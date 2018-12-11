@@ -1,0 +1,3 @@
+[submodule "odpi"]
+	path = odpi
+	url = ../../dataaccess_dpic/odpi.git
