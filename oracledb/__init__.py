@@ -6,3 +6,9 @@
 
 __version__ = '0.0.1'
 
+from _oracledb import \
+    Warning, Error, InterfaceError, DatabaseError, DataError, \
+    OperationalError, IntegrityError, InternalError, ProgrammingError, \
+    NotSupportedError
+from .connection import *
+
