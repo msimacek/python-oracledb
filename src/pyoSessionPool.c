@@ -33,7 +33,7 @@ static PyMethodDef pyoMethods[] = {
 // declaration of static members for Python type "SessionPool"
 //-----------------------------------------------------------------------------
 static PyMemberDef pyoStaticMembers[] = {
-    { "username", T_OBJECT, offsetof(pyoSessionPool, username), READONLY },
+    { "user", T_OBJECT, offsetof(pyoSessionPool, user), READONLY },
     { "dsn", T_OBJECT, offsetof(pyoSessionPool, dsn), READONLY },
     { "name", T_OBJECT, offsetof(pyoSessionPool, name), READONLY },
     { "max", T_INT, offsetof(pyoSessionPool, maxSessions), READONLY },
@@ -90,7 +90,7 @@ static void pyoSessionPool_free(pyoSessionPool *pool)
         dpiPool_release(pool->handle);
         pool->handle = NULL;
     }
-    Py_CLEAR(pool->username);
+    Py_CLEAR(pool->user);
     Py_CLEAR(pool->dsn);
     Py_CLEAR(pool->name);
     Py_TYPE(pool)->tp_free((PyObject*) pool);

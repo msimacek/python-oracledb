@@ -189,9 +189,10 @@ struct pyoConnection {
     PyObject_HEAD
     dpiConn *handle;
     pyoSessionPool *sessionPool;
+    PyObject *loop;
     PyObject *inputTypeHandler;
     PyObject *outputTypeHandler;
-    PyObject *username;
+    PyObject *user;
     PyObject *dsn;
     PyObject *version;
     PyObject *tag;
@@ -278,7 +279,7 @@ struct pyoSessionPool {
     uint32_t cacheSize;
     int homogeneous;
     int externalAuth;
-    PyObject *username;
+    PyObject *user;
     PyObject *dsn;
     PyObject *name;
     PyTypeObject *connectionType;

@@ -42,17 +42,21 @@ async def connect(user=None, password=None, dsn=None, mode=0, handle=0,
 
     # call C function to perform actual connection; this is run asynchronously
     # so we await on the future for it to be completed
-    conn = Connection()
-    conn._connect(loop, future, oracledb.DRIVER_NAME, user=user,
-            password=password, dsn=dsn, handle=handle, events=events,
-            cclass=cclass, purity=purity, new_password=new_password,
-            edition=edition, app_context=app_context, tag=tag,
-            match_any_tag=match_any_tag, sharding_key=sharding_key,
-            super_sharding_key=super_sharding_key)
+    conn = Connection(loop)
+    conn._connect(future, oracledb.DRIVER_NAME, user=user, password=password,
+            dsn=dsn, handle=handle, events=events, cclass=cclass,
+            purity=purity, new_password=new_password, edition=edition,
+            app_context=app_context, tag=tag, match_any_tag=match_any_tag,
+            sharding_key=sharding_key, super_sharding_key=super_sharding_key)
     await future
     return conn
 
 
 class Connection(_oracledb.Connection):
-    pass
+
+    async def execute(sql, *args, **kwargs):
+        if args and kwargs:
+            raise oracledb.InterfaceError("positional and keyword arguments " +
+                    "cannot be specified at the same time")
+        return 0
 

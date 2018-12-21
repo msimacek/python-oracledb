@@ -14,6 +14,7 @@
 //-----------------------------------------------------------------------------
 static void pyoConnection_free(pyoConnection*);
 static PyObject *pyoConnection_new(PyTypeObject*, PyObject*, PyObject*);
+static int pyoConnection_init(pyoConnection*, PyObject*, PyObject*);
 static PyObject *pyoConnection_connect(pyoConnection*, PyObject*, PyObject*);
 static PyObject *pyoConnection_repr(pyoConnection*);
 static void pyoAsyncDataConnect_free(void *arg);
@@ -34,8 +35,9 @@ static PyMethodDef pyoMethods[] = {
 // declaration of static members for the Python type "Connection"
 //-----------------------------------------------------------------------------
 static PyMemberDef pyoStaticMembers[] = {
-    { "username", T_OBJECT, offsetof(pyoConnection, username), READONLY },
+    { "user", T_OBJECT, offsetof(pyoConnection, user), READONLY },
     { "dsn", T_OBJECT, offsetof(pyoConnection, dsn), READONLY },
+    { "loop", T_OBJECT, offsetof(pyoConnection, loop), READONLY },
     { "autocommit", T_INT, offsetof(pyoConnection, autocommit), 0 },
     { NULL }
 };
@@ -62,6 +64,7 @@ PyTypeObject pyoPyTypeConnection = {
     .tp_methods = pyoMethods,
     .tp_members = pyoStaticMembers,
     .tp_getset = pyoDynamicMembers,
+    .tp_init = (initproc) pyoConnection_init,
     .tp_new = (newfunc) pyoConnection_new
 };
 
@@ -347,6 +350,20 @@ static PyObject *pyoConnection_new(PyTypeObject *type, PyObject *args,
 
 
 //-----------------------------------------------------------------------------
+// pyoConnection_init()
+//   Initialize the connection members.
+//-----------------------------------------------------------------------------
+static int pyoConnection_init(pyoConnection *conn, PyObject *args,
+        PyObject *keywordArgs)
+{
+    if (!PyArg_ParseTuple(args, "O", &conn->loop))
+        return -1;
+    Py_INCREF(conn->loop);
+    return 0;
+}
+
+
+//-----------------------------------------------------------------------------
 // pyoConnection_connect()
 //   Initialize the connection members.
 //-----------------------------------------------------------------------------
@@ -355,17 +372,17 @@ static PyObject *pyoConnection_connect(pyoConnection *conn, PyObject *args,
 {
     PyObject *cclassObj, *newPasswordObj, *editionObj, *appContextObj, *tagObj;
     PyObject *futureObj, *driverNameObj, *userObj, *passwordObj, *dsnObj;
-    PyObject *shardingKeyObj, *superShardingKeyObj, *loopObj;
+    PyObject *shardingKeyObj, *superShardingKeyObj;
     int temp, events, purity, matchAnyTag;
     unsigned long long externalHandle;
     pyoAsyncDataConnect *data;
     pyoSessionPool *pool;
 
     // keyword arguments
-    static char *keywordList[] = { "loop", "future", "driver_name", "user",
-            "password", "dsn", "handle", "events", "cclass", "purity",
-            "new_password", "edition", "app_context", "tag", "match_any_tag",
-            "sharding_key", "super_sharding_key", "pool", NULL };
+    static char *keywordList[] = { "future", "driver_name", "user", "password",
+            "dsn", "handle", "events", "cclass", "purity", "new_password",
+            "edition", "app_context", "tag", "match_any_tag", "sharding_key",
+            "super_sharding_key", "pool", NULL };
 
     // initialize ODPI-C, if necessary
     if (pyoUtils_initializeDPI() < 0)
@@ -378,22 +395,22 @@ static PyObject *pyoConnection_connect(pyoConnection *conn, PyObject *args,
     events = purity = matchAnyTag = 0;
     userObj = passwordObj = dsnObj = cclassObj = newPasswordObj = NULL;
     editionObj = appContextObj = tagObj = shardingKeyObj = NULL;
-    if (!PyArg_ParseTupleAndKeywords(args, keywordArgs, "OOO|OOOKpOiOOOOpOOO!",
-            keywordList, &loopObj, &futureObj, &driverNameObj, &userObj,
-            &passwordObj, &dsnObj, &externalHandle, &events, &cclassObj,
-            &purity, &newPasswordObj, &editionObj, &appContextObj, &tagObj,
+    if (!PyArg_ParseTupleAndKeywords(args, keywordArgs, "OO|OOOKpOiOOOOpOOO!",
+            keywordList, &futureObj, &driverNameObj, &userObj, &passwordObj,
+            &dsnObj, &externalHandle, &events, &cclassObj, &purity,
+            &newPasswordObj, &editionObj, &appContextObj, &tagObj,
             &matchAnyTag, &shardingKeyObj, &superShardingKeyObj,
             &pyoPyTypeSessionPool, &pool))
         return NULL;
 
     // keep a copy of the user name and connect string (DSN)
     Py_XINCREF(userObj);
-    conn->username = userObj;
+    conn->user = userObj;
     Py_XINCREF(dsnObj);
     conn->dsn = dsnObj;
 
     // create aysnchronous data
-    if (pyoAsync_allocateData(&pyoAsyncDataTypeConnect, loopObj, futureObj,
+    if (pyoAsync_allocateData(&pyoAsyncDataTypeConnect, conn->loop, futureObj,
             (void**) &data) < 0)
         return NULL;
     data->conn = conn;
@@ -455,8 +472,8 @@ static PyObject *pyoConnection_connect(pyoConnection *conn, PyObject *args,
             data->numSuperShardingKeyColumns;
 
     // for heterogeneous pools, clear user
-    if (pool && !pool->homogeneous && pool->username && userObj) {
-        temp = PyObject_RichCompareBool(userObj, pool->username, Py_EQ);
+    if (pool && !pool->homogeneous && pool->user && userObj) {
+        temp = PyObject_RichCompareBool(userObj, pool->user, Py_EQ);
         if (temp < 0)
             return pyoAsync_freeData(data);
         if (temp) {
@@ -486,7 +503,8 @@ static void pyoConnection_free(pyoConnection *conn)
         conn->handle = NULL;
     }
     Py_CLEAR(conn->sessionPool);
-    Py_CLEAR(conn->username);
+    Py_CLEAR(conn->loop);
+    Py_CLEAR(conn->user);
     Py_CLEAR(conn->dsn);
     Py_CLEAR(conn->version);
     Py_CLEAR(conn->inputTypeHandler);
@@ -505,14 +523,14 @@ static PyObject *pyoConnection_repr(pyoConnection *connection)
 
     if (pyoUtils_getModuleAndName(Py_TYPE(connection), &module, &name) < 0)
         return NULL;
-    if (connection->username && connection->username != Py_None &&
+    if (connection->user && connection->user != Py_None &&
             connection->dsn && connection->dsn != Py_None) {
         result = pyoUtils_formatString("<%s.%s to %s@%s>",
-                PyTuple_Pack(4, module, name, connection->username,
+                PyTuple_Pack(4, module, name, connection->user,
                         connection->dsn));
-    } else if (connection->username && connection->username != Py_None) {
+    } else if (connection->user && connection->user != Py_None) {
         result = pyoUtils_formatString("<%s.%s to user %s@local>",
-                PyTuple_Pack(3, module, name, connection->username));
+                PyTuple_Pack(3, module, name, connection->user));
     } else {
         result = pyoUtils_formatString("<%s.%s to externally identified user>",
                 PyTuple_Pack(2, module, name));
