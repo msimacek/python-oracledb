@@ -14,13 +14,18 @@
 //-----------------------------------------------------------------------------
 static void pyoConnection_free(pyoConnection*);
 static PyObject *pyoConnection_new(PyTypeObject*, PyObject*, PyObject*);
-static int pyoConnection_init(pyoConnection*, PyObject*, PyObject*);
+static PyObject *pyoConnection_connect(pyoConnection*, PyObject*, PyObject*);
 static PyObject *pyoConnection_repr(pyoConnection*);
+static void pyoAsyncDataConnect_free(void *arg);
+static int pyoAsyncDataConnect_run(void *arg, dpiAsync *async,
+        dpiAsyncState *state);
 
 //-----------------------------------------------------------------------------
 // declaration of methods for the Python type "Connection"
 //-----------------------------------------------------------------------------
 static PyMethodDef pyoMethods[] = {
+    { "_connect", (PyCFunction) pyoConnection_connect,
+            METH_VARARGS | METH_KEYWORDS },
     { NULL }
 };
 
@@ -57,22 +62,24 @@ PyTypeObject pyoPyTypeConnection = {
     .tp_methods = pyoMethods,
     .tp_members = pyoStaticMembers,
     .tp_getset = pyoDynamicMembers,
-    .tp_init = (initproc) pyoConnection_init,
     .tp_new = (newfunc) pyoConnection_new
 };
 
 
 //-----------------------------------------------------------------------------
-// structure used to help in establishing a connection
+// structures used for asynchronously connecting to the database
 //-----------------------------------------------------------------------------
 typedef struct {
-    const char *encoding;
-    const char *nencoding;
-    pyoBuffer userNameBuffer;
+    pyoAsyncData_HEAD
+    pyoConnection *conn;
+    dpiCommonCreateParams commonParams;
+    dpiConnCreateParams createParams;
+    pyoBuffer driverNameBuffer;
+    pyoBuffer userBuffer;
     pyoBuffer passwordBuffer;
     pyoBuffer newPasswordBuffer;
     pyoBuffer dsnBuffer;
-    pyoBuffer connectionClassBuffer;
+    pyoBuffer cclassBuffer;
     pyoBuffer editionBuffer;
     pyoBuffer tagBuffer;
     uint32_t numAppContext;
@@ -86,44 +93,103 @@ typedef struct {
     dpiShardingKeyColumn *superShardingKeyColumns;
     uint32_t numSuperShardingKeyColumns;
     pyoBuffer *superShardingKeyBuffers;
-} pyoConnectionParams;
+} pyoAsyncDataConnect;
+
+static pyoAsyncDataType pyoAsyncDataTypeConnect = {
+    .structSize = sizeof(pyoAsyncDataConnect),
+    .freeDataProc = pyoAsyncDataConnect_free,
+    .runProc = pyoAsyncDataConnect_run
+};
 
 
 //-----------------------------------------------------------------------------
-// pyoConnectionParams_initialize()
-//   Initialize the parameters to default values.
+// pyoAsyncDataConnect_run()
+//   Function that runs asynchronously in ODPI-C. No Python API calls may be
+// made in this function.
 //-----------------------------------------------------------------------------
-static void pyoConnectionParams_initialize(pyoConnectionParams *params)
+static int pyoAsyncDataConnect_run(void *arg, dpiAsync *async,
+        dpiAsyncState *state)
 {
-    pyoBuffer_init(&params->userNameBuffer);
-    pyoBuffer_init(&params->passwordBuffer);
-    pyoBuffer_init(&params->newPasswordBuffer);
-    pyoBuffer_init(&params->dsnBuffer);
-    pyoBuffer_init(&params->connectionClassBuffer);
-    pyoBuffer_init(&params->editionBuffer);
-    pyoBuffer_init(&params->tagBuffer);
-    params->numAppContext = 0;
-    params->appContext = NULL;
-    params->ctxNamespaceBuffers = NULL;
-    params->ctxNameBuffers = NULL;
-    params->ctxValueBuffers = NULL;
-    params->numShardingKeyColumns = 0;
-    params->shardingKeyColumns = NULL;
-    params->shardingKeyBuffers = NULL;
-    params->numSuperShardingKeyColumns = 0;
-    params->superShardingKeyColumns = NULL;
-    params->superShardingKeyBuffers = NULL;
+    pyoAsyncDataConnect *data = (pyoAsyncDataConnect*) arg;
+
+    return dpiConn_create(pyoDpiContext, data->userBuffer.ptr,
+            data->userBuffer.size, data->passwordBuffer.ptr,
+            data->passwordBuffer.size, data->dsnBuffer.ptr,
+            data->dsnBuffer.size, &data->commonParams, &data->createParams,
+            &data->conn->handle);
 }
 
 
 //-----------------------------------------------------------------------------
-// pyoConnectionParams_ProcessContext()
+// pyoAsyncDataConnect_free()
+//   Free data associated with asynchronous connection function.
+//-----------------------------------------------------------------------------
+static void pyoAsyncDataConnect_free(void *arg)
+{
+    pyoAsyncDataConnect *data = (pyoAsyncDataConnect*) arg;
+    uint32_t i;
+
+    pyoBuffer_clear(&data->driverNameBuffer);
+    pyoBuffer_clear(&data->userBuffer);
+    pyoBuffer_clear(&data->passwordBuffer);
+    pyoBuffer_clear(&data->newPasswordBuffer);
+    pyoBuffer_clear(&data->dsnBuffer);
+    pyoBuffer_clear(&data->cclassBuffer);
+    pyoBuffer_clear(&data->editionBuffer);
+    pyoBuffer_clear(&data->tagBuffer);
+    for (i = 0; i < data->numAppContext; i++) {
+        pyoBuffer_clear(&data->ctxNamespaceBuffers[i]);
+        pyoBuffer_clear(&data->ctxNameBuffers[i]);
+        pyoBuffer_clear(&data->ctxValueBuffers[i]);
+    }
+    data->numAppContext = 0;
+    if (data->appContext) {
+        PyMem_Free(data->appContext);
+        data->appContext = NULL;
+    }
+    if (data->ctxNamespaceBuffers) {
+        PyMem_Free(data->ctxNamespaceBuffers);
+        data->ctxNamespaceBuffers = NULL;
+    }
+    if (data->ctxNameBuffers) {
+        PyMem_Free(data->ctxNameBuffers);
+        data->ctxNameBuffers = NULL;
+    }
+    if (data->ctxValueBuffers) {
+        PyMem_Free(data->ctxValueBuffers);
+        data->ctxValueBuffers = NULL;
+    }
+    for (i = 0; i < data->numShardingKeyColumns; i++)
+        pyoBuffer_clear(&data->shardingKeyBuffers[i]);
+    if (data->shardingKeyColumns) {
+        PyMem_Free(data->shardingKeyColumns);
+        data->shardingKeyColumns = NULL;
+    }
+    if (data->shardingKeyBuffers) {
+        PyMem_Free(data->shardingKeyBuffers);
+        data->shardingKeyBuffers = NULL;
+    }
+    for (i = 0; i < data->numSuperShardingKeyColumns; i++)
+        pyoBuffer_clear(&data->superShardingKeyBuffers[i]);
+    if (data->superShardingKeyColumns) {
+        PyMem_Free(data->superShardingKeyColumns);
+        data->superShardingKeyColumns = NULL;
+    }
+    if (data->superShardingKeyBuffers) {
+        PyMem_Free(data->superShardingKeyBuffers);
+        data->superShardingKeyBuffers = NULL;
+    }
+}
+
+
+//-----------------------------------------------------------------------------
+// pyoAsyncDataConnect_processContext()
 //   Process context for the connection parameters. This validates that the
 // context passed in is a list of 3-tuples (namespace, name, value) and
 // populates the parametrs with buffers for each of these.
 //-----------------------------------------------------------------------------
-static int pyoConnectionParams_processContext(pyoConnectionParams *params,
-        PyObject *context)
+static int pyoAsyncDataConnect_processContext(pyoAsyncDataConnect *data,
+        PyObject *contextObj)
 {
     uint32_t numEntries, i;
     dpiAppContext *entry;
@@ -131,61 +197,61 @@ static int pyoConnectionParams_processContext(pyoConnectionParams *params,
     size_t memorySize;
 
     // validate context is a list with at least one entry in it
-    if (!context)
+    if (!contextObj)
         return 0;
-    if (!PyList_Check(context)) {
+    if (!PyList_Check(contextObj)) {
         PyErr_SetString(PyExc_TypeError,
-                "appcontext should be a list of 3-tuples");
+                "app_context should be a list of 3-tuples");
         return -1;
     }
-    numEntries = (uint32_t) PyList_GET_SIZE(context);
+    numEntries = (uint32_t) PyList_GET_SIZE(contextObj);
     if (numEntries == 0)
         return 0;
 
     // allocate memory for the buffers used to communicate with DPI
-    params->appContext = PyMem_Malloc(numEntries * sizeof(dpiAppContext));
+    data->appContext = PyMem_Malloc(numEntries * sizeof(dpiAppContext));
     memorySize = numEntries * sizeof(pyoBuffer);
-    params->ctxNamespaceBuffers = PyMem_Malloc(memorySize);
-    params->ctxNameBuffers = PyMem_Malloc(memorySize);
-    params->ctxValueBuffers = PyMem_Malloc(memorySize);
-    if (!params->appContext || !params->ctxNamespaceBuffers ||
-            !params->ctxNameBuffers || !params->ctxValueBuffers) {
+    data->ctxNamespaceBuffers = PyMem_Malloc(memorySize);
+    data->ctxNameBuffers = PyMem_Malloc(memorySize);
+    data->ctxValueBuffers = PyMem_Malloc(memorySize);
+    if (!data->appContext || !data->ctxNamespaceBuffers ||
+            !data->ctxNameBuffers || !data->ctxValueBuffers) {
         PyErr_NoMemory();
         return -1;
     }
 
     // initialize buffers
     for (i = 0; i < numEntries; i++) {
-        pyoBuffer_init(&params->ctxNamespaceBuffers[i]);
-        pyoBuffer_init(&params->ctxNameBuffers[i]);
-        pyoBuffer_init(&params->ctxValueBuffers[i]);
+        pyoBuffer_init(&data->ctxNamespaceBuffers[i]);
+        pyoBuffer_init(&data->ctxNameBuffers[i]);
+        pyoBuffer_init(&data->ctxValueBuffers[i]);
     }
-    params->numAppContext = numEntries;
+    data->numAppContext = numEntries;
 
     // process each entry
     for (i = 0; i < numEntries; i++) {
-        entryObj = PyList_GET_ITEM(context, i);
+        entryObj = PyList_GET_ITEM(contextObj, i);
         if (!PyTuple_Check(entryObj) || PyTuple_GET_SIZE(entryObj) != 3) {
             PyErr_SetString(PyExc_TypeError,
-                    "appcontext should be a list of 3-tuples");
+                    "app_context should be a list of 3-tuples");
             return -1;
         }
-        if (pyoBuffer_fromObject(&params->ctxNamespaceBuffers[i],
-                PyTuple_GET_ITEM(entryObj, 0), params->encoding) < 0)
+        if (pyoBuffer_fromObject(&data->ctxNamespaceBuffers[i],
+                PyTuple_GET_ITEM(entryObj, 0)) < 0)
             return -1;
-        if (pyoBuffer_fromObject(&params->ctxNameBuffers[i],
-                PyTuple_GET_ITEM(entryObj, 1), params->encoding) < 0)
+        if (pyoBuffer_fromObject(&data->ctxNameBuffers[i],
+                PyTuple_GET_ITEM(entryObj, 1)) < 0)
             return -1;
-        if (pyoBuffer_fromObject(&params->ctxValueBuffers[i],
-                PyTuple_GET_ITEM(entryObj, 2), params->encoding) < 0)
+        if (pyoBuffer_fromObject(&data->ctxValueBuffers[i],
+                PyTuple_GET_ITEM(entryObj, 2)) < 0)
             return -1;
-        entry = &params->appContext[i];
-        entry->namespaceName = params->ctxNamespaceBuffers[i].ptr;
-        entry->namespaceNameLength = params->ctxNamespaceBuffers[i].size;
-        entry->name = params->ctxNameBuffers[i].ptr;
-        entry->nameLength = params->ctxNameBuffers[i].size;
-        entry->value = params->ctxValueBuffers[i].ptr;
-        entry->valueLength = params->ctxValueBuffers[i].size;
+        entry = &data->appContext[i];
+        entry->namespaceName = data->ctxNamespaceBuffers[i].ptr;
+        entry->namespaceNameLength = data->ctxNamespaceBuffers[i].size;
+        entry->name = data->ctxNameBuffers[i].ptr;
+        entry->nameLength = data->ctxNameBuffers[i].size;
+        entry->value = data->ctxValueBuffers[i].ptr;
+        entry->valueLength = data->ctxValueBuffers[i].size;
     }
 
     return 0;
@@ -193,18 +259,18 @@ static int pyoConnectionParams_processContext(pyoConnectionParams *params,
 
 
 //-----------------------------------------------------------------------------
-// pyoConnectionParams_processShardingKeyValue()
+// pyoAsyncDataConnect_processShardingKeyValue()
 //   Process a single sharding key value.
 //-----------------------------------------------------------------------------
-static int pyoConnectionParams_processShardingKeyValue(
-        pyoConnectionParams *params, PyObject *value,
+static int pyoAsyncDataConnect_processShardingKeyValue(
+        pyoAsyncDataConnect *data, PyObject *value,
         dpiShardingKeyColumn *column, pyoBuffer *buffer)
 {
     pyoTransformNum transformNum;
 
     transformNum = pyoTransform_getNumFromValue(value, 0);
     if (pyoTransform_fromPython(transformNum, value, &column->value, buffer,
-            params->encoding, params->nencoding, NULL, 0) < 0)
+            NULL, 0) < 0)
         return -1;
     pyoTransform_getTypeInfo(transformNum, &column->oracleTypeNum,
             &column->nativeTypeNum);
@@ -213,12 +279,12 @@ static int pyoConnectionParams_processShardingKeyValue(
 
 
 //-----------------------------------------------------------------------------
-// pyoConnectionParams_processShardingKey()
+// pyoAsyncDataConnect_processShardingKey()
 //   Process either the sharding key or the super sharding key. A sharding key
 // is expected to be a sequence of values. A null value or a sequence of size
 // 0 is ignored.
 //-----------------------------------------------------------------------------
-static int pyoConnectionParams_processShardingKey(pyoConnectionParams *params,
+static int pyoAsyncDataConnect_processShardingKey(pyoAsyncDataConnect *data,
         PyObject *shardingKeyObj, int isSuperShardingKey)
 {
     dpiShardingKeyColumn *columns;
@@ -241,13 +307,13 @@ static int pyoConnectionParams_processShardingKey(pyoConnectionParams *params,
     columns = PyMem_Malloc(numColumns * sizeof(dpiShardingKeyColumn));
     buffers = PyMem_Malloc(numColumns * sizeof(pyoBuffer));
     if (isSuperShardingKey) {
-        params->superShardingKeyColumns = columns;
-        params->superShardingKeyBuffers = buffers;
-        params->numSuperShardingKeyColumns = numColumns;
+        data->superShardingKeyColumns = columns;
+        data->superShardingKeyBuffers = buffers;
+        data->numSuperShardingKeyColumns = numColumns;
     } else {
-        params->shardingKeyColumns = columns;
-        params->shardingKeyBuffers = buffers;
-        params->numShardingKeyColumns = numColumns;
+        data->shardingKeyColumns = columns;
+        data->shardingKeyBuffers = buffers;
+        data->numShardingKeyColumns = numColumns;
     }
     if (!columns || !buffers) {
         PyErr_NoMemory();
@@ -260,74 +326,12 @@ static int pyoConnectionParams_processShardingKey(pyoConnectionParams *params,
         value = PySequence_GetItem(shardingKeyObj, i);
         if (!value)
             return -1;
-        if (pyoConnectionParams_processShardingKeyValue(params, value,
+        if (pyoAsyncDataConnect_processShardingKeyValue(data, value,
                 &columns[i], &buffers[i]) < 0)
             return -1;
     }
 
     return 0;
-}
-
-
-//-----------------------------------------------------------------------------
-// pyoConnectionParams_finalize()
-//   Finalize the parameters, freeing any resources that were allocated. The
-// return value is a convenience to the caller.
-//-----------------------------------------------------------------------------
-static int pyoConnectionParams_finalize(pyoConnectionParams *params)
-{
-    uint32_t i;
-
-    pyoBuffer_clear(&params->userNameBuffer);
-    pyoBuffer_clear(&params->passwordBuffer);
-    pyoBuffer_clear(&params->newPasswordBuffer);
-    pyoBuffer_clear(&params->dsnBuffer);
-    pyoBuffer_clear(&params->connectionClassBuffer);
-    pyoBuffer_clear(&params->editionBuffer);
-    pyoBuffer_clear(&params->tagBuffer);
-    for (i = 0; i < params->numAppContext; i++) {
-        pyoBuffer_clear(&params->ctxNamespaceBuffers[i]);
-        pyoBuffer_clear(&params->ctxNameBuffers[i]);
-        pyoBuffer_clear(&params->ctxValueBuffers[i]);
-    }
-    params->numAppContext = 0;
-    if (params->appContext) {
-        PyMem_Free(params->appContext);
-        params->appContext = NULL;
-    }
-    if (params->ctxNamespaceBuffers) {
-        PyMem_Free(params->ctxNamespaceBuffers);
-        params->ctxNamespaceBuffers = NULL;
-    }
-    if (params->ctxNameBuffers) {
-        PyMem_Free(params->ctxNameBuffers);
-        params->ctxNameBuffers = NULL;
-    }
-    if (params->ctxValueBuffers) {
-        PyMem_Free(params->ctxValueBuffers);
-        params->ctxValueBuffers = NULL;
-    }
-    for (i = 0; i < params->numShardingKeyColumns; i++)
-        pyoBuffer_clear(&params->shardingKeyBuffers[i]);
-    if (params->shardingKeyColumns) {
-        PyMem_Free(params->shardingKeyColumns);
-        params->shardingKeyColumns = NULL;
-    }
-    if (params->shardingKeyBuffers) {
-        PyMem_Free(params->shardingKeyBuffers);
-        params->shardingKeyBuffers = NULL;
-    }
-    for (i = 0; i < params->numSuperShardingKeyColumns; i++)
-        pyoBuffer_clear(&params->superShardingKeyBuffers[i]);
-    if (params->superShardingKeyColumns) {
-        PyMem_Free(params->superShardingKeyColumns);
-        params->superShardingKeyColumns = NULL;
-    }
-    if (params->superShardingKeyBuffers) {
-        PyMem_Free(params->superShardingKeyBuffers);
-        params->superShardingKeyBuffers = NULL;
-    }
-    return -1;
 }
 
 
@@ -343,141 +347,129 @@ static PyObject *pyoConnection_new(PyTypeObject *type, PyObject *args,
 
 
 //-----------------------------------------------------------------------------
-// pyoConnection_init()
+// pyoConnection_connect()
 //   Initialize the connection members.
 //-----------------------------------------------------------------------------
-static int pyoConnection_init(pyoConnection *conn, PyObject *args,
+static PyObject *pyoConnection_connect(pyoConnection *conn, PyObject *args,
         PyObject *keywordArgs)
 {
-    PyObject *usernameObj, *passwordObj, *dsnObj, *cclassObj, *editionObj;
-    PyObject *shardingKeyObj, *superShardingKeyObj;
-    dpiCommonCreateParams dpiCommonParams;
-    dpiConnCreateParams dpiCreateParams;
+    PyObject *cclassObj, *newPasswordObj, *editionObj, *appContextObj, *tagObj;
+    PyObject *futureObj, *driverNameObj, *userObj, *passwordObj, *dsnObj;
+    PyObject *shardingKeyObj, *superShardingKeyObj, *loopObj;
+    int temp, events, purity, matchAnyTag;
     unsigned long long externalHandle;
-    PyObject *tagObj, *contextObj;
-    pyoConnectionParams params;
-    PyObject *newPasswordObj;
-    int status, events, temp;
+    pyoAsyncDataConnect *data;
     pyoSessionPool *pool;
+
+    // keyword arguments
+    static char *keywordList[] = { "loop", "future", "driver_name", "user",
+            "password", "dsn", "handle", "events", "cclass", "purity",
+            "new_password", "edition", "app_context", "tag", "match_any_tag",
+            "sharding_key", "super_sharding_key", "pool", NULL };
+
+    // initialize ODPI-C, if necessary
+    if (pyoUtils_initializeDPI() < 0)
+        return NULL;
 
     // parse arguments
     pool = NULL;
-    events = 0;
     externalHandle = 0;
-    newPasswordObj = usernameObj = NULL;
-    passwordObj = dsnObj = cclassObj = editionObj = tagObj = NULL;
-    contextObj = shardingKeyObj = superShardingKeyObj = NULL;
-    if (pyoUtils_initializeDPI() < 0)
-        return -1;
-    if (dpiContext_initCommonCreateParams(pyoDpiContext, &dpiCommonParams) < 0)
-        return pyoError_raiseAndReturnInt();
-    dpiCommonParams.driverName = PYO_DRIVER_NAME;
-    dpiCommonParams.driverNameLength =
-            (uint32_t) strlen(dpiCommonParams.driverName);
-    if (dpiContext_initConnCreateParams(pyoDpiContext, &dpiCreateParams) < 0)
-        return pyoError_raiseAndReturnInt();
-    if (!PyArg_ParseTuple(args, "|OOOiKpOOiOssOOOOOO", &usernameObj,
-            &passwordObj, &dsnObj, &dpiCreateParams.authMode, &externalHandle,
-            &events, &cclassObj, &dpiCreateParams.purity, &newPasswordObj,
-            &dpiCommonParams.encoding, &dpiCommonParams.nencoding, &editionObj,
-            &contextObj, &tagObj, &dpiCreateParams.matchAnyTag,
-            &shardingKeyObj, &superShardingKeyObj))
-        return -1;
-    dpiCreateParams.externalHandle = (void*) externalHandle;
-    dpiCommonParams.createMode |= DPI_MODE_CREATE_THREADED;
-    if (events)
-        dpiCommonParams.createMode |= DPI_MODE_CREATE_EVENTS;
+    superShardingKeyObj = NULL;
+    events = purity = matchAnyTag = 0;
+    userObj = passwordObj = dsnObj = cclassObj = newPasswordObj = NULL;
+    editionObj = appContextObj = tagObj = shardingKeyObj = NULL;
+    if (!PyArg_ParseTupleAndKeywords(args, keywordArgs, "OOO|OOOKpOiOOOOpOOO!",
+            keywordList, &loopObj, &futureObj, &driverNameObj, &userObj,
+            &passwordObj, &dsnObj, &externalHandle, &events, &cclassObj,
+            &purity, &newPasswordObj, &editionObj, &appContextObj, &tagObj,
+            &matchAnyTag, &shardingKeyObj, &superShardingKeyObj,
+            &pyoPyTypeSessionPool, &pool))
+        return NULL;
 
     // keep a copy of the user name and connect string (DSN)
-    Py_XINCREF(usernameObj);
-    conn->username = usernameObj;
+    Py_XINCREF(userObj);
+    conn->username = userObj;
     Py_XINCREF(dsnObj);
     conn->dsn = dsnObj;
 
-    // setup parameters
-    pyoConnectionParams_initialize(&params);
-    if (pool) {
-        dpiCreateParams.pool = pool->handle;
-        params.encoding = pool->encodingInfo.encoding;
-        params.nencoding = pool->encodingInfo.nencoding;
-    } else {
-        params.encoding =
-                pyoUtils_getAdjustedEncoding(dpiCommonParams.encoding);
-        params.nencoding =
-                pyoUtils_getAdjustedEncoding(dpiCommonParams.nencoding);
+    // create aysnchronous data
+    if (pyoAsync_allocateData(&pyoAsyncDataTypeConnect, loopObj, futureObj,
+            (void**) &data) < 0)
+        return NULL;
+    data->conn = conn;
+    if (dpiContext_initCommonCreateParams(pyoDpiContext,
+            &data->commonParams) < 0) {
+        pyoError_raiseAndReturnNull();
+        return pyoAsync_freeData(data);
     }
-    if (pyoConnectionParams_processContext(&params, contextObj) < 0)
-        return pyoConnectionParams_finalize(&params);
-    if (pyoConnectionParams_processShardingKey(&params, shardingKeyObj, 0) < 0)
-        return pyoConnectionParams_finalize(&params);
-    if (pyoConnectionParams_processShardingKey(&params, superShardingKeyObj,
+    if (dpiContext_initConnCreateParams(pyoDpiContext,
+            &data->createParams) < 0) {
+        pyoError_raiseAndReturnNull();
+        return pyoAsync_freeData(data);
+    }
+    if (pyoAsyncDataConnect_processContext(data, appContextObj) < 0)
+        return pyoAsync_freeData(data);
+    if (pyoAsyncDataConnect_processShardingKey(data, shardingKeyObj, 0) < 0)
+        return pyoAsync_freeData(data);
+    if (pyoAsyncDataConnect_processShardingKey(data, superShardingKeyObj,
             1) < 0)
-        return pyoConnectionParams_finalize(&params);
-    if (pyoBuffer_fromObject(&params.userNameBuffer, conn->username,
-                    params.encoding) < 0 ||
-            pyoBuffer_fromObject(&params.passwordBuffer, passwordObj,
-                    params.encoding) < 0 ||
-            pyoBuffer_fromObject(&params.dsnBuffer, conn->dsn,
-                    params.encoding) < 0 ||
-            pyoBuffer_fromObject(&params.connectionClassBuffer, cclassObj,
-                    params.encoding) < 0 ||
-            pyoBuffer_fromObject(&params.newPasswordBuffer, newPasswordObj,
-                    params.encoding) < 0 ||
-            pyoBuffer_fromObject(&params.editionBuffer, editionObj,
-                    params.encoding) < 0 ||
-            pyoBuffer_fromObject(&params.tagBuffer, tagObj,
-                    params.encoding) < 0)
-        return pyoConnectionParams_finalize(&params);
-    if (params.userNameBuffer.size == 0 && params.passwordBuffer.size == 0)
-        dpiCreateParams.externalAuth = 1;
-    dpiCreateParams.connectionClass = params.connectionClassBuffer.ptr;
-    dpiCreateParams.connectionClassLength = params.connectionClassBuffer.size;
-    dpiCreateParams.newPassword = params.newPasswordBuffer.ptr;
-    dpiCreateParams.newPasswordLength = params.newPasswordBuffer.size;
-    dpiCommonParams.edition = params.editionBuffer.ptr;
-    dpiCommonParams.editionLength = params.editionBuffer.size;
-    dpiCreateParams.tag = params.tagBuffer.ptr;
-    dpiCreateParams.tagLength = params.tagBuffer.size;
-    dpiCreateParams.appContext = params.appContext;
-    dpiCreateParams.numAppContext = params.numAppContext;
-    dpiCreateParams.shardingKeyColumns = params.shardingKeyColumns;
-    dpiCreateParams.numShardingKeyColumns = params.numShardingKeyColumns;
-    dpiCreateParams.superShardingKeyColumns = params.superShardingKeyColumns;
-    dpiCreateParams.numSuperShardingKeyColumns =
-            params.numSuperShardingKeyColumns;
-    if (pool && !pool->homogeneous && pool->username && conn->username) {
-        temp = PyObject_RichCompareBool(conn->username, pool->username, Py_EQ);
-        if (temp < 0)
-            return pyoConnectionParams_finalize(&params);
-        if (temp)
-            params.userNameBuffer.size = 0;
-    }
+        return pyoAsync_freeData(data);
+    if (pyoBuffer_fromObject(&data->userBuffer, userObj) < 0 ||
+            pyoBuffer_fromObject(&data->passwordBuffer, passwordObj) < 0 ||
+            pyoBuffer_fromObject(&data->dsnBuffer, conn->dsn) < 0 ||
+            pyoBuffer_fromObject(&data->cclassBuffer, cclassObj) < 0 ||
+            pyoBuffer_fromObject(&data->newPasswordBuffer,
+                    newPasswordObj) < 0 ||
+            pyoBuffer_fromObject(&data->driverNameBuffer, driverNameObj) < 0 ||
+            pyoBuffer_fromObject(&data->editionBuffer, editionObj) < 0 ||
+            pyoBuffer_fromObject(&data->tagBuffer, tagObj) < 0)
+        return pyoAsync_freeData(data);
 
-    // create connection
-    Py_BEGIN_ALLOW_THREADS
-    status = dpiConn_create(pyoDpiContext, params.userNameBuffer.ptr,
-            params.userNameBuffer.size, params.passwordBuffer.ptr,
-            params.passwordBuffer.size, params.dsnBuffer.ptr,
-            params.dsnBuffer.size, &dpiCommonParams, &dpiCreateParams,
-            &conn->handle);
-    Py_END_ALLOW_THREADS
-    pyoConnectionParams_finalize(&params);
-    if (status < 0)
-        return pyoError_raiseAndReturnInt();
+    // transfer to ODPI-C common creation parameters
+    data->commonParams.createMode |= DPI_MODE_CREATE_THREADED;
+    if (events)
+        data->commonParams.createMode |= DPI_MODE_CREATE_EVENTS;
+    data->commonParams.driverName = data->driverNameBuffer.ptr;
+    data->commonParams.driverNameLength = data->driverNameBuffer.size;
+    data->commonParams.edition = data->editionBuffer.ptr;
+    data->commonParams.editionLength = data->editionBuffer.size;
 
-    // determine encodings to use
+    // transfer to ODPI-C connection creation parameters
+    data->createParams.externalHandle = (void*) externalHandle;
     if (pool)
-        conn->encodingInfo = pool->encodingInfo;
-    else {
-        if (dpiConn_getEncodingInfo(conn->handle, &conn->encodingInfo) < 0)
-            return pyoError_raiseAndReturnInt();
-        conn->encodingInfo.encoding =
-                pyoUtils_getAdjustedEncoding(conn->encodingInfo.encoding);
-        conn->encodingInfo.nencoding =
-                pyoUtils_getAdjustedEncoding(conn->encodingInfo.nencoding);
+        data->createParams.pool = pool->handle;
+    if (data->userBuffer.size == 0 && data->passwordBuffer.size == 0)
+        data->createParams.externalAuth = 1;
+    data->createParams.connectionClass = data->cclassBuffer.ptr;
+    data->createParams.connectionClassLength = data->cclassBuffer.size;
+    data->createParams.newPassword = data->newPasswordBuffer.ptr;
+    data->createParams.newPasswordLength = data->newPasswordBuffer.size;
+    data->createParams.tag = data->tagBuffer.ptr;
+    data->createParams.tagLength = data->tagBuffer.size;
+    data->createParams.appContext = data->appContext;
+    data->createParams.numAppContext = data->numAppContext;
+    data->createParams.shardingKeyColumns = data->shardingKeyColumns;
+    data->createParams.numShardingKeyColumns = data->numShardingKeyColumns;
+    data->createParams.superShardingKeyColumns = data->superShardingKeyColumns;
+    data->createParams.numSuperShardingKeyColumns =
+            data->numSuperShardingKeyColumns;
+
+    // for heterogeneous pools, clear user
+    if (pool && !pool->homogeneous && pool->username && userObj) {
+        temp = PyObject_RichCompareBool(userObj, pool->username, Py_EQ);
+        if (temp < 0)
+            return pyoAsync_freeData(data);
+        if (temp) {
+            data->userBuffer.ptr = NULL;
+            data->userBuffer.size = 0;
+        }
     }
 
-    return 0;
+    // run asynchronous function
+    if (pyoAsync_run(data) < 0)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 
 

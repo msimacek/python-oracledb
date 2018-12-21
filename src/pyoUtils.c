@@ -40,29 +40,6 @@ PyObject *pyoUtils_formatString(const char *format, PyObject *args)
 
 
 //-----------------------------------------------------------------------------
-// pyoUtils_getAdjustedEncoding()
-//   Return the adjusted encoding to use when encoding and decoding strings
-// that are passed to and from the Oracle database. The Oracle client interface
-// does not support the inclusion of a BOM in the encoded string but assumes
-// native endian order for UTF-16. Python generates a BOM at the beginning of
-// the encoded string if plain UTF-16 is specified. For this reason, the
-// correct byte order must be determined and used inside Python so that the
-// Oracle client receives the data it expects.
-//-----------------------------------------------------------------------------
-const char *pyoUtils_getAdjustedEncoding(const char *encoding)
-{
-    static const union {
-        unsigned char bytes[4];
-        uint32_t value;
-    } hostOrder = { { 0, 1, 2, 3 } };
-
-    if (!encoding || strcmp(encoding, "UTF-16") != 0)
-        return encoding;
-    return (hostOrder.value == 0x03020100) ? "UTF-16LE" : "UTF-16BE";
-}
-
-
-//-----------------------------------------------------------------------------
 // pyoUtils_getModuleAndName()
 //   Return the module and name for the type.
 //-----------------------------------------------------------------------------

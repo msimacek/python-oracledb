@@ -15,13 +15,13 @@
 // pyoBuffer_fromObject()
 //   Populate the string buffer from a unicode object.
 //-----------------------------------------------------------------------------
-int pyoBuffer_fromObject(pyoBuffer *buf, PyObject *obj, const char *encoding)
+int pyoBuffer_fromObject(pyoBuffer *buf, PyObject *obj)
 {
     pyoBuffer_init(buf);
     if (!obj || obj == Py_None)
         return 0;
     if (PyUnicode_Check(obj)) {
-        buf->obj = PyUnicode_AsEncodedString(obj, encoding, NULL);
+        buf->obj = PyUnicode_AsEncodedString(obj, PYO_ENCODING, NULL);
         if (!buf->obj)
             return -1;
         buf->ptr = PyBytes_AS_STRING(buf->obj);

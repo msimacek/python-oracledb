@@ -184,8 +184,8 @@ static const pyoTransform pyoAllTransforms[] = {
 //   Transforms a Python object into its corresponding database value.
 //-----------------------------------------------------------------------------
 int pyoTransform_fromPython(pyoTransformNum transformNum, PyObject *pyValue,
-        dpiDataBuffer *dbValue, pyoBuffer *buffer, const char *encoding,
-        const char *nencoding, pyoVar *var, uint32_t arrayPos)
+        dpiDataBuffer *dbValue, pyoBuffer *buffer, pyoVar *var,
+        uint32_t arrayPos)
 {
     dpiIntervalDS *interval;
     PyDateTime_Delta *delta;
@@ -204,14 +204,14 @@ int pyoTransform_fromPython(pyoTransformNum transformNum, PyObject *pyValue,
         case PYO_TRANSFORM_LONG_BINARY:
         case PYO_TRANSFORM_LONG_STRING:
         case PYO_TRANSFORM_STRING:
-            if (pyoBuffer_fromObject(buffer, pyValue, encoding) < 0)
+            if (pyoBuffer_fromObject(buffer, pyValue) < 0)
                 return -1;
             dbValue->asBytes.ptr = (char*) buffer->ptr;
             dbValue->asBytes.length = buffer->size;
             return 0;
         case PYO_TRANSFORM_FIXED_NCHAR:
         case PYO_TRANSFORM_NSTRING:
-            if (pyoBuffer_fromObject(buffer, pyValue, nencoding) < 0)
+            if (pyoBuffer_fromObject(buffer, pyValue) < 0)
                 return -1;
             dbValue->asBytes.ptr = (char*) buffer->ptr;
             dbValue->asBytes.length = buffer->size;
@@ -228,9 +228,7 @@ int pyoTransform_fromPython(pyoTransformNum transformNum, PyObject *pyValue,
                 } else dbValue->asLOB = lob->handle;
                 return 0;
             }
-            if (transformNum == PYO_TRANSFORM_NCLOB)
-                encoding = nencoding;
-            if (pyoBuffer_fromObject(buffer, pyValue, encoding) < 0)
+            if (pyoBuffer_fromObject(buffer, pyValue) < 0)
                 return -1;
             Py_BEGIN_ALLOW_THREADS
             status = dpiLob_setFromBytes(dbValue->asLOB, buffer->ptr,
@@ -258,7 +256,7 @@ int pyoTransform_fromPython(pyoTransformNum transformNum, PyObject *pyValue,
             textValue = PyObject_Str(pyValue);
             if (!textValue)
                 return -1;
-            status = pyoBuffer_fromObject(buffer, textValue, encoding);
+            status = pyoBuffer_fromObject(buffer, textValue);
             Py_DECREF(textValue);
             if (status < 0)
                 return -1;
@@ -670,8 +668,7 @@ PyObject *pyoTransform_toPython(pyoTransformNum transformNum,
             if (dpiRowid_getStringValue(dbValue->asRowid, &rowid,
                     &rowidLength) < 0)
                 return pyoError_raiseAndReturnNull();
-            return PyUnicode_Decode(rowid, rowidLength,
-                    connection->encodingInfo.encoding, NULL);
+            return PyUnicode_Decode(rowid, rowidLength, PYO_ENCODING, NULL);
         case PYO_TRANSFORM_FIXED_CHAR:
         case PYO_TRANSFORM_STRING:
         case PYO_TRANSFORM_LONG_STRING:

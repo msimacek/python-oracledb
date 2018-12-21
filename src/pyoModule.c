@@ -11,6 +11,15 @@
 
 #include "pyoModule.h"
 
+// define macro for adding type objects
+#define PYO_ADD_TYPE_OBJECT(name, type) \
+    if (PyType_Ready(type) < 0) \
+        return NULL; \
+    Py_INCREF(type); \
+    if (PyModule_AddObject(module, name, (PyObject*) type) < 0) \
+        return NULL;
+
+
 //-----------------------------------------------------------------------------
 // Globals
 //-----------------------------------------------------------------------------
@@ -26,6 +35,9 @@ PyObject *pyoProgrammingErrorException = NULL;
 PyObject *pyoNotSupportedErrorException = NULL;
 PyObject *pyoJsonDumpFunction = NULL;
 PyObject *pyoJsonLoadFunction = NULL;
+PyObject *pyoSetResultName = NULL;
+PyObject *pyoSetExceptionName = NULL;
+PyObject *pyoCallSoonThreadsafeName = NULL;
 dpiContext *pyoDpiContext = NULL;
 dpiVersionInfo pyoClientVersionInfo;
 
@@ -80,6 +92,20 @@ PyMODINIT_FUNC PyInit__oracledb(void)
     if (!module)
         return NULL;
 
+    // create method names used for completing futures
+    pyoSetResultName = PyUnicode_DecodeASCII("set_result",
+            strlen("set_result"), NULL);
+    if (!pyoSetResultName)
+        return NULL;
+    pyoSetExceptionName = PyUnicode_DecodeASCII("set_exception",
+            strlen("set_exception"), NULL);
+    if (!pyoSetExceptionName)
+        return NULL;
+    pyoCallSoonThreadsafeName = PyUnicode_DecodeASCII("call_soon_threadsafe",
+            strlen("call_soon_threadsafe"), NULL);
+    if (!pyoCallSoonThreadsafeName)
+        return NULL;
+
     // create exception objects
     if (pyoModule_setException(module, &pyoWarningException, "Warning",
             NULL) < 0)
@@ -110,6 +136,11 @@ PyMODINIT_FUNC PyInit__oracledb(void)
     if (pyoModule_setException(module, &pyoNotSupportedErrorException,
             "NotSupportedError", pyoDatabaseErrorException) < 0)
         return NULL;
+
+    // add types
+    PYO_ADD_TYPE_OBJECT("Connection", &pyoPyTypeConnection)
+    PYO_ADD_TYPE_OBJECT("SessionPool", &pyoPyTypeSessionPool)
+    PYO_ADD_TYPE_OBJECT("Error", &pyoPyTypeError)
 
     return module;
 }

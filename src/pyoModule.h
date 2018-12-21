@@ -13,8 +13,8 @@
 #include <structmember.h>
 #include <dpi.h>
 
-// define macro for driver name
-#define PYO_DRIVER_NAME                 "py-oracledb : 0.0.1"
+// define encoding used throughout
+#define PYO_ENCODING                    "UTF-8"
 
 // define macro for clearing buffers
 #define pyoBuffer_clear(buf)            Py_CLEAR((buf)->obj)
@@ -24,6 +24,8 @@
 // Forward Declarations
 //-----------------------------------------------------------------------------
 
+typedef struct pyoAsyncBaseData pyoAsyncBaseData;
+typedef struct pyoAsyncDataType pyoAsyncDataType;
 typedef struct pyoBuffer pyoBuffer;
 typedef struct pyoConnection pyoConnection;
 typedef struct pyoCursor pyoCursor;
@@ -110,6 +112,11 @@ extern PyObject *pyoJsonLoadFunction;
 extern dpiContext *pyoDpiContext;
 extern dpiVersionInfo pyoClientVersionInfo;
 
+// names used for setting the result and exception of futures
+extern PyObject *pyoSetResultName;
+extern PyObject *pyoSetExceptionName;
+extern PyObject *pyoCallSoonThreadsafeName;
+
 
 //-----------------------------------------------------------------------------
 // Transforms
@@ -151,6 +158,26 @@ typedef enum {
 // Structures
 //-----------------------------------------------------------------------------
 
+typedef PyObject* (*pyoAsyncGetResultProc)(void *arg);
+typedef void (*pyoAsyncFreeDataProc)(void *arg);
+
+struct pyoAsyncDataType {
+    pyoAsyncGetResultProc getResultProc;
+    pyoAsyncFreeDataProc freeDataProc;
+    dpiAsyncFn runProc;
+    size_t structSize;
+};
+
+#define pyoAsyncData_HEAD \
+    PyObject *loopObj; \
+    PyObject *futureObj; \
+    pyoAsyncDataType *dataType; \
+    dpiAsync *handle;
+
+struct pyoAsyncBaseData {
+    pyoAsyncData_HEAD
+};
+
 struct pyoBuffer {
     const char *ptr;
     uint32_t numCharacters;
@@ -168,7 +195,6 @@ struct pyoConnection {
     PyObject *dsn;
     PyObject *version;
     PyObject *tag;
-    dpiEncodingInfo encodingInfo;
     int autocommit;
     int tagFound;
 };
@@ -250,7 +276,6 @@ struct pyoSessionPool {
     uint32_t maxSessions;
     uint32_t sessionIncrement;
     uint32_t cacheSize;
-    dpiEncodingInfo encodingInfo;
     int homogeneous;
     int externalAuth;
     PyObject *username;
@@ -288,7 +313,13 @@ struct pyoVarType {
 // Functions
 //-----------------------------------------------------------------------------
 
-int pyoBuffer_fromObject(pyoBuffer *buf, PyObject *obj, const char *encoding);
+int pyoAsync_allocateData(pyoAsyncDataType *dataType, PyObject *loopObj,
+        PyObject *futureObj, void **data);
+void pyoAsync_callback(void *arg, int status, dpiErrorInfo *errorInfo);
+PyObject *pyoAsync_freeData(void *arg);
+int pyoAsync_run(void *arg);
+
+int pyoBuffer_fromObject(pyoBuffer *buf, PyObject *obj);
 void pyoBuffer_init(pyoBuffer *buf);
 
 pyoError *pyoError_newFromInfo(dpiErrorInfo *errorInfo);
@@ -304,8 +335,8 @@ PyObject *pyoLob_new(pyoConnection *connection, dpiOracleTypeNum oracleTypeNum,
 PyObject *pyoObject_new(pyoObjectType *objectType, dpiObject *handle);
 
 int pyoTransform_fromPython(pyoTransformNum transformNum, PyObject *pyValue,
-        dpiDataBuffer *dbValue, pyoBuffer *buffer, const char *encoding,
-        const char *nencoding, pyoVar *var, uint32_t arrayPos);
+        dpiDataBuffer *dbValue, pyoBuffer *buffer, pyoVar *var,
+        uint32_t arrayPos);
 pyoTransformNum pyoTransform_getNumFromDataTypeInfo(dpiDataTypeInfo *info);
 pyoTransformNum pyoTransform_getNumFromType(PyTypeObject *type);
 pyoTransformNum pyoTransform_getNumFromValue(PyObject *value, int plsql);
@@ -317,7 +348,6 @@ PyObject *pyoTransform_toPython(pyoTransformNum transformNum,
         dpiDataBuffer *dbValue, const char *encodingErrors);
 
 PyObject *pyoUtils_formatString(const char *format, PyObject *args);
-const char *pyoUtils_getAdjustedEncoding(const char *encoding);
 int pyoUtils_getModuleAndName(PyTypeObject *type, PyObject **module,
         PyObject **name);
 int pyoUtils_initializeDPI(void);
