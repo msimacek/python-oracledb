@@ -54,9 +54,19 @@ async def connect(user=None, password=None, dsn=None, mode=0, handle=0,
 
 class Connection(_oracledb.Connection):
 
-    async def execute(sql, *args, **kwargs):
+    async def execute(self, sql, *args, **kwargs):
         if args and kwargs:
             raise oracledb.InterfaceError("positional and keyword arguments " +
                     "cannot be specified at the same time")
-        return 0
+        future = self.loop.create_future()
+        self._execute(future, sql, args or kwargs)
+        return await future
+
+    async def fetch(self, sql, *args, **kwargs):
+        if args and kwargs:
+            raise oracledb.InterfaceError("positional and keyword arguments " +
+                    "cannot be specified at the same time")
+        future = self.loop.create_future()
+        self._fetch(future, sql, args or kwargs)
+        return await future
 

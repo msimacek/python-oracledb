@@ -16,10 +16,15 @@ static void pyoConnection_free(pyoConnection*);
 static PyObject *pyoConnection_new(PyTypeObject*, PyObject*, PyObject*);
 static int pyoConnection_init(pyoConnection*, PyObject*, PyObject*);
 static PyObject *pyoConnection_connect(pyoConnection*, PyObject*, PyObject*);
+static PyObject *pyoConnection_execute(pyoConnection*, PyObject*);
 static PyObject *pyoConnection_repr(pyoConnection*);
 static void pyoAsyncDataConnect_free(void *arg);
 static int pyoAsyncDataConnect_run(void *arg, dpiAsync *async,
         dpiAsyncState *state);
+static void pyoAsyncDataExecute_free(void *arg);
+static int pyoAsyncDataExecute_run(void *arg, dpiAsync *async,
+        dpiAsyncState *state);
+static PyObject *pyoAsyncDataExecute_getResult(void *arg);
 
 //-----------------------------------------------------------------------------
 // declaration of methods for the Python type "Connection"
@@ -27,6 +32,7 @@ static int pyoAsyncDataConnect_run(void *arg, dpiAsync *async,
 static PyMethodDef pyoMethods[] = {
     { "_connect", (PyCFunction) pyoConnection_connect,
             METH_VARARGS | METH_KEYWORDS },
+    { "_execute", (PyCFunction) pyoConnection_execute, METH_VARARGS },
     { NULL }
 };
 
@@ -339,6 +345,82 @@ static int pyoAsyncDataConnect_processShardingKey(pyoAsyncDataConnect *data,
 
 
 //-----------------------------------------------------------------------------
+// structures used for asynchronously executing a statement on the database
+//-----------------------------------------------------------------------------
+typedef struct {
+    pyoAsyncData_HEAD
+    pyoConnection *conn;
+    pyoBuffer statementBuffer;
+    dpiStmt *stmt;
+    uint64_t rowCount;
+} pyoAsyncDataExecute;
+
+
+static pyoAsyncDataType pyoAsyncDataTypeExecute = {
+    .structSize = sizeof(pyoAsyncDataExecute),
+    .freeDataProc = pyoAsyncDataExecute_free,
+    .runProc = pyoAsyncDataExecute_run,
+    .getResultProc = pyoAsyncDataExecute_getResult
+};
+
+
+//-----------------------------------------------------------------------------
+// pyoAsyncDataExecute_run()
+//   Function that runs asynchronously in ODPI-C. No Python API calls may be
+// made in this function.
+//-----------------------------------------------------------------------------
+static int pyoAsyncDataExecute_run(void *arg, dpiAsync *async,
+        dpiAsyncState *state)
+{
+    pyoAsyncDataExecute *data = (pyoAsyncDataExecute*) arg;
+    uint32_t mode;
+
+    if (dpiConn_prepareStmt(data->conn->handle, 0,
+            (const char*) data->statementBuffer.ptr,
+            data->statementBuffer.size, NULL, 0, &data->stmt) < 0)
+        return -1;
+    mode = (data->conn->autocommit) ? DPI_MODE_EXEC_COMMIT_ON_SUCCESS :
+            DPI_MODE_EXEC_DEFAULT;
+    if (dpiStmt_execute(data->stmt, mode, NULL) < 0)
+        return -1;
+    if (dpiStmt_getRowCount(data->stmt, &data->rowCount) < 0)
+        return -1;
+    if (dpiStmt_close(data->stmt, NULL, 0) < 0)
+        return -1;
+
+    return 0;
+}
+
+
+//-----------------------------------------------------------------------------
+// pyoAsyncDataExecute_free()
+//   Free data associated with asynchronous statement execution function.
+//-----------------------------------------------------------------------------
+static void pyoAsyncDataExecute_free(void *arg)
+{
+    pyoAsyncDataExecute *data = (pyoAsyncDataExecute*) arg;
+
+    pyoBuffer_clear(&data->statementBuffer);
+    if (data->stmt) {
+        dpiStmt_release(data->stmt);
+        data->stmt = NULL;
+    }
+}
+
+
+//-----------------------------------------------------------------------------
+// pyoAsyncDataExecute_getResult()
+//   Return the result that should be returned from the await.
+//-----------------------------------------------------------------------------
+static PyObject *pyoAsyncDataExecute_getResult(void *arg)
+{
+    pyoAsyncDataExecute *data = (pyoAsyncDataExecute*) arg;
+
+    return PyLong_FromUnsignedLongLong(data->rowCount);
+}
+
+
+//-----------------------------------------------------------------------------
 // pyoConnection_new()
 //   Create a new connection object and return it.
 //-----------------------------------------------------------------------------
@@ -365,7 +447,7 @@ static int pyoConnection_init(pyoConnection *conn, PyObject *args,
 
 //-----------------------------------------------------------------------------
 // pyoConnection_connect()
-//   Initialize the connection members.
+//   Connect to the database.
 //-----------------------------------------------------------------------------
 static PyObject *pyoConnection_connect(pyoConnection *conn, PyObject *args,
         PyObject *keywordArgs)
@@ -481,6 +563,36 @@ static PyObject *pyoConnection_connect(pyoConnection *conn, PyObject *args,
             data->userBuffer.size = 0;
         }
     }
+
+    // run asynchronous function
+    if (pyoAsync_run(data) < 0)
+        return NULL;
+
+    Py_RETURN_NONE;
+}
+
+
+//-----------------------------------------------------------------------------
+// pyoConnection_execute()
+//   Execute a statement on the database and return the number of rows that
+// were affected by the statement.
+//-----------------------------------------------------------------------------
+static PyObject *pyoConnection_execute(pyoConnection *conn, PyObject *args)
+{
+    PyObject *futureObj, *statementObj, *argsObj;
+    pyoAsyncDataExecute *data;
+
+    // parse arguments
+    if (!PyArg_ParseTuple(args, "OOO", &futureObj, &statementObj, &argsObj))
+        return NULL;
+
+    // create aysnchronous data
+    if (pyoAsync_allocateData(&pyoAsyncDataTypeExecute, conn->loop, futureObj,
+            (void**) &data) < 0)
+        return NULL;
+    data->conn = conn;
+    if (pyoBuffer_fromObject(&data->statementBuffer, statementObj) < 0)
+        return pyoAsync_freeData(data);
 
     // run asynchronous function
     if (pyoAsync_run(data) < 0)
