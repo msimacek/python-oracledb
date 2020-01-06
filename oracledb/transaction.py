@@ -62,13 +62,15 @@ class Transaction:
         conn = await self._ensure_conn()
         return await conn._execute(sql, params, fetch_array_size)
 
-    async def execute_many(self, sql, params):
+    async def execute_many(self, sql, params, array_dml_row_counts=False,
+            batch_errors=False):
         """
         Execute a SQL statement with multiple rows of input using a connection
         acquired from the pool specifically for this transaction.
         """
         conn = await self._ensure_conn()
-        return await conn._execute_many(sql, params)
+        return await conn._execute_many(sql, params, array_dml_row_counts,
+                batch_errors)
 
     async def rollback(self):
         """

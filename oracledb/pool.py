@@ -80,7 +80,8 @@ class Pool:
         await conn._close()
         return result
 
-    async def execute_many(self, sql, params, connection_params=None):
+    async def execute_many(self, sql, params, connection_params=None,
+            array_dml_row_counts=False, batch_errors=False):
         """
         Acquire a connection from the pool and then execute a SQL statement
         with multiple rows of input. If the SQL statement is executed
@@ -90,7 +91,8 @@ class Pool:
         """
         conn = await self._get_connection(connection_params)
         conn._handle.autocommit = True
-        result = await conn._execute_many(sql, params)
+        result = await conn._execute_many(sql, params, array_dml_row_counts,
+                batch_errors)
         await conn._close()
         return result
 

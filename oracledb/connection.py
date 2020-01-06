@@ -34,9 +34,18 @@ class Connection:
             return_value["rows"] = cursor.fetchall()
         return return_value
 
-    async def _execute_many(self, sql, params):
+    async def _execute_many(self, sql, params, array_dml_row_counts=False,
+            batch_errors=False):
         cursor = self._handle.cursor()
-        await self._pool._run_task(cursor.executemany, sql, params)
+        await self._pool._run_task(cursor.executemany, sql, params,
+                arraydmlrowcounts=array_dml_row_counts,
+                batcherrors=batch_errors)
+        return_value = {}
+        if array_dml_row_counts:
+            return_value["dml_row_counts"] = cursor.getarraydmlrowcounts()
+        if batch_errors:
+            return_value["batch_errors"] = cursor.getbatcherrors()
+        return return_value
 
     async def _ping(self):
         await self._pool._run_task(self._handle.ping)
