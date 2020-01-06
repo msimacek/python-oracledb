@@ -1,16 +1,19 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under BSD license (see LICENSE.txt).
 #------------------------------------------------------------------------------
 
-__version__ = '0.0.1'
+__version__ = "0.0.1"
 
-DRIVER_NAME = "py-oracledb : " + __version__
+from .constants import *
+from .pool import *
+from .params import *
 
-from _oracledb import \
-    Warning, Error, InterfaceError, DatabaseError, DataError, \
-    OperationalError, IntegrityError, InternalError, ProgrammingError, \
-    NotSupportedError
-from .connection import *
-
+async def create_pool(params):
+    """
+    Create a pool with the specified parameters.
+    """
+    pool = Pool()
+    await pool._create(params)
+    return pool

@@ -1,72 +1,45 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under BSD license (see LICENSE.txt).
 #------------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
-# connection.py
-#   Contains definitions for connecting to the database.
-#------------------------------------------------------------------------------
+class Connection:
 
-import asyncio
-import _oracledb
-import oracledb
+    def __init__(self, pool):
+        self._pool = pool
 
-__all__ = ["connect"]
+    async def _close(self):
+        await self._pool._run_task(self._handle.close)
 
-async def connect(user=None, password=None, dsn=None, mode=0, handle=0,
-        events=False, cclass=None, purity=0, new_password=None, edition=None,
-        app_context=[], tag=None, match_any_tag=False, sharding_key=[],
-        super_sharding_key=[], loop=None):
-    """Create a standalone connection to the database."""
+    async def _commit(self):
+        await self._pool._run_task(self._handle.commit)
 
-    # split dsn and password from user if they are present and no dsn and
-    # password have been specified
-    if isinstance(user, str):
-        if not dsn:
-            pos = user.find("@")
-            if pos >= 0:
-                dsn = user[pos + 1:]
-                user = user[:pos]
-        if not password:
-            pos = user.find("/")
-            if pos >= 0:
-                password = user[pos + 1:]
-                user = user[:pos]
+    async def _connect(self, params):
+        self._handle = await self._pool._run_task(self._pool._handle.acquire,
+                user=params.user_name, password=params.password,
+                cclass=params.connection_class, purity=params.purity,
+                tag=params.tag, matchanytag=params.match_any_tag,
+                shardingkey=params.sharding_key,
+                supershardingkey=params.super_sharding_key)
 
-    # create future which will be awaited (marked done by _oracledb)
-    if loop is None:
-        loop = asyncio.get_event_loop()
-    future = loop.create_future()
+    async def _execute(self, sql, params, fetch_array_size):
+        cursor = self._handle.cursor()
+        cursor.arraysize = fetch_array_size
+        result = await self._pool._run_task(cursor.execute, sql, params or [])
+        return_value = {}
+        if result is None:
+            return_value["row_count"] = cursor.rowcount
+        else:
+            return_value["rows"] = cursor.fetchall()
+        return return_value
 
-    # call C function to perform actual connection; this is run asynchronously
-    # so we await on the future for it to be completed
-    conn = Connection(loop)
-    conn._connect(future, oracledb.DRIVER_NAME, user=user, password=password,
-            dsn=dsn, handle=handle, events=events, cclass=cclass,
-            purity=purity, new_password=new_password, edition=edition,
-            app_context=app_context, tag=tag, match_any_tag=match_any_tag,
-            sharding_key=sharding_key, super_sharding_key=super_sharding_key)
-    await future
-    return conn
+    async def _execute_many(self, sql, params):
+        cursor = self._handle.cursor()
+        await self._pool._run_task(cursor.executemany, sql, params)
 
+    async def _ping(self):
+        await self._pool._run_task(self._handle.ping)
 
-class Connection(_oracledb.Connection):
-
-    async def execute(self, sql, *args, **kwargs):
-        if args and kwargs:
-            raise oracledb.InterfaceError("positional and keyword arguments " +
-                    "cannot be specified at the same time")
-        future = self.loop.create_future()
-        self._execute(future, sql, args or kwargs)
-        return await future
-
-    async def fetch(self, sql, *args, **kwargs):
-        if args and kwargs:
-            raise oracledb.InterfaceError("positional and keyword arguments " +
-                    "cannot be specified at the same time")
-        future = self.loop.create_future()
-        self._fetch(future, sql, args or kwargs)
-        return await future
-
+    async def _rollback(self):
+        await self._pool._run_task(self._handle.rollback)
