@@ -1,54 +1,69 @@
 #------------------------------------------------------------------------------
 # Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
-#
-# Licensed under BSD license (see LICENSE.txt).
 #------------------------------------------------------------------------------
 
-class Connection:
+from . import errors, exceptions
+from .thick import driver as thick_driver
 
-    def __init__(self, pool):
-        self._pool = pool
 
-    async def _close(self):
-        await self._pool._run_task(self._handle.close)
+def connect(dsn=None, *, user=None, password=None, host=None, port=None,
+        service_name=None, thin=True):
+    """
+    Creates a connection to the database and returns a Connection object.
+    """
 
-    async def _commit(self):
-        await self._pool._run_task(self._handle.commit)
+    # parse dsn, if present; dsn is expected to be in the form
+    # user/password@host:port/service with all parts optional
+    if dsn is not None:
 
-    async def _connect(self, params):
-        self._handle = await self._pool._run_task(self._pool._handle.acquire,
-                user=params.user_name, password=params.password,
-                cclass=params.connection_class, purity=params.purity,
-                tag=params.tag, matchanytag=params.match_any_tag,
-                shardingkey=params.sharding_key,
-                supershardingkey=params.super_sharding_key)
+        # extract user/password from the dsn, if present
+        pos = dsn.find("@")
+        if pos >= 0:
+            credentials = dsn[:pos]
+            dsn = dsn[pos + 1:]
+            pos = credentials.find("/")
+            if pos >= 0:
+                if user is None:
+                    user = credentials[:pos]
+                if password is None:
+                    password = credentials[pos + 1:]
+            elif user is None:
+                user = credentials
 
-    async def _execute(self, sql, params, fetch_array_size):
-        cursor = self._handle.cursor()
-        cursor.arraysize = fetch_array_size
-        result = await self._pool._run_task(cursor.execute, sql, params or [])
-        return_value = {}
-        if result is None:
-            return_value["row_count"] = cursor.rowcount
-        else:
-            return_value["rows"] = cursor.fetchall()
-        return return_value
+        # extract host:port/service, if present
+        pos = dsn.find("/")
+        if pos >= 0:
+            if service_name is None:
+                service_name = dsn[pos + 1:]
+            dsn = dsn[:pos]
+            pos = dsn.find(":")
+            if pos >= 0:
+                if port is None:
+                    port = int(dsn[pos + 1:])
+                    dsn = dsn[:pos]
+            if host is None:
+                host = dsn
 
-    async def _execute_many(self, sql, params, array_dml_row_counts=False,
-            batch_errors=False):
-        cursor = self._handle.cursor()
-        await self._pool._run_task(cursor.executemany, sql, params,
-                arraydmlrowcounts=array_dml_row_counts,
-                batcherrors=batch_errors)
-        return_value = {}
-        if array_dml_row_counts:
-            return_value["dml_row_counts"] = cursor.getarraydmlrowcounts()
-        if batch_errors:
-            return_value["batch_errors"] = cursor.getbatcherrors()
-        return return_value
+    # a service name is mandatory
+    if service_name is None:
+        raise exceptions.InterfaceError("a service name must be specified")
 
-    async def _ping(self):
-        await self._pool._run_task(self._handle.ping)
+    # assign defaults to host and port, if needed
+    if port is None:
+        port = 1521
+    if host is None:
+        host = "localhost"
 
-    async def _rollback(self):
-        await self._pool._run_task(self._handle.rollback)
+    # establish connection
+    connect_data = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)" + \
+            f"(HOST={host})(PORT={port}))" + \
+            f"(CONNECT_DATA=(SERVICE_NAME={service_name})))"
+    normalized_dsn = f"{host}:{port}/{service_name}"
+    if thin:
+        errors._raise_from_string(exceptions.InterfaceError,
+                "Thin driver not implemented yet")
+    else:
+        cls = thick_driver.Connection
+    conn = cls(user, normalized_dsn)
+    conn._connect(connect_data, password)
+    return conn

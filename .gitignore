@@ -2,3 +2,7 @@ __pycache__/
 build/
 dist/
 doc/build
+oracledb/common/driver.c
+oracledb/thick/driver.c
+oracledb/common/*.so
+oracledb/thick/*.so
