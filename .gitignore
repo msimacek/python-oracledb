@@ -4,5 +4,7 @@ dist/
 doc/build
 oracledb/common/driver.c
 oracledb/thick/driver.c
+oracledb/thin/driver.c
 oracledb/common/*.so
 oracledb/thick/*.so
+oracledb/thin/*.so

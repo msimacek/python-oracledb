@@ -46,6 +46,10 @@ setup(
             ["oracledb/common/driver.pyx"]
         ),
         Extension(
+            "oracledb.thin.driver",
+            ["oracledb/thin/driver.pyx"]
+        ),
+        Extension(
             "oracledb.thick.driver",
             ["oracledb/thick/driver.pyx"],
             include_dirs=["oracledb/thick/odpi/include"]

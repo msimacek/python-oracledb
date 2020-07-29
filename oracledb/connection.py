@@ -4,6 +4,7 @@
 
 from . import errors, exceptions
 from .thick import driver as thick_driver
+from .thin import driver as thin_driver
 
 
 def connect(dsn=None, *, user=None, password=None, host=None, port=None,
@@ -60,10 +61,9 @@ def connect(dsn=None, *, user=None, password=None, host=None, port=None,
             f"(CONNECT_DATA=(SERVICE_NAME={service_name})))"
     normalized_dsn = f"{host}:{port}/{service_name}"
     if thin:
-        errors._raise_from_string(exceptions.InterfaceError,
-                "Thin driver not implemented yet")
+        cls = thin_driver.Connection
     else:
         cls = thick_driver.Connection
     conn = cls(user, normalized_dsn)
-    conn._connect(connect_data, password)
+    conn._connect(host, port, connect_data, password)
     return conn

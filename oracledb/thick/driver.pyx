@@ -17,7 +17,7 @@ cdef dpiContext *driver_context = NULL
 cdef class Connection(BaseConnection):
     cdef dpiConn *_handle
 
-    def _connect(self, connect_string, password):
+    def _connect(self, host, port, connect_string, password):
         cdef bytes user_name_bytes, password_bytes, connect_string_bytes
         cdef uint32_t user_name_length = 0, password_length = 0
         cdef const char *connect_string_ptr = NULL
