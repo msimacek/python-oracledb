@@ -53,7 +53,6 @@ cdef int32_t* OPERATIONAL_ERROR_CODES = [
 cdef int is_code_in_array(int32_t code, int32_t *ptr):
     cdef int ix = 0
     while ptr[ix] != 0:
-        print("Checking error code:", ptr[ix])
         if ptr[ix] == code:
             return 1
         ix += 1
