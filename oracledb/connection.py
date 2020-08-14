@@ -6,7 +6,6 @@ from . import errors, exceptions
 from .thick import driver as thick_driver
 from .thin import driver as thin_driver
 
-
 def connect(dsn=None, *, user=None, password=None, host=None, port=None,
         service_name=None, thin=True):
     """

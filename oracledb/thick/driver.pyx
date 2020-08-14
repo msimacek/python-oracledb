@@ -7,7 +7,8 @@
 from .. import constants, errors, exceptions
 
 from ..common.driver cimport get_exception_class
-from ..common.driver cimport Connection as BaseConnection
+from ..common.driver cimport BaseConnection
+from ..common.driver cimport BaseCursor
 from libc.string cimport memset
 
 include "odpi.pxd"
@@ -17,16 +18,21 @@ cdef dpiContext *driver_context = NULL
 cdef class Connection(BaseConnection):
     cdef dpiConn *_handle
 
+    def __dealloc__(self):
+        if self._handle != NULL:
+            dpiConn_release(self._handle)
+
     def _connect(self, host, port, connect_string, password):
-        cdef bytes user_name_bytes, password_bytes, connect_string_bytes
-        cdef uint32_t user_name_length = 0, password_length = 0
-        cdef const char *connect_string_ptr = NULL
-        cdef dpiCommonCreateParams common_params
-        cdef uint32_t connect_string_length = 0
-        cdef const char *user_name_ptr = NULL
-        cdef const char *password_ptr = NULL
-        cdef dpiConnCreateParams conn_params
-        cdef int status
+        cdef:
+            bytes user_name_bytes, password_bytes, connect_string_bytes
+            uint32_t user_name_length = 0, password_length = 0
+            const char *connect_string_ptr = NULL
+            dpiCommonCreateParams common_params
+            uint32_t connect_string_length = 0
+            const char *user_name_ptr = NULL
+            const char *password_ptr = NULL
+            dpiConnCreateParams conn_params
+            int status
         if driver_context == NULL:
             init_oracle_client()
         if dpiContext_initCommonCreateParams(driver_context,
@@ -54,6 +60,85 @@ cdef class Connection(BaseConnection):
                                     &conn_params, &self._handle)
         if status < 0:
             _raise_from_odpi()
+        self._is_connected = True
+
+    def cursor(self):
+        return Cursor(self)
+
+
+cdef class Cursor(BaseCursor):
+    cdef:
+        readonly Connection connection
+        dpiStmt *_handle
+        dpiStmtInfo _stmt_info;
+        str _tag
+
+    def __dealloc__(self):
+        if self._handle != NULL:
+            dpiStmt_release(self._handle)
+
+    cdef int _prepare(Cursor self, str statement, str tag=None) except -1:
+        """
+        Internal method used for preparing statements for execution.
+        """
+        cdef:
+            uint32_t statement_bytes_length, tag_bytes_length = 0
+            bytes statement_bytes, tag_bytes
+            const char *tag_ptr = NULL
+            const char *statement_ptr
+            int status
+        if statement is None and self.statement is None:
+            errors._raise_from_string(exceptions.ProgrammingError,
+                    "no statement specified and no prior statement prepared")
+        # nothing to do if the statement is identical to the one already
+        # stored, but go ahead and prepare anyway for DDL statements
+        if statement is None or statement == self.statement:
+            if self._handle != NULL and not self._stmt_info.isDDL:
+                return 0
+            statement = self.statement
+        self.statement = statement
+        statement_bytes = statement.encode()
+        statement_ptr = <const char*> statement_bytes
+        statement_bytes_length = <uint32_t> len(statement_bytes)
+        if tag is not None:
+            self._tag = tag
+            tag_bytes = tag.encode()
+            tag_bytes_length = <uint32_t> len(tag_bytes)
+            tag_ptr = <const char*> tag_bytes
+        with nogil:
+            if self._handle != NULL:
+                dpiStmt_release(self._handle)
+                self._handle = NULL
+            status = dpiConn_prepareStmt(self.connection._handle, 0,
+                                         statement_ptr, statement_bytes_length,
+                                         tag_ptr, tag_bytes_length,
+                                         &self._handle)
+            if status == 0:
+                status = dpiStmt_getInfo(self._handle, &self._stmt_info)
+            if status == 0 and self._stmt_info.isQuery:
+                status = dpiStmt_setFetchArraySize(self._handle,
+                                                   self.arraysize)
+                if status == 0 \
+                        and self.prefetchrows != DPI_DEFAULT_PREFETCH_ROWS:
+                    status = dpiStmt_setPrefetchRows(self._handle,
+                                                     self.prefetchrows)
+        if status < 0:
+            _raise_from_odpi()
+
+    def execute(self, statement=None, parameters=None, **keyword_parameters):
+
+        # verify parameters
+        if parameters and keyword_parameters:
+            errors._raise_from_string(exceptions.InterfaceError,
+                    "expecting argument or keyword arguments, not both")
+        if parameters is not None \
+                and not isinstance(parameters, (list, tuple, dict)):
+            errors._raise_from_string(exceptions.InterfaceError,
+                    "expecting a dictionary, list or tuple, or keyword args")
+        self._verify_open()
+
+        # prepare statement, if necessary
+        self._prepare(statement)
 
 
 cdef int _raise_from_info(dpiErrorInfo *error_info) except -1:

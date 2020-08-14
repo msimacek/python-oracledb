@@ -10,6 +10,7 @@ cdef extern from "odpi/embed/dpi.c":
     # constants
     unsigned int DPI_MAJOR_VERSION
     unsigned int DPI_MINOR_VERSION
+    uint32_t DPI_DEFAULT_PREFETCH_ROWS
 
     # opaque handles
     ctypedef struct dpiConn:
@@ -24,6 +25,9 @@ cdef extern from "odpi/embed/dpi.c":
     ctypedef struct dpiObject:
         pass
 
+    ctypedef struct dpiObjectType:
+        pass
+
     ctypedef struct dpiPool:
         pass
 
@@ -31,6 +35,9 @@ cdef extern from "odpi/embed/dpi.c":
         pass
 
     ctypedef struct dpiStmt:
+        pass
+
+    ctypedef struct dpiVar:
         pass
 
     # complex native data types
@@ -130,6 +137,10 @@ cdef extern from "odpi/embed/dpi.c":
         dpiStmt *asStmt
         dpiRowid *asRowid
 
+    ctypedef struct dpiData:
+        int isNull
+        dpiDataBuffer value
+
     ctypedef struct dpiErrorInfo:
         int32_t code
         uint16_t offset16
@@ -148,6 +159,13 @@ cdef extern from "odpi/embed/dpi.c":
         uint32_t nativeTypeNum
         dpiDataBuffer value
 
+    ctypedef struct dpiStmtInfo:
+        int isQuery
+        int isPLSQL
+        int isDDL
+        int isDML
+        uint16_t statementType
+        int isReturning
 
     # functions
     int dpiConn_create(const dpiContext *context, const char *userName,
@@ -156,6 +174,17 @@ cdef extern from "odpi/embed/dpi.c":
             uint32_t connectStringLength,
             const dpiCommonCreateParams *commonParams,
             dpiConnCreateParams *createParams, dpiConn **conn) nogil
+
+    int dpiConn_newVar(dpiConn *conn, uint32_t oracleTypeNum,
+            uint32_t nativeTypeNum, uint32_t maxArraySize, uint32_t size,
+            int sizeIsBytes, int isArray, dpiObjectType *objType, dpiVar **var,
+            dpiData **data) nogil
+
+    int dpiConn_prepareStmt(dpiConn *conn, int scrollable, const char *sql,
+            uint32_t sqlLength, const char *tag, uint32_t tagLength,
+            dpiStmt **stmt) nogil
+
+    int dpiConn_release(dpiConn *conn) nogil
 
     int dpiContext_createWithParams(unsigned int majorVersion,
             unsigned int minorVersion, dpiContextCreateParams *params,
@@ -169,3 +198,28 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiContext_initConnCreateParams(const dpiContext *context,
             dpiConnCreateParams *params) nogil
+
+    int dpiStmt_bindByName(dpiStmt *stmt, const char *name,
+            uint32_t nameLength, dpiVar *var) nogil
+
+    int dpiStmt_bindByPos(dpiStmt *stmt, uint32_t pos, dpiVar *var) nogil
+
+    int dpiStmt_define(dpiStmt *stmt, uint32_t pos, dpiVar *var) nogil
+
+    int dpiStmt_execute(dpiStmt *stmt, uint32_t mode,
+            uint32_t *numQueryColumns) nogil
+
+    int dpiStmt_executeMany(dpiStmt *stmt, uint32_t mode,
+            uint32_t numIters) nogil
+
+    int dpiStmt_fetchRows(dpiStmt *stmt, uint32_t maxRows,
+            uint32_t *bufferRowIndex, uint32_t *numRowsFetched,
+            int *moreRows) nogil
+
+    int dpiStmt_getInfo(dpiStmt *stmt, dpiStmtInfo *info) nogil
+
+    int dpiStmt_release(dpiStmt *stmt) nogil
+
+    int dpiStmt_setFetchArraySize(dpiStmt *stmt, uint32_t arraySize) nogil
+
+    int dpiStmt_setPrefetchRows(dpiStmt *stmt, uint32_t numRows) nogil

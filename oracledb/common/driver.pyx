@@ -7,15 +7,45 @@
 from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 
-from .. import exceptions
+from .. import errors, exceptions
 
-cdef int32_t* INTEGRITY_CODES = [
+cdef int32_t* INTEGRITY_ERROR_CODES = [
         1,          # unique constraint violated
         1400,       # cannot insert NULL
         2290,       # check constraint violated
         2291,       # integrity constraint violated - parent key not found
         2292,       # integrity constraint violated - child record found
         40479,      # internal JSON serializer error
+        0
+]
+
+cdef int32_t* OPERATIONAL_ERROR_CODES = [
+        22,         # invalid session ID; access denied
+        378,        # buffer pools cannot be created as specified
+        600,        # internal error code
+        602,        # internal programming exception
+        603,        # ORACLE server session terminated by fatal error
+        604,        # error occurred at recursive SQL level
+        609,        # could not attach to incoming connection
+        1012,       # not logged on
+        1013,       # user requested cancel of current operation
+        1033,       # ORACLE initialization or shutdown in progress
+        1034,       # ORACLE not available
+        1041,       # internal error. hostdef extension doesn't exist
+        1043,       # user side memory corruption
+        1089,       # immediate shutdown or close in progress
+        1090,       # shutdown in progress - connection is not permitted
+        1092,       # ORACLE instance terminated. Disconnection forced
+        3113,       # end-of-file on communication channel
+        3114,       # not connected to ORACLE
+        3122,       # attempt to close ORACLE-side window on user side
+        3135,       # connection lost contact
+        12153,      # TNS:not connected
+        12203,      # TNS:unable to connect to destination
+        12500,      # TNS:listener failed to start a dedicated server process
+        12571,      # TNS:packet writer failure
+        27146,      # post/wait initialization failed
+        28511,      # lost RPC connection to heterogeneous remote agent
         0
 ]
 
@@ -31,12 +61,14 @@ cdef int is_code_in_array(int32_t code, int32_t *ptr):
 
 
 cdef object get_exception_class(int32_t code):
-    if is_code_in_array(code, INTEGRITY_CODES):
+    if is_code_in_array(code, INTEGRITY_ERROR_CODES):
+        return exceptions.IntegrityError
+    if is_code_in_array(code, OPERATIONAL_ERROR_CODES):
         return exceptions.IntegrityError
     return exceptions.DatabaseError
 
 
-cdef class Connection:
+cdef class BaseConnection:
 
     def __init__(self, user, dsn):
         self.user = user
@@ -47,3 +79,27 @@ cdef class Connection:
         if self.user is None:
             return f"{cls_name} to externally identified user"
         return f"{cls_name} to {self.user}@{self.dsn}"
+
+    cdef int _verify_connected(self) except -1:
+        """
+        Verifies that the connection is connected to the database. If it is not
+        an exception is raised.
+        """
+        if not self._is_connected:
+            errors._raise_from_string(exceptions.InterfaceError,
+                                      "not connected")
+
+cdef class BaseCursor:
+
+    def __init__(self, connection):
+        self.connection = connection
+        self._is_open = True
+
+    cdef int _verify_open(self) except -1:
+        """
+        Verifies that the cursor is open and the associated connection is
+        connected. If either condition is false an exception is raised.
+        """
+        if not self._is_open:
+            errors._raise_from_string(exceptions.InterfaceError, "not open")
+        self.connection._verify_connected()
