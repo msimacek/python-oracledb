@@ -90,8 +90,7 @@ cdef class BaseConnection:
 
 cdef class BaseCursor:
 
-    def __init__(self, connection):
-        self.connection = connection
+    def __cinit__(self, connection):
         self._is_open = True
 
     cdef int _verify_open(self) except -1:
@@ -99,6 +98,8 @@ cdef class BaseCursor:
         Verifies that the cursor is open and the associated connection is
         connected. If either condition is false an exception is raised.
         """
+        cdef BaseConnection connection
         if not self._is_open:
             errors._raise_from_string(exceptions.InterfaceError, "not open")
-        self.connection._verify_connected()
+        connection = <BaseConnection> self.connection
+        connection._verify_connected()

@@ -69,13 +69,34 @@ cdef class Connection(BaseConnection):
 cdef class Cursor(BaseCursor):
     cdef:
         readonly Connection connection
+        readonly uint64_t rowcount
         dpiStmt *_handle
         dpiStmtInfo _stmt_info;
         str _tag
 
+    def __cinit__(self, connection):
+        self.connection = connection
+
     def __dealloc__(self):
         if self._handle != NULL:
             dpiStmt_release(self._handle)
+
+    cdef int _execute(Cursor self) except -1:
+        """
+        Internal method for executing a statement.
+        """
+        cdef:
+            uint64_t rowcount
+            uint32_t mode, num_query_cols
+            int status
+        mode = DPI_MODE_EXEC_DEFAULT
+        with nogil:
+            status = dpiStmt_execute(self._handle, mode, &num_query_cols)
+            if status == 0:
+                status = dpiStmt_getRowCount(self._handle, &rowcount)
+        if status < 0:
+            _raise_from_odpi()
+        self.rowcount = rowcount
 
     cdef int _prepare(Cursor self, str statement, str tag=None) except -1:
         """
@@ -126,6 +147,9 @@ cdef class Cursor(BaseCursor):
             _raise_from_odpi()
 
     def execute(self, statement=None, parameters=None, **keyword_parameters):
+        """
+        Executes a statement, passing any parameters to the database.
+        """
 
         # verify parameters
         if parameters and keyword_parameters:
@@ -137,8 +161,9 @@ cdef class Cursor(BaseCursor):
                     "expecting a dictionary, list or tuple, or keyword args")
         self._verify_open()
 
-        # prepare statement, if necessary
+        # prepare statement, if necessary, and then execute it
         self._prepare(statement)
+        self._execute()
 
 
 cdef int _raise_from_info(dpiErrorInfo *error_info) except -1:

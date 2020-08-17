@@ -11,6 +11,7 @@ cdef extern from "odpi/embed/dpi.c":
     unsigned int DPI_MAJOR_VERSION
     unsigned int DPI_MINOR_VERSION
     uint32_t DPI_DEFAULT_PREFETCH_ROWS
+    uint32_t DPI_MODE_EXEC_DEFAULT
 
     # opaque handles
     ctypedef struct dpiConn:
@@ -217,6 +218,8 @@ cdef extern from "odpi/embed/dpi.c":
             int *moreRows) nogil
 
     int dpiStmt_getInfo(dpiStmt *stmt, dpiStmtInfo *info) nogil
+
+    int dpiStmt_getRowCount(dpiStmt *stmt, uint64_t *count) nogil
 
     int dpiStmt_release(dpiStmt *stmt) nogil
 
