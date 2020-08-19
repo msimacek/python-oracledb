@@ -1,0 +1,59 @@
+#------------------------------------------------------------------------------
+# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+# connection.pyx
+#   Cython file defining the connection class (embedded in driver.pyx).
+#------------------------------------------------------------------------------
+
+cdef class Connection(BaseConnection):
+    cdef:
+        dpiConn *_handle
+
+    def __dealloc__(self):
+        if self._handle != NULL:
+            dpiConn_release(self._handle)
+
+    def _connect(self, host, port, connect_string, password):
+        cdef:
+            bytes user_name_bytes, password_bytes, connect_string_bytes
+            uint32_t user_name_length = 0, password_length = 0
+            const char *connect_string_ptr = NULL
+            dpiCommonCreateParams common_params
+            uint32_t connect_string_length = 0
+            const char *user_name_ptr = NULL
+            const char *password_ptr = NULL
+            dpiConnCreateParams conn_params
+            int status
+        if driver_context == NULL:
+            init_oracle_client()
+        if dpiContext_initCommonCreateParams(driver_context,
+                                             &common_params) < 0:
+            _raise_from_odpi()
+        if dpiContext_initConnCreateParams(driver_context, &conn_params) < 0:
+            _raise_from_odpi()
+        if self.user:
+            user_name_bytes = self.user.encode()
+            user_name_ptr = user_name_bytes
+            user_name_length = <uint32_t> len(user_name_bytes)
+        if password:
+            password_bytes = password.encode()
+            password_ptr = password_bytes
+            password_length = <uint32_t> len(password_bytes)
+        if connect_string:
+            connect_string_bytes = connect_string.encode()
+            connect_string_ptr = connect_string_bytes
+            connect_string_length = <uint32_t> len(connect_string_bytes)
+        with nogil:
+            status = dpiConn_create(driver_context, user_name_ptr,
+                                    user_name_length, password_ptr,
+                                    password_length, connect_string_ptr,
+                                    connect_string_length, &common_params,
+                                    &conn_params, &self._handle)
+        if status < 0:
+            _raise_from_odpi()
+        self._is_connected = True
+
+    def cursor(self):
+        return Cursor(self)
