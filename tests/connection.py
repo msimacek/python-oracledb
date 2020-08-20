@@ -3,7 +3,6 @@
 #------------------------------------------------------------------------------
 
 import base
-
 import oracledb
 
 class TestCase(base.BaseTestCase):

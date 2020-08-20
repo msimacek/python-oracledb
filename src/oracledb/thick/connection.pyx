@@ -10,6 +10,7 @@
 cdef class Connection(BaseConnection):
     cdef:
         dpiConn *_handle
+        public str tag
 
     def __dealloc__(self):
         if self._handle != NULL:
@@ -54,6 +55,27 @@ cdef class Connection(BaseConnection):
         if status < 0:
             _raise_from_odpi()
         self._is_connected = True
+
+    def close(self):
+        cdef:
+            uint32_t mode = DPI_MODE_CONN_CLOSE_DEFAULT
+            const char *tag_ptr = NULL
+            uint32_t tag_length = 0
+            bytes tag_bytes
+            int status
+        self._verify_connected()
+        if self.tag:
+            mode = DPI_MODE_CONN_CLOSE_RETAG
+            tag_bytes = self.tag.encode()
+            tag_ptr = tag_bytes
+            tag_length = <uint32_t> len(tag_bytes)
+        with nogil:
+            status = dpiConn_close(self._handle, mode, tag_ptr, tag_length)
+            if status == DPI_SUCCESS:
+                dpiConn_release(self._handle)
+        if status < 0:
+            _raise_from_odpi()
+        self._handle = NULL
 
     def cursor(self):
         return Cursor(self)

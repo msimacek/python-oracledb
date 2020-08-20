@@ -96,7 +96,7 @@ def run_test_cases():
 
 def get_connection(**kwargs):
     return oracledb.connect(get_connect_string(), user=get_main_user(),
-            password=get_main_password(), **kwargs)
+            password=get_main_password(), thin=False, **kwargs)
 
 class BaseTestCase(unittest.TestCase):
 

@@ -22,4 +22,5 @@ cdef dpiContext *driver_context = NULL
 
 include "connection.pyx"
 include "cursor.pyx"
+include "var.pyx"
 include "utils.pyx"

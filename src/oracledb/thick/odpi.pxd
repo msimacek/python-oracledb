@@ -7,11 +7,27 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 
 cdef extern from "odpi/embed/dpi.c":
 
-    # constants
+    # version constants
     unsigned int DPI_MAJOR_VERSION
     unsigned int DPI_MINOR_VERSION
+
+    # success/failure constants
+    int DPI_SUCCESS
+    int DPI_FAILURE
+
+    # defaults
     uint32_t DPI_DEFAULT_PREFETCH_ROWS
+
+    # execution modes
     uint32_t DPI_MODE_EXEC_DEFAULT
+    uint32_t DPI_MODE_EXEC_COMMIT_ON_SUCCESS
+    uint32_t DPI_MODE_EXEC_BATCH_ERRORS
+    uint32_t DPI_MODE_EXEC_ARRAY_DML_ROWCOUNTS
+
+    # connection close modes
+    uint32_t DPI_MODE_CONN_CLOSE_DEFAULT
+    uint32_t DPI_MODE_CONN_CLOSE_DROP
+    uint32_t DPI_MODE_CONN_CLOSE_RETAG
 
     # opaque handles
     ctypedef struct dpiConn:
@@ -169,6 +185,9 @@ cdef extern from "odpi/embed/dpi.c":
         int isReturning
 
     # functions
+    int dpiConn_close(dpiConn *conn, uint32_t mode, const char *tag,
+            uint32_t tagLength) nogil
+
     int dpiConn_create(const dpiContext *context, const char *userName,
             uint32_t userNameLength, const char *password,
             uint32_t passwordLength, const char *connectString,

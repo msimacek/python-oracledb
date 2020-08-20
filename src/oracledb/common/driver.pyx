@@ -103,3 +103,31 @@ cdef class BaseCursor:
             errors._raise_from_string(exceptions.InterfaceError, "not open")
         connection = <BaseConnection> self.connection
         connection._verify_connected()
+
+
+cdef class ApiType:
+
+    def __init__(self, name, *db_types):
+        self.name = name
+        self.db_types = db_types
+
+    def __eq__(self, other):
+        if isinstance(other, DbType):
+            return other in self.db_types
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.name)
+
+    def __repr__(self):
+        return f"<ApiType {self.name}>"
+
+
+cdef class DbType:
+
+    def __init__(self, num, name):
+        self.num = num
+        self.name = name
+
+    def __repr__(self):
+        return f"<DbType {self.name}>"

@@ -25,4 +25,16 @@ cdef class BaseCursor:
     cdef int _verify_open(self) except -1
 
 
+cdef class ApiType:
+    cdef:
+        readonly name
+        tuple db_types
+
+
+cdef class DbType:
+    cdef:
+        readonly uint32_t num
+        readonly str name
+
+
 cdef object get_exception_class(int32_t code)
