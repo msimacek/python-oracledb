@@ -7,15 +7,9 @@
 #   Cython file defining the variable class (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
-cdef class Variable:
+cdef class Var(BaseVar):
     cdef:
-        readonly object inconverter
-        readonly object outconverter
         readonly uint32_t buffer_size
-        readonly uint32_t num_elements
-        readonly bint is_array
-        readonly uint32_t size
-        readonly DbType type
         dpiVar *_handle
         dpiData *_data
         Connection _connection
@@ -26,7 +20,7 @@ cdef class Variable:
         if self._handle != NULL:
             dpiVar_release(self._handle)
 
-    cdef uint32_t _get_actual_elements(Variable self) except *:
+    cdef uint32_t _get_actual_elements(self) except *:
         cdef uint32_t num_elements
         if not self.is_array:
             return self.num_elements
@@ -34,8 +28,7 @@ cdef class Variable:
             _raise_from_odpi()
         return num_elements
 
-    cdef list _get_array_value(Variable self, uint32_t num_elements,
-                                 dpiData *data):
+    cdef list _get_array_value(self, uint32_t num_elements, dpiData *data):
         cdef:
             list return_value
             object element_value
@@ -47,7 +40,7 @@ cdef class Variable:
             cpython.PyList_SET_ITEM(return_value, i, element_value)
         return return_value
 
-    cdef object _get_single_value(Variable self, dpiData *data, uint32_t pos):
+    cdef object _get_single_value(self, dpiData *data, uint32_t pos):
         cdef object value
         if data:
             data = &data[pos]
@@ -62,10 +55,10 @@ cdef class Variable:
         return value
 
     @staticmethod
-    cdef Variable new_var(Connection connection, DbType dbtype,
-                          uint32_t num_elements, uint32_t size,
-                          bint is_array=False):
-        cdef Variable var = Variable.__new__(Variable)
+    cdef Var new_var(Connection connection, DbType dbtype,
+                     uint32_t num_elements, uint32_t size,
+                     bint is_array=False):
+        cdef Var var = Var.__new__(Var)
         var._connection = connection
         var.type = dbtype
         var.size = size

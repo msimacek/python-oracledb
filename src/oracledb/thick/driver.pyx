@@ -21,7 +21,7 @@ cydatetime.import_datetime()
 from .. import constants, errors, exceptions
 
 from ..common.driver cimport get_exception_class
-from ..common.driver cimport BaseConnection, BaseCursor, DbType
+from ..common.driver cimport BaseConnection, BaseCursor, BaseVar, DbType
 from libc.string cimport memchr, memset
 
 include "odpi.pxd"

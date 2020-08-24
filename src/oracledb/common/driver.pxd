@@ -6,6 +6,21 @@
 
 from libc.stdint cimport int32_t, uint32_t, uint64_t
 
+cdef class ApiType:
+    cdef:
+        readonly name
+        tuple db_types
+
+
+cdef class DbType:
+    cdef:
+        readonly uint32_t num
+        readonly str name
+
+    @staticmethod
+    cdef DbType from_num(uint32_t num)
+
+
 cdef class BaseConnection:
     cdef:
         readonly str user
@@ -37,19 +52,14 @@ cdef class BaseCursor:
     cdef int _verify_open(self) except -1
 
 
-cdef class ApiType:
+cdef class BaseVar:
     cdef:
-        readonly name
-        tuple db_types
-
-
-cdef class DbType:
-    cdef:
-        readonly uint32_t num
-        readonly str name
-
-    @staticmethod
-    cdef DbType from_num(uint32_t num)
+        readonly object inconverter
+        readonly object outconverter
+        readonly uint32_t num_elements
+        readonly bint is_array
+        readonly uint32_t size
+        readonly DbType type
 
 
 cdef object get_exception_class(int32_t code)

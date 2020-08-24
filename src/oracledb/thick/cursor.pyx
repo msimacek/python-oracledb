@@ -35,7 +35,7 @@ cdef class Cursor(BaseCursor):
         cdef:
             Py_ssize_t i, num_vars
             object row, value
-            Variable var
+            Var var
         num_vars = cpython.PyList_GET_SIZE(self._fetch_vars)
         row = cpython.PyTuple_New(num_vars)
         for i in range(num_vars):
@@ -110,7 +110,7 @@ cdef class Cursor(BaseCursor):
         if found:
             return self._create_row(buffer_row_index)
 
-    cdef Variable _get_define_var(self, uint32_t pos):
+    cdef Var _get_define_var(self, uint32_t pos):
         """
         Internal method that returns the variable that will be used for
         fetching data in the specified position. If an output type handler is
@@ -123,7 +123,7 @@ cdef class Cursor(BaseCursor):
             dpiQueryInfo query_info
             DbType dbtype
             uint32_t size
-            Variable var
+            Var var
             int status
             str name
         if dpiStmt_getQueryInfo(self._handle, pos, &query_info) < 0:
@@ -140,13 +140,13 @@ cdef class Cursor(BaseCursor):
             result = type_handler(self, name, dbtype, size,
                                   query_info.typeInfo.precision,
                                   query_info.typeInfo.scale)
-            if isinstance(result, Variable):
+            if isinstance(result, Var):
                 return result
             elif result is not None:
                 message = "expecting variable from output type handler"
                 errors._raise_from_error(TypeError, message)
-        var = Variable.new_var(self.connection, dbtype, self._fetch_array_size,
-                               size)
+        var = Var.new_var(self.connection, dbtype, self._fetch_array_size,
+                          size)
         if dbtype.num == DPI_ORACLE_TYPE_NUMBER:
             type_info = &query_info.typeInfo
             if type_info.scale == 0 \
@@ -161,7 +161,7 @@ cdef class Cursor(BaseCursor):
         """
         cdef:
             uint32_t i, size
-            Variable var
+            Var var
 
         # initialize fetching variables; these are used to reduce the number of
         # times that the GIL is released/acquired -- as there is a significant
