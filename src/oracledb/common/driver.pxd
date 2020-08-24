@@ -23,11 +23,16 @@ cdef class BaseCursor:
         public uint32_t prefetchrows
         public object outputtypehandler
         public object rowfactory
+        list _fetch_vars
         bint _is_open
 
     cdef int _execute(self) except -1
 
+    cdef object _fetch_next_row(self)
+
     cdef int _prepare(self, str statement, str tag=*) except -1
+
+    cdef int _verify_fetch(self) except -1
 
     cdef int _verify_open(self) except -1
 

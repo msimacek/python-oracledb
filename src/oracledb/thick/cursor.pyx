@@ -17,7 +17,6 @@ cdef class Cursor(BaseCursor):
         bint _more_rows_to_fetch
         dpiStmtInfo _stmt_info
         dpiStmt *_handle
-        list _fetch_vars
         str _tag
 
     def __cinit__(self, connection):
@@ -26,21 +25,6 @@ cdef class Cursor(BaseCursor):
     def __dealloc__(self):
         if self._handle != NULL:
             dpiStmt_release(self._handle)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        cdef:
-            uint32_t buffer_row_index
-            bint found
-        self._verify_open()
-        if not self._fetch_vars:
-            errors._raise_from_string(exceptions.InterfaceError, "not a query")
-        self._fetch_row(&found, &buffer_row_index)
-        if found:
-            return self._create_row(buffer_row_index)
-        raise StopIteration
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -113,6 +97,18 @@ cdef class Cursor(BaseCursor):
             buffer_row_index[0] = self._buffer_row_index
             self._buffer_row_index += 1
             self._num_rows_in_buffer -= 1
+
+    cdef object _fetch_next_row(self):
+        """
+        Internal method for fetching the next row from the cursor. If no rows
+        are available, None is returned.
+        """
+        cdef:
+            uint32_t buffer_row_index
+            bint found
+        self._fetch_row(&found, &buffer_row_index)
+        if found:
+            return self._create_row(buffer_row_index)
 
     cdef Variable _get_define_var(self, uint32_t pos):
         """

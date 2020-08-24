@@ -5,6 +5,13 @@
 import os
 from setuptools import setup, Extension
 
+# determine the common driver dependent source files (included)
+source_dir = os.path.join("src", "oracledb", "common")
+common_depends = [os.path.join(source_dir, n) \
+                  for n in sorted(os.listdir(source_dir))
+                  if n.endswith(".pyx") and n != "driver.pyx"
+                  or n.endswith(".pxd")]
+
 # determine the thick driver dependent source files (included)
 base_dir = os.path.join("src", "oracledb", "thick")
 source_dirs = [
@@ -28,7 +35,8 @@ thin_depends = [os.path.join(source_dir, n) \
 setup(
     ext_modules=[
         Extension("oracledb.common.driver",
-                  sources=["src/oracledb/common/driver.pyx"]),
+                  sources=["src/oracledb/common/driver.pyx"],
+                  depends=common_depends),
         Extension("oracledb.thin.driver",
                   sources=["src/oracledb/thin/driver.pyx"],
                   depends=thin_depends),

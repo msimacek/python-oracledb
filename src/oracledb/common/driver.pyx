@@ -67,69 +67,8 @@ cdef object get_exception_class(int32_t code):
     return exceptions.DatabaseError
 
 
-cdef class BaseConnection:
-
-    def __init__(self, user, dsn):
-        self.user = user
-        self.dsn = dsn
-
-    def __repr__(self):
-        cls_name = type(self).__name__
-        if self.user is None:
-            return f"{cls_name} to externally identified user"
-        return f"{cls_name} to {self.user}@{self.dsn}"
-
-    cdef int _verify_connected(self) except -1:
-        """
-        Verifies that the connection is connected to the database. If it is not
-        an exception is raised.
-        """
-        if not self._is_connected:
-            errors._raise_from_string(exceptions.InterfaceError,
-                                      "not connected")
-
-cdef class BaseCursor:
-
-    def __cinit__(self, connection):
-        self.arraysize = 100
-        self.prefetchrows = 2
-        self._is_open = True
-
-    cdef int _execute(self) except -1:
-        errors._raise_from_string(exceptions.InterfaceError, "not implemented")
-
-    cdef int _prepare(self, str statement, str tag=None) except -1:
-        errors._raise_from_string(exceptions.InterfaceError, "not implemented")
-
-    cdef int _verify_open(self) except -1:
-        """
-        Verifies that the cursor is open and the associated connection is
-        connected. If either condition is false an exception is raised.
-        """
-        cdef BaseConnection connection
-        if not self._is_open:
-            errors._raise_from_string(exceptions.InterfaceError, "not open")
-        connection = <BaseConnection> self.connection
-        connection._verify_connected()
-
-    def execute(self, statement=None, parameters=None, **keyword_parameters):
-        """
-        Executes a statement, passing any parameters to the database.
-        """
-
-        # verify parameters
-        if parameters and keyword_parameters:
-            errors._raise_from_string(exceptions.InterfaceError,
-                    "expecting argument or keyword arguments, not both")
-        if parameters is not None \
-                and not isinstance(parameters, (list, tuple, dict)):
-            errors._raise_from_string(exceptions.InterfaceError,
-                    "expecting a dictionary, list or tuple, or keyword args")
-        self._verify_open()
-
-        # prepare statement, if necessary, and then execute it
-        self._prepare(statement)
-        self._execute()
+include "connection.pyx"
+include "cursor.pyx"
 
 
 cdef class ApiType:
