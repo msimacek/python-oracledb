@@ -9,12 +9,20 @@
 
 # cython: language_level=3
 
+cimport cython
+cimport cpython
+cimport cpython.datetime as cydatetime
+
+import datetime
+import decimal
+
+cydatetime.import_datetime()
+
 from .. import constants, errors, exceptions
 
 from ..common.driver cimport get_exception_class
-from ..common.driver cimport BaseConnection
-from ..common.driver cimport BaseCursor
-from libc.string cimport memset
+from ..common.driver cimport BaseConnection, BaseCursor, DbType
+from libc.string cimport memchr, memset
 
 include "odpi.pxd"
 

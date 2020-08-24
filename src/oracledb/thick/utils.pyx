@@ -7,6 +7,86 @@
 #   Cython file for utility functions (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
+cdef object _convert_to_python(Connection connection, DbType dbtype,
+                               dpiDataBuffer *dbvalue, bint number_as_int):
+    cdef:
+        uint32_t oracle_type = dbtype.num
+        dpiTimestamp *as_timestamp
+        uint32_t rowid_length
+        dpiBytes *as_bytes
+        const char *rowid
+    if oracle_type == DPI_ORACLE_TYPE_CHAR \
+            or oracle_type == DPI_ORACLE_TYPE_NCHAR \
+            or oracle_type == DPI_ORACLE_TYPE_VARCHAR \
+            or oracle_type == DPI_ORACLE_TYPE_NVARCHAR \
+            or oracle_type == DPI_ORACLE_TYPE_LONG_VARCHAR:
+        as_bytes = &dbvalue.asBytes
+        return as_bytes.ptr[:as_bytes.length].decode()
+    elif oracle_type == DPI_ORACLE_TYPE_NUMBER:
+        as_bytes = &dbvalue.asBytes
+        if number_as_int \
+                and memchr(as_bytes.ptr, b'.', as_bytes.length) == NULL:
+            return int(as_bytes.ptr[:as_bytes.length].decode())
+        return float(as_bytes.ptr[:as_bytes.length].decode())
+    elif oracle_type == DPI_ORACLE_TYPE_RAW \
+            or oracle_type == DPI_ORACLE_TYPE_LONG_RAW:
+        as_bytes = &dbvalue.asBytes
+        return as_bytes.ptr[:as_bytes.length]
+    elif oracle_type == DPI_ORACLE_TYPE_DATE \
+            or oracle_type == DPI_ORACLE_TYPE_TIMESTAMP \
+            or oracle_type == DPI_ORACLE_TYPE_TIMESTAMP_LTZ \
+            or oracle_type == DPI_ORACLE_TYPE_TIMESTAMP_TZ:
+        as_timestamp = &dbvalue.asTimestamp
+        return cydatetime.datetime_new(as_timestamp.year, as_timestamp.month,
+                                       as_timestamp.day, as_timestamp.hour,
+                                       as_timestamp.minute,
+                                       as_timestamp.second,
+                                       as_timestamp.fsecond // 1000, None)
+    elif oracle_type == DPI_ORACLE_TYPE_BOOLEAN:
+        return dbvalue.asBoolean == 1
+    elif oracle_type == DPI_ORACLE_TYPE_NATIVE_DOUBLE:
+        return dbvalue.asDouble
+    elif oracle_type == DPI_ORACLE_TYPE_NATIVE_FLOAT:
+        return dbvalue.asFloat
+    elif oracle_type == DPI_ORACLE_TYPE_NATIVE_INT:
+        return dbvalue.asInt64
+    elif oracle_type == DPI_ORACLE_TYPE_ROWID:
+        if dpiRowid_getStringValue(dbvalue.asRowid, &rowid, &rowid_length) < 0:
+            _raise_from_odpi()
+        return rowid[:rowid_length].decode()
+    errors._raise_from_string(exceptions.NotSupportedError,
+                       f"database type {dbtype} not supported")
+
+
+cdef uint32_t _get_native_type_num(DbType dbtype):
+    cdef uint32_t oracle_type_num = dbtype.num
+    if oracle_type_num == DPI_ORACLE_TYPE_NATIVE_FLOAT:
+        return DPI_NATIVE_TYPE_FLOAT
+    elif oracle_type_num == DPI_ORACLE_TYPE_NATIVE_DOUBLE:
+        return DPI_NATIVE_TYPE_DOUBLE
+    elif oracle_type_num == DPI_ORACLE_TYPE_BOOLEAN:
+        return DPI_NATIVE_TYPE_BOOLEAN
+    elif oracle_type_num == DPI_ORACLE_TYPE_CLOB \
+            or oracle_type_num == DPI_ORACLE_TYPE_NCLOB \
+            or oracle_type_num == DPI_ORACLE_TYPE_BLOB \
+            or oracle_type_num == DPI_ORACLE_TYPE_BFILE:
+        return DPI_NATIVE_TYPE_LOB
+    elif oracle_type_num == DPI_ORACLE_TYPE_DATE \
+            or oracle_type_num == DPI_ORACLE_TYPE_TIMESTAMP \
+            or oracle_type_num == DPI_ORACLE_TYPE_TIMESTAMP_LTZ \
+            or oracle_type_num == DPI_ORACLE_TYPE_TIMESTAMP_TZ:
+        return DPI_NATIVE_TYPE_TIMESTAMP
+    elif oracle_type_num == DPI_ORACLE_TYPE_STMT:
+        return DPI_NATIVE_TYPE_STMT
+    elif oracle_type_num == DPI_ORACLE_TYPE_NATIVE_INT:
+        return DPI_NATIVE_TYPE_INT64
+    elif oracle_type_num == DPI_ORACLE_TYPE_OBJECT:
+        return DPI_NATIVE_TYPE_OBJECT
+    elif oracle_type_num == DPI_ORACLE_TYPE_ROWID:
+        return DPI_NATIVE_TYPE_ROWID
+    return DPI_NATIVE_TYPE_BYTES
+
+
 cdef int _raise_from_info(dpiErrorInfo *error_info) except -1:
     """
     Raises an exception given a dpiErrorInfo structure that is already

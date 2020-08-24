@@ -29,6 +29,45 @@ cdef extern from "odpi/embed/dpi.c":
     uint32_t DPI_MODE_CONN_CLOSE_DROP
     uint32_t DPI_MODE_CONN_CLOSE_RETAG
 
+    # native types
+    uint32_t DPI_NATIVE_TYPE_INT64
+    uint32_t DPI_NATIVE_TYPE_FLOAT
+    uint32_t DPI_NATIVE_TYPE_DOUBLE
+    uint32_t DPI_NATIVE_TYPE_BYTES
+    uint32_t DPI_NATIVE_TYPE_TIMESTAMP
+    uint32_t DPI_NATIVE_TYPE_INTERVAL_DS
+    uint32_t DPI_NATIVE_TYPE_LOB
+    uint32_t DPI_NATIVE_TYPE_OBJECT
+    uint32_t DPI_NATIVE_TYPE_STMT
+    uint32_t DPI_NATIVE_TYPE_BOOLEAN
+    uint32_t DPI_NATIVE_TYPE_ROWID
+
+    # Oracle types
+    uint32_t DPI_ORACLE_TYPE_VARCHAR
+    uint32_t DPI_ORACLE_TYPE_NVARCHAR
+    uint32_t DPI_ORACLE_TYPE_CHAR
+    uint32_t DPI_ORACLE_TYPE_NCHAR
+    uint32_t DPI_ORACLE_TYPE_ROWID
+    uint32_t DPI_ORACLE_TYPE_RAW
+    uint32_t DPI_ORACLE_TYPE_NATIVE_FLOAT
+    uint32_t DPI_ORACLE_TYPE_NATIVE_DOUBLE
+    uint32_t DPI_ORACLE_TYPE_NATIVE_INT
+    uint32_t DPI_ORACLE_TYPE_NUMBER
+    uint32_t DPI_ORACLE_TYPE_DATE
+    uint32_t DPI_ORACLE_TYPE_TIMESTAMP
+    uint32_t DPI_ORACLE_TYPE_TIMESTAMP_TZ
+    uint32_t DPI_ORACLE_TYPE_TIMESTAMP_LTZ
+    uint32_t DPI_ORACLE_TYPE_INTERVAL_DS
+    uint32_t DPI_ORACLE_TYPE_CLOB
+    uint32_t DPI_ORACLE_TYPE_NCLOB
+    uint32_t DPI_ORACLE_TYPE_BLOB
+    uint32_t DPI_ORACLE_TYPE_BFILE
+    uint32_t DPI_ORACLE_TYPE_STMT
+    uint32_t DPI_ORACLE_TYPE_BOOLEAN
+    uint32_t DPI_ORACLE_TYPE_OBJECT
+    uint32_t DPI_ORACLE_TYPE_LONG_VARCHAR
+    uint32_t DPI_ORACLE_TYPE_LONG_RAW
+
     # opaque handles
     ctypedef struct dpiConn:
         pass
@@ -158,6 +197,18 @@ cdef extern from "odpi/embed/dpi.c":
         int isNull
         dpiDataBuffer value
 
+    ctypedef struct dpiDataTypeInfo:
+        uint32_t oracleTypeNum
+        uint32_t defaultNativeTypeNum
+        uint16_t ociTypeCode
+        uint32_t dbSizeInBytes
+        uint32_t clientSizeInBytes
+        uint32_t sizeInChars
+        int16_t precision
+        int8_t scale
+        uint8_t fsPrecision
+        dpiObjectType *objectType
+
     ctypedef struct dpiErrorInfo:
         int32_t code
         uint16_t offset16
@@ -170,6 +221,12 @@ cdef extern from "odpi/embed/dpi.c":
         int isRecoverable
         int isWarning
         uint32_t offset
+
+    ctypedef struct dpiQueryInfo:
+        const char *name
+        uint32_t nameLength
+        dpiDataTypeInfo typeInfo
+        int nullOk
 
     ctypedef struct dpiShardingKeyColumn:
         uint32_t oracleTypeNum
@@ -219,6 +276,9 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiContext_initConnCreateParams(const dpiContext *context,
             dpiConnCreateParams *params) nogil
 
+    int dpiRowid_getStringValue(dpiRowid *rowid, const char **value,
+            uint32_t *valueLength)
+
     int dpiStmt_bindByName(dpiStmt *stmt, const char *name,
             uint32_t nameLength, dpiVar *var) nogil
 
@@ -234,9 +294,12 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiStmt_fetchRows(dpiStmt *stmt, uint32_t maxRows,
             uint32_t *bufferRowIndex, uint32_t *numRowsFetched,
-            int *moreRows) nogil
+            bint *moreRows) nogil
 
     int dpiStmt_getInfo(dpiStmt *stmt, dpiStmtInfo *info) nogil
+
+    int dpiStmt_getQueryInfo(dpiStmt *stmt, uint32_t pos,
+            dpiQueryInfo *info) nogil
 
     int dpiStmt_getRowCount(dpiStmt *stmt, uint64_t *count) nogil
 
@@ -245,3 +308,9 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiStmt_setFetchArraySize(dpiStmt *stmt, uint32_t arraySize) nogil
 
     int dpiStmt_setPrefetchRows(dpiStmt *stmt, uint32_t numRows) nogil
+
+    int dpiVar_getNumElementsInArray(dpiVar *var, uint32_t *numElements) nogil
+
+    int dpiVar_getSizeInBytes(dpiVar *var, uint32_t *sizeInBytes) nogil
+
+    int dpiVar_release(dpiVar *var) nogil

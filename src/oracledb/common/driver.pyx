@@ -91,6 +91,8 @@ cdef class BaseConnection:
 cdef class BaseCursor:
 
     def __cinit__(self, connection):
+        self.arraysize = 100
+        self.prefetchrows = 2
         self._is_open = True
 
     cdef int _verify_open(self) except -1:
@@ -123,11 +125,23 @@ cdef class ApiType:
         return f"<ApiType {self.name}>"
 
 
+cdef dict db_type_by_num = {}
+
 cdef class DbType:
 
     def __init__(self, num, name):
         self.num = num
         self.name = name
+        db_type_by_num[num] = self
 
     def __repr__(self):
         return f"<DbType {self.name}>"
+
+    @staticmethod
+    cdef DbType from_num(uint32_t num):
+        try:
+            return db_type_by_num[num]
+        except KeyError:
+            pass
+        errors._raise_from_string(exceptions.NotSupportedError,
+                                  f"Oracle type {num} not supported")
