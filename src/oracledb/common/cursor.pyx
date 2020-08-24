@@ -76,6 +76,27 @@ cdef class BaseCursor:
         self._prepare(statement)
         self._execute()
 
+    def fetchall(self):
+        result = []
+        while True:
+            row = self._fetch_next_row()
+            if row is None:
+                break
+            result.append(row)
+        return result
+
+    def fetchmany(self, num_rows=None):
+        self._verify_fetch()
+        if num_rows is None:
+            num_rows = self.arraysize
+        result = []
+        while len(result) < num_rows:
+            row = self._fetch_next_row()
+            if row is None:
+                break
+            result.append(row)
+        return result
+
     def fetchone(self):
         self._verify_fetch()
         return self._fetch_next_row()
