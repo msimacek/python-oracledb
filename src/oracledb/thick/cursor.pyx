@@ -44,7 +44,7 @@ cdef class Cursor(BaseCursor):
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef object _create_row(Cursor self, uint32_t buffer_row_index):
+    cdef object _create_row(self, uint32_t buffer_row_index):
         """
         Internal method for creating a row from the fetched data.
         """
@@ -63,7 +63,7 @@ cdef class Cursor(BaseCursor):
             row = self.rowfactory(*row)
         return row
 
-    cdef int _execute(Cursor self) except -1:
+    cdef int _execute(self) except -1:
         """
         Internal method for executing a statement.
         """
@@ -82,7 +82,7 @@ cdef class Cursor(BaseCursor):
         if num_query_cols > 0:
             self._perform_define(num_query_cols)
 
-    cdef int _fetch_row(Cursor self, bint* found,
+    cdef int _fetch_row(self, bint* found,
                         uint32_t* buffer_row_index) except -1:
         """
         Internal method for fetching a row from the database. If no rows are
@@ -114,7 +114,7 @@ cdef class Cursor(BaseCursor):
             self._buffer_row_index += 1
             self._num_rows_in_buffer -= 1
 
-    cdef Variable _get_define_var(Cursor self, uint32_t pos):
+    cdef Variable _get_define_var(self, uint32_t pos):
         """
         Internal method that returns the variable that will be used for
         fetching data in the specified position. If an output type handler is
@@ -158,7 +158,7 @@ cdef class Cursor(BaseCursor):
                 var._number_as_int = True
         return var
 
-    cdef int _perform_define(Cursor self, uint32_t num_query_cols) except -1:
+    cdef int _perform_define(self, uint32_t num_query_cols) except -1:
         """
         Internal method for performing defines. At this point it is assumed
         that the statement executed was in fact a query.
@@ -189,7 +189,7 @@ cdef class Cursor(BaseCursor):
             cpython.Py_INCREF(var)
             cpython.PyList_SET_ITEM(self._fetch_vars, i, var)
 
-    cdef int _prepare(Cursor self, str statement, str tag=None) except -1:
+    cdef int _prepare(self, str statement, str tag=None) except -1:
         """
         Internal method used for preparing statements for execution.
         """
@@ -236,22 +236,3 @@ cdef class Cursor(BaseCursor):
                                                      self.prefetchrows)
         if status < 0:
             _raise_from_odpi()
-
-    def execute(self, statement=None, parameters=None, **keyword_parameters):
-        """
-        Executes a statement, passing any parameters to the database.
-        """
-
-        # verify parameters
-        if parameters and keyword_parameters:
-            errors._raise_from_string(exceptions.InterfaceError,
-                    "expecting argument or keyword arguments, not both")
-        if parameters is not None \
-                and not isinstance(parameters, (list, tuple, dict)):
-            errors._raise_from_string(exceptions.InterfaceError,
-                    "expecting a dictionary, list or tuple, or keyword args")
-        self._verify_open()
-
-        # prepare statement, if necessary, and then execute it
-        self._prepare(statement)
-        self._execute()

@@ -25,6 +25,10 @@ cdef class BaseCursor:
         public object rowfactory
         bint _is_open
 
+    cdef int _execute(self) except -1
+
+    cdef int _prepare(self, str statement, str tag=*) except -1
+
     cdef int _verify_open(self) except -1
 
 
