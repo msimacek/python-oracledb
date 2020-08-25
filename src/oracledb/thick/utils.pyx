@@ -7,6 +7,65 @@
 #   Cython file for utility functions (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
+cdef int _convert_from_python(object value, DbType dbtype,
+                              dpiDataBuffer *dbvalue, Var var=None,
+                              uint32_t pos=0) except -1:
+    cdef:
+        uint32_t oracle_type = dbtype.num
+        dpiTimestamp *timestamp
+        bytes value_bytes
+    if oracle_type == DPI_ORACLE_TYPE_NUMBER:
+        if isinstance(value, bool):
+            value_bytes = b'1' if value else b'0'
+        elif isinstance(value, (int, float, decimal.Decimal)):
+            value_bytes = str(value).encode()
+        else:
+            raise TypeError("expecting number")
+        if var is not None:
+            var._set_from_bytes(pos, value_bytes)
+    elif oracle_type == DPI_ORACLE_TYPE_VARCHAR \
+            or oracle_type == DPI_ORACLE_TYPE_NVARCHAR \
+            or oracle_type == DPI_ORACLE_TYPE_CHAR \
+            or oracle_type == DPI_ORACLE_TYPE_NCHAR \
+            or oracle_type == DPI_ORACLE_TYPE_LONG_VARCHAR:
+        if not isinstance(value, str):
+            raise TypeError("expecting str")
+        value_bytes = value.encode()
+        if var is not None:
+            var._set_from_bytes(pos, value_bytes)
+    elif oracle_type == DPI_ORACLE_TYPE_RAW \
+            or oracle_type == DPI_ORACLE_TYPE_LONG_RAW:
+        if not isinstance(value, bytes):
+            raise TypeError("expecting bytes")
+        if var is not None:
+            var._set_from_bytes(pos, value)
+    elif oracle_type == DPI_ORACLE_TYPE_DATE \
+            or oracle_type == DPI_ORACLE_TYPE_TIMESTAMP \
+            or oracle_type == DPI_ORACLE_TYPE_TIMESTAMP_LTZ \
+            or oracle_type == DPI_ORACLE_TYPE_TIMESTAMP_TZ:
+        memset(&dbvalue.asTimestamp, 0, sizeof(dbvalue.asTimestamp))
+        timestamp = &dbvalue.asTimestamp
+        if isinstance(value, datetime.datetime):
+            print("Found datetime!")
+            timestamp.year = cydatetime.datetime_year(value)
+            timestamp.month = cydatetime.datetime_month(value)
+            timestamp.day = cydatetime.datetime_day(value)
+            timestamp.hour = cydatetime.datetime_hour(value)
+            timestamp.minute = cydatetime.datetime_minute(value)
+            timestamp.second = cydatetime.datetime_second(value)
+            timestamp.fsecond = cydatetime.datetime_microsecond(value) * 1000
+        elif isinstance(value, datetime.date):
+            print("Found date!")
+            timestamp.year = cydatetime.date_year(value)
+            timestamp.month = cydatetime.date_month(value)
+            timestamp.day = cydatetime.date_day(value)
+        else:
+            raise TypeError("expecting datetime.date or datetime.datetime")
+    else:
+        errors._raise_from_string(exceptions.NotSupportedError,
+                                  f"database type {dbtype} not supported")
+
+
 cdef object _convert_to_python(Connection connection, DbType dbtype,
                                dpiDataBuffer *dbvalue, bint number_as_int):
     cdef:
@@ -55,7 +114,7 @@ cdef object _convert_to_python(Connection connection, DbType dbtype,
             _raise_from_odpi()
         return rowid[:rowid_length].decode()
     errors._raise_from_string(exceptions.NotSupportedError,
-                       f"database type {dbtype} not supported")
+                              f"database type {dbtype} not supported")
 
 
 cdef uint32_t _get_native_type_num(DbType dbtype):

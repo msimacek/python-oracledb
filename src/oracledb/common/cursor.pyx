@@ -130,6 +130,7 @@ cdef class BaseCursor:
         dbtype = DbType._from_type(typ)
         var = self._create_var()
         var.type = dbtype
+        var.size = size or dbtype.default_size
         var.num_elements = arraysize
         var.inconverter = inconverter
         var.outconverter = outconverter

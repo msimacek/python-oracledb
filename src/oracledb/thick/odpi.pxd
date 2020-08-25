@@ -314,3 +314,8 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiVar_getSizeInBytes(dpiVar *var, uint32_t *sizeInBytes) nogil
 
     int dpiVar_release(dpiVar *var) nogil
+
+    int dpiVar_setNumElementsInArray(dpiVar *var, uint32_t numElements) nogil
+
+    int dpiVar_setFromBytes(dpiVar *var, uint32_t pos, const char *value,
+            uint32_t valueLength) nogil

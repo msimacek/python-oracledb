@@ -64,6 +64,36 @@ cdef class Var(BaseVar):
                 value = self.outconverter(value)
             return value
 
+    cdef int _set_array_value(self, list value) except -1:
+        cdef:
+            uint32_t num_elements = <uint32_t> len(value)
+            object element_value
+            uint32_t i
+        if dpiVar_setNumElementsInArray(self._handle, num_elements) < 0:
+            _raise_from_odpi()
+        for i in range(num_elements):
+            self._set_single_value(i, value[i])
+
+    cdef int _set_from_bytes(self, uint32_t pos, bytes value) except -1:
+        cdef:
+            const char *ptr
+            uint32_t length
+        ptr = value
+        length = <uint32_t> len(value)
+        if dpiVar_setFromBytes(self._handle, pos, ptr, length) < 0:
+            _raise_from_odpi()
+
+    cdef int _set_single_value(self, uint32_t pos, object value) except -1:
+        cdef:
+            dpiData *data
+            object x
+        if self.inconverter:
+            value = self.inconverter(value)
+        data = &self._data[pos]
+        data.isNull = (value is None)
+        if not data.isNull:
+            _convert_from_python(value, self.type, &data.value, self, pos)
+
     @staticmethod
     cdef Var new_var(Connection connection, DbType dbtype,
                      uint32_t num_elements, uint32_t size,

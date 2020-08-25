@@ -16,6 +16,7 @@ cdef class DbType:
     cdef:
         readonly uint32_t num
         readonly str name
+        readonly uint32_t default_size
 
     @staticmethod
     cdef DbType _from_num(uint32_t num)
@@ -76,6 +77,10 @@ cdef class BaseVar:
     cdef list _get_array_value(self, uint32_t num_elements)
 
     cdef object _get_single_value(self, uint32_t pos)
+
+    cdef int _set_array_value(self, list value) except -1
+
+    cdef int _set_single_value(self, uint32_t pos, object value) except -1
 
 
 cdef object get_exception_class(int32_t code)
