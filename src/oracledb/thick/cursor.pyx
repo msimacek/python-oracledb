@@ -40,12 +40,18 @@ cdef class Cursor(BaseCursor):
         row = cpython.PyTuple_New(num_vars)
         for i in range(num_vars):
             var = self._fetch_vars[i]
-            value = var._get_single_value(NULL, buffer_row_index)
+            value = var._get_single_value(buffer_row_index)
             cpython.Py_INCREF(value)
             cpython.PyTuple_SET_ITEM(row, i, value)
         if self.rowfactory:
             row = self.rowfactory(*row)
         return row
+
+    cdef BaseVar _create_var(self):
+        """
+        Internal method for creating a variable.
+        """
+        return Var.__new__(Var, self.connection)
 
     cdef int _execute(self) except -1:
         """
@@ -128,7 +134,7 @@ cdef class Cursor(BaseCursor):
             str name
         if dpiStmt_getQueryInfo(self._handle, pos, &query_info) < 0:
             _raise_from_odpi()
-        dbtype = DbType.from_num(query_info.typeInfo.oracleTypeNum)
+        dbtype = DbType._from_num(query_info.typeInfo.oracleTypeNum)
         if query_info.typeInfo.sizeInChars > 0:
             size = query_info.typeInfo.sizeInChars
         else:

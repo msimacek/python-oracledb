@@ -3,8 +3,27 @@
 #------------------------------------------------------------------------------
 
 from .version import __version__
-from .constants import *
 from .exceptions import *
 from .connection import connect
+from .constants import *
 
+from .common.driver import *
 from .thick.driver import init_oracle_client
+
+# synonyms for database types (for backwards compatibility)
+BFILE = DB_TYPE_BFILE
+BLOB = DB_TYPE_BLOB
+BOOLEAN = DB_TYPE_BOOLEAN
+CLOB = DB_TYPE_CLOB
+CURSOR = DB_TYPE_CURSOR
+FIXED_CHAR = DB_TYPE_CHAR
+FIXED_NCHAR = DB_TYPE_NCHAR
+INTERVAL = DB_TYPE_INTERVAL_DS
+LONG_BINARY = DB_TYPE_LONG_RAW
+LONG_STRING = DB_TYPE_LONG
+NATIVE_INT = DB_TYPE_BINARY_INTEGER
+NATIVE_FLOAT = DB_TYPE_BINARY_DOUBLE
+NCHAR = DB_TYPE_NVARCHAR
+OBJECT = DB_TYPE_OBJECT
+NCLOB = DB_TYPE_NCLOB
+TIMESTAMP = DB_TYPE_TIMESTAMP

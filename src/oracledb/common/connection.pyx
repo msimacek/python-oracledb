@@ -14,6 +14,12 @@ cdef class BaseConnection:
             return f"{cls_name} to externally identified user"
         return f"{cls_name} to {self.user}@{self.dsn}"
 
+    cdef BaseCursor _create_cursor(self):
+        """
+        Internal method for creating a cursor. Intended to be overridden by the
+        subclass.
+        """
+
     cdef int _verify_connected(self) except -1:
         """
         Verifies that the connection is connected to the database. If it is not
@@ -22,3 +28,9 @@ cdef class BaseConnection:
         if not self._is_connected:
             errors._raise_from_string(exceptions.InterfaceError,
                                       "not connected")
+
+    def cursor(self):
+        """
+        Returns a cursor associated with the connection.
+        """
+        return self._create_cursor()

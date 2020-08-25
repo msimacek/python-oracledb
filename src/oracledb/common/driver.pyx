@@ -7,6 +7,9 @@
 from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 
+import datetime
+import decimal
+
 from .. import errors, exceptions
 
 cdef int32_t* INTEGRITY_ERROR_CODES = [
@@ -69,43 +72,5 @@ cdef object get_exception_class(int32_t code):
 
 include "connection.pyx"
 include "cursor.pyx"
-
-
-cdef class ApiType:
-
-    def __init__(self, name, *db_types):
-        self.name = name
-        self.db_types = db_types
-
-    def __eq__(self, other):
-        if isinstance(other, DbType):
-            return other in self.db_types
-        return NotImplemented
-
-    def __hash__(self):
-        return hash(self.name)
-
-    def __repr__(self):
-        return f"<ApiType {self.name}>"
-
-
-cdef dict db_type_by_num = {}
-
-cdef class DbType:
-
-    def __init__(self, num, name):
-        self.num = num
-        self.name = name
-        db_type_by_num[num] = self
-
-    def __repr__(self):
-        return f"<DbType {self.name}>"
-
-    @staticmethod
-    cdef DbType from_num(uint32_t num):
-        try:
-            return db_type_by_num[num]
-        except KeyError:
-            pass
-        errors._raise_from_string(exceptions.NotSupportedError,
-                                  f"Oracle type {num} not supported")
+include "var.pyx"
+include "types.pyx"

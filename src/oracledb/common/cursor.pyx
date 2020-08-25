@@ -2,6 +2,8 @@
 # Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+from .. import constants
+
 cdef class BaseCursor:
 
     def __cinit__(self, connection):
@@ -18,6 +20,12 @@ cdef class BaseCursor:
         if row is not None:
             return row
         raise StopIteration
+
+    cdef BaseVar _create_var(self):
+        """
+        Internal method for creating a variable. Intended to be overridden by
+        the subclass.
+        """
 
     cdef int _execute(self) except -1:
         """
@@ -77,6 +85,10 @@ cdef class BaseCursor:
         self._execute()
 
     def fetchall(self):
+        """
+        Fetches all of the remaining rows available from the cursor and returns
+        them as a list.
+        """
         result = []
         while True:
             row = self._fetch_next_row()
@@ -86,6 +98,11 @@ cdef class BaseCursor:
         return result
 
     def fetchmany(self, num_rows=None):
+        """
+        Fetches up to the specified number of rows from the cursor and returns
+        them as a list. If the number of rows is not specified, the cursor's
+        arraysize is used instead.
+        """
         self._verify_fetch()
         if num_rows is None:
             num_rows = self.arraysize
@@ -98,5 +115,23 @@ cdef class BaseCursor:
         return result
 
     def fetchone(self):
+        """
+        Fetches a single row from the cursor and returns it. If no rows are
+        available, None is returned.
+        """
         self._verify_fetch()
         return self._fetch_next_row()
+
+    def var(self, typ, size=0, arraysize=1, inconverter=None,
+            outconverter=None, typename=None, encoding_errors=None):
+        cdef:
+            DbType dbtype
+            BaseVar var
+        dbtype = DbType._from_type(typ)
+        var = self._create_var()
+        var.type = dbtype
+        var.num_elements = arraysize
+        var.inconverter = inconverter
+        var.outconverter = outconverter
+        var._finalize_init()
+        return var

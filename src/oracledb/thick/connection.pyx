@@ -56,6 +56,12 @@ cdef class Connection(BaseConnection):
             _raise_from_odpi()
         self._is_connected = True
 
+    cdef BaseCursor _create_cursor(self):
+        """
+        Internal method for creating a cursor.
+        """
+        return Cursor.__new__(Cursor, self)
+
     def close(self):
         cdef:
             uint32_t mode = DPI_MODE_CONN_CLOSE_DEFAULT
@@ -76,6 +82,3 @@ cdef class Connection(BaseConnection):
         if status < 0:
             _raise_from_odpi()
         self._handle = NULL
-
-    def cursor(self):
-        return Cursor(self)
