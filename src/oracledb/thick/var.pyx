@@ -22,6 +22,25 @@ cdef class Var(BaseVar):
         if self._handle != NULL:
             dpiVar_release(self._handle)
 
+    cdef int _bind(self, BaseCursor cursor, str name=None,
+                   uint32_t pos=0) except -1:
+        cdef:
+            const char *name_ptr
+            uint32_t name_length
+            Cursor thick_cursor
+            bytes name_bytes
+        thick_cursor = <Cursor> cursor
+        if name is not None:
+            name_bytes = name.encode()
+            name_ptr = name_bytes
+            name_length = <uint32_t> len(name_bytes)
+            if dpiStmt_bindByName(thick_cursor._handle, name_ptr,
+                                  name_length, self._handle) < 0:
+                _raise_from_odpi()
+        else:
+            if dpiStmt_bindByPos(thick_cursor._handle, pos, self._handle) < 0:
+                _raise_from_odpi()
+
     cdef int _finalize_init(self) except -1:
         self._native_type_num = _get_native_type_num(self.type)
         if dpiConn_newVar(self._connection._handle, self.type.num,

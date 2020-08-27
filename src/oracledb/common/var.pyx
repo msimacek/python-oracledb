@@ -14,6 +14,13 @@ cdef class BaseVar:
             value = self._get_array_value(self.num_elements)
         return f"Var of type {self.type.name} with value {repr(value)}"
 
+    cdef int _bind(self, BaseCursor cursor, str name=None,
+                   uint32_t pos=0) except -1:
+        """
+        Binds a variable to the cursor. Intended to be overridden by the
+        subclass.
+        """
+
     cdef int _finalize_init(self) except -1:
         """
         Finalizes initialization.

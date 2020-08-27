@@ -21,11 +21,113 @@ cdef class BaseCursor:
             return row
         raise StopIteration
 
+    cdef int _bind_by_name(self, dict params, uint32_t num_elements=1,
+                           uint32_t pos=0) except -1:
+        """
+        Internal method used for binding variables by name.
+        """
+        cdef:
+            BaseVar orig_var, var
+            object value
+            str name
+        if self._bind_vars is None:
+            self._bind_vars = {}
+        for name, value in params.items():
+            orig_var = self._bind_vars.get(name)
+            var = self._get_bind_var(num_elements, pos, value, orig_var)
+            self._bind_vars[name] = var
+
+    cdef int _bind_by_position(self, object params, uint32_t num_elements=1,
+                               uint32_t pos=0) except -1:
+        """
+        Internal method used for binding variables by position.
+        """
+        cdef:
+            Py_ssize_t i, orig_num_vars
+            BaseVar orig_var, var
+            object value
+        if self._bind_vars is None:
+            orig_num_vars = 0
+            self._bind_vars = [None] * len(params)
+        else:
+            orig_num_vars = len(self._bind_vars)
+        for i, value in enumerate(params):
+            if i < orig_num_vars:
+                orig_var = <BaseVar> cpython.PyList_GET_ITEM(self._bind_vars,
+                                                             i)
+            else:
+                orig_var = None
+            var = self._get_bind_var(num_elements, pos, value, orig_var)
+            if i < len(self._bind_vars):
+                self._bind_vars[i] = var
+            else:
+                self._bind_vars.append(var)
+
     cdef BaseVar _create_var(self):
         """
         Internal method for creating a variable. Intended to be overridden by
         the subclass.
         """
+
+    cdef BaseVar _create_var_by_value(self, object value,
+                                      uint32_t num_elements):
+        """
+        Internal method for creating a variable that can contain the
+        specified value.
+        """
+        cdef:
+            object type_handler, result
+            uint32_t size = 0
+            DbType dbtype
+            BaseVar var
+
+        # determine if an input type handler should be used; an input type
+        # handler defined on the cursor takes precedence over one defined on
+        # the connection to which the cursor belongs; the input type handler
+        # should return a variable or None; the value None implies that the
+        # default processing should take place just as if no input type handler
+        # was defined
+        type_handler = self.inputtypehandler \
+                or self.connection.inputtypehandler
+        if type_handler:
+            result = type_handler(self, value, num_elements)
+            if result is not None:
+                if not isinstance(result, BaseVar):
+                    message = "expecting variable from input type handler"
+                    raise TypeError(message)
+                return <BaseVar> result
+
+        # determine the type and size of variable to create
+        if value is None:
+            dbtype = DB_TYPE_VARCHAR
+            size = 1
+        elif isinstance(value, bool):
+            dbtype = DB_TYPE_BOOLEAN
+        elif isinstance(value, str):
+            dbtype = DB_TYPE_VARCHAR
+            size = <uint32_t> len(value)
+        elif isinstance(value, bytes):
+            dbtype = DB_TYPE_RAW
+            size = <uint32_t> len(value)
+        elif isinstance(value, (int, float, decimal.Decimal)):
+            dbtype = DB_TYPE_NUMBER
+        elif isinstance(value, (datetime.date, datetime.datetime)):
+            dbtype = DB_TYPE_DATE
+        elif isinstance(value, datetime.timedelta):
+            dbtype = DB_TYPE_INTERVAL_DS
+        else:
+            type_name = type(value).__name__
+            message = f"Python value of type {type_name} not supported"
+            errors._raise_from_string(exceptions.NotSupportedError, message)
+
+        # create the variable
+        var = self._create_var()
+        var.type = dbtype
+        var.num_elements = num_elements
+        var.size = size
+        var.is_array = False
+        var._finalize_init()
+        return var
 
     cdef int _execute(self) except -1:
         """
@@ -38,7 +140,54 @@ cdef class BaseCursor:
         Internal method used for fetching the next row from a cursor. This is
         intended to be overridden by the subclass.
         """
-        print("base class fetch next row...")
+
+    cdef BaseVar _get_bind_var(self, uint32_t num_elements, uint32_t pos,
+                               object value, BaseVar orig_var):
+        """
+        Internal method that returns the variable that will be bound with the
+        specified value.
+        """
+        cdef BaseVar var
+        if isinstance(value, BaseVar):
+            return <BaseVar> value
+        elif orig_var is not None:
+            if num_elements <= orig_var.num_elements:
+                var = orig_var
+            else:
+                var = self._create_var()
+                var.num_elements = num_elements
+                var.type = orig_var.type
+                var.is_array = orig_var.is_array
+                var.size = orig_var.size
+                var.buffer_size = orig_var.buffer_size
+                var.inconverter = orig_var.inconverter
+                var.outconverter = orig_var.outconverter
+                var._finalize_init()
+            try:
+                var._set_single_value(pos, value)
+                return var
+            except:
+                if pos > 0:
+                    raise
+        var = self._create_var_by_value(value, num_elements)
+        var._set_single_value(pos, value)
+        return var
+
+    cdef int _perform_binds(self) except -1:
+        """
+        Perform all binds on the cursor.
+        """
+        cdef:
+            Py_ssize_t pos
+            BaseVar var
+            str key
+        self._set_input_sizes = False
+        if isinstance(self._bind_vars, dict):
+            for key, var in self._bind_vars.items():
+                var._bind(self, key)
+        else:
+            for pos, var in enumerate(self._bind_vars):
+                var._bind(self, None, pos + 1)
 
     cdef int _prepare(self, str statement, str tag=None) except -1:
         """
@@ -71,17 +220,42 @@ cdef class BaseCursor:
         """
 
         # verify parameters
-        if parameters and keyword_parameters:
-            errors._raise_from_string(exceptions.InterfaceError,
-                    "expecting argument or keyword arguments, not both")
-        if parameters is not None \
+        if statement is None and self.statement is None:
+            message = "no statement specified and no prior statement prepared"
+            errors._raise_from_string(exceptions.ProgrammingError, message)
+        if keyword_parameters:
+            if parameters:
+                errors._raise_from_string(exceptions.InterfaceError,
+                        "expecting arguments or keyword arguments, not both")
+            parameters = keyword_parameters
+        elif parameters is not None \
                 and not isinstance(parameters, (list, tuple, dict)):
             errors._raise_from_string(exceptions.InterfaceError,
                     "expecting a dictionary, list or tuple, or keyword args")
-        self._verify_open()
+        if self._bind_vars is not None and parameters is not None:
+            if isinstance(self._bind_vars, dict) \
+                    and not isinstance(parameters, dict) \
+                    or isinstance(self._bind_vars, list) \
+                    and isinstance(parameters, dict):
+                message = "positional and named binds cannot be intermixed"
+                errors._raise_from_string(exceptions.ProgrammingError, message)
 
-        # prepare statement, if necessary, and then execute it
-        self._prepare(statement)
+        # prepare statement, if necessary
+        self._verify_open()
+        if statement != self.statement:
+            self._fetch_vars = None
+            if not self._set_input_sizes:
+                self._bind_vars = None
+            self._prepare(statement)
+
+        # perform bind and execute
+        if parameters is not None:
+            if isinstance(parameters, dict):
+                self._bind_by_name(parameters)
+            else:
+                self._bind_by_position(parameters)
+        if self._bind_vars is not None:
+            self._perform_binds()
         self._execute()
 
     def fetchall(self):

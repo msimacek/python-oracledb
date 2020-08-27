@@ -29,6 +29,7 @@ cdef class BaseConnection:
     cdef:
         readonly str user
         readonly str dsn
+        public object inputtypehandler
         public object outputtypehandler
         bint _is_connected
 
@@ -42,16 +43,33 @@ cdef class BaseCursor:
         readonly str statement
         public uint32_t arraysize
         public uint32_t prefetchrows
+        public object inputtypehandler
         public object outputtypehandler
         public object rowfactory
         list _fetch_vars
+        object _bind_vars
+        bint _set_input_sizes
         bint _is_open
 
+    cdef int _bind_by_name(self, dict params, uint32_t num_elements=*,
+                           uint32_t pos=*) except -1
+
+    cdef int _bind_by_position(self, object params, uint32_t num_elements=*,
+                               uint32_t pos=*) except -1
+
     cdef BaseVar _create_var(self)
+
+    cdef BaseVar _create_var_by_value(self, object value,
+                                      uint32_t num_elements)
 
     cdef int _execute(self) except -1
 
     cdef object _fetch_next_row(self)
+
+    cdef BaseVar _get_bind_var(self, uint32_t num_elements, uint32_t pos,
+                               object value, BaseVar orig_var)
+
+    cdef int _perform_binds(self) except -1
 
     cdef int _prepare(self, str statement, str tag=*) except -1
 
@@ -69,6 +87,9 @@ cdef class BaseVar:
         readonly uint32_t size
         readonly uint32_t buffer_size
         readonly DbType type
+
+    cdef int _bind(self, BaseCursor cursor, str name=*,
+                   uint32_t pos=*) except -1
 
     cdef int _finalize_init(self) except -1
 

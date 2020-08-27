@@ -178,7 +178,7 @@ cdef class Cursor(BaseCursor):
         # if fetch variables already exist, nothing to do (the same statement
         # is being executed and therefore all defines have already been
         # performed
-        if self._fetch_vars:
+        if self._fetch_vars is not None:
             return 0
 
         # populate list to contain fetch variables that are created
@@ -201,15 +201,6 @@ cdef class Cursor(BaseCursor):
             const char *tag_ptr = NULL
             const char *statement_ptr
             int status
-        if statement is None and self.statement is None:
-            errors._raise_from_string(exceptions.ProgrammingError,
-                    "no statement specified and no prior statement prepared")
-        # nothing to do if the statement is identical to the one already
-        # stored, but go ahead and prepare anyway for DDL statements
-        if statement is None or statement == self.statement:
-            if self._handle != NULL and not self._stmt_info.isDDL:
-                return 0
-            statement = self.statement
         self.statement = statement
         statement_bytes = statement.encode()
         statement_ptr = <const char*> statement_bytes
