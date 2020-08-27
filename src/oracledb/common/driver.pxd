@@ -31,9 +31,12 @@ cdef class BaseConnection:
         readonly str dsn
         public object inputtypehandler
         public object outputtypehandler
+        str _version
         bint _is_connected
 
     cdef BaseCursor _create_cursor(self)
+
+    cdef str _get_version(self)
 
     cdef int _verify_connected(self) except -1
 

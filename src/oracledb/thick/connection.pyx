@@ -56,6 +56,21 @@ cdef class Connection(BaseConnection):
             _raise_from_odpi()
         self._is_connected = True
 
+    cdef str _get_version(self):
+        cdef:
+            dpiVersionInfo version_info
+            int status
+        self._verify_connected()
+        with nogil:
+            status = dpiConn_getServerVersion(self._handle, NULL, NULL,
+                                              &version_info)
+        if status < 0:
+            _raise_from_odpi()
+        return "%d.%d.%d.%d.%d" % \
+                (version_info.versionNum, version_info.releaseNum,
+                 version_info.updateNum, version_info.portReleaseNum,
+                 version_info.portUpdateNum)
+
     cdef BaseCursor _create_cursor(self):
         """
         Internal method for creating a cursor.

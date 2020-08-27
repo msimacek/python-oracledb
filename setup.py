@@ -30,7 +30,9 @@ thick_depends.extend(os.path.join(base_dir, n) \
 # determine the thin driver dependent source files (included)
 source_dir = os.path.join("src", "oracledb", "thin")
 thin_depends = [os.path.join(source_dir, n) \
-                for n in ["hton.c", "hton.pxd", "protocol.pxd"]]
+                for n in sorted(os.listdir(source_dir))
+                if n.endswith(".pyx") and n != "driver.pyx"
+                or n.endswith(".pxi") or n.endswith(".pxd") or n == "hton.c"]
 
 setup(
     ext_modules=[

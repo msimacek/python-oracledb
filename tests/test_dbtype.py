@@ -7,6 +7,12 @@ import oracledb
 
 class TestCase(base.BaseTestCase):
 
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
     def __test_compare(self, db_type, api_type):
         self.assertEqual(db_type, db_type)
         self.assertEqual(db_type, api_type)

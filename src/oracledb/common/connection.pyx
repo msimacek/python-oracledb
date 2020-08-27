@@ -20,6 +20,12 @@ cdef class BaseConnection:
         subclass.
         """
 
+    cdef str _get_version(self):
+        """
+        Return the version associated with the connection. Intended to be
+        overridden by the subclass.
+        """
+
     cdef int _verify_connected(self) except -1:
         """
         Verifies that the connection is connected to the database. If it is not
@@ -34,3 +40,9 @@ cdef class BaseConnection:
         Returns a cursor associated with the connection.
         """
         return self._create_cursor()
+
+    @property
+    def version(self):
+        if self._version is None:
+            self._version = self._get_version()
+        return self._version

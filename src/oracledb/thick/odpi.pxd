@@ -241,6 +241,14 @@ cdef extern from "odpi/embed/dpi.c":
         uint16_t statementType
         int isReturning
 
+    ctypedef struct dpiVersionInfo:
+        int versionNum
+        int releaseNum
+        int updateNum
+        int portReleaseNum
+        int portUpdateNum
+        uint32_t fullVersionNum
+
     # functions
     int dpiConn_close(dpiConn *conn, uint32_t mode, const char *tag,
             uint32_t tagLength) nogil
@@ -251,6 +259,9 @@ cdef extern from "odpi/embed/dpi.c":
             uint32_t connectStringLength,
             const dpiCommonCreateParams *commonParams,
             dpiConnCreateParams *createParams, dpiConn **conn) nogil
+
+    int dpiConn_getServerVersion(dpiConn *conn, const char **releaseString,
+            uint32_t *releaseStringLength, dpiVersionInfo *versionInfo) nogil
 
     int dpiConn_newVar(dpiConn *conn, uint32_t oracleTypeNum,
             uint32_t nativeTypeNum, uint32_t maxArraySize, uint32_t size,
