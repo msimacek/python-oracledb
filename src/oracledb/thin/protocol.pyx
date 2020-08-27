@@ -203,6 +203,11 @@ cdef class Protocol:
             buf.write_bytes(value_bytes)
         buf.write_native_uint32(flags)
 
+    cdef int _populate_marker_packet(self, WriteBuffer buf, object params):
+        buf.write_uint8(1)
+        buf.write_uint8(0)
+        buf.write_uint8(2)
+
     cdef int _populate_protocol_packet(self, WriteBuffer buf, object params):
         buf.write_bytes(b'\x00\x00\x01\x06\x05\x04\x03\x02\x01\x00')
         buf.write_bytes(b'x86_64/Linux 2.4.xx')
@@ -249,6 +254,15 @@ cdef class Protocol:
             offset += 8
         print()
 
+    cdef int _process_error_packet(self, ReadBuffer buf) except -1:
+        cdef:
+            uint8_t num_bytes
+            str message
+        buf.skip_bytes(138)
+        num_bytes = buf.read_uint8()
+        message = buf.read_str(num_bytes)
+        errors._raise_from_string(exceptions.DatabaseError, message)
+
     cdef int _process_session_data_packet(self, ReadBuffer buf,
                                           object params) except -1:
         cdef uint32_t num_bytes, flags
@@ -288,6 +302,10 @@ cdef class Protocol:
         buf.set_size(packet_size)
         if self._debug_packets:
             self._print_packet("Receiving packet:", memoryview(buf))
+        if packet_type == TNS_PACKET_TYPE_MARKER:
+            self._send_packet(TNS_PACKET_TYPE_MARKER, None,
+                              self._populate_marker_packet)
+            self._process_error_packet(self._receive_packet())
         return buf
 
     cdef _send_packet(self, uint8_t packet_type, object params,
