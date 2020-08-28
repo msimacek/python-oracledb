@@ -14,3 +14,6 @@ cdef class Connection(BaseConnection):
                 user=self.user, password=password)
         self._protocol = Protocol(sock)
         self._protocol._connect(params)
+
+    cdef str _get_version(self):
+        return self._protocol._server_version

@@ -12,6 +12,7 @@ cdef class Protocol:
     cdef:
         uint32_t _session_id, _serial_num
         uint8_t _seq_num, _debug_packets
+        str _server_version
         object _socket
         bytearray _read_buffer
         int _read_buffer_offset
@@ -265,9 +266,12 @@ cdef class Protocol:
 
     cdef int _process_session_data_packet(self, ReadBuffer buf,
                                           object params) except -1:
-        cdef uint32_t num_bytes, flags
-        cdef uint16_t num_params
-        cdef str key, value
+        cdef:
+            int version_num, release_num, update_num, port_release_num
+            uint32_t num_bytes, flags, full_version_num
+            int port_update_num
+            uint16_t num_params
+            str key, value
         buf.skip_bytes(3)               # skip data flag, data id
         num_params = buf.read_native_uint16()
         for i in range(num_params):
@@ -287,6 +291,13 @@ cdef class Protocol:
                     <uint32_t> int(params.session_data["AUTH_SESSION_ID"])
             self._serial_num = \
                     <uint32_t> int(params.session_data["AUTH_SERIAL_NUM"])
+            full_version_num = int(params.session_data["AUTH_VERSION_NO"])
+            self._server_version = "%d.%d.%d.%d.%d" % \
+                    ((full_version_num >> 24) & 0xFF,
+                     (full_version_num >> 16) & 0xFF,
+                     (full_version_num >> 12) & 0x0F,
+                     (full_version_num >> 4) & 0xFF,
+                     (full_version_num & 0x0F))
 
     cdef ReadBuffer _receive_packet(self):
         cdef:
