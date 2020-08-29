@@ -34,6 +34,8 @@ cdef class BaseConnection:
         str _version
         bint _is_connected
 
+    cdef int _close(self) except -1
+
     cdef BaseCursor _create_cursor(self)
 
     cdef str _get_version(self)
@@ -59,6 +61,8 @@ cdef class BaseCursor:
 
     cdef int _bind_by_position(self, object params, uint32_t num_elements=*,
                                uint32_t pos=*) except -1
+
+    cdef int _close(self) except -1
 
     cdef BaseVar _create_var(self)
 

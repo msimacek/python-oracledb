@@ -295,6 +295,8 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiStmt_bindByPos(dpiStmt *stmt, uint32_t pos, dpiVar *var) nogil
 
+    int dpiStmt_close(dpiStmt *stmt, const char *tag, uint32_t tagLength)
+
     int dpiStmt_define(dpiStmt *stmt, uint32_t pos, dpiVar *var) nogil
 
     int dpiStmt_execute(dpiStmt *stmt, uint32_t mode,

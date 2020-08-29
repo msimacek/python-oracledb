@@ -63,6 +63,43 @@ cdef class BaseCursor:
             else:
                 self._bind_vars.append(var)
 
+    def _call(self, name, parameters, keyword_parameters, return_value=None):
+
+        # verify parameters
+        if parameters is not None \
+                and not isinstance(parameters, (list, tuple)):
+            raise TypeError("arguments must be a list or tuple")
+        if keyword_parameters is not None \
+                and not isinstance(keyword_parameters, dict):
+            raise TypeError("keyword arguments must be a dict")
+        self._verify_open()
+
+        # build statement
+        bind_names = []
+        bind_values = []
+        statement_parts = ["begin "]
+        if return_value is not None:
+            statement_parts.append(":retval := ")
+            bind_values.append(return_value)
+        statement_parts.append(name + "(")
+        if parameters:
+            bind_values.extend(parameters)
+            bind_names = [":%d" % (i + 1) for i in range(len(parameters))]
+        if keyword_parameters:
+            for arg_name, arg_value in keyword_parameters.items():
+                bind_values.append(arg_value)
+                bind_names.append(f"{arg_name} => :{len(bind_names) + 1}")
+        statement_parts.append(",".join(bind_names))
+        statement_parts.append("); end;")
+        statement = "".join(statement_parts)
+        self.execute(statement, bind_values)
+
+    cdef int _close(self) except -1:
+        """
+        Internal method for closing the cursor. Intended to be overridden
+        by the subclass.
+        """
+
     cdef BaseVar _create_var(self):
         """
         Internal method for creating a variable. Intended to be overridden by
@@ -213,6 +250,35 @@ cdef class BaseCursor:
             errors._raise_from_string(exceptions.InterfaceError, "not open")
         connection = <BaseConnection> self.connection
         connection._verify_connected()
+
+    def callfunc(self, name, return_type, parameters=None, **kwargs):
+        """
+        Call a stored function and return the return value from the stored
+        function.
+        """
+        var = self.var(return_type)
+        self._call(name, parameters, kwargs, var)
+        return var.getvalue()
+
+    def callproc(self, name, parameters=None, **kwargs):
+        """
+        Call a stored procedure and return the (possibly modified) arguments.
+        Note that only the positional arguments are returned.
+        """
+        self._call(name, parameters, kwargs)
+        if parameters is None:
+            return []
+        return [v.getvalue() for v in self._bind_vars[:len(parameters)]]
+
+    def close(self):
+        """
+        Closes the cursor and makes it unusable for further operations.
+        """
+        self._verify_open()
+        self._bind_vars = None
+        self._fetch_vars = None
+        self._close()
+        self._is_open = False
 
     def execute(self, statement=None, parameters=None, **keyword_parameters):
         """

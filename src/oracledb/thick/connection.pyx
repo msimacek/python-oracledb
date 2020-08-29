@@ -16,6 +16,26 @@ cdef class Connection(BaseConnection):
         if self._handle != NULL:
             dpiConn_release(self._handle)
 
+    cdef int _close(self) except -1:
+        cdef:
+            uint32_t mode = DPI_MODE_CONN_CLOSE_DEFAULT
+            const char *tag_ptr = NULL
+            uint32_t tag_length = 0
+            bytes tag_bytes
+            int status
+        if self.tag:
+            mode = DPI_MODE_CONN_CLOSE_RETAG
+            tag_bytes = self.tag.encode()
+            tag_ptr = tag_bytes
+            tag_length = <uint32_t> len(tag_bytes)
+        with nogil:
+            status = dpiConn_close(self._handle, mode, tag_ptr, tag_length)
+            if status == DPI_SUCCESS:
+                dpiConn_release(self._handle)
+                self._handle = NULL
+        if status < 0:
+            _raise_from_odpi()
+
     def _connect(self, host, port, connect_string, password):
         cdef:
             bytes user_name_bytes, password_bytes, connect_string_bytes
@@ -76,24 +96,3 @@ cdef class Connection(BaseConnection):
         Internal method for creating a cursor.
         """
         return Cursor.__new__(Cursor, self)
-
-    def close(self):
-        cdef:
-            uint32_t mode = DPI_MODE_CONN_CLOSE_DEFAULT
-            const char *tag_ptr = NULL
-            uint32_t tag_length = 0
-            bytes tag_bytes
-            int status
-        self._verify_connected()
-        if self.tag:
-            mode = DPI_MODE_CONN_CLOSE_RETAG
-            tag_bytes = self.tag.encode()
-            tag_ptr = tag_bytes
-            tag_length = <uint32_t> len(tag_bytes)
-        with nogil:
-            status = dpiConn_close(self._handle, mode, tag_ptr, tag_length)
-            if status == DPI_SUCCESS:
-                dpiConn_release(self._handle)
-        if status < 0:
-            _raise_from_odpi()
-        self._handle = NULL

@@ -44,10 +44,12 @@ cdef class DbType:
 
     @staticmethod
     cdef DbType _from_type(object typ):
+        cdef ApiType apitype
         if isinstance(typ, DbType):
             return typ
         elif isinstance(typ, ApiType):
-            return typ.dbtypes[0]
+            apitype = typ
+            return apitype.dbtypes[0]
         elif not isinstance(typ, type):
             errors._raise_from_string(TypeError, "expecting type")
         elif typ is int:

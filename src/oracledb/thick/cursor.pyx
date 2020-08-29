@@ -26,6 +26,16 @@ cdef class Cursor(BaseCursor):
         if self._handle != NULL:
             dpiStmt_release(self._handle)
 
+    cdef int _close(self) except -1:
+        """
+        Internal method for closing the cursor.
+        """
+        if self._handle != NULL:
+            if dpiStmt_close(self._handle, NULL, 0) < 0:
+                _raise_from_odpi()
+            dpiStmt_release(self._handle)
+            self._handle = NULL
+
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef object _create_row(self, uint32_t buffer_row_index):

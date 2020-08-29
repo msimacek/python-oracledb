@@ -14,6 +14,12 @@ cdef class BaseConnection:
             return f"{cls_name} to externally identified user"
         return f"{cls_name} to {self.user}@{self.dsn}"
 
+    cdef int _close(self) except -1:
+        """
+        Internal method for closing the connection. Intended to be overridden
+        by the subclass.
+        """
+
     cdef BaseCursor _create_cursor(self):
         """
         Internal method for creating a cursor. Intended to be overridden by the
@@ -34,6 +40,13 @@ cdef class BaseConnection:
         if not self._is_connected:
             errors._raise_from_string(exceptions.InterfaceError,
                                       "not connected")
+
+    def close(self):
+        """
+        Closes the connection and makes it unusable for further operations.
+        """
+        self._verify_connected()
+        self._close()
 
     def cursor(self):
         """
