@@ -10,7 +10,6 @@
 cdef class Cursor(BaseCursor):
     cdef:
         readonly Connection connection
-        readonly uint64_t rowcount
         uint32_t _num_rows_in_buffer
         uint32_t _buffer_row_index
         uint32_t _fetch_array_size

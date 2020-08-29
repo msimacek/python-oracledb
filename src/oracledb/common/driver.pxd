@@ -46,6 +46,7 @@ cdef class BaseConnection:
 cdef class BaseCursor:
     cdef:
         readonly str statement
+        readonly uint64_t rowcount
         public uint32_t arraysize
         public uint32_t prefetchrows
         public object inputtypehandler
