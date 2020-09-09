@@ -100,6 +100,29 @@ cdef class BaseCursor:
         by the subclass.
         """
 
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef object _create_row(self):
+        """
+        Internal method for creating a row from the fetched data.
+        """
+        cdef:
+            Py_ssize_t i, num_vars
+            object row, value
+            BaseVar var
+        num_vars = cpython.PyList_GET_SIZE(self._fetch_vars)
+        row = cpython.PyTuple_New(num_vars)
+        for i in range(num_vars):
+            var = self._fetch_vars[i]
+            value = var._get_single_value(self._buffer_index)
+            cpython.Py_INCREF(value)
+            cpython.PyTuple_SET_ITEM(row, i, value)
+        if self.rowfactory:
+            row = self.rowfactory(*row)
+        self._buffer_index += 1
+        self._buffer_rowcount -= 1
+        return row
+
     cdef BaseVar _create_var(self):
         """
         Internal method for creating a variable. Intended to be overridden by
@@ -174,8 +197,17 @@ cdef class BaseCursor:
 
     cdef object _fetch_next_row(self):
         """
-        Internal method used for fetching the next row from a cursor. This is
-        intended to be overridden by the subclass.
+        Internal method used for fetching the next row from a cursor.
+        """
+        if self._buffer_rowcount == 0 and self._more_rows_to_fetch:
+            self._fetch_rows()
+        if self._buffer_rowcount > 0:
+            return self._create_row()
+
+    cdef int _fetch_rows(self) except -1:
+        """
+        Internal method used for fetching rows from a cursor. This is intended
+        to be overridden by the subclass.
         """
 
     cdef BaseVar _get_bind_var(self, uint32_t num_elements, uint32_t pos,
@@ -320,8 +352,6 @@ cdef class BaseCursor:
                 self._bind_by_name(parameters)
             else:
                 self._bind_by_position(parameters)
-        if self._bind_vars is not None:
-            self._perform_binds()
         self._execute()
 
     def fetchall(self):

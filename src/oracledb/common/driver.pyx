@@ -4,6 +4,7 @@
 
 # cython: language_level=3
 
+cimport cython
 cimport cpython
 
 from libc.stdint cimport int8_t, int16_t, int32_t, int64_t

@@ -4,7 +4,8 @@
 
 # cython: language_level=3
 
-from libc.stdint cimport int32_t, uint32_t, uint64_t
+from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
+from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 
 cdef class ApiType:
     cdef:
@@ -17,9 +18,14 @@ cdef class DbType:
         readonly uint32_t num
         readonly str name
         readonly uint32_t default_size
+        uint8_t _ora_type_num
+        uint8_t _csfrm
 
     @staticmethod
     cdef DbType _from_num(uint32_t num)
+
+    @staticmethod
+    cdef DbType _from_ora_type_and_csfrm(uint8_t ora_type_num, uint8_t csfrm)
 
     @staticmethod
     cdef DbType _from_type(object typ)
@@ -52,8 +58,12 @@ cdef class BaseCursor:
         public object inputtypehandler
         public object outputtypehandler
         public object rowfactory
+        uint32_t _buffer_rowcount
+        uint32_t _buffer_index
+        uint32_t _fetch_array_size
         list _fetch_vars
         object _bind_vars
+        bint _more_rows_to_fetch
         bint _set_input_sizes
         bint _is_open
 
@@ -65,6 +75,8 @@ cdef class BaseCursor:
 
     cdef int _close(self) except -1
 
+    cdef object _create_row(self)
+
     cdef BaseVar _create_var(self)
 
     cdef BaseVar _create_var_by_value(self, object value,
@@ -73,6 +85,8 @@ cdef class BaseCursor:
     cdef int _execute(self) except -1
 
     cdef object _fetch_next_row(self)
+
+    cdef int _fetch_rows(self) except -1
 
     cdef BaseVar _get_bind_var(self, uint32_t num_elements, uint32_t pos,
                                object value, BaseVar orig_var)

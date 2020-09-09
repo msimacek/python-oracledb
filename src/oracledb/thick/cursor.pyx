@@ -10,10 +10,6 @@
 cdef class Cursor(BaseCursor):
     cdef:
         readonly Connection connection
-        uint32_t _num_rows_in_buffer
-        uint32_t _buffer_row_index
-        uint32_t _fetch_array_size
-        bint _more_rows_to_fetch
         dpiStmtInfo _stmt_info
         dpiStmt *_handle
         str _tag
@@ -35,27 +31,6 @@ cdef class Cursor(BaseCursor):
             dpiStmt_release(self._handle)
             self._handle = NULL
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    cdef object _create_row(self, uint32_t buffer_row_index):
-        """
-        Internal method for creating a row from the fetched data.
-        """
-        cdef:
-            Py_ssize_t i, num_vars
-            object row, value
-            Var var
-        num_vars = cpython.PyList_GET_SIZE(self._fetch_vars)
-        row = cpython.PyTuple_New(num_vars)
-        for i in range(num_vars):
-            var = self._fetch_vars[i]
-            value = var._get_single_value(buffer_row_index)
-            cpython.Py_INCREF(value)
-            cpython.PyTuple_SET_ITEM(row, i, value)
-        if self.rowfactory:
-            row = self.rowfactory(*row)
-        return row
-
     cdef BaseVar _create_var(self):
         """
         Internal method for creating a variable.
@@ -70,6 +45,8 @@ cdef class Cursor(BaseCursor):
             uint64_t rowcount
             uint32_t mode, num_query_cols
             int status
+        if self._bind_vars is not None:
+            self._perform_binds()
         mode = DPI_MODE_EXEC_DEFAULT
         with nogil:
             status = dpiStmt_execute(self._handle, mode, &num_query_cols)
@@ -81,49 +58,25 @@ cdef class Cursor(BaseCursor):
         if num_query_cols > 0:
             self._perform_define(num_query_cols)
 
-    cdef int _fetch_row(self, bint* found,
-                        uint32_t* buffer_row_index) except -1:
+    cdef int _fetch_rows(self) except -1:
         """
-        Internal method for fetching a row from the database. If no rows are
-        available in the buffer, a set of rows are fetched from the database.
-        The index into the buffer is returned along with a flag indicating
-        whether a row was found or not.
+        Internal method for fetching rows from a cursor.
         """
         cdef:
             uint32_t temp_buffer_row_index, num_rows_in_buffer
             bint more_rows_to_fetch
             int status
-        if self._num_rows_in_buffer == 0 and self._more_rows_to_fetch:
-            with nogil:
-                status = dpiStmt_fetchRows(self._handle,
-                                           self._fetch_array_size,
-                                           &temp_buffer_row_index,
-                                           &num_rows_in_buffer,
-                                           &more_rows_to_fetch)
-            if status < 0:
-                errors._raise_from_odpi()
-            self._num_rows_in_buffer = num_rows_in_buffer
-            self._buffer_row_index = temp_buffer_row_index
-            self._more_rows_to_fetch = more_rows_to_fetch
-        if self._num_rows_in_buffer == 0:
-            found[0] = False
-        else:
-            found[0] = True
-            buffer_row_index[0] = self._buffer_row_index
-            self._buffer_row_index += 1
-            self._num_rows_in_buffer -= 1
-
-    cdef object _fetch_next_row(self):
-        """
-        Internal method for fetching the next row from the cursor. If no rows
-        are available, None is returned.
-        """
-        cdef:
-            uint32_t buffer_row_index
-            bint found
-        self._fetch_row(&found, &buffer_row_index)
-        if found:
-            return self._create_row(buffer_row_index)
+        with nogil:
+            status = dpiStmt_fetchRows(self._handle,
+                                       self._fetch_array_size,
+                                       &temp_buffer_row_index,
+                                       &num_rows_in_buffer,
+                                       &more_rows_to_fetch)
+        if status < 0:
+            errors._raise_from_odpi()
+        self._buffer_rowcount = num_rows_in_buffer
+        self._buffer_index = temp_buffer_row_index
+        self._more_rows_to_fetch = more_rows_to_fetch
 
     cdef Var _get_define_var(self, uint32_t pos):
         """
@@ -181,7 +134,7 @@ cdef class Cursor(BaseCursor):
         # initialize fetching variables; these are used to reduce the number of
         # times that the GIL is released/acquired -- as there is a significant
         # amount of overhead in doing so
-        self._num_rows_in_buffer = 0
+        self._buffer_rowcount = 0
         self._more_rows_to_fetch = True
 
         # if fetch variables already exist, nothing to do (the same statement

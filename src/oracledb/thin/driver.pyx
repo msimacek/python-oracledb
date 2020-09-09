@@ -16,7 +16,7 @@ import types
 from .. import constants, errors, exceptions
 
 from ..common.driver cimport get_exception_class
-from ..common.driver cimport BaseConnection, BaseCursor, BaseVar
+from ..common.driver cimport BaseConnection, BaseCursor, BaseVar, DbType
 
 include "buffer.pyx"
 include "constants.pxi"

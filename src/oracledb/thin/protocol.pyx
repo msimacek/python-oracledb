@@ -5,7 +5,7 @@
 cdef int MAX_PACKET_SIZE = 65535
 
 ctypedef int (*populate_func_type)(Protocol self, WriteBuffer buf,
-        object params)
+        object params) except -1
 
 cdef class Protocol:
 
@@ -58,6 +58,13 @@ cdef class Protocol:
             plain_text += (bytes([n]) * n)
         return b.encrypt(plain_text)
 
+    def _execute(self, params):
+        cdef ReadBuffer buf
+        self._send_packet(TNS_PACKET_TYPE_DATA, params,
+                          self._populate_execute_packet)
+        buf = self._receive_packet()
+        self._process_execute_packet(params.cursor, buf)
+
     cdef _generate_auth_response(self, object params):
 
         # create password hash
@@ -92,7 +99,13 @@ cdef class Protocol:
         return (encoded_password.hex().upper(),
                 encoded_client_key.hex().upper()[:96])
 
-    cdef int _populate_auth_packet(self, WriteBuffer buf, object params):
+    cdef _increment_seq_num(self):
+        self._seq_num += 1
+        if self._seq_num == 0:
+            self._seqNum = 1
+
+    cdef int _populate_auth_packet(self, WriteBuffer buf,
+                                   object params) except -1:
         cdef uint8_t user_len = <uint8_t> len(params.user)
 
         # generate authentication response
@@ -120,7 +133,8 @@ cdef class Protocol:
         self._populate_key_value(buf, "SESSION_CLIENT_DRIVER_NAME",
                 constants.DRIVER_NAME, 0)
 
-    cdef int _populate_connect_packet(self, WriteBuffer buf, object params):
+    cdef int _populate_connect_packet(self, WriteBuffer buf,
+                                      object params) except -1:
         cdef:
             uint16_t connect_string_length
             bytes connect_string_bytes
@@ -144,7 +158,8 @@ cdef class Protocol:
         buf.write_uint64(0)
         buf.write_bytes(connect_string_bytes)
 
-    cdef int _populate_data_types_packet(self, WriteBuffer buf, object params):
+    cdef int _populate_data_types_packet(self, WriteBuffer buf,
+                                         object params) except -1:
 
         # write character set information (use UTF-8)
         buf.write_bytes(b'\x00\x00\x02\x69\x03\x69\x03\x83')
@@ -161,8 +176,136 @@ cdef class Protocol:
         buf.write_bytes(b'\x80\x00\x00\x00\x3c\x3c\x3c\x80\x00\x00\x00\x00' +
                 b'\x00\x00\x0e\xd0\x07')
 
+    cdef int _populate_execute_packet(self, WriteBuffer buf,
+                                      object params) except -1:
+        cdef:
+            uint32_t flags, num_params = 0, num_iters = 1
+            bint is_query = 0
+            bytes sql_bytes
+            uint8_t sql_len
+
+        # set up some variables; these should go in the Statement object and
+        # be stored in a StatementCache
+        sql = params.sql.strip()
+        sql_bytes = sql.encode()
+        sql_len = <uint8_t> len(sql_bytes)
+        sql_keyword = sql[:10].split()[0].lower()
+        flags = 0x21                # parse/execute
+        if sql_keyword in ("select", "with"):
+            flags |= 0x40           # fetch
+            num_iters = params.fetch_array_size
+            is_query = 1
+        elif sql_keyword not in ("declare", "begin", "call"):
+            flags |= 0x8000         # statement is NOT PL/SQL
+        if params.params:
+            num_params = <uint32_t> len(params.params)
+            flags |= 0x08           # bind variables present
+
+        # write switch session section; this is only needed the first time
+        buf.write_uint32(0x0000116b)
+        self._increment_seq_num()
+        buf.write_uint8(self._seq_num)
+        buf.write_native_uint32(self._session_id)
+        buf.write_native_uint32(self._serial_num)
+        buf.write_native_uint32(1)
+
+        # write execute section
+        buf.write_uint8(3)
+        buf.write_uint8(94)
+        self._increment_seq_num()
+        buf.write_uint8(self._seq_num)
+        buf.write_native_uint32(flags)
+        buf.write_native_uint32(0)
+        buf.write_native_uint64(TNS_PACKET_IND_PTR)
+        buf.write_native_uint32(sql_len)
+        buf.write_native_uint64(TNS_PACKET_IND_PTR)
+        buf.write_native_uint32(13)
+        buf.write_native_uint64(TNS_PACKET_IND_PTR)
+        buf.write_native_uint64(TNS_PACKET_IND_PTR)
+        buf.write_native_uint32(0)
+        buf.write_native_uint32(num_iters)
+        buf.write_native_uint32(0)
+        if num_params == 0:
+            buf.write_native_uint64(0)
+            buf.write_native_uint32(0)
+        else:
+            buf.write_native_uint64(TNS_PACKET_IND_PTR)
+            buf.write_native_uint32(num_params)
+        buf.write_native_uint32(0)
+        buf.write_native_uint32(0)
+        buf.write_native_uint64(TNS_PACKET_IND_PTR)
+        buf.write_native_uint32(0)
+        buf.write_native_uint32(0)
+        buf.write_native_uint64(TNS_PACKET_IND_PTR)
+        buf.write_native_uint64(TNS_PACKET_IND_PTR)
+        buf.write_native_uint64(TNS_PACKET_IND_PTR)
+        buf.write_native_uint32(0)
+        buf.write_native_uint32(0)
+        buf.write_native_uint64(TNS_PACKET_IND_PTR)
+        buf.write_native_uint64(TNS_PACKET_IND_PTR)
+        for i in range(7):
+            buf.write_native_uint32(0)
+        buf.write_uint8(sql_len)
+        buf.write_bytes(sql_bytes)
+        buf.write_native_uint32(1)
+        if is_query:
+            buf.write_native_uint32(0)
+        else:
+            buf.write_native_uint32(1)
+        for i in range(5):
+            buf.write_native_uint32(0)
+        if is_query:
+            buf.write_native_uint32(1)
+        else:
+            buf.write_native_uint32(4)
+        for i in range(5):
+            buf.write_native_uint32(0)
+        if num_params > 0:
+            self._populate_bind_params(buf, params.params)
+
+    cdef int _populate_bind_params(self, WriteBuffer buf,
+                                   list params) except -1:
+        cdef:
+            uint32_t num_params = <uint32_t> len(params)
+            bytes temp_bytes
+            object value
+            Var var
+
+        # write parameter header information
+        for i in range(num_params):
+            var = <Var> cpython.PyList_GET_ITEM(params, i)
+            buf.write_uint8(1)
+            buf.write_uint8(var.type._ora_type_num)
+            buf.write_uint8(7)
+            buf.write_uint8(var._precision)
+            buf.write_uint8(var._scale)
+            buf.write_native_uint32(var.buffer_size)
+            buf.write_native_uint32(0)
+            buf.write_native_uint32(16)
+            buf.write_native_uint32(0)
+            buf.write_native_uint32(0)
+            buf.write_native_uint32(0)
+            buf.write_native_uint16(873)        # UTF-8
+            buf.write_uint8(var.type._csfrm)    # charset form
+            buf.write_uint8(0)
+            buf.write_native_uint32(0)
+            buf.write_native_uint32(0)
+
+        # write parameter values
+        buf.write_uint8(7)
+        for i in range(num_params):
+            var = <Var> cpython.PyList_GET_ITEM(params, i)
+            value = var._values[0]
+            if var.type._ora_type_num == TNS_DATA_TYPE_VARCHAR:
+                temp_bytes = value.encode()
+                buf.write_uint8(<uint8_t> len(temp_bytes))
+                buf.write_bytes(temp_bytes)
+            else:
+                errors._raise_from_string(exceptions.NotSupportedError,
+                                          f"unsupported type {var.type}")
+
     cdef int _populate_get_session_key_packet(self, WriteBuffer buf,
-                                              object params):
+                                              object params) except -1:
         cdef uint8_t user_len = <uint8_t> len(params.user)
 
         # write function code (0x76) and sequence number (0x02)
@@ -204,17 +347,20 @@ cdef class Protocol:
             buf.write_bytes(value_bytes)
         buf.write_native_uint32(flags)
 
-    cdef int _populate_marker_packet(self, WriteBuffer buf, object params):
+    cdef int _populate_marker_packet(self, WriteBuffer buf,
+                                     object params) except -1:
         buf.write_uint8(1)
         buf.write_uint8(0)
         buf.write_uint8(2)
 
-    cdef int _populate_protocol_packet(self, WriteBuffer buf, object params):
+    cdef int _populate_protocol_packet(self, WriteBuffer buf,
+                                       object params) except -1:
         buf.write_bytes(b'\x00\x00\x01\x06\x05\x04\x03\x02\x01\x00')
         buf.write_bytes(b'x86_64/Linux 2.4.xx')
         buf.write_uint8(0)
 
-    cdef int _populate_services_packet(self, WriteBuffer buf, object params):
+    cdef int _populate_services_packet(self, WriteBuffer buf,
+                                       object params) except -1:
         buf.write_bytes(b'\x00\x00\xde\xad\xbe\xef\x00\x97\x00\x00\x00\x00' +
                 b'\x00\x04\x00\x00\x04\x00\x03\x00\x00\x00\x00\x00\x04\x00' +
                 b'\x05\x0b\x20\x04\x00\x00\x08\x00\x01\x00\x01\x45\x4a\x1b' +
@@ -255,6 +401,34 @@ cdef class Protocol:
             offset += 8
         print()
 
+    cdef Var _process_column_info(self, Cursor cursor, ReadBuffer buf):
+        cdef:
+            uint8_t data_type, csfrm
+            uint32_t name_length
+            uint16_t charset_id
+            Var var
+        var = cursor._create_var()
+        buf.skip_bytes(1)
+        data_type = buf.read_uint8()
+        buf.skip_bytes(1)
+        var._precision = buf.read_uint8()
+        var._scale = buf.read_int8()
+        var.buffer_size = buf.read_native_uint32()
+        buf.skip_bytes(20)
+        charset_id = buf.read_native_uint16()
+        csfrm = buf.read_uint8()
+        buf.skip_bytes(1)
+        var.type = DbType._from_ora_type_and_csfrm(data_type, csfrm)
+        var.size = buf.read_native_uint32()
+        buf.skip_bytes(6)
+        name_length = buf.read_native_uint32()
+        buf.skip_bytes(1)               # skip repeated info
+        var._name = buf.read_str(name_length)
+        buf.skip_bytes(14)
+        var.num_elements = cursor._fetch_array_size
+        var._finalize_init()
+        return var
+
     cdef int _process_error_packet(self, ReadBuffer buf) except -1:
         cdef:
             uint8_t num_bytes
@@ -263,6 +437,83 @@ cdef class Protocol:
         num_bytes = buf.read_uint8()
         message = buf.read_str(num_bytes)
         errors._raise_from_string(exceptions.DatabaseError, message)
+
+    cdef int _process_execute_packet(self, Cursor cursor,
+                                     ReadBuffer buf) except -1:
+        cdef:
+            uint32_t num_columns, i
+            Var var
+        buf.skip_bytes(34)
+        num_columns = buf.read_native_uint32()
+        cursor._fetch_array_size = cursor.arraysize
+        buf.skip_bytes(1)
+        cursor._more_rows_to_fetch = True
+        cursor._fetch_vars = cpython.PyList_New(num_columns)
+        for i in range(num_columns):
+            var = self._process_column_info(cursor, buf)
+            cpython.Py_INCREF(var)
+            cpython.PyList_SET_ITEM(cursor._fetch_vars, i, var)
+        buf.skip_bytes(32)
+        self._process_fetch_data(cursor, buf)
+
+    cdef int _process_fetch_data(self, Cursor cursor,
+                                 ReadBuffer buf) except -1:
+        cdef:
+            uint16_t num_bits, num_bytes
+            uint32_t row_index = 0
+            uint8_t message_type
+        cursor._buffer_rowcount = 0
+        cursor._buffer_index = 0
+        while buf.bytes_left() > 0:
+            message_type = buf.read_uint8()
+            if message_type == TNS_MSG_TYPE_ROW_HEADER:
+                buf.skip_bytes(49)
+            elif message_type == TNS_MSG_TYPE_ROW_DATA:
+                self._process_row(buf, cursor._fetch_vars, row_index)
+                cursor._buffer_rowcount += 1
+            elif message_type == TNS_MSG_TYPE_BIT_VECTOR:
+                num_bits = buf.read_native_uint16()
+                num_bytes = num_bits // 8
+                if num_bits % 8 > 0:
+                    num_bytes += 1
+                buf.skip_bytes(num_bytes)
+            else:
+                break
+
+    cdef int _process_row(self, ReadBuffer buf, list columns,
+                          uint32_t row_index) except -1:
+        cdef:
+            uint8_t num_bytes, ora_type_num, csfrm
+            ssize_t num_columns, i
+            object column_value
+            bytes temp_bytes
+            const char *ptr
+            Var var
+        num_columns = cpython.PyList_GET_SIZE(columns)
+        for i in range(num_columns):
+            var = columns[i]
+            ora_type_num = var.type._ora_type_num
+            csfrm = var.type._csfrm
+            num_bytes = buf.read_uint8()
+            if num_bytes == 0:
+                column_value = None
+            elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
+                    or ora_type_num == TNS_DATA_TYPE_CHAR:
+                temp_bytes = buf.read_bytes_chunked(num_bytes, var._buf,
+                                                    var.buffer_size)
+                if csfrm == 1:
+                    column_value = temp_bytes.decode()
+                else:
+                    column_value == temp_bytes.decode("UTF16-BE")
+            elif ora_type_num == TNS_DATA_TYPE_RAW:
+                column_value = buf.read_bytes_chunked(num_bytes, var._buf,
+                                                      var.buffer_size)
+            elif ora_type_num == TNS_DATA_TYPE_NUMBER:
+                column_value = buf.read_oracle_number(num_bytes)
+            else:
+                msg = f"unhandled data type {var.type}"
+                raise Exception(msg)
+            var._values[row_index] = column_value
 
     cdef int _process_session_data_packet(self, ReadBuffer buf,
                                           object params) except -1:
