@@ -49,7 +49,9 @@ cdef uint8_t TNS_DATA_TYPE_RAW = 23
 cdef uint8_t TNS_DATA_TYPE_CHAR = 96
 
 # fetch message types
+cdef uint8_t TNS_MSG_TYPE_ERROR = 4
 cdef uint8_t TNS_MSG_TYPE_ROW_HEADER = 6
 cdef uint8_t TNS_MSG_TYPE_ROW_DATA = 7
 cdef uint8_t TNS_MSG_TYPE_PARAMETER = 8
+cdef uint8_t TNS_MSG_TYPE_DESCRIBE_INFO = 16
 cdef uint8_t TNS_MSG_TYPE_BIT_VECTOR = 21

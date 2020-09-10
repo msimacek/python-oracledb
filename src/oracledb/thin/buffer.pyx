@@ -52,33 +52,33 @@ cdef class ReadBuffer:
         if self._offset < 0:
             self._offset = 0
 
-    cdef uint8_t read_uint8(self):
+    cdef uint8_t read_uint8(self) except *:
         cdef const char_type *ptr = self._get_raw(1)
         return ptr[0]
 
-    cdef int8_t read_int8(self):
+    cdef int8_t read_int8(self) except *:
         return <int8_t> self.read_uint8()
 
-    cdef uint16_t read_uint16(self):
+    cdef uint16_t read_uint16(self) except *:
         cdef const char_type *ptr = self._get_raw(2)
         return unpack_uint16(ptr)
 
-    cdef uint16_t read_native_uint16(self):
+    cdef uint16_t read_native_uint16(self) except *:
         cdef const uint16_t *ptr = <uint16_t*> self._get_raw(2)
         return ptr[0]
 
-    cdef int16_t read_int16(self):
+    cdef int16_t read_int16(self) except *:
         return <int16_t> self.read_uint16()
 
-    cdef uint32_t read_uint32(self):
+    cdef uint32_t read_uint32(self) except *:
         cdef const char_type *ptr = self._get_raw(4)
         return unpack_uint32(ptr)
 
-    cdef uint32_t read_native_uint32(self):
+    cdef uint32_t read_native_uint32(self) except *:
         cdef const uint32_t *ptr = <uint32_t*> self._get_raw(4)
         return ptr[0]
 
-    cdef int32_t read_int32(self):
+    cdef int32_t read_int32(self) except *:
         return <int32_t> self.read_uint32()
 
     cdef bytes read_bytes(self, ssize_t num_bytes):

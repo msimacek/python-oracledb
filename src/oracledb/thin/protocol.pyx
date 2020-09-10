@@ -441,32 +441,28 @@ cdef class Protocol:
     cdef int _process_execute_packet(self, Cursor cursor,
                                      ReadBuffer buf) except -1:
         cdef:
-            uint32_t num_columns, i
-            Var var
-        buf.skip_bytes(34)
-        num_columns = buf.read_native_uint32()
-        cursor._fetch_array_size = cursor.arraysize
-        buf.skip_bytes(1)
-        cursor._more_rows_to_fetch = True
-        cursor._fetch_vars = cpython.PyList_New(num_columns)
-        for i in range(num_columns):
-            var = self._process_column_info(cursor, buf)
-            cpython.Py_INCREF(var)
-            cpython.PyList_SET_ITEM(cursor._fetch_vars, i, var)
-        buf.skip_bytes(32)
-        self._process_fetch_data(cursor, buf)
-
-    cdef int _process_fetch_data(self, Cursor cursor,
-                                 ReadBuffer buf) except -1:
-        cdef:
-            uint16_t num_bits, num_bytes
-            uint32_t row_index = 0
+            uint32_t num_columns, i, temp, num_rows, row_index = 0
+            uint16_t num_bits, num_bytes, error_num
             uint8_t message_type
-        cursor._buffer_rowcount = 0
-        cursor._buffer_index = 0
+            Var var
+        buf.skip_bytes(2)
         while buf.bytes_left() > 0:
             message_type = buf.read_uint8()
-            if message_type == TNS_MSG_TYPE_ROW_HEADER:
+            if message_type == TNS_MSG_TYPE_DESCRIBE_INFO:
+                buf.skip_bytes(31)
+                num_columns = buf.read_native_uint32()
+                cursor._fetch_array_size = cursor.arraysize
+                cursor._more_rows_to_fetch = True
+                cursor._buffer_rowcount = 0
+                cursor._buffer_index = 0
+                cursor._fetch_vars = cpython.PyList_New(num_columns)
+                buf.skip_bytes(1)
+                for i in range(num_columns):
+                    var = self._process_column_info(cursor, buf)
+                    cpython.Py_INCREF(var)
+                    cpython.PyList_SET_ITEM(cursor._fetch_vars, i, var)
+                buf.skip_bytes(32)
+            elif message_type == TNS_MSG_TYPE_ROW_HEADER:
                 buf.skip_bytes(49)
             elif message_type == TNS_MSG_TYPE_ROW_DATA:
                 self._process_row(buf, cursor._fetch_vars, row_index)
@@ -477,8 +473,19 @@ cdef class Protocol:
                 if num_bits % 8 > 0:
                     num_bytes += 1
                 buf.skip_bytes(num_bytes)
-            else:
+            elif message_type == TNS_MSG_TYPE_PARAMETER:
+                temp = buf.read_native_uint16()
+                buf.skip_bytes(temp * 4 + 8)
+            elif message_type == TNS_MSG_TYPE_ERROR:
+                buf.skip_bytes(7)
+                num_rows = buf.read_native_uint32()
+                error_num = buf.read_native_uint16()
+                if error_num == 1403:
+                    cursor._more_rows_to_fetch = False
                 break
+            else:
+                msg = f"unknown message type: {message_type}"
+                errors._raise_from_string(exceptions.InternalError, msg)
 
     cdef int _process_row(self, ReadBuffer buf, list columns,
                           uint32_t row_index) except -1:
