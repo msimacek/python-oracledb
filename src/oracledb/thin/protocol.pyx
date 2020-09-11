@@ -65,6 +65,13 @@ cdef class Protocol:
         buf = self._receive_packet()
         self._process_execute_packet(params.cursor, buf)
 
+    def _fetch(self, params):
+        cdef ReadBuffer buf
+        self._send_packet(TNS_PACKET_TYPE_DATA, params,
+                          self._populate_fetch_packet)
+        buf = self._receive_packet()
+        self._process_execute_packet(params.cursor, buf)
+
     cdef _generate_auth_response(self, object params):
 
         # create password hash
@@ -263,6 +270,17 @@ cdef class Protocol:
         if num_params > 0:
             self._populate_bind_params(buf, params.params)
 
+    cdef int _populate_fetch_packet(self, WriteBuffer buf,
+                                    object params) except -1:
+        cdef Cursor cursor = params.cursor
+        cursor._buffer_rowcount = 0
+        cursor._buffer_index = 0
+        buf.write_uint32(0x00000305)
+        self._increment_seq_num()
+        buf.write_uint8(self._seq_num)
+        buf.write_native_uint32(cursor._cursor_id)
+        buf.write_native_uint32(params.fetch_array_size)
+
     cdef int _populate_bind_params(self, WriteBuffer buf,
                                    list params) except -1:
         cdef:
@@ -441,8 +459,8 @@ cdef class Protocol:
     cdef int _process_execute_packet(self, Cursor cursor,
                                      ReadBuffer buf) except -1:
         cdef:
-            uint32_t num_columns, i, temp, num_rows, row_index = 0
             uint16_t num_bits, num_bytes, error_num
+            uint32_t num_columns, i, temp
             uint8_t message_type
             Var var
         buf.skip_bytes(2)
@@ -465,7 +483,8 @@ cdef class Protocol:
             elif message_type == TNS_MSG_TYPE_ROW_HEADER:
                 buf.skip_bytes(49)
             elif message_type == TNS_MSG_TYPE_ROW_DATA:
-                self._process_row(buf, cursor._fetch_vars, row_index)
+                self._process_row(buf, cursor._fetch_vars,
+                                  cursor._buffer_rowcount)
                 cursor._buffer_rowcount += 1
             elif message_type == TNS_MSG_TYPE_BIT_VECTOR:
                 num_bits = buf.read_native_uint16()
@@ -477,9 +496,10 @@ cdef class Protocol:
                 temp = buf.read_native_uint16()
                 buf.skip_bytes(temp * 4 + 8)
             elif message_type == TNS_MSG_TYPE_ERROR:
-                buf.skip_bytes(7)
-                num_rows = buf.read_native_uint32()
+                buf.skip_bytes(11)
                 error_num = buf.read_native_uint16()
+                buf.skip_bytes(4)
+                cursor._cursor_id = buf.read_native_uint16()
                 if error_num == 1403:
                     cursor._more_rows_to_fetch = False
                 break
