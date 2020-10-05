@@ -21,9 +21,9 @@ cdef class ReadBuffer:
         ssize_t _offset
         int _view_count
 
-    def __cinit__(self, const char_type[:] data):
+    def __cinit__(self, const char_type[:] data, ssize_t size):
         self._data = &data[0]
-        self._size = data.shape[0]
+        self._size = size
         self._offset = 0
 
     def __getbuffer__(self, Py_buffer *buf, int flags):
@@ -44,7 +44,7 @@ cdef class ReadBuffer:
     cdef ssize_t bytes_left(self):
         return self._size - self._offset
 
-    cdef void skip_bytes(self, ssize_t num_bytes):
+    cdef int skip_bytes(self, ssize_t num_bytes) except -1:
         self._get_raw(num_bytes)
 
     cdef void unread_bytes(self, ssize_t num_bytes):
@@ -63,10 +63,6 @@ cdef class ReadBuffer:
         cdef const char_type *ptr = self._get_raw(2)
         return unpack_uint16(ptr)
 
-    cdef uint16_t read_native_uint16(self) except *:
-        cdef const uint16_t *ptr = <uint16_t*> self._get_raw(2)
-        return ptr[0]
-
     cdef int16_t read_int16(self) except *:
         return <int16_t> self.read_uint16()
 
@@ -74,12 +70,46 @@ cdef class ReadBuffer:
         cdef const char_type *ptr = self._get_raw(4)
         return unpack_uint32(ptr)
 
-    cdef uint32_t read_native_uint32(self) except *:
-        cdef const uint32_t *ptr = <uint32_t*> self._get_raw(4)
-        return ptr[0]
-
     cdef int32_t read_int32(self) except *:
         return <int32_t> self.read_uint32()
+
+    cdef uint16_t read_ub2(self) except *:
+        cdef uint8_t length = self.read_uint8()
+        if length == 0:
+            return 0
+        elif length == 1:
+            return self.read_uint8()
+        elif length == 2:
+            return self.read_uint16()
+        raise Exception(f"TTC error: read UB2 of length {length}")
+
+    cdef uint32_t read_ub4(self) except *:
+        cdef uint8_t length = self.read_uint8()
+        if length == 0:
+            return 0
+        elif length == 1:
+            return self.read_uint8()
+        elif length == 2:
+            return self.read_uint16()
+        elif length == 3:
+            return self.read_uint16() * 256 + self.read_uint8()
+        elif length == 4:
+            return self.read_uint32()
+        raise Exception(f"TTC error: read UB4 of length {length}")
+
+    cdef uint64_t read_ub8(self) except *:
+        cdef uint8_t length = self.read_uint8()
+        if length == 0:
+            return 0
+        elif length == 1:
+            return self.read_uint8()
+        elif length == 2:
+            return self.read_uint16()
+        elif length == 4:
+            return self.read_uint32()
+        elif length == 8:
+            return self.read_uint64()
+        raise Exception(f"TTC error: read UB8 of length {length}")
 
     cdef bytes read_bytes(self, ssize_t num_bytes):
         cdef const char_type *ptr = self._get_raw(num_bytes)
@@ -254,14 +284,14 @@ cdef class WriteBuffer:
     def __releasebuffer__(self, Py_buffer *buf):
         self._view_count -= 1
 
-    cdef inline _ensure_available(self, ssize_t additional_size):
+    cdef inline int _ensure_available(self, ssize_t additional_size) except -1:
         cdef ssize_t new_size = self._actual_size + additional_size
         if self._view_count > 0:
             raise BufferError('Buffer is used in a memoryview!')
         if new_size > self._allocated_size:
             self._grow(new_size)
 
-    cdef _grow(self, new_size):
+    cdef int _grow(self, new_size) except -1:
         cdef char_type *new_data
         new_size = ((new_size & BUFFER_CHUNK_SIZE) + 1) * BUFFER_CHUNK_SIZE
         new_data = <char_type*> cpython.PyMem_Realloc(<void*> self._data,
@@ -271,61 +301,54 @@ cdef class WriteBuffer:
         self._data = new_data
         self._allocated_size = new_size
 
-    cdef write_bytes(self, bytes value):
+    cdef int write_bytes(self, bytes value) except -1:
         cdef char_type *buf
         cdef ssize_t value_len
         cpython.PyBytes_AsStringAndSize(value, <char**> &buf, &value_len)
         self.write_raw(buf, value_len)
 
-    cdef write_raw(self, const char_type *data, ssize_t length):
+    cdef int write_raw(self, const char_type *data, ssize_t length) except -1:
         self._ensure_available(length)
         memcpy(self._data + self._actual_size, <void*> data, <size_t> length)
         self._actual_size += length
 
-    cdef write_str(self, str value):
+    cdef int write_str(self, str value) except -1:
         self.write_bytes(value.encode())
 
-    cdef write_uint8(self, uint8_t value):
+    cdef int write_uint8(self, uint8_t value) except -1:
         self._data[self._actual_size] = value
         self._actual_size += 1
 
-    cdef write_uint16(self, uint16_t value):
+    cdef int write_uint16(self, uint16_t value) except -1:
         self._ensure_available(2)
         pack_uint16(&self._data[self._actual_size], value)
         self._actual_size += 2
 
-    cdef write_native_uint16(self, uint16_t value):
-        self._ensure_available(2)
-        memcpy(self._data + self._actual_size, &value, sizeof(uint16_t))
-        self._actual_size += 2
-
-    cdef write_uint16_array(self, uint16_t *value, unsigned num_elements):
-        self._ensure_available(num_elements * 2)
-        for i in range(num_elements):
-            pack_uint16(&self._data[self._actual_size], value[i])
-            self._actual_size += 2
-
-    cdef write_uint16_at_offset(self, uint16_t value, ssize_t offset):
+    cdef int write_uint16_at_offset(self, uint16_t value,
+                                    ssize_t offset) except -1:
         if offset + 2 > self._actual_size:
             raise BufferError("Buffer is too small")
         pack_uint16(&self._data[offset], value)
 
-    cdef write_native_uint32(self, uint32_t value):
-        self._ensure_available(4)
-        memcpy(self._data + self._actual_size, &value, sizeof(uint32_t))
-        self._actual_size += 4
-
-    cdef write_uint32(self, uint32_t value):
+    cdef int write_uint32(self, uint32_t value) except -1:
         self._ensure_available(4)
         pack_uint32(&self._data[self._actual_size], value)
         self._actual_size += 4
 
-    cdef write_native_uint64(self, uint64_t value):
-        self._ensure_available(8)
-        memcpy(self._data + self._actual_size, &value, sizeof(uint64_t))
-        self._actual_size += 8
-
-    cdef write_uint64(self, uint64_t value):
+    cdef int write_uint64(self, uint64_t value) except -1:
         self._ensure_available(8)
         pack_uint64(&self._data[self._actual_size], value)
         self._actual_size += 8
+
+    cdef int write_ub4(self, uint32_t value) except -1:
+        if value == 0:
+            self.write_uint8(0)
+        elif value <= UINT8_MAX:
+            self.write_uint8(1)
+            self.write_uint8(<uint8_t> value)
+        elif value <= UINT16_MAX:
+            self.write_uint8(2)
+            self.write_uint16(<uint16_t> value)
+        else:
+            self.write_uint8(4)
+            self.write_uint32(value)

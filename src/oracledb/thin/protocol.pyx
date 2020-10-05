@@ -7,6 +7,12 @@ cdef int MAX_PACKET_SIZE = 65535
 ctypedef int (*populate_func_type)(Protocol self, WriteBuffer buf,
         object params) except -1
 
+cdef struct _OracleErrorInfo:
+    uint32_t num
+    uint16_t cursor_id
+    uint32_t message_length
+    const char_type *message
+
 cdef class Protocol:
 
     cdef:
@@ -113,7 +119,9 @@ cdef class Protocol:
 
     cdef int _populate_auth_packet(self, WriteBuffer buf,
                                    object params) except -1:
-        cdef uint8_t user_len = <uint8_t> len(params.user)
+        cdef:
+            bytes user_bytes = params.user.encode()
+            uint8_t user_len = <uint8_t> len(user_bytes)
 
         # generate authentication response
         password, session_key = self._generate_auth_response(params)
@@ -121,17 +129,15 @@ cdef class Protocol:
         # write function code (0x73) and sequence number (0x03)
         buf.write_bytes(b'\x00\x00\x03\x73\x03')
 
-        # write first aprt of authentication structure
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint32(user_len)
-        buf.write_native_uint32(257)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint32(4)              # number of key/value pairs
-        buf.write_native_uint32(0x7ffc)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_uint8(user_len)
-        buf.write_str(params.user)
+        # write first part of authentication structure
+        buf.write_uint8(1)                  # pointer (authusr)
+        buf.write_ub4(user_len)
+        buf.write_ub4(257)                  # authentication mode
+        buf.write_uint8(1)                  # pointer (authivl)
+        buf.write_ub4(4)                    # number of key/value pairs
+        buf.write_uint8(1)                  # pointer (authovl)
+        buf.write_uint8(1)                  # pointer (authovln)
+        buf.write_bytes(user_bytes)
 
         # write key/value pairs
         self._populate_key_value(buf, "AUTH_SESSKEY", session_key, 1)
@@ -147,46 +153,31 @@ cdef class Protocol:
             bytes connect_string_bytes
         connect_string_bytes = params.connect_string.encode()
         connect_string_length = <uint16_t> len(connect_string_bytes)
-        buf.write_uint16(314)           # version
-        buf.write_uint16(300)           # compatible with version
-        buf.write_uint16(0xc41)         # service options
-        buf.write_uint16(8192)          # SDU
-        buf.write_uint16(65535)         # TDU
-        buf.write_uint16(0x7f08)        # protocol characteristics
-        buf.write_uint16(0)             # line turnaround
-        buf.write_native_uint16(1)      # value of 1
+        buf.write_uint16(314)               # version
+        buf.write_uint16(300)               # compatible with version
+        buf.write_uint16(0xc41)             # service options
+        buf.write_uint16(8192)              # SDU
+        buf.write_uint16(65535)             # TDU
+        buf.write_uint16(0x7f08)            # protocol characteristics
+        buf.write_uint16(0)                 # line turnaround
+        buf.write_uint16(1)                 # value of 1
         buf.write_uint16(connect_string_length)
-        buf.write_uint16(58)            # offset to connect data
-        buf.write_uint32(2048)          # max receivable data
-        buf.write_uint16(0x4141)        # connect flags
-        buf.write_uint32(0)             # trace facility item 1
-        buf.write_uint32(0)             # trace facility item 2
-        buf.write_uint64(0)             # trace unique conn id
-        buf.write_uint64(0)
+        buf.write_uint16(58)                # offset to connect data
+        buf.write_uint32(0)                 # max receivable data
+        buf.write_uint16(0x4141)            # connect flags
+        buf.write_uint64(0)                 # obsolete
+        buf.write_uint64(0)                 # obsolete
+        buf.write_uint64(0)                 # obsolete
         buf.write_bytes(connect_string_bytes)
 
     cdef int _populate_data_types_packet(self, WriteBuffer buf,
                                          object params) except -1:
-
-        # write character set information (use UTF-8)
-        buf.write_bytes(b'\x00\x00\x02\x69\x03\x69\x03\x83')
-
-        # send compile time capabilities (first byte is length)
-        buf.write_bytes(b'\x27\x06\x01\x01\x01\x0f\x01\x01\x06\x01\x01\x01' +
-                b'\x01\x01\x01\x01\x7f\xff\x03\x0a\x03\x07\x01\x01\x7f\x01' +
-                b'\x7f\xff\x01\x09\x01\x01\xbf\x01\x05\x06\x00\x01\x07\x04')
-
-        # send runtime capabilities (first byte is length)
-        buf.write_bytes(b'\x07\x02\x01\x00\x00\x18\x00\x03')
-
-        # send timezone information (offset + file version)
-        buf.write_bytes(b'\x80\x00\x00\x00\x3c\x3c\x3c\x80\x00\x00\x00\x00' +
-                b'\x00\x00\x0e\xd0\x07')
+        buf.write_bytes(TNS_DATA_TYPES_PACKET_DATA)
 
     cdef int _populate_execute_packet(self, WriteBuffer buf,
                                       object params) except -1:
         cdef:
-            uint32_t flags, num_params = 0, num_iters = 1
+            uint32_t options, num_params = 0, num_iters = 1
             bint is_query = 0
             bytes sql_bytes
             uint8_t sql_len
@@ -197,89 +188,78 @@ cdef class Protocol:
         sql_bytes = sql.encode()
         sql_len = <uint8_t> len(sql_bytes)
         sql_keyword = sql[:10].split()[0].lower()
-        flags = 0x21                # parse/execute
+        options = 0x21                      # parse/execute
+        if sql_keyword not in ("declare", "begin", "call"):
+            options |= 0x8000               # statement is NOT PL/SQL
         if sql_keyword in ("select", "with"):
-            flags |= 0x40           # fetch
+            options |= 0x40                 # fetch
             num_iters = params.fetch_array_size
             is_query = 1
-        elif sql_keyword not in ("declare", "begin", "call"):
-            flags |= 0x8000         # statement is NOT PL/SQL
         if params.params:
             num_params = <uint32_t> len(params.params)
-            flags |= 0x08           # bind variables present
+            options |= 0x08                 # bind variables present
 
-        # write switch session section; this is only needed the first time
-        buf.write_uint32(0x0000116b)
+        # write packet
+        buf.write_uint16(0)                 # data flags
+        buf.write_uint16(0x35e)             # function code
         self._increment_seq_num()
         buf.write_uint8(self._seq_num)
-        buf.write_native_uint32(self._session_id)
-        buf.write_native_uint32(self._serial_num)
-        buf.write_native_uint32(1)
-
-        # write execute section
-        buf.write_uint8(3)
-        buf.write_uint8(94)
-        self._increment_seq_num()
-        buf.write_uint8(self._seq_num)
-        buf.write_native_uint32(flags)
-        buf.write_native_uint32(0)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint32(sql_len)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint32(13)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint32(0)
-        buf.write_native_uint32(num_iters)
-        buf.write_native_uint32(0)
+        buf.write_ub4(options)              # execute options
+        buf.write_ub4(0)                    # cursor ID
+        buf.write_uint8(1)                  # pointer (cursor id)
+        buf.write_ub4(sql_len)              # length of SQL to execute
+        buf.write_uint8(1)                  # pointer (vector)
+        buf.write_ub4(13)                   # al8i4 array length
+        buf.write_uint8(0)                  # pointer (al8o4)
+        buf.write_uint8(0)                  # pointer (al8o4l)
+        buf.write_ub4(0)                    # prefetch buffer size
+        buf.write_ub4(num_iters)            # prefetch number of rows
+        buf.write_ub4(0)                    # maximum long size
         if num_params == 0:
-            buf.write_native_uint64(0)
-            buf.write_native_uint32(0)
+            buf.write_uint8(0)              # pointer (binds)
+            buf.write_ub4(0)                # number of binds
         else:
-            buf.write_native_uint64(TNS_PACKET_IND_PTR)
-            buf.write_native_uint32(num_params)
-        buf.write_native_uint32(0)
-        buf.write_native_uint32(0)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint32(0)
-        buf.write_native_uint32(0)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint32(0)
-        buf.write_native_uint32(0)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        for i in range(7):
-            buf.write_native_uint32(0)
-        buf.write_uint8(sql_len)
+            buf.write_uint8(1)              # pointer (binds)
+            buf.write_ub4(num_params)       # number of binds
+        buf.write_uint8(0)                  # pointer (al8app)
+        buf.write_uint8(0)                  # pointer (al8txn)
+        buf.write_uint8(0)                  # pointer (al8txl)
+        buf.write_uint8(0)                  # pointer (al8kv)
+        buf.write_uint8(0)                  # pointer (al8kvl)
+        buf.write_uint8(0)                  # pointer (al8doac)
+        buf.write_ub4(0)                    # number of defines
+        buf.write_ub4(0)                    # registration id
+        buf.write_uint8(0)                  # pointer (al8objlist)
+        buf.write_uint8(1)                  # pointer (al8objlen)
+        buf.write_uint8(0)                  # pointer (al8blv)
+        buf.write_ub4(0)                    # al8blvl
+        buf.write_uint8(0)                  # pointer (al8dnam)
+        buf.write_ub4(0)                    # al8dnaml
+        buf.write_ub4(0)                    # al8regid_msb
+        buf.write_uint8(0)                  # pointer (al8pidmlrc)
+        buf.write_ub4(0)                    # al8pidmlrcbl
+        buf.write_uint8(0)                  # pointer (al8pidmlrcl)
+        buf.write_uint8(0)                  # pointer (al8sqlsig)
+        buf.write_ub4(0)                    # SQL signature length
+        buf.write_uint8(0)                  # pointer (SQL ID)
+        buf.write_ub4(0)                    # allocated size of SQL ID
+        buf.write_uint8(0)                  # pointer (length of SQL ID)
         buf.write_bytes(sql_bytes)
-        buf.write_native_uint32(1)
-        if is_query:
-            buf.write_native_uint32(0)
-        else:
-            buf.write_native_uint32(1)
-        for i in range(5):
-            buf.write_native_uint32(0)
-        if is_query:
-            buf.write_native_uint32(1)
-        else:
-            buf.write_native_uint32(4)
-        for i in range(5):
-            buf.write_native_uint32(0)
+        buf.write_ub4(1)                    # al8i4[0] parse
+        buf.write_ub4(0)                    # al8i4[1] execution count
+        buf.write_ub4(0)                    # al8i4[2]
+        buf.write_ub4(0)                    # al8i4[3]
+        buf.write_ub4(0)                    # al8i4[4]
+        buf.write_ub4(0)                    # al8i4[5] SCN (part 1)
+        buf.write_ub4(0)                    # al8i4[6] SCN (part 2)
+        buf.write_ub4(is_query)             # al8i4[7] is query
+        buf.write_ub4(0)                    # al8i4[8]
+        buf.write_ub4(0)                    # al8i4[9] DML row counts/implicit
+        buf.write_ub4(0)                    # al8i4[10]
+        buf.write_ub4(0)                    # al8i4[11]
+        buf.write_ub4(0)                    # al8i4[12]
         if num_params > 0:
             self._populate_bind_params(buf, params.params)
-
-    cdef int _populate_fetch_packet(self, WriteBuffer buf,
-                                    object params) except -1:
-        cdef Cursor cursor = params.cursor
-        cursor._buffer_rowcount = 0
-        cursor._buffer_index = 0
-        buf.write_uint32(0x00000305)
-        self._increment_seq_num()
-        buf.write_uint8(self._seq_num)
-        buf.write_native_uint32(cursor._cursor_id)
-        buf.write_native_uint32(params.fetch_array_size)
 
     cdef int _populate_bind_params(self, WriteBuffer buf,
                                    list params) except -1:
@@ -292,25 +272,22 @@ cdef class Protocol:
         # write parameter header information
         for i in range(num_params):
             var = <Var> cpython.PyList_GET_ITEM(params, i)
-            buf.write_uint8(1)
             buf.write_uint8(var.type._ora_type_num)
-            buf.write_uint8(7)
+            buf.write_uint8(3)              # flag
             buf.write_uint8(var._precision)
             buf.write_uint8(var._scale)
-            buf.write_native_uint32(var.buffer_size)
-            buf.write_native_uint32(0)
-            buf.write_native_uint32(16)
-            buf.write_native_uint32(0)
-            buf.write_native_uint32(0)
-            buf.write_native_uint32(0)
-            buf.write_native_uint16(873)        # UTF-8
-            buf.write_uint8(var.type._csfrm)    # charset form
-            buf.write_uint8(0)
-            buf.write_native_uint32(0)
-            buf.write_native_uint32(0)
+            buf.write_ub4(var.buffer_size)
+            buf.write_ub4(0)                # max num elements
+            buf.write_ub4(0)                # cont flag
+            buf.write_ub4(0)                # OID
+            buf.write_ub4(0)                # version
+            buf.write_ub4(873)              # character set id
+            buf.write_uint8(var.type._csfrm)
+            buf.write_ub4(var.size)
+            buf.write_ub4(0)                # oaccolid
 
         # write parameter values
-        buf.write_uint8(7)
+        buf.write_uint8(7)                  # data indicator
         for i in range(num_params):
             var = <Var> cpython.PyList_GET_ITEM(params, i)
             value = var._values[0]
@@ -322,24 +299,35 @@ cdef class Protocol:
                 errors._raise_from_string(exceptions.NotSupportedError,
                                           f"unsupported type {var.type}")
 
+    cdef int _populate_fetch_packet(self, WriteBuffer buf,
+                                    object params) except -1:
+        cdef Cursor cursor = params.cursor
+        cursor._buffer_rowcount = 0
+        cursor._buffer_index = 0
+        buf.write_uint32(0x00000305)
+        self._increment_seq_num()
+        buf.write_uint8(self._seq_num)
+        buf.write_ub4(cursor._cursor_id)
+        buf.write_ub4(params.fetch_array_size)
+
     cdef int _populate_get_session_key_packet(self, WriteBuffer buf,
                                               object params) except -1:
-        cdef uint8_t user_len = <uint8_t> len(params.user)
+        cdef:
+            bytes user_bytes = params.user.encode()
+            uint8_t user_len = <uint8_t> len(user_bytes)
 
         # write function code (0x76) and sequence number (0x02)
         buf.write_bytes(b'\x00\x00\x03\x76\x02')
 
         # write first part of authorization structure
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint32(user_len)
-        buf.write_native_uint32(1)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint32(5)              # number of key/value pairs
-        buf.write_native_uint32(0)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_native_uint64(TNS_PACKET_IND_PTR)
-        buf.write_uint8(user_len)
-        buf.write_str(params.user)
+        buf.write_uint8(1)                  # pointer (authusr)
+        buf.write_ub4(user_len)             # length of user name
+        buf.write_ub4(1)                    # authentication mode
+        buf.write_uint8(1)                  # pointer (authivl)
+        buf.write_ub4(5)                    # number of key/value pairs
+        buf.write_uint8(0)                  # pointer (authovl)
+        buf.write_uint8(1)                  # pointer (authovln)
+        buf.write_bytes(user_bytes)         # user name
 
         # write key/value pairs
         self._populate_key_value(buf, "AUTH_TERMINAL", "pts/2", 0)
@@ -351,19 +339,19 @@ cdef class Protocol:
 
     cdef void _populate_key_value(self, WriteBuffer buf, str key, str value,
             uint32_t flags):
-        cdef bytes key_bytes = key.encode()
-        cdef bytes value_bytes = value.encode()
-        cdef uint8_t key_len = <uint8_t> cpython.PyBytes_GET_SIZE(key_bytes)
-        cdef uint8_t value_len = \
-                <uint8_t> cpython.PyBytes_GET_SIZE(value_bytes)
-        buf.write_native_uint32(key_len)
+        cdef:
+            bytes key_bytes = key.encode()
+            bytes value_bytes = value.encode()
+            uint8_t key_len = <uint8_t> cpython.PyBytes_GET_SIZE(key_bytes)
+            uint8_t value_len = <uint8_t> cpython.PyBytes_GET_SIZE(value_bytes)
+        buf.write_ub4(key_len)
         buf.write_uint8(key_len)
         buf.write_bytes(key_bytes)
-        buf.write_native_uint32(value_len)
+        buf.write_ub4(value_len)
         if value_len > 0:
             buf.write_uint8(value_len)
             buf.write_bytes(value_bytes)
-        buf.write_native_uint32(flags)
+        buf.write_ub4(flags)
 
     cdef int _populate_marker_packet(self, WriteBuffer buf,
                                      object params) except -1:
@@ -373,24 +361,12 @@ cdef class Protocol:
 
     cdef int _populate_protocol_packet(self, WriteBuffer buf,
                                        object params) except -1:
-        buf.write_bytes(b'\x00\x00\x01\x06\x05\x04\x03\x02\x01\x00')
-        buf.write_bytes(b'x86_64/Linux 2.4.xx')
-        buf.write_uint8(0)
+        buf.write_bytes(b'\x00\x00\x01\x06\x00')
+        buf.write_bytes(b'Python_Thin\x00')
 
     cdef int _populate_services_packet(self, WriteBuffer buf,
                                        object params) except -1:
-        buf.write_bytes(b'\x00\x00\xde\xad\xbe\xef\x00\x97\x00\x00\x00\x00' +
-                b'\x00\x04\x00\x00\x04\x00\x03\x00\x00\x00\x00\x00\x04\x00' +
-                b'\x05\x0b\x20\x04\x00\x00\x08\x00\x01\x00\x01\x45\x4a\x1b' +
-                b'\x60\x09\x2a\x00\x12\x00\x01\xde\xad\xbe\xef\x00\x03\x00' +
-                b'\x00\x00\x04\x00\x04\x00\x01\x00\x01\x00\x02\x00\x01\x00' +
-                b'\x03\x00\x00\x00\x00\x00\x04\x00\x05\x0b\x20\x04\x00\x00' +
-                b'\x02\x00\x03\xe0\xe1\x00\x02\x00\x06\xfc\xff\x00\x02\x00' +
-                b'\x03\x00\x00\x00\x00\x00\x04\x00\x05\x0b\x20\x04\x00\x00' +
-                b'\x0c\x00\x01\x00\x11\x06\x10\x0c\x0f\x0a\x0b\x08\x02\x01' +
-                b'\x03\x00\x01\x00\x02\x01\x00\x03\x00\x02\x00\x00\x00\x00' +
-                b'\x00\x04\x00\x05\x0b\x20\x04\x00\x00\x03\x00\x01\x00\x03' +
-                b'\x01')
+        buf.write_bytes(TNS_SERVICES_PACKET_DATA)
 
     def _print_packet(self, operation, view):
         offset = 0
@@ -422,53 +398,108 @@ cdef class Protocol:
     cdef Var _process_column_info(self, Cursor cursor, ReadBuffer buf):
         cdef:
             uint8_t data_type, csfrm
-            uint32_t name_length
             uint16_t charset_id
+            uint32_t num_bytes
             Var var
         var = cursor._create_var()
-        buf.skip_bytes(1)
         data_type = buf.read_uint8()
-        buf.skip_bytes(1)
+        buf.read_uint8()                    # flags
         var._precision = buf.read_uint8()
         var._scale = buf.read_int8()
-        var.buffer_size = buf.read_native_uint32()
-        buf.skip_bytes(20)
-        charset_id = buf.read_native_uint16()
-        csfrm = buf.read_uint8()
-        buf.skip_bytes(1)
+        var.buffer_size = buf.read_ub4()
+        buf.read_ub4()                      # max number of array elements
+        buf.read_ub4()                      # cont flags
+        num_bytes = buf.read_ub4()          # OID
+        if num_bytes > 0:
+            buf.skip_bytes(num_bytes)
+        buf.read_ub2()                      # version
+        buf.read_ub2()                      # character set id
+        csfrm = buf.read_uint8()            # character set form
         var.type = DbType._from_ora_type_and_csfrm(data_type, csfrm)
-        var.size = buf.read_native_uint32()
-        buf.skip_bytes(6)
-        name_length = buf.read_native_uint32()
-        buf.skip_bytes(1)               # skip repeated info
-        var._name = buf.read_str(name_length)
-        buf.skip_bytes(14)
+        var.size = buf.read_ub4()
+        buf.read_ub4()                      # oaccolid
+        var.nulls_allowed = buf.read_uint8()
+        buf.skip_bytes(1)                   # v7 length of name
+        num_bytes = buf.read_ub4()
+        if num_bytes > 0:
+            buf.skip_bytes(1)               # skip repeated length
+            var._name = buf.read_str(num_bytes)
+        num_bytes = buf.read_ub4()
+        if num_bytes > 0:
+            buf.skip_bytes(num_bytes)       # schema name
+        num_bytes = buf.read_ub4()
+        if num_bytes > 0:
+            buf.skip_bytes(num_bytes)       # type name
+        buf.read_ub2()                      # column position
+        buf.read_ub4()                      # uds flag
         var.num_elements = cursor._fetch_array_size
         var._finalize_init()
         return var
 
+    cdef int _process_error_info(self, ReadBuffer buf,
+                                 _OracleErrorInfo *info) except -1:
+        buf.read_ub4()                      # end of call status
+        buf.read_ub2()                      # end to end seq#
+        buf.read_ub4()                      # current row number
+        buf.read_ub2()                      # error number
+        buf.read_ub2()                      # array elem error
+        buf.read_ub2()                      # array elem error
+        info.cursor_id = buf.read_ub2()     # cursor id
+        buf.read_ub2()                      # error position
+        buf.read_uint8()                    # sql type
+        buf.read_uint8()                    # fatal?
+        buf.read_ub2()                      # flags
+        buf.read_ub2()                      # user cursor options
+        buf.read_uint8()                    # UPI parameter
+        buf.read_uint8()                    # warning flag
+        buf.read_ub4()                      # RBA
+        buf.read_ub2()                      # partition id
+        buf.read_uint8()                    # table id
+        buf.read_ub4()                      # block #
+        buf.read_ub2()                      # slot #
+        buf.read_ub4()                      # OS error
+        buf.read_uint8()                    # statement number
+        buf.read_uint8()                    # call number
+        buf.read_ub2()                      # padding
+        buf.read_ub4()                      # success iters
+        buf.read_ub4()                      # oerrdd
+        buf.read_ub2()                      # oerrarl
+        buf.read_ub4()                      # oerepal
+        buf.read_ub2()                      # oermarl
+        info.num = buf.read_ub4()           # error number (extended)
+        buf.read_ub8()                      # row number (extended)
+        if info.num != 0:
+            info.message_length = buf.read_uint8()
+            info.message = buf._get_raw(info.message_length)
+
     cdef int _process_error_packet(self, ReadBuffer buf) except -1:
         cdef:
+            _OracleErrorInfo error_info
             uint8_t num_bytes
-            str message
-        buf.skip_bytes(138)
-        num_bytes = buf.read_uint8()
-        message = buf.read_str(num_bytes)
+        buf.skip_bytes(2)                   # skip data flag
+        if buf.read_uint8() != 4:
+            errors._raise_from_string(exceptions.DatabaseError,
+                                      "TTC error: expecting error packet")
+        self._process_error_info(buf, &error_info)
+        message = error_info.message[:error_info.message_length].decode()
         errors._raise_from_string(exceptions.DatabaseError, message)
 
     cdef int _process_execute_packet(self, Cursor cursor,
                                      ReadBuffer buf) except -1:
         cdef:
-            uint16_t num_bits, num_bytes, error_num
-            uint32_t num_columns, i, temp
+            uint32_t num_columns, num_bytes, num_params, i, temp
+            _OracleErrorInfo error_info
             uint8_t message_type
+            uint16_t num_bits
             Var var
         buf.skip_bytes(2)
         while buf.bytes_left() > 0:
             message_type = buf.read_uint8()
             if message_type == TNS_MSG_TYPE_DESCRIBE_INFO:
-                buf.skip_bytes(31)
-                num_columns = buf.read_native_uint32()
+                num_bytes = buf.read_uint8()
+                buf.skip_bytes(num_bytes)
+                buf.read_ub4()              # max row size
+                num_columns = buf.read_ub4()
                 cursor._fetch_array_size = cursor.arraysize
                 cursor._more_rows_to_fetch = True
                 cursor._buffer_rowcount = 0
@@ -479,30 +510,54 @@ cdef class Protocol:
                     var = self._process_column_info(cursor, buf)
                     cpython.Py_INCREF(var)
                     cpython.PyList_SET_ITEM(cursor._fetch_vars, i, var)
-                buf.skip_bytes(32)
+                num_bytes = buf.read_ub4()
+                if num_bytes > 0:
+                    buf.skip_bytes(num_bytes + 1)   # current date
+                buf.read_ub4()              # dcbflag
+                buf.read_ub4()              # dcbmdbz
+                buf.read_ub4()              # dcbmnpr
+                buf.read_ub4()              # dcbmxpr
+                num_bytes = buf.read_ub4()
+                if num_bytes > 0:
+                    buf.skip_bytes(num_bytes + 1)   # dcbqcky
             elif message_type == TNS_MSG_TYPE_ROW_HEADER:
-                buf.skip_bytes(49)
+                buf.skip_bytes(1)           # flags
+                buf.read_ub2()              # num requests
+                buf.read_ub4()              # iteration number
+                buf.read_ub4()              # num iters
+                buf.read_ub2()              # buffer length
+                num_bytes = buf.read_ub4()
+                if num_bytes > 0:
+                    buf.skip_bytes(num_bytes + 1)   # rxhbvc
+                num_bytes = buf.read_ub4()
+                if num_bytes > 0:
+                    buf.skip_bytes(num_bytes + 1)   # rxhrid
             elif message_type == TNS_MSG_TYPE_ROW_DATA:
                 self._process_row(buf, cursor._fetch_vars,
                                   cursor._buffer_rowcount)
                 cursor._buffer_rowcount += 1
             elif message_type == TNS_MSG_TYPE_BIT_VECTOR:
-                num_bits = buf.read_native_uint16()
+                num_bits = buf.read_ub2()
                 num_bytes = num_bits // 8
                 if num_bits % 8 > 0:
                     num_bytes += 1
                 buf.skip_bytes(num_bytes)
             elif message_type == TNS_MSG_TYPE_PARAMETER:
-                temp = buf.read_native_uint16()
-                buf.skip_bytes(temp * 4 + 8)
+                num_params = buf.read_ub2() # al8o4l (ignored)
+                for i in range(num_params):
+                    buf.read_ub4()
+                num_bytes = buf.read_ub2()  # al8txl (ignored)
+                if num_bytes > 0:
+                    buf.skip_bytes(num_bytes)
+                num_params = buf.read_ub2() # num key/value pairs
+                num_bytes = buf.read_ub4()  # registration
+                if num_bytes > 0:
+                    buf.skip_bytes(num_bytes)
             elif message_type == TNS_MSG_TYPE_ERROR:
-                buf.skip_bytes(11)
-                error_num = buf.read_native_uint16()
-                buf.skip_bytes(4)
-                cursor._cursor_id = buf.read_native_uint16()
-                if error_num == 1403:
+                self._process_error_info(buf, &error_info)
+                cursor._cursor_id = error_info.cursor_id
+                if error_info.num == 1403:
                     cursor._more_rows_to_fetch = False
-                break
             else:
                 msg = f"unknown message type: {message_type}"
                 errors._raise_from_string(exceptions.InternalError, msg)
@@ -551,18 +606,18 @@ cdef class Protocol:
             uint16_t num_params
             str key, value
         buf.skip_bytes(3)               # skip data flag, data id
-        num_params = buf.read_native_uint16()
+        num_params = buf.read_ub2()
         for i in range(num_params):
-            num_bytes = buf.read_native_uint32()
+            num_bytes = buf.read_ub4()
             buf.skip_bytes(1)           # skip redundant length
             key = buf.read_str(num_bytes)
-            num_bytes = buf.read_native_uint32()
+            num_bytes = buf.read_ub4()
             if num_bytes > 0:
                 buf.skip_bytes(1)           # skip redundant length
                 value = buf.read_str(num_bytes)
             else:
                 value = ""
-            flags = buf.read_native_uint32()
+            flags = buf.read_ub4()
             params.session_data[key] = value
         if "AUTH_SESSION_ID" in params.session_data:
             self._session_id = \
@@ -582,8 +637,9 @@ cdef class Protocol:
             ReadBuffer buf
             uint16_t packet_size
             uint8_t packet_type
-        self._socket.recv_into(self._read_buffer, MAX_PACKET_SIZE)
-        buf = ReadBuffer(self._read_buffer)
+            ssize_t bytes_read
+        bytes_read = self._socket.recv_into(self._read_buffer, MAX_PACKET_SIZE)
+        buf = ReadBuffer(self._read_buffer, bytes_read)
         packet_size = buf.read_uint16()
         buf.skip_bytes(2)               # skip packet checksum
         packet_type = buf.read_uint8()

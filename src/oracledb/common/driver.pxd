@@ -109,6 +109,7 @@ cdef class BaseVar:
         readonly uint32_t size
         readonly uint32_t buffer_size
         readonly DbType type
+        readonly bint nulls_allowed
 
     cdef int _bind(self, BaseCursor cursor, str name=*,
                    uint32_t pos=*) except -1

@@ -185,6 +185,8 @@ cdef class BaseCursor:
         var.type = dbtype
         var.num_elements = num_elements
         var.size = size
+        if size > 0:
+            var.buffer_size = size * 4
         var.is_array = False
         var._finalize_init()
         return var

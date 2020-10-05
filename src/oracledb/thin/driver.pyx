@@ -7,6 +7,10 @@
 cimport cython
 cimport cpython
 
+from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
+from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
+from libc.stdint cimport UINT8_MAX, UINT16_MAX, UINT32_MAX, UINT64_MAX
+
 from Crypto.Cipher import AES
 import hashlib
 import os

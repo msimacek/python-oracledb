@@ -2,9 +2,6 @@
 # Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
-from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
-
 cdef extern from "./hton.c":
     cdef void pack_int16(char_type *buf, int16_t x);
     cdef void pack_uint16(char_type *buf, uint16_t x);
