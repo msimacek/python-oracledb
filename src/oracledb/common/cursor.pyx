@@ -136,8 +136,8 @@ cdef class BaseCursor:
         specified value.
         """
         cdef:
+            uint32_t size = 0, buffer_size = 0
             object type_handler, result
-            uint32_t size = 0
             DbType dbtype
             BaseVar var
 
@@ -160,17 +160,20 @@ cdef class BaseCursor:
         # determine the type and size of variable to create
         if value is None:
             dbtype = DB_TYPE_VARCHAR
-            size = 1
+            buffer_size = size = 1
         elif isinstance(value, bool):
             dbtype = DB_TYPE_BOOLEAN
+            buffer_size = 4
         elif isinstance(value, str):
             dbtype = DB_TYPE_VARCHAR
             size = <uint32_t> len(value)
+            buffer_size = size * 4
         elif isinstance(value, bytes):
             dbtype = DB_TYPE_RAW
-            size = <uint32_t> len(value)
+            buffer_size = size = <uint32_t> len(value)
         elif isinstance(value, (int, float, decimal.Decimal)):
             dbtype = DB_TYPE_NUMBER
+            buffer_size = 22
         elif isinstance(value, (datetime.date, datetime.datetime)):
             dbtype = DB_TYPE_DATE
         elif isinstance(value, datetime.timedelta):
@@ -185,8 +188,7 @@ cdef class BaseCursor:
         var.type = dbtype
         var.num_elements = num_elements
         var.size = size
-        if size > 0:
-            var.buffer_size = size * 4
+        var.buffer_size = buffer_size
         var.is_array = False
         var._finalize_init()
         return var

@@ -10,6 +10,8 @@ ctypedef unsigned char char_type
 
 include "hton.pxd"
 
+DEF NUMBER_AS_TEXT_CHARS = 172
+DEF NUMBER_MAX_DIGITS = 40
 DEF BUFFER_CHUNK_SIZE = 2048
 
 @cython.final
@@ -145,8 +147,8 @@ cdef class ReadBuffer:
         cdef bint is_positive, is_integer
         cdef int16_t decimal_point_index
         cdef const char_type *ptr
-        cdef char_type buf[172]
-        cdef uint8_t digits[40]
+        cdef char_type buf[NUMBER_AS_TEXT_CHARS]
+        cdef uint8_t digits[NUMBER_MAX_DIGITS]
         cdef int8_t exponent
         cdef str text
 
@@ -306,6 +308,151 @@ cdef class WriteBuffer:
         cdef ssize_t value_len
         cpython.PyBytes_AsStringAndSize(value, <char**> &buf, &value_len)
         self.write_raw(buf, value_len)
+
+    cdef int write_oracle_number(self, bytes num_bytes) except -1:
+        cdef:
+            uint8_t num_digits = 0, digit, num_pairs, pair_num, digits_pos
+            bint exponent_is_negative = False, append_sentinel = False
+            ssize_t num_bytes_length, exponent_pos, pos = 0
+            bint is_negative = False, prepend_zero = False
+            uint8_t digits[NUMBER_AS_TEXT_CHARS]
+            int16_t decimal_point_index
+            int8_t exponent_on_wire
+            const char_type *ptr
+            int16_t exponent
+
+        # zero length string cannot be converted
+        num_bytes_length = len(num_bytes)
+        if num_bytes_length == 0:
+            raise Exception("zero length string representation of number")
+        elif num_bytes_length > NUMBER_AS_TEXT_CHARS:
+            raise Exception("string representation of number too long")
+
+        # check to see if number is negative (first character is '-')
+        ptr = num_bytes
+        if ptr[0] == b'-':
+            is_negative = True
+            pos += 1
+
+        # scan for digits until the decimal point or exponent indicator found
+        while pos < num_bytes_length:
+            if ptr[pos] == b'.' or ptr[pos] == b'e' or ptr[pos] == b'E':
+                break
+            if ptr[pos] < b'0' or ptr[pos] > b'9':
+                raise Exception("invalid string representation of number")
+            digit = ptr[pos] - <uint8_t> b'0'
+            pos += 1
+            if digit == 0 and num_digits == 0:
+                continue
+            digits[num_digits] = digit
+            num_digits += 1
+        decimal_point_index = num_digits
+
+        # scan for digits following the decimal point, if applicable
+        if pos < num_bytes_length and ptr[pos] == b'.':
+            pos += 1
+            while pos < num_bytes_length:
+                if ptr[pos] == b'e' or ptr[pos] == b'E':
+                    break
+                digit = ptr[pos] - <uint8_t> b'0'
+                pos += 1
+                if digit == 0 and num_digits == 0:
+                    decimal_point_index -= 1
+                    continue
+                digits[num_digits] = digit
+                num_digits += 1
+
+        # handle exponent, if applicable
+        if pos < num_bytes_length and (ptr[pos] == b'e' or ptr[pos] == b'E'):
+            pos += 1
+            if pos < num_bytes_length:
+                if ptr[pos] == b'-':
+                    exponent_is_negative = True
+                    pos += 1
+                elif ptr[pos] == b'+':
+                    pos += 1
+            exponent_pos = pos
+            while pos < num_bytes_length:
+                if ptr[pos] < b'0' or ptr[pos] > b'9':
+                    raise Exception("invalid exponent")
+                pos += 1
+            if exponent_pos == pos:
+                raise Exception("no digits in exponent")
+            exponent = <int16_t> int(ptr[exponent_pos:pos])
+            if exponent_is_negative:
+                exponent = -exponent
+            decimal_point_index += exponent
+
+        # if there is anything left in the string, that indicates an invalid
+        # number as well
+        if pos < num_bytes_length:
+            raise Exception("invalid number")
+
+        # skip trailing zeros
+        while num_digits > 0 and digits[num_digits - 1] == 0:
+            num_digits -= 1
+
+        # value must be less than 1e126 and greater than 1e-129; the number of
+        # digits also cannot exceed the maximum precision of Oracle numbers
+        if num_digits > NUMBER_MAX_DIGITS or decimal_point_index > 126 \
+                or decimal_point_index < -129:
+            raise Exception("value cannot be represented as an Oracle number")
+
+        # if the exponent is odd, prepend a zero
+        if (decimal_point_index > 0 and decimal_point_index % 2 == 1) \
+                or (decimal_point_index < 0 and decimal_point_index % 2 == -1):
+            prepend_zero = True
+            if num_digits > 0:
+                digits[num_digits] = 0
+                num_digits += 1
+                decimal_point_index += 1
+
+        # determine the number of digit pairs; if the number of digits is odd,
+        # append a zero to make the number of digits even
+        if num_digits % 2 == 1:
+            digits[num_digits] = 0
+            num_digits += 1
+        num_pairs = num_digits // 2
+
+        # append a sentinel 102 byte for negative numbers if there is room
+        if is_negative and num_digits > 0 and num_digits < NUMBER_MAX_DIGITS:
+            append_sentinel = True
+
+        # write length of number
+        self.write_uint8(num_pairs + 1 + append_sentinel)
+
+        # if the number of digits is zero, the value is itself zero since all
+        # leading and trailing zeros are removed from the digits string; this
+        # is a special case
+        if num_digits == 0:
+            self.write_uint8(128)
+            return 0
+
+        # write the exponent
+        exponent_on_wire = <int8_t> ((decimal_point_index - 2) / 2 + 193)
+        if is_negative:
+            exponent_on_wire = ~exponent_on_wire
+        self.write_uint8(exponent_on_wire)
+
+        # write the mantissa bytes
+        digits_pos = 0
+        for pair_num in range(num_pairs):
+            if pair_num == 0 and prepend_zero:
+                digit = digits[digits_pos]
+                digits_pos += 1
+            else:
+                digit = digits[digits_pos] * 10 + digits[digits_pos + 1]
+                digits_pos += 2
+            if is_negative:
+                digit = 101 - digit
+            else:
+                digit += 1
+            self.write_uint8(digit)
+
+        # append 102 byte for negative numbers if the number of digits is less
+        # than the maximum allowable
+        if append_sentinel:
+            self.write_uint8(102)
 
     cdef int write_raw(self, const char_type *data, ssize_t length) except -1:
         self._ensure_available(length)

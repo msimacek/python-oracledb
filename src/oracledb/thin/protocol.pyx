@@ -291,10 +291,14 @@ cdef class Protocol:
         for i in range(num_params):
             var = <Var> cpython.PyList_GET_ITEM(params, i)
             value = var._values[0]
-            if var.type._ora_type_num == TNS_DATA_TYPE_VARCHAR:
+            if value is None:
+                buf.write_uint8(0)
+            elif var.type._ora_type_num == TNS_DATA_TYPE_VARCHAR:
                 temp_bytes = value.encode()
                 buf.write_uint8(<uint8_t> len(temp_bytes))
                 buf.write_bytes(temp_bytes)
+            elif var.type._ora_type_num == TNS_DATA_TYPE_NUMBER:
+                buf.write_oracle_number(str(value).encode())
             else:
                 errors._raise_from_string(exceptions.NotSupportedError,
                                           f"unsupported type {var.type}")
