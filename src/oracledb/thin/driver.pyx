@@ -6,16 +6,21 @@
 
 cimport cython
 cimport cpython
+cimport cpython.datetime as cydatetime
 
 from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from libc.stdint cimport UINT8_MAX, UINT16_MAX, UINT32_MAX, UINT64_MAX
 
 from Crypto.Cipher import AES
+import datetime
+import decimal
 import hashlib
 import os
 import socket
 import types
+
+cydatetime.import_datetime()
 
 from .. import constants, errors, exceptions
 

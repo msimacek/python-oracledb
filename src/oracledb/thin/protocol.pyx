@@ -414,7 +414,13 @@ cdef class Protocol:
         data_type = buf.read_uint8()
         buf.read_uint8()                    # flags
         var._precision = buf.read_uint8()
-        var._scale = buf.read_int8()
+        if data_type == TNS_DATA_TYPE_NUMBER \
+                or data_type == TNS_DATA_TYPE_TIMESTAMP \
+                or data_type == TNS_DATA_TYPE_TIMESTAMP_LTZ \
+                or data_type == TNS_DATA_TYPE_TIMESTAMP_TZ:
+            var._scale = buf.read_ub2()
+        else:
+            var._scale = buf.read_int8()
         var.buffer_size = buf.read_ub4()
         buf.read_ub4()                      # max number of array elements
         buf.read_ub4()                      # cont flags
@@ -621,12 +627,17 @@ cdef class Protocol:
                 if csfrm == 1:
                     column_value = temp_bytes.decode()
                 else:
-                    column_value == temp_bytes.decode("UTF16-BE")
+                    column_value = temp_bytes.decode("UTF-16BE")
             elif ora_type_num == TNS_DATA_TYPE_RAW:
                 column_value = buf.read_bytes_chunked(num_bytes, var._buf,
                                                       var.buffer_size)
             elif ora_type_num == TNS_DATA_TYPE_NUMBER:
                 column_value = buf.read_oracle_number(num_bytes)
+            elif ora_type_num == TNS_DATA_TYPE_DATE \
+                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
+                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_LTZ \
+                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ:
+                column_value = buf.read_oracle_date(num_bytes)
             else:
                 msg = f"unhandled data type {var.type}"
                 raise Exception(msg)

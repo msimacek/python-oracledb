@@ -75,43 +75,14 @@ cdef class ReadBuffer:
     cdef int32_t read_int32(self) except *:
         return <int32_t> self.read_uint32()
 
-    cdef uint16_t read_ub2(self) except *:
-        cdef uint8_t length = self.read_uint8()
-        if length == 0:
-            return 0
-        elif length == 1:
-            return self.read_uint8()
-        elif length == 2:
-            return self.read_uint16()
-        raise Exception(f"TTC error: read UB2 of length {length}")
+    cdef inline uint16_t read_ub2(self) except *:
+        return <uint16_t> self.read_oracle_int()
 
-    cdef uint32_t read_ub4(self) except *:
-        cdef uint8_t length = self.read_uint8()
-        if length == 0:
-            return 0
-        elif length == 1:
-            return self.read_uint8()
-        elif length == 2:
-            return self.read_uint16()
-        elif length == 3:
-            return self.read_uint16() * 256 + self.read_uint8()
-        elif length == 4:
-            return self.read_uint32()
-        raise Exception(f"TTC error: read UB4 of length {length}")
+    cdef inline uint32_t read_ub4(self) except *:
+        return <uint32_t> self.read_oracle_int()
 
     cdef uint64_t read_ub8(self) except *:
-        cdef uint8_t length = self.read_uint8()
-        if length == 0:
-            return 0
-        elif length == 1:
-            return self.read_uint8()
-        elif length == 2:
-            return self.read_uint16()
-        elif length == 4:
-            return self.read_uint32()
-        elif length == 8:
-            return self.read_uint64()
-        raise Exception(f"TTC error: read UB8 of length {length}")
+        return <uint64_t> self.read_oracle_int()
 
     cdef bytes read_bytes(self, ssize_t num_bytes):
         cdef const char_type *ptr = self._get_raw(num_bytes)
@@ -141,6 +112,44 @@ cdef class ReadBuffer:
 
     cdef str read_nstr(self, ssize_t num_bytes):
         return self.read_bytes(num_bytes).decode("UTF-16BE")
+
+    cdef object read_oracle_date(self, uint8_t num_bytes):
+        cdef:
+            const char_type *ptr = self._get_raw(num_bytes)
+            uint32_t fsecond = 0
+            uint16_t year
+        year = (<uint8_t> ptr[0] - 100) * 100 + <uint8_t> ptr[1] - 100
+        if num_bytes >= 11:
+            fsecond = unpack_uint32(&ptr[7]) // 1000
+        return cydatetime.datetime_new(year, ptr[2], ptr[3], ptr[4] - 1,
+                                       ptr[5] - 1, ptr[6] - 1, fsecond, None)
+
+    cdef int64_t read_oracle_int(self) except *:
+        cdef:
+            bint is_negative = False
+            uint8_t length
+            int64_t value
+        length = self.read_uint8()
+        if length & 0x80:
+            is_negative = True
+            length = length & 0x7f
+        if length == 0:
+            return 0
+        elif length == 1:
+            value = self.read_uint8()
+        elif length == 2:
+            value = self.read_uint16()
+        elif length == 3:
+            value = self.read_uint16() * 256 + self.read_uint8()
+        elif length == 4:
+            value = self.read_uint32()
+        elif length == 8:
+            value = self.read_uint64()
+        else:
+            raise Exception(f"TTC error: read integer of length {length}")
+        if is_negative:
+            value = -value
+        return value
 
     cdef object read_oracle_number(self, uint8_t num_bytes):
         cdef uint8_t num_digits, byte, digit

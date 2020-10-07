@@ -45,8 +45,12 @@ cdef uint8_t TNS_CS_NCHAR = 2
 # data types
 cdef uint8_t TNS_DATA_TYPE_VARCHAR = 1
 cdef uint8_t TNS_DATA_TYPE_NUMBER = 2
+cdef uint8_t TNS_DATA_TYPE_DATE = 12
 cdef uint8_t TNS_DATA_TYPE_RAW = 23
 cdef uint8_t TNS_DATA_TYPE_CHAR = 96
+cdef uint8_t TNS_DATA_TYPE_TIMESTAMP = 180
+cdef uint8_t TNS_DATA_TYPE_TIMESTAMP_TZ = 181
+cdef uint8_t TNS_DATA_TYPE_TIMESTAMP_LTZ = 231
 
 # fetch message types
 cdef uint8_t TNS_MSG_TYPE_ERROR = 4
