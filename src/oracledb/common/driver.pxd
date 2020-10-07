@@ -18,6 +18,7 @@ cdef class DbType:
         readonly uint32_t num
         readonly str name
         readonly uint32_t default_size
+        uint32_t _buffer_size_factor
         uint8_t _ora_type_num
         uint8_t _csfrm
 

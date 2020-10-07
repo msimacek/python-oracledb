@@ -53,8 +53,14 @@ cdef uint8_t TNS_MSG_TYPE_ERROR = 4
 cdef uint8_t TNS_MSG_TYPE_ROW_HEADER = 6
 cdef uint8_t TNS_MSG_TYPE_ROW_DATA = 7
 cdef uint8_t TNS_MSG_TYPE_PARAMETER = 8
+cdef uint8_t TNS_MSG_TYPE_IO_VECTOR = 11
 cdef uint8_t TNS_MSG_TYPE_DESCRIBE_INFO = 16
 cdef uint8_t TNS_MSG_TYPE_BIT_VECTOR = 21
+
+# bind directions
+cdef uint8_t TNS_BIND_DIR_OUTPUT = 16
+cdef uint8_t TNS_BIND_DIR_INPUT = 32
+cdef uint8_t TNS_BIND_DIR_INPUT_OUTPUT = 48
 
 # packet data
 cdef bytes TNS_SERVICES_PACKET_DATA = \

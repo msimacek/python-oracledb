@@ -191,6 +191,8 @@ cdef class Protocol:
         options = 0x21                      # parse/execute
         if sql_keyword not in ("declare", "begin", "call"):
             options |= 0x8000               # statement is NOT PL/SQL
+        elif params.params:
+            options |= 0x400                # PL/SQL with parameters
         if sql_keyword in ("select", "with"):
             options |= 0x40                 # fetch
             num_iters = params.fetch_array_size
@@ -246,7 +248,10 @@ cdef class Protocol:
         buf.write_uint8(0)                  # pointer (length of SQL ID)
         buf.write_bytes(sql_bytes)
         buf.write_ub4(1)                    # al8i4[0] parse
-        buf.write_ub4(0)                    # al8i4[1] execution count
+        if is_query:
+            buf.write_ub4(0)                # al8i4[1] execution count
+        else:
+            buf.write_ub4(1)                # al8i4[1] execution count
         buf.write_ub4(0)                    # al8i4[2]
         buf.write_ub4(0)                    # al8i4[3]
         buf.write_ub4(0)                    # al8i4[4]
@@ -491,12 +496,15 @@ cdef class Protocol:
     cdef int _process_execute_packet(self, Cursor cursor,
                                      ReadBuffer buf) except -1:
         cdef:
-            uint32_t num_columns, num_bytes, num_params, i, temp
+            uint32_t num_columns, num_bytes, num_params, i, temp, row_index
+            uint8_t message_type, bind_dir
             _OracleErrorInfo error_info
-            uint8_t message_type
             uint16_t num_bits
+            list row_vars
             Var var
         buf.skip_bytes(2)
+        row_vars = cursor._fetch_vars
+        row_index = cursor._buffer_rowcount
         while buf.bytes_left() > 0:
             message_type = buf.read_uint8()
             if message_type == TNS_MSG_TYPE_DESCRIBE_INFO:
@@ -506,9 +514,9 @@ cdef class Protocol:
                 num_columns = buf.read_ub4()
                 cursor._fetch_array_size = cursor.arraysize
                 cursor._more_rows_to_fetch = True
-                cursor._buffer_rowcount = 0
+                row_index = cursor._buffer_rowcount = 0
                 cursor._buffer_index = 0
-                cursor._fetch_vars = cpython.PyList_New(num_columns)
+                row_vars = cursor._fetch_vars = cpython.PyList_New(num_columns)
                 buf.skip_bytes(1)
                 for i in range(num_columns):
                     var = self._process_column_info(cursor, buf)
@@ -536,10 +544,31 @@ cdef class Protocol:
                 num_bytes = buf.read_ub4()
                 if num_bytes > 0:
                     buf.skip_bytes(num_bytes + 1)   # rxhrid
+            elif message_type == TNS_MSG_TYPE_IO_VECTOR:
+                buf.skip_bytes(1)           # flag
+                temp = buf.read_ub2()       # num requests
+                row_index = buf.read_ub4()  # iter num
+                buf.read_ub4()              # num iters this time
+                buf.read_ub2()              # uac buffer length
+                num_bytes = buf.read_ub2()  # bit vector for fast fetch
+                if num_bytes > 0:
+                    buf.skip_bytes(num_bytes)
+                num_bytes = buf.read_ub2()  # rowid
+                if num_bytes > 0:
+                    buf.skip_bytes(num_bytes)
+                row_vars = []
+                for i in range(temp):       # bind directions
+                    bind_dir = buf.read_uint8()
+                    if bind_dir == TNS_BIND_DIR_INPUT:
+                        continue
+                    row_vars.append(cursor._bind_vars[i])
             elif message_type == TNS_MSG_TYPE_ROW_DATA:
-                self._process_row(buf, cursor._fetch_vars,
-                                  cursor._buffer_rowcount)
-                cursor._buffer_rowcount += 1
+                self._process_row(buf, row_vars, row_index)
+                if cursor._fetch_vars is not None:
+                    cursor._buffer_rowcount += 1
+                    row_index = cursor._buffer_rowcount
+                else:
+                    buf.skip_bytes(1)       # skip trailing zero byte
             elif message_type == TNS_MSG_TYPE_BIT_VECTOR:
                 num_bits = buf.read_ub2()
                 num_bytes = num_bits // 8
@@ -566,18 +595,18 @@ cdef class Protocol:
                 msg = f"unknown message type: {message_type}"
                 errors._raise_from_string(exceptions.InternalError, msg)
 
-    cdef int _process_row(self, ReadBuffer buf, list columns,
+    cdef int _process_row(self, ReadBuffer buf, list row_vars,
                           uint32_t row_index) except -1:
         cdef:
             uint8_t num_bytes, ora_type_num, csfrm
-            ssize_t num_columns, i
+            ssize_t num_row_vars, i
             object column_value
             bytes temp_bytes
             const char *ptr
             Var var
-        num_columns = cpython.PyList_GET_SIZE(columns)
-        for i in range(num_columns):
-            var = columns[i]
+        num_row_vars = cpython.PyList_GET_SIZE(row_vars)
+        for i in range(num_row_vars):
+            var = row_vars[i]
             ora_type_num = var.type._ora_type_num
             csfrm = var.type._csfrm
             num_bytes = buf.read_uint8()
