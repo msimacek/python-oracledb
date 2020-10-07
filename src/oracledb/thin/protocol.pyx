@@ -499,12 +499,15 @@ cdef class Protocol:
             uint32_t num_columns, num_bytes, num_params, i, temp, row_index
             uint8_t message_type, bind_dir
             _OracleErrorInfo error_info
+            bint in_fetch = False
             uint16_t num_bits
             list row_vars
             Var var
         buf.skip_bytes(2)
         row_vars = cursor._fetch_vars
         row_index = cursor._buffer_rowcount
+        if cursor._fetch_vars is not None:
+            in_fetch = True
         while buf.bytes_left() > 0:
             message_type = buf.read_uint8()
             if message_type == TNS_MSG_TYPE_DESCRIBE_INFO:
@@ -516,6 +519,7 @@ cdef class Protocol:
                 cursor._more_rows_to_fetch = True
                 row_index = cursor._buffer_rowcount = 0
                 cursor._buffer_index = 0
+                in_fetch = True
                 row_vars = cursor._fetch_vars = cpython.PyList_New(num_columns)
                 buf.skip_bytes(1)
                 for i in range(num_columns):
@@ -563,12 +567,10 @@ cdef class Protocol:
                         continue
                     row_vars.append(cursor._bind_vars[i])
             elif message_type == TNS_MSG_TYPE_ROW_DATA:
-                self._process_row(buf, row_vars, row_index)
-                if cursor._fetch_vars is not None:
+                self._process_row(buf, row_vars, row_index, in_fetch)
+                if in_fetch:
                     cursor._buffer_rowcount += 1
                     row_index = cursor._buffer_rowcount
-                else:
-                    buf.skip_bytes(1)       # skip trailing zero byte
             elif message_type == TNS_MSG_TYPE_BIT_VECTOR:
                 num_bits = buf.read_ub2()
                 num_bytes = num_bits // 8
@@ -596,7 +598,7 @@ cdef class Protocol:
                 errors._raise_from_string(exceptions.InternalError, msg)
 
     cdef int _process_row(self, ReadBuffer buf, list row_vars,
-                          uint32_t row_index) except -1:
+                          uint32_t row_index, bint in_fetch) except -1:
         cdef:
             uint8_t num_bytes, ora_type_num, csfrm
             ssize_t num_row_vars, i
@@ -629,6 +631,8 @@ cdef class Protocol:
                 msg = f"unhandled data type {var.type}"
                 raise Exception(msg)
             var._values[row_index] = column_value
+            if not in_fetch:
+                buf.skip_bytes(1)       # skip trailing zero byte
 
     cdef int _process_session_data_packet(self, ReadBuffer buf,
                                           object params) except -1:
