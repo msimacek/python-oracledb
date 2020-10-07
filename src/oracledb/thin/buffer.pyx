@@ -318,6 +318,27 @@ cdef class WriteBuffer:
         cpython.PyBytes_AsStringAndSize(value, <char**> &buf, &value_len)
         self.write_raw(buf, value_len)
 
+    cdef int write_oracle_date(self, object value, uint8_t length) except -1:
+        cdef:
+            unsigned int year
+            char_type buf[13]
+            uint32_t fsecond
+        self.write_uint8(length)
+        year = cydatetime.datetime_year(value)
+        buf[0] = <uint8_t> ((year // 100) + 100)
+        buf[1] = <uint8_t> ((year % 100) + 100)
+        buf[2] = <uint8_t> cydatetime.datetime_month(value)
+        buf[3] = <uint8_t> cydatetime.datetime_day(value)
+        buf[4] = <uint8_t> cydatetime.datetime_hour(value) + 1
+        buf[5] = <uint8_t> cydatetime.datetime_minute(value) + 1
+        buf[6] = <uint8_t> cydatetime.datetime_second(value) + 1
+        if length > 7:
+            fsecond = <uint32_t> cydatetime.datetime_microsecond(value) * 1000
+            pack_uint32(&buf[7], fsecond)
+        if length > 11:
+            pack_uint16(&buf[11], 0)
+        self.write_raw(buf, length)
+
     cdef int write_oracle_number(self, bytes num_bytes) except -1:
         cdef:
             uint8_t num_digits = 0, digit, num_pairs, pair_num, digits_pos

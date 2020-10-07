@@ -270,6 +270,7 @@ cdef class Protocol:
                                    list params) except -1:
         cdef:
             uint32_t num_params = <uint32_t> len(params)
+            uint8_t ora_type_num
             bytes temp_bytes
             object value
             Var var
@@ -295,15 +296,28 @@ cdef class Protocol:
         buf.write_uint8(7)                  # data indicator
         for i in range(num_params):
             var = <Var> cpython.PyList_GET_ITEM(params, i)
+            ora_type_num = var.type._ora_type_num
             value = var._values[0]
             if value is None:
                 buf.write_uint8(0)
-            elif var.type._ora_type_num == TNS_DATA_TYPE_VARCHAR:
-                temp_bytes = value.encode()
+            elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
+                    or ora_type_num == TNS_DATA_TYPE_CHAR:
+                if var.type._csfrm == 1:
+                    temp_bytes = value.encode()
+                else:
+                    temp_bytes = value.encode("UTF-16BE")
                 buf.write_uint8(<uint8_t> len(temp_bytes))
                 buf.write_bytes(temp_bytes)
-            elif var.type._ora_type_num == TNS_DATA_TYPE_NUMBER:
+            elif ora_type_num == TNS_DATA_TYPE_RAW:
+                buf.write_uint8(<uint8_t> len(value))
+                buf.write_bytes(value)
+            elif ora_type_num == TNS_DATA_TYPE_NUMBER:
                 buf.write_oracle_number(str(value).encode())
+            elif ora_type_num == TNS_DATA_TYPE_DATE \
+                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
+                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ \
+                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_LTZ:
+                buf.write_oracle_date(value, var.type._buffer_size_factor)
             else:
                 errors._raise_from_string(exceptions.NotSupportedError,
                                           f"unsupported type {var.type}")
