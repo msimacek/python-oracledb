@@ -84,6 +84,9 @@ cdef class BaseCursor:
 
     cdef BaseVar _create_var(self)
 
+    cdef BaseVar _create_var_by_type(self, object value,
+                                     uint32_t num_elements=?)
+
     cdef BaseVar _create_var_by_value(self, object value,
                                       uint32_t num_elements)
 

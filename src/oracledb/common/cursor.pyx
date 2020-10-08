@@ -129,6 +129,36 @@ cdef class BaseCursor:
         the subclass.
         """
 
+    cdef BaseVar _create_var_by_type(self, object value,
+                                     uint32_t num_elements=1):
+        """
+        Internal method for creating a variable that can contain the specified
+        type.
+        """
+        cdef:
+            uint32_t size = 0
+            DbType dbtype
+            BaseVar var
+        if isinstance(value, int):
+            dbtype = DB_TYPE_VARCHAR
+            size = value
+        elif isinstance(value, BaseVar):
+            return value
+        else:
+            dbtype = DbType._from_type(value)
+            size = dbtype.default_size
+        var = self._create_var()
+        var.type = dbtype
+        var.num_elements = num_elements
+        var.size = size
+        if size > 0:
+            var.buffer_size = size * dbtype._buffer_size_factor
+        else:
+            var.buffer_size = dbtype._buffer_size_factor
+        var.is_array = False
+        var._finalize_init()
+        return var
+
     cdef BaseVar _create_var_by_value(self, object value,
                                       uint32_t num_elements):
         """
@@ -395,6 +425,19 @@ cdef class BaseCursor:
         """
         self._verify_fetch()
         return self._fetch_next_row()
+
+    def setinputsizes(self, *args, **kwargs):
+        if args and kwargs:
+            message = "expecting arguments or keyword arguments, not both"
+            errors._raise_from_string(exceptions.NotSupportedError, message)
+        self._verify_open()
+        if kwargs:
+            self._bind_vars = {}
+            for key, value in kwargs.items():
+                self._bind_vars[key] = self._create_var_by_type(value)
+        else:
+            self._bind_vars = [self._create_var_by_type(v) for v in args]
+        return self._bind_vars
 
     def var(self, typ, size=0, arraysize=1, inconverter=None,
             outconverter=None, typename=None, encoding_errors=None):
