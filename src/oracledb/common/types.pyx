@@ -16,6 +16,9 @@ cdef class ApiType:
     def __hash__(self):
         return hash(self.name)
 
+    def __reduce__(self):
+        return self.name
+
     def __repr__(self):
         return f"<ApiType {self.name}>"
 
@@ -37,6 +40,9 @@ cdef class DbType:
         if csfrm == 2:
             ora_type_num += 100
         db_type_by_ora_type_num[ora_type_num] = self
+
+    def __reduce__(self):
+        return self.name
 
     def __repr__(self):
         return f"<DbType {self.name}>"
