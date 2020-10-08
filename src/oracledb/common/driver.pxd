@@ -43,9 +43,13 @@ cdef class BaseConnection:
 
     cdef int _close(self) except -1
 
+    cdef int _commit(self) except -1
+
     cdef BaseCursor _create_cursor(self)
 
     cdef str _get_version(self)
+
+    cdef int _rollback(self) except -1
 
     cdef int _verify_connected(self) except -1
 

@@ -253,6 +253,8 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiConn_close(dpiConn *conn, uint32_t mode, const char *tag,
             uint32_t tagLength) nogil
 
+    int dpiConn_commit(dpiConn *conn) nogil
+
     int dpiConn_create(const dpiContext *context, const char *userName,
             uint32_t userNameLength, const char *password,
             uint32_t passwordLength, const char *connectString,
@@ -273,6 +275,8 @@ cdef extern from "odpi/embed/dpi.c":
             dpiStmt **stmt) nogil
 
     int dpiConn_release(dpiConn *conn) nogil
+
+    int dpiConn_rollback(dpiConn *conn) nogil
 
     int dpiContext_createWithParams(unsigned int majorVersion,
             unsigned int minorVersion, dpiContextCreateParams *params,

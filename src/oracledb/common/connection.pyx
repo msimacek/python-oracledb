@@ -20,6 +20,12 @@ cdef class BaseConnection:
         by the subclass.
         """
 
+    cdef int _commit(self) except -1:
+        """
+        Internal method for committing the transaction. Intended to be
+        overridden by the subclass.
+        """
+
     cdef BaseCursor _create_cursor(self):
         """
         Internal method for creating a cursor. Intended to be overridden by the
@@ -29,6 +35,12 @@ cdef class BaseConnection:
     cdef str _get_version(self):
         """
         Return the version associated with the connection. Intended to be
+        overridden by the subclass.
+        """
+
+    cdef int _rollback(self) except -1:
+        """
+        Internal method for rolling back the transaction. Intended to be
         overridden by the subclass.
         """
 
@@ -48,11 +60,25 @@ cdef class BaseConnection:
         self._verify_connected()
         self._close()
 
+    def commit(self):
+        """
+        Commits any outstanding connection.
+        """
+        self._verify_connected()
+        self._commit()
+
     def cursor(self):
         """
         Returns a cursor associated with the connection.
         """
         return self._create_cursor()
+
+    def rollback(self):
+        """
+        Rolls back any outstanding connection.
+        """
+        self._verify_connected()
+        self._rollback()
 
     @property
     def version(self):

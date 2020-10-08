@@ -36,6 +36,13 @@ cdef class Connection(BaseConnection):
         if status < 0:
             _raise_from_odpi()
 
+    cdef int _commit(self) except -1:
+        cdef int status
+        with nogil:
+            status = dpiConn_commit(self._handle)
+        if status < 0:
+            _raise_from_odpi()
+
     def _connect(self, host, port, connect_string, password):
         cdef:
             bytes user_name_bytes, password_bytes, connect_string_bytes
@@ -96,3 +103,10 @@ cdef class Connection(BaseConnection):
         Internal method for creating a cursor.
         """
         return Cursor.__new__(Cursor, self)
+
+    cdef int _rollback(self) except -1:
+        cdef int status
+        with nogil:
+            status = dpiConn_rollback(self._handle)
+        if status < 0:
+            _raise_from_odpi()
