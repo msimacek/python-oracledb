@@ -652,6 +652,8 @@ cdef class Protocol:
                     or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_LTZ \
                     or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ:
                 column_value = buf.read_oracle_date(num_bytes)
+            elif ora_type_num == TNS_DATA_TYPE_ROWID:
+                column_value = buf.read_rowid()
             else:
                 msg = f"unhandled data type {var.type}"
                 raise Exception(msg)

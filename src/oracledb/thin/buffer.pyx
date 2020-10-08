@@ -36,6 +36,20 @@ cdef class ReadBuffer:
     def __releasebuffer__(self, Py_buffer *buf):
         self._view_count -= 1
 
+    cdef int _convert_base64(self, bytearray result, long value, int size,
+                             int offset):
+        """
+        Converts every 6 bits into a character, from left to right. This is
+        similar to ordinary base64 encoding with a few differences and written
+        here for performance.
+        """
+        cdef int i
+        for i in range(size):
+            result[offset + size - i - 1] = \
+                    TNS_BASE64_ALPHABET_ARRAY[value & 0x3f]
+            value = value >> 6
+        return offset + size
+
     cdef inline const char_type* _get_raw(self, ssize_t num_bytes) except NULL:
         cdef const char_type *ptr = &self._data[self._offset]
         if self._offset + num_bytes > self._size:
@@ -71,6 +85,10 @@ cdef class ReadBuffer:
     cdef uint32_t read_uint32(self) except *:
         cdef const char_type *ptr = self._get_raw(4)
         return unpack_uint32(ptr)
+
+    cdef uint32_t read_uint64(self) except *:
+        cdef const char_type *ptr = self._get_raw(8)
+        return unpack_uint64(ptr)
 
     cdef int32_t read_int32(self) except *:
         return <int32_t> self.read_uint32()
@@ -258,6 +276,18 @@ cdef class ReadBuffer:
         if is_integer:
             return int(text)
         return decimal.Decimal(text)
+
+    cdef object read_rowid(self):
+        cdef:
+            bytearray result
+            int offset = 0
+        result = bytearray(TNS_MAX_ROWID_LENGTH)
+        offset = self._convert_base64(result, self.read_ub4(), 6, offset)
+        offset = self._convert_base64(result, self.read_ub2(), 3, offset)
+        self.skip_bytes(1)
+        offset = self._convert_base64(result, self.read_ub4(), 6, offset)
+        offset = self._convert_base64(result, self.read_ub2(), 3, offset)
+        return bytes(result).decode()
 
     cdef inline void set_size(self, ssize_t size):
         self._size = size
