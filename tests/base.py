@@ -148,6 +148,7 @@ def run_test_cases():
 
 
 class BaseTestCase(unittest.TestCase):
+    requires_connection = True
 
     def is_on_oracle_cloud(self, connection=None):
         if connection is None:
@@ -160,10 +161,12 @@ class BaseTestCase(unittest.TestCase):
         return service_name.endswith("oraclecloud.com")
 
     def setUp(self):
-        self.connection = get_connection()
-        self.cursor = self.connection.cursor()
+        if self.requires_connection:
+            self.connection = get_connection()
+            self.cursor = self.connection.cursor()
 
     def tearDown(self):
-        self.connection.close()
-        del self.cursor
-        del self.connection
+        if self.requires_connection:
+            self.connection.close()
+            del self.cursor
+            del self.connection

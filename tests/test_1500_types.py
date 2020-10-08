@@ -14,12 +14,7 @@ import oracledb
 import pickle
 
 class TestCase(base.BaseTestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
+    requires_connection = False
 
     def __test_compare(self, db_type, api_type):
         self.assertEqual(db_type, db_type)

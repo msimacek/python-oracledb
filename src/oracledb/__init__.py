@@ -6,9 +6,21 @@ from .version import __version__
 from .exceptions import *
 from .connection import connect
 from .constants import *
+from .constructors import *
 
 from .common.driver import *
 from .thick.driver import init_oracle_client
+
+# future object used for managing backwards incompatible changes
+class Future:
+
+    def __getattr__(self, name):
+        return None
+
+    def __setattr__(self, name, value):
+        pass
+
+__future__ = Future()
 
 # synonyms for database types (for backwards compatibility)
 BFILE = DB_TYPE_BFILE
