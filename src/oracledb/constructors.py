@@ -18,8 +18,8 @@ def Time(hour, minute, second):
     errors._raise_from_string(exceptions.NotSupportedError,
                               "Oracle does not support time only variables")
 
-def Timestamp(year, month, day, hour=0, minute=0, second=0):
-    return datetime.datetime(year, month, day, hour, minute, second)
+def Timestamp(year, month, day, hour=0, minute=0, second=0, fsecond=0):
+    return datetime.datetime(year, month, day, hour, minute, second, fsecond)
 
 def DateFromTicks(ticks):
     return Date(*time.localtime(ticks)[:3])

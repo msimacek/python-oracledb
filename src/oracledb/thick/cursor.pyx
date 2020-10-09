@@ -117,7 +117,7 @@ cdef class Cursor(BaseCursor):
         var = Var.new_var(self.connection, dbtype, self._fetch_array_size,
                           size)
         var.precision = type_info.precision
-        var.scale = type_info.scale
+        var.scale = type_info.scale + type_info.fsPrecision
         var.name = name
         var.nulls_allowed = query_info.nullOk
         if dbtype.num == DPI_ORACLE_TYPE_NUMBER:
