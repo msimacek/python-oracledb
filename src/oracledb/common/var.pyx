@@ -65,6 +65,35 @@ cdef class BaseVar:
     def bufferSize(self):
         return self.buffer_size
 
+    @property
+    def description(self):
+        if self.size > 0:
+            display_size = self.size
+        elif self.type is DB_TYPE_DATE or self.type is DB_TYPE_TIMESTAMP \
+                or self.type is DB_TYPE_TIMESTAMP_LTZ \
+                or self.type is DB_TYPE_TIMESTAMP_TZ:
+            display_size = 23
+        elif self.type is DB_TYPE_BINARY_FLOAT \
+                or self.type is DB_TYPE_BINARY_DOUBLE \
+                or self.type is DB_TYPE_BINARY_INTEGER \
+                or self.type is DB_TYPE_NUMBER:
+            if self.precision:
+                display_size = self.precision + 1
+                if self.scale > 0:
+                    display_size += self.scale + 1
+            else:
+                display_size = 127
+        else:
+            display_size = 0
+        size_in_bytes = self.buffer_size if self.type.default_size != 0 else 0
+        if self.precision or self.scale:
+            precision = self.precision
+            scale = self.scale
+        else:
+            scale = precision = None
+        return (self.name, self.type, display_size or None,
+                size_in_bytes or None, precision, scale, self.nulls_allowed)
+
     def getvalue(self, pos=0):
         """
         Return the value at the given position in the variable.

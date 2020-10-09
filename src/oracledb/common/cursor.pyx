@@ -346,6 +346,12 @@ cdef class BaseCursor:
         self._close()
         self._is_open = False
 
+    @property
+    def description(self):
+        if self._fetch_vars is None:
+            return None
+        return [v.description for v in self._fetch_vars]
+
     def execute(self, statement=None, parameters=None, **keyword_parameters):
         """
         Executes a statement, passing any parameters to the database.

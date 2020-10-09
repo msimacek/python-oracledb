@@ -113,12 +113,15 @@ cdef class Cursor(BaseCursor):
             elif result is not None:
                 message = "expecting variable from output type handler"
                 errors._raise_from_error(TypeError, message)
+        type_info = &query_info.typeInfo
         var = Var.new_var(self.connection, dbtype, self._fetch_array_size,
                           size)
+        var.precision = type_info.precision
+        var.scale = type_info.scale
+        var.name = query_info.name[:query_info.nameLength].decode()
+        var.nulls_allowed = query_info.nullOk
         if dbtype.num == DPI_ORACLE_TYPE_NUMBER:
-            type_info = &query_info.typeInfo
-            if type_info.scale == 0 \
-                    or (type_info.scale == -127 and type_info.precision == 0):
+            if var.scale == 0 or (var.scale == -127 and var.precision == 0):
                 var._number_as_int = True
         return var
 

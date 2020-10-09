@@ -110,13 +110,16 @@ cdef class BaseCursor:
 
 cdef class BaseVar:
     cdef:
+        readonly str name
+        readonly DbType type
+        readonly int16_t precision
+        readonly int16_t scale
+        readonly uint32_t num_elements
         readonly object inconverter
         readonly object outconverter
-        readonly uint32_t num_elements
-        readonly bint is_array
         readonly uint32_t size
         readonly uint32_t buffer_size
-        readonly DbType type
+        readonly bint is_array
         readonly bint nulls_allowed
 
     cdef int _bind(self, BaseCursor cursor, str name=*,

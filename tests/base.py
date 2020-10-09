@@ -82,6 +82,16 @@ def get_admin_connect_string():
                                "Password for %s" % admin_user)
     return "%s/%s@%s" % (admin_user, admin_password, get_connect_string())
 
+def get_charset_ratio():
+    value = PARAMETERS.get("CS_RATIO")
+    if value is None:
+        connection = get_connection()
+        cursor = connection.cursor()
+        cursor.execute("select 'X' from dual")
+        column_info, = cursor.description
+        value = PARAMETERS["CS_RATIO"] = column_info[3]
+    return value
+
 def get_connection(**kwargs):
     return oracledb.connect(get_connect_string(), user=get_main_user(),
             password=get_main_password(), thin=get_is_thin(), **kwargs)

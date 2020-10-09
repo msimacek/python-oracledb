@@ -10,9 +10,6 @@
 cdef class Var(BaseVar):
     cdef:
         Connection _connection
-        str _name
-        int16_t _precision
-        int16_t _scale
         list _values
         char_type *_buf
 

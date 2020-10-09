@@ -280,8 +280,8 @@ cdef class Protocol:
             var = <Var> cpython.PyList_GET_ITEM(params, i)
             buf.write_uint8(var.type._ora_type_num)
             buf.write_uint8(3)              # flag
-            buf.write_uint8(var._precision)
-            buf.write_uint8(var._scale)
+            buf.write_uint8(var.precision)
+            buf.write_uint8(var.scale)
             buf.write_ub4(var.buffer_size)
             buf.write_ub4(0)                # max num elements
             buf.write_ub4(0)                # cont flag
@@ -427,14 +427,14 @@ cdef class Protocol:
         var = cursor._create_var()
         data_type = buf.read_uint8()
         buf.read_uint8()                    # flags
-        var._precision = buf.read_uint8()
+        var.precision = buf.read_uint8()
         if data_type == TNS_DATA_TYPE_NUMBER \
                 or data_type == TNS_DATA_TYPE_TIMESTAMP \
                 or data_type == TNS_DATA_TYPE_TIMESTAMP_LTZ \
                 or data_type == TNS_DATA_TYPE_TIMESTAMP_TZ:
-            var._scale = buf.read_ub2()
+            var.scale = buf.read_ub2()
         else:
-            var._scale = buf.read_int8()
+            var.scale = buf.read_int8()
         var.buffer_size = buf.read_ub4()
         buf.read_ub4()                      # max number of array elements
         buf.read_ub4()                      # cont flags
@@ -452,7 +452,7 @@ cdef class Protocol:
         num_bytes = buf.read_ub4()
         if num_bytes > 0:
             buf.skip_bytes(1)               # skip repeated length
-            var._name = buf.read_str(num_bytes)
+            var.name = buf.read_str(num_bytes)
         num_bytes = buf.read_ub4()
         if num_bytes > 0:
             buf.skip_bytes(num_bytes)       # schema name
