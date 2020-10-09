@@ -4,6 +4,7 @@
 
 from .version import __version__
 from .exceptions import *
+from .errors import _Error
 from .connection import connect
 from .constants import *
 from .constructors import *

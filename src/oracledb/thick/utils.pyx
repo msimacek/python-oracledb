@@ -153,7 +153,7 @@ cdef int _raise_from_info(dpiErrorInfo *error_info) except -1:
     context = "%s: %s" % (error_info.fnName, error_info.action)
     error = errors._Error(msg_bytes.decode(), context, code=error_info.code,
                           offset=error_info.offset,
-                          isrecoverable=error_info.isRecoverable,
+                          isrecoverable=bool(error_info.isRecoverable),
                           iswarning=error_info.isWarning)
     exc_type = get_exception_class(error_info.code)
     raise exc_type(error)
