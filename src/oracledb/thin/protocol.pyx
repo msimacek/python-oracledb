@@ -29,6 +29,11 @@ cdef class Protocol:
         self._debug_packets = <uint8_t> ("PYO_DEBUG_PACKETS" in os.environ)
         self._read_buffer = bytearray(MAX_PACKET_SIZE * 2)
 
+    cdef int _commit(self) except -1:
+        self._send_packet(TNS_PACKET_TYPE_DATA, None,
+                          self._populate_commit_packet)
+        self._receive_packet()
+
     def _connect(self, params):
         cdef ReadBuffer buf
         self._send_packet(TNS_PACKET_TYPE_CONNECT, params,
@@ -145,6 +150,12 @@ cdef class Protocol:
         self._populate_key_value(buf, "SESSION_CLIENT_CHARSET", "873", 0)
         self._populate_key_value(buf, "SESSION_CLIENT_DRIVER_NAME",
                 constants.DRIVER_NAME, 0)
+
+    cdef int _populate_commit_packet(self, WriteBuffer buf,
+                                     object params) except -1:
+        buf.write_uint32(0x0000030e)
+        self._increment_seq_num()
+        buf.write_uint8(self._seq_num)
 
     cdef int _populate_connect_packet(self, WriteBuffer buf,
                                       object params) except -1:
@@ -387,6 +398,12 @@ cdef class Protocol:
         buf.write_bytes(b'\x00\x00\x01\x06\x00')
         buf.write_bytes(b'Python_Thin\x00')
 
+    cdef int _populate_rollback_packet(self, WriteBuffer buf,
+                                       object params) except -1:
+        buf.write_uint32(0x0000030f)
+        self._increment_seq_num()
+        buf.write_uint8(self._seq_num)
+
     cdef int _populate_services_packet(self, WriteBuffer buf,
                                        object params) except -1:
         buf.write_bytes(TNS_SERVICES_PACKET_DATA)
@@ -467,6 +484,7 @@ cdef class Protocol:
 
     cdef int _process_error_info(self, ReadBuffer buf,
                                  _OracleErrorInfo *info) except -1:
+        cdef uint32_t num_bytes
         buf.read_ub4()                      # end of call status
         buf.read_ub2()                      # end to end seq#
         buf.read_ub4()                      # current row number
@@ -491,7 +509,9 @@ cdef class Protocol:
         buf.read_uint8()                    # call number
         buf.read_ub2()                      # padding
         buf.read_ub4()                      # success iters
-        buf.read_ub4()                      # oerrdd
+        num_bytes = buf.read_ub4()          # oerrdd
+        if num_bytes > 0:
+            buf.skip_bytes(num_bytes + 1)
         buf.read_ub2()                      # oerrarl
         buf.read_ub4()                      # oerepal
         buf.read_ub2()                      # oermarl
@@ -716,6 +736,11 @@ cdef class Protocol:
                               self._populate_marker_packet)
             self._process_error_packet(self._receive_packet())
         return buf
+
+    cdef int _rollback(self) except -1:
+        self._send_packet(TNS_PACKET_TYPE_DATA, None,
+                          self._populate_rollback_packet)
+        self._receive_packet()
 
     cdef _send_packet(self, uint8_t packet_type, object params,
             populate_func_type populate_func):

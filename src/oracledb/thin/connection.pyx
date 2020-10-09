@@ -7,6 +7,9 @@ cdef class Connection(BaseConnection):
     cdef:
         Protocol _protocol
 
+    cdef int _commit(self) except -1:
+        self._protocol._commit()
+
     def _connect(self, host, port, connect_string, password):
         sock = socket.socket()
         sock.connect((host, port))
@@ -21,3 +24,6 @@ cdef class Connection(BaseConnection):
 
     cdef str _get_version(self):
         return self._protocol._server_version
+
+    cdef int _rollback(self) except -1:
+        self._protocol._rollback()
