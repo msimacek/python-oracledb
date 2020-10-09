@@ -95,10 +95,44 @@ cdef class Var(BaseVar):
 
     cdef int _set_from_bytes(self, uint32_t pos, bytes value) except -1:
         cdef:
+            uint32_t length, num_elements, i
+            dpiData *source_data
+            dpiVar *temp_handle
+            dpiData *temp_data
+            dpiBytes *as_bytes
             const char *ptr
-            uint32_t length
         ptr = value
         length = <uint32_t> len(value)
+        if length > self.buffer_size:
+            if dpiConn_newVar(self._connection._handle, self.type.num,
+                              self._native_type_num, self.num_elements,
+                              length, 1, self.is_array, NULL, &temp_handle,
+                              &temp_data) < 0:
+                _raise_from_odpi()
+            try:
+                if self.is_array:
+                    if dpiVar_getNumElementsInArray(self._handle,
+                                                    &num_elements) < 0:
+                        _raise_from_odpi()
+                    if dpiVar_setNumElementsInArray(temp_handle,
+                                                    num_elements) < 0:
+                        _raise_from_odpi()
+                for i in range(self.num_elements):
+                    source_data = &self._data[i]
+                    if i == pos or source_data.isNull:
+                        continue
+                    as_bytes = &source_data.value.asBytes
+                    if dpiVar_setFromBytes(temp_handle, i, as_bytes.ptr,
+                                           as_bytes.length) < 0:
+                        _raise_from_odpi()
+            except:
+                dpiVar_release(temp_handle)
+                raise
+            dpiVar_release(self._handle)
+            self._handle = temp_handle
+            self._data = temp_data
+            self.size = length
+            self.buffer_size = length
         if dpiVar_setFromBytes(self._handle, pos, ptr, length) < 0:
             _raise_from_odpi()
 

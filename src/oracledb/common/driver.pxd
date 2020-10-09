@@ -31,6 +31,9 @@ cdef class DbType:
     @staticmethod
     cdef DbType _from_type(object typ)
 
+    @staticmethod
+    cdef DbType _from_value(object value, uint32_t *size)
+
 
 cdef class BaseConnection:
     cdef:
@@ -136,6 +139,8 @@ cdef class BaseVar:
     cdef int _set_array_value(self, list value) except -1
 
     cdef int _set_single_value(self, uint32_t pos, object value) except -1
+
+    cdef int _set_value(self, uint32_t pos, object value) except -1
 
 
 cdef object get_exception_class(int32_t code)

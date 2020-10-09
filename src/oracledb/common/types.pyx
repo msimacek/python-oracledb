@@ -99,6 +99,29 @@ cdef class DbType:
             errors._raise_from_string(exceptions.NotSupportedError,
                                       f"Python type {typ} not supported")
 
+    @staticmethod
+    cdef DbType _from_value(object value, uint32_t *size):
+        if value is None:
+            return None
+        elif isinstance(value, bool):
+            return DB_TYPE_BOOLEAN
+        elif isinstance(value, str):
+            size[0] = <uint32_t> len(value)
+            return DB_TYPE_VARCHAR
+        elif isinstance(value, bytes):
+            size[0] = <uint32_t> len(value)
+            return DB_TYPE_RAW
+        elif isinstance(value, (int, float, decimal.Decimal)):
+            return DB_TYPE_NUMBER
+        elif isinstance(value, (datetime.date, datetime.datetime)):
+            return DB_TYPE_DATE
+        elif isinstance(value, datetime.timedelta):
+            return DB_TYPE_INTERVAL_DS
+        else:
+            type_name = type(value).__name__
+            message = f"Python value of type {type_name} not supported"
+            errors._raise_from_string(exceptions.NotSupportedError, message)
+
 
 # database types
 DB_TYPE_BFILE = DbType(2020, "DB_TYPE_BFILE", 114)

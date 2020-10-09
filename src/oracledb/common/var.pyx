@@ -53,6 +53,25 @@ cdef class BaseVar:
         Set a single element of the variable to the specified value.
         """
 
+    cdef int _set_value(self, uint32_t pos, object value) except -1:
+        """
+        Internal method for setting the value of a variable which peforms all
+        necessary checks.
+        """
+        if self.is_array:
+            if pos > 0:
+                errors._raise_from_string(exceptions.NotSupportedError,
+                                          "arrays of arrays not supported")
+            if not isinstance(value, list):
+                raise TypeError("expecting list")
+            elif len(value) > self.num_elements:
+                raise TypeError("list too large for variable")
+            self._set_array_value(value)
+        else:
+            if pos >= self.num_elements:
+                raise IndexError("position out of range")
+            self._set_single_value(pos, value)
+
     @property
     def actualElements(self):
         return self._get_actual_elements()
@@ -113,19 +132,7 @@ cdef class BaseVar:
         """
         Set the value at the specified position in the variable.
         """
-        if self.is_array:
-            if pos > 0:
-                errors._raise_from_string(exceptions.NotSupportedError,
-                                          "arrays of arrays not supported")
-            if not isinstance(value, list):
-                raise TypeError("expecting list")
-            elif len(value) > self.num_elements:
-                raise TypeError("list too large for variable")
-            self._set_array_value(value)
-        else:
-            if pos >= self.num_elements:
-                raise IndexError("position out of range")
-            self._set_single_value(pos, value)
+        self._set_value(pos, value)
 
     @property
     def values(self):

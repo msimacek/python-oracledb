@@ -144,6 +144,11 @@ cdef class BaseCursor:
             size = value
         elif isinstance(value, BaseVar):
             return value
+        elif isinstance(value, list):
+            if len(value) != 2:
+                message = "expecting a list of two elements [type, numelems]"
+                errors._raise_from_string(exceptions.ProgrammingError, message)
+            return self.arrayvar(*value)
         else:
             dbtype = DbType._from_type(value)
             size = dbtype.default_size
@@ -166,9 +171,10 @@ cdef class BaseCursor:
         specified value.
         """
         cdef:
+            DbType dbtype = None, temp_dbtype
+            uint32_t size = 0, temp_size
             object type_handler, result
-            uint32_t size = 0
-            DbType dbtype
+            bint is_array = False
             BaseVar var
 
         # determine if an input type handler should be used; an input type
@@ -188,38 +194,41 @@ cdef class BaseCursor:
                 return <BaseVar> result
 
         # determine the type and size of variable to create
-        if value is None:
+        if isinstance(value, list):
+            is_array = True
+            if len(value) > num_elements:
+                num_elements = len(value)
+            for element in value:
+                temp_size = 0
+                temp_dbtype = DbType._from_value(element, &temp_size)
+                if temp_dbtype is None:
+                    continue
+                if dbtype is None:
+                    dbtype = temp_dbtype
+                    size = temp_size
+                elif temp_dbtype is not dbtype:
+                    message = f"element {element} is not the same type as" \
+                               "previous elements"
+                    errors._raise_from_string(exceptions.NotSuppportedError,
+                                              message)
+                if temp_size > size:
+                    size = temp_size
+        else:
+            dbtype = DbType._from_value(value, &size)
+        if dbtype is None:
             dbtype = DB_TYPE_VARCHAR
             size = 1
-        elif isinstance(value, bool):
-            dbtype = DB_TYPE_BOOLEAN
-        elif isinstance(value, str):
-            dbtype = DB_TYPE_VARCHAR
-            size = <uint32_t> len(value)
-        elif isinstance(value, bytes):
-            dbtype = DB_TYPE_RAW
-            size = <uint32_t> len(value)
-        elif isinstance(value, (int, float, decimal.Decimal)):
-            dbtype = DB_TYPE_NUMBER
-        elif isinstance(value, (datetime.date, datetime.datetime)):
-            dbtype = DB_TYPE_DATE
-        elif isinstance(value, datetime.timedelta):
-            dbtype = DB_TYPE_INTERVAL_DS
-        else:
-            type_name = type(value).__name__
-            message = f"Python value of type {type_name} not supported"
-            errors._raise_from_string(exceptions.NotSupportedError, message)
 
         # create the variable
         var = self._create_var()
         var.type = dbtype
         var.num_elements = num_elements
+        var.is_array = is_array
         var.size = size
         if size > 0:
             var.buffer_size = size * dbtype._buffer_size_factor
         else:
             var.buffer_size = dbtype._buffer_size_factor
-        var.is_array = False
         var._finalize_init()
         return var
 
@@ -267,13 +276,13 @@ cdef class BaseCursor:
                 var.outconverter = orig_var.outconverter
                 var._finalize_init()
             try:
-                var._set_single_value(pos, value)
+                var._set_value(pos, value)
                 return var
             except:
                 if pos > 0:
                     raise
         var = self._create_var_by_value(value, num_elements)
-        var._set_single_value(pos, value)
+        var._set_value(pos, value)
         return var
 
     cdef int _perform_binds(self) except -1:
@@ -316,6 +325,36 @@ cdef class BaseCursor:
             errors._raise_from_string(exceptions.InterfaceError, "not open")
         connection = <BaseConnection> self.connection
         connection._verify_connected()
+
+    def arrayvar(self, typ, value, size=None):
+        """
+        Create an array variable associated with the cursor of the given type
+        and size and return it.
+        """
+        cdef:
+            DbType dbtype
+            BaseVar var
+        dbtype = DbType._from_type(typ)
+        var = self._create_var()
+        var.is_array = True
+        var.type = dbtype
+        if dbtype.default_size > 0:
+            var.size = size or dbtype.default_size
+            var.buffer_size = var.size * dbtype._buffer_size_factor
+        else:
+            var.buffer_size = dbtype._buffer_size_factor
+        if isinstance(value, list):
+            var.num_elements = len(value)
+        elif isinstance(value, int):
+            var.num_elements = value
+        else:
+            errors._raise_from_string(TypeError,
+                                      "expecting integer or list of values")
+        var._finalize_init()
+        if isinstance(value, list):
+            var.setvalue(0, value)
+        return var
+
 
     def callfunc(self, name, return_type, parameters=None, **kwargs):
         """
@@ -443,6 +482,7 @@ cdef class BaseCursor:
                 self._bind_vars[key] = self._create_var_by_type(value)
         else:
             self._bind_vars = [self._create_var_by_type(v) for v in args]
+        self._set_input_sizes = True
         return self._bind_vars
 
     def var(self, typ, size=0, arraysize=1, inconverter=None,

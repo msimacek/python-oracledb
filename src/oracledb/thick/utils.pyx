@@ -46,7 +46,6 @@ cdef int _convert_from_python(object value, DbType dbtype,
         memset(&dbvalue.asTimestamp, 0, sizeof(dbvalue.asTimestamp))
         timestamp = &dbvalue.asTimestamp
         if isinstance(value, datetime.datetime):
-            print("Found datetime!")
             timestamp.year = cydatetime.datetime_year(value)
             timestamp.month = cydatetime.datetime_month(value)
             timestamp.day = cydatetime.datetime_day(value)
@@ -55,7 +54,6 @@ cdef int _convert_from_python(object value, DbType dbtype,
             timestamp.second = cydatetime.datetime_second(value)
             timestamp.fsecond = cydatetime.datetime_microsecond(value) * 1000
         elif isinstance(value, datetime.date):
-            print("Found date!")
             timestamp.year = cydatetime.date_year(value)
             timestamp.month = cydatetime.date_month(value)
             timestamp.day = cydatetime.date_day(value)
