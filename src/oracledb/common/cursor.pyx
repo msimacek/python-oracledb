@@ -355,6 +355,9 @@ cdef class BaseCursor:
             var.setvalue(0, value)
         return var
 
+    @property
+    def bindvars(self):
+        return self._bind_vars or []
 
     def callfunc(self, name, return_type, parameters=None, **kwargs):
         """

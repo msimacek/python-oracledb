@@ -32,7 +32,6 @@ class TestCase(base.BaseTestCase):
         self.assertTrue("Test!" in error_obj.message)
         self.assertEqual(error_obj.code, 20101)
         self.assertEqual(error_obj.offset, 0)
-        print("error_obj.isrecoverable", repr(error_obj.isrecoverable))
         self.assertTrue(isinstance(error_obj.isrecoverable, bool))
         new_error_obj = pickle.loads(pickle.dumps(error_obj))
         self.assertEqual(type(new_error_obj), oracledb._Error)

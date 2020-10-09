@@ -91,9 +91,9 @@ cdef class Cursor(BaseCursor):
             dpiQueryInfo query_info
             DbType dbtype
             uint32_t size
-            Var var
             int status
             str name
+            Var var
         if dpiStmt_getQueryInfo(self._handle, pos, &query_info) < 0:
             _raise_from_odpi()
         dbtype = DbType._from_num(query_info.typeInfo.oracleTypeNum)
@@ -103,8 +103,8 @@ cdef class Cursor(BaseCursor):
             size = query_info.typeInfo.clientSizeInBytes
         type_handler = self.outputtypehandler \
                 or self.connection.outputtypehandler
+        name = query_info.name[:query_info.nameLength].decode()
         if type_handler:
-            name = query_info.name[query_info.nameLength].decode()
             result = type_handler(self, name, dbtype, size,
                                   query_info.typeInfo.precision,
                                   query_info.typeInfo.scale)
@@ -118,7 +118,7 @@ cdef class Cursor(BaseCursor):
                           size)
         var.precision = type_info.precision
         var.scale = type_info.scale
-        var.name = query_info.name[:query_info.nameLength].decode()
+        var.name = name
         var.nulls_allowed = query_info.nullOk
         if dbtype.num == DPI_ORACLE_TYPE_NUMBER:
             if var.scale == 0 or (var.scale == -127 and var.precision == 0):

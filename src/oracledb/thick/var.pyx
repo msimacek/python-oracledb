@@ -42,6 +42,8 @@ cdef class Var(BaseVar):
                 _raise_from_odpi()
 
     cdef int _finalize_init(self) except -1:
+        if self.num_elements == 0:
+            self.num_elements = 1
         self._native_type_num = _get_native_type_num(self.type)
         if dpiConn_newVar(self._connection._handle, self.type.num,
                           self._native_type_num, self.num_elements, self.size,

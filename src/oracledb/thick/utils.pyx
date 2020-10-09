@@ -23,6 +23,14 @@ cdef int _convert_from_python(object value, DbType dbtype,
             raise TypeError("expecting number")
         if var is not None:
             var._set_from_bytes(pos, value_bytes)
+    elif oracle_type == DPI_ORACLE_TYPE_NATIVE_DOUBLE \
+            or oracle_type == DPI_ORACLE_TYPE_NATIVE_FLOAT:
+        if not isinstance(value, (float, int, decimal.Decimal)):
+            raise TypeError("expecting number")
+        if oracle_type == DPI_ORACLE_TYPE_NATIVE_DOUBLE:
+            dbvalue.asDouble = <double> value
+        else:
+            dbvalue.asFloat = <float> value
     elif oracle_type == DPI_ORACLE_TYPE_VARCHAR \
             or oracle_type == DPI_ORACLE_TYPE_NVARCHAR \
             or oracle_type == DPI_ORACLE_TYPE_CHAR \
@@ -59,6 +67,8 @@ cdef int _convert_from_python(object value, DbType dbtype,
             timestamp.day = cydatetime.date_day(value)
         else:
             raise TypeError("expecting datetime.date or datetime.datetime")
+    elif oracle_type == DPI_ORACLE_TYPE_BOOLEAN:
+        dbvalue.asBoolean = 1 if value else 0
     else:
         errors._raise_from_string(exceptions.NotSupportedError,
                                   f"database type {dbtype} not supported")
