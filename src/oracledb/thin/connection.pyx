@@ -7,6 +7,9 @@ cdef class Connection(BaseConnection):
     cdef:
         Protocol _protocol
 
+    cdef int _close(self) except -1:
+        self._protocol._close()
+
     cdef int _commit(self) except -1:
         self._protocol._commit()
 

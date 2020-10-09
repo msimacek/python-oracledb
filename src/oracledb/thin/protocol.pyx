@@ -29,6 +29,14 @@ cdef class Protocol:
         self._debug_packets = <uint8_t> ("PYO_DEBUG_PACKETS" in os.environ)
         self._read_buffer = bytearray(MAX_PACKET_SIZE * 2)
 
+    cdef int _close(self) except -1:
+        self._send_packet(TNS_PACKET_TYPE_DATA, None,
+                          self._populate_close_packet)
+        self._receive_packet()
+        self._send_packet(TNS_PACKET_TYPE_DATA, None,
+                          self._populate_final_close_packet)
+        self._socket.close()
+
     cdef int _commit(self) except -1:
         self._send_packet(TNS_PACKET_TYPE_DATA, None,
                           self._populate_commit_packet)
@@ -150,6 +158,12 @@ cdef class Protocol:
         self._populate_key_value(buf, "SESSION_CLIENT_CHARSET", "873", 0)
         self._populate_key_value(buf, "SESSION_CLIENT_DRIVER_NAME",
                 constants.DRIVER_NAME, 0)
+
+    cdef int _populate_close_packet(self, WriteBuffer buf,
+                                    object params) except -1:
+        buf.write_uint32(0x00000309)
+        self._increment_seq_num()
+        buf.write_uint8(self._seq_num)
 
     cdef int _populate_commit_packet(self, WriteBuffer buf,
                                      object params) except -1:
@@ -343,6 +357,10 @@ cdef class Protocol:
         buf.write_uint8(self._seq_num)
         buf.write_ub4(cursor._cursor_id)
         buf.write_ub4(params.fetch_array_size)
+
+    cdef int _populate_final_close_packet(self, WriteBuffer buf,
+                                          object params) except -1:
+        buf.write_uint16(0x0040)
 
     cdef int _populate_get_session_key_packet(self, WriteBuffer buf,
                                               object params) except -1:
