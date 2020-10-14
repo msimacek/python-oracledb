@@ -238,6 +238,13 @@ cdef class BaseCursor:
         overridden by the subclass.
         """
 
+    cdef int _executemany(self, uint32_t num_execs, bint batcherrors,
+                          bint arraydmlrowcounts) except -1:
+        """
+        Internal method used for executing a statement many times. This is
+        intended to be overridden by the subclass.
+        """
+
     cdef object _fetch_next_row(self):
         """
         Internal method used for fetching the next row from a cursor.
@@ -251,6 +258,18 @@ cdef class BaseCursor:
         """
         Internal method used for fetching rows from a cursor. This is intended
         to be overridden by the subclass.
+        """
+
+    cdef object _get_array_dml_row_counts(self):
+        """
+        Internal method used for populating list with arraydmlrowcount. This is
+        intended to be overridden by the subclass.
+        """
+
+    cdef object _get_batch_errors(self):
+        """
+        Internal method used for populating list with batch error objects. This
+        is intended to be overridden by the subclass.
         """
 
     cdef BaseVar _get_bind_var(self, uint32_t num_elements, uint32_t pos,
@@ -422,7 +441,7 @@ cdef class BaseCursor:
 
         # prepare statement, if necessary
         self._verify_open()
-        if statement != self.statement:
+        if statement and statement != self.statement:
             self._fetch_vars = None
             if not self._set_input_sizes:
                 self._bind_vars = None
@@ -435,6 +454,47 @@ cdef class BaseCursor:
             else:
                 self._bind_by_position(parameters)
         self._execute()
+
+    def executemany(self, statement, parameters, batcherrors=False,
+                    arraydmlrowcounts=False):
+        """
+        Executes a statement many times equal to the number of elements in the
+        list of parameters or the provided integer. Arraydmlrowcounts and
+        batcherrors can be set.
+        """
+        cdef uint32_t num_execs, i
+
+        # verify parameters
+        if statement is None and self.statement is None:
+            message = "no statement specified and no prior statement prepared"
+            errors._raise_from_string(exceptions.ProgrammingError, message)
+        if not isinstance(parameters, (list, int)):
+            message = "parameters should be a list of sequences or " \
+                      "dictionaries, or an integer specifying the number of " \
+                      "times to execute the statement"
+            errors._raise_from_string(exceptions.ProgrammingError, message)
+
+        # prepare statement if necessary
+        self._verify_open()
+        if statement and statement != self.statement:
+            self._fetch_vars = None
+            if not self._set_input_sizes:
+                self._bind_vars = None
+            self._prepare(statement)
+
+        # perform binds
+        if isinstance(parameters, int):
+            num_execs = parameters
+        else:
+            num_execs = len(parameters)
+            for i in range(num_execs):
+                if isinstance(parameters[i], dict):
+                    self._bind_by_name(parameters[i], num_execs, i)
+                else:
+                    self._bind_by_position(parameters[i], num_execs, i)
+
+        self._executemany(num_execs, bool(batcherrors),
+                          bool(arraydmlrowcounts))
 
     def fetchall(self):
         """
@@ -473,6 +533,24 @@ cdef class BaseCursor:
         """
         self._verify_fetch()
         return self._fetch_next_row()
+
+    def getarraydmlrowcounts(self):
+        """
+        Populates the arraydmlrowcount row count list.
+        """
+        return self._get_array_dml_row_counts()
+
+    def getbatcherrors(self):
+        """
+        Populates the batch error list with error objects.
+        """
+        return self._get_batch_errors()
+
+    def prepare(self, statement):
+        """
+        Prepares a statement.
+        """
+        self._prepare(statement)
 
     def setinputsizes(self, *args, **kwargs):
         if args and kwargs:

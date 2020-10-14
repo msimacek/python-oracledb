@@ -58,6 +58,36 @@ cdef class Cursor(BaseCursor):
         if num_query_cols > 0:
             self._perform_define(num_query_cols)
 
+    cdef int _executemany(self, uint32_t num_execs, bint batcherrors,
+                          bint arraydmlrowcounts) except -1:
+        """
+        Internal method for executing a statement many times
+        equal to the number of elements in the list of parameters
+        or the provided integer. Arraydmlrowcounts and batcherrors
+        can be set.
+        """
+        cdef:
+            int status, rowcount_status
+            uint64_t rowcount
+            uint32_t mode
+
+        mode = DPI_MODE_EXEC_DEFAULT
+        if arraydmlrowcounts:
+            mode |= DPI_MODE_EXEC_ARRAY_DML_ROWCOUNTS
+        if batcherrors:
+            mode |= DPI_MODE_EXEC_BATCH_ERRORS
+
+        if self._bind_vars is not None:
+            self._perform_binds()
+
+        if num_execs > 0:
+            with nogil:
+                status = dpiStmt_executeMany(self._handle, mode, num_execs)
+                rowcount_status = dpiStmt_getRowCount(self._handle, &rowcount)
+            self.rowcount = rowcount
+            if status < 0 or rowcount_status < 0:
+                _raise_from_odpi()
+
     cdef int _fetch_rows(self) except -1:
         """
         Internal method for fetching rows from a cursor.
@@ -77,6 +107,55 @@ cdef class Cursor(BaseCursor):
         self._buffer_rowcount = num_rows_in_buffer
         self._buffer_index = temp_buffer_row_index
         self._more_rows_to_fetch = more_rows_to_fetch
+
+    cdef object _get_array_dml_row_counts(self):
+        """
+        Internal method for populating arraydmlrowcount
+        list.
+        """
+        cdef:
+            uint32_t num_row_count, i
+            uint64_t *rowcount
+            int status
+
+        status = dpiStmt_getRowCounts(self._handle, &num_row_count, &rowcount)
+        if status < 0:
+            _raise_from_odpi()
+
+        result = cpython.PyList_New(num_row_count)
+        for i in range(num_row_count):
+            cpython.PyList_SET_ITEM(result, i, rowcount[i])
+        return result
+
+    cdef object _get_batch_errors(self):
+        """
+        Internal method for populating a list of batch error
+        objects.
+        """
+        cdef:
+            uint32_t num_errors, i
+            dpiErrorInfo *errors
+
+        if dpiStmt_getBatchErrorCount(self._handle, &num_errors) < 0:
+            _raise_from_odpi()
+        if num_errors == 0:
+            return []
+
+        errors = <dpiErrorInfo*> \
+                cpython.PyMem_Malloc(num_errors * sizeof(dpiErrorInfo))
+
+        try:
+            if dpiStmt_getBatchErrors(self._handle, num_errors, errors) < 0:
+                _raise_from_odpi()
+            result = cpython.PyList_New(num_errors)
+            for i in range(num_errors):
+                error = _create_new_from_info(&errors[i])
+                cpython.Py_INCREF(error)
+                cpython.PyList_SET_ITEM(result, i, error)
+        finally:
+            cpython.PyMem_Free(errors)
+
+        return result
 
     cdef Var _get_define_var(self, uint32_t pos):
         """

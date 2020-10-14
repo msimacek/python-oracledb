@@ -95,9 +95,16 @@ cdef class BaseCursor:
 
     cdef int _execute(self) except -1
 
+    cdef int _executemany(self, uint32_t num_execs, bint batcherrors,
+                          bint arraydmlrowcounts) except -1
+
     cdef object _fetch_next_row(self)
 
     cdef int _fetch_rows(self) except -1
+
+    cdef object _get_array_dml_row_counts(self)
+
+    cdef object _get_batch_errors(self)
 
     cdef BaseVar _get_bind_var(self, uint32_t num_elements, uint32_t pos,
                                object value, BaseVar orig_var)
