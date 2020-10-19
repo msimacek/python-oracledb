@@ -241,7 +241,7 @@ cdef class Protocol:
         buf.write_uint8(0)                  # pointer (al8o4l)
         buf.write_ub4(0)                    # prefetch buffer size
         buf.write_ub4(num_iters)            # prefetch number of rows
-        buf.write_ub4(0)                    # maximum long size
+        buf.write_ub4(0x7fffffff)           # maximum long size
         if num_params == 0:
             buf.write_uint8(0)              # pointer (binds)
             buf.write_ub4(0)                # number of binds
@@ -625,7 +625,8 @@ cdef class Protocol:
                         continue
                     row_vars.append(cursor._bind_vars[i])
             elif message_type == TNS_MSG_TYPE_ROW_DATA:
-                self._process_row(buf, row_vars, row_index, in_fetch)
+                self._process_row(buf, cursor.connection._chunked_bytes_buf,
+                                  row_vars, row_index, in_fetch)
                 if in_fetch:
                     cursor._buffer_rowcount += 1
                     row_index = cursor._buffer_rowcount
@@ -655,7 +656,8 @@ cdef class Protocol:
                 msg = f"unknown message type: {message_type}"
                 errors._raise_from_string(exceptions.InternalError, msg)
 
-    cdef int _process_row(self, ReadBuffer buf, list row_vars,
+    cdef int _process_row(self, ReadBuffer buf,
+                          ChunkedBytesBuffer chunked_bytes_buf, list row_vars,
                           uint32_t row_index, bint in_fetch) except -1:
         cdef:
             uint8_t num_bytes, ora_type_num, csfrm
@@ -673,16 +675,19 @@ cdef class Protocol:
             if num_bytes == 0:
                 column_value = None
             elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
-                    or ora_type_num == TNS_DATA_TYPE_CHAR:
-                temp_bytes = buf.read_bytes_chunked(num_bytes, var._buf,
-                                                    var.buffer_size)
+                    or ora_type_num == TNS_DATA_TYPE_CHAR \
+                    or ora_type_num == TNS_DATA_TYPE_LONG:
+                temp_bytes = buf.read_bytes_chunked(num_bytes,
+                                                    chunked_bytes_buf)
                 if csfrm == 1:
                     column_value = temp_bytes.decode()
                 else:
                     column_value = temp_bytes.decode("UTF-16BE")
+                if ora_type_num == TNS_DATA_TYPE_LONG:
+                    buf.skip_bytes(2)
             elif ora_type_num == TNS_DATA_TYPE_RAW:
-                column_value = buf.read_bytes_chunked(num_bytes, var._buf,
-                                                      var.buffer_size)
+                column_value = buf.read_bytes_chunked(num_bytes,
+                                                      chunked_bytes_buf)
             elif ora_type_num == TNS_DATA_TYPE_NUMBER:
                 column_value = buf.read_oracle_number(num_bytes)
             elif ora_type_num == TNS_DATA_TYPE_DATE \

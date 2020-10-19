@@ -4,7 +4,7 @@
 
 import decimal
 
-from libc.string cimport memcpy
+from libc.string cimport memcpy, memset
 
 ctypedef unsigned char char_type
 
@@ -13,6 +13,132 @@ include "hton.pxd"
 DEF NUMBER_AS_TEXT_CHARS = 172
 DEF NUMBER_MAX_DIGITS = 40
 DEF BUFFER_CHUNK_SIZE = 2048
+DEF CHUNKED_BYTES_CHUNK_SIZE = 65536
+
+cdef struct BytesChunk:
+    char_type *ptr
+    uint32_t length
+    uint32_t allocated_length
+
+
+@cython.final
+cdef class ChunkedBytesBuffer:
+
+    cdef:
+        uint32_t _num_chunks
+        uint32_t _allocated_chunks
+        BytesChunk *_chunks
+
+    def __dealloc__(self):
+        cdef uint32_t i
+        for i in range(self._allocated_chunks):
+            if self._chunks[i].ptr is not NULL:
+                cpython.PyMem_Free(self._chunks[i].ptr)
+                self._chunks[i].ptr = NULL
+        if self._chunks is not NULL:
+            cpython.PyMem_Free(self._chunks)
+            self._chunks = NULL
+
+    cdef int _allocate_chunks(self) except -1:
+        """
+        Allocates a new set of chunks and copies data from the original set of
+        chunks if needed.
+        """
+        cdef:
+            BytesChunk *chunks
+            uint32_t allocated_chunks
+        allocated_chunks = self._allocated_chunks + 8
+        chunks = <BytesChunk*> \
+                cpython.PyMem_Malloc(sizeof(BytesChunk) * allocated_chunks)
+        memset(chunks, 0, sizeof(BytesChunk) * allocated_chunks)
+        if self._num_chunks > 0:
+            memcpy(chunks, self._chunks, sizeof(BytesChunk) * self._num_chunks)
+            cpython.PyMem_Free(self._chunks)
+        self._chunks = chunks
+        self._allocated_chunks = allocated_chunks
+
+    cdef BytesChunk* _get_chunk(self, uint32_t num_bytes) except NULL:
+        """
+        Return the chunk that can be used to write the number of bytes
+        requested.
+        """
+        cdef:
+            uint32_t num_allocated_bytes
+            BytesChunk *chunk
+        if self._num_chunks > 0:
+            chunk = &self._chunks[self._num_chunks - 1]
+            if chunk.allocated_length >= chunk.length + num_bytes:
+                return chunk
+        if self._num_chunks >= self._allocated_chunks:
+            self._allocate_chunks()
+        self._num_chunks += 1
+        chunk = &self._chunks[self._num_chunks - 1]
+        chunk.length = 0
+        if chunk.allocated_length < num_bytes:
+            num_allocated_bytes = self._get_chunk_size(num_bytes)
+            if chunk.ptr:
+                cpython.PyMem_Free(chunk.ptr)
+            chunk.ptr = <char_type*> cpython.PyMem_Malloc(num_allocated_bytes)
+            chunk.allocated_length = num_allocated_bytes
+        return chunk
+
+    cdef inline uint32_t _get_chunk_size(self, uint32_t size):
+        """
+        Returns the size to allocate aligned on a 64K boundary.
+        """
+        return (size + CHUNKED_BYTES_CHUNK_SIZE - 1) & \
+               ~(CHUNKED_BYTES_CHUNK_SIZE - 1)
+
+    cdef bytes end_chunked_read(self):
+        """
+        Called when a chunked read has ended. Since a chunked read is never
+        started until at least some bytes are being read, it is assumed that at
+        least one chunk is in use. If one chunk is in use, those bytes are
+        returned directly, but if more than one chunk is in use, the first
+        chunk is resized to include all of the bytes in a contiguous section of
+        memory first.
+        """
+        cdef:
+            uint32_t i, num_allocated_bytes, total_num_bytes = 0, pos = 0
+            char_type *ptr
+        if self._num_chunks > 1:
+            for i in range(self._num_chunks):
+                total_num_bytes += self._chunks[i].length
+            num_allocated_bytes = self._get_chunk_size(total_num_bytes)
+            ptr = <char_type*> cpython.PyMem_Malloc(num_allocated_bytes)
+            for i in range(self._num_chunks):
+                memcpy(&ptr[pos], self._chunks[i].ptr, self._chunk[i].length)
+                pos += self._chunks[i].length
+                cpython.PyMem_Free(self._chunks[i].ptr)
+                self._chunks[i].ptr = NULL
+                self._chunks[i].allocated_length = 0
+                self._chunks[i].length = 0
+            self._num_chunks = 1
+            self._chunks[0].ptr = ptr
+            self._chunks[0].length = total_num_bytes
+            self._chunks[0].allocated_length = num_allocated_bytes
+        return self._chunks[0].ptr[:self._chunks[0].length]
+
+    cdef char_type* get_chunk_ptr(self, uint32_t size_required) except NULL:
+        """
+        Called when memory is required for a chunked read.
+        """
+        cdef:
+            BytesChunk *chunk
+            char_type *ptr
+        chunk = self._get_chunk(size_required)
+        ptr = &chunk.ptr[chunk.length]
+        chunk.length += size_required
+        return ptr
+
+    cdef inline void start_chunked_read(self):
+        """
+        Called when a chunked read is started and simply indicates that no
+        chunks are in use. The memory is retained in order to reduce the
+        overhead in freeing and reallocating memory for each chunked read.
+        """
+        self._num_chunks = 0
+
 
 @cython.final
 cdef class ReadBuffer:
@@ -106,24 +232,22 @@ cdef class ReadBuffer:
         cdef const char_type *ptr = self._get_raw(num_bytes)
         return cpython.PyBytes_FromStringAndSize(<char*> ptr, num_bytes)
 
-    cdef bytes read_bytes_chunked(self, uint8_t num_bytes, char_type* buf,
-            uint32_t max_length_bytes):
-        cdef total_num_bytes = 0
-        cdef const char_type *ptr
+    cdef bytes read_bytes_chunked(self, uint32_t num_bytes,
+                                  ChunkedBytesBuffer chunked_bytes_buf):
+        cdef:
+            const char_type *source_ptr
+            char_type *dest_ptr
         if num_bytes != 0xfe:
             return self.read_bytes(num_bytes)
-        if buf is NULL:
-            raise Exception("No buffer available for chunked read!")
+        chunked_bytes_buf.start_chunked_read()
         while True:
-            num_bytes = self.read_uint8()
+            num_bytes = self.read_ub4()
             if num_bytes == 0:
                 break
-            if total_num_bytes + num_bytes > max_length_bytes:
-                raise Exception("Buffer too small for chunked read!")
-            ptr = self._get_raw(num_bytes)
-            memcpy(&buf[total_num_bytes], ptr, num_bytes)
-            total_num_bytes += num_bytes
-        return cpython.PyBytes_FromStringAndSize(<char*> buf, total_num_bytes)
+            source_ptr = self._get_raw(num_bytes)
+            dest_ptr = chunked_bytes_buf.get_chunk_ptr(num_bytes)
+            memcpy(dest_ptr, source_ptr, num_bytes)
+        return chunked_bytes_buf.end_chunked_read()
 
     cdef str read_str(self, ssize_t num_bytes):
         return self.read_bytes(num_bytes).decode()
