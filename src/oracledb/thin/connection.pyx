@@ -5,7 +5,6 @@
 cdef class Connection(BaseConnection):
 
     cdef:
-        ChunkedBytesBuffer _chunked_bytes_buf
         Protocol _protocol
 
     cdef int _close(self) except -1:
@@ -22,7 +21,6 @@ cdef class Connection(BaseConnection):
         self._protocol = Protocol(sock)
         self._protocol._connect(params)
         self._is_connected = True
-        self._chunked_bytes_buf = ChunkedBytesBuffer()
 
     cdef BaseCursor _create_cursor(self):
         return Cursor.__new__(Cursor, self)

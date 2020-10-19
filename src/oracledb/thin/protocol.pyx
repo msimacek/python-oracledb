@@ -20,14 +20,15 @@ cdef class Protocol:
         uint8_t _seq_num, _debug_packets
         str _server_version
         object _socket
-        bytearray _read_buffer
-        int _read_buffer_offset
+        bytearray _read_buf
+        ChunkedBytesBuffer _chunked_bytes_buf
 
     def __init__(self, socket):
         self._seq_num = 3
         self._socket = socket
         self._debug_packets = <uint8_t> ("PYO_DEBUG_PACKETS" in os.environ)
-        self._read_buffer = bytearray(MAX_PACKET_SIZE * 2)
+        self._read_buf = bytearray(MAX_PACKET_SIZE * 2)
+        self._chunked_bytes_buf = ChunkedBytesBuffer()
 
     cdef int _close(self) except -1:
         self._send_packet(TNS_PACKET_TYPE_DATA, None,
@@ -625,8 +626,7 @@ cdef class Protocol:
                         continue
                     row_vars.append(cursor._bind_vars[i])
             elif message_type == TNS_MSG_TYPE_ROW_DATA:
-                self._process_row(buf, cursor.connection._chunked_bytes_buf,
-                                  row_vars, row_index, in_fetch)
+                self._process_row(buf, row_vars, row_index, in_fetch)
                 if in_fetch:
                     cursor._buffer_rowcount += 1
                     row_index = cursor._buffer_rowcount
@@ -656,8 +656,7 @@ cdef class Protocol:
                 msg = f"unknown message type: {message_type}"
                 errors._raise_from_string(exceptions.InternalError, msg)
 
-    cdef int _process_row(self, ReadBuffer buf,
-                          ChunkedBytesBuffer chunked_bytes_buf, list row_vars,
+    cdef int _process_row(self, ReadBuffer buf, list row_vars,
                           uint32_t row_index, bint in_fetch) except -1:
         cdef:
             uint8_t num_bytes, ora_type_num, csfrm
@@ -678,7 +677,7 @@ cdef class Protocol:
                     or ora_type_num == TNS_DATA_TYPE_CHAR \
                     or ora_type_num == TNS_DATA_TYPE_LONG:
                 temp_bytes = buf.read_bytes_chunked(num_bytes,
-                                                    chunked_bytes_buf)
+                                                    self._chunked_bytes_buf)
                 if csfrm == 1:
                     column_value = temp_bytes.decode()
                 else:
@@ -687,7 +686,7 @@ cdef class Protocol:
                     buf.skip_bytes(2)
             elif ora_type_num == TNS_DATA_TYPE_RAW:
                 column_value = buf.read_bytes_chunked(num_bytes,
-                                                      chunked_bytes_buf)
+                                                      self._chunked_bytes_buf)
             elif ora_type_num == TNS_DATA_TYPE_NUMBER:
                 column_value = buf.read_oracle_number(num_bytes)
             elif ora_type_num == TNS_DATA_TYPE_DATE \
@@ -745,8 +744,8 @@ cdef class Protocol:
             uint16_t packet_size
             uint8_t packet_type
             ssize_t bytes_read
-        bytes_read = self._socket.recv_into(self._read_buffer, MAX_PACKET_SIZE)
-        buf = ReadBuffer(self._read_buffer, bytes_read)
+        bytes_read = self._socket.recv_into(self._read_buf, MAX_PACKET_SIZE)
+        buf = ReadBuffer(self._read_buf, bytes_read)
         packet_size = buf.read_uint16()
         buf.skip_bytes(2)               # skip packet checksum
         packet_type = buf.read_uint8()
