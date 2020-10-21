@@ -12,7 +12,7 @@ include "hton.pxd"
 
 DEF NUMBER_AS_TEXT_CHARS = 172
 DEF NUMBER_MAX_DIGITS = 40
-DEF BUFFER_CHUNK_SIZE = 2048
+DEF BUFFER_CHUNK_SIZE = 65536
 DEF CHUNKED_BYTES_CHUNK_SIZE = 65536
 
 cdef struct BytesChunk:
@@ -248,6 +248,10 @@ cdef class ReadBuffer:
         packet_type[0] = self.read_uint8()
         self.skip_bytes(3)              # skip reserved byte, header checksum
 
+        # display packet if requested
+        if DEBUG_PACKETS:
+            _print_packet("Receiving packet:", memoryview(self))
+
     cdef int skip_bytes(self, ssize_t num_bytes) except -1:
         self._get_raw(num_bytes)
 
@@ -463,23 +467,20 @@ cdef class ReadBuffer:
 cdef class WriteBuffer:
 
     cdef:
-        ssize_t _allocated_size
-        ssize_t _actual_size
+        ssize_t _max_size, _actual_size
+        bytearray _data_obj
         char_type *_data
+        uint8_t _packet_type
+        object _socket
         int _view_count
 
-    def __cinit__(self):
-        self._allocated_size = 0
-        self._actual_size = 0
-        self._data = NULL
-        self._view_count = 0
+    def __cinit__(self, object sock, ssize_t max_size):
+        self._socket = sock
+        self._data_obj = bytearray(max_size)
+        self._data = <char_type*> self._data_obj
+        self._max_size = max_size
 
     def __dealloc__(self):
-        if self._data is not NULL:
-            cpython.PyMem_Free(self._data)
-            self._data = NULL
-            self._allocated_size = 0
-            self._actual_size = 0
         if self._view_count > 0:
             raise BufferError('Deallocating buffer with attached memoryviews!')
 
@@ -495,18 +496,39 @@ cdef class WriteBuffer:
         cdef ssize_t new_size = self._actual_size + additional_size
         if self._view_count > 0:
             raise BufferError('Buffer is used in a memoryview!')
-        if new_size > self._allocated_size:
-            self._grow(new_size)
+        if new_size > self._max_size:
+            self._send_packet()
 
-    cdef int _grow(self, new_size) except -1:
-        cdef char_type *new_data
-        new_size = ((new_size & BUFFER_CHUNK_SIZE) + 1) * BUFFER_CHUNK_SIZE
-        new_data = <char_type*> cpython.PyMem_Realloc(<void*> self._data,
-                <size_t> new_size)
-        if new_data is NULL:
-            raise MemoryError
-        self._data = new_data
-        self._allocated_size = new_size
+    cdef int _send_packet(self) except -1:
+        cdef ssize_t size = self._actual_size
+        self._actual_size = 0
+        self.write_uint16(size)
+        self.write_uint16(0)
+        self.write_uint8(self._packet_type)
+        self.write_uint8(0)
+        self.write_uint16(0)
+        self._actual_size = size
+        if DEBUG_PACKETS:
+            _print_packet("Sending packet:", memoryview(self))
+        self._socket.send(memoryview(self))
+        self._actual_size = 8
+
+    cdef int end_request(self) except -1:
+        """
+        Indicates that the request from the client is completing and will send
+        any packet remaining, if necessary.
+        """
+        if self._actual_size > 8:
+            self._send_packet()
+
+    cdef void start_request(self, uint8_t packet_type):
+        """
+        Indicates that a request from the client is starting. The packet type
+        is retained just in case a request spans multiple packets. The packet
+        header (8 bytes in length) is written when a packet is actually being
+        sent and so is skipped at this point"""
+        self._packet_type = packet_type
+        self._actual_size = 8
 
     cdef int write_bytes(self, bytes value) except -1:
         cdef char_type *buf

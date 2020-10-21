@@ -18,17 +18,18 @@ cdef class Protocol:
 
     cdef:
         uint32_t _session_id, _serial_num
-        uint8_t _seq_num, _debug_packets
+        uint8_t _seq_num
         str _server_version
         object _socket
         ReadBuffer _read_buf
+        WriteBuffer _write_buf
         ChunkedBytesBuffer _chunked_bytes_buf
 
     def __init__(self, sock):
         self._seq_num = 3
         self._socket = sock
-        self._debug_packets = <uint8_t> ("PYO_DEBUG_PACKETS" in os.environ)
         self._read_buf = ReadBuffer(sock, SDU)
+        self._write_buf = WriteBuffer(sock, SDU)
         self._chunked_bytes_buf = ChunkedBytesBuffer()
 
     cdef int _close(self) except -1:
@@ -784,8 +785,6 @@ cdef class Protocol:
     cdef int _receive_packet(self) except -1:
         cdef uint8_t packet_type
         self._read_buf.receive_packet(&packet_type)
-        if self._debug_packets:
-            self._print_packet("Receiving packet:", memoryview(self._read_buf))
         if packet_type == TNS_PACKET_TYPE_MARKER:
             self._send_packet(TNS_PACKET_TYPE_MARKER, None,
                               self._populate_marker_packet)
@@ -799,14 +798,6 @@ cdef class Protocol:
 
     cdef _send_packet(self, uint8_t packet_type, object params,
             populate_func_type populate_func):
-        cdef WriteBuffer buf = WriteBuffer()
-        buf.write_uint32(0)
-        buf.write_uint8(packet_type)
-        buf.write_uint8(0)
-        buf.write_uint16(0)
-        populate_func(self, buf, params)
-        view = memoryview(buf)
-        buf.write_uint16_at_offset(view.nbytes, 0)
-        if self._debug_packets:
-            self._print_packet("Sending packet:", view)
-        self._socket.send(view)
+        self._write_buf.start_request(packet_type)
+        populate_func(self, self._write_buf, params)
+        self._write_buf.end_request()
