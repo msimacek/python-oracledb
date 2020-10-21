@@ -2,7 +2,8 @@
 # Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
-cdef int MAX_PACKET_SIZE = 65535
+DEF SDU = 8192
+DEF TDU = 65535
 
 ctypedef int (*populate_func_type)(Protocol self, WriteBuffer buf,
         object params) except -1
@@ -20,14 +21,14 @@ cdef class Protocol:
         uint8_t _seq_num, _debug_packets
         str _server_version
         object _socket
-        bytearray _read_buf
+        ReadBuffer _read_buf
         ChunkedBytesBuffer _chunked_bytes_buf
 
-    def __init__(self, socket):
+    def __init__(self, sock):
         self._seq_num = 3
-        self._socket = socket
+        self._socket = sock
         self._debug_packets = <uint8_t> ("PYO_DEBUG_PACKETS" in os.environ)
-        self._read_buf = bytearray(MAX_PACKET_SIZE * 2)
+        self._read_buf = ReadBuffer(sock, SDU)
         self._chunked_bytes_buf = ChunkedBytesBuffer()
 
     cdef int _close(self) except -1:
@@ -44,7 +45,6 @@ cdef class Protocol:
         self._receive_packet()
 
     def _connect(self, params):
-        cdef ReadBuffer buf
         self._send_packet(TNS_PACKET_TYPE_CONNECT, params,
                           self._populate_connect_packet)
         self._receive_packet()
@@ -62,13 +62,13 @@ cdef class Protocol:
         self._receive_packet()
         self._send_packet(TNS_PACKET_TYPE_DATA, params,
                           self._populate_get_session_key_packet)
-        buf = self._receive_packet()
+        self._receive_packet()
         params.session_data = {}
-        self._process_session_data_packet(buf, params)
+        self._process_session_data_packet(params)
         self._send_packet(TNS_PACKET_TYPE_DATA, params,
                           self._populate_auth_packet)
-        buf = self._receive_packet()
-        self._process_session_data_packet(buf, params)
+        self._receive_packet()
+        self._process_session_data_packet(params)
 
     def _encrypt_cbc(self, key, plain_text):
         iv = b"\x00" * AES.block_size
@@ -79,18 +79,16 @@ cdef class Protocol:
         return b.encrypt(plain_text)
 
     def _execute(self, params):
-        cdef ReadBuffer buf
         self._send_packet(TNS_PACKET_TYPE_DATA, params,
                           self._populate_execute_packet)
-        buf = self._receive_packet()
-        self._process_execute_packet(params.cursor, buf)
+        self._receive_packet()
+        self._process_execute_packet(params.cursor)
 
     def _fetch(self, params):
-        cdef ReadBuffer buf
         self._send_packet(TNS_PACKET_TYPE_DATA, params,
                           self._populate_fetch_packet)
-        buf = self._receive_packet()
-        self._process_execute_packet(params.cursor, buf)
+        self._receive_packet()
+        self._process_execute_packet(params.cursor)
 
     cdef _generate_auth_response(self, object params):
 
@@ -182,8 +180,8 @@ cdef class Protocol:
         buf.write_uint16(314)               # version
         buf.write_uint16(300)               # compatible with version
         buf.write_uint16(0xc41)             # service options
-        buf.write_uint16(8192)              # SDU
-        buf.write_uint16(65535)             # TDU
+        buf.write_uint16(SDU)               # SDU
+        buf.write_uint16(TDU)               # TDU
         buf.write_uint16(0x7f08)            # protocol characteristics
         buf.write_uint16(0)                 # line turnaround
         buf.write_uint16(1)                 # value of 1
@@ -540,10 +538,12 @@ cdef class Protocol:
             info.message_length = buf.read_uint8()
             info.message = buf._get_raw(info.message_length)
 
-    cdef int _process_error_packet(self, ReadBuffer buf) except -1:
+    cdef int _process_error_packet(self) except -1:
         cdef:
             _OracleErrorInfo error_info
             uint8_t num_bytes
+            ReadBuffer buf
+        buf = self._read_buf
         buf.skip_bytes(2)                   # skip data flag
         if buf.read_uint8() != 4:
             errors._raise_from_string(exceptions.DatabaseError,
@@ -552,16 +552,17 @@ cdef class Protocol:
         message = error_info.message[:error_info.message_length].decode()
         errors._raise_from_string(exceptions.DatabaseError, message)
 
-    cdef int _process_execute_packet(self, Cursor cursor,
-                                     ReadBuffer buf) except -1:
+    cdef int _process_execute_packet(self, Cursor cursor) except -1:
         cdef:
             uint32_t num_columns, num_bytes, num_params, i, temp, row_index
             uint8_t message_type, bind_dir
             _OracleErrorInfo error_info
             bint in_fetch = False
             uint16_t num_bits
+            ReadBuffer buf
             list row_vars
             Var var
+        buf = self._read_buf
         buf.skip_bytes(2)
         row_vars = cursor._fetch_vars
         row_index = cursor._buffer_rowcount
@@ -676,8 +677,7 @@ cdef class Protocol:
             elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
                     or ora_type_num == TNS_DATA_TYPE_CHAR \
                     or ora_type_num == TNS_DATA_TYPE_LONG:
-                temp_bytes = buf.read_bytes_chunked(num_bytes,
-                                                    self._chunked_bytes_buf)
+                temp_bytes = self._read_bytes(num_bytes)
                 if csfrm == 1:
                     column_value = temp_bytes.decode()
                 else:
@@ -685,8 +685,7 @@ cdef class Protocol:
                 if ora_type_num == TNS_DATA_TYPE_LONG:
                     buf.skip_bytes(2)
             elif ora_type_num == TNS_DATA_TYPE_RAW:
-                column_value = buf.read_bytes_chunked(num_bytes,
-                                                      self._chunked_bytes_buf)
+                column_value = self._read_bytes(num_bytes)
             elif ora_type_num == TNS_DATA_TYPE_NUMBER:
                 column_value = buf.read_oracle_number(num_bytes)
             elif ora_type_num == TNS_DATA_TYPE_DATE \
@@ -703,14 +702,15 @@ cdef class Protocol:
             if not in_fetch:
                 buf.skip_bytes(1)       # skip trailing zero byte
 
-    cdef int _process_session_data_packet(self, ReadBuffer buf,
-                                          object params) except -1:
+    cdef int _process_session_data_packet(self, object params) except -1:
         cdef:
             int version_num, release_num, update_num, port_release_num
             uint32_t num_bytes, flags, full_version_num
             int port_update_num
             uint16_t num_params
+            ReadBuffer buf
             str key, value
+        buf = self._read_buf
         buf.skip_bytes(3)               # skip data flag, data id
         num_params = buf.read_ub2()
         for i in range(num_params):
@@ -738,26 +738,59 @@ cdef class Protocol:
                      (full_version_num >> 4) & 0xFF,
                      (full_version_num & 0x0F))
 
-    cdef ReadBuffer _receive_packet(self):
+    cdef bytes _read_bytes(self, uint32_t num_bytes):
         cdef:
+            const char_type *source_ptr
+            uint32_t num_bytes_left
+            char_type *dest_ptr
             ReadBuffer buf
-            uint16_t packet_size
-            uint8_t packet_type
-            ssize_t bytes_read
-        bytes_read = self._socket.recv_into(self._read_buf, MAX_PACKET_SIZE)
-        buf = ReadBuffer(self._read_buf, bytes_read)
-        packet_size = buf.read_uint16()
-        buf.skip_bytes(2)               # skip packet checksum
-        packet_type = buf.read_uint8()
-        buf.skip_bytes(3)               # skip reserved byte, header checksum
-        buf.set_size(packet_size)
+        buf = self._read_buf
+        if num_bytes != 0xfe:
+            num_bytes_left = <uint32_t> buf.bytes_left()
+            if num_bytes < num_bytes_left:
+                return buf.read_bytes(num_bytes)
+            self._chunked_bytes_buf.start_chunked_read()
+            self._read_split_bytes(num_bytes_left, num_bytes - num_bytes_left)
+            return self._chunked_bytes_buf.end_chunked_read()
+        self._chunked_bytes_buf.start_chunked_read()
+        while True:
+            num_bytes = buf.read_ub4()
+            if num_bytes == 0:
+                break
+            num_bytes_left = <uint32_t> buf.bytes_left()
+            if num_bytes < num_bytes_left:
+                source_ptr = buf._get_raw(num_bytes)
+                dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes)
+                memcpy(dest_ptr, source_ptr, num_bytes)
+            else:
+                self._read_split_bytes(num_bytes_left,
+                                       num_bytes - num_bytes_left)
+        return self._chunked_bytes_buf.end_chunked_read()
+
+    cdef int _read_split_bytes(self, uint32_t num_bytes_1,
+                               uint32_t num_bytes_2) except -1:
+        cdef:
+            const char_type *source_ptr
+            char_type *dest_ptr
+        dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_1)
+        source_ptr = self._read_buf._get_raw(num_bytes_1)
+        memcpy(dest_ptr, source_ptr, num_bytes_1)
+        self._receive_packet()
+        self._read_buf.skip_bytes(2)
+        dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_2)
+        source_ptr = self._read_buf._get_raw(num_bytes_2)
+        memcpy(dest_ptr, source_ptr, num_bytes_2)
+
+    cdef int _receive_packet(self) except -1:
+        cdef uint8_t packet_type
+        self._read_buf.receive_packet(&packet_type)
         if self._debug_packets:
-            self._print_packet("Receiving packet:", memoryview(buf))
+            self._print_packet("Receiving packet:", memoryview(self._read_buf))
         if packet_type == TNS_PACKET_TYPE_MARKER:
             self._send_packet(TNS_PACKET_TYPE_MARKER, None,
                               self._populate_marker_packet)
-            self._process_error_packet(self._receive_packet())
-        return buf
+            self._receive_packet()
+            self._process_error_packet()
 
     cdef int _rollback(self) except -1:
         self._send_packet(TNS_PACKET_TYPE_DATA, None,

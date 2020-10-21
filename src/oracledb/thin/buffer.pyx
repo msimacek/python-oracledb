@@ -107,7 +107,7 @@ cdef class ChunkedBytesBuffer:
             num_allocated_bytes = self._get_chunk_size(total_num_bytes)
             ptr = <char_type*> cpython.PyMem_Malloc(num_allocated_bytes)
             for i in range(self._num_chunks):
-                memcpy(&ptr[pos], self._chunks[i].ptr, self._chunk[i].length)
+                memcpy(&ptr[pos], self._chunks[i].ptr, self._chunks[i].length)
                 pos += self._chunks[i].length
                 cpython.PyMem_Free(self._chunks[i].ptr)
                 self._chunks[i].ptr = NULL
@@ -144,20 +144,26 @@ cdef class ChunkedBytesBuffer:
 cdef class ReadBuffer:
 
     cdef:
+        ssize_t _max_packet_size, _max_size, _size, _offset, _bytes_to_process
+        ssize_t _packet_start_offset
         const char_type *_data
-        ssize_t _size
-        ssize_t _offset
+        bytearray _data_obj
         int _view_count
+        object _socket
 
-    def __cinit__(self, const char_type[:] data, ssize_t size):
-        self._data = &data[0]
-        self._size = size
-        self._offset = 0
+    def __cinit__(self, object sock, ssize_t max_packet_size):
+        self._socket = sock
+        self._max_size = max_packet_size * 2
+        self._max_packet_size = max_packet_size
+        self._data_obj = bytearray(self._max_size)
+        self._data = <const char_type*> self._data_obj
 
     def __getbuffer__(self, Py_buffer *buf, int flags):
+        cdef char* ptr = <char*> &self._data[self._packet_start_offset]
         self._view_count += 1
-        cpython.PyBuffer_FillInfo(buf, self, <char*> self._data, self._size, 1,
-                flags)
+        cpython.PyBuffer_FillInfo(buf, self, ptr,
+                                  self._size - self._packet_start_offset, 1,
+                                  flags)
 
     def __releasebuffer__(self, Py_buffer *buf):
         self._view_count -= 1
@@ -177,14 +183,70 @@ cdef class ReadBuffer:
         return offset + size
 
     cdef inline const char_type* _get_raw(self, ssize_t num_bytes) except NULL:
+        """
+        Returns a pointer to the buffer after ensuring that the specified
+        number of bytes are available.
+        """
         cdef const char_type *ptr = &self._data[self._offset]
         if self._offset + num_bytes > self._size:
-            raise BufferError('Not enough data in buffer!')
+            msg = f"Not enough data in buffer: need {num_bytes} bytes!"
+            raise BufferError(msg)
         self._offset += num_bytes
         return ptr
 
-    cdef ssize_t bytes_left(self):
+    cdef inline ssize_t bytes_left(self):
         return self._size - self._offset
+
+    cdef int receive_packet(self, uint8_t *packet_type) except -1:
+        """
+        Receives a packet and updates the pointers appropriately. Note that
+        multiple packets may be received if they are small enough or a portion
+        of a second packet may be received so the buffer needs to be adjusted
+        as needed. This is also why room is available in the buffer for up to
+        two complete packets.
+        """
+        cdef:
+            ssize_t offset, bytes_to_read, packet_size
+            char_type[:] view
+
+        # if no bytes are left over from a previous read, perform a read of the
+        # maximum packet size and reset the offset to 0
+        view = memoryview(self._data_obj)
+        if self._bytes_to_process == 0:
+            self._packet_start_offset = 0
+            self._offset = 0
+            self._bytes_to_process = \
+                    self._socket.recv_into(self._data_obj,
+                                           self._max_packet_size)
+
+        # otherwise, set the offset to the end of the previous packet and
+        # ensure that there are at lest 8 bytes available to cover the contents
+        # of the packet header
+        else:
+            self._packet_start_offset = self._size
+            self._offset = self._size
+            if self._bytes_to_process < 8:
+                offset = self._size + self._bytes_to_process
+                bytes_to_read = 8 - self._bytes_to_process
+                self._bytes_to_process += \
+                        self._socket.recv_into(view[offset:], bytes_to_read)
+
+        # determine the packet length and ensure that all of the bytes for the
+        # packet are available
+        self._size += 2
+        packet_size = self.read_uint16()
+        while self._bytes_to_process < packet_size:
+            offset = self._packet_start_offset + self._bytes_to_process
+            bytes_to_read = packet_size - self._bytes_to_process
+            self._bytes_to_process += \
+                    self._socket.recv_into(view[offset:], bytes_to_read)
+
+        # process remainder of packet header and set size to the new packet
+        self._size = self._packet_start_offset + packet_size
+        self._bytes_to_process -= packet_size
+        self.skip_bytes(2)              # skip packet checksum
+        packet_type[0] = self.read_uint8()
+        self.skip_bytes(3)              # skip reserved byte, header checksum
 
     cdef int skip_bytes(self, ssize_t num_bytes) except -1:
         self._get_raw(num_bytes)
@@ -231,23 +293,6 @@ cdef class ReadBuffer:
     cdef bytes read_bytes(self, ssize_t num_bytes):
         cdef const char_type *ptr = self._get_raw(num_bytes)
         return cpython.PyBytes_FromStringAndSize(<char*> ptr, num_bytes)
-
-    cdef bytes read_bytes_chunked(self, uint32_t num_bytes,
-                                  ChunkedBytesBuffer chunked_bytes_buf):
-        cdef:
-            const char_type *source_ptr
-            char_type *dest_ptr
-        if num_bytes != 0xfe:
-            return self.read_bytes(num_bytes)
-        chunked_bytes_buf.start_chunked_read()
-        while True:
-            num_bytes = self.read_ub4()
-            if num_bytes == 0:
-                break
-            source_ptr = self._get_raw(num_bytes)
-            dest_ptr = chunked_bytes_buf.get_chunk_ptr(num_bytes)
-            memcpy(dest_ptr, source_ptr, num_bytes)
-        return chunked_bytes_buf.end_chunked_read()
 
     cdef str read_str(self, ssize_t num_bytes):
         return self.read_bytes(num_bytes).decode()
@@ -412,9 +457,6 @@ cdef class ReadBuffer:
         offset = self._convert_base64(result, self.read_ub4(), 6, offset)
         offset = self._convert_base64(result, self.read_ub2(), 3, offset)
         return bytes(result).decode()
-
-    cdef inline void set_size(self, ssize_t size):
-        self._size = size
 
 
 @cython.final
