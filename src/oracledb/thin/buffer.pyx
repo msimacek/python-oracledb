@@ -10,6 +10,7 @@ ctypedef unsigned char char_type
 
 include "hton.pxd"
 
+DEF PACKET_HEADER_SIZE = 8
 DEF NUMBER_AS_TEXT_CHARS = 172
 DEF NUMBER_MAX_DIGITS = 40
 DEF BUFFER_CHUNK_SIZE = 65536
@@ -225,9 +226,9 @@ cdef class ReadBuffer:
         else:
             self._packet_start_offset = self._size
             self._offset = self._size
-            if self._bytes_to_process < 8:
+            if self._bytes_to_process < PACKET_HEADER_SIZE:
                 offset = self._size + self._bytes_to_process
-                bytes_to_read = 8 - self._bytes_to_process
+                bytes_to_read = PACKET_HEADER_SIZE - self._bytes_to_process
                 self._bytes_to_process += \
                         self._socket.recv_into(view[offset:], bytes_to_read)
 
@@ -498,8 +499,13 @@ cdef class WriteBuffer:
             raise BufferError('Buffer is used in a memoryview!')
         if new_size > self._max_size:
             self._send_packet()
+            self.write_uint16(0)            # data flags for next packet
 
     cdef int _send_packet(self) except -1:
+        """
+        Write the packet header and then send the packet. Once sent, reset the
+        pointers back to an empty packet.
+        """
         cdef ssize_t size = self._actual_size
         self._actual_size = 0
         self.write_uint16(size)
@@ -511,15 +517,21 @@ cdef class WriteBuffer:
         if DEBUG_PACKETS:
             _print_packet("Sending packet:", memoryview(self))
         self._socket.send(memoryview(self))
-        self._actual_size = 8
+        self._actual_size = PACKET_HEADER_SIZE
+
+    cdef inline ssize_t bytes_left(self):
+        return self._max_size - self._actual_size
 
     cdef int end_request(self) except -1:
         """
         Indicates that the request from the client is completing and will send
         any packet remaining, if necessary.
         """
-        if self._actual_size > 8:
+        if self._actual_size > PACKET_HEADER_SIZE:
             self._send_packet()
+
+    cdef inline ssize_t max_payload_bytes(self):
+        return self._max_size - PACKET_HEADER_SIZE - 2
 
     cdef void start_request(self, uint8_t packet_type):
         """
@@ -528,13 +540,14 @@ cdef class WriteBuffer:
         header (8 bytes in length) is written when a packet is actually being
         sent and so is skipped at this point"""
         self._packet_type = packet_type
-        self._actual_size = 8
+        self._actual_size = PACKET_HEADER_SIZE
 
     cdef int write_bytes(self, bytes value) except -1:
-        cdef char_type *buf
-        cdef ssize_t value_len
-        cpython.PyBytes_AsStringAndSize(value, <char**> &buf, &value_len)
-        self.write_raw(buf, value_len)
+        cdef:
+            ssize_t value_len
+            char_type *ptr
+        cpython.PyBytes_AsStringAndSize(value, <char**> &ptr, &value_len)
+        self.write_raw(ptr, value_len)
 
     cdef int write_oracle_date(self, object value, uint8_t length) except -1:
         cdef:

@@ -392,16 +392,15 @@ cdef class Protocol:
             if value is None:
                 buf.write_uint8(0)
             elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
-                    or ora_type_num == TNS_DATA_TYPE_CHAR:
+                    or ora_type_num == TNS_DATA_TYPE_CHAR \
+                    or ora_type_num == TNS_DATA_TYPE_LONG:
                 if var.type._csfrm == 1:
                     temp_bytes = value.encode()
                 else:
                     temp_bytes = value.encode("UTF-16BE")
-                buf.write_uint8(<uint8_t> len(temp_bytes))
-                buf.write_bytes(temp_bytes)
+                self._write_bytes(temp_bytes)
             elif ora_type_num == TNS_DATA_TYPE_RAW:
-                buf.write_uint8(<uint8_t> len(value))
-                buf.write_bytes(value)
+                self._write_bytes(value)
             elif ora_type_num == TNS_DATA_TYPE_NUMBER:
                 buf.write_oracle_number(str(value).encode())
             elif ora_type_num == TNS_DATA_TYPE_DATE \
@@ -767,12 +766,11 @@ cdef class Protocol:
 
     cdef bytes _read_bytes(self, uint32_t num_bytes):
         cdef:
+            ReadBuffer buf = self._read_buf
             const char_type *source_ptr
             uint32_t num_bytes_left
             char_type *dest_ptr
-            ReadBuffer buf
-        buf = self._read_buf
-        if num_bytes != 0xfe:
+        if num_bytes != TNS_LONG_LENGTH_INDICATOR:
             num_bytes_left = <uint32_t> buf.bytes_left()
             if num_bytes < num_bytes_left:
                 return buf.read_bytes(num_bytes)
@@ -825,3 +823,26 @@ cdef class Protocol:
 
         # receive response
         self._receive_packet()
+
+    cdef int _write_bytes(self, bytes value) except -1:
+        cdef:
+            WriteBuffer buf = self._write_buf
+            ssize_t value_len, bytes_left
+            char_type *ptr
+        cpython.PyBytes_AsStringAndSize(value, <char**> &ptr, &value_len)
+        if value_len <= TNS_MAX_SHORT_LENGTH:
+            buf.write_uint8(<uint8_t> value_len)
+            buf.write_raw(ptr, value_len)
+        else:
+            buf.write_uint8(TNS_LONG_LENGTH_INDICATOR)
+            buf.write_ub4(value_len)
+            bytes_left = buf.bytes_left()
+            while True:
+                if bytes_left >= value_len:
+                    buf.write_raw(ptr, value_len)
+                    break
+                buf.write_raw(ptr, bytes_left)
+                value_len -= bytes_left
+                ptr += bytes_left
+                bytes_left = buf.max_payload_bytes()
+            buf.write_ub4(0)

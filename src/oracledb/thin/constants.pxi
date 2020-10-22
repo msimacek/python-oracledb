@@ -66,6 +66,8 @@ DEF TNS_BIND_DIR_INPUT = 32
 DEF TNS_BIND_DIR_INPUT_OUTPUT = 48
 
 # other constants
+cdef uint8_t TNS_MAX_SHORT_LENGTH = 252
+cdef uint8_t TNS_LONG_LENGTH_INDICATOR = 254
 cdef uint8_t TNS_MAX_ROWID_LENGTH = 18
 
 # base 64 encoding alphabet
