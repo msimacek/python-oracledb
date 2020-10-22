@@ -399,7 +399,8 @@ cdef class Protocol:
                 else:
                     temp_bytes = value.encode("UTF-16BE")
                 self._write_bytes(temp_bytes)
-            elif ora_type_num == TNS_DATA_TYPE_RAW:
+            elif ora_type_num == TNS_DATA_TYPE_RAW \
+                    or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
                 self._write_bytes(value)
             elif ora_type_num == TNS_DATA_TYPE_NUMBER:
                 buf.write_oracle_number(str(value).encode())
@@ -450,33 +451,6 @@ cdef class Protocol:
                                        object params) except -1:
         buf.write_bytes(b'\x00\x00\x01\x06\x00')
         buf.write_bytes(b'Python_Thin\x00')
-
-    def _print_packet(self, operation, view):
-        offset = 0
-        hex_data = view.hex().upper()
-        print(operation)
-        while hex_data:
-            line_hex_data = hex_data[:16]
-            hex_data = hex_data[16:]
-            hex_dump_values = []
-            printable_values = []
-            for i in range(0, len(line_hex_data), 2):
-                hex_byte = line_hex_data[i:i + 2]
-                hex_dump_values.append(hex_byte)
-                byte_val = ord(bytes.fromhex(hex_byte))
-                char_byte = chr(byte_val)
-                if char_byte.isprintable() and byte_val < 128 \
-                        and char_byte != " ":
-                    printable_values.append(char_byte)
-                else:
-                    printable_values.append(".")
-            while len(hex_dump_values) < 8:
-                hex_dump_values.append("  ")
-                printable_values.append(" ")
-            print("%.4d : %s  |%s|" % (offset, " ".join(hex_dump_values),
-                    "".join(printable_values)))
-            offset += 8
-        print()
 
     cdef Var _process_column_info(self, Cursor cursor, ReadBuffer buf):
         cdef:
@@ -710,8 +684,11 @@ cdef class Protocol:
                     column_value = temp_bytes.decode("UTF-16BE")
                 if ora_type_num == TNS_DATA_TYPE_LONG:
                     buf.skip_bytes(2)
-            elif ora_type_num == TNS_DATA_TYPE_RAW:
+            elif ora_type_num == TNS_DATA_TYPE_RAW \
+                    or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
                 column_value = self._read_bytes(num_bytes)
+                if ora_type_num == TNS_DATA_TYPE_LONG_RAW:
+                    buf.skip_bytes(2)
             elif ora_type_num == TNS_DATA_TYPE_NUMBER:
                 column_value = buf.read_oracle_number(num_bytes)
             elif ora_type_num == TNS_DATA_TYPE_DATE \

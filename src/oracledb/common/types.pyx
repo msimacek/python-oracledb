@@ -101,6 +101,7 @@ cdef class DbType:
 
     @staticmethod
     cdef DbType _from_value(object value, uint32_t *size):
+        print("getting DB type by value:", type(value))
         if value is None:
             return None
         elif isinstance(value, bool):
@@ -138,7 +139,8 @@ DB_TYPE_INTERVAL_DS = DbType(2015, "DB_TYPE_INTERVAL_DS", 190)
 DB_TYPE_INTERVAL_YM = DbType(2016, "DB_TYPE_INTERVAL_YM", 189)
 DB_TYPE_LONG = DbType(2024, "DB_TYPE_LONG", 8, 128 * 1024,
                       buffer_size_factor=4)
-DB_TYPE_LONG_RAW = DbType(2025, "DB_TYPE_LONG_RAW", 23, 128 * 1024)
+DB_TYPE_LONG_RAW = DbType(2025, "DB_TYPE_LONG_RAW", 24, 128 * 1024,
+                          buffer_size_factor=1)
 DB_TYPE_NCHAR = DbType(2004, "DB_TYPE_NCHAR", 96, 2000, csfrm=2,
                        buffer_size_factor=4)
 DB_TYPE_NCLOB = DbType(2018, "DB_TYPE_NCLOB", 112, csfrm=2)
