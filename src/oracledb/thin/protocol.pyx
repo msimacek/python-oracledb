@@ -33,41 +33,123 @@ cdef class Protocol:
         self._chunked_bytes_buf = ChunkedBytesBuffer()
 
     cdef int _close(self) except -1:
-        self._send_packet(TNS_PACKET_TYPE_DATA, None,
-                          self._populate_close_packet)
+
+        # send close request
+        self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
+        self._write_buf.write_uint32(0x00000309)
+        self._increment_seq_num()
+        self._write_buf.write_uint8(self._seq_num)
+        self._write_buf.end_request()
+
+        # receive response
         self._receive_packet()
-        self._send_packet(TNS_PACKET_TYPE_DATA, None,
-                          self._populate_final_close_packet)
+
+        # send final close
+        self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
+        self._write_buf.write_uint16(0x0040)
+        self._write_buf.end_request()
         self._socket.close()
 
     cdef int _commit(self) except -1:
-        self._send_packet(TNS_PACKET_TYPE_DATA, None,
-                          self._populate_commit_packet)
+
+        # send request
+        self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
+        self._write_buf.write_uint32(0x0000030e)
+        self._increment_seq_num()
+        self._write_buf.write_uint8(self._seq_num)
+        self._write_buf.end_request()
+
+        # receive response
         self._receive_packet()
 
     def _connect(self, params):
-        self._send_packet(TNS_PACKET_TYPE_CONNECT, params,
-                          self._populate_connect_packet)
+        cdef:
+            bytes user_bytes = params.user.encode()
+            uint8_t user_len = <uint8_t> len(user_bytes)
+            WriteBuffer buf = self._write_buf
+
+        # send connect packet
+        self._send_connect_packet(params.connect_string)
+
+        # receive response (requests connect packet to be resent)
         self._receive_packet()
-        self._send_packet(TNS_PACKET_TYPE_CONNECT, params,
-                          self._populate_connect_packet)
+
+        # resend connect packet
+        self._send_connect_packet(params.connect_string)
+
+        # receive response (accept packet)
         self._receive_packet()
-        self._send_packet(TNS_PACKET_TYPE_DATA, params,
-                          self._populate_services_packet)
+
+        # send services packet
+        buf.start_request(TNS_PACKET_TYPE_DATA)
+        buf.write_bytes(TNS_SERVICES_PACKET_DATA)
+        buf.end_request()
+
+        # receive response (services from server)
         self._receive_packet()
-        self._send_packet(TNS_PACKET_TYPE_DATA, params,
-                          self._populate_protocol_packet)
+
+        # send protocol packet
+        buf.start_request(TNS_PACKET_TYPE_DATA)
+        buf.start_request(TNS_PACKET_TYPE_DATA)
+        buf.write_bytes(b'\x00\x00\x01\x06\x00')
+        buf.write_bytes(b'Python_Thin\x00')
+        buf.end_request()
+
+        # receive response (server protocol)
         self._receive_packet()
-        self._send_packet(TNS_PACKET_TYPE_DATA, params,
-                          self._populate_data_types_packet)
+
+        # send data types packet
+        buf.start_request(TNS_PACKET_TYPE_DATA)
+        buf.write_bytes(TNS_DATA_TYPES_PACKET_DATA)
+        buf.end_request()
+
+        # receive response (server data type support)
         self._receive_packet()
-        self._send_packet(TNS_PACKET_TYPE_DATA, params,
-                          self._populate_get_session_key_packet)
+
+        # send session key packet
+        buf.start_request(TNS_PACKET_TYPE_DATA)
+        buf.write_bytes(b'\x00\x00\x03\x76\x02')
+        buf.write_uint8(1)                  # pointer (authusr)
+        buf.write_ub4(user_len)             # length of user name
+        buf.write_ub4(1)                    # authentication mode
+        buf.write_uint8(1)                  # pointer (authivl)
+        buf.write_ub4(5)                    # number of key/value pairs
+        buf.write_uint8(0)                  # pointer (authovl)
+        buf.write_uint8(1)                  # pointer (authovln)
+        buf.write_bytes(user_bytes)         # user name
+        self._populate_key_value("AUTH_TERMINAL", "pts/2", 0)
+        self._populate_key_value("AUTH_PROGRAM_NM",
+                                 "python3.8@atc (TNS V1-V3)", 0)
+        self._populate_key_value("AUTH_MACHINE", "atc", 0)
+        self._populate_key_value("AUTH_PID", "83274", 0)
+        self._populate_key_value("AUTH_SID", "anthony", 0)
+        buf.end_request()
+
+        # receive response (session key packet)
         self._receive_packet()
         params.session_data = {}
         self._process_session_data_packet(params)
-        self._send_packet(TNS_PACKET_TYPE_DATA, params,
-                          self._populate_auth_packet)
+
+        # send authorization packet
+        buf.start_request(TNS_PACKET_TYPE_DATA)
+        password, session_key = self._generate_auth_response(params)
+        buf.write_bytes(b'\x00\x00\x03\x73\x03')
+        buf.write_uint8(1)                  # pointer (authusr)
+        buf.write_ub4(user_len)
+        buf.write_ub4(257)                  # authentication mode
+        buf.write_uint8(1)                  # pointer (authivl)
+        buf.write_ub4(4)                    # number of key/value pairs
+        buf.write_uint8(1)                  # pointer (authovl)
+        buf.write_uint8(1)                  # pointer (authovln)
+        buf.write_bytes(user_bytes)
+        self._populate_key_value("AUTH_SESSKEY", session_key, 1)
+        self._populate_key_value("AUTH_PASSWORD", password, 0)
+        self._populate_key_value("SESSION_CLIENT_CHARSET", "873", 0)
+        self._populate_key_value("SESSION_CLIENT_DRIVER_NAME",
+                                 constants.DRIVER_NAME, 0)
+        buf.end_request()
+
+        # receive response (session data packet)
         self._receive_packet()
         self._process_session_data_packet(params)
 
@@ -80,16 +162,35 @@ cdef class Protocol:
         return b.encrypt(plain_text)
 
     def _execute(self, params):
-        self._send_packet(TNS_PACKET_TYPE_DATA, params,
-                          self._populate_execute_packet)
+
+        # send execute packet
+        self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
+        self._populate_execute_packet(params)
+        self._write_buf.end_request()
+
+        # receive and process response
         self._receive_packet()
         self._process_execute_packet(params.cursor)
 
     def _fetch(self, params):
-        self._send_packet(TNS_PACKET_TYPE_DATA, params,
-                          self._populate_fetch_packet)
+        cdef:
+            WriteBuffer buf = self._write_buf
+            Cursor cursor = params.cursor
+
+        # send fetch request
+        buf.start_request(TNS_PACKET_TYPE_DATA)
+        cursor._buffer_rowcount = 0
+        cursor._buffer_index = 0
+        buf.write_uint32(0x00000305)
+        self._increment_seq_num()
+        buf.write_uint8(self._seq_num)
+        buf.write_ub4(cursor._cursor_id)
+        buf.write_ub4(params.fetch_array_size)
+        buf.end_request()
+
+        # receive and process response
         self._receive_packet()
-        self._process_execute_packet(params.cursor)
+        self._process_execute_packet(cursor)
 
     cdef _generate_auth_response(self, object params):
 
@@ -125,58 +226,26 @@ cdef class Protocol:
         return (encoded_password.hex().upper(),
                 encoded_client_key.hex().upper()[:96])
 
+    cdef int _handle_error(self) except -1:
+        cdef WriteBuffer buf = self._write_buf
+        buf.start_request(TNS_PACKET_TYPE_MARKER)
+        buf.write_bytes(b'\x01\x00\x02')
+        buf.end_request()
+        self._receive_packet()
+        self._process_error_packet()
+
     cdef _increment_seq_num(self):
         self._seq_num += 1
         if self._seq_num == 0:
             self._seqNum = 1
 
-    cdef int _populate_auth_packet(self, WriteBuffer buf,
-                                   object params) except -1:
+    cdef int _send_connect_packet(self, object connect_string) except -1:
         cdef:
-            bytes user_bytes = params.user.encode()
-            uint8_t user_len = <uint8_t> len(user_bytes)
-
-        # generate authentication response
-        password, session_key = self._generate_auth_response(params)
-
-        # write function code (0x73) and sequence number (0x03)
-        buf.write_bytes(b'\x00\x00\x03\x73\x03')
-
-        # write first part of authentication structure
-        buf.write_uint8(1)                  # pointer (authusr)
-        buf.write_ub4(user_len)
-        buf.write_ub4(257)                  # authentication mode
-        buf.write_uint8(1)                  # pointer (authivl)
-        buf.write_ub4(4)                    # number of key/value pairs
-        buf.write_uint8(1)                  # pointer (authovl)
-        buf.write_uint8(1)                  # pointer (authovln)
-        buf.write_bytes(user_bytes)
-
-        # write key/value pairs
-        self._populate_key_value(buf, "AUTH_SESSKEY", session_key, 1)
-        self._populate_key_value(buf, "AUTH_PASSWORD", password, 0)
-        self._populate_key_value(buf, "SESSION_CLIENT_CHARSET", "873", 0)
-        self._populate_key_value(buf, "SESSION_CLIENT_DRIVER_NAME",
-                constants.DRIVER_NAME, 0)
-
-    cdef int _populate_close_packet(self, WriteBuffer buf,
-                                    object params) except -1:
-        buf.write_uint32(0x00000309)
-        self._increment_seq_num()
-        buf.write_uint8(self._seq_num)
-
-    cdef int _populate_commit_packet(self, WriteBuffer buf,
-                                     object params) except -1:
-        buf.write_uint32(0x0000030e)
-        self._increment_seq_num()
-        buf.write_uint8(self._seq_num)
-
-    cdef int _populate_connect_packet(self, WriteBuffer buf,
-                                      object params) except -1:
-        cdef:
+            WriteBuffer buf = self._write_buf
             uint16_t connect_string_length
             bytes connect_string_bytes
-        connect_string_bytes = params.connect_string.encode()
+        buf.start_request(TNS_PACKET_TYPE_CONNECT)
+        connect_string_bytes = connect_string.encode()
         connect_string_length = <uint16_t> len(connect_string_bytes)
         buf.write_uint16(314)               # version
         buf.write_uint16(300)               # compatible with version
@@ -194,15 +263,12 @@ cdef class Protocol:
         buf.write_uint64(0)                 # obsolete
         buf.write_uint64(0)                 # obsolete
         buf.write_bytes(connect_string_bytes)
+        buf.end_request()
 
-    cdef int _populate_data_types_packet(self, WriteBuffer buf,
-                                         object params) except -1:
-        buf.write_bytes(TNS_DATA_TYPES_PACKET_DATA)
-
-    cdef int _populate_execute_packet(self, WriteBuffer buf,
-                                      object params) except -1:
+    cdef int _populate_execute_packet(self, object params) except -1:
         cdef:
             uint32_t options, num_params = 0, num_iters = 1
+            WriteBuffer buf = self._write_buf
             bint is_query = 0
             bytes sql_bytes
             uint8_t sql_len
@@ -358,44 +424,14 @@ cdef class Protocol:
         buf.write_ub4(cursor._cursor_id)
         buf.write_ub4(params.fetch_array_size)
 
-    cdef int _populate_final_close_packet(self, WriteBuffer buf,
-                                          object params) except -1:
-        buf.write_uint16(0x0040)
-
-    cdef int _populate_get_session_key_packet(self, WriteBuffer buf,
-                                              object params) except -1:
-        cdef:
-            bytes user_bytes = params.user.encode()
-            uint8_t user_len = <uint8_t> len(user_bytes)
-
-        # write function code (0x76) and sequence number (0x02)
-        buf.write_bytes(b'\x00\x00\x03\x76\x02')
-
-        # write first part of authorization structure
-        buf.write_uint8(1)                  # pointer (authusr)
-        buf.write_ub4(user_len)             # length of user name
-        buf.write_ub4(1)                    # authentication mode
-        buf.write_uint8(1)                  # pointer (authivl)
-        buf.write_ub4(5)                    # number of key/value pairs
-        buf.write_uint8(0)                  # pointer (authovl)
-        buf.write_uint8(1)                  # pointer (authovln)
-        buf.write_bytes(user_bytes)         # user name
-
-        # write key/value pairs
-        self._populate_key_value(buf, "AUTH_TERMINAL", "pts/2", 0)
-        self._populate_key_value(buf, "AUTH_PROGRAM_NM",
-                "python3.8@atc (TNS V1-V3)", 0)
-        self._populate_key_value(buf, "AUTH_MACHINE", "atc", 0)
-        self._populate_key_value(buf, "AUTH_PID", "83274", 0)
-        self._populate_key_value(buf, "AUTH_SID", "anthony", 0)
-
-    cdef void _populate_key_value(self, WriteBuffer buf, str key, str value,
-            uint32_t flags):
+    cdef int _populate_key_value(self, str key, str value,
+                                 uint32_t flags) except -1:
         cdef:
             bytes key_bytes = key.encode()
             bytes value_bytes = value.encode()
             uint8_t key_len = <uint8_t> cpython.PyBytes_GET_SIZE(key_bytes)
             uint8_t value_len = <uint8_t> cpython.PyBytes_GET_SIZE(value_bytes)
+            WriteBuffer buf = self._write_buf
         buf.write_ub4(key_len)
         buf.write_uint8(key_len)
         buf.write_bytes(key_bytes)
@@ -415,16 +451,6 @@ cdef class Protocol:
                                        object params) except -1:
         buf.write_bytes(b'\x00\x00\x01\x06\x00')
         buf.write_bytes(b'Python_Thin\x00')
-
-    cdef int _populate_rollback_packet(self, WriteBuffer buf,
-                                       object params) except -1:
-        buf.write_uint32(0x0000030f)
-        self._increment_seq_num()
-        buf.write_uint8(self._seq_num)
-
-    cdef int _populate_services_packet(self, WriteBuffer buf,
-                                       object params) except -1:
-        buf.write_bytes(TNS_SERVICES_PACKET_DATA)
 
     def _print_packet(self, operation, view):
         offset = 0
@@ -786,18 +812,16 @@ cdef class Protocol:
         cdef uint8_t packet_type
         self._read_buf.receive_packet(&packet_type)
         if packet_type == TNS_PACKET_TYPE_MARKER:
-            self._send_packet(TNS_PACKET_TYPE_MARKER, None,
-                              self._populate_marker_packet)
-            self._receive_packet()
-            self._process_error_packet()
+            self._handle_error()
 
     cdef int _rollback(self) except -1:
-        self._send_packet(TNS_PACKET_TYPE_DATA, None,
-                          self._populate_rollback_packet)
-        self._receive_packet()
 
-    cdef _send_packet(self, uint8_t packet_type, object params,
-            populate_func_type populate_func):
-        self._write_buf.start_request(packet_type)
-        populate_func(self, self._write_buf, params)
+        # send request
+        self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
+        self._write_buf.write_uint32(0x0000030f)
+        self._increment_seq_num()
+        self._write_buf.write_uint8(self._seq_num)
         self._write_buf.end_request()
+
+        # receive response
+        self._receive_packet()
