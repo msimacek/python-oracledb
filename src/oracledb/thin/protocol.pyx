@@ -787,6 +787,8 @@ cdef class Protocol:
         cdef uint8_t packet_type
         self._read_buf.receive_packet(&packet_type)
         if packet_type == TNS_PACKET_TYPE_MARKER:
+            # on error a second packet is sent which is ignored
+            self._read_buf.receive_packet(&packet_type)
             self._handle_error()
 
     cdef int _rollback(self) except -1:
