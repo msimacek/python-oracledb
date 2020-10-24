@@ -596,6 +596,70 @@ cdef class WriteBuffer:
         self._packet_type = packet_type
         self._actual_size = PACKET_HEADER_SIZE
 
+    cdef int write_binary_double(self, double value) except -1:
+        cdef:
+            uint8_t b0, b1, b2, b3, b4, b5, b6, b7
+            uint64_t all_bits
+            char_type buf[8]
+            uint64_t *ptr
+        ptr = <uint64_t*> &value
+        all_bits = ptr[0]
+        b7 = all_bits & 0xff
+        b6 = (all_bits >> 8) & 0xff
+        b5 = (all_bits >> 16) & 0xff
+        b4 = (all_bits >> 24) & 0xff
+        b3 = (all_bits >> 32) & 0xff
+        b2 = (all_bits >> 40) & 0xff
+        b1 = (all_bits >> 48) & 0xff
+        b0 = (all_bits >> 56) & 0xff
+        if b0 & 0x80 == 0:
+            b0 = b0 | 0x80
+        else:
+            b0 = ~b0
+            b1 = ~b1
+            b2 = ~b2
+            b3 = ~b3
+            b4 = ~b4
+            b5 = ~b5
+            b6 = ~b6
+            b7 = ~b7
+        buf[0] = b0
+        buf[1] = b1
+        buf[2] = b2
+        buf[3] = b3
+        buf[4] = b4
+        buf[5] = b5
+        buf[6] = b6
+        buf[7] = b7
+        self.write_uint8(8)
+        self.write_raw(buf, 8)
+
+    cdef int write_binary_float(self, float value) except -1:
+        cdef:
+            uint8_t b0, b1, b2, b3
+            uint32_t all_bits
+            char_type buf[4]
+            uint32_t *ptr
+        ptr = <uint32_t*> &value
+        all_bits = ptr[0]
+        b3 = all_bits & 0xff
+        b2 = (all_bits >> 8) & 0xff
+        b1 = (all_bits >> 16) & 0xff
+        b0 = (all_bits >> 24) & 0xff
+        if b0 & 0x80 == 0:
+            b0 = b0 | 0x80
+        else:
+            b0 = ~b0
+            b1 = ~b1
+            b2 = ~b2
+            b3 = ~b3
+        buf[0] = b0
+        buf[1] = b1
+        buf[2] = b2
+        buf[3] = b3
+        self.write_uint8(4)
+        self.write_raw(buf, 4)
+
     cdef int write_bytes(self, bytes value) except -1:
         cdef:
             ssize_t value_len

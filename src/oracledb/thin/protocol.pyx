@@ -409,6 +409,10 @@ cdef class Protocol:
                     or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ \
                     or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_LTZ:
                 buf.write_oracle_date(value, var.type._buffer_size_factor)
+            elif ora_type_num == TNS_DATA_TYPE_BINARY_DOUBLE:
+                buf.write_binary_double(value)
+            elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
+                buf.write_binary_float(value)
             else:
                 errors._raise_from_string(exceptions.NotSupportedError,
                                           f"unsupported type {var.type}")

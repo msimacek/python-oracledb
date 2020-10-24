@@ -123,8 +123,10 @@ cdef class DbType:
 
 # database types
 DB_TYPE_BFILE = DbType(2020, "DB_TYPE_BFILE", 114)
-DB_TYPE_BINARY_DOUBLE = DbType(2008, "DB_TYPE_BINARY_DOUBLE", 101)
-DB_TYPE_BINARY_FLOAT = DbType(2007, "DB_TYPE_BINARY_FLOAT", 100)
+DB_TYPE_BINARY_DOUBLE = DbType(2008, "DB_TYPE_BINARY_DOUBLE", 101,
+                               buffer_size_factor=8)
+DB_TYPE_BINARY_FLOAT = DbType(2007, "DB_TYPE_BINARY_FLOAT", 100,
+                              buffer_size_factor=4)
 DB_TYPE_BINARY_INTEGER = DbType(2009, "DB_TYPE_BINARY_INTEGER", 3)
 DB_TYPE_BLOB = DbType(2019, "DB_TYPE_BLOB", 113)
 DB_TYPE_BOOLEAN = DbType(2022, "DB_TYPE_BOOLEAN", 252)
