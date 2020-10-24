@@ -261,6 +261,60 @@ cdef class ReadBuffer:
         if self._offset < 0:
             self._offset = 0
 
+    cdef object read_binary_double(self):
+        cdef:
+            const uint8_t *ptr = <uint8_t*> self._get_raw(8)
+            uint64_t high_bits, low_bits, all_bits
+            uint8_t b0, b1, b2, b3, b4, b5, b6, b7
+            double *double_ptr
+        b0 = ptr[0]
+        b1 = ptr[1]
+        b2 = ptr[2]
+        b3 = ptr[3]
+        b4 = ptr[4]
+        b5 = ptr[5]
+        b6 = ptr[6]
+        b7 = ptr[7]
+        if b0 & 0x80:
+            b0 = b0 & 0x7f
+        else:
+            b0 = ~b0
+            b1 = ~b1
+            b2 = ~b2
+            b3 = ~b3
+            b4 = ~b4
+            b5 = ~b5
+            b6 = ~b6
+            b7 = ~b7
+        high_bits = b0 << 24 | b1 << 16 | b2 << 8 | b3
+        low_bits = b4 << 24 | b5 << 16 | b6 << 8 | b7
+        all_bits = high_bits << 32 | (low_bits & 0xffffffff)
+        double_ptr = <double*> &all_bits
+        ptr = <uint8_t*> double_ptr
+        return double_ptr[0]
+
+    cdef object read_binary_float(self):
+        cdef:
+            const uint8_t *ptr = <uint8_t*> self._get_raw(4)
+            uint8_t b0, b1, b2, b3
+            uint64_t all_bits
+            float *float_ptr
+        b0 = ptr[0]
+        b1 = ptr[1]
+        b2 = ptr[2]
+        b3 = ptr[3]
+        if b0 & 0x80:
+            b0 = b0 & 0x7f
+        else:
+            b0 = ~b0
+            b1 = ~b1
+            b2 = ~b2
+            b3 = ~b3
+        all_bits = (b0 << 24) | (b1 << 16) | (b2 << 8) | b3
+        float_ptr = <float*> &all_bits
+        ptr = <uint8_t*> float_ptr
+        return float_ptr[0]
+
     cdef uint8_t read_uint8(self) except *:
         cdef const char_type *ptr = self._get_raw(1)
         return ptr[0]

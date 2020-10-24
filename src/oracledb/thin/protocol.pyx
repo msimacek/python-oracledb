@@ -698,6 +698,10 @@ cdef class Protocol:
                 column_value = buf.read_oracle_date(num_bytes)
             elif ora_type_num == TNS_DATA_TYPE_ROWID:
                 column_value = buf.read_rowid()
+            elif ora_type_num == TNS_DATA_TYPE_BINARY_DOUBLE:
+                column_value = buf.read_binary_double()
+            elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
+                column_value = buf.read_binary_float()
             else:
                 msg = f"unhandled data type {var.type}"
                 raise Exception(msg)

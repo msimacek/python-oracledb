@@ -58,7 +58,6 @@ cdef class DbType:
     @staticmethod
     cdef DbType _from_ora_type_and_csfrm(uint8_t ora_type_num, uint8_t csfrm):
         cdef uint16_t ora_type_key = csfrm * 256 + ora_type_num
-        print("DbType_from_ora_type_and_csfrm:", ora_type_num, csfrm)
         try:
             return db_type_by_ora_type_num[ora_type_key]
         except KeyError:
@@ -100,7 +99,6 @@ cdef class DbType:
 
     @staticmethod
     cdef DbType _from_value(object value, uint32_t *size):
-        print("getting DB type by value:", type(value))
         if value is None:
             return None
         elif isinstance(value, bool):
@@ -125,8 +123,8 @@ cdef class DbType:
 
 # database types
 DB_TYPE_BFILE = DbType(2020, "DB_TYPE_BFILE", 114)
-DB_TYPE_BINARY_DOUBLE = DbType(2008, "DB_TYPE_BINARY_DOUBLE", 22)
-DB_TYPE_BINARY_FLOAT = DbType(2007, "DB_TYPE_BINARY_FLOAT", 21)
+DB_TYPE_BINARY_DOUBLE = DbType(2008, "DB_TYPE_BINARY_DOUBLE", 101)
+DB_TYPE_BINARY_FLOAT = DbType(2007, "DB_TYPE_BINARY_FLOAT", 100)
 DB_TYPE_BINARY_INTEGER = DbType(2009, "DB_TYPE_BINARY_INTEGER", 3)
 DB_TYPE_BLOB = DbType(2019, "DB_TYPE_BLOB", 113)
 DB_TYPE_BOOLEAN = DbType(2022, "DB_TYPE_BOOLEAN", 252)
