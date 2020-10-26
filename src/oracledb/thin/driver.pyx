@@ -13,6 +13,7 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from libc.stdint cimport UINT8_MAX, UINT16_MAX, UINT32_MAX, UINT64_MAX
 
 from Crypto.Cipher import AES
+import collections
 import datetime
 import decimal
 import hashlib
@@ -32,5 +33,6 @@ include "buffer.pyx"
 include "constants.pxi"
 include "protocol.pyx"
 include "connection.pyx"
+include "statement.pyx"
 include "cursor.pyx"
 include "var.pyx"

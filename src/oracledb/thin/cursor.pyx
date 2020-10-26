@@ -6,7 +6,7 @@ cdef class Cursor(BaseCursor):
 
     cdef:
         readonly Connection connection
-        uint16_t _cursor_id
+        Statement _statement
 
     def __cinit__(self, connection):
         self.connection = connection
@@ -15,7 +15,7 @@ cdef class Cursor(BaseCursor):
         return Var.__new__(Var, self.connection)
 
     cdef int _execute(self) except -1:
-        params = types.SimpleNamespace(cursor=self, sql=self.statement,
+        params = types.SimpleNamespace(cursor=self,
                                        fetch_array_size=self.arraysize,
                                        params=self._bind_vars)
         self.connection._protocol._execute(params)
@@ -25,5 +25,9 @@ cdef class Cursor(BaseCursor):
                                        fetch_array_size=self._fetch_array_size)
         self.connection._protocol._fetch(params)
 
-    cdef int _prepare(self, str statement, str tag=None) except -1:
-        self.statement = statement
+    cdef int _prepare(self, str sql, str tag=None) except -1:
+        self._statement = self.connection._statement_cache.get_statement(sql)
+        if self._statement is None:
+            self._statement = Statement()
+            self._statement._prepare(sql)
+        self.statement = sql

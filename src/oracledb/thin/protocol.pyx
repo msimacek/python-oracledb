@@ -184,7 +184,7 @@ cdef class Protocol:
         buf.write_uint32(0x00000305)
         self._increment_seq_num()
         buf.write_uint8(self._seq_num)
-        buf.write_ub4(cursor._cursor_id)
+        buf.write_ub4(cursor._statement._cursor_id)
         buf.write_ub4(params.fetch_array_size)
         buf.end_request()
 
@@ -269,28 +269,26 @@ cdef class Protocol:
         cdef:
             uint32_t options, num_params = 0, num_iters = 1
             WriteBuffer buf = self._write_buf
-            bint is_query = 0
-            bytes sql_bytes
-            uint8_t sql_len
+            Statement stmt
+            Cursor cursor
 
-        # set up some variables; these should go in the Statement object and
-        # be stored in a StatementCache
-        sql = params.sql.strip()
-        sql_bytes = sql.encode()
-        sql_len = <uint8_t> len(sql_bytes)
-        sql_keyword = sql[:10].split()[0].lower()
-        options = 0x21                      # parse/execute
-        if sql_keyword not in ("declare", "begin", "call"):
-            options |= 0x8000               # statement is NOT PL/SQL
-        elif params.params:
-            options |= 0x400                # PL/SQL with parameters
-        if sql_keyword in ("select", "with"):
-            options |= 0x40                 # fetch
-            num_iters = params.fetch_array_size
-            is_query = 1
+        # determine the options to use for the execute
+        cursor = <Cursor> params.cursor
+        stmt = cursor._statement
         if params.params:
             num_params = <uint32_t> len(params.params)
-            options |= 0x08                 # bind variables present
+        options = TNS_EXEC_OPTION_EXECUTE
+        if stmt._cursor_id == 0:
+            options |= TNS_EXEC_OPTION_PARSE
+        if not stmt._is_plsql:
+            options |= TNS_EXEC_OPTION_NOT_PLSQL
+        elif num_params > 0:
+            options |= TNS_EXEC_OPTION_PLSQL_BIND
+        if stmt._is_query:
+            options |= TNS_EXEC_OPTION_FETCH
+            num_iters = params.fetch_array_size
+        if num_params > 0:
+            options |= TNS_EXEC_OPTION_BIND
 
         # write packet
         buf.write_uint16(0)                 # data flags
@@ -298,9 +296,9 @@ cdef class Protocol:
         self._increment_seq_num()
         buf.write_uint8(self._seq_num)
         buf.write_ub4(options)              # execute options
-        buf.write_ub4(0)                    # cursor ID
+        buf.write_ub4(stmt._cursor_id)
         buf.write_uint8(1)                  # pointer (cursor id)
-        buf.write_ub4(sql_len)              # length of SQL to execute
+        buf.write_ub4(stmt._sql_bytes_length)
         buf.write_uint8(1)                  # pointer (vector)
         buf.write_ub4(13)                   # al8i4 array length
         buf.write_uint8(0)                  # pointer (al8o4)
@@ -337,9 +335,9 @@ cdef class Protocol:
         buf.write_uint8(0)                  # pointer (SQL ID)
         buf.write_ub4(0)                    # allocated size of SQL ID
         buf.write_uint8(0)                  # pointer (length of SQL ID)
-        buf.write_bytes(sql_bytes)
+        buf.write_bytes(stmt._sql_bytes)
         buf.write_ub4(1)                    # al8i4[0] parse
-        if is_query:
+        if stmt._is_query:
             buf.write_ub4(0)                # al8i4[1] execution count
         else:
             buf.write_ub4(1)                # al8i4[1] execution count
@@ -348,7 +346,7 @@ cdef class Protocol:
         buf.write_ub4(0)                    # al8i4[4]
         buf.write_ub4(0)                    # al8i4[5] SCN (part 1)
         buf.write_ub4(0)                    # al8i4[6] SCN (part 2)
-        buf.write_ub4(is_query)             # al8i4[7] is query
+        buf.write_ub4(stmt._is_query)       # al8i4[7] is query
         buf.write_ub4(0)                    # al8i4[8]
         buf.write_ub4(0)                    # al8i4[9] DML row counts/implicit
         buf.write_ub4(0)                    # al8i4[10]
@@ -425,7 +423,7 @@ cdef class Protocol:
         buf.write_uint32(0x00000305)
         self._increment_seq_num()
         buf.write_uint8(self._seq_num)
-        buf.write_ub4(cursor._cursor_id)
+        buf.write_ub4(cursor._statement._cursor_id)
         buf.write_ub4(params.fetch_array_size)
 
     cdef int _populate_key_value(self, str key, str value,
@@ -654,7 +652,7 @@ cdef class Protocol:
                     buf.skip_bytes(num_bytes)
             elif message_type == TNS_MSG_TYPE_ERROR:
                 self._process_error_info(buf, &error_info)
-                cursor._cursor_id = error_info.cursor_id
+                cursor._statement._cursor_id = error_info.cursor_id
                 if error_info.num == 1403:
                     cursor._more_rows_to_fetch = False
             else:

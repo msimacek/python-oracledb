@@ -5,6 +5,7 @@
 cdef class Connection(BaseConnection):
 
     cdef:
+        StatementCache _statement_cache
         Protocol _protocol
 
     cdef int _close(self) except -1:
@@ -20,6 +21,7 @@ cdef class Connection(BaseConnection):
                 user=self.user, password=password)
         self._protocol = Protocol(sock)
         self._protocol._connect(params)
+        self._statement_cache = StatementCache(30)
         self._is_connected = True
 
     cdef BaseCursor _create_cursor(self):
