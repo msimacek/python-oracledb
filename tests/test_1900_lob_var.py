@@ -227,24 +227,20 @@ class TestCase(base.BaseTestCase):
         "1914 - test binding and fetching NCLOB data (directly)"
         self.__perform_test("NCLOB", oracledb.DB_TYPE_NCLOB)
 
-    def test_1915_nclob_different_encodings(self):
-        "1915 - test binding and fetching NCLOB data (different encodings)"
-        connection = oracledb.connect(base.get_main_user(),
-                                      base.get_main_password(),
-                                      base.get_connect_string(),
-                                      encoding="UTF-8", nencoding="UTF-16")
+    def test_1915_nclob_non_ascii_chars(self):
+        "1915 - test binding and fetching NCLOB data (with non-ASCII chars)"
         value = "\u03b4\u4e2a"
-        cursor = connection.cursor()
-        cursor.execute("truncate table TestNCLOBs")
-        cursor.setinputsizes(val=oracledb.DB_TYPE_NVARCHAR)
-        cursor.execute("insert into TestNCLOBs values (1, :val)", val=value)
-        cursor.execute("select NCLOBCol from TestNCLOBs")
-        nclob, = cursor.fetchone()
-        cursor.setinputsizes(val=oracledb.DB_TYPE_NVARCHAR)
-        cursor.execute("update TestNCLOBs set NCLOBCol = :val",
-                       val=nclob.read() + value)
-        cursor.execute("select NCLOBCol from TestNCLOBs")
-        nclob, = cursor.fetchone()
+        self.cursor.execute("truncate table TestNCLOBs")
+        self.cursor.setinputsizes(val=oracledb.DB_TYPE_NVARCHAR)
+        self.cursor.execute("insert into TestNCLOBs values (1, :val)",
+                            val=value)
+        self.cursor.execute("select NCLOBCol from TestNCLOBs")
+        nclob, = self.cursor.fetchone()
+        self.cursor.setinputsizes(val=oracledb.DB_TYPE_NVARCHAR)
+        self.cursor.execute("update TestNCLOBs set NCLOBCol = :val",
+                            val=nclob.read() + value)
+        self.cursor.execute("select NCLOBCol from TestNCLOBs")
+        nclob, = self.cursor.fetchone()
         self.assertEqual(nclob.read(), value + value)
 
     def test_1916_nclob_indirect(self):

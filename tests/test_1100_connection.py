@@ -162,41 +162,6 @@ class TestCase(base.BaseTestCase):
         finally:
             connection.changepassword(new_password, base.get_main_password())
 
-    def test_1110_encodings(self):
-        "1110 - connection with only encoding/nencoding specified should work"
-        connection = oracledb.connect(base.get_main_user(),
-                                      base.get_main_password(),
-                                      base.get_connect_string())
-        encoding = connection.encoding
-        nencoding = connection.nencoding
-        alt_encoding = "ISO-8859-1"
-        connection = oracledb.connect(base.get_main_user(),
-                                      base.get_main_password(),
-                                      base.get_connect_string(),
-                                      encoding=alt_encoding)
-        self.assertEqual(connection.encoding, alt_encoding)
-        self.assertEqual(connection.nencoding, nencoding)
-        connection = oracledb.connect(base.get_main_user(),
-                                      base.get_main_password(),
-                                      base.get_connect_string(),
-                                      nencoding=alt_encoding)
-        self.assertEqual(connection.encoding, encoding)
-        self.assertEqual(connection.nencoding, alt_encoding)
-
-    def test_1111_different_encodings(self):
-        "1111 - different encodings can be specified for encoding/nencoding"
-        connection = oracledb.connect(base.get_main_user(),
-                                      base.get_main_password(),
-                                      base.get_connect_string(),
-                                      encoding="UTF-8", nencoding="UTF-16")
-        value = "\u03b4\u4e2a"
-        cursor = connection.cursor()
-        nchar_var = cursor.var(oracledb.DB_TYPE_NVARCHAR, 100)
-        nchar_var.setvalue(0, value)
-        cursor.execute("select :value from dual", value=nchar_var)
-        result, = cursor.fetchone()
-        self.assertEqual(result, value)
-
     def test_1112_exception_on_close(self):
         "1112 - confirm an exception is raised after closing a connection"
         connection = base.get_connection()
@@ -307,16 +272,6 @@ class TestCase(base.BaseTestCase):
 
     def test_1122_connection_attributes(self):
         "1122 - test connection attribute values"
-        connection = oracledb.connect(base.get_main_user(),
-                                      base.get_main_password(),
-                                      base.get_connect_string(),
-                                      encoding="ASCII")
-        self.assertEqual(connection.maxBytesPerCharacter, 1)
-        connection = oracledb.connect(base.get_main_user(),
-                                      base.get_main_password(),
-                                      base.get_connect_string(),
-                                      encoding="UTF-8")
-        self.assertEqual(connection.maxBytesPerCharacter, 4)
         if base.get_client_version() >= (12, 1):
             self.assertEqual(connection.ltxid, b'')
         self.assertEqual(connection.current_schema, None)

@@ -40,7 +40,7 @@ class TestCase(base.BaseTestCase):
             if not messages:
                 break
             for m in messages:
-                results.append(m.payload.decode(connection.encoding))
+                results.append(m.payload.decode())
         connection.commit()
 
     def __get_and_clear_raw_queue(self):
@@ -59,7 +59,7 @@ class TestCase(base.BaseTestCase):
                     for d in RAW_PAYLOAD_DATA]
         queue.enqMany(messages)
         messages = queue.deqMany(len(RAW_PAYLOAD_DATA))
-        data = [m.payload.decode(self.connection.encoding) for m in messages]
+        data = [m.payload.decode() for m in messages]
         self.connection.commit()
         self.assertEqual(data, RAW_PAYLOAD_DATA)
 
@@ -96,8 +96,7 @@ class TestCase(base.BaseTestCase):
         all_data = []
         for num in (3, 5, 10):
             messages = queue.deqMany(num)
-            all_data.extend(m.payload.decode(self.connection.encoding) \
-                    for m in messages)
+            all_data.extend(m.payload.decode() for m in messages)
         self.connection.commit()
         self.assertEqual(all_data, RAW_PAYLOAD_DATA)
 
