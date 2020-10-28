@@ -19,30 +19,42 @@ cdef class BaseConnection:
         Internal method for closing the connection. Intended to be overridden
         by the subclass.
         """
+        raise NotImplementedError()
 
     cdef int _commit(self) except -1:
         """
         Internal method for committing the transaction. Intended to be
         overridden by the subclass.
         """
+        raise NotImplementedError()
 
     cdef BaseCursor _create_cursor(self):
         """
         Internal method for creating a cursor. Intended to be overridden by the
         subclass.
         """
+        raise NotImplementedError()
 
     cdef str _get_version(self):
         """
         Return the version associated with the connection. Intended to be
         overridden by the subclass.
         """
+        raise NotImplementedError()
+
+    cdef int _ping(self) except -1:
+        """
+        Internal method for pinging the database. Intended to be overridden by
+        the subclass.
+        """
+        raise NotImplementedError()
 
     cdef int _rollback(self) except -1:
         """
         Internal method for rolling back the transaction. Intended to be
         overridden by the subclass.
         """
+        raise NotImplementedError()
 
     cdef int _verify_connected(self) except -1:
         """
@@ -72,6 +84,13 @@ cdef class BaseConnection:
         Returns a cursor associated with the connection.
         """
         return self._create_cursor()
+
+    def ping(self):
+        """
+        Pings the database to verify the connection is valid.
+        """
+        self._verify_connected()
+        self._ping()
 
     def rollback(self):
         """

@@ -30,5 +30,8 @@ cdef class Connection(BaseConnection):
     cdef str _get_version(self):
         return self._protocol._server_version
 
+    cdef int _ping(self) except -1:
+        self._protocol._ping()
+
     cdef int _rollback(self) except -1:
         self._protocol._rollback()

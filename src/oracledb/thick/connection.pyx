@@ -104,6 +104,13 @@ cdef class Connection(BaseConnection):
         """
         return Cursor.__new__(Cursor, self)
 
+    cdef int _ping(self) except -1:
+        cdef int status
+        with nogil:
+            status = dpiConn_ping(self._handle)
+        if status < 0:
+            _raise_from_odpi()
+
     cdef int _rollback(self) except -1:
         cdef int status
         with nogil:

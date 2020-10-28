@@ -355,6 +355,18 @@ cdef class Protocol:
         if num_params > 0:
             self._populate_bind_params(buf, params.params)
 
+    cdef int _ping(self) except -1:
+
+        # send request
+        self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
+        self._write_buf.write_uint32(0x00000393)
+        self._increment_seq_num()
+        self._write_buf.write_uint8(self._seq_num)
+        self._write_buf.end_request()
+
+        # receive response
+        self._receive_packet()
+
     cdef int _populate_bind_params(self, WriteBuffer buf,
                                    list params) except -1:
         cdef:

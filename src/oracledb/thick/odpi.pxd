@@ -270,6 +270,8 @@ cdef extern from "odpi/embed/dpi.c":
             int sizeIsBytes, int isArray, dpiObjectType *objType, dpiVar **var,
             dpiData **data) nogil
 
+    int dpiConn_ping(dpiConn *conn) nogil
+
     int dpiConn_prepareStmt(dpiConn *conn, int scrollable, const char *sql,
             uint32_t sqlLength, const char *tag, uint32_t tagLength,
             dpiStmt **stmt) nogil

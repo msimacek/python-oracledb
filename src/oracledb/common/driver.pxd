@@ -52,6 +52,8 @@ cdef class BaseConnection:
 
     cdef str _get_version(self)
 
+    cdef int _ping(self) except -1
+
     cdef int _rollback(self) except -1
 
     cdef int _verify_connected(self) except -1
