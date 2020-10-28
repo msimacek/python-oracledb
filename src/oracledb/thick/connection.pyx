@@ -61,8 +61,8 @@ cdef class Connection(BaseConnection):
             _raise_from_odpi()
         if dpiContext_initConnCreateParams(driver_context, &conn_params) < 0:
             _raise_from_odpi()
-        if self.user:
-            user_name_bytes = self.user.encode()
+        if self.username:
+            user_name_bytes = self.username.encode()
             user_name_ptr = user_name_bytes
             user_name_length = <uint32_t> len(user_name_bytes)
         if password:

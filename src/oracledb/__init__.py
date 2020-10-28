@@ -10,7 +10,7 @@ from .constants import *
 from .constructors import *
 
 from .common.driver import *
-from .thick.driver import init_oracle_client
+from .thick.driver import clientversion, init_oracle_client
 
 # future object used for managing backwards incompatible changes
 class Future:

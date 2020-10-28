@@ -18,7 +18,7 @@ cdef class Connection(BaseConnection):
         sock = socket.socket()
         sock.connect((host, port))
         params = types.SimpleNamespace(connect_string=connect_string,
-                user=self.user, password=password)
+                user=self.username, password=password)
         self._protocol = Protocol(sock)
         self._protocol._connect(params)
         self._statement_cache = StatementCache(30)

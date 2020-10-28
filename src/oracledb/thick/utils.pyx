@@ -192,6 +192,29 @@ cdef int _raise_from_odpi() except -1:
     _raise_from_info(&error_info)
 
 
+def clientversion():
+    """
+    Returns the version of the Oracle Client library being used as a 5-tuple.
+    The five values are the major version, minor version, update number, patch
+    number and port update number.
+    """
+    cdef dpiVersionInfo info
+    global client_version
+    if client_version is None:
+        if driver_context == NULL:
+            init_oracle_client()
+        if dpiContext_getClientVersion(driver_context, &info) < 0:
+            _raise_from_odpi()
+        client_version = (
+            info.versionNum,
+            info.releaseNum,
+            info.updateNum,
+            info.portReleaseNum,
+            info.portUpdateNum
+        )
+    return client_version
+
+
 def init_oracle_client(lib_dir=None, config_dir=None, error_url=None,
         driver_name=None):
     """
@@ -200,10 +223,11 @@ def init_oracle_client(lib_dir=None, config_dir=None, error_url=None,
     library is initialized. If not called earlier, the first usage of the
     Oracle Client library will cause this method to be called internally.
     """
-    cdef bytes lib_dir_bytes, config_dir_bytes, driver_name_bytes
-    cdef dpiContextCreateParams params
-    cdef dpiErrorInfo error_info
-    cdef bytes encoding_bytes
+    cdef:
+        bytes lib_dir_bytes, config_dir_bytes, driver_name_bytes
+        dpiContextCreateParams params
+        dpiErrorInfo error_info
+        bytes encoding_bytes
     if driver_context != NULL:
         errors._raise_from_string(exceptions.ProgrammingError,
                 "Oracle Client library has already been initialized")

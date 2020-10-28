@@ -10,9 +10,9 @@ cdef class BaseConnection:
 
     def __repr__(self):
         cls_name = type(self).__name__
-        if self.user is None:
+        if self.username is None:
             return f"{cls_name} to externally identified user"
-        return f"{cls_name} to {self.user}@{self.dsn}"
+        return f"{cls_name} to {self.username}@{self.dsn}"
 
     cdef int _close(self) except -1:
         """

@@ -284,6 +284,9 @@ cdef extern from "odpi/embed/dpi.c":
             unsigned int minorVersion, dpiContextCreateParams *params,
             dpiContext **context, dpiErrorInfo *errorInfo) nogil
 
+    int dpiContext_getClientVersion(const dpiContext *context,
+            dpiVersionInfo *versionInfo) nogil
+
     void dpiContext_getError(const dpiContext *context,
             dpiErrorInfo *errorInfo) nogil
 

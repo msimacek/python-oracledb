@@ -28,6 +28,8 @@ include "odpi.pxd"
 
 cdef dpiContext *driver_context = NULL
 
+client_version = None
+
 include "connection.pyx"
 include "cursor.pyx"
 include "var.pyx"
