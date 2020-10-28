@@ -37,7 +37,7 @@ cdef class DbType:
 
 cdef class BaseConnection:
     cdef:
-        readonly str user
+        readonly str username
         readonly str dsn
         public object inputtypehandler
         public object outputtypehandler

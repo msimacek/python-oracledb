@@ -5,7 +5,7 @@
 cdef class BaseConnection:
 
     def __init__(self, user, dsn):
-        self.user = user
+        self.username = user
         self.dsn = dsn
 
     def __repr__(self):
