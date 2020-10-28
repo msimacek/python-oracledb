@@ -8,6 +8,13 @@ cdef class BaseConnection:
         self.username = user
         self.dsn = dsn
 
+    def __enter__(self):
+        self._verify_connected()
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        self.close()
+
     def __repr__(self):
         cls_name = type(self).__name__
         if self.username is None:
@@ -71,6 +78,7 @@ cdef class BaseConnection:
         """
         self._verify_connected()
         self._close()
+        self._is_connected = False
 
     def commit(self):
         """
