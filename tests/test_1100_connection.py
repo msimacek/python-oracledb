@@ -262,6 +262,7 @@ class TestCase(base.BaseTestCase):
 
     def test_1122_connection_attributes(self):
         "1122 - test connection attribute values"
+        connection = base.get_connection()
         if base.get_client_version() >= (12, 1):
             self.assertEqual(connection.ltxid, b'')
         self.assertEqual(connection.current_schema, None)
