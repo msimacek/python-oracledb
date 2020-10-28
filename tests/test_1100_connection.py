@@ -27,8 +27,6 @@ class TestCase(base.BaseTestCase):
     def __verify_args(self, connection):
         self.assertEqual(connection.username, base.get_main_user(),
                          "user name differs")
-        self.assertEqual(connection.tnsentry, base.get_connect_string(),
-                         "tnsentry differs")
         self.assertEqual(connection.dsn, base.get_connect_string(),
                          "dsn differs")
 

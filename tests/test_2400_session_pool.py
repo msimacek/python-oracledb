@@ -46,8 +46,6 @@ class TestCase(base.BaseTestCase):
                              getmode=oracledb.SPOOL_ATTRVAL_WAIT)
         self.assertEqual(pool.username, base.get_main_user(),
                          "user name differs")
-        self.assertEqual(pool.tnsentry, base.get_connect_string(),
-                         "tnsentry differs")
         self.assertEqual(pool.dsn, base.get_connect_string(), "dsn differs")
         self.assertEqual(pool.max, 8, "max differs")
         self.assertEqual(pool.min, 2, "min differs")
