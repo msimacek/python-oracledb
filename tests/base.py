@@ -92,9 +92,21 @@ def get_charset_ratio():
         value = PARAMETERS["CS_RATIO"] = column_info[3]
     return value
 
+def get_client_version():
+    name = "CLIENT_VERSION"
+    value = PARAMETERS.get(name)
+    if value is None:
+        if get_is_thin():
+            value = (21, 1)
+        else:
+            value = oracledb.clientversion()[:2]
+        PARAMETERS[name] = value
+    return value
+
 def get_connection(**kwargs):
     return oracledb.connect(get_connect_string(), user=get_main_user(),
-            password=get_main_password(), thin=get_is_thin(), **kwargs)
+                            password=get_main_password(), thin=get_is_thin(),
+                            **kwargs)
 
 def get_connect_string():
     return get_value("CONNECT_STRING", "Connect String",
@@ -117,6 +129,15 @@ def get_proxy_password():
 
 def get_proxy_user():
     return get_value("PROXY_USER", "Proxy User Name", DEFAULT_PROXY_USER)
+
+def get_server_version():
+    name = "SERVER_VERSION"
+    value = PARAMETERS.get(name)
+    if value is None:
+        conn = get_connection()
+        value = tuple(int(s) for s in conn.version.split("."))[:2]
+        PARAMETERS[name] = value
+    return value
 
 def run_sql_script(conn, script_name, **kwargs):
     statement_parts = []

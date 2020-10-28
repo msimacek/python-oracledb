@@ -26,7 +26,7 @@ class TestCase(base.BaseTestCase):
                               arraysize=cursor.arraysize)
 
     def setUp(self):
-        base.BaseTestCase.setUp(self)
+        super().setUp()
         self.raw_data = []
         self.data_by_key = {}
         for i in range(1, 11):
@@ -267,16 +267,16 @@ class TestCase(base.BaseTestCase):
     def test_2220_cursor_description(self):
         "2220 - test cursor description is accurate"
         self.cursor.execute("select * from TestNumbers")
-        self.assertEqual(self.cursor.description,
-                [ ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
-                  ('LONGINTCOL', oracledb.DB_TYPE_NUMBER, 17, None, 16, 0, 0),
-                  ('NUMBERCOL', oracledb.DB_TYPE_NUMBER, 13, None, 9, 2, 0),
-                  ('FLOATCOL', oracledb.DB_TYPE_NUMBER, 127, None, 126, -127,
-                        0),
-                  ('UNCONSTRAINEDCOL', oracledb.DB_TYPE_NUMBER, 127, None, 0,
-                        -127, 0),
-                  ('NULLABLECOL', oracledb.DB_TYPE_NUMBER, 39, None, 38, 0,
-                        1) ])
+        expected_value = [
+            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
+            ('LONGINTCOL', oracledb.DB_TYPE_NUMBER, 17, None, 16, 0, 0),
+            ('NUMBERCOL', oracledb.DB_TYPE_NUMBER, 13, None, 9, 2, 0),
+            ('FLOATCOL', oracledb.DB_TYPE_NUMBER, 127, None, 126, -127, 0),
+            ('UNCONSTRAINEDCOL', oracledb.DB_TYPE_NUMBER, 127, None, 0, -127,
+                0),
+            ('NULLABLECOL', oracledb.DB_TYPE_NUMBER, 39, None, 38, 0, 1)
+        ]
+        self.assertEqual(self.cursor.description, expected_value)
 
     def test_2221_fetchall(self):
         "2221 - test that fetching all of the data returns the correct results"

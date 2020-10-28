@@ -76,10 +76,11 @@ class TestCase(base.BaseTestCase):
     def test_2003_long_cursor_description(self):
         "2003 - test cursor description is accurate for longs"
         self.cursor.execute("select * from TestLongs")
-        self.assertEqual(self.cursor.description,
-                [ ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
-                  ('LONGCOL', oracledb.DB_TYPE_LONG, None, None, None, None,
-                        0) ])
+        expected_value = [
+            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
+            ('LONGCOL', oracledb.DB_TYPE_LONG, None, None, None, None, 0)
+        ]
+        self.assertEqual(self.cursor.description, expected_value)
 
     def test_2004_long_raw_cursor_description(self):
         "2004 - test cursor description is accurate for long raws"

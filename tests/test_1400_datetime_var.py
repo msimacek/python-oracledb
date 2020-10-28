@@ -15,7 +15,7 @@ import time
 class TestCase(base.BaseTestCase):
 
     def setUp(self):
-        base.BaseTestCase.setUp(self)
+        super().setUp()
         self.raw_data = []
         self.data_by_key = {}
         for i in range(1, 11):
@@ -207,11 +207,12 @@ class TestCase(base.BaseTestCase):
     def test_1414_cursor_description(self):
         "1414 - test cursor description is accurate"
         self.cursor.execute("select * from TestDates")
-        self.assertEqual(self.cursor.description,
-                [ ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
-                  ('DATECOL', oracledb.DB_TYPE_DATE, 23, None, None, None, 0),
-                  ('NULLABLECOL', oracledb.DB_TYPE_DATE, 23, None, None, None,
-                        1) ])
+        expected_value = [
+            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
+            ('DATECOL', oracledb.DB_TYPE_DATE, 23, None, None, None, 0),
+            ('NULLABLECOL', oracledb.DB_TYPE_DATE, 23, None, None, None, 1)
+        ]
+        self.assertEqual(self.cursor.description, expected_value)
 
     def test_1415_fetchall(self):
         "1415 - test that fetching all of the data returns the correct results"

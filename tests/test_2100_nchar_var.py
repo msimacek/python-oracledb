@@ -13,7 +13,7 @@ import oracledb
 class TestCase(base.BaseTestCase):
 
     def setUp(self):
-        base.BaseTestCase.setUp(self)
+        super().setUp()
         self.raw_data = []
         self.data_by_key = {}
         for i in range(1, 11):
@@ -197,14 +197,13 @@ class TestCase(base.BaseTestCase):
     def test_2114_cursor_description(self):
         "2114 - test cursor description is accurate"
         self.cursor.execute("select * from TestUnicodes")
-        self.assertEqual(self.cursor.description,
-                [ ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
-                  ('UNICODECOL', oracledb.DB_TYPE_NVARCHAR, 20, 80, None,
-                        None, 0),
-                  ('FIXEDUNICODECOL', oracledb.DB_TYPE_NCHAR, 40, 160, None,
-                        None, 0),
-                  ('NULLABLECOL', oracledb.DB_TYPE_NVARCHAR, 50, 200, None,
-                        None, 1) ])
+        expected_value = [
+            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
+            ('UNICODECOL', oracledb.DB_TYPE_NVARCHAR, 20, 80, None, None, 0),
+            ('FIXEDUNICODECOL', oracledb.DB_TYPE_NCHAR, 40, 160, None, None, 0),
+            ('NULLABLECOL', oracledb.DB_TYPE_NVARCHAR, 50, 200, None, None, 1)
+        ]
+        self.assertEqual(self.cursor.description, expected_value)
 
     def test_2115_fetchall(self):
         "2115 - test that fetching all of the data returns the correct results"
