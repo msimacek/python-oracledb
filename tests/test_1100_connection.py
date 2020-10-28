@@ -187,14 +187,6 @@ class TestCase(base.BaseTestCase):
         self.assertRaises(oracledb.DatabaseError, cursor.execute,
                 "select count(*) from TestTempTable")
 
-    def test_1114_make_dsn(self):
-        "1114 - test making a data source name from host, port and sid"
-        format_string = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)" + \
-                        "(HOST=%s)(PORT=%d))(CONNECT_DATA=(SID=%s)))"
-        args = ("hostname", 1521, "TEST")
-        result = oracledb.makedsn(*args)
-        self.assertEqual(result, format_string % args)
-
     def test_1115_single_arg(self):
         "1115 - connection to database with user, password, DSN together"
         arg = "%s/%s@%s" % (base.get_main_user(), base.get_main_password(),
