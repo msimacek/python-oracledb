@@ -182,7 +182,7 @@ cdef class Connection(BaseConnection):
             conn_params.appContext = params.app_context
             conn_params.numAppContext = params.num_app_context
         if handle:
-            conn_params.externalHandle = <void*> handle
+            conn_params.externalHandle = <void*> (<uint64_t> handle)
 
         # perform connection
         with nogil:
@@ -313,3 +313,11 @@ cdef class Connection(BaseConnection):
     cdef int _set_stmtcachesize(self, uint32_t value) except -1:
         if dpiConn_setStmtCacheSize(self._handle, value) < 0:
             _raise_from_odpi()
+
+    @property
+    def handle(self):
+        cdef void* handle
+        self._verify_connected()
+        if dpiConn_getHandle(self._handle, &handle) < 0:
+            _raise_from_odpi()
+        return <uint64_t> handle

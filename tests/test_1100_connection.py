@@ -12,6 +12,7 @@ import oracledb
 import random
 import string
 import threading
+import unittest
 
 class TestCase(base.BaseTestCase):
     requires_connection = False
@@ -167,6 +168,7 @@ class TestCase(base.BaseTestCase):
         connection.close()
         self.assertRaises(oracledb.InterfaceError, connection.rollback)
 
+    @unittest.skipIf(base.get_is_thin(), "not relevant for thin driver")
     def test_1113_connect_with_handle(self):
         "1113 - test creating a connection using a handle"
         connection = base.get_connection()
@@ -176,7 +178,7 @@ class TestCase(base.BaseTestCase):
         cursor.execute("""
                 insert into TestTempTable (IntCol, StringCol)
                 values (:val, null)""", val=int_value)
-        connection2 = oracledb.connect(handle = connection.handle)
+        connection2 = oracledb.connect(handle=connection.handle, thin=False)
         cursor = connection2.cursor()
         cursor.execute("select IntCol from TestTempTable")
         fetched_int_value, = cursor.fetchone()
