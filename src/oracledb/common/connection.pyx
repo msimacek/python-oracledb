@@ -18,8 +18,8 @@ cdef class BaseConnection:
     def __repr__(self):
         cls_name = type(self).__name__
         if self.username is None:
-            return f"{cls_name} to externally identified user"
-        return f"{cls_name} to {self.username}@{self.dsn}"
+            return f"<oracledb.{cls_name} to externally identified user>"
+        return f"<oracledb.{cls_name} to {self.username}@{self.dsn}>"
 
     cdef int _close(self) except -1:
         """

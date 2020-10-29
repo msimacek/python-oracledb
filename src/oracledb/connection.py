@@ -35,17 +35,17 @@ def connect(dsn=None, *, user=None, password=None, host=None, port=None,
         if pos >= 0:
             if service_name is None:
                 service_name = dsn[pos + 1:]
-            dsn = dsn[:pos]
-            pos = dsn.find(":")
+            remainder = dsn[:pos]
+            pos = remainder.find(":")
             if pos >= 0:
                 if port is None:
-                    port = int(dsn[pos + 1:])
-                    dsn = dsn[:pos]
+                    port = int(remainder[pos + 1:])
+                    remainder = remainder[:pos]
             if host is None:
-                host = dsn
+                host = remainder
 
     # a service name is mandatory
-    if service_name is None:
+    if thin and service_name is None:
         raise exceptions.InterfaceError("a service name must be specified")
 
     # assign defaults to host and port, if needed
@@ -55,14 +55,16 @@ def connect(dsn=None, *, user=None, password=None, host=None, port=None,
         host = "localhost"
 
     # establish connection
-    connect_data = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)" + \
-            f"(HOST={host})(PORT={port}))" + \
-            f"(CONNECT_DATA=(SERVICE_NAME={service_name})))"
-    normalized_dsn = f"{host}:{port}/{service_name}"
+    if service_name is not None:
+        connect_data = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)" + \
+                f"(HOST={host})(PORT={port}))" + \
+                f"(CONNECT_DATA=(SERVICE_NAME={service_name})))"
+    else:
+        connect_data = dsn
     if thin:
         cls = thin_driver.Connection
     else:
         cls = thick_driver.Connection
-    conn = cls(user, normalized_dsn)
+    conn = cls(user, dsn)
     conn._connect(host, port, connect_data, password)
     return conn

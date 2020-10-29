@@ -103,15 +103,16 @@ class TestCase(base.BaseTestCase):
 
     def test_1105_bad_connect_string(self):
         "1105 - connection to database with bad connect string"
+        thin = base.get_is_thin()
         self.assertRaises(oracledb.DatabaseError, oracledb.connect,
-                          base.get_main_user())
+                          base.get_main_user(), thin=thin)
         self.assertRaises(oracledb.DatabaseError, oracledb.connect,
                           base.get_main_user() + "@" + \
-                          base.get_connect_string())
+                          base.get_connect_string(), thin=thin)
         self.assertRaises(oracledb.DatabaseError, oracledb.connect,
                           base.get_main_user() + "@" + \
                           base.get_connect_string() + "/" + \
-                          base.get_main_password())
+                          base.get_main_password(), thin=thin)
 
     def test_1106_bad_password(self):
         "1106 - connection to database with bad password"
