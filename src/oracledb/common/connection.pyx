@@ -42,6 +42,42 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
+    cdef str _get_current_schema(self):
+        """
+        Internal method for returning the current schema.
+        """
+        raise NotImplementedError()
+
+    cdef str _get_edition(self):
+        """
+        Internal method for returning the edition.
+        """
+        raise NotImplementedError()
+
+    cdef str _get_external_name(self):
+        """
+        Internal method for returning the external name.
+        """
+        raise NotImplementedError()
+
+    cdef str _get_internal_name(self):
+        """
+        Internal method for returning the internal name.
+        """
+        raise NotImplementedError()
+
+    cdef bytes _get_ltxid(self):
+        """
+        Internal method for returning the logical transaction id.
+        """
+        raise NotImplementedError()
+
+    cdef uint32_t _get_stmtcachesize(self) except *:
+        """
+        Internal method for returning the size of the statement cache.
+        """
+        raise NotImplementedError()
+
     cdef str _get_version(self):
         """
         Return the version associated with the connection. Intended to be
@@ -60,6 +96,30 @@ cdef class BaseConnection:
         """
         Internal method for rolling back the transaction. Intended to be
         overridden by the subclass.
+        """
+        raise NotImplementedError()
+
+    cdef int _set_current_schema(self, str value) except -1:
+        """
+        Internal method for setting the current schema.
+        """
+        raise NotImplementedError()
+
+    cdef int _set_external_name(self, str value) except -1:
+        """
+        Internal method for setting the external name.
+        """
+        raise NotImplementedError()
+
+    cdef int _set_internal_name(self, str value) except -1:
+        """
+        Internal method for setting the internal name.
+        """
+        raise NotImplementedError()
+
+    cdef int _set_stmtcachesize(self, uint32_t value) except -1:
+        """
+        Internal method for setting the size of the statement cache.
         """
         raise NotImplementedError()
 
@@ -92,6 +152,56 @@ cdef class BaseConnection:
         Returns a cursor associated with the connection.
         """
         return self._create_cursor()
+
+    @property
+    def current_schema(self):
+        self._verify_connected()
+        return self._get_current_schema()
+
+    @current_schema.setter
+    def current_schema(self, value):
+        self._verify_connected()
+        self._set_current_schema(value)
+
+    @property
+    def edition(self):
+        self._verify_connected()
+        return self._get_edition()
+
+    @property
+    def external_name(self):
+        self._verify_connected()
+        return self._get_external_name()
+
+    @external_name.setter
+    def external_name(self, value):
+        self._verify_connected()
+        self._set_external_name(value)
+
+    @property
+    def internal_name(self):
+        self._verify_connected()
+        return self._get_internal_name()
+
+    @internal_name.setter
+    def internal_name(self, value):
+        self._verify_connected()
+        self._set_internal_name(value)
+
+    @property
+    def ltxid(self):
+        self._verify_connected()
+        return self._get_ltxid()
+
+    @property
+    def stmtcachesize(self):
+        self._verify_connected()
+        return self._get_stmtcachesize()
+
+    @stmtcachesize.setter
+    def stmtcachesize(self, value):
+        self._verify_connected()
+        self._set_stmtcachesize(value)
 
     def ping(self):
         """

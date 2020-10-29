@@ -262,8 +262,25 @@ cdef extern from "odpi/embed/dpi.c":
             const dpiCommonCreateParams *commonParams,
             dpiConnCreateParams *createParams, dpiConn **conn) nogil
 
+    int dpiConn_getCurrentSchema(dpiConn *conn, const char **value,
+            uint32_t *valueLength) nogil
+
+    int dpiConn_getEdition(dpiConn *conn, const char **value,
+            uint32_t *valueLength) nogil
+
+    int dpiConn_getExternalName(dpiConn *conn, const char **value,
+            uint32_t *valueLength) nogil
+
+    int dpiConn_getInternalName(dpiConn *conn, const char **value,
+            uint32_t *valueLength) nogil
+
+    int dpiConn_getLTXID(dpiConn *conn, const char **value,
+            uint32_t *valueLength) nogil
+
     int dpiConn_getServerVersion(dpiConn *conn, const char **releaseString,
             uint32_t *releaseStringLength, dpiVersionInfo *versionInfo) nogil
+
+    int dpiConn_getStmtCacheSize(dpiConn *conn, uint32_t *cacheSize) nogil
 
     int dpiConn_newVar(dpiConn *conn, uint32_t oracleTypeNum,
             uint32_t nativeTypeNum, uint32_t maxArraySize, uint32_t size,
@@ -279,6 +296,17 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiConn_release(dpiConn *conn) nogil
 
     int dpiConn_rollback(dpiConn *conn) nogil
+
+    int dpiConn_setCurrentSchema(dpiConn *conn, const char *value,
+            uint32_t valueLength) nogil
+
+    int dpiConn_setExternalName(dpiConn *conn, const char *value,
+            uint32_t valueLength) nogil
+
+    int dpiConn_setInternalName(dpiConn *conn, const char *value,
+            uint32_t valueLength) nogil
+
+    int dpiConn_setStmtCacheSize(dpiConn *conn, uint32_t cacheSize) nogil
 
     int dpiContext_createWithParams(unsigned int majorVersion,
             unsigned int minorVersion, dpiContextCreateParams *params,

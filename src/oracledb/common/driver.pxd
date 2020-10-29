@@ -36,6 +36,7 @@ cdef class DbType:
 
 
 cdef class BaseConnection:
+
     cdef:
         readonly str username
         readonly str dsn
@@ -45,17 +46,21 @@ cdef class BaseConnection:
         bint _is_connected
 
     cdef int _close(self) except -1
-
     cdef int _commit(self) except -1
-
     cdef BaseCursor _create_cursor(self)
-
+    cdef str _get_current_schema(self)
+    cdef str _get_edition(self)
+    cdef str _get_external_name(self)
+    cdef str _get_internal_name(self)
+    cdef bytes _get_ltxid(self)
+    cdef uint32_t _get_stmtcachesize(self) except *
     cdef str _get_version(self)
-
     cdef int _ping(self) except -1
-
     cdef int _rollback(self) except -1
-
+    cdef int _set_current_schema(self, str value) except -1
+    cdef int _set_external_name(self, str value) except -1
+    cdef int _set_internal_name(self, str value) except -1
+    cdef int _set_stmtcachesize(self, uint32_t value) except -1
     cdef int _verify_connected(self) except -1
 
 

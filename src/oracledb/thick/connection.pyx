@@ -83,6 +83,56 @@ cdef class Connection(BaseConnection):
             _raise_from_odpi()
         self._is_connected = True
 
+    cdef str _get_current_schema(self):
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiConn_getCurrentSchema(self._handle, &value, &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
+
+    cdef str _get_edition(self):
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiConn_getEdition(self._handle, &value, &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
+
+    cdef str _get_external_name(self):
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiConn_getExternalName(self._handle, &value, &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
+
+    cdef str _get_internal_name(self):
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiConn_getInternalName(self._handle, &value, &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
+
+    cdef bytes _get_ltxid(self):
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiConn_getLTXID(self._handle, &value, &value_length) < 0:
+            _raise_from_odpi()
+        return value[:value_length]
+
+    cdef uint32_t _get_stmtcachesize(self) except *:
+        cdef uint32_t size
+        if dpiConn_getStmtCacheSize(self._handle, &size) < 0:
+            _raise_from_odpi()
+        return size
+
     cdef str _get_version(self):
         cdef:
             dpiVersionInfo version_info
@@ -99,9 +149,6 @@ cdef class Connection(BaseConnection):
                  version_info.portUpdateNum)
 
     cdef BaseCursor _create_cursor(self):
-        """
-        Internal method for creating a cursor.
-        """
         return Cursor.__new__(Cursor, self)
 
     cdef int _ping(self) except -1:
@@ -116,4 +163,41 @@ cdef class Connection(BaseConnection):
         with nogil:
             status = dpiConn_rollback(self._handle)
         if status < 0:
+            _raise_from_odpi()
+
+    cdef int _set_current_schema(self, str value) except -1:
+        cdef:
+            uint32_t value_length
+            const char *value_ptr
+            bytes value_bytes
+        value_bytes = value.encode()
+        value_ptr = value_bytes
+        value_length = len(value_bytes)
+        if dpiConn_setCurrentSchema(self._handle, value_ptr, value_length) < 0:
+            _raise_from_odpi()
+
+    cdef int _set_external_name(self, str value) except -1:
+        cdef:
+            uint32_t value_length
+            const char *value_ptr
+            bytes value_bytes
+        value_bytes = value.encode()
+        value_ptr = value_bytes
+        value_length = len(value_bytes)
+        if dpiConn_setExternalName(self._handle, value_ptr, value_length) < 0:
+            _raise_from_odpi()
+
+    cdef int _set_internal_name(self, str value) except -1:
+        cdef:
+            uint32_t value_length
+            const char *value_ptr
+            bytes value_bytes
+        value_bytes = value.encode()
+        value_ptr = value_bytes
+        value_length = len(value_bytes)
+        if dpiConn_setInternalName(self._handle, value_ptr, value_length) < 0:
+            _raise_from_odpi()
+
+    cdef int _set_stmtcachesize(self, uint32_t value) except -1:
+        if dpiConn_setStmtCacheSize(self._handle, value) < 0:
             _raise_from_odpi()
