@@ -7,6 +7,76 @@
 #   Cython file defining the connection class (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
+cdef class ConnectionParams:
+    cdef:
+        bytes dsn
+        bytes username
+        bytes password
+        bytes cclass
+        bytes new_password
+        bytes edition
+
+        const char *dsn_ptr
+        const char *username_ptr
+        const char *password_ptr
+        const char *cclass_ptr
+        const char *new_password_ptr
+        const char *edition_ptr
+
+        uint32_t dsn_len
+        uint32_t username_len
+        uint32_t password_len
+        uint32_t cclass_len
+        uint32_t new_password_len
+        uint32_t edition_len
+
+        uint32_t num_app_context
+        list app_context_bytes
+        dpiAppContext *app_context
+
+        uint32_t num_sharding_key_columns
+        dpiShardingKeyColumn *sharding_key_columns
+        uint32_t num_super_sharding_key_columns
+        dpiShardingKeyColumn *super_sharding_key_columns
+
+    def __dealloc__(self):
+        if self.app_context is not NULL:
+            cpython.PyMem_Free(self.app_context)
+        if self.sharding_key_columns is not NULL:
+            cpython.PyMem_Free(self.sharding_key_columns)
+        if self.super_sharding_key_columns is not NULL:
+            cpython.PyMem_Free(self.super_sharding_key_columns)
+
+    cdef int _process_context_str(self, str value, const char **ptr,
+                                  uint32_t *length) except -1:
+        cdef bytes temp
+        temp = value.encode()
+        self.app_context_bytes.append(temp)
+        ptr[0] = temp
+        length[0] = <uint32_t> len(temp)
+
+    cdef process_appcontext(self, list entries):
+        cdef:
+            object namespace, name, value
+            dpiAppContext *entry
+            ssize_t num_bytes
+            bytes temp
+            uint32_t i
+        self.app_context_bytes = []
+        self.num_app_context = <uint32_t> len(entries)
+        num_bytes = self.num_app_context * sizeof(dpiAppContext)
+        self.app_context = <dpiAppContext*> cpython.PyMem_Malloc(num_bytes)
+        for i in range(self.num_app_context):
+            if not isinstance(entries[i], tuple) or len(entries[i]) != 3:
+                raise TypeError("appcontext should be a list of 3-tuples")
+            namespace, name, value = entries[i]
+            entry = &self.app_context[i]
+            self._process_context_str(namespace, &entry.namespaceName,
+                                      &entry.namespaceNameLength)
+            self._process_context_str(name, &entry.name, &entry.nameLength)
+            self._process_context_str(value, &entry.value, &entry.valueLength)
+
+
 cdef class Connection(BaseConnection):
     cdef:
         dpiConn *_handle
@@ -43,41 +113,83 @@ cdef class Connection(BaseConnection):
         if status < 0:
             _raise_from_odpi()
 
-    def _connect(self, host, port, connect_string, password):
+    def _connect(self, password, mode, handle, threaded, events, cclass,
+                 purity, newpassword, edition, appcontext, shardingkey,
+                 supershardingkey):
         cdef:
-            bytes user_name_bytes, password_bytes, connect_string_bytes
-            uint32_t user_name_length = 0, password_length = 0
-            const char *connect_string_ptr = NULL
             dpiCommonCreateParams common_params
-            uint32_t connect_string_length = 0
-            const char *user_name_ptr = NULL
-            const char *password_ptr = NULL
             dpiConnCreateParams conn_params
+            ConnectionParams params
             int status
+
+        # ensure that the Oracle Client library is initialized
         if driver_context == NULL:
             init_oracle_client()
+
+        # set up connection parameters
+        params = ConnectionParams()
+        if self.username:
+            params.username = self.username.encode()
+            params.username_ptr = params.username
+            params.username_len = <uint32_t> len(params.username)
+        if password:
+            params.password = password.encode()
+            params.password_ptr = params.password
+            params.password_len = <uint32_t> len(params.password)
+        if self.dsn:
+            params.dsn = self.dsn.encode()
+            params.dsn_ptr = params.dsn
+            params.dsn_len = <uint32_t> len(params.dsn)
+        if cclass:
+            params.cclass = cclass.decode()
+            params.cclass_ptr = params.cclass
+            params.cclass_len = <uint32_t> len(params.cclass)
+        if newpassword:
+            params.new_password = newpassword.decode()
+            params.new_password_ptr = params.new_password
+            params.new_password_len = <uint32_t> len(params.new_password)
+        if edition:
+            params.edition = edition.encode()
+            params.edition_ptr = params.edition
+            params.edition_len = <uint32_t> len(params.edition)
+        if appcontext:
+            params.process_appcontext(appcontext)
+
+        # set up common creation parameters
         if dpiContext_initCommonCreateParams(driver_context,
                                              &common_params) < 0:
             _raise_from_odpi()
+        if threaded:
+            common_params.createMode |= DPI_MODE_CREATE_THREADED
+        if events:
+            common_params.createMode |= DPI_MODE_CREATE_EVENTS
+        if edition:
+            common_params.edition = params.edition_ptr
+            common_params.editionLength = params.edition_len
+
+        # set up connection specific creation parameters
         if dpiContext_initConnCreateParams(driver_context, &conn_params) < 0:
             _raise_from_odpi()
-        if self.username:
-            user_name_bytes = self.username.encode()
-            user_name_ptr = user_name_bytes
-            user_name_length = <uint32_t> len(user_name_bytes)
-        if password:
-            password_bytes = password.encode()
-            password_ptr = password_bytes
-            password_length = <uint32_t> len(password_bytes)
-        if connect_string:
-            connect_string_bytes = connect_string.encode()
-            connect_string_ptr = connect_string_bytes
-            connect_string_length = <uint32_t> len(connect_string_bytes)
+        if params.username_len == 0 and params.password_len == 0:
+            conn_params.externalAuth = 1
+        if cclass:
+            conn_params.connectionClass = params.cclass_ptr
+            conn_params.connectionClassLength = params.cclass_ptr_len
+        if newpassword:
+            conn_params.newPassword = params.new_password_ptr
+            conn_params.newPasswordLength = params.new_password_len
+        if appcontext:
+            conn_params.appContext = params.app_context
+            conn_params.numAppContext = params.num_app_context
+        if handle:
+            conn_params.externalHandle = <void*> handle
+
+        # perform connection
         with nogil:
-            status = dpiConn_create(driver_context, user_name_ptr,
-                                    user_name_length, password_ptr,
-                                    password_length, connect_string_ptr,
-                                    connect_string_length, &common_params,
+            status = dpiConn_create(driver_context, params.username_ptr,
+                                    params.username_len, params.password_ptr,
+                                    params.password_len, params.dsn_ptr,
+                                    params.dsn_len, &common_params,
                                     &conn_params, &self._handle)
         if status < 0:
             _raise_from_odpi()

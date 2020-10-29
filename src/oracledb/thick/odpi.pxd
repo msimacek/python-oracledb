@@ -24,6 +24,11 @@ cdef extern from "odpi/embed/dpi.c":
     uint32_t DPI_MODE_EXEC_BATCH_ERRORS
     uint32_t DPI_MODE_EXEC_ARRAY_DML_ROWCOUNTS
 
+    # connection/pool creation modes
+    uint32_t DPI_MODE_CREATE_DEFAULT
+    uint32_t DPI_MODE_CREATE_THREADED
+    uint32_t DPI_MODE_CREATE_EVENTS
+
     # connection close modes
     uint32_t DPI_MODE_CONN_CLOSE_DEFAULT
     uint32_t DPI_MODE_CONN_CLOSE_DROP

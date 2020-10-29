@@ -2,12 +2,16 @@
 # Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
-from . import errors, exceptions
+from . import constants, errors, exceptions
 from .thick import driver as thick_driver
 from .thin import driver as thin_driver
 
 def connect(dsn=None, *, user=None, password=None, host=None, port=None,
-        service_name=None, thin=True):
+            service_name=None, thin=True, mode=constants.DEFAULT_AUTH,
+            handle=0, pool=None, threaded=False, events=False, cclass=None,
+            purity=constants.ATTR_PURITY_DEFAULT, newpassword=None,
+            edition=None, appcontext=[], tag=None, matchanytag=False,
+            shardingkey=[], supershardingkey=[]):
     """
     Creates a connection to the database and returns a Connection object.
     """
@@ -54,17 +58,23 @@ def connect(dsn=None, *, user=None, password=None, host=None, port=None,
     if host is None:
         host = "localhost"
 
+    # if dsn was not specified but components were, build up dsn as a
+    # convenience to the caller
+    if dsn is None and service_name is not None:
+        dsn = f"{host}:{port}/{service_name}"
+
     # establish connection
-    if service_name is not None:
+    if thin:
         connect_data = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)" + \
                 f"(HOST={host})(PORT={port}))" + \
                 f"(CONNECT_DATA=(SERVICE_NAME={service_name})))"
+        conn = thin_driver.Connection(user, dsn)
+        conn._connect(host, port, connect_data, password)
     else:
-        connect_data = dsn
-    if thin:
-        cls = thin_driver.Connection
-    else:
-        cls = thick_driver.Connection
-    conn = cls(user, dsn)
-    conn._connect(host, port, connect_data, password)
+        conn = thick_driver.Connection(user, dsn)
+        conn._connect(password=password, mode=mode, handle=handle,
+                      threaded=threaded, events=events, cclass=cclass,
+                      purity=purity, newpassword=newpassword, edition=edition,
+                      appcontext=appcontext, shardingkey=shardingkey,
+                      supershardingkey=supershardingkey)
     return conn
