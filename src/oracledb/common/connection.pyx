@@ -21,6 +21,14 @@ cdef class BaseConnection:
             return f"<oracledb.{cls_name} to externally identified user>"
         return f"<oracledb.{cls_name} to {self.username}@{self.dsn}>"
 
+
+    cdef int _change_password(self, str old_password,
+                              str new_password) except -1:
+        """
+        Internal method for changing the password.
+        """
+        raise NotImplementedError()
+
     cdef int _close(self) except -1:
         """
         Internal method for closing the connection. Intended to be overridden
@@ -131,6 +139,13 @@ cdef class BaseConnection:
         if not self._is_connected:
             errors._raise_from_string(exceptions.InterfaceError,
                                       "not connected")
+
+    def changepassword(self, old_password, new_password):
+        """
+        Changes the password for the user to which the connection is connected.
+        """
+        self._verify_connected()
+        self._change_password(old_password, new_password)
 
     def close(self):
         """

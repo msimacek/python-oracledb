@@ -131,8 +131,10 @@ class TestCase(base.BaseTestCase):
         new_password = "".join(sys_random.choice(string.ascii_letters) \
                        for i in range(20))
         connection.changepassword(base.get_main_password(), new_password)
-        cconnection = oracledb.connect(base.get_main_user(), new_password,
-                                       base.get_connect_string())
+        connection = oracledb.connect(base.get_connect_string(),
+                                       user=base.get_main_user(),
+                                       password=new_password,
+                                       thin=base.get_is_thin())
         connection.changepassword(new_password, base.get_main_password())
 
     def test_1108_change_password_negative(self):

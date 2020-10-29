@@ -86,6 +86,35 @@ cdef class Connection(BaseConnection):
         if self._handle != NULL:
             dpiConn_release(self._handle)
 
+
+    cdef int _change_password(self, str old_password,
+                              str new_password) except -1:
+        cdef:
+            bytes username_bytes, old_password_bytes, new_password_bytes
+            uint32_t username_len = 0, old_password_len = 0
+            const char *old_password_ptr = NULL
+            const char *new_password_ptr = NULL
+            const char *username_ptr = NULL
+            uint32_t new_password_len = 0
+            int status
+        if self.username:
+            username_bytes = self.username.encode()
+            username_ptr = username_bytes
+            username_len = <uint32_t> len(username_bytes)
+        old_password_bytes = old_password.encode()
+        old_password_ptr = old_password_bytes
+        old_password_len = <uint32_t> len(old_password_bytes)
+        new_password_bytes = new_password.encode()
+        new_password_ptr = new_password_bytes
+        new_password_len = <uint32_t> len(new_password_bytes)
+        with nogil:
+            status = dpiConn_changePassword(self._handle, username_ptr,
+                                            username_len, old_password_ptr,
+                                            old_password_len, new_password_ptr,
+                                            new_password_len)
+        if status < 0:
+            _raise_from_odpi()
+
     cdef int _close(self) except -1:
         cdef:
             uint32_t mode = DPI_MODE_CONN_CLOSE_DEFAULT

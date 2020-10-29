@@ -255,6 +255,11 @@ cdef extern from "odpi/embed/dpi.c":
         uint32_t fullVersionNum
 
     # functions
+    int dpiConn_changePassword(dpiConn *conn, const char *userName,
+            uint32_t userNameLength, const char *oldPassword,
+            uint32_t oldPasswordLength, const char *newPassword,
+            uint32_t newPasswordLength) nogil
+
     int dpiConn_close(dpiConn *conn, uint32_t mode, const char *tag,
             uint32_t tagLength) nogil
 
@@ -275,6 +280,8 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiConn_getExternalName(dpiConn *conn, const char **value,
             uint32_t *valueLength) nogil
+
+    int dpiConn_getHandle(dpiConn *conn, void **handle) nogil
 
     int dpiConn_getInternalName(dpiConn *conn, const char **value,
             uint32_t *valueLength) nogil
@@ -355,8 +362,6 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiStmt_getBatchErrors(dpiStmt *stmt, uint32_t numErrors,
             dpiErrorInfo *errors) nogil
-
-    int dpiConn_getHandle(dpiConn *conn, void **handle) nogil
 
     int dpiStmt_getRowCounts(dpiStmt *stmt, uint32_t *numRowCounts,
             uint64_t **rowCounts) nogil

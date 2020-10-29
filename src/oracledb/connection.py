@@ -21,7 +21,7 @@ def connect(dsn=None, *, user=None, password=None, host=None, port=None,
     if dsn is not None:
 
         # extract user/password from the dsn, if present
-        pos = dsn.find("@")
+        pos = dsn.rfind("@")
         if pos >= 0:
             credentials = dsn[:pos]
             dsn = dsn[pos + 1:]

@@ -45,6 +45,8 @@ cdef class BaseConnection:
         str _version
         bint _is_connected
 
+    cdef int _change_password(self, str old_password,
+                              str new_password) except -1
     cdef int _close(self) except -1
     cdef int _commit(self) except -1
     cdef BaseCursor _create_cursor(self)
