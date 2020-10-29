@@ -47,7 +47,10 @@ cdef class Cursor(BaseCursor):
             int status
         if self._bind_vars is not None:
             self._perform_binds()
-        mode = DPI_MODE_EXEC_DEFAULT
+        if self.connection.autocommit:
+            mode = DPI_MODE_EXEC_COMMIT_ON_SUCCESS
+        else:
+            mode = DPI_MODE_EXEC_DEFAULT
         with nogil:
             status = dpiStmt_execute(self._handle, mode, &num_query_cols)
             if status == DPI_SUCCESS:
@@ -71,7 +74,10 @@ cdef class Cursor(BaseCursor):
             uint64_t rowcount
             uint32_t mode
 
-        mode = DPI_MODE_EXEC_DEFAULT
+        if self.connection.autocommit:
+            mode = DPI_MODE_EXEC_COMMIT_ON_SUCCESS
+        else:
+            mode = DPI_MODE_EXEC_DEFAULT
         if arraydmlrowcounts:
             mode |= DPI_MODE_EXEC_ARRAY_DML_ROWCOUNTS
         if batcherrors:

@@ -42,6 +42,7 @@ cdef class BaseConnection:
         readonly str dsn
         public object inputtypehandler
         public object outputtypehandler
+        public bint autocommit
         str _version
         bint _is_connected
 
