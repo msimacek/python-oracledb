@@ -40,7 +40,21 @@ cdef class Statement:
         bint _is_query
         bint _is_plsql
         bint _is_dml
+        bint _is_ddl
         list _bind_names
+
+    cdef _determine_statement_type(self, str sql):
+        tokens = sql.strip()[:10].split()
+        if tokens:
+            sql_keyword = tokens[0].lower()
+            if sql_keyword in ("declare", "begin", "call"):
+                self._is_plsql = True
+            elif sql_keyword in ("select", "with"):
+                self._is_query = True
+            elif sql_keyword in ("insert", "update", "delete", "merge"):
+                self._is_dml = True
+            elif sql_keyword in ("create", "alter", "drop"):
+                self._is_ddl = True
 
     cdef _prepare(self, str sql):
         self._sql = sql
@@ -54,19 +68,12 @@ cdef class Statement:
         sql = re.sub(r"/\\*[\S\n ]+\\*/", "", sql)
         sql = re.sub(r"\--.*(\n|$)", "", sql)
 
-        # Determine type of statement if valid
-        tokens = sql.split()
-        sql_keyword = tokens[0].lower()
-        if sql_keyword in ("declare", "begin", "call"):
-            self._is_plsql = True
-        elif sql_keyword in ("select", "with"):
-            self._is_query = True
-        elif sql_keyword in ("insert", "returning", "merge", "commit",
-                             "update", "delete", "rollback", "flashback"):
-            self._is_dml = True
-        else:
-            return
+        # dtermine statement type
+        self._determine_statement_type(sql)
 
-        # Iterate to find all unique bind names
-        self._bind_names = re.findall(r"(?<=\:)[a-zA-Z]?[a-zA-Z0-9_]+",
-                                    sql.upper())
+        # bind variables can only be found in queries, DML and PL/SQL
+        if self._is_query or self._is_dml or self._is_plsql:
+            self._bind_names = re.findall(r"(?<=\:)[a-zA-Z]?[a-zA-Z0-9_]+",
+                                          sql.upper())
+        else:
+            self._bind_names = []
