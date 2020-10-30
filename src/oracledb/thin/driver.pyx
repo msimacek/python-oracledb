@@ -20,6 +20,7 @@ import hashlib
 import os
 import socket
 import types
+import re
 
 cydatetime.import_datetime()
 

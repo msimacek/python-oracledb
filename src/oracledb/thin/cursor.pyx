@@ -18,6 +18,10 @@ cdef class Cursor(BaseCursor):
     cdef BaseVar _create_var(self):
         return Var.__new__(Var, self.connection)
 
+    cdef object _bindnames(self):
+        names = self._statement._bind_names
+        return list(collections.OrderedDict.fromkeys(names))
+
     cdef int _execute(self) except -1:
         params = types.SimpleNamespace(cursor=self,
                                        fetch_array_size=self.arraysize,
@@ -30,6 +34,7 @@ cdef class Cursor(BaseCursor):
         self.connection._protocol._fetch(params)
 
     cdef int _prepare(self, str sql, str tag=None) except -1:
+        self.statement = sql
         self._statement = self.connection._statement_cache.get_statement(sql)
         if self._statement is None:
             self._statement = Statement()

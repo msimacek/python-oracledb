@@ -39,14 +39,34 @@ cdef class Statement:
         uint16_t _cursor_id
         bint _is_query
         bint _is_plsql
+        bint _is_dml
+        list _bind_names
 
     cdef _prepare(self, str sql):
         self._sql = sql
         sql = sql.strip()
         self._sql_bytes = sql.encode()
         self._sql_bytes_length = <uint32_t> len(self._sql_bytes)
-        sql_keyword = sql[:10].split()[0].lower()
+        self._get_bind_names(sql)
+
+    cdef _get_bind_names(self, str sql):
+        # Strip any single or multiline comments from sql statement
+        sql = re.sub(r"/\\*[\S\n ]+\\*/", "", sql)
+        sql = re.sub(r"\--.*(\n|$)", "", sql)
+
+        # Determine type of statement if valid
+        tokens = sql.split()
+        sql_keyword = tokens[0].lower()
         if sql_keyword in ("declare", "begin", "call"):
             self._is_plsql = True
         elif sql_keyword in ("select", "with"):
             self._is_query = True
+        elif sql_keyword in ("insert", "returning", "merge", "commit",
+                             "update", "delete", "rollback", "flashback"):
+            self._is_dml = True
+        else:
+            return
+
+        # Iterate to find all unique bind names
+        self._bind_names = re.findall(r"(?<=\:)[a-zA-Z]?[a-zA-Z0-9_]+",
+                                    sql.upper())

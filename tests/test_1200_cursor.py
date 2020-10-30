@@ -786,5 +786,20 @@ class TestCase(base.BaseTestCase):
             cursor.execute("select IntCol from TestTempTable").fetchall()
             self.assertRoundTrips(2)
 
+    def test_1268_bind_names_with_single_line_comments(self):
+        "1268 - test bindnames() with single line comments"
+        self.cursor.prepare("""--begin :value2 := :a + :b + :c +:a +3; end;
+                            begin :value2 := :a + :c +3; end;
+                            """)
+        self.assertEqual(self.cursor.bindnames(), ["VALUE2", "A", "C"])
+
+    def test_1269_bind_names_with_multi_line_comments(self):
+        "1269 - test bindnames() with multi line comments"
+        self.cursor.prepare("""/*--select * from :a where :a = 1
+                            select * from table_names where :a = 1*/
+                            select * from :table_name where :value = 1
+                            """)
+        self.assertEqual(self.cursor.bindnames(), ["TABLE_NAME", "VALUE"])
+
 if __name__ == "__main__":
     base.run_test_cases()
