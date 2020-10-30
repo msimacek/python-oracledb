@@ -412,7 +412,7 @@ cdef class BaseCursor:
         self._call(name, parameters, kwargs, var)
         return var.getvalue()
 
-    def callproc(self, name, parameters=None, **kwargs):
+    def callproc(self, name, parameters=None, kwargs=None):
         """
         Call a stored procedure and return the (possibly modified) arguments.
         Note that only the positional arguments are returned.
