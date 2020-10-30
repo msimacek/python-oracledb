@@ -177,9 +177,59 @@ def run_sql_script(conn, script_name, **kwargs):
 def run_test_cases():
     unittest.main(testRunner=unittest.TextTestRunner(verbosity=2))
 
+def skip_soda_tests():
+    client = get_client_version()
+    if client < (18, 3):
+        return True
+    server = get_server_version()
+    if server < (18, 0):
+        return True
+    if server > (20, 1) and client < (20, 1):
+        return True
+    return False
+
+class RoundTripInfo:
+
+    def __init__(self, connection):
+        self.prev_round_trips = 0
+        self.admin_conn = oracledb.connect(get_admin_connect_string(),
+                                           thin=get_is_thin())
+        with connection.cursor() as cursor:
+            cursor.execute("select sys_context('userenv', 'sid') from dual")
+            self.sid, = cursor.fetchone()
+        self.get_round_trips()
+
+    def get_round_trips(self):
+        with self.admin_conn.cursor() as cursor:
+            cursor.execute("""
+                    select ss.value
+                    from v$sesstat ss, v$statname sn
+                    where ss.sid = :sid
+                      and ss.statistic# = sn.statistic#
+                      and sn.name like '%roundtrip%client%'""", sid=self.sid)
+            current_round_trips, = cursor.fetchone()
+            diff_round_trips = current_round_trips - self.prev_round_trips
+            self.prev_round_trips = current_round_trips
+            return diff_round_trips
 
 class BaseTestCase(unittest.TestCase):
     requires_connection = True
+
+    def assertRoundTrips(self, n):
+        self.assertEqual(self.round_trip_info.get_round_trips(), n)
+
+    def get_soda_database(self, minclient=(18, 3), minserver=(18, 0),
+                          message="not supported with this client/server " \
+                                  "combination"):
+        client = get_client_version()
+        if client < minclient:
+            self.skipTest(message)
+        server = get_server_version()
+        if server < minserver:
+            self.skipTest(message)
+        if server > (20, 1) and client < (20, 1):
+            self.skipTest(message)
+        return self.connection.getSodaDatabase()
 
     def is_on_oracle_cloud(self, connection=None):
         if connection is None:
@@ -195,6 +245,9 @@ class BaseTestCase(unittest.TestCase):
         if self.requires_connection:
             self.connection = get_connection()
             self.cursor = self.connection.cursor()
+
+    def setup_round_trip_checker(self):
+        self.round_trip_info = RoundTripInfo(self.connection)
 
     def tearDown(self):
         if self.requires_connection:

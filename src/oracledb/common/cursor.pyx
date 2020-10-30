@@ -476,6 +476,8 @@ cdef class BaseCursor:
             else:
                 self._bind_by_position(parameters)
         self._execute()
+        if self._fetch_vars is not None:
+            return self
 
     def executemany(self, statement, parameters, batcherrors=False,
                     arraydmlrowcounts=False):
