@@ -27,6 +27,9 @@ cdef class BaseCursor:
             return row
         raise StopIteration
 
+    def __repr__(self):
+        return f"<oracledb.Cursor on {self.connection!r}>"
+
     cdef int _bind_by_name(self, dict params, uint32_t num_elements=1,
                            uint32_t pos=0) except -1:
         """
