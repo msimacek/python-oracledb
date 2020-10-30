@@ -69,6 +69,12 @@ cdef class BaseCursor:
             else:
                 self._bind_vars.append(var)
 
+    cdef object _bindnames(self):
+        """
+        Internal method used for getting bind names.
+        """
+        raise NotImplementedError()
+
     def _call(self, name, parameters, keyword_parameters, return_value=None):
 
         # verify parameters
@@ -102,9 +108,9 @@ cdef class BaseCursor:
 
     cdef int _close(self) except -1:
         """
-        Internal method for closing the cursor. Intended to be overridden
-        by the subclass.
+        Internal method for closing the cursor.
         """
+        raise NotImplementedError()
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -131,9 +137,9 @@ cdef class BaseCursor:
 
     cdef BaseVar _create_var(self):
         """
-        Internal method for creating a variable. Intended to be overridden by
-        the subclass.
+        Internal method for creating a variable.
         """
+        raise NotImplementedError()
 
     cdef BaseVar _create_var_by_type(self, object value,
                                      uint32_t num_elements=1):
@@ -240,16 +246,16 @@ cdef class BaseCursor:
 
     cdef int _execute(self) except -1:
         """
-        Internal method used for executing a statement. This is intended to be
-        overridden by the subclass.
+        Internal method used for executing a statement.
         """
+        raise NotImplementedError()
 
     cdef int _executemany(self, uint32_t num_execs, bint batcherrors,
                           bint arraydmlrowcounts) except -1:
         """
-        Internal method used for executing a statement many times. This is
-        intended to be overridden by the subclass.
+        Internal method used for executing a statement many times.
         """
+        raise NotImplementedError()
 
     cdef object _fetch_next_row(self):
         """
@@ -262,21 +268,21 @@ cdef class BaseCursor:
 
     cdef int _fetch_rows(self) except -1:
         """
-        Internal method used for fetching rows from a cursor. This is intended
-        to be overridden by the subclass.
+        Internal method used for fetching rows from a cursor.
         """
+        raise NotImplementedError()
 
     cdef object _get_array_dml_row_counts(self):
         """
-        Internal method used for populating list with arraydmlrowcount. This is
-        intended to be overridden by the subclass.
+        Internal method used for populating list with arraydmlrowcount.
         """
+        raise NotImplementedError()
 
     cdef object _get_batch_errors(self):
         """
-        Internal method used for populating list with batch error objects. This
-        is intended to be overridden by the subclass.
+        Internal method used for populating list with batch error objects.
         """
+        raise NotImplementedError()
 
     cdef BaseVar _get_bind_var(self, uint32_t num_elements, uint32_t pos,
                                object value, BaseVar orig_var):
@@ -328,9 +334,9 @@ cdef class BaseCursor:
 
     cdef int _prepare(self, str statement, str tag=None) except -1:
         """
-        Internal method used for preparing a statement for execution. This is
-        intended to be overridden by the subclass.
+        Internal method used for preparing a statement for execution.
         """
+        raise NotImplementedError()
 
     cdef int _verify_fetch(self) except -1:
         """
@@ -379,6 +385,16 @@ cdef class BaseCursor:
         if isinstance(value, list):
             var.setvalue(0, value)
         return var
+
+    def bindnames(self):
+        """
+        Returns a list of bind names.
+        """
+        self._verify_open()
+        if self.statement is None:
+            message = "statement must be prepared first"
+            errors._raise_from_string(exceptions.ProgrammingError, message)
+        return self._bindnames()
 
     @property
     def bindvars(self):

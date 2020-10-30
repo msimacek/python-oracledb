@@ -96,44 +96,28 @@ cdef class BaseCursor:
 
     cdef int _bind_by_name(self, dict params, uint32_t num_elements=*,
                            uint32_t pos=*) except -1
-
     cdef int _bind_by_position(self, object params, uint32_t num_elements=*,
                                uint32_t pos=*) except -1
-
+    cdef object _bindnames(self)
     cdef int _close(self) except -1
-
     cdef object _create_row(self)
-
     cdef BaseVar _create_var(self)
-
     cdef BaseVar _create_var_by_type(self, object value,
                                      uint32_t num_elements=?)
-
     cdef BaseVar _create_var_by_value(self, object value,
                                       uint32_t num_elements)
-
     cdef int _execute(self) except -1
-
     cdef int _executemany(self, uint32_t num_execs, bint batcherrors,
                           bint arraydmlrowcounts) except -1
-
     cdef object _fetch_next_row(self)
-
     cdef int _fetch_rows(self) except -1
-
     cdef object _get_array_dml_row_counts(self)
-
     cdef object _get_batch_errors(self)
-
     cdef BaseVar _get_bind_var(self, uint32_t num_elements, uint32_t pos,
                                object value, BaseVar orig_var)
-
     cdef int _perform_binds(self) except -1
-
     cdef int _prepare(self, str statement, str tag=*) except -1
-
     cdef int _verify_fetch(self) except -1
-
     cdef int _verify_open(self) except -1
 
 
