@@ -227,11 +227,14 @@ cdef class BaseConnection:
         self._verify_connected()
         self._commit()
 
-    def cursor(self):
+    def cursor(self, scrollable=False):
         """
         Returns a cursor associated with the connection.
         """
-        return self._create_cursor()
+        cdef BaseCursor cursor
+        cursor = self._create_cursor()
+        cursor.scrollable = scrollable
+        return cursor
 
     @property
     def action(self):

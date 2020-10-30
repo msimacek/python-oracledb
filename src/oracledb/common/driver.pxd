@@ -85,6 +85,7 @@ cdef class BaseCursor:
         public object inputtypehandler
         public object outputtypehandler
         public object rowfactory
+        public bint scrollable
         uint32_t _buffer_rowcount
         uint32_t _buffer_index
         uint32_t _fetch_array_size
