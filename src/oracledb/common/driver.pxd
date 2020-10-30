@@ -64,9 +64,14 @@ cdef class BaseConnection:
     cdef int _ping(self) except -1
     cdef bint _prepare(self) except *
     cdef int _rollback(self) except -1
+    cdef int _set_action(self, str value) except -1
+    cdef int _set_client_identifier(self, str value) except -1
+    cdef int _set_client_info(self, str value) except -1
     cdef int _set_current_schema(self, str value) except -1
+    cdef int _set_dbop(self, str value) except -1
     cdef int _set_external_name(self, str value) except -1
     cdef int _set_internal_name(self, str value) except -1
+    cdef int _set_module(self, str value) except -1
     cdef int _set_stmtcachesize(self, uint32_t value) except -1
     cdef int _verify_connected(self) except -1
 

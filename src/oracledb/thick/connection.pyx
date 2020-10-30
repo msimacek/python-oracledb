@@ -7,6 +7,8 @@
 #   Cython file defining the connection class (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
+ctypedef int (*dpiConnSetTextAttrFunc)(dpiConn*, const char*, uint32_t) nogil
+
 cdef class ConnectionParams:
     cdef:
         bytes dsn
@@ -343,41 +345,44 @@ cdef class Connection(BaseConnection):
         if status < 0:
             _raise_from_odpi()
 
+    cdef int _set_action(self, str value) except -1:
+        self._set_text_attr(dpiConn_setAction, value)
+
+    cdef int _set_client_identifier(self, str value) except -1:
+        self._set_text_attr(dpiConn_setClientIdentifier, value)
+
+    cdef int _set_client_info(self, str value) except -1:
+        self._set_text_attr(dpiConn_setClientInfo, value)
+
     cdef int _set_current_schema(self, str value) except -1:
-        cdef:
-            uint32_t value_length
-            const char *value_ptr
-            bytes value_bytes
-        value_bytes = value.encode()
-        value_ptr = value_bytes
-        value_length = len(value_bytes)
-        if dpiConn_setCurrentSchema(self._handle, value_ptr, value_length) < 0:
-            _raise_from_odpi()
+        self._set_text_attr(dpiConn_setCurrentSchema, value)
+
+    cdef int _set_dbop(self, str value) except -1:
+        self._set_text_attr(dpiConn_setDbOp, value)
 
     cdef int _set_external_name(self, str value) except -1:
-        cdef:
-            uint32_t value_length
-            const char *value_ptr
-            bytes value_bytes
-        value_bytes = value.encode()
-        value_ptr = value_bytes
-        value_length = len(value_bytes)
-        if dpiConn_setExternalName(self._handle, value_ptr, value_length) < 0:
-            _raise_from_odpi()
+        self._set_text_attr(dpiConn_setExternalName, value)
 
     cdef int _set_internal_name(self, str value) except -1:
-        cdef:
-            uint32_t value_length
-            const char *value_ptr
-            bytes value_bytes
-        value_bytes = value.encode()
-        value_ptr = value_bytes
-        value_length = len(value_bytes)
-        if dpiConn_setInternalName(self._handle, value_ptr, value_length) < 0:
-            _raise_from_odpi()
+        self._set_text_attr(dpiConn_setInternalName, value)
+
+    cdef int _set_module(self, str value) except -1:
+        self._set_text_attr(dpiConn_setModule, value)
 
     cdef int _set_stmtcachesize(self, uint32_t value) except -1:
         if dpiConn_setStmtCacheSize(self._handle, value) < 0:
+            _raise_from_odpi()
+
+    cdef int _set_text_attr(self, dpiConnSetTextAttrFunc func,
+                            str value) except -1:
+        cdef:
+            uint32_t value_length
+            const char *value_ptr
+            bytes value_bytes
+        value_bytes = value.encode()
+        value_ptr = value_bytes
+        value_length = len(value_bytes)
+        if func(self._handle, value_ptr, value_length) < 0:
             _raise_from_odpi()
 
     @property

@@ -317,13 +317,28 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiConn_rollback(dpiConn *conn) nogil
 
+    int dpiConn_setAction(dpiConn *conn, const char *value,
+            uint32_t valueLength) nogil
+
+    int dpiConn_setClientIdentifier(dpiConn *conn, const char *value,
+            uint32_t valueLength) nogil
+
+    int dpiConn_setClientInfo(dpiConn *conn, const char *value,
+            uint32_t valueLength) nogil
+
     int dpiConn_setCurrentSchema(dpiConn *conn, const char *value,
+            uint32_t valueLength) nogil
+
+    int dpiConn_setDbOp(dpiConn *conn, const char *value,
             uint32_t valueLength) nogil
 
     int dpiConn_setExternalName(dpiConn *conn, const char *value,
             uint32_t valueLength) nogil
 
     int dpiConn_setInternalName(dpiConn *conn, const char *value,
+            uint32_t valueLength) nogil
+
+    int dpiConn_setModule(dpiConn *conn, const char *value,
             uint32_t valueLength) nogil
 
     int dpiConn_setStmtCacheSize(dpiConn *conn, uint32_t cacheSize) nogil

@@ -127,9 +127,33 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
+    cdef int _set_action(self, str value) except -1:
+        """
+        Internal method for setting the action.
+        """
+        raise NotImplementedError()
+
+    cdef int _set_client_identifier(self, str value) except -1:
+        """
+        Internal method for setting the client identifier.
+        """
+        raise NotImplementedError()
+
+    cdef int _set_client_info(self, str value) except -1:
+        """
+        Internal method for setting the client info.
+        """
+        raise NotImplementedError()
+
     cdef int _set_current_schema(self, str value) except -1:
         """
         Internal method for setting the current schema.
+        """
+        raise NotImplementedError()
+
+    cdef int _set_dbop(self, str value) except -1:
+        """
+        Internal method for setting the database operation.
         """
         raise NotImplementedError()
 
@@ -142,6 +166,12 @@ cdef class BaseConnection:
     cdef int _set_internal_name(self, str value) except -1:
         """
         Internal method for setting the internal name.
+        """
+        raise NotImplementedError()
+
+    cdef int _set_module(self, str value) except -1:
+        """
+        Internal method for setting the module.
         """
         raise NotImplementedError()
 
@@ -204,6 +234,33 @@ cdef class BaseConnection:
         return self._create_cursor()
 
     @property
+    def action(self):
+        raise AttributeError("action is not readable")
+
+    @action.setter
+    def action(self, value):
+        self._verify_connected()
+        self._set_action(value)
+
+    @property
+    def client_identifier(self):
+        raise AttributeError("client_identifier is not readable")
+
+    @client_identifier.setter
+    def client_identifier(self, value):
+        self._verify_connected()
+        self._set_client_identifier(value)
+
+    @property
+    def clientinfo(self):
+        raise AttributeError("clientinfo is not readable")
+
+    @clientinfo.setter
+    def clientinfo(self, value):
+        self._verify_connected()
+        self._set_client_info(value)
+
+    @property
     def current_schema(self):
         self._verify_connected()
         return self._get_current_schema()
@@ -212,6 +269,15 @@ cdef class BaseConnection:
     def current_schema(self, value):
         self._verify_connected()
         self._set_current_schema(value)
+
+    @property
+    def dbop(self):
+        raise AttributeError("dbop is not readable")
+
+    @dbop.setter
+    def dbop(self, value):
+        self._verify_connected()
+        self._set_dbop(value)
 
     @property
     def edition(self):
@@ -242,6 +308,15 @@ cdef class BaseConnection:
     def ltxid(self):
         self._verify_connected()
         return self._get_ltxid()
+
+    @property
+    def module(self):
+        raise AttributeError("module is not readable")
+
+    @module.setter
+    def module(self, value):
+        self._verify_connected()
+        self._set_module(value)
 
     @property
     def stmtcachesize(self):
