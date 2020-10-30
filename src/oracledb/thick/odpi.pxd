@@ -386,6 +386,11 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiStmt_getBatchErrors(dpiStmt *stmt, uint32_t numErrors,
             dpiErrorInfo *errors) nogil
 
+    int dpiStmt_getBindCount(dpiStmt *stmt, uint32_t *count) nogil
+
+    int dpiStmt_getBindNames(dpiStmt *stmt, uint32_t *numBindNames,
+            const char **bindNames, uint32_t *bindNameLengths) nogil
+
     int dpiStmt_getRowCounts(dpiStmt *stmt, uint32_t *numRowCounts,
             uint64_t **rowCounts) nogil
 

@@ -21,6 +21,35 @@ cdef class Cursor(BaseCursor):
         if self._handle != NULL:
             dpiStmt_release(self._handle)
 
+    cdef object _bindnames(self):
+        cdef:
+            uint32_t *name_lengths = NULL
+            const char **names = NULL
+            uint32_t num_binds, i
+            ssize_t num_bytes
+            list result
+        if dpiStmt_getBindCount(self._handle, &num_binds) < 0:
+            _raise_from_odpi()
+        if num_binds == 0:
+            return []
+        try:
+            num_bytes = num_binds * sizeof(char*)
+            names = <const char**> cpython.PyMem_Malloc(num_bytes)
+            num_bytes = num_binds * sizeof(uint32_t)
+            name_lengths = <uint32_t*> cpython.PyMem_Malloc(num_bytes)
+            if dpiStmt_getBindNames(self._handle, &num_binds, names,
+                                    name_lengths) < 0:
+                _raise_from_odpi()
+            result = [None] * num_binds
+            for i in range(num_binds):
+                result[i] = names[i][:name_lengths[i]].decode()
+            return result
+        finally:
+            if names:
+                cpython.PyMem_Free(names)
+            if name_lengths:
+                cpython.PyMem_Free(name_lengths)
+
     cdef int _close(self) except -1:
         """
         Internal method for closing the cursor.
