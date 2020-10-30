@@ -592,14 +592,6 @@ class TestCase(base.BaseTestCase):
                 (base.get_main_user(), base.get_connect_string())
         self.assertEqual(str(self.cursor), expected_value)
 
-    def test_1253_cursor_fetch_raw(self):
-        "1253 - test cursor.fetchraw()"
-        cursor = self.connection.cursor()
-        cursor.arraysize = 25
-        cursor.execute("select LongIntCol from TestNumbers order by IntCol")
-        self.assertEqual(cursor.fetchraw(), 10)
-        self.assertEqual(cursor.fetchvars[0].getvalue(), 38)
-
     def test_1254_parse(self):
         "1254 - test parsing statements"
         sql = "select LongIntCol from TestNumbers where IntCol = :val"
