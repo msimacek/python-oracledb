@@ -255,6 +255,12 @@ cdef extern from "odpi/embed/dpi.c":
         uint32_t fullVersionNum
 
     # functions
+    int dpiConn_beginDistribTrans(dpiConn *conn, long formatId,
+            const char *transactionId, uint32_t transactionIdLength,
+            const char *branchId, uint32_t branchIdLength) nogil
+
+    int dpiConn_breakExecution(dpiConn *conn) nogil
+
     int dpiConn_changePassword(dpiConn *conn, const char *userName,
             uint32_t userNameLength, const char *oldPassword,
             uint32_t oldPasswordLength, const char *newPassword,
@@ -300,6 +306,8 @@ cdef extern from "odpi/embed/dpi.c":
             dpiData **data) nogil
 
     int dpiConn_ping(dpiConn *conn) nogil
+
+    int dpiConn_prepareDistribTrans(dpiConn *conn, int *commitNeeded) nogil
 
     int dpiConn_prepareStmt(dpiConn *conn, int scrollable, const char *sql,
             uint32_t sqlLength, const char *tag, uint32_t tagLength,

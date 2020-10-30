@@ -46,6 +46,9 @@ cdef class BaseConnection:
         str _version
         bint _is_connected
 
+    cdef int _begin(self, long format_id, str transaction_id,
+                    str branch_id) except -1
+    cdef int _cancel(self) except -1
     cdef int _change_password(self, str old_password,
                               str new_password) except -1
     cdef int _close(self) except -1
@@ -59,6 +62,7 @@ cdef class BaseConnection:
     cdef uint32_t _get_stmtcachesize(self) except *
     cdef str _get_version(self)
     cdef int _ping(self) except -1
+    cdef bint _prepare(self) except *
     cdef int _rollback(self) except -1
     cdef int _set_current_schema(self, str value) except -1
     cdef int _set_external_name(self, str value) except -1

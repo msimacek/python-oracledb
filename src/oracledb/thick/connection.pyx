@@ -87,6 +87,35 @@ cdef class Connection(BaseConnection):
             dpiConn_release(self._handle)
 
 
+    cdef int _begin(self, long format_id, str transaction_id,
+                    str branch_id) except -1:
+        cdef:
+            bytes transaction_id_bytes, branch_id_bytes
+            uint32_t transaction_id_len, branch_id_len
+            const char *transaction_id_ptr
+            const char *branch_id_ptr
+            int status
+        transaction_id_bytes = transaction_id.encode()
+        transaction_id_ptr = transaction_id_bytes
+        transaction_id_len = <uint32_t> len(transaction_id_bytes)
+        branch_id_bytes = branch_id.encode()
+        branch_id_ptr = branch_id_bytes
+        branch_id_len = <uint32_t> len(branch_id_bytes)
+        with nogil:
+            status = dpiConn_beginDistribTrans(self._handle, format_id,
+                                               transaction_id_ptr,
+                                               transaction_id_len,
+                                               branch_id_ptr, branch_id_len)
+        if status < 0:
+            _raise_from_odpi()
+
+    cdef int _cancel(self) except -1:
+        cdef int status
+        with nogil:
+            status = dpiConn_breakExecution(self._handle)
+        if status < 0:
+            _raise_from_odpi()
+
     cdef int _change_password(self, str old_password,
                               str new_password) except -1:
         cdef:
@@ -298,6 +327,14 @@ cdef class Connection(BaseConnection):
             status = dpiConn_ping(self._handle)
         if status < 0:
             _raise_from_odpi()
+
+    cdef bint _prepare(self) except *:
+        cdef int commit_needed, status
+        with nogil:
+            status = dpiConn_prepareDistribTrans(self._handle, &commit_needed)
+        if status < 0:
+            _raise_from_odpi()
+        return commit_needed
 
     cdef int _rollback(self) except -1:
         cdef int status

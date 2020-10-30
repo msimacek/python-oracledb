@@ -22,6 +22,20 @@ cdef class BaseConnection:
         return f"<oracledb.{cls_name} to {self.username}@{self.dsn}>"
 
 
+    cdef int _begin(self, long format_id, str transaction_id,
+                    str branch_id) except -1:
+        """
+        Internal method for beginning a distributed transaction.
+        """
+        raise NotImplementedError()
+
+    cdef int _cancel(self) except -1:
+        """
+        Internal method for breaking execution of any currently executing
+        statement.
+        """
+        raise NotImplementedError()
+
     cdef int _change_password(self, str old_password,
                               str new_password) except -1:
         """
@@ -100,6 +114,12 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
+    cdef bint _prepare(self) except *:
+        """
+        Internal method for preparing to commit a distributed transaction.
+        """
+        raise NotImplementedError()
+
     cdef int _rollback(self) except -1:
         """
         Internal method for rolling back the transaction. Intended to be
@@ -139,6 +159,21 @@ cdef class BaseConnection:
         if not self._is_connected:
             errors._raise_from_string(exceptions.InterfaceError,
                                       "not connected")
+
+    def begin(self, format_id=-1, transaction_id="", branch_id=""):
+        """
+        Begins a distributed transaction.
+        """
+        self._verify_connected()
+        self._begin(format_id, transaction_id, branch_id)
+
+    def cancel(self):
+        """
+        Issues an immediate (asynchronous) abort of any currently executing
+        statement.
+        """
+        self._verify_connected()
+        self._cancel()
 
     def changepassword(self, old_password, new_password):
         """
@@ -224,6 +259,14 @@ cdef class BaseConnection:
         """
         self._verify_connected()
         self._ping()
+
+    def prepare(self):
+        """
+        Prepares the distributed transaction for commit. Returns a boolean
+        indicating if a commit is in fact needed.
+        """
+        self._verify_connected()
+        return self._prepare()
 
     def rollback(self):
         """
