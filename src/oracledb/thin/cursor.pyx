@@ -11,6 +11,10 @@ cdef class Cursor(BaseCursor):
     def __cinit__(self, connection):
         self.connection = connection
 
+    cdef int _close(self) except -1:
+        if self._statement is not None:
+            self.connection._statement_cache.put_statement(self._statement)
+
     cdef BaseVar _create_var(self):
         return Var.__new__(Var, self.connection)
 

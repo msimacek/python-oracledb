@@ -18,7 +18,7 @@ cdef class StatementCache:
             self._statements.move_to_end(sql)
         return statement
 
-    def put_statement(self, statement):
+    cdef put_statement(self, Statement statement):
         self._statements[statement._sql] = statement
         self._statements.move_to_end(statement._sql)
         if len(self._statements) > self._max_entries:
