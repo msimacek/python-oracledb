@@ -623,8 +623,8 @@ class TestCase(base.BaseTestCase):
                 select IntCol, StringCol
                 from TestTempTable
                 order by IntCol""")
-        self.assertEqual(self.cursor.fetchall(),
-                         [(0, "Value should be 0"), (1, "Value should be 1")])
+        expected_value = [(0, "Value should be 0"), (1, "Value should be 1")]
+        self.assertEqual(self.cursor.fetchall(), expected_value)
 
     def test_1259_as_context_manager(self):
         "1259 - test using a cursor as a context manager"

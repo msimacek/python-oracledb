@@ -136,6 +136,7 @@ cdef class BaseCursor:
             row = self.rowfactory(*row)
         self._buffer_index += 1
         self._buffer_rowcount -= 1
+        self.rowcount += 1
         return row
 
     cdef BaseVar _create_var(self):
@@ -154,7 +155,9 @@ cdef class BaseCursor:
             uint32_t size = 0
             DbType dbtype
             BaseVar var
-        if isinstance(value, int):
+        if value is None:
+            return None
+        elif isinstance(value, int):
             dbtype = DB_TYPE_VARCHAR
             size = value
         elif isinstance(value, BaseVar):
@@ -499,7 +502,7 @@ cdef class BaseCursor:
             message = "parameters should be a list of sequences or " \
                       "dictionaries, or an integer specifying the number of " \
                       "times to execute the statement"
-            errors._raise_from_string(exceptions.ProgrammingError, message)
+            errors._raise_from_string(TypeError, message)
 
         # prepare statement if necessary
         self._verify_open()
@@ -528,6 +531,7 @@ cdef class BaseCursor:
         Fetches all of the remaining rows available from the cursor and returns
         them as a list.
         """
+        self._verify_fetch()
         result = []
         while True:
             row = self._fetch_next_row()
@@ -582,16 +586,25 @@ cdef class BaseCursor:
     def setinputsizes(self, *args, **kwargs):
         if args and kwargs:
             message = "expecting arguments or keyword arguments, not both"
-            errors._raise_from_string(exceptions.NotSupportedError, message)
+            errors._raise_from_string(exceptions.InterfaceError, message)
         self._verify_open()
         if kwargs:
             self._bind_vars = {}
             for key, value in kwargs.items():
                 self._bind_vars[key] = self._create_var_by_type(value)
-        else:
+        elif args:
             self._bind_vars = [self._create_var_by_type(v) for v in args]
+        else:
+            return []
         self._set_input_sizes = True
         return self._bind_vars
+
+    def setoutputsize(self, size, column=0):
+        """
+        Sets a column buffer size for fetches of long columns but the driver
+        does not require it so nothing is done here.
+        """
+        pass
 
     def var(self, typ, size=0, arraysize=1, inconverter=None,
             outconverter=None, typename=None, encoding_errors=None):
