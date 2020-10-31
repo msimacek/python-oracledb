@@ -391,7 +391,7 @@ class TestCase(base.BaseTestCase):
         cursor.fetchmany()
         self.assertTrue(cursor.arraysize > 1,
                 "array size must exceed 1 for this test to work correctly")
-        cursor.scroll(1, mode = "absolute")
+        cursor.scroll(1, mode="absolute")
         row = cursor.fetchone()
         self.assertEqual(row[0], 1.25)
         self.assertEqual(cursor.rowcount, 1)
@@ -404,7 +404,7 @@ class TestCase(base.BaseTestCase):
                 select NumberCol
                 from TestNumbers
                 order by IntCol""")
-        cursor.scroll(6, mode = "absolute")
+        cursor.scroll(6, mode="absolute")
         row = cursor.fetchone()
         self.assertEqual(row[0], 7.5)
         self.assertEqual(cursor.rowcount, 6)
@@ -509,9 +509,9 @@ class TestCase(base.BaseTestCase):
         self.cursor.execute("truncate table TestTempTable")
         cursor = self.connection.cursor(scrollable=True)
         cursor.execute("select * from TestTempTable")
-        cursor.scroll(mode = "last")
+        cursor.scroll(mode="last")
         self.assertEqual(cursor.fetchall(), [])
-        cursor.scroll(mode = "first")
+        cursor.scroll(mode="first")
         self.assertEqual(cursor.fetchall(), [])
         self.assertRaises(oracledb.DatabaseError, cursor.scroll, 1,
                           mode="absolute")

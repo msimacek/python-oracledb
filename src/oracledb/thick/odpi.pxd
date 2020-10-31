@@ -403,6 +403,9 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiStmt_release(dpiStmt *stmt) nogil
 
+    int dpiStmt_scroll(dpiStmt *stmt, uint32_t mode, int32_t offset,
+            int32_t rowCountOffset) nogil
+
     int dpiStmt_setFetchArraySize(dpiStmt *stmt, uint32_t arraySize) nogil
 
     int dpiStmt_setPrefetchRows(dpiStmt *stmt, uint32_t numRows) nogil

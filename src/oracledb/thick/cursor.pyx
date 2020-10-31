@@ -293,10 +293,10 @@ cdef class Cursor(BaseCursor):
             if self._handle != NULL:
                 dpiStmt_release(self._handle)
                 self._handle = NULL
-            status = dpiConn_prepareStmt(self.connection._handle, 0,
-                                         statement_ptr, statement_bytes_length,
-                                         tag_ptr, tag_bytes_length,
-                                         &self._handle)
+            status = dpiConn_prepareStmt(self.connection._handle,
+                                         self.scrollable, statement_ptr,
+                                         statement_bytes_length, tag_ptr,
+                                         tag_bytes_length, &self._handle)
             if status == DPI_SUCCESS:
                 status = dpiStmt_getInfo(self._handle, &self._stmt_info)
             if status == DPI_SUCCESS and self._stmt_info.isQuery:
@@ -308,3 +308,26 @@ cdef class Cursor(BaseCursor):
                                                      self.prefetchrows)
         if status < 0:
             _raise_from_odpi()
+
+    cdef int _scroll(self, int32_t offset, uint32_t mode) except -1:
+        cdef:
+            uint32_t temp_buffer_row_index = 0, num_rows_in_buffer = 0
+            bint more_rows_to_fetch = False
+            int status
+        with nogil:
+            status = dpiStmt_scroll(self._handle, mode, offset,
+                                    0 - self._buffer_rowcount)
+            if status == 0:
+                status = dpiStmt_fetchRows(self._handle,
+                                           self._fetch_array_size,
+                                           &temp_buffer_row_index,
+                                           &num_rows_in_buffer,
+                                           &more_rows_to_fetch)
+            if status == 0:
+                status = dpiStmt_getRowCount(self._handle, &self.rowcount)
+        if status < 0:
+            _raise_from_odpi()
+        self._buffer_rowcount = num_rows_in_buffer
+        self._buffer_index = temp_buffer_row_index
+        self._more_rows_to_fetch = more_rows_to_fetch
+        self.rowcount -= num_rows_in_buffer

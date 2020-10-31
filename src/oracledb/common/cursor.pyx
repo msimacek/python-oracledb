@@ -344,6 +344,12 @@ cdef class BaseCursor:
         """
         raise NotImplementedError()
 
+    cdef int _scroll(self, int32_t offset, uint32_t mode) except -1:
+        """
+        Internal method for scrolling a scrollable cursor.
+        """
+        raise NotImplementedError()
+
     cdef int _verify_fetch(self) except -1:
         """
         Verifies that fetching is possible from this cursor.
@@ -582,6 +588,25 @@ cdef class BaseCursor:
         Prepares a statement.
         """
         self._prepare(statement)
+
+    def scroll(self, value=0, mode="relative"):
+        """
+        Scrolls a scrollable cursor.
+        """
+        cdef uint32_t int_mode = 0
+        if mode == "relative":
+            int_mode = FETCH_MODE_RELATIVE
+        elif mode == "absolute":
+            int_mode = FETCH_MODE_ABSOLUTE
+        elif mode == "first":
+            int_mode = FETCH_MODE_FIRST
+        elif mode == "last":
+            int_mode = FETCH_MODE_LAST
+        else:
+            message = "mode must be one of relative, absolute, first or last"
+            errors._raise_from_string(exceptions.InterfaceError, message)
+        self._verify_open()
+        self._scroll(value, int_mode)
 
     def setinputsizes(self, *args, **kwargs):
         if args and kwargs:

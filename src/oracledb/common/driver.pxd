@@ -7,6 +7,12 @@
 from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 
+cdef enum:
+    FETCH_MODE_ABSOLUTE = 0x0020
+    FETCH_MODE_FIRST = 0x0004
+    FETCH_MODE_LAST = 0x0008
+    FETCH_MODE_RELATIVE = 0x0040
+
 cdef class ApiType:
     cdef:
         readonly name
@@ -118,6 +124,7 @@ cdef class BaseCursor:
                                object value, BaseVar orig_var)
     cdef int _perform_binds(self) except -1
     cdef int _prepare(self, str statement, str tag=*) except -1
+    cdef int _scroll(self, int32_t offset, uint32_t mode) except -1
     cdef int _verify_fetch(self) except -1
     cdef int _verify_open(self) except -1
 
