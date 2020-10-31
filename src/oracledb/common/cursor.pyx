@@ -232,7 +232,7 @@ cdef class BaseCursor:
                 if temp_size > size:
                     size = temp_size
         else:
-            dbtype = DbType._from_value(value, &size)
+            dbtype = DbType._from_value(value, &size, self._is_plsql())
         if dbtype is None:
             dbtype = DB_TYPE_VARCHAR
             size = 1
@@ -325,6 +325,13 @@ cdef class BaseCursor:
     cdef object _get_lastrowid(self):
         """
         Internal method for returning the last rowid associated with a cursor.
+        """
+        raise NotImplementedError()
+
+    cdef bint _is_plsql(self):
+        """
+        Internal method that indicates whether the currently prepared statement
+        is a PL/SQL statement or not.
         """
         raise NotImplementedError()
 

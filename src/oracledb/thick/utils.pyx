@@ -69,6 +69,11 @@ cdef int _convert_from_python(object value, DbType dbtype,
             raise TypeError("expecting datetime.date or datetime.datetime")
     elif oracle_type == DPI_ORACLE_TYPE_BOOLEAN:
         dbvalue.asBoolean = 1 if value else 0
+    elif oracle_type == DPI_ORACLE_TYPE_NATIVE_INT:
+        if isinstance(value, bool):
+            dbvalue.asInt64 = 1 if value else 0
+        else:
+            dbvalue.asInt64 = <int64_t> value
     else:
         errors._raise_from_string(exceptions.NotSupportedError,
                                   f"database type {dbtype} not supported")

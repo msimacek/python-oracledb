@@ -38,7 +38,7 @@ cdef class DbType:
     cdef DbType _from_type(object typ)
 
     @staticmethod
-    cdef DbType _from_value(object value, uint32_t *size)
+    cdef DbType _from_value(object value, uint32_t *size, bint is_plsql=*)
 
 
 cdef class BaseConnection:
@@ -123,6 +123,7 @@ cdef class BaseCursor:
     cdef BaseVar _get_bind_var(self, uint32_t num_elements, uint32_t pos,
                                object value, BaseVar orig_var)
     cdef object _get_lastrowid(self)
+    cdef bint _is_plsql(self)
     cdef int _perform_binds(self) except -1
     cdef int _parse(self) except -1
     cdef int _prepare(self, str statement, str tag=*) except -1

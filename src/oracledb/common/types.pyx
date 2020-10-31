@@ -98,11 +98,13 @@ cdef class DbType:
                                       f"Python type {typ} not supported")
 
     @staticmethod
-    cdef DbType _from_value(object value, uint32_t *size):
+    cdef DbType _from_value(object value, uint32_t *size, bint is_plsql=True):
         if value is None:
             return None
         elif isinstance(value, bool):
-            return DB_TYPE_BOOLEAN
+            if is_plsql:
+                return DB_TYPE_BOOLEAN
+            return DB_TYPE_BINARY_INTEGER
         elif isinstance(value, str):
             size[0] = <uint32_t> len(value)
             return DB_TYPE_VARCHAR

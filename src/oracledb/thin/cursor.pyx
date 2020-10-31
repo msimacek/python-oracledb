@@ -33,6 +33,9 @@ cdef class Cursor(BaseCursor):
                                        fetch_array_size=self._fetch_array_size)
         self.connection._protocol._fetch(params)
 
+    cdef bint _is_plsql(self):
+        return self._statement.is_plsql
+
     cdef int _prepare(self, str sql, str tag=None) except -1:
         self.statement = sql
         self._statement = self.connection._statement_cache.get_statement(sql)

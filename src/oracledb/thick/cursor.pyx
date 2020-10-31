@@ -253,6 +253,9 @@ cdef class Cursor(BaseCursor):
                     _raise_from_odpi()
                 return rowid_ptr[:rowid_length].decode()
 
+    cdef bint _is_plsql(self):
+        return <bint> self._stmt_info.isPLSQL
+
     cdef int _parse(self) except -1:
         cdef:
             uint32_t mode, num_query_cols
