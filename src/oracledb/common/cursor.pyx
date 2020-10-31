@@ -322,6 +322,12 @@ cdef class BaseCursor:
         var._set_value(pos, value)
         return var
 
+    cdef object _get_lastrowid(self):
+        """
+        Internal method for returning the last rowid associated with a cursor.
+        """
+        raise NotImplementedError()
+
     cdef int _perform_binds(self) except -1:
         """
         Perform all binds on the cursor.
@@ -582,6 +588,11 @@ cdef class BaseCursor:
         Populates the batch error list with error objects.
         """
         return self._get_batch_errors()
+
+    @property
+    def lastrowid(self):
+        self._verify_open()
+        return self._get_lastrowid()
 
     def prepare(self, statement):
         """

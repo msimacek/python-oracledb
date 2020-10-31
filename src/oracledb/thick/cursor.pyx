@@ -239,6 +239,20 @@ cdef class Cursor(BaseCursor):
                 var._number_as_int = True
         return var
 
+    cdef object _get_lastrowid(self):
+        cdef:
+            uint32_t rowid_length
+            const char *rowid_ptr
+            dpiRowid *rowid
+        if self._handle is not NULL:
+            if dpiStmt_getLastRowid(self._handle, &rowid) < 0:
+                _raise_from_odpi()
+            if rowid:
+                if dpiRowid_getStringValue(rowid, &rowid_ptr,
+                                           &rowid_length) < 0:
+                    _raise_from_odpi()
+                return rowid_ptr[:rowid_length].decode()
+
     cdef int _perform_define(self, uint32_t num_query_cols) except -1:
         """
         Internal method for performing defines. At this point it is assumed

@@ -396,6 +396,8 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiStmt_getInfo(dpiStmt *stmt, dpiStmtInfo *info) nogil
 
+    int dpiStmt_getLastRowid(dpiStmt *stmt, dpiRowid **rowid) nogil
+
     int dpiStmt_getQueryInfo(dpiStmt *stmt, uint32_t pos,
             dpiQueryInfo *info) nogil
 

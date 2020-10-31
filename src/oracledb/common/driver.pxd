@@ -122,6 +122,7 @@ cdef class BaseCursor:
     cdef object _get_batch_errors(self)
     cdef BaseVar _get_bind_var(self, uint32_t num_elements, uint32_t pos,
                                object value, BaseVar orig_var)
+    cdef object _get_lastrowid(self)
     cdef int _perform_binds(self) except -1
     cdef int _prepare(self, str statement, str tag=*) except -1
     cdef int _scroll(self, int32_t offset, uint32_t mode) except -1
