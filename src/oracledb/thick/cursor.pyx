@@ -253,6 +253,21 @@ cdef class Cursor(BaseCursor):
                     _raise_from_odpi()
                 return rowid_ptr[:rowid_length].decode()
 
+    cdef int _parse(self) except -1:
+        cdef:
+            uint32_t mode, num_query_cols
+            int status
+        if self._stmt_info.isQuery:
+            mode = DPI_MODE_EXEC_DESCRIBE_ONLY
+        else:
+            mode = DPI_MODE_EXEC_PARSE_ONLY
+        with nogil:
+            status = dpiStmt_execute(self._handle, mode, &num_query_cols)
+        if status < 0:
+            _raise_from_odpi()
+        if num_query_cols > 0:
+            self._perform_define(num_query_cols)
+
     cdef int _perform_define(self, uint32_t num_query_cols) except -1:
         """
         Internal method for performing defines. At this point it is assumed

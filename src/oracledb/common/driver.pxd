@@ -124,6 +124,7 @@ cdef class BaseCursor:
                                object value, BaseVar orig_var)
     cdef object _get_lastrowid(self)
     cdef int _perform_binds(self) except -1
+    cdef int _parse(self) except -1
     cdef int _prepare(self, str statement, str tag=*) except -1
     cdef int _scroll(self, int32_t offset, uint32_t mode) except -1
     cdef int _verify_fetch(self) except -1

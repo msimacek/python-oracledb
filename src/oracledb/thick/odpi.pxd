@@ -19,10 +19,12 @@ cdef extern from "odpi/embed/dpi.c":
     uint32_t DPI_DEFAULT_PREFETCH_ROWS
 
     # execution modes
-    uint32_t DPI_MODE_EXEC_DEFAULT
-    uint32_t DPI_MODE_EXEC_COMMIT_ON_SUCCESS
-    uint32_t DPI_MODE_EXEC_BATCH_ERRORS
     uint32_t DPI_MODE_EXEC_ARRAY_DML_ROWCOUNTS
+    uint32_t DPI_MODE_EXEC_BATCH_ERRORS
+    uint32_t DPI_MODE_EXEC_COMMIT_ON_SUCCESS
+    uint32_t DPI_MODE_EXEC_DEFAULT
+    uint32_t DPI_MODE_EXEC_DESCRIBE_ONLY
+    uint32_t DPI_MODE_EXEC_PARSE_ONLY
 
     # connection/pool creation modes
     uint32_t DPI_MODE_CREATE_DEFAULT

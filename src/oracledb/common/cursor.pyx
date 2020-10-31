@@ -328,6 +328,13 @@ cdef class BaseCursor:
         """
         raise NotImplementedError()
 
+    cdef int _parse(self) except -1:
+        """
+        Internal method for parsing the currently prepared statement without
+        executing it.
+        """
+        raise NotImplementedError()
+
     cdef int _perform_binds(self) except -1:
         """
         Perform all binds on the cursor.
@@ -593,6 +600,15 @@ cdef class BaseCursor:
     def lastrowid(self):
         self._verify_open()
         return self._get_lastrowid()
+
+    def parse(self, statement):
+        """
+        Parse the statement without executing it. This also retrieves
+        describe information for queries.
+        """
+        self._verify_open()
+        self._prepare(statement)
+        self._parse()
 
     def prepare(self, statement):
         """
