@@ -9,13 +9,9 @@
 
 cdef class Cursor(BaseCursor):
     cdef:
-        readonly Connection connection
         dpiStmtInfo _stmt_info
         dpiStmt *_handle
         str _tag
-
-    def __cinit__(self, connection):
-        self.connection = connection
 
     def __dealloc__(self):
         if self._handle != NULL:
@@ -317,6 +313,7 @@ cdef class Cursor(BaseCursor):
             bytes statement_bytes, tag_bytes
             const char *tag_ptr = NULL
             const char *statement_ptr
+            Connection connection
             int status
         self.statement = statement
         statement_bytes = statement.encode()
@@ -327,14 +324,15 @@ cdef class Cursor(BaseCursor):
             tag_bytes = tag.encode()
             tag_bytes_length = <uint32_t> len(tag_bytes)
             tag_ptr = <const char*> tag_bytes
+        connection = self.connection
         with nogil:
             if self._handle != NULL:
                 dpiStmt_release(self._handle)
                 self._handle = NULL
-            status = dpiConn_prepareStmt(self.connection._handle,
-                                         self.scrollable, statement_ptr,
-                                         statement_bytes_length, tag_ptr,
-                                         tag_bytes_length, &self._handle)
+            status = dpiConn_prepareStmt(connection._handle, self.scrollable,
+                                         statement_ptr, statement_bytes_length,
+                                         tag_ptr, tag_bytes_length,
+                                         &self._handle)
             if status == DPI_SUCCESS:
                 status = dpiStmt_getInfo(self._handle, &self._stmt_info)
             if status == DPI_SUCCESS and self._stmt_info.isQuery:

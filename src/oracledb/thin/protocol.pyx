@@ -379,7 +379,7 @@ cdef class Protocol:
         # write parameter header information
         for i in range(num_params):
             var = <Var> cpython.PyList_GET_ITEM(params, i)
-            buf.write_uint8(var.type._ora_type_num)
+            buf.write_uint8(var._dbtype._ora_type_num)
             buf.write_uint8(3)              # flag
             buf.write_uint8(var.precision)
             buf.write_uint8(var.scale)
@@ -389,7 +389,7 @@ cdef class Protocol:
             buf.write_ub4(0)                # OID
             buf.write_ub4(0)                # version
             buf.write_ub4(873)              # character set id
-            buf.write_uint8(var.type._csfrm)
+            buf.write_uint8(var._dbtype._csfrm)
             buf.write_ub4(var.size)
             buf.write_ub4(0)                # oaccolid
 
@@ -397,14 +397,14 @@ cdef class Protocol:
         buf.write_uint8(7)                  # data indicator
         for i in range(num_params):
             var = <Var> cpython.PyList_GET_ITEM(params, i)
-            ora_type_num = var.type._ora_type_num
+            ora_type_num = var._dbtype._ora_type_num
             value = var._values[0]
             if value is None:
                 buf.write_uint8(0)
             elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
                     or ora_type_num == TNS_DATA_TYPE_CHAR \
                     or ora_type_num == TNS_DATA_TYPE_LONG:
-                if var.type._csfrm == 1:
+                if var._dbtype._csfrm == 1:
                     temp_bytes = value.encode()
                 else:
                     temp_bytes = value.encode("UTF-16BE")
@@ -418,7 +418,7 @@ cdef class Protocol:
                     or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
                     or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ \
                     or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_LTZ:
-                buf.write_oracle_date(value, var.type._buffer_size_factor)
+                buf.write_oracle_date(value, var._dbtype._buffer_size_factor)
             elif ora_type_num == TNS_DATA_TYPE_BINARY_DOUBLE:
                 buf.write_binary_double(value)
             elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
@@ -492,7 +492,7 @@ cdef class Protocol:
         buf.read_ub2()                      # version
         buf.read_ub2()                      # character set id
         csfrm = buf.read_uint8()            # character set form
-        var.type = DbType._from_ora_type_and_csfrm(data_type, csfrm)
+        var._dbtype = DbType._from_ora_type_and_csfrm(data_type, csfrm)
         var.size = buf.read_ub4()
         buf.read_ub4()                      # oaccolid
         var.nulls_allowed = buf.read_uint8()
@@ -683,8 +683,8 @@ cdef class Protocol:
         num_row_vars = cpython.PyList_GET_SIZE(row_vars)
         for i in range(num_row_vars):
             var = row_vars[i]
-            ora_type_num = var.type._ora_type_num
-            csfrm = var.type._csfrm
+            ora_type_num = var._dbtype._ora_type_num
+            csfrm = var._dbtype._csfrm
             num_bytes = buf.read_uint8()
             if num_bytes == 0:
                 column_value = None

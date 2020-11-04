@@ -7,6 +7,7 @@ from .. import constants
 cdef class BaseCursor:
 
     def __cinit__(self, connection):
+        self.connection = connection
         self.arraysize = 100
         self.prefetchrows = 2
         self._is_open = True

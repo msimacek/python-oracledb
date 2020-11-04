@@ -5,15 +5,12 @@
 cdef class Cursor(BaseCursor):
 
     cdef:
-        readonly Connection connection
         Statement _statement
 
-    def __cinit__(self, connection):
-        self.connection = connection
-
     cdef int _close(self) except -1:
+        cdef Connection connection = self.connection
         if self._statement is not None:
-            self.connection._statement_cache.put_statement(self._statement)
+            connection._statement_cache.put_statement(self._statement)
 
     cdef BaseVar _create_var(self):
         return Var.__new__(Var, self.connection)
@@ -23,22 +20,25 @@ cdef class Cursor(BaseCursor):
         return list(collections.OrderedDict.fromkeys(names))
 
     cdef int _execute(self) except -1:
+        cdef Connection connection = self.connection
         params = types.SimpleNamespace(cursor=self,
                                        fetch_array_size=self.arraysize,
                                        params=self._bind_vars)
-        self.connection._protocol._execute(params)
+        connection._protocol._execute(params)
 
     cdef int _fetch_rows(self) except -1:
+        cdef Connection connection = self.connection
         params = types.SimpleNamespace(cursor=self,
                                        fetch_array_size=self._fetch_array_size)
-        self.connection._protocol._fetch(params)
+        connection._protocol._fetch(params)
 
     cdef bint _is_plsql(self):
-        return self._statement.is_plsql
+        return self._statement._is_plsql
 
     cdef int _prepare(self, str sql, str tag=None) except -1:
+        cdef Connection connection = self.connection
         self.statement = sql
-        self._statement = self.connection._statement_cache.get_statement(sql)
+        self._statement = connection._statement_cache.get_statement(sql)
         if self._statement is None:
             self._statement = Statement()
             self._statement._prepare(sql)
