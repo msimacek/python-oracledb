@@ -42,12 +42,18 @@ cdef class Var(BaseVar):
                 _raise_from_odpi()
 
     cdef int _finalize_init(self) except -1:
+        cdef:
+            dpiObjectType *obj_type_handle = NULL
+            ObjectType obj_type
         if self.num_elements == 0:
             self.num_elements = 1
-        self._native_type_num = _get_native_type_num(self.type)
-        if dpiConn_newVar(self._connection._handle, self.type.num,
+        if self._objtype is not None:
+            obj_type = <ObjectType> self._objtype
+            obj_type_handle = obj_type._handle
+        self._native_type_num = _get_native_type_num(self._dbtype)
+        if dpiConn_newVar(self._connection._handle, self._dbtype.num,
                           self._native_type_num, self.num_elements, self.size,
-                          0, self.is_array, NULL, &self._handle,
+                          0, self.is_array, obj_type_handle, &self._handle,
                           &self._data) < 0:
             _raise_from_odpi()
         if dpiVar_getSizeInBytes(self._handle, &self.buffer_size) < 0:
@@ -79,7 +85,7 @@ cdef class Var(BaseVar):
             object value
         data = &self._data[pos]
         if not data.isNull:
-            value = _convert_to_python(self._connection, self.type,
+            value = _convert_to_python(self._connection, self._dbtype,
                                        &data.value, self._number_as_int)
             if self.outconverter:
                 value = self.outconverter(value)
@@ -154,7 +160,7 @@ cdef class Var(BaseVar):
                      uint32_t num_elements, uint32_t size,
                      bint is_array=False):
         cdef Var var = Var.__new__(Var, connection)
-        var.type = dbtype
+        var._dbtype = dbtype
         var.size = size
         var.num_elements = num_elements
         var.is_array = is_array

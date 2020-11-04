@@ -12,20 +12,22 @@ cdef class BaseVar:
             value = self._get_single_value(0)
         else:
             value = self._get_array_value(self.num_elements)
-        r = f"<oracledb.Var of type {self.type.name} with value {repr(value)}>"
+        r = f"<oracledb.Var of type {self._dbtype.name} with value " \
+            f"{repr(value)}>"
         return r
 
     cdef int _bind(self, BaseCursor cursor, str name=None,
                    uint32_t pos=0) except -1:
         """
-        Binds a variable to the cursor. Intended to be overridden by the
-        subclass.
+        Binds a variable to the cursor.
         """
+        raise NotImplementedError()
 
     cdef int _finalize_init(self) except -1:
         """
         Finalizes initialization.
         """
+        raise NotImplementedError()
 
     cdef uint32_t _get_actual_elements(self) except *:
         """
@@ -33,26 +35,31 @@ cdef class BaseVar:
         number of elements in a PL/SQL array or the number of elements that
         were originally allocated for the variable.
         """
+        raise NotImplementedError()
 
     cdef list _get_array_value(self, uint32_t num_elements):
         """
         Return the values stored in the variable as a list.
         """
+        raise NotImplementedError()
     
     cdef object _get_single_value(self, uint32_t pos):
         """
         Return the value stored in the variable at the specified position.
         """
+        raise NotImplementedError()
 
     cdef int _set_array_value(self, list value) except -1:
         """
         Set the array elements to the value of the list.
         """
+        raise NotImplementedError()
 
     cdef int _set_single_value(self, uint32_t pos, object value) except -1:
         """
         Set a single element of the variable to the specified value.
         """
+        raise NotImplementedError()
 
     cdef int _set_value(self, uint32_t pos, object value) except -1:
         """
@@ -89,14 +96,15 @@ cdef class BaseVar:
     def description(self):
         if self.size > 0:
             display_size = self.size
-        elif self.type is DB_TYPE_DATE or self.type is DB_TYPE_TIMESTAMP \
-                or self.type is DB_TYPE_TIMESTAMP_LTZ \
-                or self.type is DB_TYPE_TIMESTAMP_TZ:
+        elif self._dbtype is DB_TYPE_DATE \
+                or self._dbtype is DB_TYPE_TIMESTAMP \
+                or self._dbtype is DB_TYPE_TIMESTAMP_LTZ \
+                or self._dbtype is DB_TYPE_TIMESTAMP_TZ:
             display_size = 23
-        elif self.type is DB_TYPE_BINARY_FLOAT \
-                or self.type is DB_TYPE_BINARY_DOUBLE \
-                or self.type is DB_TYPE_BINARY_INTEGER \
-                or self.type is DB_TYPE_NUMBER:
+        elif self._dbtype is DB_TYPE_BINARY_FLOAT \
+                or self._dbtype is DB_TYPE_BINARY_DOUBLE \
+                or self._dbtype is DB_TYPE_BINARY_INTEGER \
+                or self._dbtype is DB_TYPE_NUMBER:
             if self.precision:
                 display_size = self.precision + 1
                 if self.scale > 0:
@@ -105,7 +113,8 @@ cdef class BaseVar:
                 display_size = 127
         else:
             display_size = 0
-        size_in_bytes = self.buffer_size if self.type.default_size != 0 else 0
+        size_in_bytes = self.buffer_size \
+                if self._dbtype.default_size != 0 else 0
         if self.precision or self.scale:
             precision = self.precision
             scale = self.scale
@@ -134,6 +143,10 @@ cdef class BaseVar:
         Set the value at the specified position in the variable.
         """
         self._set_value(pos, value)
+
+    @property
+    def type(self):
+        return self._objtype or self._dbtype
 
     @property
     def values(self):

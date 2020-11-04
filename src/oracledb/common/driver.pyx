@@ -76,4 +76,5 @@ cdef object get_exception_class(int32_t code):
 include "connection.pyx"
 include "cursor.pyx"
 include "var.pyx"
+include "object.pyx"
 include "types.pyx"

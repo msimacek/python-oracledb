@@ -305,6 +305,24 @@ cdef class Connection(BaseConnection):
             _raise_from_odpi()
         return size
 
+    cdef BaseObjectType _get_type(self, str name):
+        cdef:
+            ObjectType object_type
+            dpiObjectType *handle
+            const char *name_ptr
+            uint32_t name_len
+            bytes name_bytes
+            int status
+        name_bytes = name.encode()
+        name_ptr = name_bytes
+        name_len = <uint32_t> len(name_bytes)
+        with nogil:
+            status = dpiConn_getObjectType(self._handle, name_ptr, name_len,
+                                           &handle)
+        if status < 0:
+            _raise_from_odpi()
+        return ObjectType._new_type(self, handle)
+
     cdef str _get_version(self):
         cdef:
             dpiVersionInfo version_info

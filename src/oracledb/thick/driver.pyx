@@ -22,6 +22,7 @@ from .. import constants, errors, exceptions
 
 from ..common.driver cimport get_exception_class
 from ..common.driver cimport BaseConnection, BaseCursor, BaseVar, DbType
+from ..common.driver cimport BaseObjectType, BaseObjectAttr, BaseObject
 from libc.string cimport memchr, memset
 
 include "odpi.pxd"
@@ -33,4 +34,5 @@ client_version = None
 include "connection.pyx"
 include "cursor.pyx"
 include "var.pyx"
+include "object.pyx"
 include "utils.pyx"

@@ -88,6 +88,9 @@ cdef extern from "odpi/embed/dpi.c":
     ctypedef struct dpiObject:
         pass
 
+    ctypedef struct dpiObjectAttr:
+        pass
+
     ctypedef struct dpiObjectType:
         pass
 
@@ -229,6 +232,20 @@ cdef extern from "odpi/embed/dpi.c":
         int isWarning
         uint32_t offset
 
+    ctypedef struct dpiObjectAttrInfo:
+        const char *name
+        uint32_t nameLength
+        dpiDataTypeInfo typeInfo
+
+    ctypedef struct dpiObjectTypeInfo:
+        const char *schema
+        uint32_t schemaLength
+        const char *name
+        uint32_t nameLength
+        int isCollection
+        dpiDataTypeInfo elementTypeInfo
+        uint16_t numAttributes
+
     ctypedef struct dpiQueryInfo:
         const char *name
         uint32_t nameLength
@@ -297,6 +314,9 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiConn_getLTXID(dpiConn *conn, const char **value,
             uint32_t *valueLength) nogil
 
+    int dpiConn_getObjectType(dpiConn *conn, const char *name,
+            uint32_t nameLength, dpiObjectType **objType) nogil
+
     int dpiConn_getServerVersion(dpiConn *conn, const char **releaseString,
             uint32_t *releaseStringLength, dpiVersionInfo *versionInfo) nogil
 
@@ -360,6 +380,24 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiContext_initConnCreateParams(const dpiContext *context,
             dpiConnCreateParams *params) nogil
+
+    int dpiObject_release(dpiObject *obj) nogil
+
+    int dpiObjectAttr_getInfo(dpiObjectAttr *attr,
+            dpiObjectAttrInfo *info) nogil
+
+    int dpiObjectAttr_release(dpiObjectAttr *attr) nogil
+
+    int dpiObjectType_createObject(dpiObjectType *objType,
+            dpiObject **obj) nogil
+
+    int dpiObjectType_getAttributes(dpiObjectType *objType,
+            uint16_t numAttributes, dpiObjectAttr **attributes) nogil
+
+    int dpiObjectType_getInfo(dpiObjectType *objType,
+            dpiObjectTypeInfo *info) nogil
+
+    int dpiObjectType_release(dpiObjectType *objType) nogil
 
     int dpiRowid_getStringValue(dpiRowid *rowid, const char **value,
             uint32_t *valueLength)

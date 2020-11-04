@@ -171,7 +171,7 @@ cdef class BaseCursor:
             dbtype = DbType._from_type(value)
             size = dbtype.default_size
         var = self._create_var()
-        var.type = dbtype
+        var._dbtype = dbtype
         var.num_elements = num_elements
         var.size = size
         if size > 0:
@@ -239,7 +239,7 @@ cdef class BaseCursor:
 
         # create the variable
         var = self._create_var()
-        var.type = dbtype
+        var._dbtype = dbtype
         var.num_elements = num_elements
         var.is_array = is_array
         var.size = size
@@ -305,7 +305,8 @@ cdef class BaseCursor:
             else:
                 var = self._create_var()
                 var.num_elements = num_elements
-                var.type = orig_var.type
+                var._dbtype = orig_var._dbtype
+                var._objtype = orig_var._objtype
                 var.is_array = orig_var.is_array
                 var.size = orig_var.size
                 var.buffer_size = orig_var.buffer_size
@@ -400,7 +401,9 @@ cdef class BaseCursor:
         dbtype = DbType._from_type(typ)
         var = self._create_var()
         var.is_array = True
-        var.type = dbtype
+        var._dbtype = dbtype
+        if isinstance(typ, BaseObjectType):
+            var._objtype = typ
         if dbtype.default_size > 0:
             var.size = size or dbtype.default_size
             var.buffer_size = var.size * dbtype._buffer_size_factor
@@ -670,9 +673,13 @@ cdef class BaseCursor:
         cdef:
             DbType dbtype
             BaseVar var
-        dbtype = DbType._from_type(typ)
         var = self._create_var()
-        var.type = dbtype
+        if isinstance(typ, BaseObjectType):
+            var._objtype = typ
+            dbtype = DB_TYPE_OBJECT
+        else:
+            dbtype = DbType._from_type(typ)
+        var._dbtype = dbtype
         if dbtype.default_size > 0:
             var.size = size or dbtype.default_size
             var.buffer_size = var.size * dbtype._buffer_size_factor

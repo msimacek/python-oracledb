@@ -73,6 +73,8 @@ cdef class DbType:
         elif isinstance(typ, ApiType):
             apitype = typ
             return apitype.dbtypes[0]
+        elif isinstance(typ, BaseObjectType):
+            return DB_TYPE_OBJECT
         elif not isinstance(typ, type):
             errors._raise_from_string(TypeError, "expecting type")
         elif typ is int:

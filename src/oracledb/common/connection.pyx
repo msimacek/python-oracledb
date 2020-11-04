@@ -45,22 +45,19 @@ cdef class BaseConnection:
 
     cdef int _close(self) except -1:
         """
-        Internal method for closing the connection. Intended to be overridden
-        by the subclass.
+        Internal method for closing the connection.
         """
         raise NotImplementedError()
 
     cdef int _commit(self) except -1:
         """
-        Internal method for committing the transaction. Intended to be
-        overridden by the subclass.
+        Internal method for committing the transaction.
         """
         raise NotImplementedError()
 
     cdef BaseCursor _create_cursor(self):
         """
-        Internal method for creating a cursor. Intended to be overridden by the
-        subclass.
+        Internal method for creating a cursor.
         """
         raise NotImplementedError()
 
@@ -100,17 +97,21 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
+    cdef BaseObjectType _get_type(self, str name):
+        """
+        Internal method for returning an object type given its name.
+        """
+        raise NotImplementedError()
+
     cdef str _get_version(self):
         """
-        Return the version associated with the connection. Intended to be
-        overridden by the subclass.
+        Return the version associated with the connection.
         """
         raise NotImplementedError()
 
     cdef int _ping(self) except -1:
         """
-        Internal method for pinging the database. Intended to be overridden by
-        the subclass.
+        Internal method for pinging the database.
         """
         raise NotImplementedError()
 
@@ -122,8 +123,7 @@ cdef class BaseConnection:
 
     cdef int _rollback(self) except -1:
         """
-        Internal method for rolling back the transaction. Intended to be
-        overridden by the subclass.
+        Internal method for rolling back the transaction.
         """
         raise NotImplementedError()
 
@@ -296,6 +296,10 @@ cdef class BaseConnection:
     def external_name(self, value):
         self._verify_connected()
         self._set_external_name(value)
+
+    def gettype(self, name):
+        self._verify_connected()
+        return self._get_type(name)
 
     @property
     def internal_name(self):
