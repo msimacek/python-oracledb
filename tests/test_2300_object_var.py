@@ -118,9 +118,10 @@ class TestCase(base.BaseTestCase):
                 from TestObjects
                 order by IntCol""")
         expected_value = [
-            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
-            ('OBJECTCOL', oracledb.DB_TYPE_OBJECT, None, None, None, None, 1),
-            ('ARRAYCOL', oracledb.DB_TYPE_OBJECT, None, None, None, None, 1)
+            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, False),
+            ('OBJECTCOL', oracledb.DB_TYPE_OBJECT, None, None, None, None,
+             True),
+            ('ARRAYCOL', oracledb.DB_TYPE_OBJECT, None, None, None, None, True)
         ]
         self.assertEqual(self.cursor.description, expected_value)
         expected_value = (

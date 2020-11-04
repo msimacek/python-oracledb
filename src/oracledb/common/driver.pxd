@@ -163,21 +163,29 @@ cdef class BaseDbObjectType:
     cdef:
         readonly str schema
         readonly str name
-        readonly object attributes
+        readonly list attributes
         readonly bint iscollection
-        readonly object element_type
+        readonly BaseConnection _connection
+        readonly dict _attributesByName
+        DbType _element_dbtype
+        BaseDbObjectType _element_objtype
+
+    cdef BaseDbObject _new_object(self)
 
 
 cdef class BaseDbObjectAttr:
     cdef:
         readonly str name
-        readonly object type
         DbType _dbtype
+        BaseDbObjectType _objtype
 
 
 cdef class BaseDbObject:
     cdef:
         readonly BaseDbObjectType type
 
+    cdef object _get_attr_value(self, BaseDbObjectAttr attr)
+    cdef int _set_attr_value(self, BaseDbObjectAttr attr,
+                             object value) except -1
 
 cdef object get_exception_class(int32_t code)

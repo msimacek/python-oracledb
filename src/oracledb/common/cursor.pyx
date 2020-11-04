@@ -692,6 +692,8 @@ cdef class BaseCursor:
         else:
             dbtype = DbType._from_type(typ)
         var._dbtype = dbtype
+        if typename:
+            var._objtype = self.connection._get_type(typename)
         if dbtype.default_size > 0:
             var.size = size or dbtype.default_size
             var.buffer_size = var.size * dbtype._buffer_size_factor

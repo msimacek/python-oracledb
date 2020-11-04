@@ -228,15 +228,21 @@ cdef class Cursor(BaseCursor):
                 message = "expecting variable from output type handler"
                 errors._raise_from_error(TypeError, message)
         type_info = &query_info.typeInfo
-        var = Var.new_var(self.connection, dbtype, self._fetch_array_size,
-                          size)
+        var = Var.__new__(Var, self.connection)
+        var._dbtype = dbtype
+        var.size = size
+        var.num_elements = self._fetch_array_size
         var.precision = type_info.precision
         var.scale = type_info.scale + type_info.fsPrecision
         var.name = name
         var.nulls_allowed = query_info.nullOk
+        if type_info.objectType != NULL:
+            var._objtype = DbObjectType._new_type(self.connection,
+                                                  type_info.objectType)
         if dbtype.num == DPI_ORACLE_TYPE_NUMBER:
             if var.scale == 0 or (var.scale == -127 and var.precision == 0):
                 var._number_as_int = True
+        var._finalize_init()
         return var
 
     cdef object _get_lastrowid(self):

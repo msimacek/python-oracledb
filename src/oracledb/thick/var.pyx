@@ -156,15 +156,3 @@ cdef class Var(BaseVar):
         if not data.isNull:
             _convert_from_python(value, self._dbtype, self._objtype,
                                  &data.value, self, pos)
-
-    @staticmethod
-    cdef Var new_var(Connection connection, DbType dbtype,
-                     uint32_t num_elements, uint32_t size,
-                     bint is_array=False):
-        cdef Var var = Var.__new__(Var, connection)
-        var._dbtype = dbtype
-        var.size = size
-        var.num_elements = num_elements
-        var.is_array = is_array
-        var._finalize_init()
-        return var

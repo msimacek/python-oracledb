@@ -383,7 +383,13 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiObject_addRef(dpiObject *obj) nogil
 
+    int dpiObject_getAttributeValue(dpiObject *obj, dpiObjectAttr *attr,
+            uint32_t nativeTypeNum, dpiData *value) nogil
+
     int dpiObject_release(dpiObject *obj) nogil
+
+    int dpiObject_setAttributeValue(dpiObject *obj, dpiObjectAttr *attr,
+            uint32_t nativeTypeNum, dpiData *value) nogil
 
     int dpiObjectAttr_getInfo(dpiObjectAttr *attr,
             dpiObjectAttrInfo *info) nogil

@@ -91,7 +91,7 @@ cdef int _convert_from_python(object value, DbType dbtype,
 
 cdef object _convert_to_python(Connection connection, DbType dbtype,
                                DbObjectType objtype, dpiDataBuffer *dbvalue,
-                               bint number_as_int):
+                               bint number_as_int=False):
     cdef:
         uint32_t oracle_type = dbtype.num
         dpiTimestamp *as_timestamp
