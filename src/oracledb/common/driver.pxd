@@ -66,7 +66,7 @@ cdef class BaseConnection:
     cdef str _get_internal_name(self)
     cdef bytes _get_ltxid(self)
     cdef uint32_t _get_stmtcachesize(self) except *
-    cdef BaseObjectType _get_type(self, str name)
+    cdef BaseDbObjectType _get_type(self, str name)
     cdef str _get_version(self)
     cdef int _ping(self) except -1
     cdef bint _prepare(self) except *
@@ -146,7 +146,7 @@ cdef class BaseVar:
         readonly bint is_array
         readonly bint nulls_allowed
         DbType _dbtype
-        BaseObjectType _objtype
+        BaseDbObjectType _objtype
 
     cdef int _bind(self, BaseCursor cursor, str name=*,
                    uint32_t pos=*) except -1
@@ -159,7 +159,7 @@ cdef class BaseVar:
     cdef int _set_value(self, uint32_t pos, object value) except -1
 
 
-cdef class BaseObjectType:
+cdef class BaseDbObjectType:
     cdef:
         readonly str schema
         readonly str name
@@ -168,16 +168,16 @@ cdef class BaseObjectType:
         readonly object element_type
 
 
-cdef class BaseObjectAttr:
+cdef class BaseDbObjectAttr:
     cdef:
         readonly str name
         readonly object type
         DbType _dbtype
 
 
-cdef class BaseObject:
+cdef class BaseDbObject:
     cdef:
-        readonly BaseObjectType type
+        readonly BaseDbObjectType type
 
 
 cdef object get_exception_class(int32_t code)

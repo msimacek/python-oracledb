@@ -97,7 +97,7 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
-    cdef BaseObjectType _get_type(self, str name):
+    cdef BaseDbObjectType _get_type(self, str name):
         """
         Internal method for returning an object type given its name.
         """

@@ -73,7 +73,7 @@ cdef class DbType:
         elif isinstance(typ, ApiType):
             apitype = typ
             return apitype.dbtypes[0]
-        elif isinstance(typ, BaseObjectType):
+        elif isinstance(typ, BaseDbObjectType):
             return DB_TYPE_OBJECT
         elif not isinstance(typ, type):
             errors._raise_from_string(TypeError, "expecting type")
@@ -119,6 +119,8 @@ cdef class DbType:
             return DB_TYPE_DATE
         elif isinstance(value, datetime.timedelta):
             return DB_TYPE_INTERVAL_DS
+        elif isinstance(value, BaseDbObject):
+            return DB_TYPE_OBJECT
         else:
             type_name = type(value).__name__
             message = f"Python value of type {type_name} not supported"

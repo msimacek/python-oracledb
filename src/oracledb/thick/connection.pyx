@@ -305,9 +305,9 @@ cdef class Connection(BaseConnection):
             _raise_from_odpi()
         return size
 
-    cdef BaseObjectType _get_type(self, str name):
+    cdef BaseDbObjectType _get_type(self, str name):
         cdef:
-            ObjectType object_type
+            BaseDbObjectType objtype
             dpiObjectType *handle
             const char *name_ptr
             uint32_t name_len
@@ -321,7 +321,9 @@ cdef class Connection(BaseConnection):
                                            &handle)
         if status < 0:
             _raise_from_odpi()
-        return ObjectType._new_type(self, handle)
+        objtype = DbObjectType._new_type(self, handle)
+        dpiObjectType_release(handle)
+        return objtype
 
     cdef str _get_version(self):
         cdef:

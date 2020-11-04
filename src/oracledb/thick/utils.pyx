@@ -8,12 +8,13 @@
 #------------------------------------------------------------------------------
 
 cdef int _convert_from_python(object value, DbType dbtype,
-                              dpiDataBuffer *dbvalue, Var var=None,
-                              uint32_t pos=0) except -1:
+                              BaseDbObjectType objtype, dpiDataBuffer *dbvalue,
+                              Var var=None, uint32_t pos=0) except -1:
     cdef:
         uint32_t oracle_type = dbtype.num
         dpiTimestamp *timestamp
         bytes value_bytes
+        DbObject obj
     if oracle_type == DPI_ORACLE_TYPE_NUMBER:
         if isinstance(value, bool):
             value_bytes = b'1' if value else b'0'
@@ -74,13 +75,23 @@ cdef int _convert_from_python(object value, DbType dbtype,
             dbvalue.asInt64 = 1 if value else 0
         else:
             dbvalue.asInt64 = <int64_t> value
+    elif oracle_type == DPI_ORACLE_TYPE_OBJECT:
+        if not isinstance(value, DbObject):
+            raise TypeError("expecting DbObject")
+        obj = <DbObject> value
+        if var is not None:
+            if dpiVar_setFromObject(var._handle, pos, obj._handle) < 0:
+                _raise_from_odpi()
+        else:
+            dbvalue.asObject = obj._handle
     else:
         errors._raise_from_string(exceptions.NotSupportedError,
                                   f"database type {dbtype} not supported")
 
 
 cdef object _convert_to_python(Connection connection, DbType dbtype,
-                               dpiDataBuffer *dbvalue, bint number_as_int):
+                               DbObjectType objtype, dpiDataBuffer *dbvalue,
+                               bint number_as_int):
     cdef:
         uint32_t oracle_type = dbtype.num
         dpiTimestamp *as_timestamp
@@ -126,6 +137,8 @@ cdef object _convert_to_python(Connection connection, DbType dbtype,
         if dpiRowid_getStringValue(dbvalue.asRowid, &rowid, &rowid_length) < 0:
             _raise_from_odpi()
         return rowid[:rowid_length].decode()
+    elif oracle_type == DPI_ORACLE_TYPE_OBJECT:
+        return DbObject._new_object(objtype, dbvalue.asObject)
     errors._raise_from_string(exceptions.NotSupportedError,
                               f"database type {dbtype} not supported")
 

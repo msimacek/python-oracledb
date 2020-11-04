@@ -189,10 +189,12 @@ cdef class BaseCursor:
         specified value.
         """
         cdef:
+            BaseDbObjectType objtype = None, temp_objtype
             DbType dbtype = None, temp_dbtype
             uint32_t size = 0, temp_size
             object type_handler, result
             bint is_array = False
+            BaseDbObject obj
             BaseVar var
 
         # determine if an input type handler should be used; an input type
@@ -221,10 +223,16 @@ cdef class BaseCursor:
                 temp_dbtype = DbType._from_value(element, &temp_size)
                 if temp_dbtype is None:
                     continue
+                if temp_dbtype is DB_TYPE_OBJECT:
+                    obj = <BaseDbObject> value
+                    temp_objtype = obj.type
+                else:
+                    temp_dbtype = None
                 if dbtype is None:
                     dbtype = temp_dbtype
+                    objtype = temp_objtype
                     size = temp_size
-                elif temp_dbtype is not dbtype:
+                elif temp_dbtype is not dbtype or temp_objtype is not objtype:
                     message = f"element {element} is not the same type as" \
                                "previous elements"
                     errors._raise_from_string(exceptions.NotSuppportedError,
@@ -233,6 +241,9 @@ cdef class BaseCursor:
                     size = temp_size
         else:
             dbtype = DbType._from_value(value, &size, self._is_plsql())
+            if dbtype is DB_TYPE_OBJECT:
+                obj = <BaseDbObject> value
+                objtype = obj.type
         if dbtype is None:
             dbtype = DB_TYPE_VARCHAR
             size = 1
@@ -240,6 +251,7 @@ cdef class BaseCursor:
         # create the variable
         var = self._create_var()
         var._dbtype = dbtype
+        var._objtype = objtype
         var.num_elements = num_elements
         var.is_array = is_array
         var.size = size
@@ -402,7 +414,7 @@ cdef class BaseCursor:
         var = self._create_var()
         var.is_array = True
         var._dbtype = dbtype
-        if isinstance(typ, BaseObjectType):
+        if isinstance(typ, BaseDbObjectType):
             var._objtype = typ
         if dbtype.default_size > 0:
             var.size = size or dbtype.default_size
@@ -674,7 +686,7 @@ cdef class BaseCursor:
             DbType dbtype
             BaseVar var
         var = self._create_var()
-        if isinstance(typ, BaseObjectType):
+        if isinstance(typ, BaseDbObjectType):
             var._objtype = typ
             dbtype = DB_TYPE_OBJECT
         else:

@@ -381,12 +381,16 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiContext_initConnCreateParams(const dpiContext *context,
             dpiConnCreateParams *params) nogil
 
+    int dpiObject_addRef(dpiObject *obj) nogil
+
     int dpiObject_release(dpiObject *obj) nogil
 
     int dpiObjectAttr_getInfo(dpiObjectAttr *attr,
             dpiObjectAttrInfo *info) nogil
 
     int dpiObjectAttr_release(dpiObjectAttr *attr) nogil
+
+    int dpiObjectType_addRef(dpiObjectType *objType) nogil
 
     int dpiObjectType_createObject(dpiObjectType *objType,
             dpiObject **obj) nogil
@@ -462,3 +466,5 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiVar_setFromBytes(dpiVar *var, uint32_t pos, const char *value,
             uint32_t valueLength) nogil
+
+    int dpiVar_setFromObject(dpiVar *var, uint32_t pos, dpiObject *obj) nogil

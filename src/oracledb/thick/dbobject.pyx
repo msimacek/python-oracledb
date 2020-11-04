@@ -8,7 +8,7 @@
 # (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
-cdef class ObjectType(BaseObjectType):
+cdef class DbObjectType(BaseDbObjectType):
     cdef:
         Connection _connection
         dpiObjectType *_handle
@@ -18,31 +18,33 @@ cdef class ObjectType(BaseObjectType):
             dpiObjectType_release(self._handle)
 
     @staticmethod
-    cdef ObjectType _new_type(Connection connection, dpiObjectType *handle):
+    cdef DbObjectType _new_type(Connection connection, dpiObjectType *handle):
         cdef:
             dpiObjectAttr **attributes
             dpiObjectTypeInfo info
-            ObjectType object_type
+            DbObjectType objtype
             object typ
-        object_type = ObjectType.__new__(ObjectType)
-        object_type._handle = handle
+        objtype = DbObjectType.__new__(DbObjectType)
+        if dpiObjectType_addRef(handle) < 0:
+            _raise_from_odpi()
+        objtype._handle = handle
         if dpiObjectType_getInfo(handle, &info) < 0:
             _raise_from_odpi()
-        object_type.schema = info.schema[:info.schemaLength].decode()
-        object_type.name = info.name[:info.nameLength].decode()
-        object_type.iscollection = info.isCollection
-        if object_type.iscollection:
+        objtype.schema = info.schema[:info.schemaLength].decode()
+        objtype.name = info.name[:info.nameLength].decode()
+        objtype.iscollection = info.isCollection
+        if objtype.iscollection:
             if info.elementTypeInfo.objectType != NULL:
-                typ = ObjectType._new_type(connection,
-                                           info.elementTypeInfo.objectType)
+                typ = DbObjectType._new_type(connection,
+                                             info.elementTypeInfo.objectType)
             else:
                 typ = DbType._from_num(info.elementTypeInfo.oracleTypeNum)
-            object_type.element_type = typ
-        object_type.attributes = [None] * info.numAttributes
-        return object_type
+            objtype.element_type = typ
+        objtype.attributes = [None] * info.numAttributes
+        return objtype
 
 
-cdef class ObjectAttr(BaseObjectAttr):
+cdef class DbObjectAttr(BaseDbObjectAttr):
     cdef:
         dpiObjectAttr *_handle
 
@@ -51,10 +53,19 @@ cdef class ObjectAttr(BaseObjectAttr):
             dpiObjectAttr_release(self._handle)
 
 
-cdef class Object(BaseObject):
+cdef class DbObject(BaseDbObject):
     cdef:
         dpiObject *_handle
 
     def __dealloc__(self):
         if self._handle != NULL:
             dpiObject_release(self._handle)
+
+    @staticmethod
+    cdef DbObject _new_object(DbObjectType objtype, dpiObject *handle):
+        cdef DbObject obj = DbObject.__new__(DbObject)
+        obj.type = objtype
+        if dpiObject_addRef(handle) < 0:
+            _raise_from_odpi()
+        obj._handle = handle
+        return obj
