@@ -225,24 +225,33 @@ cdef class DbObject(BaseDbObject):
         cdef:
             DbObjectAttr a = <DbObjectAttr> attr
             StringBuffer buf = StringBuffer()
+            uint32_t native_type_num
             dpiData data
         self._convert_from_python(value, a._dbtype, a._objtype, &data, buf)
+        native_type_num = a._native_type_num
+        if native_type_num == DPI_NATIVE_TYPE_LOB \
+                and not isinstance(value, Lob):
+            native_type_num = DPI_NATIVE_TYPE_BYTES
         if dpiObject_setAttributeValue(self._handle, a._handle,
-                                       a._native_type_num, &data) < 0:
+                                       native_type_num, &data) < 0:
             _raise_from_odpi()
 
     cdef int _set_element_by_index(self, int32_t index,
                                    object value) except -1:
         cdef:
             StringBuffer buf = StringBuffer()
+            uint32_t native_type_num
             DbObjectType objtype
             dpiData data
         objtype = self.type
         self._convert_from_python(value, objtype._element_dbtype,
                                   objtype._element_objtype, &data, buf)
+        native_type_num = objtype._element_native_type_num
+        if native_type_num == DPI_NATIVE_TYPE_LOB \
+                and not isinstance(value, Lob):
+            native_typeNum = DPI_NATIVE_TYPE_BYTES
         if dpiObject_setElementValueByIndex(self._handle, index,
-                                            objtype._element_native_type_num,
-                                            &data) < 0:
+                                            native_type_num, &data) < 0:
             _raise_from_odpi()
 
     cdef int _trim(self, int32_t num_to_trim) except -1:

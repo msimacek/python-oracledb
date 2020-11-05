@@ -54,8 +54,12 @@ cdef int _convert_from_python(object value, DbType dbtype,
             or oracle_type == DPI_ORACLE_TYPE_LONG_RAW:
         if not isinstance(value, bytes):
             raise TypeError("expecting bytes")
+        buf.set_value(value)
         if var is not None:
             var._set_from_bytes(pos, value)
+        else:
+            dbvalue.asBytes.ptr = buf.ptr
+            dbvalue.asBytes.length = buf.length
     elif oracle_type == DPI_ORACLE_TYPE_DATE \
             or oracle_type == DPI_ORACLE_TYPE_TIMESTAMP \
             or oracle_type == DPI_ORACLE_TYPE_TIMESTAMP_LTZ \
