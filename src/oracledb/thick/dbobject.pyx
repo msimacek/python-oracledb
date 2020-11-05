@@ -107,6 +107,28 @@ cdef class DbObject(BaseDbObject):
         if self._handle != NULL:
             dpiObject_release(self._handle)
 
+    cdef int _append(self, object value) except -1:
+        cdef:
+            StringBuffer buf = StringBuffer()
+            DbObjectType objtype
+            dpiData data
+        objtype = self.type
+        self._convert_from_python(value, objtype._element_dbtype,
+                                  objtype._element_objtype, &data, buf)
+        if dpiObject_appendElement(self._handle,
+                                   objtype._element_native_type_num,
+                                   &data) < 0:
+            _raise_from_odpi()
+
+    cdef int _convert_from_python(self, object value, DbType dbtype,
+                                  DbObjectType objtype, dpiData *data,
+                                  StringBuffer buf):
+        if value is None:
+            data.isNull = 1
+        else:
+            data.isNull = 0
+            _convert_from_python(value, dbtype, objtype, &data.value, buf)
+
     cdef object _get_attr_value(self, BaseDbObjectAttr attr):
         cdef:
             DbObjectAttr a = <DbObjectAttr> attr
@@ -140,12 +162,7 @@ cdef class DbObject(BaseDbObject):
             DbObjectAttr a = <DbObjectAttr> attr
             StringBuffer buf = StringBuffer()
             dpiData data
-        if value is None:
-            data.isNull = 1
-        else:
-            data.isNull = 0
-            _convert_from_python(value, a._dbtype, a._objtype, &data.value,
-                                 buf)
+        self._convert_from_python(value, a._dbtype, a._objtype, &data, buf)
         if dpiObject_setAttributeValue(self._handle, a._handle,
                                        a._native_type_num, &data) < 0:
             _raise_from_odpi()

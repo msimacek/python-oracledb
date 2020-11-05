@@ -185,6 +185,7 @@ cdef class BaseDbObject:
     cdef:
         readonly BaseDbObjectType type
 
+    cdef int _append(self, object value) except -1
     cdef object _get_attr_value(self, BaseDbObjectAttr attr)
     cdef int _set_attr_value(self, BaseDbObjectAttr attr,
                              object value) except -1

@@ -63,6 +63,12 @@ cdef class BaseDbObject:
         attr = self.type._attributesByName[name]
         self._set_attr_value(attr, value)
 
+    cdef int _append(self, object value) except -1:
+        """
+        Internal method for appending a value to a collection object.
+        """
+        raise NotImplementedError()
+
     cdef object _get_attr_value(self, BaseDbObjectAttr attr):
         """
         Internal method for getting an attribute value.
@@ -75,3 +81,6 @@ cdef class BaseDbObject:
         Internal method for setting an attribute value.
         """
         raise NotImplementedError()
+
+    def append(self, value):
+        self._append(value)
