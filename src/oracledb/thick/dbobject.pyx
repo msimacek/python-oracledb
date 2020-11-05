@@ -120,6 +120,25 @@ cdef class DbObject(BaseDbObject):
                                    &data) < 0:
             _raise_from_odpi()
 
+    cdef object _copy(self):
+        cdef dpiObject *copied_handle
+        if dpiObject_copy(self._handle, &copied_handle) < 0:
+            _raise_from_odpi()
+        try:
+            return DbObject._new_object(self.type, copied_handle)
+        finally:
+            dpiObject_release(copied_handle)
+
+    cdef int _delete_by_index(self, int32_t index) except -1:
+        if dpiObject_deleteElementByIndex(self._handle, index) < 0:
+            _raise_from_odpi()
+
+    cdef bint _exists_by_index(self, int32_t index) except *:
+        cdef bint exists
+        if dpiObject_getElementExistsByIndex(self._handle, index, &exists) < 0:
+            _raise_from_odpi()
+        return exists
+
     cdef int _convert_from_python(self, object value, DbType dbtype,
                                   DbObjectType objtype, dpiData *data,
                                   StringBuffer buf):
@@ -147,6 +166,51 @@ cdef class DbObject(BaseDbObject):
         return _convert_to_python(self.type._connection, a._dbtype, a._objtype,
                                   &data.value)
 
+    cdef object _get_element_by_index(self, int32_t index):
+        cdef:
+            char number_as_string_buffer[200]
+            DbObjectType objtype
+            dpiData data
+        objtype = self.type
+        if objtype._element_native_type_num == DPI_NATIVE_TYPE_BYTES \
+                and objtype._element_dbtype.num == DPI_ORACLE_TYPE_NUMBER:
+            data.value.asBytes.ptr = number_as_string_buffer
+            data.value.asBytes.length = sizeof(number_as_string_buffer)
+            data.value.asBytes.encoding = NULL
+        if dpiObject_getElementValueByIndex(self._handle, index,
+                                            objtype._element_native_type_num,
+                                            &data) < 0:
+            _raise_from_odpi()
+        if data.isNull:
+            return None
+        return _convert_to_python(self.type._connection,
+                                  objtype._element_dbtype,
+                                  objtype._element_objtype, &data.value)
+
+    cdef int _get_first_index(self, int32_t* index, bint* exists) except -1:
+        if dpiObject_getFirstIndex(self._handle, index, exists) < 0:
+            _raise_from_odpi()
+
+    cdef int _get_last_index(self, int32_t* index, bint* exists) except -1:
+        if dpiObject_getLastIndex(self._handle, index, exists) < 0:
+            _raise_from_odpi()
+
+    cdef int _get_next_index(self, int32_t index, int32_t* next_index,
+                             bint* exists) except -1:
+        if dpiObject_getNextIndex(self._handle, index, next_index, exists) < 0:
+            _raise_from_odpi()
+
+    cdef int _get_prev_index(self, int32_t index, int32_t* prev_index,
+                             bint* exists) except -1:
+        if dpiObject_getPrevIndex(self._handle, index, prev_index, exists) < 0:
+            _raise_from_odpi()
+
+    cdef int32_t _get_size(self) except *:
+        cdef int32_t size
+        if dpiObject_getSize(self._handle, &size) < 0:
+            _raise_from_odpi()
+        return size
+
     @staticmethod
     cdef DbObject _new_object(DbObjectType objtype, dpiObject *handle):
         cdef DbObject obj = DbObject.__new__(DbObject)
@@ -165,4 +229,22 @@ cdef class DbObject(BaseDbObject):
         self._convert_from_python(value, a._dbtype, a._objtype, &data, buf)
         if dpiObject_setAttributeValue(self._handle, a._handle,
                                        a._native_type_num, &data) < 0:
+            _raise_from_odpi()
+
+    cdef int _set_element_by_index(self, int32_t index,
+                                   object value) except -1:
+        cdef:
+            StringBuffer buf = StringBuffer()
+            DbObjectType objtype
+            dpiData data
+        objtype = self.type
+        self._convert_from_python(value, objtype._element_dbtype,
+                                  objtype._element_objtype, &data, buf)
+        if dpiObject_setElementValueByIndex(self._handle, index,
+                                            objtype._element_native_type_num,
+                                            &data) < 0:
+            _raise_from_odpi()
+
+    cdef int _trim(self, int32_t num_to_trim) except -1:
+        if dpiObject_trim(self._handle, num_to_trim) < 0:
             _raise_from_odpi()

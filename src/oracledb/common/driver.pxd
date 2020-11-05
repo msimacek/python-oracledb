@@ -186,8 +186,21 @@ cdef class BaseDbObject:
         readonly BaseDbObjectType type
 
     cdef int _append(self, object value) except -1
+    cdef object _copy(self)
+    cdef int _delete_by_index(self, int32_t index) except -1
+    cdef bint _exists_by_index(self, int32_t index) except *
     cdef object _get_attr_value(self, BaseDbObjectAttr attr)
+    cdef object _get_element_by_index(self, int32_t index)
+    cdef int _get_first_index(self, int32_t* index, bint* exists) except -1
+    cdef int _get_last_index(self, int32_t* index, bint* exists) except -1
+    cdef int _get_next_index(self, int32_t index, int32_t* next_index,
+                             bint* exists) except -1
+    cdef int _get_prev_index(self, int32_t index, int32_t* prev_index,
+                             bint* exists) except -1
+    cdef int32_t _get_size(self) except *
     cdef int _set_attr_value(self, BaseDbObjectAttr attr,
                              object value) except -1
+    cdef int _set_element_by_index(self, int32_t index, object value) except -1
+    cdef int _trim(self, int32_t num_to_trim) except -1
 
 cdef object get_exception_class(int32_t code)

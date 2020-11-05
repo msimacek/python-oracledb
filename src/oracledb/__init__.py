@@ -12,6 +12,9 @@ from .constructors import *
 from .common.driver import *
 from .thick.driver import clientversion, init_oracle_client
 
+ObjectType = BaseDbObjectType
+Object = BaseDbObject
+
 # future object used for managing backwards incompatible changes
 class Future:
 

@@ -386,13 +386,42 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiObject_appendElement(dpiObject *obj, uint32_t nativeTypeNum,
             dpiData *value) nogil
 
+    int dpiObject_copy(dpiObject *obj, dpiObject **copiedObj) nogil
+
+    int dpiObject_deleteElementByIndex(dpiObject *obj, int32_t index) nogil
+
     int dpiObject_getAttributeValue(dpiObject *obj, dpiObjectAttr *attr,
             uint32_t nativeTypeNum, dpiData *value) nogil
+
+    int dpiObject_getElementExistsByIndex(dpiObject *obj, int32_t index,
+            bint *exists) nogil
+
+    int dpiObject_getElementValueByIndex(dpiObject *obj, int32_t index,
+            uint32_t nativeTypeNum, dpiData *value) nogil
+
+    int dpiObject_getFirstIndex(dpiObject *obj, int32_t *index,
+            bint *exists) nogil
+
+    int dpiObject_getLastIndex(dpiObject *obj, int32_t *index,
+            bint *exists) nogil
+
+    int dpiObject_getNextIndex(dpiObject *obj, int32_t index,
+            int32_t *nextIndex, bint *exists) nogil
+
+    int dpiObject_getPrevIndex(dpiObject *obj, int32_t index,
+            int32_t *prevIndex, bint *exists) nogil
+
+    int dpiObject_getSize(dpiObject *obj, int32_t *size) nogil
 
     int dpiObject_release(dpiObject *obj) nogil
 
     int dpiObject_setAttributeValue(dpiObject *obj, dpiObjectAttr *attr,
             uint32_t nativeTypeNum, dpiData *value) nogil
+
+    int dpiObject_setElementValueByIndex(dpiObject *obj, int32_t index,
+            uint32_t nativeTypeNum, dpiData *value) nogil
+
+    int dpiObject_trim(dpiObject *obj, uint32_t numToTrim) nogil
 
     int dpiObjectAttr_getInfo(dpiObjectAttr *attr,
             dpiObjectAttrInfo *info) nogil
