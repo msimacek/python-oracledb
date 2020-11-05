@@ -12,6 +12,7 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 
 import datetime
 import decimal
+import sys
 
 from .. import errors, exceptions
 
@@ -77,4 +78,5 @@ include "connection.pyx"
 include "cursor.pyx"
 include "var.pyx"
 include "dbobject.pyx"
+include "lob.pyx"
 include "types.pyx"

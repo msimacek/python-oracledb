@@ -12,6 +12,7 @@ from .constructors import *
 from .common.driver import *
 from .thick.driver import clientversion, init_oracle_client
 
+LOB = BaseLob
 ObjectType = BaseDbObjectType
 Object = BaseDbObject
 

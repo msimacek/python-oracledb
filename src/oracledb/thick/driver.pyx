@@ -23,6 +23,7 @@ from .. import constants, errors, exceptions
 from ..common.driver cimport get_exception_class
 from ..common.driver cimport BaseConnection, BaseCursor, BaseVar, DbType
 from ..common.driver cimport BaseDbObjectType, BaseDbObjectAttr, BaseDbObject
+from ..common.driver cimport BaseLob
 from libc.string cimport memchr, memset
 
 include "odpi.pxd"
@@ -34,6 +35,7 @@ client_version = None
 include "buffer.pyx"
 include "connection.pyx"
 include "cursor.pyx"
+include "lob.pyx"
 include "var.pyx"
 include "dbobject.pyx"
 include "utils.pyx"

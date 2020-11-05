@@ -322,6 +322,8 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiConn_getStmtCacheSize(dpiConn *conn, uint32_t *cacheSize) nogil
 
+    int dpiConn_newTempLob(dpiConn *conn, uint32_t lobType, dpiLob **lob) nogil
+
     int dpiConn_newVar(dpiConn *conn, uint32_t oracleTypeNum,
             uint32_t nativeTypeNum, uint32_t maxArraySize, uint32_t size,
             int sizeIsBytes, int isArray, dpiObjectType *objType, dpiVar **var,
@@ -380,6 +382,44 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiContext_initConnCreateParams(const dpiContext *context,
             dpiConnCreateParams *params) nogil
+
+    int dpiLob_addRef(dpiLob *lob) nogil
+
+    int dpiLob_closeResource(dpiLob *lob) nogil
+
+    int dpiLob_getBufferSize(dpiLob *lob, uint64_t sizeInChars,
+            uint64_t *sizeInBytes) nogil
+
+    int dpiLob_getChunkSize(dpiLob *lob, uint32_t *size) nogil
+
+    int dpiLob_getDirectoryAndFileName(dpiLob *lob,
+            const char **directoryAlias, uint32_t *directoryAliasLength,
+            const char **fileName, uint32_t *fileNameLength) nogil
+
+    int dpiLob_getFileExists(dpiLob *lob, bint *exists) nogil
+
+    int dpiLob_getIsResourceOpen(dpiLob *lob, bint *isOpen) nogil
+
+    int dpiLob_getSize(dpiLob *lob, uint64_t *size) nogil
+
+    int dpiLob_openResource(dpiLob *lob) nogil
+
+    int dpiLob_readBytes(dpiLob *lob, uint64_t offset, uint64_t amount,
+            char *value, uint64_t *valueLength) nogil
+
+    int dpiLob_release(dpiLob *lob) nogil
+
+    int dpiLob_setDirectoryAndFileName(dpiLob *lob,
+            const char *directoryAlias, uint32_t directoryAliasLength,
+            const char *fileName, uint32_t fileNameLength) nogil
+
+    int dpiLob_setFromBytes(dpiLob *lob, const char *value,
+            uint64_t valueLength) nogil
+
+    int dpiLob_trim(dpiLob *lob, uint64_t newSize) nogil
+
+    int dpiLob_writeBytes(dpiLob *lob, uint64_t offset,
+            const char *value, uint64_t valueLength) nogil
 
     int dpiObject_addRef(dpiObject *obj) nogil
 
@@ -504,5 +544,7 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiVar_setFromBytes(dpiVar *var, uint32_t pos, const char *value,
             uint32_t valueLength) nogil
+
+    int dpiVar_setFromLob(dpiVar *var, uint32_t pos, dpiLob *lob) nogil
 
     int dpiVar_setFromObject(dpiVar *var, uint32_t pos, dpiObject *obj) nogil

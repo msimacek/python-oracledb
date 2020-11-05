@@ -15,6 +15,8 @@ cdef int _convert_from_python(object value, DbType dbtype,
         uint32_t oracle_type = dbtype.num
         dpiTimestamp *timestamp
         DbObject obj
+        int status
+        Lob lob
     if oracle_type == DPI_ORACLE_TYPE_NUMBER:
         if isinstance(value, bool):
             if value:
@@ -90,6 +92,27 @@ cdef int _convert_from_python(object value, DbType dbtype,
                 _raise_from_odpi()
         else:
             dbvalue.asObject = obj._handle
+    elif oracle_type == DPI_ORACLE_TYPE_CLOB \
+            or oracle_type == DPI_ORACLE_TYPE_BLOB \
+            or oracle_type == DPI_ORACLE_TYPE_NCLOB:
+        if isinstance(value, Lob):
+            lob = <Lob> value
+            if var is not None:
+                if dpiVar_setFromLob(var._handle, pos, lob._handle) < 0:
+                    _raise_from_odpi()
+            else:
+                dbvalue.asLOB = lob._handle
+        else:
+            buf.set_value(value)
+            if var is not None:
+                with nogil:
+                    status = dpiLob_setFromBytes(dbvalue.asLOB, buf.ptr,
+                                                 buf.length)
+                if status < 0:
+                    _raise_from_odpi()
+            else:
+                dbvalue.asBytes.ptr = buf.ptr
+                dbvalue.asBytes.length = buf.length
     else:
         errors._raise_from_string(exceptions.NotSupportedError,
                                   f"database type {dbtype} not supported")
@@ -143,6 +166,11 @@ cdef object _convert_to_python(Connection connection, DbType dbtype,
         if dpiRowid_getStringValue(dbvalue.asRowid, &rowid, &rowid_length) < 0:
             _raise_from_odpi()
         return rowid[:rowid_length].decode()
+    elif oracle_type == DPI_ORACLE_TYPE_CLOB \
+            or oracle_type == DPI_ORACLE_TYPE_BLOB \
+            or oracle_type == DPI_ORACLE_TYPE_NCLOB \
+            or oracle_type == DPI_ORACLE_TYPE_BFILE:
+        return Lob._new_lob(connection, dbtype, dbvalue.asLOB)
     elif oracle_type == DPI_ORACLE_TYPE_OBJECT:
         return DbObject._new_object(objtype, dbvalue.asObject)
     errors._raise_from_string(exceptions.NotSupportedError,

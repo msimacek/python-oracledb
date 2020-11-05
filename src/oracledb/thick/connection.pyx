@@ -255,6 +255,19 @@ cdef class Connection(BaseConnection):
             _raise_from_odpi()
         self._is_connected = True
 
+    cdef BaseLob _create_temp_lob(self, DbType dbtype):
+        cdef:
+            dpiLob *handle
+            int status
+        with nogil:
+            status = dpiConn_newTempLob(self._handle, dbtype.num, &handle)
+        if status < 0:
+            _raise_from_odpi()
+        try:
+            return Lob._new_lob(self, dbtype, handle)
+        finally:
+            dpiLob_release(handle)
+
     cdef str _get_current_schema(self):
         cdef:
             uint32_t value_length

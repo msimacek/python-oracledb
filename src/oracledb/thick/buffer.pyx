@@ -10,7 +10,7 @@
 cdef class StringBuffer:
     cdef:
         bytes obj
-        const char *ptr
+        char *ptr
         uint32_t length
         uint32_t size_in_chars
 

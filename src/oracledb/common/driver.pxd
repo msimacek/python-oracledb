@@ -60,6 +60,7 @@ cdef class BaseConnection:
     cdef int _close(self) except -1
     cdef int _commit(self) except -1
     cdef BaseCursor _create_cursor(self)
+    cdef BaseLob _create_temp_lob(self, DbType dbtype)
     cdef str _get_current_schema(self)
     cdef str _get_edition(self)
     cdef str _get_external_name(self)
@@ -172,6 +173,24 @@ cdef class BaseDbObjectType:
         BaseDbObjectType _element_objtype
 
     cdef BaseDbObject _new_object(self)
+
+
+cdef class BaseLob:
+    cdef:
+        readonly DbType type
+        readonly BaseConnection _connection
+
+    cdef int _close(self) except -1
+    cdef int _file_exists(self, bint* exists) except -1
+    cdef int _get_chunk_size(self, uint32_t* size) except -1
+    cdef object _get_file_name(self)
+    cdef int _get_is_open(self, bint* is_open) except -1
+    cdef int _open(self) except -1
+    cdef object _read(self, uint64_t offset, uint64_t amount)
+    cdef int _set_file_name(self, str dir_alias, str name) except -1
+    cdef int _get_size(self, uint64_t* size) except -1
+    cdef int _trim(self, uint64_t new_size=*) except -1
+    cdef int _write(self, object value, uint64_t offset) except -1
 
 
 cdef class BaseDbObjectAttr:

@@ -61,6 +61,12 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
+    cdef BaseLob _create_temp_lob(self, DbType dbtype):
+        """
+        Internal method for creating a temporary LOB.
+        """
+        raise NotImplementedError()
+
     cdef str _get_current_schema(self):
         """
         Internal method for returning the current schema.
@@ -235,6 +241,17 @@ cdef class BaseConnection:
         cursor = self._create_cursor()
         cursor.scrollable = scrollable
         return cursor
+
+    def createlob(self, lob_type):
+        """
+        Create and return a new temporary LOB of the specified type.
+        """
+        self._verify_connected()
+        if lob_type not in (DB_TYPE_CLOB, DB_TYPE_NCLOB, DB_TYPE_BLOB):
+            message = "parameter should be one of oracledb.DB_TYPE_CLOB, " \
+                      "oracledb.DB_TYPE_BLOB or oracledb.DB_TYPE_NCLOB"
+            raise TypeError(message)
+        return self._create_temp_lob(lob_type)
 
     @property
     def action(self):

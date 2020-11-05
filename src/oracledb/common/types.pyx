@@ -101,6 +101,7 @@ cdef class DbType:
 
     @staticmethod
     cdef DbType _from_value(object value, uint32_t *size, bint is_plsql=True):
+        cdef BaseLob lob
         if value is None:
             return None
         elif isinstance(value, bool):
@@ -121,6 +122,9 @@ cdef class DbType:
             return DB_TYPE_INTERVAL_DS
         elif isinstance(value, BaseDbObject):
             return DB_TYPE_OBJECT
+        elif isinstance(value, BaseLob):
+            lob = <BaseLob> value
+            return lob.type
         else:
             type_name = type(value).__name__
             message = f"Python value of type {type_name} not supported"
