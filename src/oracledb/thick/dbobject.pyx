@@ -120,6 +120,8 @@ cdef class DbObject(BaseDbObject):
         if dpiObject_getAttributeValue(self._handle, a._handle,
                                        a._native_type_num, &data) < 0:
             _raise_from_odpi()
+        if data.isNull:
+            return None
         return _convert_to_python(self.type._connection, a._dbtype, a._objtype,
                                   &data.value)
 
@@ -136,8 +138,14 @@ cdef class DbObject(BaseDbObject):
                              object value) except -1:
         cdef:
             DbObjectAttr a = <DbObjectAttr> attr
+            StringBuffer buf = StringBuffer()
             dpiData data
-        _convert_from_python(value, a._dbtype, a._objtype, &data.value)
+        if value is None:
+            data.isNull = 1
+        else:
+            data.isNull = 0
+            _convert_from_python(value, a._dbtype, a._objtype, &data.value,
+                                 buf)
         if dpiObject_setAttributeValue(self._handle, a._handle,
                                        a._native_type_num, &data) < 0:
             _raise_from_odpi()

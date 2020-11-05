@@ -120,7 +120,7 @@ cdef class BaseVar:
             scale = self.scale
         else:
             scale = precision = None
-        return (self.name, self.type, display_size or None,
+        return (self.name, self._dbtype, display_size or None,
                 size_in_bytes or None, precision, scale, self.nulls_allowed)
 
     def getvalue(self, pos=0):

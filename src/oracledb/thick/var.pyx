@@ -147,6 +147,7 @@ cdef class Var(BaseVar):
 
     cdef int _set_single_value(self, uint32_t pos, object value) except -1:
         cdef:
+            StringBuffer buf = StringBuffer()
             dpiData *data
             object x
         if self.inconverter:
@@ -155,4 +156,4 @@ cdef class Var(BaseVar):
         data.isNull = (value is None)
         if not data.isNull:
             _convert_from_python(value, self._dbtype, self._objtype,
-                                 &data.value, self, pos)
+                                 &data.value, buf, self, pos)

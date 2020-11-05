@@ -9,21 +9,24 @@
 
 cdef int _convert_from_python(object value, DbType dbtype,
                               BaseDbObjectType objtype, dpiDataBuffer *dbvalue,
-                              Var var=None, uint32_t pos=0) except -1:
+                              StringBuffer buf, Var var=None,
+                              uint32_t pos=0) except -1:
     cdef:
         uint32_t oracle_type = dbtype.num
         dpiTimestamp *timestamp
-        bytes value_bytes
         DbObject obj
     if oracle_type == DPI_ORACLE_TYPE_NUMBER:
         if isinstance(value, bool):
-            value_bytes = b'1' if value else b'0'
+            if value:
+                buf.set_value("1")
+            else:
+                buf.set_value("0")
         elif isinstance(value, (int, float, decimal.Decimal)):
-            value_bytes = str(value).encode()
+            buf.set_value(str(value))
         else:
             raise TypeError("expecting number")
-        if var is not None:
-            var._set_from_bytes(pos, value_bytes)
+        dbvalue.asBytes.ptr = buf.ptr
+        dbvalue.asBytes.length = buf.length
     elif oracle_type == DPI_ORACLE_TYPE_NATIVE_DOUBLE \
             or oracle_type == DPI_ORACLE_TYPE_NATIVE_FLOAT:
         if not isinstance(value, (float, int, decimal.Decimal)):
@@ -39,9 +42,12 @@ cdef int _convert_from_python(object value, DbType dbtype,
             or oracle_type == DPI_ORACLE_TYPE_LONG_VARCHAR:
         if not isinstance(value, str):
             raise TypeError("expecting str")
-        value_bytes = value.encode()
+        buf.set_value(value)
         if var is not None:
-            var._set_from_bytes(pos, value_bytes)
+            var._set_from_bytes(pos, buf.obj)
+        else:
+            dbvalue.asBytes.ptr = buf.ptr
+            dbvalue.asBytes.length = buf.length
     elif oracle_type == DPI_ORACLE_TYPE_RAW \
             or oracle_type == DPI_ORACLE_TYPE_LONG_RAW:
         if not isinstance(value, bytes):
