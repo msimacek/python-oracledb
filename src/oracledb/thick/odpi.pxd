@@ -515,6 +515,9 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiStmt_getBindNames(dpiStmt *stmt, uint32_t *numBindNames,
             const char **bindNames, uint32_t *bindNameLengths) nogil
 
+    int dpiStmt_getImplicitResult(dpiStmt *stmt,
+            dpiStmt **implicitResult) nogil
+
     int dpiStmt_getNumQueryColumns(dpiStmt *stmt,
             uint32_t *numQueryColumns) nogil
 

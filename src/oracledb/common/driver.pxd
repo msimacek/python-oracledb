@@ -125,6 +125,7 @@ cdef class BaseCursor:
     cdef object _get_batch_errors(self)
     cdef BaseVar _get_bind_var(self, uint32_t num_elements, uint32_t pos,
                                object value, BaseVar orig_var)
+    cdef object _get_implicit_results(self)
     cdef object _get_lastrowid(self)
     cdef bint _is_plsql(self)
     cdef bint _is_query(self) except *

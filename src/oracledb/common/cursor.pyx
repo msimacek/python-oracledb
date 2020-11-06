@@ -336,6 +336,13 @@ cdef class BaseCursor:
         var._set_value(pos, value)
         return var
 
+    cdef object _get_implicit_results(self):
+        """
+        Internal method for returning a list of cursors corresponding to the
+        implicit results made available from a PL/SQL block or procedure.
+        """
+        raise NotImplementedError()
+
     cdef object _get_lastrowid(self):
         """
         Internal method for returning the last rowid associated with a cursor.
@@ -626,6 +633,14 @@ cdef class BaseCursor:
         Populates the batch error list with error objects.
         """
         return self._get_batch_errors()
+
+    def getimplicitresults(self):
+        """
+        returning a list of cursors corresponding to the implicit results made
+        available from a PL/SQL block or procedure.
+        """
+        self._verify_open()
+        return self._get_implicit_results()
 
     @property
     def lastrowid(self):

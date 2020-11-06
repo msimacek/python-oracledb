@@ -245,6 +245,25 @@ cdef class Cursor(BaseCursor):
         var._finalize_init()
         return var
 
+    cdef object _get_implicit_results(self):
+        cdef:
+            Cursor child_cursor
+            dpiStmt *child_stmt
+            list result = []
+        if self._handle == NULL:
+            errors._raise_from_string(exceptions.InterfaceError,
+                                      "no statement executed")
+        while True:
+            if dpiStmt_getImplicitResult(self._handle, &child_stmt) < 0:
+                _raise_from_odpi()
+            if child_stmt == NULL:
+                break
+            child_cursor = Cursor.__new__(Cursor, self.connection)
+            child_cursor._handle = child_stmt
+            child_cursor._fixup_ref_cursor = True
+            result.append(child_cursor)
+        return result
+
     cdef object _get_lastrowid(self):
         cdef:
             uint32_t rowid_length
