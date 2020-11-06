@@ -507,7 +507,9 @@ cdef class BaseCursor:
                 and not isinstance(parameters, (list, tuple, dict)):
             errors._raise_from_string(exceptions.InterfaceError,
                     "expecting a dictionary, list or tuple, or keyword args")
-        if self._bind_vars is not None and parameters is not None:
+        prepare_needed = statement and statement != self.statement
+        if not (prepare_needed and not self._set_input_sizes) \
+                and self._bind_vars is not None and parameters is not None:
             if isinstance(self._bind_vars, dict) \
                     and not isinstance(parameters, dict) \
                     or isinstance(self._bind_vars, list) \
@@ -517,7 +519,7 @@ cdef class BaseCursor:
 
         # prepare statement, if necessary
         self._verify_open()
-        if statement and statement != self.statement:
+        if prepare_needed:
             self._fetch_vars = None
             if not self._set_input_sizes:
                 self._bind_vars = None
