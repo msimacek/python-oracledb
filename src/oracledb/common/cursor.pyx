@@ -349,6 +349,13 @@ cdef class BaseCursor:
         """
         raise NotImplementedError()
 
+    cdef bint _is_query(self) except *:
+        """
+        Internal method that indicates whether the currently statement is a
+        query or not.
+        """
+        raise NotImplementedError()
+
     cdef int _parse(self) except -1:
         """
         Internal method for parsing the currently prepared statement without
@@ -389,7 +396,7 @@ cdef class BaseCursor:
         Verifies that fetching is possible from this cursor.
         """
         self._verify_open()
-        if not self._fetch_vars:
+        if not self._is_query():
             errors._raise_from_string(exceptions.InterfaceError, "not a query")
 
     cdef int _verify_open(self) except -1:
@@ -479,9 +486,8 @@ cdef class BaseCursor:
 
     @property
     def description(self):
-        if self._fetch_vars is None:
-            return None
-        return [v.description for v in self._fetch_vars]
+        if self._is_query():
+            return [v.description for v in self._fetch_vars]
 
     def execute(self, statement=None, parameters=None, **keyword_parameters):
         """

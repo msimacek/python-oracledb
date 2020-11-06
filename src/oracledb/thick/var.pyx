@@ -136,6 +136,30 @@ cdef class Var(BaseVar):
         for i in range(num_elements):
             self._set_single_value(i, value[i])
 
+    cdef int _set_cursor_value(self, Cursor cursor, uint32_t pos) except -1:
+        cdef:
+            dpiStmtInfo stmt_info
+            dpiData *data
+
+        # if the cursor already has a handle, use it directly
+        if cursor._handle != NULL:
+            if dpiVar_setFromStmt(self._handle, pos, cursor._handle) < 0:
+                _raise_from_odpi()
+
+        # otherwise, make use of the statement handle allocated by the variable
+        # BUT, make sure the statement handle is still valid as it may have
+        # been closed by some other code; the call to dpiStmt_getInfo() will
+        # ensure the statement is still open; if an error occurs, this bind
+        # will be discarded and a second attempt will be made with a new cursor
+        else:
+            data = &self._data[pos]
+            if dpiStmt_getInfo(data.value.asStmt, &stmt_info) < 0:
+                _raise_from_odpi()
+            if dpiStmt_addRef(data.value.asStmt) < 0:
+                _raise_from_odpi()
+            cursor._handle = data.value.asStmt
+        cursor._fixup_ref_cursor = True
+
     cdef int _set_single_value(self, uint32_t pos, object value) except -1:
         cdef:
             StringBuffer buf = StringBuffer()
@@ -149,16 +173,19 @@ cdef class Var(BaseVar):
         data = &self._data[pos]
         data.isNull = (value is None)
         if not data.isNull:
-            if self._native_type_num == DPI_NATIVE_TYPE_BYTES:
-                dbvalue = &temp_dbvalue
+            if self._native_type_num == DPI_NATIVE_TYPE_STMT:
+                self._set_cursor_value(value, pos)
             else:
-                dbvalue = &data.value
-            _convert_from_python(value, self._dbtype, self._objtype, dbvalue,
-                                 buf, self, pos)
-            if self._native_type_num == DPI_NATIVE_TYPE_BYTES:
-                as_bytes = &dbvalue.asBytes
-                if as_bytes.length > self.buffer_size:
-                    self._resize(as_bytes.length, pos)
-                if dpiVar_setFromBytes(self._handle, pos, as_bytes.ptr,
-                                       as_bytes.length) < 0:
-                    _raise_from_odpi()
+                if self._native_type_num == DPI_NATIVE_TYPE_BYTES:
+                    dbvalue = &temp_dbvalue
+                else:
+                    dbvalue = &data.value
+                _convert_from_python(value, self._dbtype, self._objtype,
+                                     dbvalue, buf, self, pos)
+                if self._native_type_num == DPI_NATIVE_TYPE_BYTES:
+                    as_bytes = &dbvalue.asBytes
+                    if as_bytes.length > self.buffer_size:
+                        self._resize(as_bytes.length, pos)
+                    if dpiVar_setFromBytes(self._handle, pos, as_bytes.ptr,
+                                           as_bytes.length) < 0:
+                        _raise_from_odpi()

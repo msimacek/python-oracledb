@@ -9,6 +9,7 @@
 
 cdef class Cursor(BaseCursor):
     cdef:
+        bint _fixup_ref_cursor
         dpiStmtInfo _stmt_info
         dpiStmt *_handle
         str _tag
@@ -260,6 +261,19 @@ cdef class Cursor(BaseCursor):
 
     cdef bint _is_plsql(self):
         return <bint> self._stmt_info.isPLSQL
+
+    cdef bint _is_query(self) except *:
+        cdef uint32_t num_query_cols
+        if self._fixup_ref_cursor:
+            self._fetch_array_size = self.arraysize
+            if dpiStmt_setFetchArraySize(self._handle,
+                                         self._fetch_array_size) < 0:
+                _raise_from_odpi()
+            if dpiStmt_getNumQueryColumns(self._handle, &num_query_cols) < 0:
+                _raise_from_odpi()
+            self._perform_define(num_query_cols)
+            self._fixup_ref_cursor = False
+        return self._fetch_vars is not None
 
     cdef int _parse(self) except -1:
         cdef:

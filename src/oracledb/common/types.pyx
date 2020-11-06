@@ -125,6 +125,8 @@ cdef class DbType:
         elif isinstance(value, BaseLob):
             lob = <BaseLob> value
             return lob.type
+        elif isinstance(value, BaseCursor):
+            return DB_TYPE_CURSOR
         else:
             type_name = type(value).__name__
             message = f"Python value of type {type_name} not supported"

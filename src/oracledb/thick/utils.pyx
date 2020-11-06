@@ -125,6 +125,7 @@ cdef object _convert_to_python(Connection connection, DbType dbtype,
         uint32_t rowid_length
         dpiBytes *as_bytes
         const char *rowid
+        Cursor cursor
     if oracle_type == DPI_ORACLE_TYPE_CHAR \
             or oracle_type == DPI_ORACLE_TYPE_NCHAR \
             or oracle_type == DPI_ORACLE_TYPE_VARCHAR \
@@ -171,6 +172,13 @@ cdef object _convert_to_python(Connection connection, DbType dbtype,
         return Lob._new_lob(connection, dbtype, dbvalue.asLOB)
     elif oracle_type == DPI_ORACLE_TYPE_OBJECT:
         return DbObject._new_object(objtype, dbvalue.asObject)
+    elif oracle_type == DPI_ORACLE_TYPE_STMT:
+        cursor = Cursor.__new__(Cursor, connection)
+        if dpiStmt_addRef(dbvalue.asStmt) < 0:
+            _raise_from_odpi()
+        cursor._handle = dbvalue.asStmt
+        cursor._fixup_ref_cursor = True
+        return cursor
     errors._raise_from_string(exceptions.NotSupportedError,
                               f"database type {dbtype} not supported")
 

@@ -484,6 +484,8 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiRowid_getStringValue(dpiRowid *rowid, const char **value,
             uint32_t *valueLength)
 
+    int dpiStmt_addRef(dpiStmt *stmt) nogil
+
     int dpiStmt_bindByName(dpiStmt *stmt, const char *name,
             uint32_t nameLength, dpiVar *var) nogil
 
@@ -512,6 +514,9 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiStmt_getBindNames(dpiStmt *stmt, uint32_t *numBindNames,
             const char **bindNames, uint32_t *bindNameLengths) nogil
+
+    int dpiStmt_getNumQueryColumns(dpiStmt *stmt,
+            uint32_t *numQueryColumns) nogil
 
     int dpiStmt_getRowCounts(dpiStmt *stmt, uint32_t *numRowCounts,
             uint64_t **rowCounts) nogil
@@ -548,3 +553,5 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiVar_setFromLob(dpiVar *var, uint32_t pos, dpiLob *lob) nogil
 
     int dpiVar_setFromObject(dpiVar *var, uint32_t pos, dpiObject *obj) nogil
+
+    int dpiVar_setFromStmt(dpiVar *var, uint32_t pos, dpiStmt *stmt) nogil

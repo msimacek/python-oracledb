@@ -35,6 +35,9 @@ cdef class Cursor(BaseCursor):
     cdef bint _is_plsql(self):
         return self._statement._is_plsql
 
+    cdef bint _is_query(self) except *:
+        return self._statement._is_query
+
     cdef int _prepare(self, str sql, str tag=None) except -1:
         cdef Connection connection = self.connection
         self.statement = sql

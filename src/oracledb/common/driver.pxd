@@ -127,6 +127,7 @@ cdef class BaseCursor:
                                object value, BaseVar orig_var)
     cdef object _get_lastrowid(self)
     cdef bint _is_plsql(self)
+    cdef bint _is_query(self) except *
     cdef int _perform_binds(self) except -1
     cdef int _parse(self) except -1
     cdef int _prepare(self, str statement, str tag=*) except -1
@@ -161,20 +162,6 @@ cdef class BaseVar:
     cdef int _set_value(self, uint32_t pos, object value) except -1
 
 
-cdef class BaseDbObjectType:
-    cdef:
-        readonly str schema
-        readonly str name
-        readonly list attributes
-        readonly bint iscollection
-        readonly BaseConnection _connection
-        readonly dict _attributesByName
-        DbType _element_dbtype
-        BaseDbObjectType _element_objtype
-
-    cdef BaseDbObject _new_object(self)
-
-
 cdef class BaseLob:
     cdef:
         readonly DbType type
@@ -191,6 +178,20 @@ cdef class BaseLob:
     cdef int _get_size(self, uint64_t* size) except -1
     cdef int _trim(self, uint64_t new_size=*) except -1
     cdef int _write(self, object value, uint64_t offset) except -1
+
+
+cdef class BaseDbObjectType:
+    cdef:
+        readonly str schema
+        readonly str name
+        readonly list attributes
+        readonly bint iscollection
+        readonly BaseConnection _connection
+        readonly dict _attributesByName
+        DbType _element_dbtype
+        BaseDbObjectType _element_objtype
+
+    cdef BaseDbObject _new_object(self)
 
 
 cdef class BaseDbObjectAttr:
