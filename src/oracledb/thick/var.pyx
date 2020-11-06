@@ -92,6 +92,40 @@ cdef class Var(BaseVar):
                 value = self.outconverter(value)
             return value
 
+    cdef int _resize(self, uint32_t new_size, uint32_t pos) except -1:
+        cdef:
+            uint32_t num_elements, i
+            dpiData *source_data
+            dpiVar *temp_handle
+            dpiData *temp_data
+            const char *ptr
+        if dpiConn_newVar(self._connection._handle, self.type.num,
+                          self._native_type_num, self.num_elements, new_size,
+                          1, self.is_array, NULL, &temp_handle,
+                          &temp_data) < 0:
+            _raise_from_odpi()
+        try:
+            if self.is_array:
+                if dpiVar_getNumElementsInArray(self._handle,
+                                                &num_elements) < 0:
+                    _raise_from_odpi()
+                if dpiVar_setNumElementsInArray(temp_handle, num_elements) < 0:
+                    _raise_from_odpi()
+            for i in range(self.num_elements):
+                source_data = &self._data[i]
+                if i == pos or source_data.isNull:
+                    continue
+                if dpiVar_setFromBytes(temp_handle, i,
+                                       source_data.value.asBytes.ptr,
+                                       source_data.value.asBytes.length) < 0:
+                    _raise_from_odpi()
+            self._handle, temp_handle = temp_handle, self._handle
+            self._data = temp_data
+            self.size = new_size
+            self.buffer_size = new_size
+        finally:
+            dpiVar_release(temp_handle)
+
     cdef int _set_array_value(self, list value) except -1:
         cdef:
             uint32_t num_elements = <uint32_t> len(value)
@@ -102,52 +136,12 @@ cdef class Var(BaseVar):
         for i in range(num_elements):
             self._set_single_value(i, value[i])
 
-    cdef int _set_from_bytes(self, uint32_t pos, bytes value) except -1:
-        cdef:
-            uint32_t length, num_elements, i
-            dpiData *source_data
-            dpiVar *temp_handle
-            dpiData *temp_data
-            dpiBytes *as_bytes
-            const char *ptr
-        ptr = value
-        length = <uint32_t> len(value)
-        if length > self.buffer_size:
-            if dpiConn_newVar(self._connection._handle, self.type.num,
-                              self._native_type_num, self.num_elements,
-                              length, 1, self.is_array, NULL, &temp_handle,
-                              &temp_data) < 0:
-                _raise_from_odpi()
-            try:
-                if self.is_array:
-                    if dpiVar_getNumElementsInArray(self._handle,
-                                                    &num_elements) < 0:
-                        _raise_from_odpi()
-                    if dpiVar_setNumElementsInArray(temp_handle,
-                                                    num_elements) < 0:
-                        _raise_from_odpi()
-                for i in range(self.num_elements):
-                    source_data = &self._data[i]
-                    if i == pos or source_data.isNull:
-                        continue
-                    as_bytes = &source_data.value.asBytes
-                    if dpiVar_setFromBytes(temp_handle, i, as_bytes.ptr,
-                                           as_bytes.length) < 0:
-                        _raise_from_odpi()
-            except:
-                dpiVar_release(temp_handle)
-                raise
-            dpiVar_release(self._handle)
-            self._handle = temp_handle
-            self._data = temp_data
-            self.size = length
-            self.buffer_size = length
-        if dpiVar_setFromBytes(self._handle, pos, ptr, length) < 0:
-            _raise_from_odpi()
-
     cdef int _set_single_value(self, uint32_t pos, object value) except -1:
         cdef:
             StringBuffer buf = StringBuffer()
+            dpiDataBuffer temp_dbvalue
+            dpiDataBuffer *dbvalue
+            dpiBytes *as_bytes
             dpiData *data
             object x
         if self.inconverter:
@@ -155,5 +149,16 @@ cdef class Var(BaseVar):
         data = &self._data[pos]
         data.isNull = (value is None)
         if not data.isNull:
-            _convert_from_python(value, self._dbtype, self._objtype,
-                                 &data.value, buf, self, pos)
+            if self._native_type_num == DPI_NATIVE_TYPE_BYTES:
+                dbvalue = &temp_dbvalue
+            else:
+                dbvalue = &data.value
+            _convert_from_python(value, self._dbtype, self._objtype, dbvalue,
+                                 buf, self, pos)
+            if self._native_type_num == DPI_NATIVE_TYPE_BYTES:
+                as_bytes = &dbvalue.asBytes
+                if as_bytes.length > self.buffer_size:
+                    self._resize(as_bytes.length, pos)
+                if dpiVar_setFromBytes(self._handle, pos, as_bytes.ptr,
+                                       as_bytes.length) < 0:
+                    _raise_from_odpi()
