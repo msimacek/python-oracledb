@@ -95,9 +95,10 @@ cdef class Cursor(BaseCursor):
         can be set.
         """
         cdef:
-            int status, rowcount_status
+            dpiErrorInfo error_info
             uint64_t rowcount
             uint32_t mode
+            int status
 
         if self.connection.autocommit:
             mode = DPI_MODE_EXEC_COMMIT_ON_SUCCESS
@@ -114,10 +115,12 @@ cdef class Cursor(BaseCursor):
         if num_execs > 0:
             with nogil:
                 status = dpiStmt_executeMany(self._handle, mode, num_execs)
-                rowcount_status = dpiStmt_getRowCount(self._handle, &rowcount)
+                if status < 0:
+                    dpiContext_getError(driver_context, &error_info)
+                dpiStmt_getRowCount(self._handle, &rowcount)
             self.rowcount = rowcount
-            if status < 0 or rowcount_status < 0:
-                _raise_from_odpi()
+            if status < 0:
+                _raise_from_info(&error_info)
 
     cdef int _fetch_rows(self) except -1:
         """
