@@ -228,7 +228,7 @@ cdef class BaseCursor:
                     obj = <BaseDbObject> value
                     temp_objtype = obj.type
                 else:
-                    temp_dbtype = None
+                    temp_objtype = None
                 if dbtype is None:
                     dbtype = temp_dbtype
                     objtype = temp_objtype
