@@ -3,6 +3,7 @@ include pyproject.toml
 include tox.ini
 include *.txt
 recursive-include src/oracledb/common *.pxd
+recursive-include src/oracledb/common *.pyx
 include src/oracledb/thin/hton.c
 recursive-include src/oracledb/thin *.pxd
 recursive-include src/oracledb/thin *.pxi
