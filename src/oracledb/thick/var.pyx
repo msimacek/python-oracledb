@@ -14,6 +14,8 @@ cdef class Var(BaseVar):
         Connection _connection
         uint32_t _native_type_num
         bint _number_as_int
+        bint _is_value_set
+        bint _get_returned_data
 
     def __cinit__(self, connection):
         self._connection = connection
@@ -40,6 +42,8 @@ cdef class Var(BaseVar):
         else:
             if dpiStmt_bindByPos(thick_cursor._handle, pos, self._handle) < 0:
                 _raise_from_odpi()
+        if thick_cursor._stmt_info.isReturning and not self._is_value_set:
+            self._get_returned_data = True
 
     cdef int _finalize_init(self) except -1:
         cdef:
@@ -68,22 +72,42 @@ cdef class Var(BaseVar):
         return num_elements
 
     cdef list _get_array_value(self, uint32_t num_elements):
+        return self._get_array_value_with_data(num_elements, NULL)
+
+    cdef object _get_array_value_with_data(self, uint32_t num_elements,
+                                           dpiData *data):
         cdef:
             object element_value
             list return_value
             uint32_t i
         return_value = cpython.PyList_New(num_elements)
         for i in range(num_elements):
-            element_value = self._get_single_value(i)
+            element_value = self._get_single_value_with_data(i, data)
             cpython.Py_INCREF(element_value)
             cpython.PyList_SET_ITEM(return_value, i, element_value)
         return return_value
 
     cdef object _get_single_value(self, uint32_t pos):
+        return self._get_single_value_with_data(pos, NULL)
+
+    cdef object _get_single_value_with_data(self, uint32_t pos, dpiData *data):
         cdef:
-            dpiData *data
+            uint32_t num_returned_rows
+            dpiData *returned_data
             object value
-        data = &self._data[pos]
+
+        # handle DML returning
+        if data == NULL and self._get_returned_data:
+            if dpiVar_getReturnedData(self._handle, pos, &num_returned_rows,
+                                      &returned_data) < 0:
+                _raise_from_odpi()
+            return self._get_array_value_with_data(num_returned_rows,
+                                                   returned_data)
+        # in all other cases, just get the value at the specified position
+        if data != NULL:
+            data = &data[pos]
+        else:
+            data = &self._data[pos]
         if not data.isNull:
             value = _convert_to_python(self._connection, self._dbtype,
                                        self._objtype, &data.value,
@@ -168,6 +192,7 @@ cdef class Var(BaseVar):
             dpiBytes *as_bytes
             dpiData *data
             object x
+        self._is_value_set = True
         if self.inconverter:
             value = self.inconverter(value)
         data = &self._data[pos]
