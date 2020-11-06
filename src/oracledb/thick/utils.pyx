@@ -14,8 +14,8 @@ cdef int _convert_from_python(object value, DbType dbtype,
     cdef:
         uint32_t oracle_type = dbtype.num
         dpiTimestamp *timestamp
+        int seconds, status
         DbObject obj
-        int status
         Lob lob
     if oracle_type == DPI_ORACLE_TYPE_NUMBER:
         if isinstance(value, bool):
@@ -81,6 +81,17 @@ cdef int _convert_from_python(object value, DbType dbtype,
             dbvalue.asInt64 = 1 if value else 0
         else:
             dbvalue.asInt64 = <int64_t> value
+    elif oracle_type == DPI_ORACLE_TYPE_INTERVAL_DS:
+        if not isinstance(value, datetime.timedelta):
+            raise TypeError("expecting datetime.timedelta")
+        seconds = cydatetime.timedelta_seconds(value)
+        dbvalue.asIntervalDS.days = cydatetime.timedelta_days(value)
+        dbvalue.asIntervalDS.hours = seconds // 3600
+        seconds = seconds % 3600
+        dbvalue.asIntervalDS.minutes = seconds // 60
+        dbvalue.asIntervalDS.seconds = seconds % 60
+        dbvalue.asIntervalDS.fseconds = \
+                cydatetime.timedelta_microseconds(value) * 1000
     elif oracle_type == DPI_ORACLE_TYPE_OBJECT:
         if not isinstance(value, DbObject):
             raise TypeError("expecting DbObject")
@@ -125,6 +136,7 @@ cdef object _convert_to_python(Connection connection, DbType dbtype,
         uint32_t rowid_length
         dpiBytes *as_bytes
         const char *rowid
+        int32_t seconds
         Cursor cursor
     if oracle_type == DPI_ORACLE_TYPE_CHAR \
             or oracle_type == DPI_ORACLE_TYPE_NCHAR \
@@ -172,6 +184,12 @@ cdef object _convert_to_python(Connection connection, DbType dbtype,
         return Lob._new_lob(connection, dbtype, dbvalue.asLOB)
     elif oracle_type == DPI_ORACLE_TYPE_OBJECT:
         return DbObject._new_object(objtype, dbvalue.asObject)
+    elif oracle_type == DPI_ORACLE_TYPE_INTERVAL_DS:
+        seconds = dbvalue.asIntervalDS.hours * 60 * 60 + \
+                dbvalue.asIntervalDS.minutes * 60 + \
+                dbvalue.asIntervalDS.seconds
+        return cydatetime.timedelta_new(dbvalue.asIntervalDS.days, seconds,
+                                        dbvalue.asIntervalDS.fseconds // 1000)
     elif oracle_type == DPI_ORACLE_TYPE_STMT:
         cursor = Cursor.__new__(Cursor, connection)
         if dpiStmt_addRef(dbvalue.asStmt) < 0:
@@ -209,6 +227,8 @@ cdef uint32_t _get_native_type_num(DbType dbtype):
         return DPI_NATIVE_TYPE_OBJECT
     elif oracle_type_num == DPI_ORACLE_TYPE_ROWID:
         return DPI_NATIVE_TYPE_ROWID
+    elif oracle_type_num == DPI_ORACLE_TYPE_INTERVAL_DS:
+        return DPI_NATIVE_TYPE_INTERVAL_DS
     return DPI_NATIVE_TYPE_BYTES
 
 
