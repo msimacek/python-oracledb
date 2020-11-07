@@ -24,8 +24,9 @@ def connect(dsn=None, *, user=None, password=None, host=None, port=None,
     else:
         conn = thick_driver.Connection(user, dsn)
         conn._connect(password=password, mode=mode, handle=handle,
-                      threaded=threaded, events=events, cclass=cclass,
-                      purity=purity, newpassword=newpassword, edition=edition,
-                      appcontext=appcontext, shardingkey=shardingkey,
+                      pool=pool, threaded=threaded, events=events,
+                      cclass=cclass, purity=purity, newpassword=newpassword,
+                      edition=edition, appcontext=appcontext, tag=tag,
+                      matchanytag=matchanytag, shardingkey=shardingkey,
                       supershardingkey=supershardingkey)
     return conn

@@ -17,6 +17,7 @@ cdef class ConnectionParams:
         bytes cclass
         bytes new_password
         bytes edition
+        bytes tag
 
         const char *dsn_ptr
         const char *username_ptr
@@ -24,6 +25,7 @@ cdef class ConnectionParams:
         const char *cclass_ptr
         const char *new_password_ptr
         const char *edition_ptr
+        const char *tag_ptr
 
         uint32_t dsn_len
         uint32_t username_len
@@ -31,6 +33,7 @@ cdef class ConnectionParams:
         uint32_t cclass_len
         uint32_t new_password_len
         uint32_t edition_len
+        uint32_t tag_len
 
         uint32_t num_app_context
         list app_context_bytes
@@ -173,13 +176,14 @@ cdef class Connection(BaseConnection):
         if status < 0:
             _raise_from_odpi()
 
-    def _connect(self, password, mode, handle, threaded, events, cclass,
-                 purity, newpassword, edition, appcontext, shardingkey,
-                 supershardingkey):
+    def _connect(self, password, mode, handle, pool, threaded, events, cclass,
+                 purity, newpassword, edition, appcontext, tag, matchanytag,
+                 shardingkey, supershardingkey):
         cdef:
             dpiCommonCreateParams common_params
             dpiConnCreateParams conn_params
             ConnectionParams params
+            Pool thick_pool
             int status
 
         # ensure that the Oracle Client library is initialized
@@ -212,6 +216,10 @@ cdef class Connection(BaseConnection):
             params.edition = edition.encode()
             params.edition_ptr = params.edition
             params.edition_len = <uint32_t> len(params.edition)
+        if tag:
+            params.tag = tag.encode()
+            params.tag_ptr = params.tag
+            params.tag_len = <uint32_t> len(params.tag)
         if appcontext:
             params.process_appcontext(appcontext)
 
@@ -241,8 +249,16 @@ cdef class Connection(BaseConnection):
         if appcontext:
             conn_params.appContext = params.app_context
             conn_params.numAppContext = params.num_app_context
+        if tag:
+            conn_params.tag = params.tag_ptr
+            conn_params.tagLength = params.tag_len
         if handle:
             conn_params.externalHandle = <void*> (<uint64_t> handle)
+        if pool is not None:
+            thick_pool = pool
+            conn_params.pool = thick_pool._handle
+        conn_params.matchAnyTag = matchanytag
+        conn_params.purity = purity
 
         # perform connection
         with nogil:
@@ -254,6 +270,10 @@ cdef class Connection(BaseConnection):
         if status < 0:
             _raise_from_odpi()
         self._is_connected = True
+
+        # set tag property, if applicable
+        if conn_params.outTagLength > 0:
+            self.tag = conn_params.outTag[:conn_params.outTagLength].decode()
 
     cdef BaseLob _create_temp_lob(self, DbType dbtype):
         cdef:

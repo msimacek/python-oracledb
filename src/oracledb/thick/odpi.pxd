@@ -502,6 +502,8 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiObjectType_release(dpiObjectType *objType) nogil
 
+    int dpiPool_close(dpiPool *pool, uint32_t closeMode) nogil
+
     int dpiPool_create(const dpiContext *context, const char *userName,
             uint32_t userNameLength, const char *password,
             uint32_t passwordLength, const char *connectString,
@@ -509,7 +511,31 @@ cdef extern from "odpi/embed/dpi.c":
             const dpiCommonCreateParams *commonParams,
             dpiPoolCreateParams *createParams, dpiPool **pool) nogil
 
+    int dpiPool_getBusyCount(dpiPool *pool, uint32_t *value) nogil
+
+    int dpiPool_getGetMode(dpiPool *pool, uint8_t *value) nogil
+
+    int dpiPool_getMaxLifetimeSession(dpiPool *pool, uint32_t *value) nogil
+
+    int dpiPool_getOpenCount(dpiPool *pool, uint32_t *value) nogil
+
+    int dpiPool_getStmtCacheSize(dpiPool *pool, uint32_t *cacheSize) nogil
+
+    int dpiPool_getTimeout(dpiPool *pool, uint32_t *value) nogil
+
+    int dpiPool_getWaitTimeout(dpiPool *pool, uint32_t *value) nogil
+
     int dpiPool_release(dpiPool *pool) nogil
+
+    int dpiPool_setGetMode(dpiPool *pool, uint8_t value) nogil
+
+    int dpiPool_setMaxLifetimeSession(dpiPool *pool, uint32_t value) nogil
+
+    int dpiPool_setStmtCacheSize(dpiPool *pool, uint32_t cacheSize) nogil
+
+    int dpiPool_setTimeout(dpiPool *pool, uint32_t value) nogil
+
+    int dpiPool_setWaitTimeout(dpiPool *pool, uint32_t value) nogil
 
     int dpiRowid_getStringValue(dpiRowid *rowid, const char **value,
             uint32_t *valueLength)

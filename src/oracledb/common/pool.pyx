@@ -38,6 +38,13 @@ cdef class BasePool:
         """
         raise NotImplementedError()
 
+    cdef int _get_getmode(self, uint8_t *value) except -1:
+        """
+        Internal method for getting the method by which connections are
+        acquired from the pool.
+        """
+        raise NotImplementedError()
+
     cdef int _get_max_lifetime_session(self, uint32_t *value) except -1:
         """
         Internal method for getting the maximum lifetime of each session.
@@ -71,6 +78,13 @@ cdef class BasePool:
     cdef int _release(self, BaseConnection connection, str tag) except -1:
         """
         Internal method for releasing a connection from the pool.
+        """
+        raise NotImplementedError()
+
+    cdef int _set_getmode(self, uint8_t value) except -1:
+        """
+        Internal method for setting the method by which connections are
+        acquired from the pool.
         """
         raise NotImplementedError()
 
@@ -120,6 +134,16 @@ cdef class BasePool:
 
     def drop(self, connection):
         self._drop(connection)
+
+    @property
+    def getmode(self):
+        cdef uint8_t value
+        self._get_getmode(&value)
+        return value
+
+    @getmode.setter
+    def getmode(self, value):
+        self._set_getmode(value)
 
     @property
     def max_lifetime_session(self):

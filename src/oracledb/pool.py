@@ -23,10 +23,8 @@ def create_pool(dsn=None, *, user=None, password=None, host=None, port=None,
         pool._create(host, port, connect_data, password)
     else:
         pool = thick_driver.Pool(user, dsn, min, max, increment, homogeneous)
-        pool._create(user=user, password=password, min=min, max=max,
-                     increment=increment, threaded=threaded, getmode=getmode,
-                     events=events, homogeneous=homogeneous,
-                     externalauth=externalauth, edition=edition,
+        pool._create(password=password, threaded=threaded, getmode=getmode,
+                     events=events, externalauth=externalauth, edition=edition,
                      timeout=timeout, wait_timeout=wait_timeout,
                      max_lifetime_session=max_lifetime_session,
                      session_callback=session_callback,
