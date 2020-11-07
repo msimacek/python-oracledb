@@ -65,6 +65,7 @@ cdef class BaseConnection:
     cdef str _get_external_name(self)
     cdef str _get_internal_name(self)
     cdef bytes _get_ltxid(self)
+    cdef BaseSodaDatabase _get_soda_database(self)
     cdef uint32_t _get_stmtcachesize(self) except *
     cdef BaseDbObjectType _get_type(self, str name)
     cdef str _get_version(self)
@@ -252,5 +253,71 @@ cdef class BaseDbObject:
                              object value) except -1
     cdef int _set_element_by_index(self, int32_t index, object value) except -1
     cdef int _trim(self, int32_t num_to_trim) except -1
+
+
+cdef class BaseSodaDatabase:
+    cdef:
+        BaseConnection _connection
+
+    cdef BaseSodaCollection _create_collection(self, str name, str metadata,
+                                               bint map_mode)
+    cdef BaseSodaDoc _create_document(self, bytes content, str key,
+                                      str media_type)
+    cdef object _get_collection_names(self, str start_name, uint32_t limit)
+    cdef BaseSodaCollection _open_collection(self, str name)
+
+
+cdef class BaseSodaCollection:
+    cdef:
+        BaseSodaDatabase _db
+        readonly str name
+
+    cdef int _create_index(self, str spec) except -1
+    cdef int _drop(self) except -1
+    cdef int _drop_index(self, str name, bint force) except -1
+    cdef BaseSodaDoc _get_data_guide(self)
+    cdef object _get_metadata(self)
+    cdef int _insert_many(self, list documents) except -1
+    cdef object _insert_many_and_get(self, list documents)
+    cdef int _insert_one(self, BaseSodaDoc doc) except -1
+    cdef BaseSodaDoc _insert_one_and_get(self, BaseSodaDoc doc)
+    cdef int _save(self, BaseSodaDoc doc) except -1
+    cdef BaseSodaDoc _save_and_get(self, BaseSodaDoc doc)
+    cdef int _truncate(self) except -1
+
+
+cdef class BaseSodaDoc:
+
+    cdef object _get_content(self)
+    cdef object _get_created_on(self)
+    cdef object _get_key(self)
+    cdef object _get_last_modified(self)
+    cdef object _get_media_type(self)
+    cdef object _get_version(self)
+
+
+cdef class BaseSodaDocCursor:
+
+    cdef int _close(self) except -1
+
+
+cdef class BaseSodaOperation:
+    cdef:
+        BaseSodaCollection _collection
+        str _key
+        list _keys
+        str _version
+        str _filter
+        uint32_t _skip
+        uint32_t _limit
+        uint32_t _fetch_array_size
+
+    cdef int _count(self, uint64_t* count) except -1
+    cdef BaseSodaDocCursor _get_cursor(self)
+    cdef object _get_documents(self)
+    cdef BaseSodaDoc _get_one(self)
+    cdef int _replace_one(self, BaseSodaDoc doc, bint* replaced) except -1
+    cdef BaseSodaDoc _replace_one_and_get(self, BaseSodaDoc doc)
+
 
 cdef object get_exception_class(int32_t code)

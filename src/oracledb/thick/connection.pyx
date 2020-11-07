@@ -332,6 +332,13 @@ cdef class Connection(BaseConnection):
             _raise_from_odpi()
         return value[:value_length]
 
+    cdef BaseSodaDatabase _get_soda_database(self):
+        cdef SodaDatabase db = SodaDatabase.__new__(SodaDatabase)
+        db._connection = self
+        if dpiConn_getSodaDb(self._handle, &db._handle) < 0:
+            _raise_from_odpi()
+        return db
+
     cdef uint32_t _get_stmtcachesize(self) except *:
         cdef uint32_t size
         if dpiConn_getStmtCacheSize(self._handle, &size) < 0:

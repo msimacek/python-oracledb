@@ -100,6 +100,18 @@ cdef extern from "odpi/embed/dpi.c":
     ctypedef struct dpiRowid:
         pass
 
+    ctypedef struct dpiSodaColl:
+        pass
+
+    ctypedef struct dpiSodaDb:
+        pass
+
+    ctypedef struct dpiSodaDoc:
+        pass
+
+    ctypedef struct dpiSodaDocCursor:
+        pass
+
     ctypedef struct dpiStmt:
         pass
 
@@ -337,6 +349,8 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiConn_getServerVersion(dpiConn *conn, const char **releaseString,
             uint32_t *releaseStringLength, dpiVersionInfo *versionInfo) nogil
+
+    int dpiConn_getSodaDb(dpiConn *conn, dpiSodaDb **db) nogil
 
     int dpiConn_getStmtCacheSize(dpiConn *conn, uint32_t *cacheSize) nogil
 

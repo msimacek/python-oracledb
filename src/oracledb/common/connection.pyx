@@ -97,6 +97,12 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
+    cdef BaseSodaDatabase _get_soda_database(self):
+        """
+        Internal method for returning a SODA database for the connection.
+        """
+        raise NotImplementedError()
+
     cdef uint32_t _get_stmtcachesize(self) except *:
         """
         Internal method for returning the size of the statement cache.
@@ -313,6 +319,10 @@ cdef class BaseConnection:
     def external_name(self, value):
         self._verify_connected()
         self._set_external_name(value)
+
+    def getSodaDatabase(self):
+        self._verify_connected()
+        return self._get_soda_database()
 
     def gettype(self, name):
         self._verify_connected()

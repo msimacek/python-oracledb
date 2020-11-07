@@ -12,6 +12,7 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 
 import datetime
 import decimal
+import json
 import sys
 
 from .. import constants, errors, exceptions
@@ -80,4 +81,5 @@ include "cursor.pyx"
 include "var.pyx"
 include "dbobject.pyx"
 include "lob.pyx"
+include "soda.pyx"
 include "types.pyx"

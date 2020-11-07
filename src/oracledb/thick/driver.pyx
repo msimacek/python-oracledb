@@ -23,7 +23,9 @@ from .. import constants, errors, exceptions
 from ..common.driver cimport get_exception_class
 from ..common.driver cimport BaseConnection, BaseCursor, BaseVar, DbType
 from ..common.driver cimport BaseDbObjectType, BaseDbObjectAttr, BaseDbObject
-from ..common.driver cimport BaseLob, BasePool
+from ..common.driver cimport BaseLob, BasePool, BaseSodaDatabase
+from ..common.driver cimport BaseSodaCollection, BaseSodaDoc, BaseSodaDocCursor
+from ..common.driver cimport BaseSodaOperation
 from libc.string cimport memchr, memset
 
 include "odpi.pxd"
@@ -39,4 +41,5 @@ include "cursor.pyx"
 include "lob.pyx"
 include "var.pyx"
 include "dbobject.pyx"
+include "soda.pyx"
 include "utils.pyx"
