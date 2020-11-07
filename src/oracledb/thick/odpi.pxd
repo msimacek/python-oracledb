@@ -246,6 +246,24 @@ cdef extern from "odpi/embed/dpi.c":
         dpiDataTypeInfo elementTypeInfo
         uint16_t numAttributes
 
+    ctypedef struct dpiPoolCreateParams:
+        uint32_t minSessions
+        uint32_t maxSessions
+        uint32_t sessionIncrement
+        int pingInterval
+        int pingTimeout
+        int homogeneous
+        int externalAuth
+        uint32_t getMode
+        const char *outPoolName
+        uint32_t outPoolNameLength
+        uint32_t timeout
+        uint32_t waitTimeout
+        uint32_t maxLifetimeSession
+        const char *plsqlFixupCallback
+        uint32_t plsqlFixupCallbackLength
+        uint32_t maxSessionsPerShard
+
     ctypedef struct dpiQueryInfo:
         const char *name
         uint32_t nameLength
@@ -383,6 +401,9 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiContext_initConnCreateParams(const dpiContext *context,
             dpiConnCreateParams *params) nogil
 
+    int dpiContext_initPoolCreateParams(const dpiContext *context,
+            dpiPoolCreateParams *params) nogil
+
     int dpiLob_addRef(dpiLob *lob) nogil
 
     int dpiLob_closeResource(dpiLob *lob) nogil
@@ -480,6 +501,15 @@ cdef extern from "odpi/embed/dpi.c":
             dpiObjectTypeInfo *info) nogil
 
     int dpiObjectType_release(dpiObjectType *objType) nogil
+
+    int dpiPool_create(const dpiContext *context, const char *userName,
+            uint32_t userNameLength, const char *password,
+            uint32_t passwordLength, const char *connectString,
+            uint32_t connectStringLength,
+            const dpiCommonCreateParams *commonParams,
+            dpiPoolCreateParams *createParams, dpiPool **pool) nogil
+
+    int dpiPool_release(dpiPool *pool) nogil
 
     int dpiRowid_getStringValue(dpiRowid *rowid, const char **value,
             uint32_t *valueLength)

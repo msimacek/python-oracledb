@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------
 
 """
-2400 - Module for testing session pools
+2400 - Module for testing pools
 """
 
 import base
@@ -43,7 +43,7 @@ class TestCase(base.BaseTestCase):
     def test_2400_pool(self):
         "2400 - test that the pool is created and has the right attributes"
         pool = base.get_pool(min=2, max=8, increment=3,
-                             getmode=oracledb.SPOOL_ATTRVAL_WAIT)
+                             getmode=oracledb.POOL_GETMODE_WAIT)
         self.assertEqual(pool.username, base.get_main_user(),
                          "user name differs")
         self.assertEqual(pool.dsn, base.get_connect_string(), "dsn differs")
@@ -65,11 +65,11 @@ class TestCase(base.BaseTestCase):
         self.assertEqual(pool.busy, 2, "busy not 2 after release")
         del connection_2
         self.assertEqual(pool.busy, 1, "busy not 1 after del")
-        pool.getmode = oracledb.SPOOL_ATTRVAL_NOWAIT
-        self.assertEqual(pool.getmode, oracledb.SPOOL_ATTRVAL_NOWAIT)
+        pool.getmode = oracledb.POOL_GETMODE_NOWAIT
+        self.assertEqual(pool.getmode, oracledb.POOL_GETMODE_NOWAIT)
         if base.get_client_version() >= (12, 2):
-            pool.getmode = oracledb.SPOOL_ATTRVAL_TIMEDWAIT
-            self.assertEqual(pool.getmode, oracledb.SPOOL_ATTRVAL_TIMEDWAIT)
+            pool.getmode = oracledb.POOL_GETMODE_TIMEDWAIT
+            self.assertEqual(pool.getmode, oracledb.POOL_GETMODE_TIMEDWAIT)
         pool.stmtcachesize = 50
         self.assertEqual(pool.stmtcachesize, 50)
         pool.timeout = 10
@@ -81,13 +81,13 @@ class TestCase(base.BaseTestCase):
     def test_2401_proxy_auth(self):
         "2401 - test that proxy authentication is possible"
         pool = base.get_pool(min=2, max=8, increment=3,
-                             getmode=oracledb.SPOOL_ATTRVAL_WAIT)
+                             getmode=oracledb.POOL_GETMODE_WAIT)
         self.assertEqual(pool.homogeneous, True,
                          "homogeneous should be True by default")
         self.assertRaises(oracledb.DatabaseError, pool.acquire,
                           user="missing_proxyuser")
         pool = base.get_pool(min=2, max=8, increment=3,
-                             getmode=oracledb.SPOOL_ATTRVAL_WAIT,
+                             getmode=oracledb.POOL_GETMODE_WAIT,
                              homogeneous=False)
         msg = "homogeneous should be False after setting it in the constructor"
         self.assertEqual(pool.homogeneous, False, msg)
@@ -130,7 +130,7 @@ class TestCase(base.BaseTestCase):
     def test_2404_threading(self):
         "2404 - test session pool with multiple threads"
         self.pool = base.get_pool(min=5, max=20, increment=2, threaded=True,
-                                  getmode=oracledb.SPOOL_ATTRVAL_WAIT)
+                                  getmode=oracledb.POOL_GETMODE_WAIT)
         threads = []
         for i in range(20):
             thread = threading.Thread(None, self.__connect_and_drop)
@@ -142,7 +142,7 @@ class TestCase(base.BaseTestCase):
     def test_2405_threading_with_errors(self):
         "2405 - test session pool with multiple threads (with errors)"
         self.pool = base.get_pool(min=5, max=20, increment=2, threaded=True,
-                                  getmode=oracledb.SPOOL_ATTRVAL_WAIT)
+                                  getmode=oracledb.POOL_GETMODE_WAIT)
         threads = []
         for i in range(20):
             thread = threading.Thread(None, self.__connect_and_generate_error)
@@ -154,7 +154,7 @@ class TestCase(base.BaseTestCase):
     def test_2406_purity(self):
         "2406 - test session pool with various types of purity"
         pool = base.get_pool(min=1, max=8, increment=1,
-                             getmode=oracledb.SPOOL_ATTRVAL_WAIT)
+                             getmode=oracledb.POOL_GETMODE_WAIT)
 
         # get connection and set the action
         action = "TEST_ACTION"
@@ -190,7 +190,7 @@ class TestCase(base.BaseTestCase):
     def test_2407_heterogeneous(self):
         "2407 - test heterogeneous pool with user and password specified"
         pool = base.get_pool(min=2, max=8, increment=3, homogeneous=False,
-                             getmode=oracledb.SPOOL_ATTRVAL_WAIT)
+                             getmode=oracledb.POOL_GETMODE_WAIT)
         self.assertEqual(pool.homogeneous, 0)
         self.__verify_connection(pool.acquire(), base.get_main_user())
         self.__verify_connection(pool.acquire(base.get_main_user(),
@@ -207,7 +207,7 @@ class TestCase(base.BaseTestCase):
     def test_2408_heterogenous_without_user(self):
         "2408 - test heterogeneous pool without user and password specified"
         pool = base.get_pool(user="", password="", min=2, max=8, increment=3,
-                             getmode=oracledb.SPOOL_ATTRVAL_WAIT,
+                             getmode=oracledb.POOL_GETMODE_WAIT,
                              homogeneous=False)
         self.__verify_connection(pool.acquire(base.get_main_user(),
                                  base.get_main_password()),
@@ -223,7 +223,7 @@ class TestCase(base.BaseTestCase):
     def test_2409_heterogeneous_wrong_password(self):
         "2409 - test heterogeneous pool with wrong password specified"
         pool = base.get_pool(min=2, max=8, increment=3,
-                             getmode=oracledb.SPOOL_ATTRVAL_WAIT,
+                             getmode=oracledb.POOL_GETMODE_WAIT,
                              homogeneous=False)
         self.assertRaises(oracledb.DatabaseError, pool.acquire,
                           base.get_proxy_user(), "this is the wrong password")
@@ -231,7 +231,7 @@ class TestCase(base.BaseTestCase):
     def test_2410_tagging_session(self):
         "2410 - test tagging a session"
         pool = base.get_pool(min=2, max=8, increment=3,
-                             getmode=oracledb.SPOOL_ATTRVAL_NOWAIT)
+                             getmode=oracledb.POOL_GETMODE_NOWAIT)
 
         tag_mst = "TIME_ZONE=MST"
         tag_utc = "TIME_ZONE=UTC"
@@ -258,8 +258,8 @@ class TestCase(base.BaseTestCase):
         if base.get_client_version() < (12, 2):
             self.skipTest("PL/SQL session callbacks not supported before 12.2")
         pool = base.get_pool(min=2, max=8, increment=3,
-                             getmode=oracledb.SPOOL_ATTRVAL_NOWAIT,
-                             sessionCallback="pkg_SessionCallback.TheCallback")
+                             getmode=oracledb.POOL_GETMODE_NOWAIT,
+                             session_callback="pkg_SessionCallback.TheCallback")
         tags = [
             "NLS_DATE_FORMAT=SIMPLE",
             "NLS_DATE_FORMAT=FULL;TIME_ZONE=UTC",
@@ -295,7 +295,7 @@ class TestCase(base.BaseTestCase):
 
     def test_2412_tagging_invalid_key(self):
         "2412 - testTagging with Invalid key"
-        pool = base.get_pool(getmode=oracledb.SPOOL_ATTRVAL_NOWAIT)
+        pool = base.get_pool(getmode=oracledb.POOL_GETMODE_NOWAIT)
         conn = pool.acquire()
         self.assertRaises(TypeError, pool.release, conn, tag=12345)
         if base.get_client_version() >= (12, 2):

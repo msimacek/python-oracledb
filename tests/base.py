@@ -124,6 +124,15 @@ def get_main_password():
 def get_main_user():
     return get_value("MAIN_USER", "Main User Name", DEFAULT_MAIN_USER)
 
+def get_pool(user=None, password=None, **kwargs):
+    if user is None:
+        user = get_main_user()
+    if password is None:
+        password = get_main_password()
+    return oracledb.create_pool(user=user, password=password,
+                                dsn=get_connect_string(), thin=get_is_thin(),
+                                **kwargs)
+
 def get_proxy_password():
     return get_value("PROXY_PASSWORD", "Password for %s" % get_proxy_user())
 

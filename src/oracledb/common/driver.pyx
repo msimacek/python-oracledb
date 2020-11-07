@@ -14,7 +14,7 @@ import datetime
 import decimal
 import sys
 
-from .. import errors, exceptions
+from .. import constants, errors, exceptions
 
 cdef int32_t* INTEGRITY_ERROR_CODES = [
         1,          # unique constraint violated
@@ -75,6 +75,7 @@ cdef object get_exception_class(int32_t code):
 
 
 include "connection.pyx"
+include "pool.pyx"
 include "cursor.pyx"
 include "var.pyx"
 include "dbobject.pyx"

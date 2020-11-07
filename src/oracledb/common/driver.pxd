@@ -42,7 +42,6 @@ cdef class DbType:
 
 
 cdef class BaseConnection:
-
     cdef:
         readonly str username
         readonly str dsn
@@ -82,6 +81,34 @@ cdef class BaseConnection:
     cdef int _set_module(self, str value) except -1
     cdef int _set_stmtcachesize(self, uint32_t value) except -1
     cdef int _verify_connected(self) except -1
+
+
+cdef class BasePool:
+    cdef:
+        readonly str dsn
+        readonly bint homogeneous
+        readonly uint32_t increment
+        readonly uint32_t min
+        readonly uint32_t max
+        readonly str username
+        readonly str name
+
+    cdef BaseConnection _acquire(self, str user, str password, str cclass,
+                                 uint32_t purity, str tag, bint match_any_tag,
+                                 list sharding_key, list super_sharding_key)
+    cdef int _close(self, bint force) except -1
+    cdef int _drop(self, BaseConnection connection) except -1
+    cdef int _get_busy_count(self, uint32_t *value) except -1
+    cdef int _get_max_lifetime_session(self, uint32_t *value) except -1
+    cdef int _get_open_count(self, uint32_t *value) except -1
+    cdef int _get_stmt_cache_size(self, uint32_t *value) except -1
+    cdef int _get_timeout(self, uint32_t *value) except -1
+    cdef int _get_wait_timeout(self, uint32_t *value) except -1
+    cdef int _release(self, BaseConnection connection, str tag) except -1
+    cdef int _set_max_lifetime_session(self, uint32_t value) except -1
+    cdef int _set_stmt_cache_size(self, uint32_t value) except -1
+    cdef int _set_timeout(self, uint32_t value) except -1
+    cdef int _set_wait_timeout(self, uint32_t value) except -1
 
 
 cdef class BaseCursor:
