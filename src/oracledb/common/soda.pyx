@@ -33,6 +33,40 @@ cdef class BaseSodaDatabase:
         """
         raise NotImplementedError()
 
+    def createCollection(self, name, metadata=None, mapMode=False):
+        """
+        Create a SODA collection with the given name and return a new SODA
+        collection.
+        """
+        if metadata is not None and not isinstance(metadata, str):
+            metadata = json.dumps(metadata)
+        return self._create_collection(name, metadata, mapMode)
+
+    def createDocument(self, content, key=None, mediaType="application/json"):
+        """
+        Create a SODA document with the given content and return it.
+        """
+        cdef bytes content_bytes
+        if isinstance(content, str):
+            content_bytes = content.encode()
+        elif isinstance(content, bytes):
+            content_bytes = content
+        else:
+            content_bytes = json.dumps(content).encode()
+        return self._create_document(content_bytes, key, mediaType)
+
+    def getCollectionNames(self, startName=None, limit=0):
+        """
+        Return a list of the names of collections found in the database.
+        """
+        return self._get_collection_names(startName, limit)
+
+    def openCollection(self, name):
+        """
+        Open an existing collection with the given name and return it.
+        """
+        return self._open_collection(name)
+
 
 cdef class BaseSodaCollection:
 
@@ -42,7 +76,7 @@ cdef class BaseSodaCollection:
         """
         raise NotImplementedError()
 
-    cdef int _drop(self) except -1:
+    cdef int _drop(self, bint* is_dropped) except -1:
         """
         Internal method for dropping a collection.
         """
@@ -66,42 +100,21 @@ cdef class BaseSodaCollection:
         """
         raise NotImplementedError()
 
-    cdef int _insert_many(self, list documents) except -1:
+    cdef object _insert_many(self, list documents, bint return_docs):
         """
         Internal method for inserting many documents into a collection at once.
         """
         raise NotImplementedError()
 
-    cdef object _insert_many_and_get(self, list documents):
-        """
-        Internal method for inserting many documents into a collection at once
-        and returning a list of the documents inserted.
-        """
-        raise NotImplementedError()
-
-    cdef int _insert_one(self, BaseSodaDoc doc) except -1:
+    cdef object _insert_one(self, BaseSodaDoc doc, bint return_doc):
         """
         Internal method for inserting a single document into a collection.
         """
         raise NotImplementedError()
 
-    cdef BaseSodaDoc _insert_one_and_get(self, BaseSodaDoc doc):
-        """
-        Internal method for inserting a single document into a collection and
-        returning the document thus inserted.
-        """
-        raise NotImplementedError()
-
-    cdef int _save(self, BaseSodaDoc doc) except -1:
+    cdef object _save(self, BaseSodaDoc doc, bint return_doc):
         """
         Internal method for saving a document into the collection.
-        """
-        raise NotImplementedError()
-
-    cdef BaseSodaDoc _save_and_get(self, BaseSodaDoc doc):
-        """
-        Internal method for saving a document into the collection and returning
-        the modified document.
         """
         raise NotImplementedError()
 
@@ -112,10 +125,36 @@ cdef class BaseSodaCollection:
         """
         raise NotImplementedError()
 
+    def createIndex(self, spec):
+        """
+        Create an index on a SODA collection.
+        """
+        self._create_index(spec)
+
+    def drop(self):
+        """
+        Drop the collection from the database.
+        """
+        cdef bint is_dropped
+        self._drop(&is_dropped)
+        return is_dropped
+
+    def dropIndex(self, name, force=False):
+        self._drop_index(name, force)
+
+    def getDataGuide(self):
+        return self._get_data_guide()
+
+    def insertMany(self, docs):
+        self._insert_many(docs, return_docs=False)
+
+    def insertManyAndGet(self, docs):
+        return self._insert_many(docs, return_docs=True)
+
 
 cdef class BaseSodaDoc:
 
-    cdef object _get_content(self):
+    cdef object _get_content(self, const char **encoding):
         """
         Internal method for returning the content of the document.
         """
@@ -150,6 +189,42 @@ cdef class BaseSodaDoc:
         Internal method for getting the version of the document.
         """
         raise NotImplementedError()
+
+    @property
+    def createdOn(self):
+        return self._get_created_on()
+
+    def getContent(self):
+        return json.loads(self.getContentAsString())
+
+    def getContentAsBytes(self):
+        cdef const char *encoding_ptr = NULL
+        return self._get_content(&encoding_ptr)
+
+    def getContentAsString(self):
+        cdef:
+            const char *encoding_ptr = NULL
+            str encoding = "UTF-8"
+        content = self._get_content(&encoding_ptr)
+        if encoding_ptr != NULL:
+            encoding = encoding_ptr.decode()
+        return content.decode(encoding)
+
+    @property
+    def key(self):
+        return self._get_key()
+
+    @property
+    def lastModified(self):
+        return self._get_last_modified()
+
+    @property
+    def mediaType(self):
+        return self._get_media_type()
+
+    @property
+    def version(self):
+        return self._get_version()
 
 
 cdef class BaseSodaDocCursor:
@@ -189,16 +264,10 @@ cdef class BaseSodaOperation:
         """
         raise NotImplementedError()
 
-    cdef int _replace_one(self, BaseSodaDoc doc, bint* replaced) except -1:
+    cdef object _replace_one(self, BaseSodaDoc doc, bint return_doc,
+                             bint* replaced):
         """
         Internal method for replacing the document matching the criteria with
         the supplied coument.
-        """
-        raise NotImplementedError()
-
-    cdef BaseSodaDoc _replace_one_and_get(self, BaseSodaDoc doc):
-        """
-        Internal method for replacing the document matching the criteria with
-        the supplied coument and returning the updated document.
         """
         raise NotImplementedError()

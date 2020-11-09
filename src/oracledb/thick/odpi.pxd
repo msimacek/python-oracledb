@@ -75,6 +75,12 @@ cdef extern from "odpi/embed/dpi.c":
     uint32_t DPI_ORACLE_TYPE_LONG_VARCHAR
     uint32_t DPI_ORACLE_TYPE_LONG_RAW
 
+    # SODA flags
+    uint32_t DPI_SODA_FLAGS_DEFAULT
+    uint32_t DPI_SODA_FLAGS_ATOMIC_COMMIT
+    uint32_t DPI_SODA_FLAGS_CREATE_COLL_MAP
+    uint32_t DPI_SODA_FLAGS_INDEX_DROP_FORCE
+
     # opaque handles
     ctypedef struct dpiConn:
         pass
@@ -286,6 +292,25 @@ cdef extern from "odpi/embed/dpi.c":
         uint32_t oracleTypeNum
         uint32_t nativeTypeNum
         dpiDataBuffer value
+
+    ctypedef struct dpiSodaCollNames:
+        uint32_t numNames
+        const char **names
+        uint32_t *nameLengths
+
+    ctypedef struct dpiSodaOperOptions:
+        uint32_t numKeys
+        const char **keys
+        uint32_t *keyLengths
+        const char *key
+        uint32_t keyLength
+        const char *version
+        uint32_t versionLength
+        const char *filter
+        uint32_t filterLength
+        uint32_t skip
+        uint32_t limit
+        uint32_t fetchArraySize
 
     ctypedef struct dpiStmtInfo:
         int isQuery
@@ -553,6 +578,106 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiRowid_getStringValue(dpiRowid *rowid, const char **value,
             uint32_t *valueLength)
+
+    int dpiSodaColl_createIndex(dpiSodaColl *coll,
+            const char *indexSpec, uint32_t indexSpecLength,
+            uint32_t flags) nogil
+
+    int dpiSodaColl_drop(dpiSodaColl *coll, uint32_t flags,
+            bint *isDropped) nogil
+
+    int dpiSodaColl_dropIndex(dpiSodaColl *coll, const char *name,
+            uint32_t nameLength, uint32_t flags, bint *isDropped) nogil
+
+    int dpiSodaColl_find(dpiSodaColl *coll,
+            const dpiSodaOperOptions *options, uint32_t flags,
+            dpiSodaDocCursor **cursor) nogil
+
+    int dpiSodaColl_findOne(dpiSodaColl *coll,
+            const dpiSodaOperOptions *options, uint32_t flags,
+            dpiSodaDoc **doc) nogil
+
+    int dpiSodaColl_getDataGuide(dpiSodaColl *coll, uint32_t flags,
+            dpiSodaDoc **doc) nogil
+
+    int dpiSodaColl_getDocCount(dpiSodaColl *coll,
+            const dpiSodaOperOptions *options, uint32_t flags,
+            uint64_t *count) nogil
+
+    int dpiSodaColl_getMetadata(dpiSodaColl *coll, const char **value,
+            uint32_t *valueLength) nogil
+
+    int dpiSodaColl_getName(dpiSodaColl *coll, const char **value,
+            uint32_t *valueLength) nogil
+
+    int dpiSodaColl_insertMany(dpiSodaColl *coll, uint32_t numDocs,
+            dpiSodaDoc **docs, uint32_t flags, dpiSodaDoc **insertedDocs) nogil
+
+    int dpiSodaColl_insertOne(dpiSodaColl *coll, dpiSodaDoc *doc,
+            uint32_t flags, dpiSodaDoc **insertedDoc) nogil
+
+    int dpiSodaColl_release(dpiSodaColl *coll) nogil
+
+    int dpiSodaColl_remove(dpiSodaColl *coll,
+            const dpiSodaOperOptions *options, uint32_t flags,
+            uint64_t *count) nogil
+
+    int dpiSodaColl_replaceOne(dpiSodaColl *coll,
+            const dpiSodaOperOptions *options, dpiSodaDoc *doc, uint32_t flags,
+            int *replaced, dpiSodaDoc **replacedDoc) nogil
+
+    int dpiSodaColl_save(dpiSodaColl *coll, dpiSodaDoc *doc,
+            uint32_t flags, dpiSodaDoc **savedDoc) nogil
+
+    int dpiSodaColl_truncate(dpiSodaColl *coll) nogil
+
+    int dpiSodaDb_createCollection(dpiSodaDb *db, const char *name,
+            uint32_t nameLength, const char *metadata, uint32_t metadataLength,
+            uint32_t flags, dpiSodaColl **coll) nogil
+
+    int dpiSodaDb_createDocument(dpiSodaDb *db, const char *key,
+            uint32_t keyLength, const char *content, uint32_t contentLength,
+            const char *mediaType, uint32_t mediaTypeLength, uint32_t flags,
+            dpiSodaDoc **doc) nogil
+
+    int dpiSodaDb_freeCollectionNames(dpiSodaDb *db,
+            dpiSodaCollNames *names) nogil
+
+    int dpiSodaDb_getCollectionNames(dpiSodaDb *db,
+            const char *startName, uint32_t startNameLength, uint32_t limit,
+            uint32_t flags, dpiSodaCollNames *names) nogil
+
+    int dpiSodaDb_openCollection(dpiSodaDb *db, const char *name,
+            uint32_t nameLength, uint32_t flags, dpiSodaColl **coll) nogil
+
+    int dpiSodaDb_release(dpiSodaDb *db) nogil
+
+    int dpiSodaDoc_getContent(dpiSodaDoc *doc, const char **value,
+            uint32_t *valueLength, const char **encoding) nogil
+
+    int dpiSodaDoc_getCreatedOn(dpiSodaDoc *doc, const char **value,
+            uint32_t *valueLength) nogil
+
+    int dpiSodaDoc_getKey(dpiSodaDoc *doc, const char **value,
+            uint32_t *valueLength) nogil
+
+    int dpiSodaDoc_getLastModified(dpiSodaDoc *doc, const char **value,
+            uint32_t *valueLength) nogil
+
+    int dpiSodaDoc_getMediaType(dpiSodaDoc *doc, const char **value,
+            uint32_t *valueLength) nogil
+
+    int dpiSodaDoc_getVersion(dpiSodaDoc *doc, const char **value,
+            uint32_t *valueLength) nogil
+
+    int dpiSodaDoc_release(dpiSodaDoc *doc) nogil
+
+    int dpiSodaDocCursor_close(dpiSodaDocCursor *cursor) nogil
+
+    int dpiSodaDocCursor_getNext(dpiSodaDocCursor *cursor,
+            uint32_t flags, dpiSodaDoc **doc) nogil
+
+    int dpiSodaDocCursor_release(dpiSodaDocCursor *cursor) nogil
 
     int dpiStmt_addRef(dpiStmt *stmt) nogil
 

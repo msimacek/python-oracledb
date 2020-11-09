@@ -273,22 +273,21 @@ cdef class BaseSodaCollection:
         readonly str name
 
     cdef int _create_index(self, str spec) except -1
-    cdef int _drop(self) except -1
+    cdef int _drop(self, bint* is_dropped) except -1
     cdef int _drop_index(self, str name, bint force) except -1
     cdef BaseSodaDoc _get_data_guide(self)
     cdef object _get_metadata(self)
-    cdef int _insert_many(self, list documents) except -1
-    cdef object _insert_many_and_get(self, list documents)
-    cdef int _insert_one(self, BaseSodaDoc doc) except -1
-    cdef BaseSodaDoc _insert_one_and_get(self, BaseSodaDoc doc)
-    cdef int _save(self, BaseSodaDoc doc) except -1
-    cdef BaseSodaDoc _save_and_get(self, BaseSodaDoc doc)
+    cdef object _insert_many(self, list documents, bint return_docs)
+    cdef object _insert_one(self, BaseSodaDoc doc, bint return_doc)
+    cdef object _save(self, BaseSodaDoc doc, bint return_doc)
     cdef int _truncate(self) except -1
 
 
 cdef class BaseSodaDoc:
+    cdef:
+        BaseSodaDatabase _db
 
-    cdef object _get_content(self)
+    cdef object _get_content(self, const char **encoding)
     cdef object _get_created_on(self)
     cdef object _get_key(self)
     cdef object _get_last_modified(self)
@@ -316,8 +315,8 @@ cdef class BaseSodaOperation:
     cdef BaseSodaDocCursor _get_cursor(self)
     cdef object _get_documents(self)
     cdef BaseSodaDoc _get_one(self)
-    cdef int _replace_one(self, BaseSodaDoc doc, bint* replaced) except -1
-    cdef BaseSodaDoc _replace_one_and_get(self, BaseSodaDoc doc)
+    cdef object _replace_one(self, BaseSodaDoc doc, bint return_doc,
+                             bint* replaced)
 
 
 cdef object get_exception_class(int32_t code)

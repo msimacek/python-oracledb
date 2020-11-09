@@ -7,6 +7,7 @@
 #   Cython file for the StringBuffer class (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
+@cython.freelist(20)
 cdef class StringBuffer:
     cdef:
         bytes obj
