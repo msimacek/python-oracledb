@@ -443,6 +443,9 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiContext_initPoolCreateParams(const dpiContext *context,
             dpiPoolCreateParams *params) nogil
 
+    int dpiContext_initSodaOperOptions(const dpiContext *context,
+            dpiSodaOperOptions *options) nogil
+
     int dpiLob_addRef(dpiLob *lob) nogil
 
     int dpiLob_closeResource(dpiLob *lob) nogil
@@ -624,7 +627,7 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiSodaColl_replaceOne(dpiSodaColl *coll,
             const dpiSodaOperOptions *options, dpiSodaDoc *doc, uint32_t flags,
-            int *replaced, dpiSodaDoc **replacedDoc) nogil
+            bint *replaced, dpiSodaDoc **replacedDoc) nogil
 
     int dpiSodaColl_save(dpiSodaColl *coll, dpiSodaDoc *doc,
             uint32_t flags, dpiSodaDoc **savedDoc) nogil

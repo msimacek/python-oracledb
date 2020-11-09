@@ -273,12 +273,15 @@ cdef class BaseSodaCollection:
         readonly str name
 
     cdef int _create_index(self, str spec) except -1
+    cdef BaseSodaOperation _create_operation(self)
     cdef int _drop(self, bint* is_dropped) except -1
-    cdef int _drop_index(self, str name, bint force) except -1
+    cdef int _drop_index(self, str name, bint force,
+                         bint* is_dropped) except -1
     cdef BaseSodaDoc _get_data_guide(self)
     cdef object _get_metadata(self)
     cdef object _insert_many(self, list documents, bint return_docs)
     cdef object _insert_one(self, BaseSodaDoc doc, bint return_doc)
+    cdef BaseSodaDoc _process_doc_arg(self, object doc_arg)
     cdef object _save(self, BaseSodaDoc doc, bint return_doc)
     cdef int _truncate(self) except -1
 
@@ -296,7 +299,10 @@ cdef class BaseSodaDoc:
 
 
 cdef class BaseSodaDocCursor:
+    cdef:
+        BaseSodaDatabase _db
 
+    cdef object _get_next_doc(self)
     cdef int _close(self) except -1
 
 
@@ -313,8 +319,8 @@ cdef class BaseSodaOperation:
 
     cdef int _count(self, uint64_t* count) except -1
     cdef BaseSodaDocCursor _get_cursor(self)
-    cdef object _get_documents(self)
     cdef BaseSodaDoc _get_one(self)
+    cdef int _remove(self, uint64_t* count) except -1
     cdef object _replace_one(self, BaseSodaDoc doc, bint return_doc,
                              bint* replaced)
 
