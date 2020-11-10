@@ -2,6 +2,16 @@
 # Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+cdef class BindInfo:
+
+    cdef:
+        bint _is_dup
+        str _bind_name
+        Var _bind_var
+
+    def __cinit__(self, str name):
+        self._bind_name = name
+
 cdef class StatementCache:
 
     cdef:
@@ -41,7 +51,8 @@ cdef class Statement:
         bint _is_plsql
         bint _is_dml
         bint _is_ddl
-        list _bind_names
+        list _bind_info_list
+        object _bind_info_dict
 
     cdef _determine_statement_type(self, str sql):
         tokens = sql.strip()[:10].split()
@@ -64,16 +75,28 @@ cdef class Statement:
         self._get_bind_names(sql)
 
     cdef _get_bind_names(self, str sql):
+        cdef:
+            list bind_names = []
+            str name
+            BindInfo bind_info
         # Strip any single or multiline comments from sql statement
         sql = re.sub(r"/\\*[\S\n ]+\\*/", "", sql)
         sql = re.sub(r"\--.*(\n|$)", "", sql)
 
-        # dtermine statement type
+        # determine statement type
         self._determine_statement_type(sql)
 
+        bind_names = []
+        self._bind_info_dict = collections.OrderedDict()
         # bind variables can only be found in queries, DML and PL/SQL
         if self._is_query or self._is_dml or self._is_plsql:
-            self._bind_names = re.findall(r"(?<=\:)[a-zA-Z]?[a-zA-Z0-9_]+",
+            bind_names = re.findall(r"(?<=\:)[a-zA-Z]?[a-zA-Z0-9_]+",
                                           sql.upper())
-        else:
-            self._bind_names = []
+            self._bind_info_list = [BindInfo(name) for name in bind_names]
+            for bind_info in self._bind_info_list:
+                if bind_info._bind_name in self._bind_info_dict:
+                    bind_info._is_dup = True
+                    self._bind_info_dict[bind_info._bind_name].append(bind_info)
+                else:
+                    self._bind_info_dict[bind_info._bind_name] = [bind_info]
+

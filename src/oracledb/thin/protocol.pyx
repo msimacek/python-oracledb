@@ -374,11 +374,13 @@ cdef class Protocol:
             uint8_t ora_type_num
             bytes temp_bytes
             object value
+            BindInfo bind_info
             Var var
 
         # write parameter header information
         for i in range(num_params):
-            var = <Var> cpython.PyList_GET_ITEM(params, i)
+            bind_info = <BindInfo> cpython.PyList_GET_ITEM(params, i)
+            var = bind_info._bind_var
             buf.write_uint8(var._dbtype._ora_type_num)
             buf.write_uint8(3)              # flag
             buf.write_uint8(var.precision)
@@ -396,7 +398,8 @@ cdef class Protocol:
         # write parameter values
         buf.write_uint8(7)                  # data indicator
         for i in range(num_params):
-            var = <Var> cpython.PyList_GET_ITEM(params, i)
+            bind_info = <BindInfo> cpython.PyList_GET_ITEM(params, i)
+            var = bind_info._bind_var
             ora_type_num = var._dbtype._ora_type_num
             value = var._values[0]
             if value is None:
@@ -575,6 +578,7 @@ cdef class Protocol:
             uint16_t num_bits
             ReadBuffer buf
             list row_vars
+            BindInfo bind_info
             Var var
         buf = self._read_buf
         buf.skip_bytes(2)
@@ -639,7 +643,8 @@ cdef class Protocol:
                     bind_dir = buf.read_uint8()
                     if bind_dir == TNS_BIND_DIR_INPUT:
                         continue
-                    row_vars.append(cursor._bind_vars[i])
+                    bind_info = cursor._statement._bind_info_list[i]
+                    row_vars.append(bind_info._bind_var)
             elif message_type == TNS_MSG_TYPE_ROW_DATA:
                 self._process_row(buf, row_vars, row_index, in_fetch)
                 if in_fetch:
