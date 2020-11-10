@@ -793,5 +793,51 @@ class TestCase(base.BaseTestCase):
                             """)
         self.assertEqual(self.cursor.bindnames(), ["TABLE_NAME", "VALUE"])
 
+    def test_1270_execute_bind_names_with_incorrect_bind(self):
+        "1270 - test executing a statement with an incorrect named bind"
+        statement = "select * from TestStrings where IntCol = :value"
+        self.assertRaises(oracledb.DatabaseError, self.cursor.execute,
+                          statement, value2=3)
+
+    def test_1271_execute_with_named_binds(self):
+        "1271 - test executing a statement with named binds"
+        statement = "select * from TestNumbers where IntCol = :value1 " + \
+                    "and LongIntCol = :value2"
+        result = self.cursor.execute(statement, value1=1, value2=38)
+        self.assertEqual(len(result.fetchall()), 1)
+
+    def test_1272_execute_bind_position_with_incorrect_bind(self):
+        "1272 - test executing a statement with an incorrect positional bind"
+        statement = "select * from TestNumbers where IntCol = :value " + \
+                    "and LongIntCol = :value2"
+        self.assertRaises(oracledb.DatabaseError, self.cursor.execute,
+                          statement, [3])
+
+    def test_1273_execute_with_positional_binds(self):
+        "1273 - test executing a statement with positional binds"
+        statement = "select * from TestNumbers where IntCol = :value " + \
+                    "and LongIntCol = :value2"
+        result = self.cursor.execute(statement, [1,38])
+        self.assertEqual(len(result.fetchall()), 1)
+
+    def test_1274_execute_with_rebinding_bind_name(self):
+        "1274 - test executing a statement after rebinding a named bind"
+        statement = "begin :value := :value2 + 5; end;"
+        simple_var = self.cursor.var(oracledb.NUMBER)
+        simple_var2 = self.cursor.var(oracledb.NUMBER)
+        simple_var2.setvalue(0,5)
+        result = self.cursor.execute(statement, value=simple_var,
+                                     value2=simple_var2)
+        self.assertEqual(result, None)
+        self.assertEqual(simple_var.getvalue(), 10)
+
+        simple_var = self.cursor.var(oracledb.NATIVE_FLOAT)
+        simple_var2 = self.cursor.var(oracledb.NATIVE_FLOAT)
+        simple_var2.setvalue(0,10)
+        result = self.cursor.execute(statement, value=simple_var,
+                                     value2=simple_var2)
+        self.assertEqual(result, None)
+        self.assertEqual(simple_var.getvalue(), 15)
+
 if __name__ == "__main__":
     base.run_test_cases()
