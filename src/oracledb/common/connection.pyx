@@ -61,6 +61,12 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
+    cdef BaseQueue _create_queue(self):
+        """
+        Internal method for creating a queue.
+        """
+        raise NotImplementedError()
+
     cdef BaseLob _create_temp_lob(self, DbType dbtype):
         """
         Internal method for creating a temporary LOB.
@@ -202,6 +208,15 @@ cdef class BaseConnection:
             errors._raise_from_string(exceptions.InterfaceError,
                                       "not connected")
 
+    @property
+    def action(self):
+        raise AttributeError("action is not readable")
+
+    @action.setter
+    def action(self, value):
+        self._verify_connected()
+        self._set_action(value)
+
     def begin(self, format_id=-1, transaction_id="", branch_id=""):
         """
         Begins a distributed transaction.
@@ -224,50 +239,6 @@ cdef class BaseConnection:
         self._verify_connected()
         self._change_password(old_password, new_password)
 
-    def close(self):
-        """
-        Closes the connection and makes it unusable for further operations.
-        """
-        self._verify_connected()
-        self._close()
-        self._is_connected = False
-
-    def commit(self):
-        """
-        Commits any outstanding connection.
-        """
-        self._verify_connected()
-        self._commit()
-
-    def cursor(self, scrollable=False):
-        """
-        Returns a cursor associated with the connection.
-        """
-        cdef BaseCursor cursor
-        cursor = self._create_cursor()
-        cursor.scrollable = scrollable
-        return cursor
-
-    def createlob(self, lob_type):
-        """
-        Create and return a new temporary LOB of the specified type.
-        """
-        self._verify_connected()
-        if lob_type not in (DB_TYPE_CLOB, DB_TYPE_NCLOB, DB_TYPE_BLOB):
-            message = "parameter should be one of oracledb.DB_TYPE_CLOB, " \
-                      "oracledb.DB_TYPE_BLOB or oracledb.DB_TYPE_NCLOB"
-            raise TypeError(message)
-        return self._create_temp_lob(lob_type)
-
-    @property
-    def action(self):
-        raise AttributeError("action is not readable")
-
-    @action.setter
-    def action(self, value):
-        self._verify_connected()
-        self._set_action(value)
-
     @property
     def client_identifier(self):
         raise AttributeError("client_identifier is not readable")
@@ -286,6 +257,32 @@ cdef class BaseConnection:
         self._verify_connected()
         self._set_client_info(value)
 
+    def close(self):
+        """
+        Closes the connection and makes it unusable for further operations.
+        """
+        self._verify_connected()
+        self._close()
+        self._is_connected = False
+
+    def commit(self):
+        """
+        Commits any outstanding connection.
+        """
+        self._verify_connected()
+        self._commit()
+
+    def createlob(self, lob_type):
+        """
+        Create and return a new temporary LOB of the specified type.
+        """
+        self._verify_connected()
+        if lob_type not in (DB_TYPE_CLOB, DB_TYPE_NCLOB, DB_TYPE_BLOB):
+            message = "parameter should be one of oracledb.DB_TYPE_CLOB, " \
+                      "oracledb.DB_TYPE_BLOB or oracledb.DB_TYPE_NCLOB"
+            raise TypeError(message)
+        return self._create_temp_lob(lob_type)
+
     @property
     def current_schema(self):
         self._verify_connected()
@@ -295,6 +292,15 @@ cdef class BaseConnection:
     def current_schema(self, value):
         self._verify_connected()
         self._set_current_schema(value)
+
+    def cursor(self, scrollable=False):
+        """
+        Returns a cursor associated with the connection.
+        """
+        cdef BaseCursor cursor
+        cursor = self._create_cursor()
+        cursor.scrollable = scrollable
+        return cursor
 
     @property
     def dbop(self):
@@ -376,6 +382,16 @@ cdef class BaseConnection:
         """
         self._verify_connected()
         return self._prepare()
+
+    def queue(self, name, payloadType=None):
+        """
+        Returns a queue used to enqueue and dequeue messages in AQ.
+        """
+        cdef BaseQueue queue = self._create_queue()
+        queue.name = name
+        queue.payloadType = payloadType
+        queue._initializae()
+        return queue
 
     def rollback(self):
         """

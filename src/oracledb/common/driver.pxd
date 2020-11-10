@@ -59,6 +59,7 @@ cdef class BaseConnection:
     cdef int _close(self) except -1
     cdef int _commit(self) except -1
     cdef BaseCursor _create_cursor(self)
+    cdef BaseQueue _create_queue(self)
     cdef BaseLob _create_temp_lob(self, DbType dbtype)
     cdef str _get_current_schema(self)
     cdef str _get_edition(self)
@@ -323,6 +324,75 @@ cdef class BaseSodaOperation:
     cdef int _remove(self, uint64_t* count) except -1
     cdef object _replace_one(self, BaseSodaDoc doc, bint return_doc,
                              bint* replaced)
+
+
+cdef class BaseQueue:
+    cdef:
+        readonly BaseConnection connection
+        readonly str name
+        readonly BaseDbObjectType payloadType
+        readonly BaseDeqOptions deqOptions
+        readonly BaseEnqOptions enqOptions
+
+    cdef object _deq_many(self, uint32_t max_messages)
+    cdef object _deq_one(self)
+    cdef int _enq_many(self, list messages) except -1
+    cdef int _enq_one(self, BaseMsgProps message) except -1
+    cdef int _initialize(self) except -1
+
+
+cdef class BaseDeqOptions:
+
+    cdef object _get_condition(self)
+    cdef object _get_consumer_name(self)
+    cdef object _get_correlation(self)
+    cdef int _get_mode(self, uint32_t* value) except -1
+    cdef object _get_message_id(self)
+    cdef int _get_navigation(self, uint32_t* value) except -1
+    cdef object _get_transformation(self)
+    cdef int _get_visibility(self, uint32_t* value) except -1
+    cdef int _get_wait(self, uint32_t* value) except -1
+    cdef int _set_condition(self, str value) except -1
+    cdef int _set_consumer_name(self, str value) except -1
+    cdef int _set_correlation(self, str value) except -1
+    cdef int _set_delivery_mode(self, uint16_t value) except -1
+    cdef int _set_mode(self, uint32_t value) except -1
+    cdef int _set_message_id(self, bytes value) except -1
+    cdef int _set_navigation(self, uint32_t value) except -1
+    cdef int _set_transformation(self, str value) except -1
+    cdef int _set_visibility(self, uint32_t value) except -1
+    cdef int _set_wait(self, uint32_t value) except -1
+
+
+cdef class BaseEnqOptions:
+
+    cdef object _get_transformation(self)
+    cdef int _get_visibility(self, uint32_t* value) except -1
+    cdef int _set_delivery_mode(self, uint16_t value) except -1
+    cdef int _set_transformation(self, str value) except -1
+    cdef int _set_visibility(self, uint32_t value) except -1
+
+
+cdef class BaseMsgProps:
+    cdef:
+        public object payload
+
+    cdef int _get_num_attempts(self, int32_t* value) except -1
+    cdef object _get_correlation(self)
+    cdef int _get_delay(self, int32_t* value) except -1
+    cdef int _get_delivery_mode(self, uint16_t* value) except -1
+    cdef object _get_enq_time(self)
+    cdef object _get_exception_queue(self)
+    cdef int _get_expiration(self, int32_t* value) except -1
+    cdef object _get_original_message_id(self)
+    cdef int _get_priority(self, int32_t* value) except -1
+    cdef int _get_message_state(self, uint32_t* value) except -1
+    cdef int _set_correlation(self, str value) except -1
+    cdef int _set_delay(self, int32_t value) except -1
+    cdef int _set_exception_queue(self, str value) except -1
+    cdef int _set_expiration(self, int32_t value) except -1
+    cdef int _set_original_message_id(self, bytes value) except -1
+    cdef int _set_priority(self, int32_t value) except -1
 
 
 cdef object get_exception_class(int32_t code)
