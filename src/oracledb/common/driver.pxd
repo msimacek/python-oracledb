@@ -59,6 +59,7 @@ cdef class BaseConnection:
     cdef int _close(self) except -1
     cdef int _commit(self) except -1
     cdef BaseCursor _create_cursor(self)
+    cdef BaseMsgProps _create_msg_props(self)
     cdef BaseQueue _create_queue(self)
     cdef BaseLob _create_temp_lob(self, DbType dbtype)
     cdef str _get_current_schema(self)

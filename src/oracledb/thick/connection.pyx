@@ -275,6 +275,12 @@ cdef class Connection(BaseConnection):
         if conn_params.outTagLength > 0:
             self.tag = conn_params.outTag[:conn_params.outTagLength].decode()
 
+    cdef BaseMsgProps _create_msg_props(self):
+        return MsgProps.__new__(MsgProps)
+
+    cdef BaseQueue _create_queue(self):
+        return Queue.__new__(Queue)
+
     cdef BaseLob _create_temp_lob(self, DbType dbtype):
         cdef:
             dpiLob *handle

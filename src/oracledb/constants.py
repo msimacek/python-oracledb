@@ -42,10 +42,43 @@ ATTR_PURITY_DEFAULT = PURITY_DEFAULT
 ATTR_PURITY_NEW = PURITY_NEW
 ATTR_PURITY_SELF = PURITY_ANY
 
-# session purity
-ATTR_PURITY_DEFAULT = 0
-ATTR_PURITY_NEW = 1
-ATTR_PURITY_SELF = 2
+# AQ delivery modes
+MSG_BUFFERED =  2
+MSG_PERSISTENT = 1
+MSG_PERSISTENT_OR_BUFFERED = 3
+
+# AQ deque modes
+DEQ_BROWSE = 1
+DEQ_LOCKED = 2
+DEQ_REMOVE = 3
+DEQ_REMOVE_NODATA = 4
+
+# AQ dequeue navigation modes
+DEQ_FIRST_MSG = 1
+DEQ_NEXT_MSG = 3
+DEQ_NEXT_TRANSACTION = 2
+
+# AQ dequeue visibility modes
+DEQ_IMMEDIATE = 1
+DEQ_ON_COMMIT = 2
+
+# AQ dequeue wait modes
+DEQ_NO_WAIT = 0
+DEQ_WAIT_FOREVER = 2 ** 32 - 1
+
+# AQ enqueue visibility modes
+ENQ_IMMEDIATE = 1
+ENQ_ON_COMMIT = 2
+
+# AQ message states
+MSG_EXPIRED = 3
+MSG_PROCESSED = 2
+MSG_READY = 0
+MSG_WAITING = 1
+
+# AQ other constants
+MSG_NO_DELAY = 0
+MSG_NO_EXPIRATION = -1
 
 # basic configuration constants
 DRIVER_NAME = "oracledb : " + VERSION

@@ -88,7 +88,16 @@ cdef extern from "odpi/embed/dpi.c":
     ctypedef struct dpiContext:
         pass
 
+    ctypedef struct dpiDeqOptions:
+        pass
+
+    ctypedef struct dpiEnqOptions:
+        pass
+
     ctypedef struct dpiLob:
+        pass
+
+    ctypedef struct dpiMsgProps:
         pass
 
     ctypedef struct dpiObject:
@@ -101,6 +110,9 @@ cdef extern from "odpi/embed/dpi.c":
         pass
 
     ctypedef struct dpiPool:
+        pass
+
+    ctypedef struct dpiQueue:
         pass
 
     ctypedef struct dpiRowid:
@@ -379,6 +391,10 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiConn_getStmtCacheSize(dpiConn *conn, uint32_t *cacheSize) nogil
 
+    int dpiConn_newQueue(dpiConn *conn, const char *name,
+            uint32_t nameLength, dpiObjectType *payloadType,
+            dpiQueue **queue) nogil
+
     int dpiConn_newTempLob(dpiConn *conn, uint32_t lobType, dpiLob **lob) nogil
 
     int dpiConn_newVar(dpiConn *conn, uint32_t oracleTypeNum,
@@ -446,6 +462,78 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiContext_initSodaOperOptions(const dpiContext *context,
             dpiSodaOperOptions *options) nogil
 
+    int dpiDeqOptions_getCondition(dpiDeqOptions *options,
+            const char **value, uint32_t *valueLength) nogil
+
+    int dpiDeqOptions_getConsumerName(dpiDeqOptions *options,
+            const char **value, uint32_t *valueLength) nogil
+
+    int dpiDeqOptions_getCorrelation(dpiDeqOptions *options,
+            const char **value, uint32_t *valueLength) nogil
+
+    int dpiDeqOptions_getMode(dpiDeqOptions *options, uint32_t *value) nogil
+
+    int dpiDeqOptions_getMsgId(dpiDeqOptions *options,
+            const char **value, uint32_t *valueLength) nogil
+
+    int dpiDeqOptions_getNavigation(dpiDeqOptions *options,
+            uint32_t *value) nogil
+
+    int dpiDeqOptions_getTransformation(dpiDeqOptions *options,
+            const char **value, uint32_t *valueLength) nogil
+
+    int dpiDeqOptions_getVisibility(dpiDeqOptions *options,
+            uint32_t *value) nogil
+
+    int dpiDeqOptions_getWait(dpiDeqOptions *options, uint32_t *value) nogil
+
+    int dpiDeqOptions_release(dpiDeqOptions *options) nogil
+
+    int dpiDeqOptions_setCondition(dpiDeqOptions *options,
+            const char *value, uint32_t valueLength) nogil
+
+    int dpiDeqOptions_setConsumerName(dpiDeqOptions *options,
+            const char *value, uint32_t valueLength) nogil
+
+    int dpiDeqOptions_setCorrelation(dpiDeqOptions *options,
+            const char *value, uint32_t valueLength) nogil
+
+    int dpiDeqOptions_setDeliveryMode(dpiDeqOptions *options,
+            uint16_t value) nogil
+
+    int dpiDeqOptions_setMode(dpiDeqOptions *options, uint32_t value) nogil
+
+    int dpiDeqOptions_setMsgId(dpiDeqOptions *options,
+            const char *value, uint32_t valueLength) nogil
+
+    int dpiDeqOptions_setNavigation(dpiDeqOptions *options,
+            uint32_t value) nogil
+
+    int dpiDeqOptions_setTransformation(dpiDeqOptions *options,
+            const char *value, uint32_t valueLength) nogil
+
+    int dpiDeqOptions_setVisibility(dpiDeqOptions *options,
+            uint32_t value) nogil
+
+    int dpiDeqOptions_setWait(dpiDeqOptions *options, uint32_t value) nogil
+
+    int dpiEnqOptions_getTransformation(dpiEnqOptions *options,
+            const char **value, uint32_t *valueLength) nogil
+
+    int dpiEnqOptions_getVisibility(dpiEnqOptions *options,
+            uint32_t *value) nogil
+
+    int dpiEnqOptions_release(dpiEnqOptions *options) nogil
+
+    int dpiEnqOptions_setDeliveryMode(dpiEnqOptions *options,
+            uint16_t value) nogil
+
+    int dpiEnqOptions_setTransformation(dpiEnqOptions *options,
+            const char *value, uint32_t valueLength) nogil
+
+    int dpiEnqOptions_setVisibility(dpiEnqOptions *options,
+            uint32_t value) nogil
+
     int dpiLob_addRef(dpiLob *lob) nogil
 
     int dpiLob_closeResource(dpiLob *lob) nogil
@@ -483,6 +571,57 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiLob_writeBytes(dpiLob *lob, uint64_t offset,
             const char *value, uint64_t valueLength) nogil
+
+    int dpiMsgProps_getNumAttempts(dpiMsgProps *props, int32_t *value) nogil
+
+    int dpiMsgProps_getCorrelation(dpiMsgProps *props,
+            const char **value, uint32_t *valueLength) nogil
+
+    int dpiMsgProps_getDelay(dpiMsgProps *props, int32_t *value) nogil
+
+    int dpiMsgProps_getDeliveryMode(dpiMsgProps *props, uint16_t *value) nogil
+
+    int dpiMsgProps_getEnqTime(dpiMsgProps *props, dpiTimestamp *value) nogil
+
+    int dpiMsgProps_getExceptionQ(dpiMsgProps *props,
+            const char **value, uint32_t *valueLength) nogil
+
+    int dpiMsgProps_getExpiration(dpiMsgProps *props, int32_t *value) nogil
+
+    int dpiMsgProps_getMsgId(dpiMsgProps *props, const char **value,
+            uint32_t *valueLength) nogil
+
+    int dpiMsgProps_getOriginalMsgId(dpiMsgProps *props,
+            const char **value, uint32_t *valueLength) nogil
+
+    int dpiMsgProps_getPayload(dpiMsgProps *props, dpiObject **obj,
+            const char **value, uint32_t *valueLength) nogil
+
+    int dpiMsgProps_getPriority(dpiMsgProps *props, int32_t *value) nogil
+
+    int dpiMsgProps_getState(dpiMsgProps *props, uint32_t *value) nogil
+
+    int dpiMsgProps_release(dpiMsgProps *props) nogil
+
+    int dpiMsgProps_setCorrelation(dpiMsgProps *props,
+            const char *value, uint32_t valueLength) nogil
+
+    int dpiMsgProps_setDelay(dpiMsgProps *props, int32_t value) nogil
+
+    int dpiMsgProps_setExceptionQ(dpiMsgProps *props, const char *value,
+            uint32_t valueLength) nogil
+
+    int dpiMsgProps_setExpiration(dpiMsgProps *props, int32_t value) nogil
+
+    int dpiMsgProps_setOriginalMsgId(dpiMsgProps *props,
+        const char *value, uint32_t valueLength) nogil
+
+    int dpiMsgProps_setPayloadBytes(dpiMsgProps *props,
+            const char *value, uint32_t valueLength) nogil
+
+    int dpiMsgProps_setPayloadObject(dpiMsgProps *props, dpiObject *obj) nogil
+
+    int dpiMsgProps_setPriority(dpiMsgProps *props, int32_t value) nogil
 
     int dpiObject_addRef(dpiObject *obj) nogil
 
@@ -578,6 +717,24 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiPool_setTimeout(dpiPool *pool, uint32_t value) nogil
 
     int dpiPool_setWaitTimeout(dpiPool *pool, uint32_t value) nogil
+
+    int dpiQueue_deqMany(dpiQueue *queue, uint32_t *numProps,
+            dpiMsgProps **props) nogil
+
+    int dpiQueue_deqOne(dpiQueue *queue, dpiMsgProps **props) nogil
+
+    int dpiQueue_enqMany(dpiQueue *queue, uint32_t numProps,
+            dpiMsgProps **props) nogil
+
+    int dpiQueue_enqOne(dpiQueue *queue, dpiMsgProps *props) nogil
+
+    int dpiQueue_getDeqOptions(dpiQueue *queue,
+            dpiDeqOptions **options) nogil
+
+    int dpiQueue_getEnqOptions(dpiQueue *queue,
+            dpiEnqOptions **options) nogil
+
+    int dpiQueue_release(dpiQueue *queue) nogil
 
     int dpiRowid_getStringValue(dpiRowid *rowid, const char **value,
             uint32_t *valueLength)

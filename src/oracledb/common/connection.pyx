@@ -61,6 +61,12 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
+    cdef BaseMsgProps _create_msg_props(self):
+        """
+        Internal method for creating a message property object.
+        """
+        raise NotImplementedError()
+
     cdef BaseQueue _create_queue(self):
         """
         Internal method for creating a queue.
@@ -358,15 +364,27 @@ cdef class BaseConnection:
         self._verify_connected()
         self._set_module(value)
 
-    @property
-    def stmtcachesize(self):
-        self._verify_connected()
-        return self._get_stmtcachesize()
-
-    @stmtcachesize.setter
-    def stmtcachesize(self, value):
-        self._verify_connected()
-        self._set_stmtcachesize(value)
+    def msgproperties(self, payload=None, correlation=None, delay=None,
+                      exceptionq=None, expiration=None, priority=None):
+        """
+        Create and return a message properties object. If the parameters are
+        not None, they act as a shortcut for setting each of the equivalently
+        named properties.
+        """
+        cdef BaseMsgProps props = self._create_msg_props()
+        if payload is not None:
+            props.payload = payload
+        if correlation is not None:
+            props.correlation = correlation
+        if delay is not None:
+            props.delay = delay
+        if exceptionq is not None:
+            props.exceptionq = exceptionq
+        if expiration is not None:
+            props.expiration = expiration
+        if priority is not None:
+            props.priority = priority
+        return props
 
     def ping(self):
         """
@@ -387,10 +405,13 @@ cdef class BaseConnection:
         """
         Returns a queue used to enqueue and dequeue messages in AQ.
         """
-        cdef BaseQueue queue = self._create_queue()
+        cdef BaseQueue queue
+        self._verify_connected()
+        queue = self._create_queue()
+        queue.connection = self
         queue.name = name
         queue.payloadType = payloadType
-        queue._initializae()
+        queue._initialize()
         return queue
 
     def rollback(self):
@@ -399,6 +420,16 @@ cdef class BaseConnection:
         """
         self._verify_connected()
         self._rollback()
+
+    @property
+    def stmtcachesize(self):
+        self._verify_connected()
+        return self._get_stmtcachesize()
+
+    @stmtcachesize.setter
+    def stmtcachesize(self, value):
+        self._verify_connected()
+        self._set_stmtcachesize(value)
 
     @property
     def version(self):
