@@ -61,6 +61,7 @@ cdef class BaseConnection:
     cdef BaseCursor _create_cursor(self)
     cdef BaseMsgProps _create_msg_props(self)
     cdef BaseQueue _create_queue(self)
+    cdef BaseSubscription _create_subscription(self)
     cdef BaseLob _create_temp_lob(self, DbType dbtype)
     cdef str _get_current_schema(self)
     cdef str _get_edition(self)
@@ -394,6 +395,63 @@ cdef class BaseMsgProps:
     cdef int _set_expiration(self, int32_t value) except -1
     cdef int _set_original_message_id(self, bytes value) except -1
     cdef int _set_priority(self, int32_t value) except -1
+
+
+cdef class BaseSubscription:
+    cdef:
+        readonly object callback
+        readonly BaseConnection connection
+        readonly uint32_t namespace
+        readonly str name
+        readonly uint32_t protocol
+        readonly str ip_address
+        readonly uint32_t port
+        readonly uint32_t timeout
+        readonly uint32_t operations
+        readonly uint32_t qos
+        readonly uint64_t id
+        readonly uint8_t grouping_class
+        readonly uint32_t grouping_value
+        readonly uint8_t grouping_type
+        readonly bint client_initiated
+
+    cdef int _register_query(self, str sql, object args,
+                             uint64_t* query_id) except -1
+    cdef int _subscribe(self) except -1
+    cdef int _unsubscribe(self, BaseConnection connection) except -1
+
+
+cdef class Message:
+    cdef:
+        readonly uint32_t type
+        readonly BaseSubscription subscription
+        readonly str dbname
+        readonly bytes txid
+        readonly list tables
+        readonly list queries
+        readonly str queueName
+        readonly str consumerName
+        readonly bint registered
+
+
+cdef class MessageQuery:
+    cdef:
+        readonly uint64_t id
+        readonly uint32_t operation
+        readonly list tables
+
+
+cdef class MessageRow:
+    cdef:
+        readonly uint32_t operation
+        readonly str rowid
+
+
+cdef class MessageTable:
+    cdef:
+        readonly str name
+        readonly uint32_t operation
+        readonly list rows
 
 
 cdef object get_exception_class(int32_t code)

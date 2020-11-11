@@ -81,6 +81,11 @@ cdef extern from "odpi/embed/dpi.c":
     uint32_t DPI_SODA_FLAGS_CREATE_COLL_MAP
     uint32_t DPI_SODA_FLAGS_INDEX_DROP_FORCE
 
+    # subscription constants
+    uint32_t DPI_SUBSCR_QOS_QUERY
+    uint32_t DPI_EVENT_OBJCHANGE
+    uint32_t DPI_EVENT_QUERYCHANGE
+
     # opaque handles
     ctypedef struct dpiConn:
         pass
@@ -133,8 +138,14 @@ cdef extern from "odpi/embed/dpi.c":
     ctypedef struct dpiStmt:
         pass
 
+    ctypedef struct dpiSubscr:
+        pass
+
     ctypedef struct dpiVar:
         pass
+
+    # function pointer types
+    ctypedef void (*dpiSubscrCallback)(void* context, dpiSubscrMessage *message)
 
     # complex native data types
     ctypedef struct dpiBytes:
@@ -332,6 +343,62 @@ cdef extern from "odpi/embed/dpi.c":
         uint16_t statementType
         int isReturning
 
+    ctypedef struct dpiSubscrCreateParams:
+        uint32_t subscrNamespace
+        uint32_t protocol
+        uint32_t qos
+        uint32_t operations
+        uint32_t portNumber
+        uint32_t timeout
+        const char *name
+        uint32_t nameLength
+        dpiSubscrCallback callback
+        void *callbackContext
+        const char *recipientName
+        uint32_t recipientNameLength
+        const char *ipAddress
+        uint32_t ipAddressLength
+        uint8_t groupingClass
+        uint32_t groupingValue
+        uint8_t groupingType
+        uint64_t outRegId
+        int clientInitiated
+
+    ctypedef struct dpiSubscrMessage:
+        uint32_t eventType
+        const char *dbName
+        uint32_t dbNameLength
+        dpiSubscrMessageTable *tables
+        uint32_t numTables
+        dpiSubscrMessageQuery *queries
+        uint32_t numQueries
+        dpiErrorInfo *errorInfo
+        const void *txId
+        uint32_t txIdLength
+        bint registered
+        const char *queueName
+        uint32_t queueNameLength
+        const char *consumerName
+        uint32_t consumerNameLength
+
+    ctypedef struct dpiSubscrMessageQuery:
+        uint64_t id
+        uint32_t operation
+        dpiSubscrMessageTable *tables
+        uint32_t numTables
+
+    ctypedef struct dpiSubscrMessageRow:
+        uint32_t operation
+        const char *rowid
+        uint32_t rowidLength
+
+    ctypedef struct dpiSubscrMessageTable:
+        uint32_t operation
+        const char *name
+        uint32_t nameLength
+        dpiSubscrMessageRow *rows
+        uint32_t numRows
+
     ctypedef struct dpiVersionInfo:
         int versionNum
         int releaseNum
@@ -442,6 +509,11 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiConn_setStmtCacheSize(dpiConn *conn, uint32_t cacheSize) nogil
 
+    int dpiConn_subscribe(dpiConn *conn, dpiSubscrCreateParams *params,
+            dpiSubscr **subscr) nogil
+
+    int dpiConn_unsubscribe(dpiConn *conn, dpiSubscr *subscr) nogil
+
     int dpiContext_createWithParams(unsigned int majorVersion,
             unsigned int minorVersion, dpiContextCreateParams *params,
             dpiContext **context, dpiErrorInfo *errorInfo) nogil
@@ -463,6 +535,9 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiContext_initSodaOperOptions(const dpiContext *context,
             dpiSodaOperOptions *options) nogil
+
+    int dpiContext_initSubscrCreateParams(const dpiContext *context,
+            dpiSubscrCreateParams *params) nogil
 
     int dpiDeqOptions_getCondition(dpiDeqOptions *options,
             const char **value, uint32_t *valueLength) nogil
@@ -878,9 +953,6 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiStmt_getNumQueryColumns(dpiStmt *stmt,
             uint32_t *numQueryColumns) nogil
 
-    int dpiStmt_getRowCounts(dpiStmt *stmt, uint32_t *numRowCounts,
-            uint64_t **rowCounts) nogil
-
     int dpiStmt_getInfo(dpiStmt *stmt, dpiStmtInfo *info) nogil
 
     int dpiStmt_getLastRowid(dpiStmt *stmt, dpiRowid **rowid) nogil
@@ -890,6 +962,11 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiStmt_getRowCount(dpiStmt *stmt, uint64_t *count) nogil
 
+    int dpiStmt_getRowCounts(dpiStmt *stmt, uint32_t *numRowCounts,
+            uint64_t **rowCounts) nogil
+
+    int dpiStmt_getSubscrQueryId(dpiStmt *stmt, uint64_t *queryId) nogil
+
     int dpiStmt_release(dpiStmt *stmt) nogil
 
     int dpiStmt_scroll(dpiStmt *stmt, uint32_t mode, int32_t offset,
@@ -898,6 +975,11 @@ cdef extern from "odpi/embed/dpi.c":
     int dpiStmt_setFetchArraySize(dpiStmt *stmt, uint32_t arraySize) nogil
 
     int dpiStmt_setPrefetchRows(dpiStmt *stmt, uint32_t numRows) nogil
+
+    int dpiSubscr_prepareStmt(dpiSubscr *subscr, const char *sql,
+            uint32_t sqlLength, dpiStmt **stmt) nogil
+
+    int dpiSubscr_release(dpiSubscr *subscr) nogil
 
     int dpiVar_getNumElementsInArray(dpiVar *var, uint32_t *numElements) nogil
 

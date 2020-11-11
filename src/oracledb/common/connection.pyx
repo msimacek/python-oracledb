@@ -73,6 +73,12 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
+    cdef BaseSubscription _create_subscription(self):
+        """
+        Internal method for creating a subscription.
+        """
+        raise NotImplementedError()
+
     cdef BaseLob _create_temp_lob(self, DbType dbtype):
         """
         Internal method for creating a temporary LOB.
@@ -430,6 +436,38 @@ cdef class BaseConnection:
     def stmtcachesize(self, value):
         self._verify_connected()
         self._set_stmtcachesize(value)
+
+    def subscribe(self, namespace=constants.SUBSCR_NAMESPACE_DBCHANGE,
+                  protocol=constants.SUBSCR_PROTOCOL_CALLBACK, callback=None,
+                  timeout=0, operations=constants.OPCODE_ALLOPS, port=0,
+                  qos=constants.SUBSCR_QOS_DEFAULT, ipAddress=None,
+                  groupingClass=constants.SUBSCR_GROUPING_CLASS_NONE,
+                  groupingValue=0,
+                  groupingType=constants.SUBSCR_GROUPING_TYPE_SUMMARY,
+                  name=None, clientInitiated=False):
+        cdef BaseSubscription subscr
+        subscr = self._create_subscription()
+        subscr.connection = self
+        subscr.callback = callback
+        subscr.namespace = namespace
+        subscr.name = name
+        subscr.protocol = protocol
+        subscr.ip_address = ipAddress
+        subscr.port = port
+        subscr.timeout = timeout
+        subscr.operations = operations
+        subscr.qos = qos
+        subscr.grouping_class = groupingClass
+        subscr.grouping_value = groupingValue
+        subscr.grouping_type = groupingType
+        subscr.client_initiated = clientInitiated
+        subscr._subscribe()
+        return subscr
+
+    def unsubscribe(self, subscr):
+        cdef BaseSubscription common_subscr = subscr
+        self._verify_connected()
+        common_subscr._unsubscribe(self)
 
     @property
     def version(self):

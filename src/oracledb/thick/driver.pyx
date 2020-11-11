@@ -26,7 +26,8 @@ from ..common.driver cimport BaseDbObjectType, BaseDbObjectAttr, BaseDbObject
 from ..common.driver cimport BaseLob, BasePool, BaseSodaDatabase
 from ..common.driver cimport BaseSodaCollection, BaseSodaDoc, BaseSodaDocCursor
 from ..common.driver cimport BaseSodaOperation, BaseQueue, BaseDeqOptions
-from ..common.driver cimport BaseEnqOptions, BaseMsgProps
+from ..common.driver cimport BaseEnqOptions, BaseMsgProps, BaseSubscription
+from ..common.driver cimport Message, MessageQuery, MessageRow, MessageTable
 from libc.string cimport memchr, memset
 
 include "odpi.pxd"
@@ -44,4 +45,5 @@ include "var.pyx"
 include "dbobject.pyx"
 include "soda.pyx"
 include "queue.pyx"
+include "subscr.pyx"
 include "utils.pyx"

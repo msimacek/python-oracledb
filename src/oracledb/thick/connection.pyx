@@ -284,6 +284,9 @@ cdef class Connection(BaseConnection):
     cdef BaseQueue _create_queue(self):
         return Queue.__new__(Queue)
 
+    cdef BaseSubscription _create_subscription(self):
+        return Subscription.__new__(Subscription)
+
     cdef BaseLob _create_temp_lob(self, DbType dbtype):
         cdef:
             dpiLob *handle
