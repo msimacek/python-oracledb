@@ -276,7 +276,10 @@ cdef class Connection(BaseConnection):
             self.tag = conn_params.outTag[:conn_params.outTagLength].decode()
 
     cdef BaseMsgProps _create_msg_props(self):
-        return MsgProps.__new__(MsgProps)
+        cdef MsgProps props = MsgProps.__new__(MsgProps)
+        if dpiConn_newMsgProps(self._handle, &props._handle) < 0:
+            _raise_from_odpi()
+        return props
 
     cdef BaseQueue _create_queue(self):
         return Queue.__new__(Queue)

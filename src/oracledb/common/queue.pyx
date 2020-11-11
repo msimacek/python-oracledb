@@ -51,6 +51,11 @@ cdef class BaseQueue:
         """
         Enqueue multiple messages into the queue.
         """
+        cdef BaseMsgProps props
+        for props in messages:
+            if props.payload is None:
+                errors._raise_from_string(exceptions.ProgrammingError,
+                                          "message has no payload")
         self._enq_many(messages)
 
     def enqOne(self, message):
@@ -194,7 +199,7 @@ cdef class BaseDeqOptions:
 
     @property
     def correlation(self):
-        return self._get_consumer_name()
+        return self._get_correlation()
 
     @correlation.setter
     def correlation(self, value):
@@ -430,7 +435,7 @@ cdef class BaseMsgProps:
 
     @property
     def correlation(self):
-        return self._get_consumer_name()
+        return self._get_correlation()
 
     @correlation.setter
     def correlation(self, value):
@@ -480,11 +485,11 @@ cdef class BaseMsgProps:
 
     @property
     def msgid(self):
-        return self._get_message_id()
+        return self._get_original_message_id()
 
     @msgid.setter
     def msgid(self, value):
-        self._set_message_id(value)
+        self._set_original_message_id(value)
 
     @property
     def priority(self):

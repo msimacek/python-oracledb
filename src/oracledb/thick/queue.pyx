@@ -30,7 +30,7 @@ cdef class Queue(BaseQueue):
                 props = MsgProps.__new__(MsgProps)
                 props._handle = handles[i]
                 processed_props += 1
-                props._initialize()
+                props._initialize(self)
                 result.append(props)
         finally:
             for i in range(processed_props, num_props):
@@ -47,18 +47,38 @@ cdef class Queue(BaseQueue):
         if status < 0:
             _raise_from_odpi()
         if props._handle != NULL:
-            props._initialize()
+            props._initialize(self)
             return props
 
     cdef int _enq_many(self, list messages) except -1:
         cdef:
+            uint32_t i, num_props = 0
             dpiMsgProps **handles
+            ssize_t num_bytes
             MsgProps props
             int status
-        pass
+        num_props = <uint32_t> len(messages)
+        for props in messages:
+            props._set_payload()
+        num_bytes = num_props * sizeof(dpiMsgProps*)
+        handles = <dpiMsgProps**> cpython.PyMem_Malloc(num_bytes)
+        for i, props in enumerate(messages):
+            handles[i] = props._handle
+        with nogil:
+            status = dpiQueue_enqMany(self._handle, num_props, handles)
+        cpython.PyMem_Free(handles)
+        if status < 0:
+            _raise_from_odpi()
 
     cdef int _enq_one(self, BaseMsgProps message) except -1:
-        raise NotImplementedError()
+        cdef:
+            MsgProps props = message
+            int status
+        props._set_payload()
+        with nogil:
+            status = dpiQueue_enqOne(self._handle, props._handle)
+        if status < 0:
+            _raise_from_odpi()
 
     cdef int _initialize(self) except -1:
         cdef:
@@ -93,40 +113,87 @@ cdef class DeqOptions(BaseDeqOptions):
             dpiDeqOptions_release(self._handle)
 
     cdef object _get_condition(self):
-        raise NotImplementedError()
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiDeqOptions_getCondition(self._handle, &value, &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
 
     cdef object _get_consumer_name(self):
-        raise NotImplementedError()
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiDeqOptions_getConsumerName(self._handle, &value,
+                                         &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
 
     cdef object _get_correlation(self):
-        raise NotImplementedError()
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiDeqOptions_getCorrelation(self._handle, &value,
+                                        &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
 
     cdef int _get_mode(self, uint32_t* value) except -1:
-        raise NotImplementedError()
+        if dpiDeqOptions_getMode(self._handle, value) < 0:
+            _raise_from_odpi()
 
     cdef object _get_message_id(self):
-        raise NotImplementedError()
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiDeqOptions_getMsgId(self._handle, &value, &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length]
 
     cdef int _get_navigation(self, uint32_t* value) except -1:
-        raise NotImplementedError()
+        if dpiDeqOptions_getNavigation(self._handle, value) < 0:
+            _raise_from_odpi()
 
     cdef object _get_transformation(self):
-        raise NotImplementedError()
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiDeqOptions_getTransformation(self._handle, &value,
+                                           &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
 
     cdef int _get_visibility(self, uint32_t* value) except -1:
-        raise NotImplementedError()
+        if dpiDeqOptions_getVisibility(self._handle, value) < 0:
+            _raise_from_odpi()
 
     cdef int _get_wait(self, uint32_t* value) except -1:
-        raise NotImplementedError()
+        if dpiDeqOptions_getWait(self._handle, value) < 0:
+            _raise_from_odpi()
 
     cdef int _set_condition(self, str value) except -1:
-        raise NotImplementedError()
+        cdef StringBuffer buf = StringBuffer()
+        buf.set_value(value)
+        if dpiDeqOptions_setCondition(self._handle, buf.ptr, buf.length) < 0:
+            _raise_from_odpi()
 
     cdef int _set_consumer_name(self, str value) except -1:
-        raise NotImplementedError()
+        cdef StringBuffer buf = StringBuffer()
+        buf.set_value(value)
+        if dpiDeqOptions_setConsumerName(self._handle, buf.ptr,
+                                         buf.length) < 0:
+            _raise_from_odpi()
 
     cdef int _set_correlation(self, str value) except -1:
-        raise NotImplementedError()
+        cdef StringBuffer buf = StringBuffer()
+        buf.set_value(value)
+        if dpiDeqOptions_setCorrelation(self._handle, buf.ptr, buf.length) < 0:
+            _raise_from_odpi()
 
     cdef int _set_delivery_mode(self, uint16_t value) except -1:
         if dpiDeqOptions_setDeliveryMode(self._handle, value) < 0:
@@ -137,14 +204,21 @@ cdef class DeqOptions(BaseDeqOptions):
             _raise_from_odpi()
 
     cdef int _set_message_id(self, bytes value) except -1:
-        raise NotImplementedError()
+        cdef StringBuffer buf = StringBuffer()
+        buf.set_value(value)
+        if dpiDeqOptions_setMsgId(self._handle, buf.ptr, buf.length) < 0:
+            _raise_from_odpi()
 
     cdef int _set_navigation(self, uint32_t value) except -1:
         if dpiDeqOptions_setNavigation(self._handle, value) < 0:
             _raise_from_odpi()
 
     cdef int _set_transformation(self, str value) except -1:
-        raise NotImplementedError()
+        cdef StringBuffer buf = StringBuffer()
+        buf.set_value(value)
+        if dpiDeqOptions_setTransformation(self._handle, buf.ptr,
+                                           buf.length) < 0:
+            _raise_from_odpi()
 
     cdef int _set_visibility(self, uint32_t value) except -1:
         if dpiDeqOptions_setVisibility(self._handle, value) < 0:
@@ -164,7 +238,14 @@ cdef class EnqOptions(BaseEnqOptions):
             dpiEnqOptions_release(self._handle)
 
     cdef object _get_transformation(self):
-        raise NotImplementedError()
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiEnqOptions_getTransformation(self._handle, &value,
+                                           &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
 
     cdef int _get_visibility(self, uint32_t* value) except -1:
         if dpiEnqOptions_getVisibility(self._handle, value) < 0:
@@ -175,7 +256,11 @@ cdef class EnqOptions(BaseEnqOptions):
             _raise_from_odpi()
 
     cdef int _set_transformation(self, str value) except -1:
-        raise NotImplementedError()
+        cdef StringBuffer buf = StringBuffer()
+        buf.set_value(value)
+        if dpiEnqOptions_setTransformation(self._handle, buf.ptr,
+                                           buf.length) < 0:
+            _raise_from_odpi()
 
     cdef int _set_visibility(self, uint32_t value) except -1:
         if dpiEnqOptions_setVisibility(self._handle, value) < 0:
@@ -191,36 +276,67 @@ cdef class MsgProps(BaseMsgProps):
             dpiMsgProps_release(self._handle)
 
     cdef int _get_num_attempts(self, int32_t* value) except -1:
-        raise NotImplementedError()
+        if dpiMsgProps_getNumAttempts(self._handle, value) < 0:
+            _raise_from_odpi()
 
     cdef object _get_correlation(self):
-        raise NotImplementedError()
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiMsgProps_getCorrelation(self._handle, &value, &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
 
     cdef int _get_delay(self, int32_t* value) except -1:
-        raise NotImplementedError()
+        if dpiMsgProps_getDelay(self._handle, value) < 0:
+            _raise_from_odpi()
 
     cdef int _get_delivery_mode(self, uint16_t* value) except -1:
-        raise NotImplementedError()
+        if dpiMsgProps_getDeliveryMode(self._handle, value) < 0:
+            _raise_from_odpi()
 
     cdef object _get_enq_time(self):
-        raise NotImplementedError()
+        cdef dpiTimestamp timestamp
+        if dpiMsgProps_getEnqTime(self._handle, &timestamp) < 0:
+            _raise_from_odpi()
+        return cydatetime.datetime_new(timestamp.year, timestamp.month,
+                                       timestamp.day, timestamp.hour,
+                                       timestamp.minute, timestamp.second,
+                                       timestamp.fsecond // 1000, None)
 
     cdef object _get_exception_queue(self):
-        raise NotImplementedError()
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiMsgProps_getExceptionQ(self._handle, &value, &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
 
     cdef int _get_expiration(self, int32_t* value) except -1:
-        raise NotImplementedError()
+        if dpiMsgProps_getExpiration(self._handle, value) < 0:
+            _raise_from_odpi()
 
     cdef object _get_original_message_id(self):
-        raise NotImplementedError()
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiMsgProps_getOriginalMsgId(self._handle, &value,
+                                        &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length]
 
     cdef int _get_priority(self, int32_t* value) except -1:
-        raise NotImplementedError()
+        if dpiMsgProps_getPriority(self._handle, value) < 0:
+            _raise_from_odpi()
 
     cdef int _get_message_state(self, uint32_t* value) except -1:
-        raise NotImplementedError()
+        if dpiMsgProps_getState(self._handle, value) < 0:
+            _raise_from_odpi()
 
-    cdef int _initialize(self) except -1:
+    cdef int _initialize(self, Queue queue) except -1:
         cdef:
             dpiObject *payload_obj_handle
             const char *payload_ptr
@@ -231,7 +347,7 @@ cdef class MsgProps(BaseMsgProps):
             _raise_from_odpi()
         if payload_obj_handle != NULL:
             payload_obj = DbObject.__new__(DbObject)
-            payload_obj.type = self.payloadType
+            payload_obj.type = queue.payloadType
             if dpiObject_addRef(payload_obj_handle) < 0:
                 _raise_from_odpi()
             payload_obj._handle = payload_obj_handle
@@ -240,19 +356,45 @@ cdef class MsgProps(BaseMsgProps):
             self.payload = payload_ptr[:payload_len]
 
     cdef int _set_correlation(self, str value) except -1:
-        raise NotImplementedError()
+        cdef StringBuffer buf = StringBuffer()
+        buf.set_value(value)
+        if dpiMsgProps_setCorrelation(self._handle, buf.ptr, buf.length) < 0:
+            _raise_from_odpi()
 
     cdef int _set_delay(self, int32_t value) except -1:
-        raise NotImplementedError()
+        if dpiMsgProps_setDelay(self._handle, value) < 0:
+            _raise_from_odpi()
 
     cdef int _set_exception_queue(self, str value) except -1:
-        raise NotImplementedError()
+        cdef StringBuffer buf = StringBuffer()
+        buf.set_value(value)
+        if dpiMsgProps_setExceptionQ(self._handle, buf.ptr, buf.length) < 0:
+            _raise_from_odpi()
 
     cdef int _set_expiration(self, int32_t value) except -1:
-        raise NotImplementedError()
+        if dpiMsgProps_setExpiration(self._handle, value) < 0:
+            _raise_from_odpi()
 
     cdef int _set_original_message_id(self, bytes value) except -1:
-        raise NotImplementedError()
+        cdef StringBuffer buf = StringBuffer()
+        buf.set_value(value)
+        if dpiMsgProps_setOriginalMsgId(self._handle, buf.ptr, buf.length) < 0:
+            _raise_from_odpi()
+
+    cdef int _set_payload(self) except -1:
+        cdef:
+            StringBuffer buf = StringBuffer()
+            DbObject obj
+        if isinstance(self.payload, DbObject):
+            obj = self.payload
+            if dpiMsgProps_setPayloadObject(self._handle, obj._handle) < 0:
+                _raise_from_odpi()
+        else:
+            buf.set_value(self.payload)
+            if dpiMsgProps_setPayloadBytes(self._handle, buf.ptr,
+                                           buf.length) < 0:
+                _raise_from_odpi()
 
     cdef int _set_priority(self, int32_t value) except -1:
-        raise NotImplementedError()
+        if dpiMsgProps_setPriority(self._handle, value) < 0:
+            _raise_from_odpi()

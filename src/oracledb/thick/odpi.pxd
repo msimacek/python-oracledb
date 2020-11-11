@@ -391,6 +391,8 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiConn_getStmtCacheSize(dpiConn *conn, uint32_t *cacheSize) nogil
 
+    int dpiConn_newMsgProps(dpiConn *conn, dpiMsgProps **props) nogil
+
     int dpiConn_newQueue(dpiConn *conn, const char *name,
             uint32_t nameLength, dpiObjectType *payloadType,
             dpiQueue **queue) nogil
