@@ -849,5 +849,14 @@ class TestCase(base.BaseTestCase):
         self.cursor.prepare(statement)
         self.assertEqual(self.cursor.bindnames(), ["VALUE"])
 
+    def test_1276_bind_by_name_with_duplicates(self):
+        "1276 - test executing a PL/SQL statement with duplicate binds"
+        statement = "begin :value := :value + 5; end;"
+        simple_var = self.cursor.var(oracledb.NUMBER)
+        simple_var.setvalue(0,5)
+        result = self.cursor.execute(statement, value=simple_var)
+        self.assertEqual(result, None)
+        self.assertEqual(simple_var.getvalue(), 10)
+
 if __name__ == "__main__":
     base.run_test_cases()

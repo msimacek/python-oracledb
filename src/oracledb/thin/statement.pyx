@@ -93,6 +93,8 @@ cdef class Statement:
         if self._is_query or self._is_dml or self._is_plsql:
             bind_names = re.findall(r"(?<=\:)[a-zA-Z]?[a-zA-Z0-9_]+",
                                           sql.upper())
+            if self._is_plsql:
+                bind_names = list(collections.OrderedDict.fromkeys(bind_names))
             self._bind_info_list = [BindInfo(name) for name in bind_names]
             for bind_info in self._bind_info_list:
                 if bind_info._bind_name in self._bind_info_dict:
