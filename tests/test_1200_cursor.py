@@ -781,12 +781,12 @@ class TestCase(base.BaseTestCase):
     def test_1266_refcursor_prefetchrows(self):
         "1266 - test prefetch rows and arraysize using a refcursor"
         self.setup_round_trip_checker()
- 
+
         # simple DDL only requires a single round trip
         with self.connection.cursor() as cursor:
             cursor.execute("truncate table TestTempTable")
             self.assertRoundTrips(1)
- 
+
         # array execution only requires a single round trip
         num_rows = 590
         with self.connection.cursor() as cursor:
@@ -794,7 +794,7 @@ class TestCase(base.BaseTestCase):
             data = [(n + 1,) for n in range(num_rows)]
             cursor.executemany(sql, data)
             self.assertRoundTrips(1)
- 
+
         # create refcursor and execute stored procedure
         with self.connection.cursor() as cursor:
             refcursor = self.connection.cursor()
@@ -803,11 +803,11 @@ class TestCase(base.BaseTestCase):
             cursor.callproc("myrefcursorproc", [refcursor])
             refcursor.fetchall()
             self.assertRoundTrips(2)
- 
+
     def test_1267_existing_cursor_prefetchrows(self):
         "1267 - test prefetch rows using existing cursor"
         self.setup_round_trip_checker()
- 
+
         # Set prefetch rows on an existing cursor
         num_rows = 590
         with self.connection.cursor() as cursor:
