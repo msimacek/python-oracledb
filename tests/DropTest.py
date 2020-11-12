@@ -11,7 +11,7 @@
 import oracledb
 import base
 
-def DropTests(conn):
+def drop_tests(conn):
     print("Dropping test schemas...")
     base.run_sql_script(conn, "DropTest",
                         main_user=base.get_main_user(),
@@ -20,5 +20,5 @@ def DropTests(conn):
 if __name__ == "__main__":
     conn = oracledb.connect(base.get_admin_connect_string(),
                             thin=base.get_is_thin())
-    DropTests(conn)
+    drop_tests(conn)
     print("Done.")

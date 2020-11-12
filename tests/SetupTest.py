@@ -19,7 +19,7 @@ conn = oracledb.connect(base.get_admin_connect_string(),
                         thin=base.get_is_thin())
 
 # drop existing users and editions, if applicable
-DropTest.DropTests(conn)
+DropTest.drop_tests(conn)
 
 # create test schemas
 print("Creating test schemas...")
