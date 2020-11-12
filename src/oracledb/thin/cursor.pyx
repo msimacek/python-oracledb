@@ -19,9 +19,15 @@ cdef class Cursor(BaseCursor):
         return list(self._statement._bind_info_dict.keys())
 
     cdef int _execute(self) except -1:
-        cdef Connection connection = self.connection
+        cdef:
+            Connection connection = self.connection
+            BindInfo bind_info
         if self._bind_vars:
             self._perform_binds()
+        for bind_info in self._statement._bind_info_list:
+            if bind_info._bind_var is None:
+                message = f"Bind value for: {bind_info._bind_name} missing."
+                errors._raise_from_string(exceptions.DatabaseError, message)
         params = types.SimpleNamespace(cursor=self,
                                        fetch_array_size=self.arraysize,
                                        params=self._statement._bind_info_list)

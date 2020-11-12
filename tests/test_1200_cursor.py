@@ -908,5 +908,17 @@ class TestCase(base.BaseTestCase):
         self.cursor.execute(statement, [simple_var])
         self.assertEqual(simple_var.getvalue(), 10)
 
+    def test_1278_execute_with_incorrect_bind_values(self):
+        "1278 - test executing a statement with an incorrect number of binds"
+        statement = "begin :value := :value2 + 5; end;"
+        var = self.cursor.var(oracledb.NUMBER)
+        var.setvalue(0, 5)
+        self.assertRaises(oracledb.DatabaseError, self.cursor.execute,
+                          statement)
+        self.assertRaises(oracledb.DatabaseError, self.cursor.execute,
+                          statement, value=var)
+        self.assertRaises(oracledb.DatabaseError, self.cursor.execute,
+                          statement, value=var, value2=var, value3=var)
+
 if __name__ == "__main__":
     base.run_test_cases()

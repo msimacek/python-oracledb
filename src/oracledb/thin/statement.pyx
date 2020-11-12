@@ -87,7 +87,6 @@ cdef class Statement:
         # determine statement type
         self._determine_statement_type(sql)
 
-        bind_names = []
         self._bind_info_dict = collections.OrderedDict()
         # bind variables can only be found in queries, DML and PL/SQL
         if self._is_query or self._is_dml or self._is_plsql:
@@ -95,11 +94,12 @@ cdef class Statement:
                                           sql.upper())
             if self._is_plsql:
                 bind_names = list(collections.OrderedDict.fromkeys(bind_names))
-            self._bind_info_list = [BindInfo(name) for name in bind_names]
-            for bind_info in self._bind_info_list:
-                if bind_info._bind_name in self._bind_info_dict:
-                    bind_info._is_dup = True
-                    self._bind_info_dict[bind_info._bind_name].append(bind_info)
-                else:
-                    self._bind_info_dict[bind_info._bind_name] = [bind_info]
-
+        else:
+            bind_names = []
+        self._bind_info_list = [BindInfo(name) for name in bind_names]
+        for bind_info in self._bind_info_list:
+            if bind_info._bind_name in self._bind_info_dict:
+                bind_info._is_dup = True
+                self._bind_info_dict[bind_info._bind_name].append(bind_info)
+            else:
+                self._bind_info_dict[bind_info._bind_name] = [bind_info]
