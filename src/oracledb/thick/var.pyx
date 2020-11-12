@@ -182,6 +182,8 @@ cdef class Var(BaseVar):
             if dpiStmt_addRef(data.value.asStmt) < 0:
                 _raise_from_odpi()
             cursor._handle = data.value.asStmt
+        if dpiStmt_setPrefetchRows(cursor._handle, cursor.prefetchrows) < 0:
+            _raise_from_odpi()
         cursor._fixup_ref_cursor = True
 
     cdef int _set_single_value(self, uint32_t pos, object value) except -1:
