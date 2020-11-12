@@ -825,7 +825,7 @@ class TestCase(base.BaseTestCase):
         statement = "begin :value := :value2 + 5; end;"
         simple_var = self.cursor.var(oracledb.NUMBER)
         simple_var2 = self.cursor.var(oracledb.NUMBER)
-        simple_var2.setvalue(0,5)
+        simple_var2.setvalue(0, 5)
         result = self.cursor.execute(statement, value=simple_var,
                                      value2=simple_var2)
         self.assertEqual(result, None)
@@ -833,7 +833,7 @@ class TestCase(base.BaseTestCase):
 
         simple_var = self.cursor.var(oracledb.NATIVE_FLOAT)
         simple_var2 = self.cursor.var(oracledb.NATIVE_FLOAT)
-        simple_var2.setvalue(0,10)
+        simple_var2.setvalue(0, 10)
         result = self.cursor.execute(statement, value=simple_var,
                                      value2=simple_var2)
         self.assertEqual(result, None)
