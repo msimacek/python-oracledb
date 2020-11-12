@@ -839,5 +839,15 @@ class TestCase(base.BaseTestCase):
         self.assertEqual(result, None)
         self.assertEqual(simple_var.getvalue(), 15)
 
+    def test_1275_bind_names_with_strings(self):
+        "1275 - test bindnames() with strings in the statement"
+        statement = """
+                    begin
+                    :value := to_date('20021231 12:31:00',
+                    'YYYYMMDD HH24:MI:SS');
+                    end;"""
+        self.cursor.prepare(statement)
+        self.assertEqual(self.cursor.bindnames(), ["VALUE"])
+
 if __name__ == "__main__":
     base.run_test_cases()

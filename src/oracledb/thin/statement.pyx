@@ -79,9 +79,10 @@ cdef class Statement:
             list bind_names = []
             str name
             BindInfo bind_info
-        # Strip any single or multiline comments from sql statement
+        # Strip single/multiline comments and strings from the sql statement
         sql = re.sub(r"/\\*[\S\n ]+\\*/", "", sql)
         sql = re.sub(r"\--.*(\n|$)", "", sql)
+        sql = re.sub(r"'(.*?)+'", "", sql)
 
         # determine statement type
         self._determine_statement_type(sql)
