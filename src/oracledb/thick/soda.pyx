@@ -328,7 +328,7 @@ cdef class SodaOperation(BaseSodaOperation):
     cdef:
         uint32_t _allocated_keys
         uint32_t* _key_lengths
-        char** _key_values
+        const char** _key_values
         list _buffers
 
     def __dealloc__(self):
@@ -369,14 +369,15 @@ cdef class SodaOperation(BaseSodaOperation):
         self._buffers = []
         if dpiContext_initSodaOperOptions(driver_context, options) < 0:
             _raise_from_odpi()
-        if self._key:
+        if self._key is not None:
             self._add_buf(self._key, &options.key, &options.keyLength)
         if self._keys:
             options.numKeys = <uint32_t> len(self._keys)
             if options.numKeys > self._allocated_keys:
                 self._clear_keys()
                 num_bytes = options.numKeys * sizeof(char*)
-                self._key_values = <char**> cpython.PyMem_Malloc(num_bytes)
+                self._key_values = \
+                        <const char**> cpython.PyMem_Malloc(num_bytes)
                 num_bytes = options.numKeys * sizeof(uint32_t)
                 self._key_lengths = <uint32_t*> cpython.PyMem_Malloc(num_bytes)
                 self._allocated_keys = options.numKeys
@@ -385,10 +386,10 @@ cdef class SodaOperation(BaseSodaOperation):
             for i in range(options.numKeys):
                 self._add_buf(self._keys[i], &self._key_values[i],
                               &self._key_lengths[i])
-        if self._version:
+        if self._version is not None:
             self._add_buf(self._version, &options.version,
                           &options.versionLength)
-        if self._filter:
+        if self._filter is not None:
             self._add_buf(self._filter, &options.filter, &options.filterLength)
         options.skip = self._skip
         options.limit = self._limit

@@ -131,7 +131,7 @@ cdef class Connection(BaseConnection):
             const char *username_ptr = NULL
             uint32_t new_password_len = 0
             int status
-        if self.username:
+        if self.username is not None:
             username_bytes = self.username.encode()
             username_ptr = username_bytes
             username_len = <uint32_t> len(username_bytes)
@@ -156,7 +156,7 @@ cdef class Connection(BaseConnection):
             uint32_t tag_length = 0
             bytes tag_bytes
             int status
-        if self.tag:
+        if self.tag is not None:
             mode = DPI_MODE_CONN_CLOSE_RETAG
             tag_bytes = self.tag.encode()
             tag_ptr = tag_bytes
@@ -192,31 +192,31 @@ cdef class Connection(BaseConnection):
 
         # set up connection parameters
         params = ConnectionParams()
-        if self.username:
+        if self.username is not None:
             params.username = self.username.encode()
             params.username_ptr = params.username
             params.username_len = <uint32_t> len(params.username)
-        if password:
+        if password is not None:
             params.password = password.encode()
             params.password_ptr = params.password
             params.password_len = <uint32_t> len(params.password)
-        if self.dsn:
+        if self.dsn is not None:
             params.dsn = self.dsn.encode()
             params.dsn_ptr = params.dsn
             params.dsn_len = <uint32_t> len(params.dsn)
-        if cclass:
+        if cclass is not None:
             params.cclass = cclass.decode()
             params.cclass_ptr = params.cclass
             params.cclass_len = <uint32_t> len(params.cclass)
-        if newpassword:
+        if newpassword is not None:
             params.new_password = newpassword.decode()
             params.new_password_ptr = params.new_password
             params.new_password_len = <uint32_t> len(params.new_password)
-        if edition:
+        if edition is not None:
             params.edition = edition.encode()
             params.edition_ptr = params.edition
             params.edition_len = <uint32_t> len(params.edition)
-        if tag:
+        if tag is not None:
             params.tag = tag.encode()
             params.tag_ptr = params.tag
             params.tag_len = <uint32_t> len(params.tag)

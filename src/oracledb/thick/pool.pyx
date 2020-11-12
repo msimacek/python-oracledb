@@ -79,15 +79,15 @@ cdef class Pool(BasePool):
         pool_params.maxSessionsPerShard = max_sessions_per_shard
 
         # prepare user, password and DSN for use
-        if self.username:
+        if self.username is not None:
             user_bytes = self.username.encode()
             user_ptr = user_bytes
             user_len = <uint32_t> len(user_bytes)
-        if password:
+        if password is not None:
             password_bytes = password.encode()
             password_ptr = password_bytes
             password_len = <uint32_t> len(password_bytes)
-        if self.dsn:
+        if self.dsn is not None:
             dsn_bytes = self.dsn.encode()
             dsn_ptr = dsn_bytes
             dsn_len = <uint32_t> len(dsn_bytes)
@@ -146,7 +146,7 @@ cdef class Pool(BasePool):
 
     cdef int _release(self, BaseConnection connection, str tag) except -1:
         cdef Connection thick_connection = <Connection> connection
-        if tag:
+        if tag is not None:
             thick_connection.tag = tag
         thick_connection._close()
         thick_connection._is_connected = False
