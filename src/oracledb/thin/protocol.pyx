@@ -12,6 +12,7 @@ cdef struct _OracleErrorInfo:
     uint32_t num
     uint16_t cursor_id
     uint16_t pos
+    uint64_t rowcount
     uint32_t message_length
     const char_type *message
 
@@ -551,7 +552,7 @@ cdef class Protocol:
         buf.read_ub4()                      # oerepal
         buf.read_ub2()                      # oermarl
         info.num = buf.read_ub4()           # error number (extended)
-        buf.read_ub8()                      # row number (extended)
+        info.rowcount = buf.read_ub8()      # row number (extended)
         if info.num != 0:
             info.message_length = buf.read_uint8()
             info.message = buf._get_raw(info.message_length)
@@ -674,6 +675,7 @@ cdef class Protocol:
             elif message_type == TNS_MSG_TYPE_ERROR:
                 self._process_error_info(buf, &error_info)
                 cursor._statement._cursor_id = error_info.cursor_id
+                cursor.rowcount = error_info.rowcount
                 if error_info.num == 1403:
                     cursor._more_rows_to_fetch = False
             else:
