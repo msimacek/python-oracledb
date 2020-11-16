@@ -11,6 +11,7 @@ ctypedef int (*populate_func_type)(Protocol self, WriteBuffer buf,
 cdef struct _OracleErrorInfo:
     uint32_t num
     uint16_t cursor_id
+    uint16_t pos
     uint32_t message_length
     const char_type *message
 
@@ -526,7 +527,7 @@ cdef class Protocol:
         buf.read_ub2()                      # array elem error
         buf.read_ub2()                      # array elem error
         info.cursor_id = buf.read_ub2()     # cursor id
-        buf.read_ub2()                      # error position
+        info.pos = buf.read_ub2()           # error position
         buf.read_uint8()                    # sql type
         buf.read_uint8()                    # fatal?
         buf.read_ub2()                      # flags
@@ -567,7 +568,10 @@ cdef class Protocol:
                                       "TTC error: expecting error packet")
         self._process_error_info(buf, &error_info)
         message = error_info.message[:error_info.message_length].decode()
-        errors._raise_from_string(exceptions.DatabaseError, message)
+        error = errors._Error(message, code=error_info.num,
+                              offset=error_info.pos)
+        exc_type = get_exception_class(error_info.num)
+        raise exc_type(error)
 
     cdef int _process_execute_packet(self, Cursor cursor) except -1:
         cdef:
