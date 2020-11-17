@@ -6,6 +6,7 @@ cdef class Cursor(BaseCursor):
 
     cdef:
         Statement _statement
+        str _lastrowid
 
     cdef int _close(self) except -1:
         cdef Connection connection = self.connection
@@ -38,6 +39,9 @@ cdef class Cursor(BaseCursor):
         params = types.SimpleNamespace(cursor=self,
                                        fetch_array_size=self._fetch_array_size)
         connection._protocol._fetch(params)
+
+    cdef object _get_lastrowid(self):
+        return self._lastrowid
 
     cdef bint _is_plsql(self):
         return self._statement._is_plsql

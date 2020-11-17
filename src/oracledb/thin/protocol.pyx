@@ -5,16 +5,16 @@
 DEF SDU = 8192
 DEF TDU = 65535
 
-ctypedef int (*populate_func_type)(Protocol self, WriteBuffer buf,
-        object params) except -1
+@cython.freelist(20)
+cdef class _OracleErrorInfo:
+    cdef:
+        uint32_t num
+        uint16_t cursor_id
+        uint16_t pos
+        uint64_t rowcount
+        str message
+        str rowid
 
-cdef struct _OracleErrorInfo:
-    uint32_t num
-    uint16_t cursor_id
-    uint16_t pos
-    uint64_t rowcount
-    uint32_t message_length
-    const char_type *message
 
 cdef class Protocol:
 
@@ -518,9 +518,12 @@ cdef class Protocol:
         var._finalize_init()
         return var
 
-    cdef int _process_error_info(self, ReadBuffer buf,
-                                 _OracleErrorInfo *info) except -1:
-        cdef uint32_t num_bytes
+    cdef _OracleErrorInfo _process_error_info(self, ReadBuffer buf):
+        cdef:
+            _OracleErrorInfo info = _OracleErrorInfo()
+            const char_type *message
+            uint8_t message_length
+            uint32_t num_bytes
         buf.read_ub4()                      # end of call status
         buf.read_ub2()                      # end to end seq#
         buf.read_ub4()                      # current row number
@@ -535,11 +538,7 @@ cdef class Protocol:
         buf.read_ub2()                      # user cursor options
         buf.read_uint8()                    # UPI parameter
         buf.read_uint8()                    # warning flag
-        buf.read_ub4()                      # RBA
-        buf.read_ub2()                      # partition id
-        buf.read_uint8()                    # table id
-        buf.read_ub4()                      # block #
-        buf.read_ub2()                      # slot #
+        info.rowid = buf.read_rowid()
         buf.read_ub4()                      # OS error
         buf.read_uint8()                    # statement number
         buf.read_uint8()                    # call number
@@ -554,8 +553,10 @@ cdef class Protocol:
         info.num = buf.read_ub4()           # error number (extended)
         info.rowcount = buf.read_ub8()      # row number (extended)
         if info.num != 0:
-            info.message_length = buf.read_uint8()
-            info.message = buf._get_raw(info.message_length)
+            message_length = buf.read_uint8()
+            message = buf._get_raw(message_length)
+            info.message = message[:message_length].decode()
+        return info
 
     cdef int _process_error_packet(self) except -1:
         cdef:
@@ -567,9 +568,8 @@ cdef class Protocol:
         if buf.read_uint8() != 4:
             errors._raise_from_string(exceptions.DatabaseError,
                                       "TTC error: expecting error packet")
-        self._process_error_info(buf, &error_info)
-        message = error_info.message[:error_info.message_length].decode()
-        error = errors._Error(message, code=error_info.num,
+        error_info = self._process_error_info(buf)
+        error = errors._Error(error_info.message, code=error_info.num,
                               offset=error_info.pos)
         exc_type = get_exception_class(error_info.num)
         raise exc_type(error)
@@ -673,9 +673,10 @@ cdef class Protocol:
                 if num_bytes > 0:
                     buf.skip_bytes(num_bytes)
             elif message_type == TNS_MSG_TYPE_ERROR:
-                self._process_error_info(buf, &error_info)
+                error_info = self._process_error_info(buf)
                 cursor._statement._cursor_id = error_info.cursor_id
                 cursor.rowcount = error_info.rowcount
+                cursor._lastrowid = error_info.rowid
                 if error_info.num == 1403:
                     cursor._more_rows_to_fetch = False
             else:

@@ -507,15 +507,22 @@ cdef class ReadBuffer:
 
     cdef object read_rowid(self):
         cdef:
+            uint16_t partition_id, slot_num
+            uint32_t rba, block_num
             bytearray result
             int offset = 0
-        result = bytearray(TNS_MAX_ROWID_LENGTH)
-        offset = self._convert_base64(result, self.read_ub4(), 6, offset)
-        offset = self._convert_base64(result, self.read_ub2(), 3, offset)
+        rba = self.read_ub4()
+        partition_id = self.read_ub2()
         self.skip_bytes(1)
-        offset = self._convert_base64(result, self.read_ub4(), 6, offset)
-        offset = self._convert_base64(result, self.read_ub2(), 3, offset)
-        return bytes(result).decode()
+        block_num = self.read_ub4()
+        slot_num = self.read_ub2()
+        if rba != 0 or partition_id != 0 or block_num != 0 or slot_num != 0:
+            result = bytearray(TNS_MAX_ROWID_LENGTH)
+            offset = self._convert_base64(result, rba, 6, offset)
+            offset = self._convert_base64(result, partition_id, 3, offset)
+            offset = self._convert_base64(result, block_num, 6, offset)
+            offset = self._convert_base64(result, slot_num, 3, offset)
+            return bytes(result).decode()
 
 
 @cython.final
