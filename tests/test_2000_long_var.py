@@ -9,6 +9,7 @@
 import base
 
 import oracledb
+import unittest
 
 class TestCase(base.BaseTestCase):
 
@@ -90,6 +91,7 @@ class TestCase(base.BaseTestCase):
                   ('LONGRAWCOL', oracledb.DB_TYPE_LONG_RAW, None, None, None,
                         None, 0) ])
 
+    @unittest.skipIf(base.get_is_thin(), "not relevant for thin driver")
     def test_2005_array_size_too_large(self):
         "2005 - test array size too large generates an exception"
         self.cursor.arraysize = 268435456
