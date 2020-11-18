@@ -55,10 +55,37 @@ cdef class Var(BaseVar):
     cdef int _finalize_init(self) except -1:
         self._values = [None] * self.num_elements
 
+    cdef list _get_array_value(self, uint32_t num_elements):
+        cdef:
+            object element_value
+            list return_value
+            uint32_t i
+        return_value = []
+        for i in range(num_elements):
+            element_value = self._get_single_value(i)
+            return_value.append(element_value)
+        return return_value
+
     cdef object _get_single_value(self, uint32_t pos):
         return self._values[pos]
 
+    cdef int _set_array_value(self, list value) except -1:
+        cdef:
+            uint32_t num_elements = <uint32_t> len(value)
+            uint32_t i
+        for i in range(num_elements):
+            self._set_single_value(i, value[i])
+
     cdef int _set_single_value(self, uint32_t pos, object value) except -1:
+        cdef:
+            uint8_t ora_type_num
         if self.inconverter:
             value = self.inconverter(value)
         self._values[pos] = value
+        ora_type_num = self._dbtype._ora_type_num
+        if ora_type_num == TNS_DATA_TYPE_VARCHAR \
+                    or ora_type_num == TNS_DATA_TYPE_CHAR \
+                    or ora_type_num == TNS_DATA_TYPE_LONG:
+            if value is not None and len(value) > self.size:
+                self.size = len(value)
+                self.buffer_size = len(value)

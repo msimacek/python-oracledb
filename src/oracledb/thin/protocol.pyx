@@ -163,21 +163,21 @@ cdef class Protocol:
             plain_text += (bytes([n]) * n)
         return b.encrypt(plain_text)
 
-    def _execute(self, params):
+    cdef int _execute(self, Cursor cursor, uint32_t fetch_array_size,
+                      uint32_t num_execs, list params) except -1:
 
         # send execute packet
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
-        self._populate_execute_packet(params)
+        self._populate_execute_packet(cursor, fetch_array_size, num_execs,
+                                      params)
         self._write_buf.end_request()
 
         # receive and process response
         self._receive_packet()
-        self._process_execute_packet(params.cursor)
+        self._process_execute_packet(cursor)
 
-    def _fetch(self, params):
-        cdef:
-            WriteBuffer buf = self._write_buf
-            Cursor cursor = params.cursor
+    cdef int _fetch(self, Cursor cursor, uint32_t fetch_array_size) except -1:
+        cdef WriteBuffer buf = self._write_buf
 
         # send fetch request
         buf.start_request(TNS_PACKET_TYPE_DATA)
@@ -187,7 +187,7 @@ cdef class Protocol:
         self._increment_seq_num()
         buf.write_uint8(self._seq_num)
         buf.write_ub4(cursor._statement._cursor_id)
-        buf.write_ub4(params.fetch_array_size)
+        buf.write_ub4(fetch_array_size)
         buf.end_request()
 
         # receive and process response
@@ -267,18 +267,19 @@ cdef class Protocol:
         buf.write_bytes(connect_string_bytes)
         buf.end_request()
 
-    cdef int _populate_execute_packet(self, object params) except -1:
+    cdef int _populate_execute_packet(self, Cursor cursor,
+                                      uint32_t fetch_array_size,
+                                      uint32_t num_execs,
+                                      list params) except -1:
         cdef:
             uint32_t options, num_params = 0, num_iters = 1
             WriteBuffer buf = self._write_buf
             Statement stmt
-            Cursor cursor
 
         # determine the options to use for the execute
-        cursor = <Cursor> params.cursor
         stmt = cursor._statement
-        if params.params:
-            num_params = <uint32_t> len(params.params)
+        if params:
+            num_params = <uint32_t> len(params)
         options = TNS_EXEC_OPTION_EXECUTE
         if stmt._cursor_id == 0:
             options |= TNS_EXEC_OPTION_PARSE
@@ -288,7 +289,7 @@ cdef class Protocol:
             options |= TNS_EXEC_OPTION_PLSQL_BIND
         if stmt._is_query:
             options |= TNS_EXEC_OPTION_FETCH
-            num_iters = params.fetch_array_size
+            num_iters = fetch_array_size
         if num_params > 0:
             options |= TNS_EXEC_OPTION_BIND
 
@@ -342,7 +343,7 @@ cdef class Protocol:
         if stmt._is_query:
             buf.write_ub4(0)                # al8i4[1] execution count
         else:
-            buf.write_ub4(1)                # al8i4[1] execution count
+            buf.write_ub4(num_execs)        # al8i4[1] execution count
         buf.write_ub4(0)                    # al8i4[2]
         buf.write_ub4(0)                    # al8i4[3]
         buf.write_ub4(0)                    # al8i4[4]
@@ -355,7 +356,7 @@ cdef class Protocol:
         buf.write_ub4(0)                    # al8i4[11]
         buf.write_ub4(0)                    # al8i4[12]
         if num_params > 0:
-            self._populate_bind_params(buf, params.params)
+            self._populate_bind_params(buf, params, num_execs)
 
     cdef int _ping(self) except -1:
 
@@ -369,14 +370,14 @@ cdef class Protocol:
         # receive response
         self._receive_packet()
 
-    cdef int _populate_bind_params(self, WriteBuffer buf,
-                                   list params) except -1:
+    cdef int _populate_bind_params(self, WriteBuffer buf, list params,
+                                   uint32_t num_execs) except -1:
         cdef:
-            uint32_t num_params = <uint32_t> len(params)
+            uint32_t i, num_params = <uint32_t> len(params)
             uint8_t ora_type_num
+            BindInfo bind_info
             bytes temp_bytes
             object value
-            BindInfo bind_info
             Var var
 
         # write parameter header information
@@ -398,12 +399,24 @@ cdef class Protocol:
             buf.write_ub4(0)                # oaccolid
 
         # write parameter values
-        buf.write_uint8(7)                  # data indicator
+        for i in range(num_execs):
+            buf.write_uint8(7)              # data indicator
+            self._populate_bind_params_row(buf, params, i)
+
+    cdef int _populate_bind_params_row(self, WriteBuffer buf, list params,
+                                       uint32_t pos) except -1:
+        cdef:
+            uint32_t i, num_params = <uint32_t> len(params)
+            uint8_t ora_type_num
+            BindInfo bind_info
+            bytes temp_bytes
+            object value
+            Var var
         for i in range(num_params):
             bind_info = <BindInfo> cpython.PyList_GET_ITEM(params, i)
             var = bind_info._bind_var
             ora_type_num = var._dbtype._ora_type_num
-            value = var._values[0]
+            value = var._values[pos]
             if value is None:
                 buf.write_uint8(0)
             elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
@@ -432,16 +445,16 @@ cdef class Protocol:
                 errors._raise_from_string(exceptions.NotSupportedError,
                                           f"unsupported type {var.type}")
 
-    cdef int _populate_fetch_packet(self, WriteBuffer buf,
-                                    object params) except -1:
-        cdef Cursor cursor = params.cursor
+    cdef int _populate_fetch_packet(self, WriteBuffer buf, Cursor cursor,
+                                    list params,
+                                    uint32_t fetch_array_size) except -1:
         cursor._buffer_rowcount = 0
         cursor._buffer_index = 0
         buf.write_uint32(0x00000305)
         self._increment_seq_num()
         buf.write_uint8(self._seq_num)
         buf.write_ub4(cursor._statement._cursor_id)
-        buf.write_ub4(params.fetch_array_size)
+        buf.write_ub4(fetch_array_size)
 
     cdef int _populate_key_value(self, str key, str value,
                                  uint32_t flags) except -1:
