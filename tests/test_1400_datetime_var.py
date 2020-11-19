@@ -51,9 +51,11 @@ class TestCase(base.BaseTestCase):
     def test_1402_bind_date_in_datetime_var(self):
         "1402 - test binding date in a datetime variable"
         var = self.cursor.var(oracledb.DATETIME)
-        dateVal = datetime.date.today()
-        var.setvalue(0, dateVal)
-        self.assertEqual(var.getvalue().date(), dateVal)
+        date_val = datetime.date.today()
+        var.setvalue(0, date_val)
+        self.cursor.execute("select :1 from dual", [var])
+        result, = self.cursor.fetchone()
+        self.assertEqual(result.date(), date_val)
 
     def test_1403_bind_date_after_string(self):
         "1403 - test binding in a date after setting input sizes to a string"
