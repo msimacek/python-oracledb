@@ -416,6 +416,7 @@ class TestCase(base.BaseTestCase):
         random_string = ''.join(random.choice(chars) for _ in range(1024))
         int_val = 200
         xml_string = '<data>' + random_string + '</data>'
+        self.cursor.execute("truncate table TestXML")
         self.cursor.execute("""
                 insert into TestXML (IntCol, XMLCol)
                 values (:1, :2)""", (int_val, xml_string))
