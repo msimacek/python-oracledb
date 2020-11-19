@@ -82,14 +82,19 @@ def get_admin_connect_string():
                                "Password for %s" % admin_user)
     return "%s/%s@%s" % (admin_user, admin_password, get_connect_string())
 
-def get_charset_ratio():
+def get_charset_ratios():
     value = PARAMETERS.get("CS_RATIO")
     if value is None:
         connection = get_connection()
         cursor = connection.cursor()
-        cursor.execute("select 'X' from dual")
-        column_info, = cursor.description
-        value = PARAMETERS["CS_RATIO"] = column_info[3]
+        cursor.execute("""
+                select
+                    cast('X' as varchar2(1)),
+                    cast('Y' as nvarchar2(1))
+                from dual""")
+        varchar_column_info, nvarchar_column_info = cursor.description
+        value = (varchar_column_info[3], nvarchar_column_info[3])
+        PARAMETERS["CS_RATIO"] = value
     return value
 
 def get_client_version():
