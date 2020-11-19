@@ -287,14 +287,14 @@ class TestCase(base.BaseTestCase):
         "2522 - test cursor description is accurate"
         self.cursor.execute("select * from TestStrings")
         expected_value = [
-            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
+            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, False),
             ('STRINGCOL', oracledb.DB_TYPE_VARCHAR, 20,
-                    20 * base.get_charset_ratio(), None, None, 0),
-            ('RAWCOL', oracledb.DB_TYPE_RAW, 30, 30, None, None, 0),
+                    20 * base.get_charset_ratio(), None, None, False),
+            ('RAWCOL', oracledb.DB_TYPE_RAW, 30, 30, None, None, False),
             ('FIXEDCHARCOL', oracledb.DB_TYPE_CHAR, 40,
-                    40 * base.get_charset_ratio(), None, None, 0),
+                    40 * base.get_charset_ratio(), None, None, False),
             ('NULLABLECOL', oracledb.DB_TYPE_VARCHAR, 50,
-                    50 * base.get_charset_ratio(), None, None, 1)
+                    50 * base.get_charset_ratio(), None, None, True)
         ]
         self.assertEqual(self.cursor.description, expected_value)
 

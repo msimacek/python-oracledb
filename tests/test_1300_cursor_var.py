@@ -80,8 +80,9 @@ class TestCase(base.BaseTestCase):
                 from TestNumbers
                 order by IntCol""")
         expected_value = [
-            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
-            ('CURSORVALUE', oracledb.DB_TYPE_CURSOR, None, None, None, None, 1)
+            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, False),
+            ('CURSORVALUE', oracledb.DB_TYPE_CURSOR, None, None, None, None,
+                    True)
         ]
         self.assertEqual(self.cursor.description, expected_value)
         for i in range(1, 11):

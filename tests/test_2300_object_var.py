@@ -120,7 +120,7 @@ class TestCase(base.BaseTestCase):
         expected_value = [
             ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, False),
             ('OBJECTCOL', oracledb.DB_TYPE_OBJECT, None, None, None, None,
-             True),
+                    True),
             ('ARRAYCOL', oracledb.DB_TYPE_OBJECT, None, None, None, None, True)
         ]
         self.assertEqual(self.cursor.description, expected_value)

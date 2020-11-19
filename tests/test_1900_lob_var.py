@@ -178,8 +178,8 @@ class TestCase(base.BaseTestCase):
         "1905 - test cursor description is accurate for CLOBs"
         self.cursor.execute("select * from TestCLOBs")
         expected_value = [
-            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
-            ('CLOBCOL', oracledb.DB_TYPE_CLOB, None, None, None, None, 0)
+            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, False),
+            ('CLOBCOL', oracledb.DB_TYPE_CLOB, None, None, None, None, False)
         ]
         self.assertEqual(self.cursor.description, expected_value)
 

@@ -110,9 +110,10 @@ class TestCase(base.BaseTestCase):
         "2606 - test cursor description is accurate"
         self.cursor.execute("select * from TestTimestamps")
         expected_value = [
-            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
-            ('TIMESTAMPCOL', oracledb.DB_TYPE_TIMESTAMP, 23, None, 0, 6, 0),
-            ('NULLABLECOL', oracledb.DB_TYPE_TIMESTAMP, 23, None, 0, 6, 1)
+            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, False),
+            ('TIMESTAMPCOL', oracledb.DB_TYPE_TIMESTAMP, 23, None, 0, 6,
+                    False),
+            ('NULLABLECOL', oracledb.DB_TYPE_TIMESTAMP, 23, None, 0, 6, True)
         ]
         self.assertEqual(self.cursor.description, expected_value)
 

@@ -198,10 +198,13 @@ class TestCase(base.BaseTestCase):
         "2114 - test cursor description is accurate"
         self.cursor.execute("select * from TestUnicodes")
         expected_value = [
-            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
-            ('UNICODECOL', oracledb.DB_TYPE_NVARCHAR, 20, 80, None, None, 0),
-            ('FIXEDUNICODECOL', oracledb.DB_TYPE_NCHAR, 40, 160, None, None, 0),
-            ('NULLABLECOL', oracledb.DB_TYPE_NVARCHAR, 50, 200, None, None, 1)
+            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, False),
+            ('UNICODECOL', oracledb.DB_TYPE_NVARCHAR, 20, 80, None, None,
+                    False),
+            ('FIXEDUNICODECOL', oracledb.DB_TYPE_NCHAR, 40, 160, None, None,
+                    False),
+            ('NULLABLECOL', oracledb.DB_TYPE_NVARCHAR, 50, 200, None, None,
+                    True)
         ]
         self.assertEqual(self.cursor.description, expected_value)
 

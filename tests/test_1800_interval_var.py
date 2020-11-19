@@ -114,9 +114,11 @@ class TestCase(base.BaseTestCase):
         "1807 - test cursor description is accurate"
         self.cursor.execute("select * from TestIntervals")
         expected_value = [
-            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
-            ('INTERVALCOL', oracledb.DB_TYPE_INTERVAL_DS, None, None, 2, 6, 0),
-            ('NULLABLECOL', oracledb.DB_TYPE_INTERVAL_DS, None, None, 2, 6, 1)
+            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, False),
+            ('INTERVALCOL', oracledb.DB_TYPE_INTERVAL_DS, None, None, 2, 6,
+                    False),
+            ('NULLABLECOL', oracledb.DB_TYPE_INTERVAL_DS, None, None, 2, 6,
+                    True)
         ]
         self.assertEqual(self.cursor.description, expected_value)
 

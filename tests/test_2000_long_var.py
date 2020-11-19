@@ -86,10 +86,12 @@ class TestCase(base.BaseTestCase):
     def test_2004_long_raw_cursor_description(self):
         "2004 - test cursor description is accurate for long raws"
         self.cursor.execute("select * from TestLongRaws")
-        self.assertEqual(self.cursor.description,
-                [ ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
-                  ('LONGRAWCOL', oracledb.DB_TYPE_LONG_RAW, None, None, None,
-                        None, 0) ])
+        expected_value = [
+            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, False),
+            ('LONGRAWCOL', oracledb.DB_TYPE_LONG_RAW, None, None, None, None,
+                    False)
+        ]
+        self.assertEqual(self.cursor.description, expected_value)
 
     @unittest.skipIf(base.get_is_thin(), "not relevant for thin driver")
     def test_2005_array_size_too_large(self):
