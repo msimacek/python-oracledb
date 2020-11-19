@@ -81,11 +81,31 @@ cdef class Var(BaseVar):
             uint8_t ora_type_num
         if self.inconverter:
             value = self.inconverter(value)
-        self._values[pos] = value
-        ora_type_num = self._dbtype._ora_type_num
-        if ora_type_num == TNS_DATA_TYPE_VARCHAR \
+        if value is not None:
+            ora_type_num = self._dbtype._ora_type_num
+            if ora_type_num == TNS_DATA_TYPE_NUMBER:
+                if not isinstance(value, (bool, int, float, decimal.Decimal)):
+                    raise TypeError("expecting number")
+            elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
                     or ora_type_num == TNS_DATA_TYPE_CHAR \
                     or ora_type_num == TNS_DATA_TYPE_LONG:
-            if value is not None and len(value) > self.size:
-                self.size = len(value)
-                self.buffer_size = len(value)
+                if not isinstance(value, str):
+                    raise TypeError("expecting string")
+                if len(value) > self.size:
+                    self.size = len(value)
+                    self.buffer_size = len(value)
+            elif ora_type_num == TNS_DATA_TYPE_RAW \
+                    or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
+                if not isinstance(value, bytes):
+                    raise TypeError("expecting bytes")
+                if len(value) > self.size:
+                    self.size = len(value)
+                    self.buffer_size = len(value)
+            elif ora_type_num == TNS_DATA_TYPE_DATE \
+                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
+                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_LTZ \
+                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ:
+                if not isinstance(value, (datetime.date, datetime.datetime)):
+                    message = "expecting datetime.date or datetime.datetime"
+                    raise TypeError(message)
+        self._values[pos] = value
