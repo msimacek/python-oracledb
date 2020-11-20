@@ -770,6 +770,10 @@ cdef class Protocol:
             column_value = buf.read_oracle_date(num_bytes)
         elif ora_type_num == TNS_DATA_TYPE_ROWID:
             column_value = buf.read_rowid()
+        elif ora_type_num == TNS_DATA_TYPE_UROWID:
+            buf.skip_bytes(num_bytes)           # skip length
+            temp_bytes = self._read_bytes(buf.read_uint8())
+            column_value = buf.read_urowid(temp_bytes)
         elif ora_type_num == TNS_DATA_TYPE_BINARY_DOUBLE:
             column_value = buf.read_binary_double()
         elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:

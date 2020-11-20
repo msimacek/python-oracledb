@@ -168,6 +168,7 @@ DB_TYPE_TIMESTAMP_LTZ = DbType(2014, "DB_TYPE_TIMESTAMP_LTZ", 231,
                                buffer_size_factor=11)
 DB_TYPE_TIMESTAMP_TZ = DbType(2013, "DB_TYPE_TIMESTAMP_TZ", 181,
                               buffer_size_factor=13)
+DB_TYPE_UROWID = DbType(2028, "DB_TYPE_UROWID", 208)
 DB_TYPE_VARCHAR = DbType(2001, "DB_TYPE_VARCHAR", 1, 4000, csfrm=1,
                          buffer_size_factor=4)
 
@@ -177,6 +178,6 @@ DATETIME = ApiType("DATETIME", DB_TYPE_DATE, DB_TYPE_TIMESTAMP,
                    DB_TYPE_TIMESTAMP_LTZ, DB_TYPE_TIMESTAMP_TZ)
 NUMBER = ApiType("NUMBER", DB_TYPE_NUMBER, DB_TYPE_BINARY_DOUBLE,
                  DB_TYPE_BINARY_FLOAT, DB_TYPE_BINARY_INTEGER)
-ROWID = ApiType("ROWID", DB_TYPE_ROWID)
+ROWID = ApiType("ROWID", DB_TYPE_ROWID, DB_TYPE_UROWID)
 STRING = ApiType("STRING", DB_TYPE_VARCHAR, DB_TYPE_NVARCHAR, DB_TYPE_CHAR,
                  DB_TYPE_NCHAR, DB_TYPE_LONG)

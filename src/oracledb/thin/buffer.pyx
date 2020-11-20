@@ -524,6 +524,61 @@ cdef class ReadBuffer:
             offset = self._convert_base64(result, slot_num, 3, offset)
             return bytes(result).decode()
 
+    cdef object read_urowid(self, bytes input_bytes):
+        cdef:
+            ssize_t output_len, input_len, remainder, pos
+            int input_offset = 1, output_offset = 0
+            bytearray input_value, output_value
+        input_len = len(input_bytes)
+        output_len = (input_len // 3) * 4
+        remainder = input_len % 3
+        if remainder == 1:
+            output_len += 1
+        elif remainder == 2:
+            output_len += 3
+        input_value = bytearray(input_bytes)
+        output_value = bytearray(output_len)
+        input_len -= 1
+        output_value[0] = 42            # '*'
+        output_offset += 1
+        while input_len > 0:
+
+            # produce first byte of quadruple
+            pos = input_value[input_offset] >> 2
+            output_value[output_offset] = TNS_BASE64_ALPHABET_ARRAY[pos]
+            output_offset += 1
+
+            # produce second byte of quadruple, but if only one byte is left,
+            # produce that one byte and exit
+            pos = (input_value[input_offset] & 0x3) << 4
+            if input_len == 1:
+                output_value[output_offset] = TNS_BASE64_ALPHABET_ARRAY[pos]
+                break
+            input_offset += 1
+            pos |= ((input_value[input_offset] & 0xf0) >> 4)
+            output_value[output_offset] = TNS_BASE64_ALPHABET_ARRAY[pos]
+            output_offset += 1
+
+            # produce third byte of quadruple, but if only two bytes are left,
+            # produce that one byte and exit
+            pos = (input_value[input_offset] & 0xf) << 2
+            if input_len == 2:
+                output_value[output_offset] = TNS_BASE64_ALPHABET_ARRAY[pos]
+                break
+            input_offset += 1
+            pos |= ((input_value[input_offset] & 0xc0) >> 6)
+            output_value[output_offset] = TNS_BASE64_ALPHABET_ARRAY[pos]
+            output_offset += 1
+
+            # produce final byte of quadruple
+            pos = input_value[input_offset] & 0x3f
+            output_value[output_offset] = TNS_BASE64_ALPHABET_ARRAY[pos]
+            output_offset += 1
+            input_offset += 1
+            input_len -= 3
+
+        return bytes(output_value).decode()
+
 
 @cython.final
 cdef class WriteBuffer:
