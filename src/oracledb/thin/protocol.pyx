@@ -526,6 +526,8 @@ cdef class Protocol:
         csfrm = buf.read_uint8()            # character set form
         var._dbtype = DbType._from_ora_type_and_csfrm(data_type, csfrm)
         var.size = buf.read_ub4()
+        if data_type == TNS_DATA_TYPE_RAW:
+            var.size = var.buffer_size
         buf.read_ub4()                      # oaccolid
         var.nulls_allowed = buf.read_uint8()
         buf.skip_bytes(1)                   # v7 length of name
