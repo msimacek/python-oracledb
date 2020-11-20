@@ -520,7 +520,7 @@ cdef class Protocol:
         buf.read_ub4()                      # cont flags
         num_bytes = buf.read_ub4()          # OID
         if num_bytes > 0:
-            buf.skip_bytes(num_bytes)
+            buf.skip_bytes(num_bytes + 1)
         buf.read_ub2()                      # version
         buf.read_ub2()                      # character set id
         csfrm = buf.read_uint8()            # character set form
