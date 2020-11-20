@@ -11,6 +11,7 @@ cdef class Var(BaseVar):
     cdef:
         Connection _connection
         list _values
+        uint32_t _num_elements_in_array
 
     def __cinit__(self, connection):
         self._connection = connection
@@ -55,30 +56,23 @@ cdef class Var(BaseVar):
     cdef int _finalize_init(self) except -1:
         self._values = [None] * self.num_elements
 
+    cdef uint32_t _get_actual_elements(self) except *:
+        return self._num_elements_in_array
+
     cdef list _get_array_value(self, uint32_t num_elements):
-        cdef:
-            object element_value
-            list return_value
-            uint32_t i
-        return_value = []
-        for i in range(num_elements):
-            element_value = self._get_single_value(i)
-            return_value.append(element_value)
-        return return_value
+        return self._values[:num_elements]
 
     cdef object _get_single_value(self, uint32_t pos):
         return self._values[pos]
 
     cdef int _set_array_value(self, list value) except -1:
-        cdef:
-            uint32_t num_elements = <uint32_t> len(value)
-            uint32_t i
-        for i in range(num_elements):
-            self._set_single_value(i, value[i])
+        cdef uint32_t i
+        for i, element_value in enumerate(value):
+            self._set_single_value(i, element_value)
+        self._num_elements_in_array = <uint32_t> len(value)
 
     cdef int _set_single_value(self, uint32_t pos, object value) except -1:
-        cdef:
-            uint8_t ora_type_num
+        cdef uint8_t ora_type_num
         if self.inconverter:
             value = self.inconverter(value)
         if value is not None:

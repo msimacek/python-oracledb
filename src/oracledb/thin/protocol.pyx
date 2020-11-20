@@ -374,7 +374,7 @@ cdef class Protocol:
                                    uint32_t num_execs) except -1:
         cdef:
             uint32_t i, num_params = <uint32_t> len(params)
-            uint8_t ora_type_num
+            uint8_t ora_type_num, flag
             BindInfo bind_info
             bytes temp_bytes
             object value
@@ -384,12 +384,18 @@ cdef class Protocol:
         for i in range(num_params):
             bind_info = <BindInfo> cpython.PyList_GET_ITEM(params, i)
             var = bind_info._bind_var
+            flag = TNS_BIND_USE_INDICATORS | TNS_BIND_USE_LENGTH
+            if var.is_array:
+                flag |= TNS_BIND_ARRAY
             buf.write_uint8(var._dbtype._ora_type_num)
-            buf.write_uint8(3)              # flag
+            buf.write_uint8(flag)
             buf.write_uint8(var.precision)
             buf.write_uint8(var.scale)
             buf.write_ub4(var.buffer_size)
-            buf.write_ub4(0)                # max num elements
+            if var.is_array:
+                buf.write_ub4(var.num_elements)
+            else:
+                buf.write_ub4(0)            # max num elements
             buf.write_ub4(0)                # cont flag
             buf.write_ub4(0)                # OID
             buf.write_ub4(0)                # version
@@ -406,44 +412,52 @@ cdef class Protocol:
     cdef int _populate_bind_params_row(self, WriteBuffer buf, list params,
                                        uint32_t pos) except -1:
         cdef:
-            uint32_t i, num_params = <uint32_t> len(params)
-            uint8_t ora_type_num
+            uint32_t i, num_elements, num_params = <uint32_t> len(params)
             BindInfo bind_info
-            bytes temp_bytes
-            object value
             Var var
         for i in range(num_params):
             bind_info = <BindInfo> cpython.PyList_GET_ITEM(params, i)
             var = bind_info._bind_var
-            ora_type_num = var._dbtype._ora_type_num
-            value = var._values[pos]
-            if value is None:
-                buf.write_uint8(0)
-            elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
-                    or ora_type_num == TNS_DATA_TYPE_CHAR \
-                    or ora_type_num == TNS_DATA_TYPE_LONG:
-                if var._dbtype._csfrm == 1:
-                    temp_bytes = value.encode()
-                else:
-                    temp_bytes = value.encode("UTF-16BE")
-                self._write_bytes(temp_bytes)
-            elif ora_type_num == TNS_DATA_TYPE_RAW \
-                    or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
-                self._write_bytes(value)
-            elif ora_type_num == TNS_DATA_TYPE_NUMBER:
-                buf.write_oracle_number(str(value).encode())
-            elif ora_type_num == TNS_DATA_TYPE_DATE \
-                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
-                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ \
-                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_LTZ:
-                buf.write_oracle_date(value, var._dbtype._buffer_size_factor)
-            elif ora_type_num == TNS_DATA_TYPE_BINARY_DOUBLE:
-                buf.write_binary_double(value)
-            elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
-                buf.write_binary_float(value)
+            if var.is_array:
+                num_elements = var._num_elements_in_array
+                buf.write_ub4(num_elements)
+                for value in var._values[:num_elements]:
+                    self._populate_bind_value(buf, var, value)
             else:
-                errors._raise_from_string(exceptions.NotSupportedError,
-                                          f"unsupported type {var.type}")
+                self._populate_bind_value(buf, var, var._values[pos])
+
+    cdef int _populate_bind_value(self, WriteBuffer buf, Var var,
+                                  object value) except -1:
+        cdef:
+            uint8_t ora_type_num = var._dbtype._ora_type_num
+            bytes temp_bytes
+        if value is None:
+            buf.write_uint8(0)
+        elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
+                or ora_type_num == TNS_DATA_TYPE_CHAR \
+                or ora_type_num == TNS_DATA_TYPE_LONG:
+            if var._dbtype._csfrm == 1:
+                temp_bytes = value.encode()
+            else:
+                temp_bytes = value.encode("UTF-16BE")
+            self._write_bytes(temp_bytes)
+        elif ora_type_num == TNS_DATA_TYPE_RAW \
+                or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
+            self._write_bytes(value)
+        elif ora_type_num == TNS_DATA_TYPE_NUMBER:
+            buf.write_oracle_number(str(value).encode())
+        elif ora_type_num == TNS_DATA_TYPE_DATE \
+                or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
+                or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ \
+                or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_LTZ:
+            buf.write_oracle_date(value, var._dbtype._buffer_size_factor)
+        elif ora_type_num == TNS_DATA_TYPE_BINARY_DOUBLE:
+            buf.write_binary_double(value)
+        elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
+            buf.write_binary_float(value)
+        else:
+            errors._raise_from_string(exceptions.NotSupportedError,
+                                      f"unsupported type {var.type}")
 
     cdef int _populate_fetch_packet(self, WriteBuffer buf, Cursor cursor,
                                     list params,
@@ -700,53 +714,66 @@ cdef class Protocol:
                           uint32_t row_index, bint in_fetch) except -1:
         cdef:
             uint8_t num_bytes, ora_type_num, csfrm
-            ssize_t num_row_vars, i
             object column_value
             bytes temp_bytes
-            const char *ptr
+            uint32_t pos
+            ssize_t i
             Var var
-        num_row_vars = cpython.PyList_GET_SIZE(row_vars)
-        for i in range(num_row_vars):
-            var = row_vars[i]
-            ora_type_num = var._dbtype._ora_type_num
-            csfrm = var._dbtype._csfrm
-            num_bytes = buf.read_uint8()
-            if num_bytes == 0:
-                column_value = None
-            elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
-                    or ora_type_num == TNS_DATA_TYPE_CHAR \
-                    or ora_type_num == TNS_DATA_TYPE_LONG:
-                temp_bytes = self._read_bytes(num_bytes)
-                if csfrm == 1:
-                    column_value = temp_bytes.decode()
-                else:
-                    column_value = temp_bytes.decode("UTF-16BE")
-                if ora_type_num == TNS_DATA_TYPE_LONG:
-                    buf.skip_bytes(2)
-            elif ora_type_num == TNS_DATA_TYPE_RAW \
-                    or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
-                column_value = self._read_bytes(num_bytes)
-                if ora_type_num == TNS_DATA_TYPE_LONG_RAW:
-                    buf.skip_bytes(2)
-            elif ora_type_num == TNS_DATA_TYPE_NUMBER:
-                column_value = buf.read_oracle_number(num_bytes)
-            elif ora_type_num == TNS_DATA_TYPE_DATE \
-                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
-                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_LTZ \
-                    or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ:
-                column_value = buf.read_oracle_date(num_bytes)
-            elif ora_type_num == TNS_DATA_TYPE_ROWID:
-                column_value = buf.read_rowid()
-            elif ora_type_num == TNS_DATA_TYPE_BINARY_DOUBLE:
-                column_value = buf.read_binary_double()
-            elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
-                column_value = buf.read_binary_float()
+        for i, var in enumerate(row_vars):
+            if var.is_array:
+                var._num_elements_in_array = buf.read_ub4()
+                for pos in range(var._num_elements_in_array):
+                    var._values[pos] = self._process_row_data(buf, var,
+                                                              in_fetch)
             else:
-                msg = f"unhandled data type {var.type}"
-                raise Exception(msg)
-            var._values[row_index] = column_value
-            if not in_fetch:
-                buf.skip_bytes(1)       # skip trailing zero byte
+                var._values[row_index] = self._process_row_data(buf, var,
+                                                                in_fetch)
+
+    cdef object _process_row_data(self, ReadBuffer buf, Var var,
+                                  bint in_fetch):
+        cdef:
+            uint8_t num_bytes, ora_type_num, csfrm
+            object column_value
+            bytes temp_bytes
+        ora_type_num = var._dbtype._ora_type_num
+        csfrm = var._dbtype._csfrm
+        num_bytes = buf.read_uint8()
+        if num_bytes == 0:
+            column_value = None
+        elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
+                or ora_type_num == TNS_DATA_TYPE_CHAR \
+                or ora_type_num == TNS_DATA_TYPE_LONG:
+            temp_bytes = self._read_bytes(num_bytes)
+            if csfrm == 1:
+                column_value = temp_bytes.decode()
+            else:
+                column_value = temp_bytes.decode("UTF-16BE")
+            if ora_type_num == TNS_DATA_TYPE_LONG:
+                buf.skip_bytes(2)
+        elif ora_type_num == TNS_DATA_TYPE_RAW \
+                or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
+            column_value = self._read_bytes(num_bytes)
+            if ora_type_num == TNS_DATA_TYPE_LONG_RAW:
+                buf.skip_bytes(2)
+        elif ora_type_num == TNS_DATA_TYPE_NUMBER:
+            column_value = buf.read_oracle_number(num_bytes)
+        elif ora_type_num == TNS_DATA_TYPE_DATE \
+                or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
+                or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_LTZ \
+                or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ:
+            column_value = buf.read_oracle_date(num_bytes)
+        elif ora_type_num == TNS_DATA_TYPE_ROWID:
+            column_value = buf.read_rowid()
+        elif ora_type_num == TNS_DATA_TYPE_BINARY_DOUBLE:
+            column_value = buf.read_binary_double()
+        elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
+            column_value = buf.read_binary_float()
+        else:
+            msg = f"unhandled data type {var.type}"
+            raise Exception(msg)
+        if not in_fetch:
+            buf.skip_bytes(1)       # skip trailing zero byte
+        return column_value
 
     cdef int _process_session_data_packet(self, object params) except -1:
         cdef:
