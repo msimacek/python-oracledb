@@ -575,9 +575,9 @@ cdef class Protocol:
         buf.read_uint8()                    # call number
         buf.read_ub2()                      # padding
         buf.read_ub4()                      # success iters
-        num_bytes = buf.read_ub4()          # oerrdd
+        num_bytes = buf.read_ub4()          # oerrdd (logical rowid)
         if num_bytes > 0:
-            buf.skip_bytes(num_bytes + 1)
+            self._read_bytes(buf.read_uint8())
         buf.read_ub2()                      # oerrarl
         buf.read_ub4()                      # oerepal
         buf.read_ub2()                      # oermarl
