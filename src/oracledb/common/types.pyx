@@ -159,7 +159,7 @@ DB_TYPE_NCLOB = DbType(2018, "DB_TYPE_NCLOB", 112, csfrm=2)
 DB_TYPE_NUMBER = DbType(2010, "DB_TYPE_NUMBER", 2, buffer_size_factor=22)
 DB_TYPE_NVARCHAR = DbType(2002, "DB_TYPE_NVARCHAR", 1, 4000, csfrm=2,
                           buffer_size_factor=4)
-DB_TYPE_OBJECT = DbType(2023, "DB_TYPE_OBJECT", 108)
+DB_TYPE_OBJECT = DbType(2023, "DB_TYPE_OBJECT", 109)
 DB_TYPE_RAW = DbType(2006, "DB_TYPE_RAW", 23, 4000, buffer_size_factor=1)
 DB_TYPE_ROWID = DbType(2005, "DB_TYPE_ROWID", 11)
 DB_TYPE_TIMESTAMP = DbType(2012, "DB_TYPE_TIMESTAMP", 180,

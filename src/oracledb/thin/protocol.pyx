@@ -537,9 +537,11 @@ cdef class Protocol:
             var.name = buf.read_str(num_bytes)
         num_bytes = buf.read_ub4()
         if num_bytes > 0:
+            buf.skip_bytes(1)               # skip repeated length
             buf.skip_bytes(num_bytes)       # schema name
         num_bytes = buf.read_ub4()
         if num_bytes > 0:
+            buf.skip_bytes(1)               # skip repeated length
             buf.skip_bytes(num_bytes)       # type name
         buf.read_ub2()                      # column position
         buf.read_ub4()                      # uds flag
