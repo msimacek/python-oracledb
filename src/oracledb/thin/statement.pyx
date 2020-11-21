@@ -12,6 +12,7 @@ cdef class BindInfo:
     def __cinit__(self, str name):
         self._bind_name = name
 
+
 cdef class StatementCache:
 
     cdef:
@@ -52,6 +53,7 @@ cdef class Statement:
         bint _is_dml
         bint _is_ddl
         list _bind_info_list
+        list _fetch_vars
         object _bind_info_dict
 
     cdef _determine_statement_type(self, str sql):

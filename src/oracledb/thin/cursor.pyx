@@ -49,7 +49,9 @@ cdef class Cursor(BaseCursor):
         cdef Connection connection = self.connection
         self.statement = sql
         self._statement = connection._statement_cache.get_statement(sql)
-        if self._statement is None:
+        if self._statement is not None:
+            self._fetch_vars = self._statement._fetch_vars
+        else:
             self._statement = Statement()
             self._statement._prepare(sql)
 

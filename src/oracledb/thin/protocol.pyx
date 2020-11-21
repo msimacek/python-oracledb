@@ -239,7 +239,7 @@ cdef class Protocol:
     cdef _increment_seq_num(self):
         self._seq_num += 1
         if self._seq_num == 0:
-            self._seqNum = 1
+            self._seq_num = 1
 
     cdef int _send_connect_packet(self, object connect_string) except -1:
         cdef:
@@ -618,9 +618,11 @@ cdef class Protocol:
             Var var
         buf = self._read_buf
         buf.skip_bytes(2)
-        row_vars = cursor._fetch_vars
-        row_index = cursor._buffer_rowcount
-        if cursor._fetch_vars is not None:
+        if cursor._statement._is_query:
+            row_vars = cursor._fetch_vars
+            cursor._more_rows_to_fetch = True
+            cursor._fetch_array_size = cursor.arraysize
+            row_index = cursor._buffer_rowcount = cursor._buffer_index = 0
             in_fetch = True
         while buf.bytes_left() > 0:
             message_type = buf.read_uint8()
@@ -629,11 +631,6 @@ cdef class Protocol:
                 buf.skip_bytes(num_bytes)
                 buf.read_ub4()              # max row size
                 num_columns = buf.read_ub4()
-                cursor._fetch_array_size = cursor.arraysize
-                cursor._more_rows_to_fetch = True
-                row_index = cursor._buffer_rowcount = 0
-                cursor._buffer_index = 0
-                in_fetch = True
                 row_vars = cursor._fetch_vars = cpython.PyList_New(num_columns)
                 buf.skip_bytes(1)
                 for i in range(num_columns):
@@ -650,6 +647,7 @@ cdef class Protocol:
                 num_bytes = buf.read_ub4()
                 if num_bytes > 0:
                     buf.skip_bytes(num_bytes + 1)   # dcbqcky
+                cursor._statement._fetch_vars = cursor._fetch_vars
             elif message_type == TNS_MSG_TYPE_ROW_HEADER:
                 buf.skip_bytes(1)           # flags
                 buf.read_ub2()              # num requests
