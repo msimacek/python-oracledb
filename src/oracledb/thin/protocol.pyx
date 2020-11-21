@@ -624,6 +624,11 @@ cdef class Protocol:
             cursor._fetch_array_size = cursor.arraysize
             row_index = cursor._buffer_rowcount = cursor._buffer_index = 0
             in_fetch = True
+            if row_vars is not None:
+                for var in row_vars:
+                    if var.num_elements < cursor._fetch_array_size:
+                        var.num_elements = cursor._fetch_array_size
+                        var._finalize_init()
         while buf.bytes_left() > 0:
             message_type = buf.read_uint8()
             if message_type == TNS_MSG_TYPE_DESCRIBE_INFO:
