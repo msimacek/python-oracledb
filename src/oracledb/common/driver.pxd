@@ -15,7 +15,7 @@ cdef enum:
 
 cdef class ApiType:
     cdef:
-        readonly name
+        readonly str name
         tuple dbtypes
 
 

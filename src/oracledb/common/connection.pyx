@@ -21,7 +21,6 @@ cdef class BaseConnection:
             return f"<oracledb.{cls_name} to externally identified user>"
         return f"<oracledb.{cls_name} to {self.username}@{self.dsn}>"
 
-
     cdef int _begin(self, long format_id, str transaction_id,
                     str branch_id) except -1:
         """
