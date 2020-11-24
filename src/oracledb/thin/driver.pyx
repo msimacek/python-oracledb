@@ -32,6 +32,7 @@ from ..common.driver cimport BaseConnection, BaseCursor, BaseVar, DbType
 include "utils.pyx"
 include "buffer.pyx"
 include "constants.pxi"
+include "network_services.pyx"
 include "protocol.pyx"
 include "connection.pyx"
 include "statement.pyx"

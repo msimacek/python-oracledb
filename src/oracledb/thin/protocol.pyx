@@ -70,24 +70,17 @@ cdef class Protocol:
             uint8_t user_len = <uint8_t> len(user_bytes)
             WriteBuffer buf = self._write_buf
 
-        # send connect packet
+        # send connect packet and receive response (which requests the packet
+        # to be resent)
         self._send_connect_packet(params.connect_string)
-
-        # receive response (requests connect packet to be resent)
         self._receive_packet()
 
-        # resend connect packet
+        # resend connect packet and receive response
         self._send_connect_packet(params.connect_string)
-
-        # receive response (accept packet)
         self._receive_packet()
 
-        # send services packet
-        buf.start_request(TNS_PACKET_TYPE_DATA)
-        buf.write_bytes(TNS_SERVICES_PACKET_DATA)
-        buf.end_request()
-
-        # receive response (services from server)
+        # send services packet and receive response
+        self._send_services_packet()
         self._receive_packet()
 
         # send protocol packet
@@ -265,6 +258,31 @@ cdef class Protocol:
         buf.write_uint64(0)                 # obsolete
         buf.write_uint64(0)                 # obsolete
         buf.write_bytes(connect_string_bytes)
+        buf.end_request()
+
+    cdef int _send_services_packet(self) except -1:
+        cdef:
+            WriteBuffer buf = self._write_buf
+            uint16_t packet_length
+            NetworkService service
+
+        # calculate length of packet
+        packet_length = TNS_NETWORK_HEADER_SIZE
+        for service in TNS_NETWORK_SERVICES:
+            packet_length += service.get_data_size()
+
+        # write header
+        buf.start_request(TNS_PACKET_TYPE_DATA)
+        buf.write_uint16(0)                 # data flags
+        buf.write_uint32(TNS_NETWORK_MAGIC)
+        buf.write_uint16(packet_length)
+        buf.write_uint32(TNS_NETWORK_VERSION)
+        buf.write_uint16(<uint16_t> len(TNS_NETWORK_SERVICES))
+        buf.write_uint8(0)                  # flags
+
+        # write service data
+        for service in TNS_NETWORK_SERVICES:
+            service.write_data(buf)
         buf.end_request()
 
     cdef int _populate_execute_packet(self, Cursor cursor,
