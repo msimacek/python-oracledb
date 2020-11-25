@@ -6,6 +6,8 @@ cdef class Cursor(BaseCursor):
 
     cdef:
         Statement _statement
+        list _batcherrors
+        list _dmlrowcounts
         str _lastrowid
 
     cdef int _close(self) except -1:
@@ -21,20 +23,31 @@ cdef class Cursor(BaseCursor):
 
     cdef int _execute(self) except -1:
         cdef Connection connection = self.connection
-        self._preprocess_execute(connection)
-        connection._protocol._execute(self, self.arraysize, 1,
+        self._preprocess_execute()
+        connection._protocol._execute(self, self.arraysize,
                                       self._statement._bind_info_list)
 
     cdef int _executemany(self, uint32_t num_execs, bint batcherrors,
                           bint arraydmlrowcounts) except -1:
         cdef Connection connection = self.connection
-        self._preprocess_execute(connection)
-        connection._protocol._execute(self, self.arraysize, num_execs,
-                                      self._statement._bind_info_list)
+        self._preprocess_execute()
+        connection._protocol._execute(self, self.arraysize,
+                                      self._statement._bind_info_list,
+                                      num_execs, arraydmlrowcounts,
+                                      batcherrors)
 
     cdef int _fetch_rows(self) except -1:
         cdef Connection connection = self.connection
         connection._protocol._fetch(self, self._fetch_array_size)
+
+    cdef object _get_array_dml_row_counts(self):
+        if self._dmlrowcounts is None:
+            errors._raise_from_string(exceptions.DatabaseError,
+                                      "Array DML row counts not available")
+        return self._dmlrowcounts
+
+    cdef object _get_batch_errors(self):
+        return self._batcherrors
 
     cdef object _get_lastrowid(self):
         return self._lastrowid
@@ -55,7 +68,7 @@ cdef class Cursor(BaseCursor):
             self._statement = Statement()
             self._statement._prepare(sql)
 
-    cdef int _preprocess_execute(self, Connection connection) except -1:
+    cdef int _preprocess_execute(self) except -1:
         cdef BindInfo bind_info
         if self._bind_vars is not None:
             self._perform_binds()

@@ -7,8 +7,8 @@ class _Error:
     Error class which is used for all errors that are raised by the driver.
     """
 
-    def __init__(self, message, context=None, isrecoverable=False,
-            iswarning=False, code=0, offset=0):
+    def __init__(self, message=None, context=None, isrecoverable=False,
+                 iswarning=False, code=0, offset=0):
         self.message = message
         self.context = context
         self.isrecoverable = isrecoverable

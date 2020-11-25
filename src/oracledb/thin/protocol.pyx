@@ -14,6 +14,8 @@ cdef class _OracleErrorInfo:
         uint64_t rowcount
         str message
         str rowid
+        list batcherrors
+        list dmlrowcounts
 
 
 cdef class Protocol:
@@ -26,6 +28,7 @@ cdef class Protocol:
         ReadBuffer _read_buf
         WriteBuffer _write_buf
         ChunkedBytesBuffer _chunked_bytes_buf
+        _OracleErrorInfo _error_info
 
     def __init__(self, sock):
         self._seq_num = 3
@@ -158,17 +161,21 @@ cdef class Protocol:
         return b.encrypt(plain_text)
 
     cdef int _execute(self, Cursor cursor, uint32_t fetch_array_size,
-                      uint32_t num_execs, list params) except -1:
+                      list params, uint32_t num_execs=1,
+                      bint arraydmlrowcounts=False,
+                      bint batcherrors=False) except -1:
 
         # send execute packet
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
         self._populate_execute_packet(cursor, fetch_array_size, num_execs,
-                                      params)
+                                      params, arraydmlrowcounts, batcherrors)
         self._write_buf.end_request()
 
         # receive and process response
-        self._receive_packet()
-        self._process_execute_packet(cursor)
+        self._error_info = _OracleErrorInfo()
+        self._receive_packet(cursor, arraydmlrowcounts)
+        if self._error_info.batcherrors is None:
+            self._process_execute_packet(cursor, arraydmlrowcounts, num_execs)
 
     cdef int _fetch(self, Cursor cursor, uint32_t fetch_array_size) except -1:
         cdef WriteBuffer buf = self._write_buf
@@ -291,10 +298,11 @@ cdef class Protocol:
 
     cdef int _populate_execute_packet(self, Cursor cursor,
                                       uint32_t fetch_array_size,
-                                      uint32_t num_execs,
-                                      list params) except -1:
+                                      uint32_t num_execs, list params,
+                                      bint arraydmlrowcounts,
+                                      bint batcherrors) except -1:
         cdef:
-            uint32_t options, num_params = 0, num_iters = 1
+            uint32_t options, dml_options = 0, num_params = 0, num_iters = 1
             WriteBuffer buf = self._write_buf
             Statement stmt
 
@@ -314,6 +322,10 @@ cdef class Protocol:
             num_iters = fetch_array_size
         if num_params > 0:
             options |= TNS_EXEC_OPTION_BIND
+        if batcherrors:
+            options |= TNS_EXEC_OPTION_BATCH_ERRORS
+        if arraydmlrowcounts:
+            dml_options = TNS_EXEC_OPTION_DML_ROWCOUNTS
 
         # write packet
         buf.write_uint16(0)                 # data flags
@@ -352,9 +364,14 @@ cdef class Protocol:
         buf.write_uint8(0)                  # pointer (al8dnam)
         buf.write_ub4(0)                    # al8dnaml
         buf.write_ub4(0)                    # al8regid_msb
-        buf.write_uint8(0)                  # pointer (al8pidmlrc)
-        buf.write_ub4(0)                    # al8pidmlrcbl
-        buf.write_uint8(0)                  # pointer (al8pidmlrcl)
+        if arraydmlrowcounts:
+            buf.write_uint8(1)              # pointer (al8pidmlrc)
+            buf.write_ub4(num_execs)        # al8pidmlrcbl
+            buf.write_uint8(1)              # pointer (al8pidmlrcl)
+        else:
+            buf.write_uint8(0)              # pointer (al8pidmlrc)
+            buf.write_ub4(0)                # al8pidmlrcbl
+            buf.write_uint8(0)              # pointer (al8pidmlrcl)
         buf.write_uint8(0)                  # pointer (al8sqlsig)
         buf.write_ub4(0)                    # SQL signature length
         buf.write_uint8(0)                  # pointer (SQL ID)
@@ -373,7 +390,10 @@ cdef class Protocol:
         buf.write_ub4(0)                    # al8i4[6] SCN (part 2)
         buf.write_ub4(stmt._is_query)       # al8i4[7] is query
         buf.write_ub4(0)                    # al8i4[8]
-        buf.write_ub4(0)                    # al8i4[9] DML row counts/implicit
+        if arraydmlrowcounts:
+            buf.write_ub4(dml_options)      # al8i4[9] DML row counts/implicit
+        else:
+            buf.write_ub4(0)                # al8i4[9] DML row counts/implicit
         buf.write_ub4(0)                    # al8i4[10]
         buf.write_ub4(0)                    # al8i4[11]
         buf.write_ub4(0)                    # al8i4[12]
@@ -579,12 +599,14 @@ cdef class Protocol:
         var._finalize_init()
         return var
 
-    cdef _OracleErrorInfo _process_error_info(self, ReadBuffer buf):
+    cdef int _process_error_info(self, ReadBuffer buf) except -1:
         cdef:
-            _OracleErrorInfo info = _OracleErrorInfo()
+            uint16_t num_entries, error_code, message_length
+            _OracleErrorInfo info = self._error_info
             const char_type *message
-            uint8_t message_length
-            uint32_t num_bytes
+            uint32_t num_bytes, i
+            uint8_t first_byte
+            str error_msg
         buf.read_ub4()                      # end of call status
         buf.read_ub2()                      # end to end seq#
         buf.read_ub4()                      # current row number
@@ -608,46 +630,78 @@ cdef class Protocol:
         num_bytes = buf.read_ub4()          # oerrdd (logical rowid)
         if num_bytes > 0:
             self._read_bytes(buf.read_uint8())
-        buf.read_ub2()                      # oerrarl
-        buf.read_ub4()                      # oerepal
-        buf.read_ub2()                      # oermarl
+
+        # batch error codes
+        num_entries = buf.read_ub2()        # batch error codes array
+        if num_entries > 0:
+            info.batcherrors = []
+            first_byte = buf.read_uint8()
+            for i in range(num_entries):
+                if first_byte == TNS_LONG_LENGTH_INDICATOR:
+                    buf.read_ub4()          # chunk length ignored
+                error_code = buf.read_ub2()
+                info.batcherrors.append(errors._Error(code=error_code))
+            if first_byte == TNS_LONG_LENGTH_INDICATOR:
+                buf.skip_bytes(1)           # ignore end marker
+
+        # batch error offsets
+        num_entries = buf.read_ub2()        # batch error row offset array
+        if num_entries > 0:
+            first_byte = buf.read_uint8()
+            for i in range(num_entries):
+                if first_byte == TNS_LONG_LENGTH_INDICATOR:
+                    buf.read_ub4()          # chunk length ignored
+                info.batcherrors[i].offset = buf.read_ub4()
+            if first_byte == TNS_LONG_LENGTH_INDICATOR:
+                buf.skip_bytes(1)           # ignore end marker
+
+        # batch error messages
+        num_entries = buf.read_ub2()        # batch error messages array
+        if num_entries > 0:
+            buf.skip_bytes(1)               # ignore packed size
+            for i in range(num_entries):
+                buf.read_ub2()              # skip chunk length
+                info.batcherrors[i].message = \
+                        self._read_bytes(buf.read_uint8()).decode().rstrip()
+                buf.skip_bytes(2)           # ignore end marker
+
         info.num = buf.read_ub4()           # error number (extended)
         info.rowcount = buf.read_ub8()      # row number (extended)
         if info.num != 0:
             message_length = buf.read_uint8()
             message = buf._get_raw(message_length)
             info.message = message[:message_length].decode()
-        return info
 
     cdef int _process_error_packet(self) except -1:
         cdef:
-            _OracleErrorInfo error_info
-            uint8_t num_bytes
-            ReadBuffer buf
-        buf = self._read_buf
+            ReadBuffer buf = self._read_buf
+            uint8_t num_bytes, message_type
         buf.skip_bytes(2)                   # skip data flag
-        if buf.read_uint8() != 4:
-            errors._raise_from_string(exceptions.DatabaseError,
-                                      "TTC error: expecting error packet")
-        error_info = self._process_error_info(buf)
-        error = errors._Error(error_info.message, code=error_info.num,
-                              offset=error_info.pos)
-        exc_type = get_exception_class(error_info.num)
-        raise exc_type(error)
+        while buf.bytes_left() > 0:
+            message_type = buf.read_uint8()
+            if message_type == TNS_MSG_TYPE_PARAMETER:
+                self._process_msg_parameter(buf)
+            elif message_type == TNS_MSG_TYPE_ERROR:
+                self._process_error_info(buf)
+            else:
+                errors._raise_from_string(exceptions.DatabaseError,
+                                          "TTC error: expecting error packet")
 
-    cdef int _process_execute_packet(self, Cursor cursor) except -1:
+    cdef int _process_execute_packet(self, Cursor cursor,
+                                     bint arraydmlrowcounts=False,
+                                     uint32_t num_execs=1) except -1:
         cdef:
-            uint32_t num_columns, num_bytes, num_params, i, temp, row_index
+            uint32_t num_columns, num_bytes, i, temp, row_index
+            ReadBuffer buf = self._read_buf
             uint8_t message_type, bind_dir
-            _OracleErrorInfo error_info
             bint in_fetch = False
-            uint16_t num_bits
-            ReadBuffer buf
-            list row_vars
             BindInfo bind_info
+            uint16_t num_bits
+            Statement stmt
+            list row_vars
             Var var
-        buf = self._read_buf
         buf.skip_bytes(2)
+        stmt = cursor._statement
         if cursor._statement._is_query:
             row_vars = cursor._fetch_vars
             cursor._more_rows_to_fetch = True
@@ -659,6 +713,8 @@ cdef class Protocol:
                     if var.num_elements < cursor._fetch_array_size:
                         var.num_elements = cursor._fetch_array_size
                         var._finalize_init()
+        if arraydmlrowcounts:
+            self._error_info.dmlrowcounts = []
         while buf.bytes_left() > 0:
             message_type = buf.read_uint8()
             if message_type == TNS_MSG_TYPE_DESCRIBE_INFO:
@@ -712,7 +768,7 @@ cdef class Protocol:
                     bind_dir = buf.read_uint8()
                     if bind_dir == TNS_BIND_DIR_INPUT:
                         continue
-                    bind_info = cursor._statement._bind_info_list[i]
+                    bind_info = stmt._bind_info_list[i]
                     row_vars.append(bind_info._bind_var)
             elif message_type == TNS_MSG_TYPE_ROW_DATA:
                 self._process_row(buf, row_vars, row_index, in_fetch)
@@ -726,28 +782,38 @@ cdef class Protocol:
                     num_bytes += 1
                 buf.skip_bytes(num_bytes)
             elif message_type == TNS_MSG_TYPE_PARAMETER:
-                num_params = buf.read_ub2() # al8o4l (ignored)
-                for i in range(num_params):
-                    buf.read_ub4()
-                num_bytes = buf.read_ub2()  # al8txl (ignored)
-                if num_bytes > 0:
-                    buf.skip_bytes(num_bytes)
-                num_params = buf.read_ub2() # num key/value pairs
-                num_bytes = buf.read_ub4()  # registration
-                if num_bytes > 0:
-                    buf.skip_bytes(num_bytes)
+                self._process_msg_parameter(buf)
+                cursor._dmlrowcounts = self._error_info.dmlrowcounts
             elif message_type == TNS_MSG_TYPE_ERROR:
-                error_info = self._process_error_info(buf)
-                cursor._statement._cursor_id = error_info.cursor_id
-                cursor.rowcount = error_info.rowcount
-                cursor._lastrowid = error_info.rowid
-                if error_info.num == 1403:
+                self._process_error_info(buf)
+                stmt._cursor_id = self._error_info.cursor_id
+                cursor.rowcount = self._error_info.rowcount
+                cursor._lastrowid = self._error_info.rowid
+                if self._error_info.num == 1403:
                     cursor._more_rows_to_fetch = False
             elif message_type == TNS_MSG_TYPE_SERVER_SIDE_PIGGYBACK:
                 self._process_server_side_piggyback()
             else:
                 msg = f"unknown message type: {message_type}"
                 errors._raise_from_string(exceptions.InternalError, msg)
+
+    cdef int _process_msg_parameter(self, ReadBuffer buf) except -1:
+        cdef:
+            _OracleErrorInfo error_info = self._error_info
+            uint32_t num_params, num_bytes, i
+        num_params = buf.read_ub2()         # al8o4l (ignored)
+        for i in range(num_params):
+            buf.read_ub4()
+        num_bytes = buf.read_ub2()          # al8txl (ignored)
+        if num_bytes > 0:
+            buf.skip_bytes(num_bytes)
+        buf.read_ub2()                      # num key/val pairs
+        num_bytes = buf.read_ub4()          # registration
+        if num_bytes > 0:
+            buf.skip_bytes(num_bytes)
+        if error_info.dmlrowcounts is not None:
+            for i in range(buf.read_ub4()):
+                error_info.dmlrowcounts.append(buf.read_ub8())
 
     cdef int _process_row(self, ReadBuffer buf, list row_vars,
                           uint32_t row_index, bint in_fetch) except -1:
@@ -942,13 +1008,27 @@ cdef class Protocol:
         source_ptr = self._read_buf._get_raw(num_bytes_2)
         memcpy(dest_ptr, source_ptr, num_bytes_2)
 
-    cdef int _receive_packet(self) except -1:
+    cdef int _receive_packet(self, Cursor cursor=None,
+                             bint arraydmlrowcounts=False) except -1:
         cdef uint8_t packet_type
         self._read_buf.receive_packet(&packet_type)
         if packet_type == TNS_PACKET_TYPE_MARKER:
             # on error a second packet is sent which is ignored
             self._read_buf.receive_packet(&packet_type)
+            self._error_info = _OracleErrorInfo()
+            if arraydmlrowcounts:
+                self._error_info.dmlrowcounts = []
             self._handle_error()
+            if cursor is not None:
+                cursor.rowcount = self._error_info.rowcount
+                cursor._batcherrors = self._error_info.batcherrors
+                cursor._dmlrowcounts = self._error_info.dmlrowcounts
+            if self._error_info.batcherrors is None:
+                error = errors._Error(self._error_info.message,
+                                      code=self._error_info.num,
+                                      offset=self._error_info.pos)
+                exc_type = get_exception_class(self._error_info.num)
+                raise exc_type(error)
 
     cdef int _rollback(self) except -1:
 
