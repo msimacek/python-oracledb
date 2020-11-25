@@ -147,6 +147,7 @@ cdef class ReadBuffer:
     cdef:
         ssize_t _max_packet_size, _max_size, _size, _offset, _bytes_to_process
         ssize_t _packet_start_offset
+        uint16_t _protocol_version
         const char_type *_data
         bytearray _data_obj
         int _view_count
@@ -221,8 +222,8 @@ cdef class ReadBuffer:
                                            self._max_packet_size)
 
         # otherwise, set the offset to the end of the previous packet and
-        # ensure that there are at lest 8 bytes available to cover the contents
-        # of the packet header
+        # ensure that there are at least enough bytes available to cover the
+        # contents of the packet header
         else:
             self._packet_start_offset = self._size
             self._offset = self._size
@@ -233,9 +234,15 @@ cdef class ReadBuffer:
                         self._socket.recv_into(view[offset:], bytes_to_read)
 
         # determine the packet length and ensure that all of the bytes for the
-        # packet are available
-        self._size += 2
-        packet_size = self.read_uint16()
+        # packet are available; note that as of version 12.2 the packet size is
+        # 32 bits in size instead of 16 bits, but this doesn't take effect
+        # until it is known that the server is capable of that as well
+        if self._protocol_version >= TNS_VERSION_MIN_LARGE_SDU:
+            self._size += 4
+            packet_size = self.read_uint32()
+        else:
+            self._size += 2
+            packet_size = self.read_uint16()
         while self._bytes_to_process < packet_size:
             offset = self._packet_start_offset + self._bytes_to_process
             bytes_to_read = packet_size - self._bytes_to_process
@@ -245,7 +252,8 @@ cdef class ReadBuffer:
         # process remainder of packet header and set size to the new packet
         self._size = self._packet_start_offset + packet_size
         self._bytes_to_process -= packet_size
-        self.skip_bytes(2)              # skip packet checksum
+        if self._protocol_version < TNS_VERSION_MIN_LARGE_SDU:
+            self.skip_bytes(2)          # skip packet checksum
         packet_type[0] = self.read_uint8()
         self.skip_bytes(3)              # skip reserved byte, header checksum
 
@@ -585,9 +593,10 @@ cdef class WriteBuffer:
 
     cdef:
         ssize_t _max_size, _actual_size
+        uint16_t _protocol_version
+        uint8_t _packet_type
         bytearray _data_obj
         char_type *_data
-        uint8_t _packet_type
         object _socket
         int _view_count
 
@@ -624,8 +633,11 @@ cdef class WriteBuffer:
         """
         cdef ssize_t size = self._actual_size
         self._actual_size = 0
-        self.write_uint16(size)
-        self.write_uint16(0)
+        if self._protocol_version >= TNS_VERSION_MIN_LARGE_SDU:
+            self.write_uint32(size)
+        else:
+            self.write_uint16(size)
+            self.write_uint16(0)
         self.write_uint8(self._packet_type)
         self.write_uint8(0)
         self.write_uint16(0)

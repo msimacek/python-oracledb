@@ -78,6 +78,7 @@ cdef class Protocol:
         # resend connect packet and receive response
         self._send_connect_packet(params.connect_string)
         self._receive_packet()
+        self._process_accept_packet()
 
         # send services packet and receive response
         self._send_services_packet()
@@ -242,8 +243,8 @@ cdef class Protocol:
         buf.start_request(TNS_PACKET_TYPE_CONNECT)
         connect_string_bytes = connect_string.encode()
         connect_string_length = <uint16_t> len(connect_string_bytes)
-        buf.write_uint16(314)               # version
-        buf.write_uint16(300)               # compatible with version
+        buf.write_uint16(TNS_VERSION_DESIRED)
+        buf.write_uint16(TNS_VERSION_MINIMUM)
         buf.write_uint16(0xc41)             # service options
         buf.write_uint16(SDU)               # SDU
         buf.write_uint16(TDU)               # TDU
@@ -251,12 +252,15 @@ cdef class Protocol:
         buf.write_uint16(0)                 # line turnaround
         buf.write_uint16(1)                 # value of 1
         buf.write_uint16(connect_string_length)
-        buf.write_uint16(58)                # offset to connect data
+        buf.write_uint16(70)                # offset to connect data
         buf.write_uint32(0)                 # max receivable data
         buf.write_uint16(0x4141)            # connect flags
         buf.write_uint64(0)                 # obsolete
         buf.write_uint64(0)                 # obsolete
         buf.write_uint64(0)                 # obsolete
+        buf.write_uint32(SDU)               # SDU (large)
+        buf.write_uint32(TDU)               # TDU (large)
+        buf.write_uint32(0)                 # compression flags
         buf.write_bytes(connect_string_bytes)
         buf.end_request()
 
@@ -515,6 +519,14 @@ cdef class Protocol:
                                        object params) except -1:
         buf.write_bytes(b'\x00\x00\x01\x06\x00')
         buf.write_bytes(b'Python_Thin\x00')
+
+    cdef int _process_accept_packet(self) except -1:
+        cdef:
+            ReadBuffer buf = self._read_buf
+            uint16_t version
+        version = buf.read_uint16()
+        self._read_buf._protocol_version = version
+        self._write_buf._protocol_version = version
 
     cdef Var _process_column_info(self, Cursor cursor, ReadBuffer buf):
         cdef:
