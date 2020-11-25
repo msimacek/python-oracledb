@@ -39,6 +39,9 @@ cdef class Protocol:
 
     cdef int _close(self) except -1:
 
+        # rollback any transaction first
+        self._rollback()
+
         # send close request
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
         self._write_buf.write_uint32(0x00000309)
