@@ -2,6 +2,8 @@
 # Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+from . import exceptions
+
 def parse_connect_params(dsn, user, password, host, port, service_name, thin):
 
     # parse dsn, if present; dsn is expected to be in the form
