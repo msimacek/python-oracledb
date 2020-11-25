@@ -326,6 +326,8 @@ cdef class Protocol:
             options |= TNS_EXEC_OPTION_BATCH_ERRORS
         if arraydmlrowcounts:
             dml_options = TNS_EXEC_OPTION_DML_ROWCOUNTS
+        if cursor.connection.autocommit:
+            options |= TNS_EXEC_OPTION_COMMIT
 
         # write packet
         buf.write_uint16(0)                 # data flags
