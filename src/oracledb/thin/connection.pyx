@@ -8,10 +8,6 @@ cdef class Connection(BaseConnection):
         StatementCache _statement_cache
         Protocol _protocol
 
-    def __dealloc__(self):
-        if self._is_connected:
-            self._protocol._close()
-
     cdef int _close(self) except -1:
         self._protocol._close()
 
