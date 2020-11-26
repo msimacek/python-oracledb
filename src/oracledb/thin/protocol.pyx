@@ -70,19 +70,25 @@ cdef class Protocol:
         # receive response
         self._receive_packet()
 
-    def _connect(self, params):
+    cdef _connect(self, str connect_string, str user, str password):
         cdef:
-            bytes user_bytes = params.user.encode()
+            bytes user_bytes = user.encode()
             uint8_t user_len = <uint8_t> len(user_bytes)
             WriteBuffer buf = self._write_buf
+            dict session_data = {}
+
+        # verify that a password has been specified first
+        if password is None:
+            errors._raise_from_string(exceptions.DatabaseError,
+                                      "no password specified")
 
         # send connect packet and receive response (which requests the packet
         # to be resent)
-        self._send_connect_packet(params.connect_string)
+        self._send_connect_packet(connect_string)
         self._receive_packet()
 
         # resend connect packet and receive response
-        self._send_connect_packet(params.connect_string)
+        self._send_connect_packet(connect_string)
         self._receive_packet()
         self._process_accept_packet()
 
@@ -129,12 +135,12 @@ cdef class Protocol:
 
         # receive response (session key packet)
         self._receive_packet()
-        params.session_data = {}
-        self._process_session_data_packet(params)
+        self._process_session_data_packet(session_data)
 
         # send authorization packet
         buf.start_request(TNS_PACKET_TYPE_DATA)
-        password, session_key = self._generate_auth_response(params)
+        password, session_key = self._generate_auth_response(session_data,
+                                                             password)
         buf.write_bytes(b'\x00\x00\x03\x73\x03')
         buf.write_uint8(1)                  # pointer (authusr)
         buf.write_ub4(user_len)
@@ -153,7 +159,7 @@ cdef class Protocol:
 
         # receive response (session data packet)
         self._receive_packet()
-        self._process_session_data_packet(params)
+        self._process_session_data_packet(session_data)
 
     def _encrypt_cbc(self, key, plain_text):
         iv = b"\x00" * AES.block_size
@@ -198,11 +204,11 @@ cdef class Protocol:
         self._receive_packet()
         self._process_execute_packet(cursor)
 
-    cdef _generate_auth_response(self, object params):
+    cdef object _generate_auth_response(self, dict session_data, str password):
 
         # create password hash
-        verifier_data = bytes.fromhex(params.session_data['AUTH_VFR_DATA'])
-        h = hashlib.sha1(params.password.encode())
+        verifier_data = bytes.fromhex(session_data['AUTH_VFR_DATA'])
+        h = hashlib.sha1(password.encode())
         h.update(verifier_data)
         password_hash = h.digest() + b"\x00\x00\x00\x00"
 
@@ -211,7 +217,7 @@ cdef class Protocol:
         encoded_client_key = self._encrypt_cbc(password_hash, client_key)
 
         # decode server key
-        encoded_server_key = bytes.fromhex(params.session_data['AUTH_SESSKEY'])
+        encoded_server_key = bytes.fromhex(session_data['AUTH_SESSKEY'])
         b = AES.new(password_hash, AES.MODE_CBC, b"\x00" * AES.block_size)
         server_key = b.decrypt(encoded_server_key)
 
@@ -225,7 +231,7 @@ cdef class Protocol:
 
         # encrypt password
         salt = bytes.fromhex("4C31AFE05F3B012C0AE9AB0CDFF0C508")
-        password_with_salt = salt + params.password.encode()
+        password_with_salt = salt + password.encode()
         encoded_password = self._encrypt_cbc(combo_key, password_with_salt)
 
         # store results in session data for transmission to the server
@@ -245,7 +251,7 @@ cdef class Protocol:
         if self._seq_num == 0:
             self._seq_num = 1
 
-    cdef int _send_connect_packet(self, object connect_string) except -1:
+    cdef int _send_connect_packet(self, str connect_string) except -1:
         cdef:
             WriteBuffer buf = self._write_buf
             uint16_t connect_string_length
@@ -935,7 +941,7 @@ cdef class Protocol:
             msg = f"Unhandled server side piggyback opcode: {opcode}"
             raise Exception(msg)
 
-    cdef int _process_session_data_packet(self, object params) except -1:
+    cdef int _process_session_data_packet(self, dict session_data) except -1:
         cdef:
             int version_num, release_num, update_num, port_release_num
             uint32_t num_bytes, flags, full_version_num
@@ -957,13 +963,11 @@ cdef class Protocol:
             else:
                 value = ""
             flags = buf.read_ub4()
-            params.session_data[key] = value
-        if "AUTH_SESSION_ID" in params.session_data:
-            self._session_id = \
-                    <uint32_t> int(params.session_data["AUTH_SESSION_ID"])
-            self._serial_num = \
-                    <uint32_t> int(params.session_data["AUTH_SERIAL_NUM"])
-            full_version_num = int(params.session_data["AUTH_VERSION_NO"])
+            session_data[key] = value
+        if "AUTH_SESSION_ID" in session_data:
+            self._session_id = <uint32_t> int(session_data["AUTH_SESSION_ID"])
+            self._serial_num = <uint32_t> int(session_data["AUTH_SERIAL_NUM"])
+            full_version_num = int(session_data["AUTH_VERSION_NO"])
             self._server_version = "%d.%d.%d.%d.%d" % \
                     ((full_version_num >> 24) & 0xFF,
                      (full_version_num >> 16) & 0xFF,

@@ -40,7 +40,7 @@ def parse_connect_params(dsn, user, password, host, port, service_name, thin):
 
     # a service name is mandatory for the thin driver
     if thin and service_name is None:
-        raise exceptions.InterfaceError("a service name must be specified")
+        raise exceptions.DatabaseError("a service name must be specified")
 
     # assign defaults to host and port, if needed
     if port is None:
