@@ -192,6 +192,8 @@ def run_test_cases():
     unittest.main(testRunner=unittest.TextTestRunner(verbosity=2))
 
 def skip_soda_tests():
+    if get_is_thin():
+        return True
     client = get_client_version()
     if client < (18, 3):
         return True
