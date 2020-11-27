@@ -610,6 +610,30 @@ cdef class Protocol:
         var._finalize_init()
         return var
 
+    cdef int _process_describe_info(self, Cursor cursor) except -1:
+        cdef:
+            ReadBuffer buf = self._read_buf
+            uint32_t num_bytes, num_columns
+        buf.read_ub4()                      # max row size
+        num_columns = buf.read_ub4()
+        cursor._fetch_vars = cpython.PyList_New(num_columns)
+        buf.skip_bytes(1)
+        for i in range(num_columns):
+            var = self._process_column_info(cursor, buf)
+            cpython.Py_INCREF(var)
+            cpython.PyList_SET_ITEM(cursor._fetch_vars, i, var)
+        num_bytes = buf.read_ub4()
+        if num_bytes > 0:
+            buf.skip_bytes(num_bytes + 1)   # current date
+        buf.read_ub4()                      # dcbflag
+        buf.read_ub4()                      # dcbmdbz
+        buf.read_ub4()                      # dcbmnpr
+        buf.read_ub4()                      # dcbmxpr
+        num_bytes = buf.read_ub4()
+        if num_bytes > 0:
+            buf.skip_bytes(num_bytes + 1)   # dcbqcky
+        cursor._statement._fetch_vars = cursor._fetch_vars
+
     cdef int _process_error_info(self, ReadBuffer buf) except -1:
         cdef:
             uint16_t num_entries, error_code, message_length
@@ -731,25 +755,8 @@ cdef class Protocol:
             if message_type == TNS_MSG_TYPE_DESCRIBE_INFO:
                 num_bytes = buf.read_uint8()
                 buf.skip_bytes(num_bytes)
-                buf.read_ub4()              # max row size
-                num_columns = buf.read_ub4()
-                row_vars = cursor._fetch_vars = cpython.PyList_New(num_columns)
-                buf.skip_bytes(1)
-                for i in range(num_columns):
-                    var = self._process_column_info(cursor, buf)
-                    cpython.Py_INCREF(var)
-                    cpython.PyList_SET_ITEM(cursor._fetch_vars, i, var)
-                num_bytes = buf.read_ub4()
-                if num_bytes > 0:
-                    buf.skip_bytes(num_bytes + 1)   # current date
-                buf.read_ub4()              # dcbflag
-                buf.read_ub4()              # dcbmdbz
-                buf.read_ub4()              # dcbmnpr
-                buf.read_ub4()              # dcbmxpr
-                num_bytes = buf.read_ub4()
-                if num_bytes > 0:
-                    buf.skip_bytes(num_bytes + 1)   # dcbqcky
-                cursor._statement._fetch_vars = cursor._fetch_vars
+                self._process_describe_info(cursor)
+                row_vars = cursor._fetch_vars
             elif message_type == TNS_MSG_TYPE_ROW_HEADER:
                 buf.skip_bytes(1)           # flags
                 buf.read_ub2()              # num requests
@@ -782,7 +789,8 @@ cdef class Protocol:
                     bind_info = stmt._bind_info_list[i]
                     row_vars.append(bind_info._bind_var)
             elif message_type == TNS_MSG_TYPE_ROW_DATA:
-                self._process_row(buf, row_vars, row_index, in_fetch)
+                self._process_row(buf, row_vars, cursor.connection,
+                                  row_index, in_fetch)
                 if in_fetch:
                     cursor._buffer_rowcount += 1
                     row_index = cursor._buffer_rowcount
@@ -827,11 +835,10 @@ cdef class Protocol:
                 error_info.dmlrowcounts.append(buf.read_ub8())
 
     cdef int _process_row(self, ReadBuffer buf, list row_vars,
-                          uint32_t row_index, bint in_fetch) except -1:
+                          Connection conn, uint32_t row_index,
+                          bint in_fetch) except -1:
         cdef:
-            uint8_t num_bytes, ora_type_num, csfrm
-            object column_value
-            bytes temp_bytes
+            object value
             uint32_t pos
             ssize_t i
             Var var
@@ -839,17 +846,18 @@ cdef class Protocol:
             if var.is_array:
                 var._num_elements_in_array = buf.read_ub4()
                 for pos in range(var._num_elements_in_array):
-                    var._values[pos] = self._process_row_data(buf, var,
-                                                              in_fetch)
+                    value = self._process_row_data(buf, conn, var, in_fetch)
+                    var._values[pos] = value
             else:
-                var._values[row_index] = self._process_row_data(buf, var,
-                                                                in_fetch)
+                value = self._process_row_data(buf, conn, var, in_fetch)
+                var._values[row_index] = value
 
-    cdef object _process_row_data(self, ReadBuffer buf, Var var,
-                                  bint in_fetch):
+    cdef object _process_row_data(self, ReadBuffer buf, Connection conn,
+                                  Var var, bint in_fetch):
         cdef:
             uint8_t num_bytes, ora_type_num, csfrm
             object column_value
+            Cursor cursor
             bytes temp_bytes
         ora_type_num = var._dbtype._ora_type_num
         csfrm = var._dbtype._csfrm
@@ -888,6 +896,15 @@ cdef class Protocol:
             column_value = buf.read_binary_double()
         elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
             column_value = buf.read_binary_float()
+        elif ora_type_num == TNS_DATA_TYPE_CURSOR:
+            cursor = Cursor(conn)
+            cursor._fetch_array_size = cursor.arraysize
+            cursor._statement = Statement()
+            cursor._more_rows_to_fetch = True
+            cursor._statement._is_query = True
+            self._process_describe_info(cursor)
+            cursor._statement._cursor_id = buf.read_ub4()
+            column_value = cursor
         else:
             msg = f"unhandled data type {var.type}"
             raise Exception(msg)
