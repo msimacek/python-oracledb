@@ -8,6 +8,7 @@ cdef class Cursor(BaseCursor):
         Statement _statement
         list _batcherrors
         list _dmlrowcounts
+        list _implicit_resultsets
         str _lastrowid
 
     cdef int _close(self) except -1:
@@ -51,6 +52,12 @@ cdef class Cursor(BaseCursor):
 
     cdef object _get_lastrowid(self):
         return self._lastrowid
+
+    cdef object _get_implicit_results(self):
+        if self._implicit_resultsets is None:
+            errors._raise_from_string(exceptions.InterfaceError,
+                                      "no statement executed")
+        return self._implicit_resultsets
 
     cdef bint _is_plsql(self):
         return self._statement._is_plsql

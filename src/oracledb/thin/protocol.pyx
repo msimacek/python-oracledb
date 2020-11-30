@@ -161,6 +161,16 @@ cdef class Protocol:
         self._receive_packet()
         self._process_session_data_packet(session_data)
 
+    cdef Cursor _create_cursor_from_describe(self, Connection conn):
+        cdef Cursor cursor
+        cursor = Cursor(conn)
+        cursor._fetch_array_size = cursor.arraysize
+        cursor._statement = Statement()
+        cursor._more_rows_to_fetch = True
+        cursor._statement._is_query = True
+        self._process_describe_info(cursor)
+        return cursor
+
     def _encrypt_cbc(self, key, plain_text):
         iv = b"\x00" * AES.block_size
         b = AES.new(key, AES.MODE_CBC, iv)
@@ -320,6 +330,7 @@ cdef class Protocol:
         if params:
             num_params = <uint32_t> len(params)
         options = TNS_EXEC_OPTION_EXECUTE
+        dml_options = TNS_EXEC_OPTION_IMPLICIT_RESULTSET
         if stmt._cursor_id == 0:
             options |= TNS_EXEC_OPTION_PARSE
         if not stmt._is_plsql:
@@ -401,10 +412,7 @@ cdef class Protocol:
         buf.write_ub4(0)                    # al8i4[6] SCN (part 2)
         buf.write_ub4(stmt._is_query)       # al8i4[7] is query
         buf.write_ub4(0)                    # al8i4[8]
-        if arraydmlrowcounts:
-            buf.write_ub4(dml_options)      # al8i4[9] DML row counts/implicit
-        else:
-            buf.write_ub4(0)                # al8i4[9] DML row counts/implicit
+        buf.write_ub4(dml_options)          # al8i4[9] DML row counts/implicit
         buf.write_ub4(0)                    # al8i4[10]
         buf.write_ub4(0)                    # al8i4[11]
         buf.write_ub4(0)                    # al8i4[12]
@@ -812,9 +820,28 @@ cdef class Protocol:
                     cursor._more_rows_to_fetch = False
             elif message_type == TNS_MSG_TYPE_SERVER_SIDE_PIGGYBACK:
                 self._process_server_side_piggyback()
+            elif message_type == TNS_MSG_TYPE_IMPLICIT_RESULTSET:
+                self._process_implicit_result(cursor)
             else:
                 msg = f"unknown message type: {message_type}"
                 errors._raise_from_string(exceptions.InternalError, msg)
+
+    cdef int _process_implicit_result(self, Cursor cursor) except -1:
+        cdef:
+            ReadBuffer buf = self._read_buf
+            uint32_t resultset_count, i
+            uint8_t num_bytes
+            Cursor child_cursor
+            Connection conn = cursor.connection
+
+        cursor._implicit_resultsets = []
+        resultset_count = buf.read_ub4()
+        for i in range(resultset_count):
+            num_bytes = buf.read_uint8()
+            buf.skip_bytes(num_bytes)
+            child_cursor = self._create_cursor_from_describe(conn)
+            child_cursor._statement._cursor_id = buf.read_ub4()
+            cursor._implicit_resultsets.append(child_cursor)
 
     cdef int _process_msg_parameter(self, ReadBuffer buf) except -1:
         cdef:
@@ -897,12 +924,7 @@ cdef class Protocol:
         elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
             column_value = buf.read_binary_float()
         elif ora_type_num == TNS_DATA_TYPE_CURSOR:
-            cursor = Cursor(conn)
-            cursor._fetch_array_size = cursor.arraysize
-            cursor._statement = Statement()
-            cursor._more_rows_to_fetch = True
-            cursor._statement._is_query = True
-            self._process_describe_info(cursor)
+            cursor = self._create_cursor_from_describe(conn)
             cursor._statement._cursor_id = buf.read_ub4()
             column_value = cursor
         else:
