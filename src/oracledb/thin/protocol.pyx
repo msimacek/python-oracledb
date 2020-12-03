@@ -161,11 +161,12 @@ cdef class Protocol:
         self._receive_packet()
         self._process_session_data_packet(session_data)
 
-    cdef Cursor _create_cursor_from_describe(self, Connection conn):
-        cdef Cursor cursor
-        cursor = Cursor(conn)
-        cursor._fetch_array_size = cursor.arraysize
+    cdef Cursor _create_cursor_from_describe(self, Connection conn,
+                                             Cursor cursor=None):
+        if cursor is None:
+            cursor = Cursor(conn)
         cursor._statement = Statement()
+        cursor._fetch_array_size = cursor.arraysize
         cursor._more_rows_to_fetch = True
         cursor._statement._is_query = True
         self._process_describe_info(cursor)
@@ -492,6 +493,7 @@ cdef class Protocol:
         cdef:
             uint8_t ora_type_num = var._dbtype._ora_type_num
             bytes temp_bytes
+            Cursor cursor
         if value is None:
             buf.write_uint8(0)
         elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
@@ -516,6 +518,15 @@ cdef class Protocol:
             buf.write_binary_double(value)
         elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
             buf.write_binary_float(value)
+        elif ora_type_num == TNS_DATA_TYPE_CURSOR:
+            cursor = <Cursor> value
+            if cursor._statement is None:
+                cursor._statement = Statement()
+            if cursor._statement._cursor_id == 0:
+                buf.write_uint8(1)
+                buf.write_uint8(0)
+            else:
+                buf.write_ub4(cursor._statement._cursor_id)
         else:
             errors._raise_from_string(exceptions.NotSupportedError,
                                       f"unsupported type {var.type}")
@@ -873,18 +884,20 @@ cdef class Protocol:
             if var.is_array:
                 var._num_elements_in_array = buf.read_ub4()
                 for pos in range(var._num_elements_in_array):
-                    value = self._process_row_data(buf, conn, var, in_fetch)
+                    value = self._process_row_data(buf, conn, var, pos,
+                                                   in_fetch)
                     var._values[pos] = value
             else:
-                value = self._process_row_data(buf, conn, var, in_fetch)
+                value = self._process_row_data(buf, conn, var, row_index,
+                                               in_fetch)
                 var._values[row_index] = value
 
     cdef object _process_row_data(self, ReadBuffer buf, Connection conn,
-                                  Var var, bint in_fetch):
+                                  Var var, uint32_t pos, bint in_fetch):
         cdef:
             uint8_t num_bytes, ora_type_num, csfrm
+            Cursor cursor = None
             object column_value
-            Cursor cursor
             bytes temp_bytes
         ora_type_num = var._dbtype._ora_type_num
         csfrm = var._dbtype._csfrm
@@ -924,7 +937,9 @@ cdef class Protocol:
         elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
             column_value = buf.read_binary_float()
         elif ora_type_num == TNS_DATA_TYPE_CURSOR:
-            cursor = self._create_cursor_from_describe(conn)
+            if not in_fetch:
+                cursor = var._values[pos]
+            cursor = self._create_cursor_from_describe(conn, cursor)
             cursor._statement._cursor_id = buf.read_ub4()
             column_value = cursor
         else:
