@@ -234,9 +234,9 @@ cdef class BaseCursor:
                     objtype = temp_objtype
                     size = temp_size
                 elif temp_dbtype is not dbtype or temp_objtype is not objtype:
-                    message = f"element {element} is not the same type as" \
+                    message = f"element {element} is not the same type as " \
                                "previous elements"
-                    errors._raise_from_string(exceptions.NotSuppportedError,
+                    errors._raise_from_string(exceptions.NotSupportedError,
                                               message)
                 if temp_size > size:
                     size = temp_size
