@@ -6,14 +6,14 @@
 2500 - Module for testing string variables
 """
 
-import base
+import test_env
 
 import oracledb
 import datetime
 import string
 import random
 
-class TestCase(base.BaseTestCase):
+class TestCase(test_env.BaseTestCase):
 
     def setUp(self):
         super().setUp()
@@ -286,7 +286,7 @@ class TestCase(base.BaseTestCase):
     def test_2522_cursor_description(self):
         "2522 - test cursor description is accurate"
         self.cursor.execute("select * from TestStrings")
-        varchar_ratio, nvarchar_ratio = base.get_charset_ratios()
+        varchar_ratio, nvarchar_ratio = test_env.get_charset_ratios()
         expected_value = [
             ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, False),
             ('STRINGCOL', oracledb.DB_TYPE_VARCHAR, 20, 20 * varchar_ratio,
@@ -426,4 +426,4 @@ class TestCase(base.BaseTestCase):
         self.assertEqual(actual_value.strip(), xml_string)
 
 if __name__ == "__main__":
-    base.run_test_cases()
+    test_env.run_test_cases()

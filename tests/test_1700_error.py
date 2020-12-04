@@ -6,12 +6,12 @@
 1700 - Module for testing error objects
 """
 
-import base
+import test_env
 
 import oracledb
 import pickle
 
-class TestCase(base.BaseTestCase):
+class TestCase(test_env.BaseTestCase):
 
     def test_1700_parse_error(self):
         "1700 - test parse error returns offset correctly"
@@ -42,4 +42,4 @@ class TestCase(base.BaseTestCase):
         self.assertTrue(new_error_obj.isrecoverable == error_obj.isrecoverable)
 
 if __name__ == "__main__":
-    base.run_test_cases()
+    test_env.run_test_cases()

@@ -7,13 +7,13 @@
 """
 
 import unittest
-import base
+import test_env
 
 import oracledb
 
-@unittest.skipUnless(base.get_client_version() >= (12, 1),
+@unittest.skipUnless(test_env.get_client_version() >= (12, 1),
                      "unsupported client")
-class TestCase(base.BaseTestCase):
+class TestCase(test_env.BaseTestCase):
 
     def __test_bind_value_as_boolean(self, value):
         expected_result = str(bool(value)).upper()
@@ -70,4 +70,4 @@ class TestCase(base.BaseTestCase):
         self.assertEqual(result, "TRUE")
 
 if __name__ == "__main__":
-    base.run_test_cases()
+    test_env.run_test_cases()

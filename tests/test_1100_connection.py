@@ -6,7 +6,7 @@
 1100 - Module for testing connections
 """
 
-import base
+import test_env
 
 import oracledb
 import random
@@ -14,21 +14,21 @@ import string
 import threading
 import unittest
 
-class TestCase(base.BaseTestCase):
+class TestCase(test_env.BaseTestCase):
     requires_connection = False
 
     def __connect_and_drop(self):
         """Connect to the database, perform a query and drop the connection."""
-        connection = base.get_connection(threaded=True)
+        connection = test_env.get_connection(threaded=True)
         cursor = connection.cursor()
         cursor.execute("select count(*) from TestNumbers")
         count, = cursor.fetchone()
         self.assertEqual(count, 10)
 
     def __verify_args(self, connection):
-        self.assertEqual(connection.username, base.get_main_user(),
+        self.assertEqual(connection.username, test_env.get_main_user(),
                          "user name differs")
-        self.assertEqual(connection.dsn, base.get_connect_string(),
+        self.assertEqual(connection.dsn, test_env.get_connect_string(),
                          "dsn differs")
 
     def __verify_attributes(self, connection, attrName, value, sql):
@@ -40,7 +40,7 @@ class TestCase(base.BaseTestCase):
 
     def test_1100_all_args(self):
         "1100 - connection to database with user, password, TNS separate"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         self.__verify_args(connection)
 
     def test_1101_app_context(self):
@@ -51,7 +51,7 @@ class TestCase(base.BaseTestCase):
             ( namespace, "ATTR2", "VALUE2" ),
             ( namespace, "ATTR3", "VALUE3" )
         ]
-        connection = base.get_connection(appcontext=app_context_entries)
+        connection = test_env.get_connection(appcontext=app_context_entries)
         cursor = connection.cursor()
         for namespace, name, value in app_context_entries:
             cursor.execute("select sys_context(:1, :2) from dual",
@@ -61,14 +61,17 @@ class TestCase(base.BaseTestCase):
 
     def test_1102_app_context_negative(self):
         "1102 - test invalid use of application context"
-        self.assertRaises(TypeError, oracledb.connect, base.get_main_user(),
-                          base.get_main_password(), base.get_connect_string(),
+        self.assertRaises(TypeError, oracledb.connect,
+                          user=test_env.get_main_user(),
+                          password=test_env.get_main_password(),
+                          dsn=test_env.get_connect_string(),
+                          thin=test_env.get_is_thin(),
                           appcontext=[('userenv', 'action')])
 
     def test_1103_attributes(self):
         "1103 - test connection end-to-end tracing attributes"
-        connection = base.get_connection()
-        if base.get_client_version() >= (12, 1) \
+        connection = test_env.get_connection()
+        if test_env.get_client_version() >= (12, 1) \
                 and not self.is_on_oracle_cloud(connection):
             sql = "select dbop_name from v$sql_monitor " \
                   "where sid = sys_context('userenv', 'sid')" \
@@ -87,9 +90,9 @@ class TestCase(base.BaseTestCase):
 
     def test_1104_autocommit(self):
         "1104 - test use of autocommit"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         cursor = connection.cursor()
-        other_connection = base.get_connection()
+        other_connection = test_env.get_connection()
         other_cursor = other_connection.cursor()
         cursor.execute("truncate table TestTempTable")
         cursor.execute("insert into TestTempTable (IntCol) values (1)")
@@ -104,51 +107,53 @@ class TestCase(base.BaseTestCase):
 
     def test_1105_bad_connect_string(self):
         "1105 - connection to database with bad connect string"
-        thin = base.get_is_thin()
+        thin = test_env.get_is_thin()
         self.assertRaises(oracledb.DatabaseError, oracledb.connect,
-                          base.get_main_user(), thin=thin)
+                          test_env.get_main_user(), thin=thin)
         self.assertRaises(oracledb.DatabaseError, oracledb.connect,
-                          base.get_main_user() + "@" + \
-                          base.get_connect_string(), thin=thin)
+                          test_env.get_main_user() + "@" + \
+                          test_env.get_connect_string(), thin=thin)
         self.assertRaises(oracledb.DatabaseError, oracledb.connect,
-                          base.get_main_user() + "@" + \
-                          base.get_connect_string() + "/" + \
-                          base.get_main_password(), thin=thin)
+                          test_env.get_main_user() + "@" + \
+                          test_env.get_connect_string() + "/" + \
+                          test_env.get_main_password(), thin=thin)
 
     def test_1106_bad_password(self):
         "1106 - connection to database with bad password"
-        thin = base.get_is_thin()
+        thin = test_env.get_is_thin()
         self.assertRaises(oracledb.DatabaseError, oracledb.connect,
-                          base.get_connect_string(), user=base.get_main_user(),
-                          password=base.get_main_password() + "X", thin=thin)
+                          test_env.get_connect_string(),
+                          user=test_env.get_main_user(),
+                          password=test_env.get_main_password() + "X",
+                          thin=thin)
 
     def test_1107_change_password(self):
         "1107 - test changing password"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         if self.is_on_oracle_cloud(connection):
             self.skipTest("passwords on Oracle Cloud are strictly controlled")
         sys_random = random.SystemRandom()
         new_password = "".join(sys_random.choice(string.ascii_letters) \
                        for i in range(20))
-        connection.changepassword(base.get_main_password(), new_password)
-        connection = oracledb.connect(base.get_connect_string(),
-                                       user=base.get_main_user(),
+        connection.changepassword(test_env.get_main_password(), new_password)
+        connection = oracledb.connect(test_env.get_connect_string(),
+                                       user=test_env.get_main_user(),
                                        password=new_password,
-                                       thin=base.get_is_thin())
-        connection.changepassword(new_password, base.get_main_password())
+                                       thin=test_env.get_is_thin())
+        connection.changepassword(new_password, test_env.get_main_password())
 
     def test_1108_change_password_negative(self):
         "1108 - test changing password to an invalid value"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         if self.is_on_oracle_cloud(connection):
             self.skipTest("passwords on Oracle Cloud are strictly controlled")
         new_password = "1" * 150
         self.assertRaises(oracledb.DatabaseError, connection.changepassword,
-                base.get_main_password(), new_password)
+                test_env.get_main_password(), new_password)
 
     def test_1109_parse_password(self):
         "1109 - test connecting with password containing / and @ symbols"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         if self.is_on_oracle_cloud(connection):
             self.skipTest("passwords on Oracle Cloud are strictly controlled")
         sys_random = random.SystemRandom()
@@ -156,24 +161,25 @@ class TestCase(base.BaseTestCase):
         chars[4] = "/"
         chars[8] = "@"
         new_password = "".join(chars)
-        connection.changepassword(base.get_main_password(), new_password)
+        connection.changepassword(test_env.get_main_password(), new_password)
         try:
-            arg = "%s/%s@%s" % (base.get_main_user(), new_password,
-                                base.get_connect_string())
-            oracledb.connect(arg)
+            arg = "%s/%s@%s" % (test_env.get_main_user(), new_password,
+                                test_env.get_connect_string())
+            oracledb.connect(arg, thin=test_env.get_is_thin())
         finally:
-            connection.changepassword(new_password, base.get_main_password())
+            connection.changepassword(new_password,
+                                      test_env.get_main_password())
 
     def test_1112_exception_on_close(self):
         "1112 - confirm an exception is raised after closing a connection"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         connection.close()
         self.assertRaises(oracledb.InterfaceError, connection.rollback)
 
-    @unittest.skipIf(base.get_is_thin(), "not relevant for thin driver")
+    @unittest.skipIf(test_env.get_is_thin(), "not relevant for thin driver")
     def test_1113_connect_with_handle(self):
         "1113 - test creating a connection using a handle"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         cursor = connection.cursor()
         cursor.execute("truncate table TestTempTable")
         int_value = random.randint(1, 32768)
@@ -194,22 +200,23 @@ class TestCase(base.BaseTestCase):
 
     def test_1115_single_arg(self):
         "1115 - connection to database with user, password, DSN together"
-        arg = "%s/%s@%s" % (base.get_main_user(), base.get_main_password(),
-                            base.get_connect_string())
-        connection = oracledb.connect(arg)
+        arg = "%s/%s@%s" % (test_env.get_main_user(),
+                            test_env.get_main_password(),
+                            test_env.get_connect_string())
+        connection = oracledb.connect(arg, thin=test_env.get_is_thin())
         self.__verify_args(connection)
 
     def test_1116_version(self):
         "1116 - connection version is a string"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         self.assertTrue(isinstance(connection.version, str))
 
     def test_1117_rollback_on_close(self):
         "1117 - connection rolls back before close"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         cursor = connection.cursor()
         cursor.execute("truncate table TestTempTable")
-        other_connection = base.get_connection()
+        other_connection = test_env.get_connection()
         other_cursor = other_connection.cursor()
         other_cursor.execute("insert into TestTempTable (IntCol) values (1)")
         other_cursor.close()
@@ -220,10 +227,10 @@ class TestCase(base.BaseTestCase):
 
     def test_1118_rollback_on_del(self):
         "1118 - connection rolls back before destruction"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         cursor = connection.cursor()
         cursor.execute("truncate table TestTempTable")
-        other_connection = base.get_connection()
+        other_connection = test_env.get_connection()
         other_cursor = other_connection.cursor()
         other_cursor.execute("insert into TestTempTable (IntCol) values (1)")
         del other_cursor
@@ -244,14 +251,14 @@ class TestCase(base.BaseTestCase):
 
     def test_1120_string_format(self):
         "1120 - test string format of connection"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         expected_value = "<oracledb.Connection to %s@%s>" % \
-                (base.get_main_user(), base.get_connect_string())
+                (test_env.get_main_user(), test_env.get_connect_string())
         self.assertEqual(str(connection), expected_value)
 
     def test_1121_ctx_mgr_close(self):
         "1121 - test context manager - close"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         with connection:
             cursor = connection.cursor()
             cursor.execute("truncate table TestTempTable")
@@ -259,7 +266,7 @@ class TestCase(base.BaseTestCase):
             connection.commit()
             cursor.execute("insert into TestTempTable (IntCol) values (2)")
         self.assertRaises(oracledb.InterfaceError, connection.ping)
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         cursor = connection.cursor()
         cursor.execute("select count(*) from TestTempTable")
         count, = cursor.fetchone()
@@ -267,8 +274,8 @@ class TestCase(base.BaseTestCase):
 
     def test_1122_connection_attributes(self):
         "1122 - test connection attribute values"
-        connection = base.get_connection()
-        if base.get_client_version() >= (12, 1):
+        connection = test_env.get_connection()
+        if test_env.get_client_version() >= (12, 1):
             self.assertEqual(connection.ltxid, b'')
         self.assertEqual(connection.current_schema, None)
         connection.current_schema = "test_schema"
@@ -285,11 +292,11 @@ class TestCase(base.BaseTestCase):
 
     def test_1123_closed_connection_attributes(self):
         "1123 - test closed connection attribute values"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         connection.close()
         attr_names = ["current_schema", "edition", "external_name",
                       "internal_name", "stmtcachesize"]
-        if base.get_client_version() >= (12, 1):
+        if test_env.get_client_version() >= (12, 1):
             attr_names.append("ltxid")
         for name in attr_names:
             self.assertRaises(oracledb.InterfaceError, getattr, connection,
@@ -297,12 +304,12 @@ class TestCase(base.BaseTestCase):
 
     def test_1124_ping(self):
         "1124 - test connection ping"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         connection.ping()
 
     def test_1125_transaction_begin(self):
         "1125 - test begin, prepare, cancel transaction"
-        connection = base.get_connection()
+        connection = test_env.get_connection()
         cursor = connection.cursor()
         cursor.execute("truncate table TestTempTable")
         connection.begin(10, 'trxnId', 'branchId')
@@ -319,4 +326,4 @@ class TestCase(base.BaseTestCase):
         self.assertEqual(count, 0)
 
 if __name__ == "__main__":
-    base.run_test_cases()
+    test_env.run_test_cases()

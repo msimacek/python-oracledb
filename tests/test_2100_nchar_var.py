@@ -6,11 +6,11 @@
 2100 - Module for testing NCHAR variables
 """
 
-import base
+import test_env
 
 import oracledb
 
-class TestCase(base.BaseTestCase):
+class TestCase(test_env.BaseTestCase):
 
     def setUp(self):
         super().setUp()
@@ -197,7 +197,7 @@ class TestCase(base.BaseTestCase):
     def test_2114_cursor_description(self):
         "2114 - test cursor description is accurate"
         self.cursor.execute("select * from TestUnicodes")
-        varchar_ratio, nvarchar_ratio = base.get_charset_ratios()
+        varchar_ratio, nvarchar_ratio = test_env.get_charset_ratios()
         expected_value = [
             ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, False),
             ('UNICODECOL', oracledb.DB_TYPE_NVARCHAR, 20, 20 * nvarchar_ratio,
@@ -236,4 +236,4 @@ class TestCase(base.BaseTestCase):
         self.assertEqual(self.cursor.fetchone(), None)
 
 if __name__ == "__main__":
-    base.run_test_cases()
+    test_env.run_test_cases()

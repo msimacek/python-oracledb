@@ -6,13 +6,13 @@
 2200 - Module for testing number variables
 """
 
-import base
+import test_env
 
 import oracledb
 import decimal
 import sys
 
-class TestCase(base.BaseTestCase):
+class TestCase(test_env.BaseTestCase):
 
     def output_type_handler_binary_int(self, cursor, name, default_type, size,
                                        precision, scale):
@@ -402,4 +402,4 @@ class TestCase(base.BaseTestCase):
             self.assertEqual(value, fetched_value)
 
 if __name__ == "__main__":
-    base.run_test_cases()
+    test_env.run_test_cases()

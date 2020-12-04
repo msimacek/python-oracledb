@@ -6,11 +6,11 @@
 1900 - Module for testing LOB (CLOB and BLOB) variables
 """
 
-import base
+import test_env
 
 import oracledb
 
-class TestCase(base.BaseTestCase):
+class TestCase(test_env.BaseTestCase):
 
     def __get_temp_lobs(self, sid):
         cursor = self.connection.cursor()
@@ -277,4 +277,4 @@ class TestCase(base.BaseTestCase):
         self.assertRaises(IndexError, nclobVar.setvalue, 1, "test char")
 
 if __name__ == "__main__":
-    base.run_test_cases()
+    test_env.run_test_cases()

@@ -6,12 +6,12 @@
 1300 - Module for testing cursor variables
 """
 
-import base
+import test_env
 
 import oracledb
 import sys
 
-class TestCase(base.BaseTestCase):
+class TestCase(test_env.BaseTestCase):
 
     def test_1300_bind_cursor(self):
         "1300 - test binding in a cursor"
@@ -22,7 +22,7 @@ class TestCase(base.BaseTestCase):
                   open :cursor for select 'X' StringValue from dual;
                 end;""",
                 cursor=cursor)
-        varchar_ratio, nvarchar_ratio = base.get_charset_ratios()
+        varchar_ratio, nvarchar_ratio = test_env.get_charset_ratios()
         expected_value = [
             ('STRINGVALUE', oracledb.DB_TYPE_CHAR, 1, varchar_ratio, None,
                     None, True)
@@ -35,7 +35,7 @@ class TestCase(base.BaseTestCase):
         cursor = self.connection.cursor()
         self.assertEqual(cursor.description, None)
         self.cursor.callproc("pkg_TestRefCursors.TestOutCursor", (2, cursor))
-        varchar_ratio, nvarchar_ratio = base.get_charset_ratios()
+        varchar_ratio, nvarchar_ratio = test_env.get_charset_ratios()
         expected_value = [
             ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, False),
             ('STRINGCOL', oracledb.DB_TYPE_VARCHAR, 20, 20 * varchar_ratio,
@@ -93,4 +93,4 @@ class TestCase(base.BaseTestCase):
             self.assertEqual(cursor.fetchall(), [(i + 1,)])
 
 if __name__ == "__main__":
-    base.run_test_cases()
+    test_env.run_test_cases()

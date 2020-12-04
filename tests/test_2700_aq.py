@@ -6,13 +6,13 @@
 2700 - Module for testing AQ
 """
 
-import base
+import test_env
 
 import oracledb
 import decimal
 import threading
 
-class TestCase(base.BaseTestCase):
+class TestCase(test_env.BaseTestCase):
     book_type_name = "UDT_BOOK"
     book_queue_name = "TEST_BOOK_QUEUE"
     book_data = [
@@ -31,7 +31,7 @@ class TestCase(base.BaseTestCase):
             pass
 
     def __deq_in_thread(self, results):
-        connection = base.get_connection(threaded=True)
+        connection = test_env.get_connection(threaded=True)
         books_type = connection.gettype(self.book_type_name)
         queue = connection.queue(self.book_queue_name, books_type)
         queue.deqOptions.wait = 10
@@ -172,7 +172,7 @@ class TestCase(base.BaseTestCase):
         props = self.connection.msgproperties(payload=book)
         queue.enqOne(props)
 
-        other_connection = base.get_connection()
+        other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
         queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
@@ -194,7 +194,7 @@ class TestCase(base.BaseTestCase):
         props = self.connection.msgproperties(payload=book)
         queue.enqOne(props)
 
-        other_connection = base.get_connection()
+        other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
         queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
@@ -218,7 +218,7 @@ class TestCase(base.BaseTestCase):
         props = self.connection.msgproperties(payload=book)
         queue.enqOne(props)
 
-        other_connection = base.get_connection()
+        other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
         queue.deqOptions.deliverymode = oracledb.MSG_BUFFERED
@@ -243,7 +243,7 @@ class TestCase(base.BaseTestCase):
         props = self.connection.msgproperties(payload=book)
         queue.enqOne(props)
 
-        other_connection = base.get_connection()
+        other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
         queue.deqOptions.deliverymode = oracledb.MSG_PERSISTENT
@@ -268,7 +268,7 @@ class TestCase(base.BaseTestCase):
         props = self.connection.msgproperties(payload=book)
         queue.enqOne(props)
 
-        other_connection = base.get_connection()
+        other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
         queue.deqOptions.deliverymode = oracledb.MSG_PERSISTENT_OR_BUFFERED
@@ -293,7 +293,7 @@ class TestCase(base.BaseTestCase):
         props = self.connection.msgproperties(payload=book)
         queue.enqOne(props)
 
-        other_connection = base.get_connection()
+        other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
         queue.deqOptions.deliverymode = oracledb.MSG_PERSISTENT
@@ -315,7 +315,7 @@ class TestCase(base.BaseTestCase):
         queue.enqOne(props)
         self.connection.commit()
 
-        other_connection = base.get_connection()
+        other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
         queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
@@ -340,7 +340,7 @@ class TestCase(base.BaseTestCase):
         queue.enqOne(props)
         self.connection.commit()
 
-        other_connection = base.get_connection()
+        other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
         queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
@@ -350,4 +350,4 @@ class TestCase(base.BaseTestCase):
         self.assertEqual(props.payload.PRICE, expected_price)
 
 if __name__ == "__main__":
-    base.run_test_cases()
+    test_env.run_test_cases()

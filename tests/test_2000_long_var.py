@@ -6,12 +6,12 @@
 2000 - Module for testing long and long raw variables
 """
 
-import base
+import test_env
 
 import oracledb
 import unittest
 
-class TestCase(base.BaseTestCase):
+class TestCase(test_env.BaseTestCase):
 
     def __perform_test(self, typ):
         name_part = "Long" if typ is oracledb.DB_TYPE_LONG else "LongRaw"
@@ -93,7 +93,7 @@ class TestCase(base.BaseTestCase):
         ]
         self.assertEqual(self.cursor.description, expected_value)
 
-    @unittest.skipIf(base.get_is_thin(), "not relevant for thin driver")
+    @unittest.skipIf(test_env.get_is_thin(), "not relevant for thin driver")
     def test_2005_array_size_too_large(self):
         "2005 - test array size too large generates an exception"
         self.cursor.arraysize = 268435456
@@ -101,4 +101,4 @@ class TestCase(base.BaseTestCase):
                           "select * from TestLongRaws")
 
 if __name__ == "__main__":
-    base.run_test_cases()
+    test_env.run_test_cases()
