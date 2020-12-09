@@ -4,7 +4,7 @@
 
 /*-----------------------------------------------------------------------------
  * DropTest.sql
- *   Drops database objects used for cx_Oracle tests.
+ *   Drops database objects used for oracledb tests.
  *
  * Run this like:
  *   sqlplus sys/syspassword@hostname/servicename as sysdba @DropTest

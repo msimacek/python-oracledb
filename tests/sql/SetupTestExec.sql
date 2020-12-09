@@ -5,7 +5,7 @@
 /*-----------------------------------------------------------------------------
  * SetupTestExec.sql
  *   This script performs the actual work of creating and populating the
- * schemas with the database objects used by the cx_Oracle test suite. It is
+ * schemas with the database objects used by the oracledb test suite. It is
  * called by the SetupTest.sql file after acquiring the necessary parameters
  * and also by the Python script SetupTest.py.
  *---------------------------------------------------------------------------*/
@@ -245,6 +245,25 @@ create table &main_user..PlsqlSessionCallbacks (
     ActualTag             varchar2(250),
     FixupTimestamp        timestamp
 )
+/
+
+declare
+    t_Version                           number;
+begin
+
+    select to_number(substr(version, 1, instr(version, '.') - 1))
+    into t_Version
+    from product_component_version
+    where product like 'Oracle Database%';
+
+    if t_Version >= 21 then
+        execute immediate 'create table &main_user..TestJson (' ||
+                          '    IntCol number(9) not null,' ||
+                          '    JsonCol json not null' ||
+                          ')';
+    end if;
+
+end;
 /
 
 -- create queue table and queues for testing advanced queuing

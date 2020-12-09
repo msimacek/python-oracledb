@@ -149,6 +149,8 @@ DB_TYPE_CURSOR = DbType(2021, "DB_TYPE_CURSOR", 102, buffer_size_factor=4)
 DB_TYPE_DATE = DbType(2011, "DB_TYPE_DATE", 12, buffer_size_factor=7)
 DB_TYPE_INTERVAL_DS = DbType(2015, "DB_TYPE_INTERVAL_DS", 190)
 DB_TYPE_INTERVAL_YM = DbType(2016, "DB_TYPE_INTERVAL_YM", 189)
+DB_TYPE_JSON = DbType(2027, "DB_TYPE_JSON", 119)
+
 DB_TYPE_LONG = DbType(2024, "DB_TYPE_LONG", 8, 128 * 1024, csfrm=1,
                       buffer_size_factor=4)
 DB_TYPE_LONG_RAW = DbType(2025, "DB_TYPE_LONG_RAW", 24, 128 * 1024,

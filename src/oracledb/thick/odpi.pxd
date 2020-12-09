@@ -48,6 +48,10 @@ cdef extern from "odpi/embed/dpi.c":
     uint32_t DPI_NATIVE_TYPE_STMT
     uint32_t DPI_NATIVE_TYPE_BOOLEAN
     uint32_t DPI_NATIVE_TYPE_ROWID
+    uint32_t DPI_NATIVE_TYPE_JSON
+    uint32_t DPI_NATIVE_TYPE_JSON_OBJECT
+    uint32_t DPI_NATIVE_TYPE_JSON_ARRAY
+    uint32_t DPI_NATIVE_TYPE_NULL
 
     # Oracle types
     uint32_t DPI_ORACLE_TYPE_VARCHAR
@@ -74,6 +78,10 @@ cdef extern from "odpi/embed/dpi.c":
     uint32_t DPI_ORACLE_TYPE_OBJECT
     uint32_t DPI_ORACLE_TYPE_LONG_VARCHAR
     uint32_t DPI_ORACLE_TYPE_LONG_RAW
+    uint32_t DPI_ORACLE_TYPE_JSON
+    uint32_t DPI_ORACLE_TYPE_JSON_OBJECT
+    uint32_t DPI_ORACLE_TYPE_JSON_ARRAY
+    uint32_t DPI_ORACLE_TYPE_NONE
 
     # SODA flags
     uint32_t DPI_SODA_FLAGS_DEFAULT
@@ -86,6 +94,9 @@ cdef extern from "odpi/embed/dpi.c":
     uint32_t DPI_EVENT_OBJCHANGE
     uint32_t DPI_EVENT_QUERYCHANGE
 
+    # JSON flags
+    uint32_t DPI_JSON_OPT_NUMBER_AS_STRING
+
     # opaque handles
     ctypedef struct dpiConn:
         pass
@@ -97,6 +108,9 @@ cdef extern from "odpi/embed/dpi.c":
         pass
 
     ctypedef struct dpiEnqOptions:
+        pass
+
+    ctypedef struct dpiJson:
         pass
 
     ctypedef struct dpiLob:
@@ -164,6 +178,23 @@ cdef extern from "odpi/embed/dpi.c":
         int32_t years
         int32_t months
 
+    ctypedef struct dpiJsonNode:
+        uint32_t oracleTypeNum
+        uint32_t nativeTypeNum
+        dpiDataBuffer *value
+
+    ctypedef struct dpiJsonArray:
+        uint32_t numElements
+        dpiJsonNode *elements
+        dpiDataBuffer *elementValues
+
+    ctypedef struct dpiJsonObject:
+        uint32_t numFields
+        char **fieldNames
+        uint32_t *fieldNameLengths
+        dpiJsonNode *fields
+        dpiDataBuffer *fieldValues
+
     ctypedef struct dpiTimestamp:
         int16_t year
         uint8_t month
@@ -225,7 +256,7 @@ cdef extern from "odpi/embed/dpi.c":
         const char *oracleClientConfigDir
 
     ctypedef union dpiDataBuffer:
-        int asBoolean
+        bint asBoolean
         uint8_t asUint8
         uint16_t asUint16
         uint32_t asUint32
@@ -239,6 +270,9 @@ cdef extern from "odpi/embed/dpi.c":
         dpiTimestamp asTimestamp
         dpiIntervalDS asIntervalDS
         dpiIntervalYM asIntervalYM
+        dpiJson *asJson
+        dpiJsonObject asJsonObject
+        dpiJsonArray asJsonArray
         dpiLob *asLOB
         dpiObject *asObject
         dpiStmt *asStmt
@@ -610,6 +644,11 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiEnqOptions_setVisibility(dpiEnqOptions *options,
             uint32_t value) nogil
+
+    int dpiJson_getValue(dpiJson *json, uint32_t options,
+            dpiJsonNode **topNode) nogil
+
+    int dpiJson_setValue(dpiJson *json, dpiJsonNode *topNode)
 
     int dpiLob_addRef(dpiLob *lob) nogil
 

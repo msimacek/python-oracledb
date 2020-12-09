@@ -7,6 +7,62 @@
 #   Cython file for utility functions (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
+cdef object _convert_from_json_node(dpiJsonNode *node):
+    cdef:
+        dpiTimestamp *as_timestamp
+        dpiIntervalDS *as_interval
+        dpiJsonArray *array
+        dpiJsonObject *obj
+        bytes temp_bytes
+        dict dict_value
+        list list_value
+        int32_t seconds
+        uint32_t i
+        str key
+    if node.nativeTypeNum == DPI_NATIVE_TYPE_NULL:
+        return None
+    elif node.oracleTypeNum == DPI_ORACLE_TYPE_NUMBER:
+        if node.nativeTypeNum == DPI_NATIVE_TYPE_DOUBLE:
+            return node.value.asDouble
+        temp_bytes = node.value.asBytes.ptr[:node.value.asBytes.length]
+        return decimal.Decimal(temp_bytes.decode())
+    elif node.oracleTypeNum == DPI_ORACLE_TYPE_VARCHAR:
+        temp_bytes = node.value.asBytes.ptr[:node.value.asBytes.length]
+        return temp_bytes.decode()
+    elif node.oracleTypeNum == DPI_ORACLE_TYPE_RAW:
+        return node.value.asBytes.ptr[:node.value.asBytes.length]
+    elif node.oracleTypeNum == DPI_ORACLE_TYPE_DATE \
+            or node.oracleTypeNum == DPI_ORACLE_TYPE_TIMESTAMP:
+        as_timestamp = &node.value.asTimestamp
+        return cydatetime.datetime_new(as_timestamp.year, as_timestamp.month,
+                                       as_timestamp.day, as_timestamp.hour,
+                                       as_timestamp.minute,
+                                       as_timestamp.second,
+                                       as_timestamp.fsecond // 1000, None)
+    elif node.oracleTypeNum == DPI_ORACLE_TYPE_BOOLEAN:
+        return node.value.asBoolean
+    elif node.oracleTypeNum == DPI_ORACLE_TYPE_INTERVAL_DS:
+        as_interval = &node.value.asIntervalDS
+        seconds = as_interval.hours * 60 * 60 + as_interval.minutes * 60 + \
+                as_interval.seconds
+        return cydatetime.timedelta_new(as_interval.days, seconds,
+                                        as_interval.fseconds // 1000)
+    elif node.oracleTypeNum == DPI_ORACLE_TYPE_JSON_OBJECT:
+        obj = &node.value.asJsonObject
+        dict_value = {}
+        for i in range(obj.numFields):
+            key = obj.fieldNames[i][:obj.fieldNameLengths[i]].decode()
+            dict_value[key] = _convert_from_json_node(&obj.fields[i])
+        return dict_value
+    elif node.oracleTypeNum == DPI_ORACLE_TYPE_JSON_ARRAY:
+        array = &node.value.asJsonArray
+        list_value = [None] * array.numElements
+        for i in range(array.numElements):
+            list_value[i] = _convert_from_json_node(&array.elements[i])
+        return list_value
+    message = f"Oracle type {node.oracleTypeNum} not supported"
+    errors._raise_from_string(exceptions.NotSupportedError, message)
+
 cdef int _convert_from_python(object value, DbType dbtype,
                               BaseDbObjectType objtype, dpiDataBuffer *dbvalue,
                               StringBuffer buf, Var var=None,
@@ -15,6 +71,7 @@ cdef int _convert_from_python(object value, DbType dbtype,
         uint32_t oracle_type = dbtype.num
         dpiTimestamp *timestamp
         int seconds, status
+        JsonBuffer json_buf
         DbObject obj
         Lob lob
     if oracle_type == DPI_ORACLE_TYPE_NUMBER:
@@ -75,7 +132,7 @@ cdef int _convert_from_python(object value, DbType dbtype,
         else:
             raise TypeError("expecting datetime.date or datetime.datetime")
     elif oracle_type == DPI_ORACLE_TYPE_BOOLEAN:
-        dbvalue.asBoolean = 1 if value else 0
+        dbvalue.asBoolean = <bint> value
     elif oracle_type == DPI_ORACLE_TYPE_NATIVE_INT:
         if isinstance(value, bool):
             dbvalue.asInt64 = 1 if value else 0
@@ -122,6 +179,11 @@ cdef int _convert_from_python(object value, DbType dbtype,
             else:
                 dbvalue.asBytes.ptr = buf.ptr
                 dbvalue.asBytes.length = buf.length
+    elif oracle_type == DPI_ORACLE_TYPE_JSON:
+        json_buf = JsonBuffer()
+        json_buf.from_object(value)
+        if dpiJson_setValue(dbvalue.asJson, &json_buf._top_node) < 0:
+            _raise_from_odpi()
     else:
         errors._raise_from_string(exceptions.NotSupportedError,
                                   f"database type {dbtype} not supported")
@@ -133,6 +195,7 @@ cdef object _convert_to_python(Connection connection, DbType dbtype,
     cdef:
         uint32_t oracle_type = dbtype.num
         dpiTimestamp *as_timestamp
+        dpiJsonNode *json_node
         uint32_t rowid_length
         dpiBytes *as_bytes
         const char *rowid
@@ -197,6 +260,11 @@ cdef object _convert_to_python(Connection connection, DbType dbtype,
         cursor._handle = dbvalue.asStmt
         cursor._fixup_ref_cursor = True
         return cursor
+    elif oracle_type == DPI_ORACLE_TYPE_JSON:
+        if dpiJson_getValue(dbvalue.asJson, DPI_JSON_OPT_NUMBER_AS_STRING,
+                            &json_node) < 0:
+            _raise_from_odpi()
+        return _convert_from_json_node(json_node)
     errors._raise_from_string(exceptions.NotSupportedError,
                               f"database type {dbtype} not supported")
 
@@ -229,6 +297,8 @@ cdef uint32_t _get_native_type_num(DbType dbtype):
         return DPI_NATIVE_TYPE_ROWID
     elif oracle_type_num == DPI_ORACLE_TYPE_INTERVAL_DS:
         return DPI_NATIVE_TYPE_INTERVAL_DS
+    elif oracle_type_num == DPI_ORACLE_TYPE_JSON:
+        return DPI_NATIVE_TYPE_JSON
     return DPI_NATIVE_TYPE_BYTES
 
 

@@ -5,7 +5,7 @@
 /*-----------------------------------------------------------------------------
  * SetupTest.sql
  *   Creates and populates schemas with the database objects used by the
- * cx_Oracle test suite.
+ * oracledb test suite.
  *
  * Run this like:
  *   sqlplus sys/syspassword@hostname/servicename as sysdba @SetupTest
