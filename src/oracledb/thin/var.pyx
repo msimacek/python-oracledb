@@ -57,7 +57,9 @@ cdef class Var(BaseVar):
         self._values = [None] * self.num_elements
 
     cdef uint32_t _get_actual_elements(self) except *:
-        return self._num_elements_in_array
+        if self.is_array:
+            return self._num_elements_in_array
+        return self.num_elements
 
     cdef list _get_array_value(self, uint32_t num_elements):
         return self._values[:num_elements]

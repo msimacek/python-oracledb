@@ -163,7 +163,7 @@ DB_TYPE_NVARCHAR = DbType(2002, "DB_TYPE_NVARCHAR", 1, 4000, csfrm=2,
                           buffer_size_factor=4)
 DB_TYPE_OBJECT = DbType(2023, "DB_TYPE_OBJECT", 109)
 DB_TYPE_RAW = DbType(2006, "DB_TYPE_RAW", 23, 4000, buffer_size_factor=1)
-DB_TYPE_ROWID = DbType(2005, "DB_TYPE_ROWID", 11)
+DB_TYPE_ROWID = DbType(2005, "DB_TYPE_ROWID", 11, buffer_size_factor=18)
 DB_TYPE_TIMESTAMP = DbType(2012, "DB_TYPE_TIMESTAMP", 180,
                            buffer_size_factor=11)
 DB_TYPE_TIMESTAMP_LTZ = DbType(2014, "DB_TYPE_TIMESTAMP_LTZ", 231,

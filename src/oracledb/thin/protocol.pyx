@@ -180,15 +180,14 @@ cdef class Protocol:
             plain_text += (bytes([n]) * n)
         return b.encrypt(plain_text)
 
-    cdef int _execute(self, Cursor cursor, uint32_t fetch_array_size,
-                      list params, uint32_t num_execs=1,
+    cdef int _execute(self, Cursor cursor, uint32_t num_execs=1,
                       bint arraydmlrowcounts=False,
                       bint batcherrors=False) except -1:
 
         # send execute packet
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
-        self._populate_execute_packet(cursor, fetch_array_size, num_execs,
-                                      params, arraydmlrowcounts, batcherrors)
+        self._populate_execute_packet(cursor, num_execs, arraydmlrowcounts,
+                                      batcherrors)
         self._write_buf.end_request()
 
         # receive and process response
@@ -316,13 +315,12 @@ cdef class Protocol:
             service.write_data(buf)
         buf.end_request()
 
-    cdef int _populate_execute_packet(self, Cursor cursor,
-                                      uint32_t fetch_array_size,
-                                      uint32_t num_execs, list params,
+    cdef int _populate_execute_packet(self, Cursor cursor, uint32_t num_execs,
                                       bint arraydmlrowcounts,
                                       bint batcherrors) except -1:
         cdef:
             uint32_t options, dml_options = 0, num_params = 0, num_iters = 1
+            list params = cursor._statement._bind_info_list
             WriteBuffer buf = self._write_buf
             Statement stmt
 
@@ -339,8 +337,9 @@ cdef class Protocol:
         elif num_params > 0:
             options |= TNS_EXEC_OPTION_PLSQL_BIND
         if stmt._is_query:
-            options |= TNS_EXEC_OPTION_FETCH
-            num_iters = fetch_array_size
+            if cursor.prefetchrows > 0:
+                options |= TNS_EXEC_OPTION_FETCH
+            num_iters = cursor.prefetchrows
         if num_params > 0:
             options |= TNS_EXEC_OPTION_BIND
         if batcherrors:
@@ -436,6 +435,7 @@ cdef class Protocol:
                                    uint32_t num_execs) except -1:
         cdef:
             uint32_t i, num_params = <uint32_t> len(params)
+            bint returning_only = True
             uint8_t ora_type_num, flag
             BindInfo bind_info
             bytes temp_bytes
@@ -445,6 +445,8 @@ cdef class Protocol:
         # write parameter header information
         for i in range(num_params):
             bind_info = <BindInfo> cpython.PyList_GET_ITEM(params, i)
+            if not bind_info._is_return_bind:
+                returning_only = False
             var = bind_info._bind_var
             flag = TNS_BIND_USE_INDICATORS | TNS_BIND_USE_LENGTH
             if var.is_array:
@@ -466,10 +468,11 @@ cdef class Protocol:
             buf.write_ub4(var.size)
             buf.write_ub4(0)                # oaccolid
 
-        # write parameter values
-        for i in range(num_execs):
-            buf.write_uint8(7)              # data indicator
-            self._populate_bind_params_row(buf, params, i)
+        # write parameter values unless statement contains only returning binds
+        if not returning_only:
+            for i in range(num_execs):
+                buf.write_uint8(TNS_MSG_TYPE_ROW_DATA)
+                self._populate_bind_params_row(buf, params, i)
 
     cdef int _populate_bind_params_row(self, WriteBuffer buf, list params,
                                        uint32_t pos) except -1:
@@ -479,6 +482,8 @@ cdef class Protocol:
             Var var
         for i in range(num_params):
             bind_info = <BindInfo> cpython.PyList_GET_ITEM(params, i)
+            if bind_info._is_return_bind:
+                continue
             var = bind_info._bind_var
             if var.is_array:
                 num_elements = var._num_elements_in_array
@@ -808,11 +813,16 @@ cdef class Protocol:
                     bind_info = stmt._bind_info_list[i]
                     row_vars.append(bind_info._bind_var)
             elif message_type == TNS_MSG_TYPE_ROW_DATA:
-                self._process_row(buf, row_vars, cursor.connection,
+                if stmt._is_returning:
+                    self._process_returning_binds(stmt, cursor.connection,
+                                                  row_index)
+                    row_index += 1
+                else:
+                    self._process_row(buf, row_vars, cursor.connection,
                                   row_index, in_fetch)
-                if in_fetch:
-                    cursor._buffer_rowcount += 1
-                    row_index = cursor._buffer_rowcount
+                    if in_fetch:
+                        cursor._buffer_rowcount += 1
+                        row_index = cursor._buffer_rowcount
             elif message_type == TNS_MSG_TYPE_BIT_VECTOR:
                 num_bits = buf.read_ub2()
                 num_bytes = num_bits // 8
@@ -872,6 +882,25 @@ cdef class Protocol:
             for i in range(buf.read_ub4()):
                 error_info.dmlrowcounts.append(buf.read_ub8())
 
+    cdef int _process_returning_binds(self, Statement stmt,
+                                      Connection conn,
+                                      uint32_t row_index) except -1:
+        cdef:
+            ReadBuffer buf = self._read_buf
+            BindInfo bind_info
+            uint32_t num_rows
+            list values
+
+        for bind_info in stmt._bind_info_list:
+            if not bind_info._is_return_bind:
+                continue
+            num_rows = buf.read_ub4()
+            values = [None] * num_rows
+            for j in range(num_rows):
+                values[j] = self._process_row_data(buf, conn,
+                                                   bind_info._bind_var, j)
+            bind_info._bind_var._values[row_index] = values
+
     cdef int _process_row(self, ReadBuffer buf, list row_vars,
                           Connection conn, uint32_t row_index,
                           bint in_fetch) except -1:
@@ -893,9 +922,11 @@ cdef class Protocol:
                 var._values[row_index] = value
 
     cdef object _process_row_data(self, ReadBuffer buf, Connection conn,
-                                  Var var, uint32_t pos, bint in_fetch):
+                                  Var var, uint32_t pos,
+                                  bint in_fetch = False):
         cdef:
             uint8_t num_bytes, ora_type_num, csfrm
+            uint32_t actual_num_bytes
             Cursor cursor = None
             object column_value
             bytes temp_bytes
@@ -946,7 +977,13 @@ cdef class Protocol:
             msg = f"unhandled data type {var.type}"
             raise Exception(msg)
         if not in_fetch:
-            buf.skip_bytes(1)           # skip trailing zero byte
+            actual_num_bytes = buf.read_ub4()
+            if actual_num_bytes != 0:
+                unit_type = "bytes" if isinstance(column_value, bytes) \
+                            else "characters"
+                message = f"column truncated to {len(column_value)} " \
+                          f"{unit_type} (actual is {actual_num_bytes})"
+                errors._raise_from_string(exceptions.DatabaseError, message)
         return column_value
 
     cdef int _process_server_side_piggyback(self) except -1:

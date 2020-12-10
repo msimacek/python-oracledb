@@ -25,16 +25,13 @@ cdef class Cursor(BaseCursor):
     cdef int _execute(self) except -1:
         cdef Connection connection = self.connection
         self._preprocess_execute()
-        connection._protocol._execute(self, self.arraysize,
-                                      self._statement._bind_info_list)
+        connection._protocol._execute(self)
 
     cdef int _executemany(self, uint32_t num_execs, bint batcherrors,
                           bint arraydmlrowcounts) except -1:
         cdef Connection connection = self.connection
         self._preprocess_execute()
-        connection._protocol._execute(self, self.arraysize,
-                                      self._statement._bind_info_list,
-                                      num_execs, arraydmlrowcounts,
+        connection._protocol._execute(self, num_execs, arraydmlrowcounts,
                                       batcherrors)
 
     cdef int _fetch_rows(self) except -1:

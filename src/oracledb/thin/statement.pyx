@@ -6,6 +6,7 @@ cdef class BindInfo:
 
     cdef:
         bint _is_dup
+        bint _is_return_bind
         str _bind_name
         Var _bind_var
 
@@ -52,6 +53,7 @@ cdef class Statement:
         bint _is_plsql
         bint _is_dml
         bint _is_ddl
+        bint _is_returning
         list _bind_info_list
         list _fetch_vars
         object _bind_info_dict
@@ -59,15 +61,17 @@ cdef class Statement:
     cdef _determine_statement_type(self, str sql):
         tokens = sql.strip()[:10].split()
         if tokens:
-            sql_keyword = tokens[0].lower()
-            if sql_keyword in ("declare", "begin", "call"):
+            sql_keyword = tokens[0]
+            if sql_keyword in ("DECLARE", "BEGIN", "CALL"):
                 self._is_plsql = True
-            elif sql_keyword in ("select", "with"):
+            elif sql_keyword in ("SELECT", "WITH"):
                 self._is_query = True
-            elif sql_keyword in ("insert", "update", "delete", "merge"):
+            elif sql_keyword in ("INSERT", "UPDATE", "DELETE", "MERGE"):
                 self._is_dml = True
-            elif sql_keyword in ("create", "alter", "drop"):
+            elif sql_keyword in ("CREATE", "ALTER", "DROP"):
                 self._is_ddl = True
+        if not self._is_plsql and "RETURNING" in sql:
+            self._is_returning = True
 
     cdef _prepare(self, str sql):
         self._sql = sql
@@ -78,26 +82,32 @@ cdef class Statement:
 
     cdef _get_bind_names(self, str sql):
         cdef:
-            list bind_names = []
-            str name
+            list bind_names = [], return_bind_names = []
+            str name, return_str
             BindInfo bind_info
+
         # Strip single/multiline comments and strings from the sql statement
         sql = re.sub(r"/\\*[\S\n ]+\\*/", "", sql)
         sql = re.sub(r"\--.*(\n|$)", "", sql)
         sql = re.sub(r"'(.*?)+'", "", sql)
 
         # determine statement type
+        sql = sql.upper()
         self._determine_statement_type(sql)
 
-        self._bind_info_dict = collections.OrderedDict()
         # bind variables can only be found in queries, DML and PL/SQL
         if self._is_query or self._is_dml or self._is_plsql:
-            bind_names = re.findall(r"(?<=\:)[a-zA-Z]?[a-zA-Z0-9_]+",
-                                          sql.upper())
+            bind_names = re.findall(r"(?<=\:)[A-Z]?[A-Z0-9_]+", sql)
             if self._is_plsql:
                 bind_names = list(collections.OrderedDict.fromkeys(bind_names))
-        else:
-            bind_names = []
+
+        # find all bind variables used in DML returning
+        if self._is_returning:
+            return_str = re.findall(r"RETURNING.*?$|\;", sql)[0]
+            return_bind_names = re.findall(r"(?<=\:)[A-Z]?[A-Z0-9_]+",
+                                           return_str)
+
+        self._bind_info_dict = collections.OrderedDict()
         self._bind_info_list = [BindInfo(name) for name in bind_names]
         for bind_info in self._bind_info_list:
             if bind_info._bind_name in self._bind_info_dict:
@@ -105,3 +115,5 @@ cdef class Statement:
                 self._bind_info_dict[bind_info._bind_name].append(bind_info)
             else:
                 self._bind_info_dict[bind_info._bind_name] = [bind_info]
+            if bind_info._bind_name in return_bind_names:
+                bind_info._is_return_bind = True
