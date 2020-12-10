@@ -141,7 +141,7 @@ DB_TYPE_BINARY_FLOAT = DbType(2007, "DB_TYPE_BINARY_FLOAT", 100,
                               buffer_size_factor=4)
 DB_TYPE_BINARY_INTEGER = DbType(2009, "DB_TYPE_BINARY_INTEGER", 3)
 DB_TYPE_BLOB = DbType(2019, "DB_TYPE_BLOB", 113)
-DB_TYPE_BOOLEAN = DbType(2022, "DB_TYPE_BOOLEAN", 252)
+DB_TYPE_BOOLEAN = DbType(2022, "DB_TYPE_BOOLEAN", 252, buffer_size_factor=4)
 DB_TYPE_CHAR = DbType(2003, "DB_TYPE_CHAR", 96, 2000, csfrm=1,
                       buffer_size_factor=4)
 DB_TYPE_CLOB = DbType(2017, "DB_TYPE_CLOB", 112, csfrm=1)

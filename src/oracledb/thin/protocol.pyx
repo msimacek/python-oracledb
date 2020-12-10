@@ -532,6 +532,11 @@ cdef class Protocol:
                 buf.write_uint8(0)
             else:
                 buf.write_ub4(cursor._statement._cursor_id)
+        elif ora_type_num == TNS_DATA_TYPE_BOOLEAN:
+            if value:
+                buf.write_uint16(0x0101)
+            else:
+                buf.write_uint16(0x0100)
         else:
             errors._raise_from_string(exceptions.NotSupportedError,
                                       f"unsupported type {var.type}")
@@ -973,6 +978,8 @@ cdef class Protocol:
             cursor = self._create_cursor_from_describe(conn, cursor)
             cursor._statement._cursor_id = buf.read_ub4()
             column_value = cursor
+        elif ora_type_num == TNS_DATA_TYPE_BOOLEAN:
+            column_value = buf.read_uint32() != 0
         else:
             msg = f"unhandled data type {var.type}"
             raise Exception(msg)
