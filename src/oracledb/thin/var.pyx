@@ -82,6 +82,9 @@ cdef class Var(BaseVar):
             if ora_type_num == TNS_DATA_TYPE_NUMBER:
                 if not isinstance(value, (bool, int, float, decimal.Decimal)):
                     raise TypeError("expecting number")
+            elif ora_type_num == TNS_DATA_TYPE_BINARY_INTEGER:
+                if not isinstance(value, (bool, int)):
+                    raise TypeError("expecting integer or boolean")
             elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
                     or ora_type_num == TNS_DATA_TYPE_CHAR \
                     or ora_type_num == TNS_DATA_TYPE_LONG:

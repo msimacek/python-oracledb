@@ -512,7 +512,8 @@ cdef class Protocol:
         elif ora_type_num == TNS_DATA_TYPE_RAW \
                 or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
             self._write_bytes(value)
-        elif ora_type_num == TNS_DATA_TYPE_NUMBER:
+        elif ora_type_num == TNS_DATA_TYPE_NUMBER \
+                or ora_type_num == TNS_DATA_TYPE_BINARY_INTEGER:
             buf.write_oracle_number(str(value).encode())
         elif ora_type_num == TNS_DATA_TYPE_DATE \
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
@@ -976,6 +977,8 @@ cdef class Protocol:
             column_value = buf.read_binary_double()
         elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
             column_value = buf.read_binary_float()
+        elif ora_type_num == TNS_DATA_TYPE_BINARY_INTEGER:
+            column_value = int(buf.read_oracle_number(num_bytes))
         elif ora_type_num == TNS_DATA_TYPE_CURSOR:
             if not in_fetch:
                 cursor = var._values[pos]
