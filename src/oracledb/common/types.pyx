@@ -147,7 +147,8 @@ DB_TYPE_CHAR = DbType(2003, "DB_TYPE_CHAR", 96, 2000, csfrm=1,
 DB_TYPE_CLOB = DbType(2017, "DB_TYPE_CLOB", 112, csfrm=1)
 DB_TYPE_CURSOR = DbType(2021, "DB_TYPE_CURSOR", 102, buffer_size_factor=4)
 DB_TYPE_DATE = DbType(2011, "DB_TYPE_DATE", 12, buffer_size_factor=7)
-DB_TYPE_INTERVAL_DS = DbType(2015, "DB_TYPE_INTERVAL_DS", 190)
+DB_TYPE_INTERVAL_DS = DbType(2015, "DB_TYPE_INTERVAL_DS", 183,
+                             buffer_size_factor=11)
 DB_TYPE_INTERVAL_YM = DbType(2016, "DB_TYPE_INTERVAL_YM", 189)
 DB_TYPE_JSON = DbType(2027, "DB_TYPE_JSON", 119)
 

@@ -538,6 +538,8 @@ cdef class Protocol:
                 buf.write_uint16(0x0101)
             else:
                 buf.write_uint16(0x0100)
+        elif ora_type_num == TNS_DATA_TYPE_INTERVAL_DS:
+            buf.write_interval_ds(value)
         else:
             errors._raise_from_string(exceptions.NotSupportedError,
                                       f"unsupported type {var.type}")
@@ -600,6 +602,7 @@ cdef class Protocol:
         buf.read_uint8()                    # flags
         var.precision = buf.read_uint8()
         if data_type == TNS_DATA_TYPE_NUMBER \
+                or data_type == TNS_DATA_TYPE_INTERVAL_DS \
                 or data_type == TNS_DATA_TYPE_TIMESTAMP \
                 or data_type == TNS_DATA_TYPE_TIMESTAMP_LTZ \
                 or data_type == TNS_DATA_TYPE_TIMESTAMP_TZ:
@@ -981,6 +984,8 @@ cdef class Protocol:
             column_value = cursor
         elif ora_type_num == TNS_DATA_TYPE_BOOLEAN:
             column_value = buf.read_uint32() != 0
+        elif ora_type_num == TNS_DATA_TYPE_INTERVAL_DS:
+            column_value = buf.read_interval_ds(num_bytes)
         else:
             msg = f"unhandled data type {var.type}"
             raise Exception(msg)

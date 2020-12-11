@@ -361,6 +361,18 @@ cdef class ReadBuffer:
         cdef const char_type *ptr = self._get_raw(num_bytes)
         return cpython.PyBytes_FromStringAndSize(<char*> ptr, num_bytes)
 
+    cdef object read_interval_ds(self, uint8_t num_bytes):
+        cdef:
+            uint32_t days, hours, minutes, second, total_seconds, fseconds
+            const uint8_t *ptr = <uint8_t*> self._get_raw(num_bytes)
+        days = unpack_uint32(ptr) - TNS_DURATION_MID
+        fseconds = unpack_uint32(&ptr[7]) - TNS_DURATION_MID
+        hours = ptr[4] - TNS_DURATION_OFFSET
+        minutes = ptr[5] - TNS_DURATION_OFFSET
+        seconds = ptr[6] - TNS_DURATION_OFFSET
+        total_seconds = hours * 60 * 60 + minutes * 60 + seconds
+        return cydatetime.timedelta_new(days, total_seconds, fseconds // 1000)
+
     cdef str read_str(self, ssize_t num_bytes):
         return self.read_bytes(num_bytes).decode()
 
@@ -740,6 +752,22 @@ cdef class WriteBuffer:
             char_type *ptr
         cpython.PyBytes_AsStringAndSize(value, <char**> &ptr, &value_len)
         self.write_raw(ptr, value_len)
+
+    cdef int write_interval_ds(self, object value) except -1:
+        cdef:
+            uint32_t days, seconds, fseconds
+            char_type buf[11]
+        days = cydatetime.timedelta_days(value)
+        pack_uint32(buf, days + TNS_DURATION_MID)
+        seconds = cydatetime.timedelta_seconds(value)
+        buf[4] = (seconds // 3600) + TNS_DURATION_OFFSET
+        seconds = seconds % 3600
+        buf[5] = (seconds // 60) + TNS_DURATION_OFFSET
+        buf[6] = (seconds % 60) + TNS_DURATION_OFFSET
+        fseconds = cydatetime.timedelta_microseconds(value) * 1000
+        pack_uint32(&buf[7], fseconds + TNS_DURATION_MID)
+        self.write_uint8(sizeof(buf))
+        self.write_raw(buf, sizeof(buf))
 
     cdef int write_oracle_date(self, object value, uint8_t length) except -1:
         cdef:
