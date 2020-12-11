@@ -531,6 +531,7 @@ cdef class Protocol:
                 buf.write_uint8(1)
                 buf.write_uint8(0)
             else:
+                buf.write_ub4(1)
                 buf.write_ub4(cursor._statement._cursor_id)
         elif ora_type_num == TNS_DATA_TYPE_BOOLEAN:
             if value:
