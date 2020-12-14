@@ -524,6 +524,8 @@ cdef class Protocol:
             buf.write_binary_double(value)
         elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
             buf.write_binary_float(value)
+        elif ora_type_num == TNS_DATA_TYPE_BINARY_INTEGER:
+            buf.write_oracle_number(str(int(value)).encode())
         elif ora_type_num == TNS_DATA_TYPE_CURSOR:
             cursor = <Cursor> value
             if cursor._statement is None:

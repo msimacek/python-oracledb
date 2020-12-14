@@ -425,10 +425,13 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute(statement, [simple_var])
         self.assertEqual(simple_var.getvalue(), -2)
 
-    def test_2235_setting_incorrect_value_binary_int(self):
+    def test_2235_setting_decimal_value_binary_int(self):
         "2235 - test setting decimal value for binary int"
+        statement = "begin :value := :value + 2.5; end;"
         simple_var = self.cursor.var(oracledb.DB_TYPE_BINARY_INTEGER)
-        self.assertRaises(TypeError, simple_var.setvalue, 0, 0.5)
+        simple_var.setvalue(0, 2.5)
+        self.cursor.execute(statement, [simple_var])
+        self.assertEqual(simple_var.getvalue(), 4)
 
     def test_2236_out_bind_binary_int_with_large_value(self):
         "2236 - bind a large value to binary int"

@@ -79,12 +79,10 @@ cdef class Var(BaseVar):
             value = self.inconverter(value)
         if value is not None:
             ora_type_num = self._dbtype._ora_type_num
-            if ora_type_num == TNS_DATA_TYPE_NUMBER:
+            if ora_type_num == TNS_DATA_TYPE_NUMBER \
+                    or ora_type_num == TNS_DATA_TYPE_BINARY_INTEGER:
                 if not isinstance(value, (bool, int, float, decimal.Decimal)):
-                    raise TypeError("expecting number")
-            elif ora_type_num == TNS_DATA_TYPE_BINARY_INTEGER:
-                if not isinstance(value, (bool, int)):
-                    raise TypeError("expecting integer or boolean")
+                    raise TypeError("expecting number or boolean")
             elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
                     or ora_type_num == TNS_DATA_TYPE_CHAR \
                     or ora_type_num == TNS_DATA_TYPE_LONG:
