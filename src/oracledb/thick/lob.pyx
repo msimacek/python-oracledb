@@ -55,6 +55,13 @@ cdef class Lob(BaseLob):
         if status < 0:
             _raise_from_odpi()
 
+    cdef int _get_max_amount(self, uint64_t* max_amount) except -1:
+        return self._get_size(max_amount)
+
+    cdef int _get_size(self, uint64_t* size) except -1:
+        if dpiLob_getSize(self._handle, size) < 0:
+            _raise_from_odpi()
+
     @staticmethod
     cdef Lob _new_lob(Connection connection, DbType lob_type, dpiLob *handle):
         cdef Lob lob = Lob.__new__(Lob)
@@ -114,10 +121,6 @@ cdef class Lob(BaseLob):
                                                     dir_alias_len,
                                                     name_ptr, name_len)
         if status < 0:
-            _raise_from_odpi()
-
-    cdef int _get_size(self, uint64_t* size) except -1:
-        if dpiLob_getSize(self._handle, size) < 0:
             _raise_from_odpi()
 
     cdef int _trim(self, uint64_t new_size=0) except -1:

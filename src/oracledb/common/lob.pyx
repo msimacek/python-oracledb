@@ -39,6 +39,18 @@ cdef class BaseLob:
         """
         raise NotImplementedError()
 
+    cdef int _get_max_amount(self, uint64_t* max_amount) except -1:
+        """
+        Internal method for returning the maximum amount that can be read.
+        """
+        raise NotImplementedError()
+
+    cdef int _get_size(self, uint64_t* size) except -1:
+        """
+        Internal method for returning the size of a LOB.
+        """
+        raise NotImplementedError()
+
     cdef int _open(self) except -1:
         """
         Internal method for opening a LOB.
@@ -55,12 +67,6 @@ cdef class BaseLob:
         """
         Internal method for setting the directory alias and file name
         associated with a BFILE LOB.
-        """
-        raise NotImplementedError()
-
-    cdef int _get_size(self, uint64_t* size) except -1:
-        """
-        Internal method for returning the size of a LOB.
         """
         raise NotImplementedError()
 
@@ -126,7 +132,7 @@ cdef class BaseLob:
         cdef uint64_t actual_offset, actual_amount = 0
         actual_offset = offset
         if amount is None:
-            self._get_size(&actual_amount)
+            self._get_max_amount(&actual_amount)
             if actual_amount >= actual_offset:
                 actual_amount = actual_amount - actual_offset + 1
             else:

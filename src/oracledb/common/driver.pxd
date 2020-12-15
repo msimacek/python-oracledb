@@ -206,10 +206,11 @@ cdef class BaseLob:
     cdef int _get_chunk_size(self, uint32_t* size) except -1
     cdef object _get_file_name(self)
     cdef int _get_is_open(self, bint* is_open) except -1
+    cdef int _get_max_amount(self, uint64_t* max_amount) except -1
+    cdef int _get_size(self, uint64_t* size) except -1
     cdef int _open(self) except -1
     cdef object _read(self, uint64_t offset, uint64_t amount)
     cdef int _set_file_name(self, str dir_alias, str name) except -1
-    cdef int _get_size(self, uint64_t* size) except -1
     cdef int _trim(self, uint64_t new_size=*) except -1
     cdef int _write(self, object value, uint64_t offset) except -1
 

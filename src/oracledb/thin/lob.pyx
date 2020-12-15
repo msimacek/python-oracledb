@@ -11,6 +11,9 @@ cdef class Lob(BaseLob):
     cdef:
         bytes _locator
 
+    cdef int _get_max_amount(self, uint64_t* max_amount) except -1:
+        max_amount[0] = 2**64 - 1
+
     cdef int _get_size(self, uint64_t* size) except -1:
         cdef Connection conn = self._connection
         conn._protocol._process_lob_op(TNS_LOB_OP_GET_LENGTH, source_lob=self,
