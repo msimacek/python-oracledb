@@ -271,10 +271,10 @@ cdef class Protocol:
         connect_string_length = <uint16_t> len(connect_string_bytes)
         buf.write_uint16(TNS_VERSION_DESIRED)
         buf.write_uint16(TNS_VERSION_MINIMUM)
-        buf.write_uint16(0xc41)             # service options
+        buf.write_uint16(0xc01)             # service options
         buf.write_uint16(SDU)               # SDU
         buf.write_uint16(TDU)               # TDU
-        buf.write_uint16(0x7f08)            # protocol characteristics
+        buf.write_uint16(0x4f98)            # protocol characteristics
         buf.write_uint16(0)                 # line turnaround
         buf.write_uint16(1)                 # value of 1
         buf.write_uint16(connect_string_length)
@@ -314,6 +314,88 @@ cdef class Protocol:
         for service in TNS_NETWORK_SERVICES:
             service.write_data(buf)
         buf.end_request()
+
+    cdef object _process_lob_op(self, uint32_t operation, Lob source_lob,
+                             Lob dest_lob, uint64_t source_offset,
+                             uint64_t dest_offset, uint64_t* amount):
+        cdef:
+            WriteBuffer buf = self._write_buf
+            int i
+
+        # create and send packet for LOB operation
+        buf.write_uint16(0)                 # data flags
+        buf.write_uint16(0x360)             # function code
+        self._increment_seq_num()
+        buf.write_uint8(self._seq_num)
+        if source_lob is None:
+            buf.write_uint8(0)              # source pointer
+            buf.write_ub4(0)                # source length
+        else:
+            buf.write_uint8(1)              # source pointer
+            buf.write_ub4(len(source_lob._locator))
+        if dest_lob is None:
+            buf.write_uint8(0)              # dest pointer
+            buf.write_ub4(0)                # dest length
+        else:
+            buf.write_uint8(1)              # dest pointer
+            buf.write_ub4(len(dest_lob._locator))
+        buf.write_ub4(0)                    # short source offset
+        buf.write_ub4(0)                    # short dest offset
+        buf.write_uint8(0)                  # pointer (character set)
+        buf.write_uint8(0)                  # pointer (amount)
+        buf.write_uint8(0)                  # pointer (unknown)
+        buf.write_ub4(operation)
+        buf.write_uint8(0)                  # pointer (SCN array)
+        buf.write_ub4(0)                    # SCN array length
+        buf.write_ub8(source_offset)
+        buf.write_ub8(dest_offset)
+        if amount != NULL:
+            buf.write_uint8(1)              # pointer (amount)
+        else:
+            buf.write_uint8(0)              # pointer (amount)
+        for i in range(3):                  # array LOB (not used)
+            buf.write_uint16(0)
+        if source_lob is not None:
+            buf.write_bytes(source_lob._locator)
+        if dest_lob is not None:
+            buf.write_bytes(dest_lob._locator)
+        if amount != NULL:
+            buf.write_ub8(amount[0])
+        buf.end_request()
+
+        # process response
+        self._receive_packet()
+        return self._process_lob_response(source_lob, dest_lob, amount)
+
+    cdef object _process_lob_response(self, Lob source_lob, Lob dest_lob,
+                                      uint64_t* amount):
+        cdef:
+            ReadBuffer buf = self._read_buf
+            object return_value = None
+            uint8_t message_type
+            bytes temp_bytes
+        buf.skip_bytes(2)
+        while buf.bytes_left() > 0:
+            message_type = buf.read_uint8()
+            if message_type == TNS_MSG_TYPE_LOB_DATA:
+                temp_bytes = self._read_bytes(buf.read_uint8())
+                if source_lob.type._ora_type_num == TNS_DATA_TYPE_BLOB:
+                    return_value = temp_bytes
+                else:
+                    return_value = temp_bytes.decode("UTF-16BE")
+            elif message_type == TNS_MSG_TYPE_PARAMETER:
+                if source_lob is not None:
+                    buf.skip_bytes(len(source_lob._locator))
+                if dest_lob is not None:
+                    buf.skip_bytes(len(dest_lob._locator))
+                if amount != NULL:
+                    amount[0] = buf.read_ub8()
+            elif message_type == TNS_MSG_TYPE_ERROR:
+                self._process_error_info(buf)
+            else:
+                message = f"TTC error: unknown message type {message_type}"
+                errors._raise_from_string(exceptions.DatabaseError, message)
+        return return_value
 
     cdef int _populate_execute_packet(self, Cursor cursor, uint32_t num_execs,
                                       bint arraydmlrowcounts,
@@ -942,6 +1024,7 @@ cdef class Protocol:
             Cursor cursor = None
             object column_value
             bytes temp_bytes
+            Lob lob
         ora_type_num = var._dbtype._ora_type_num
         csfrm = var._dbtype._csfrm
         num_bytes = buf.read_uint8()
@@ -991,6 +1074,15 @@ cdef class Protocol:
             column_value = buf.read_uint32() != 0
         elif ora_type_num == TNS_DATA_TYPE_INTERVAL_DS:
             column_value = buf.read_interval_ds(num_bytes)
+        elif ora_type_num == TNS_DATA_TYPE_CLOB \
+                or ora_type_num == TNS_DATA_TYPE_BLOB:
+            lob = Lob()
+            lob.type = var._dbtype
+            num_bytes = buf.read_uint8()
+            buf.skip_bytes(1)           # skip repeated length
+            lob._connection = conn
+            lob._locator = self._read_bytes(num_bytes)
+            column_value = lob
         else:
             msg = f"unhandled data type {var.type}"
             raise Exception(msg)

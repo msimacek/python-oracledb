@@ -27,6 +27,7 @@ from .. import constants, errors, exceptions
 
 from ..common.driver cimport get_exception_class
 from ..common.driver cimport BaseConnection, BaseCursor, BaseVar, DbType
+from ..common.driver cimport BaseLob
 
 include "constants.pxi"
 include "utils.pyx"
@@ -37,3 +38,4 @@ include "connection.pyx"
 include "statement.pyx"
 include "cursor.pyx"
 include "var.pyx"
+include "lob.pyx"

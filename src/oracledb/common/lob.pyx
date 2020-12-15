@@ -123,7 +123,7 @@ cdef class BaseLob:
         """
         Return a portion (or all) of the data in the LOB object.
         """
-        cdef uint64_t actual_offset, actual_amount
+        cdef uint64_t actual_offset, actual_amount = 0
         actual_offset = offset
         if amount is None:
             self._get_size(&actual_amount)

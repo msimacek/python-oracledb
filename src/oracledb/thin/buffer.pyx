@@ -980,3 +980,19 @@ cdef class WriteBuffer:
         else:
             self.write_uint8(4)
             self.write_uint32(value)
+
+    cdef int write_ub8(self, uint64_t value) except -1:
+        if value == 0:
+            self.write_uint8(0)
+        elif value <= UINT8_MAX:
+            self.write_uint8(1)
+            self.write_uint8(<uint8_t> value)
+        elif value <= UINT16_MAX:
+            self.write_uint8(2)
+            self.write_uint16(<uint16_t> value)
+        elif value <= UINT32_MAX:
+            self.write_uint8(4)
+            self.write_uint32(value)
+        else:
+            self.write_uint8(8)
+            self.write_uint64(value)
