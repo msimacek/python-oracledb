@@ -359,7 +359,7 @@ cdef class ReadBuffer:
 
     cdef bytes read_bytes(self, ssize_t num_bytes):
         cdef const char_type *ptr = self._get_raw(num_bytes)
-        return cpython.PyBytes_FromStringAndSize(<char*> ptr, num_bytes)
+        return ptr[:num_bytes]
 
     cdef object read_interval_ds(self, uint8_t num_bytes):
         cdef:
