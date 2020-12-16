@@ -25,6 +25,9 @@ cdef class Connection(BaseConnection):
     cdef BaseCursor _create_cursor(self):
         return Cursor.__new__(Cursor, self)
 
+    cdef BaseLob _create_temp_lob(self, DbType dbtype):
+        return Lob._create_temp_lob(self, dbtype)
+
     cdef str _get_version(self):
         return self._protocol._server_version
 

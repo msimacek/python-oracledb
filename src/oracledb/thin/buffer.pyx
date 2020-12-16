@@ -377,7 +377,7 @@ cdef class ReadBuffer:
         return self.read_bytes(num_bytes).decode()
 
     cdef str read_nstr(self, ssize_t num_bytes):
-        return self.read_bytes(num_bytes).decode("UTF-16BE")
+        return self.read_bytes(num_bytes).decode(TNS_ENCODING_UTF16)
 
     cdef object read_oracle_date(self, uint8_t num_bytes):
         cdef:

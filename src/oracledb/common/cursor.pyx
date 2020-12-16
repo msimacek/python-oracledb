@@ -329,7 +329,7 @@ cdef class BaseCursor:
             try:
                 var._set_value(pos, value)
                 return var
-            except:
+            except TypeError:
                 if pos > 0:
                     raise
         var = self._create_var_by_value(value, num_elements)

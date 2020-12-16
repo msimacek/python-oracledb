@@ -74,7 +74,9 @@ cdef class Var(BaseVar):
         self._num_elements_in_array = <uint32_t> len(value)
 
     cdef int _set_single_value(self, uint32_t pos, object value) except -1:
-        cdef uint8_t ora_type_num
+        cdef:
+            uint8_t ora_type_num
+            Lob lob
         if self.inconverter:
             value = self.inconverter(value)
         if value is not None:
@@ -105,4 +107,18 @@ cdef class Var(BaseVar):
                 if not isinstance(value, (datetime.date, datetime.datetime)):
                     message = "expecting datetime.date or datetime.datetime"
                     raise TypeError(message)
+            elif ora_type_num == TNS_DATA_TYPE_CLOB \
+                    or ora_type_num == TNS_DATA_TYPE_BLOB:
+                if isinstance(value, Lob):
+                    lob = <Lob> value
+                    if lob.type is not self._dbtype:
+                        message = f"LOB must be of type {self._dbtype}"
+                        raise TypeError(message)
+                else:
+                    lob = <Lob> self._values[pos]
+                    if lob is None:
+                        lob = self._connection.createlob(self._dbtype)
+                    if value:
+                        lob.write(value)
+                    value = lob
         self._values[pos] = value

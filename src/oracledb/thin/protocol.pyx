@@ -317,7 +317,8 @@ cdef class Protocol:
 
     cdef object _process_lob_op(self, uint32_t operation, Lob source_lob,
                              Lob dest_lob, uint64_t source_offset,
-                             uint64_t dest_offset, uint64_t* amount):
+                             uint64_t dest_offset, uint64_t* amount,
+                             bytes data):
         cdef:
             WriteBuffer buf = self._write_buf
             int i
@@ -341,12 +342,20 @@ cdef class Protocol:
             buf.write_ub4(len(dest_lob._locator))
         buf.write_ub4(0)                    # short source offset
         buf.write_ub4(0)                    # short dest offset
-        buf.write_uint8(0)                  # pointer (character set)
-        buf.write_uint8(0)                  # pointer (amount)
-        buf.write_uint8(0)                  # pointer (unknown)
-        buf.write_ub4(operation)
-        buf.write_uint8(0)                  # pointer (SCN array)
-        buf.write_ub4(0)                    # SCN array length
+        if operation == TNS_LOB_OP_CREATE_TEMP:
+            buf.write_uint8(1)              # pointer (character set)
+            buf.write_uint8(0)              # pointer (amount)
+            buf.write_uint8(1)              # pointer (NULL LOB)
+            buf.write_ub4(operation)
+            buf.write_uint8(1)              # pointer (SCN array)
+            buf.write_ub4(1)                # SCN array length
+        else:
+            buf.write_uint8(0)              # pointer (character set)
+            buf.write_uint8(0)              # pointer (amount)
+            buf.write_uint8(0)              # pointer (NULL LOB)
+            buf.write_ub4(operation)
+            buf.write_uint8(0)              # pointer (SCN array)
+            buf.write_ub4(0)                # SCN array length
         buf.write_ub8(source_offset)
         buf.write_ub8(dest_offset)
         if amount != NULL:
@@ -359,20 +368,32 @@ cdef class Protocol:
             buf.write_bytes(source_lob._locator)
         if dest_lob is not None:
             buf.write_bytes(dest_lob._locator)
+        if operation == TNS_LOB_OP_CREATE_TEMP:
+            if source_lob.type._csfrm == TNS_CS_NCHAR:
+                buf.write_ub4(TNS_CHARSET_UTF16)
+            else:
+                buf.write_ub4(TNS_CHARSET_UTF8)
         if amount != NULL:
             buf.write_ub8(amount[0])
+        if data is not None:
+            buf.write_uint8(TNS_MSG_TYPE_LOB_DATA)
+            self._write_bytes(data)
+        if operation == TNS_LOB_OP_CREATE_TEMP:
+            buf.write_ub4(0)                # SCN array element
         buf.end_request()
 
         # process response
         self._receive_packet()
-        return self._process_lob_response(source_lob, dest_lob, amount)
+        return self._process_lob_response(source_lob, dest_lob, amount,
+                                          operation)
 
     cdef object _process_lob_response(self, Lob source_lob, Lob dest_lob,
-                                      uint64_t* amount):
+                                      uint64_t* amount, uint32_t operation):
         cdef:
             ReadBuffer buf = self._read_buf
             object return_value = None
             uint8_t message_type
+            uint32_t num_bytes
             bytes temp_bytes
         buf.skip_bytes(2)
         while buf.bytes_left() > 0:
@@ -382,15 +403,22 @@ cdef class Protocol:
                 if source_lob.type._ora_type_num == TNS_DATA_TYPE_BLOB:
                     return_value = temp_bytes
                 else:
-                    return_value = temp_bytes.decode("UTF-16BE")
+                    return_value = temp_bytes.decode(TNS_ENCODING_UTF16)
             elif message_type == TNS_MSG_TYPE_PARAMETER:
                 if source_lob is not None:
-                    buf.skip_bytes(len(source_lob._locator))
+                    num_bytes = <uint32_t> len(source_lob._locator)
+                    source_lob._locator = buf.read_bytes(num_bytes)
                 if dest_lob is not None:
-                    buf.skip_bytes(len(dest_lob._locator))
+                    num_bytes = <uint32_t> len(dest_lob._locator)
+                    dest_lob._locator = buf.read_bytes(num_bytes)
+                if operation == TNS_LOB_OP_CREATE_TEMP:
+                    buf.read_ub2()          # skip character set
                 if amount != NULL:
                     amount[0] = buf.read_ub8()
+                if operation == TNS_LOB_OP_CREATE_TEMP:
+                    buf.read_ub2()          # skip NULL flag
             elif message_type == TNS_MSG_TYPE_ERROR:
+                self._error_info = _OracleErrorInfo()
                 self._process_error_info(buf)
             else:
                 message = f"TTC error: unknown message type {message_type}"
@@ -545,7 +573,7 @@ cdef class Protocol:
             buf.write_ub4(0)                # cont flag
             buf.write_ub4(0)                # OID
             buf.write_ub4(0)                # version
-            buf.write_ub4(873)              # character set id
+            buf.write_ub4(TNS_CHARSET_UTF8)
             buf.write_uint8(var._dbtype._csfrm)
             buf.write_ub4(var.size)
             buf.write_ub4(0)                # oaccolid
@@ -579,8 +607,10 @@ cdef class Protocol:
                                   object value) except -1:
         cdef:
             uint8_t ora_type_num = var._dbtype._ora_type_num
+            uint8_t num_bytes
             bytes temp_bytes
             Cursor cursor
+            Lob lob
         if value is None:
             buf.write_uint8(0)
         elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
@@ -589,7 +619,7 @@ cdef class Protocol:
             if var._dbtype._csfrm == 1:
                 temp_bytes = value.encode()
             else:
-                temp_bytes = value.encode("UTF-16BE")
+                temp_bytes = value.encode(TNS_ENCODING_UTF16)
             self._write_bytes(temp_bytes)
         elif ora_type_num == TNS_DATA_TYPE_RAW \
                 or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
@@ -625,6 +655,13 @@ cdef class Protocol:
                 buf.write_uint16(0x0100)
         elif ora_type_num == TNS_DATA_TYPE_INTERVAL_DS:
             buf.write_interval_ds(value)
+        elif ora_type_num == TNS_DATA_TYPE_CLOB \
+                or ora_type_num == TNS_DATA_TYPE_BLOB:
+            lob = <Lob> value
+            num_bytes = <uint8_t> len(lob._locator)
+            buf.write_ub4(num_bytes)
+            buf.write_uint8(num_bytes)
+            buf.write_bytes(lob._locator)
         else:
             errors._raise_from_string(exceptions.NotSupportedError,
                                       f"unsupported type {var.type}")
@@ -1037,7 +1074,7 @@ cdef class Protocol:
             if csfrm == 1:
                 column_value = temp_bytes.decode()
             else:
-                column_value = temp_bytes.decode("UTF-16BE")
+                column_value = temp_bytes.decode(TNS_ENCODING_UTF16)
             if ora_type_num == TNS_DATA_TYPE_LONG:
                 buf.skip_bytes(2)
         elif ora_type_num == TNS_DATA_TYPE_RAW \
