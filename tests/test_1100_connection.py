@@ -43,6 +43,8 @@ class TestCase(test_env.BaseTestCase):
         connection = test_env.get_connection()
         self.__verify_args(connection)
 
+    @unittest.skipIf(test_env.get_is_thin(),
+                     "thin driver doesn't support application context yet")
     def test_1101_app_context(self):
         "1101 - test use of application context"
         namespace = "CLIENTCONTEXT"
@@ -59,6 +61,8 @@ class TestCase(test_env.BaseTestCase):
             actual_value, = cursor.fetchone()
             self.assertEqual(actual_value, value)
 
+    @unittest.skipIf(test_env.get_is_thin(),
+                     "thin driver doesn't support application context yet")
     def test_1102_app_context_negative(self):
         "1102 - test invalid use of application context"
         self.assertRaises(TypeError, oracledb.connect,
@@ -127,6 +131,8 @@ class TestCase(test_env.BaseTestCase):
                           password=test_env.get_main_password() + "X",
                           thin=thin)
 
+    @unittest.skipIf(test_env.get_is_thin(),
+                     "thin driver doesn't support changing passwords yet")
     def test_1107_change_password(self):
         "1107 - test changing password"
         connection = test_env.get_connection()
@@ -142,6 +148,8 @@ class TestCase(test_env.BaseTestCase):
                                        thin=test_env.get_is_thin())
         connection.changepassword(new_password, test_env.get_main_password())
 
+    @unittest.skipIf(test_env.get_is_thin(),
+                     "thin driver doesn't support changing passwords yet")
     def test_1108_change_password_negative(self):
         "1108 - test changing password to an invalid value"
         connection = test_env.get_connection()
@@ -151,6 +159,8 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaises(oracledb.DatabaseError, connection.changepassword,
                 test_env.get_main_password(), new_password)
 
+    @unittest.skipIf(test_env.get_is_thin(),
+                     "thin driver doesn't support changing passwords yet")
     def test_1109_parse_password(self):
         "1109 - test connecting with password containing / and @ symbols"
         connection = test_env.get_connection()
@@ -307,6 +317,8 @@ class TestCase(test_env.BaseTestCase):
         connection = test_env.get_connection()
         connection.ping()
 
+    @unittest.skipIf(test_env.get_is_thin(),
+                     "thin driver doesn't support two-phase commit yet")
     def test_1125_transaction_begin(self):
         "1125 - test begin, prepare, cancel transaction"
         connection = test_env.get_connection()

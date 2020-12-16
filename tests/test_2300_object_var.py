@@ -11,7 +11,10 @@ import test_env
 import oracledb
 import datetime
 import decimal
+import unittest
 
+@unittest.skipIf(test_env.get_is_thin(),
+                 "thin driver doesn't support database objects yet")
 class TestCase(test_env.BaseTestCase):
 
     def __get_object_as_tuple(self, obj):

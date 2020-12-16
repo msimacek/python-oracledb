@@ -11,6 +11,7 @@ import test_env
 import oracledb
 import decimal
 import threading
+import unittest
 
 RAW_QUEUE_NAME = "TEST_RAW_QUEUE"
 RAW_PAYLOAD_DATA = [
@@ -28,6 +29,7 @@ RAW_PAYLOAD_DATA = [
     "The twelfth and final message"
 ]
 
+@unittest.skipIf(test_env.get_is_thin(), "thin driver doesn't support AQ yet")
 class TestCase(test_env.BaseTestCase):
 
     def __deq_in_thread(self, results):

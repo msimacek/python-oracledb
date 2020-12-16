@@ -10,6 +10,7 @@ import test_env
 
 import oracledb
 import threading
+import unittest
 
 class SubscriptionData(object):
 
@@ -36,6 +37,7 @@ class SubscriptionData(object):
             self.condition.release()
 
 
+@unittest.skipIf(test_env.get_is_thin(), "thin driver doesn't support CQN yet")
 class TestCase(test_env.BaseTestCase):
 
     def test_3000_subscription(self):

@@ -11,7 +11,9 @@ import test_env
 import oracledb
 import decimal
 import threading
+import unittest
 
+@unittest.skipIf(test_env.get_is_thin(), "thin driver doesn't support AQ yet")
 class TestCase(test_env.BaseTestCase):
     book_type_name = "UDT_BOOK"
     book_queue_name = "TEST_BOOK_QUEUE"
