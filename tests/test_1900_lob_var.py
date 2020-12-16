@@ -33,7 +33,7 @@ class TestCase(test_env.BaseTestCase):
                 long_string += char * 25000
             elif input_type is not db_type:
                 continue
-            self.cursor.setinputsizes(long_string = input_type)
+            self.cursor.setinputsizes(long_string=input_type)
             if lob_type == "BLOB":
                 bind_value = long_string.encode()
             else:
@@ -129,16 +129,16 @@ class TestCase(test_env.BaseTestCase):
                 prev_char = chr(ord('A') + integer_value - 2)
                 long_string += char * 25000
                 if lob_type == "BLOB":
-                    actualValue = long_string.encode("ascii")
+                    expected_value = long_string.encode("ascii")
                     char = char.encode("ascii")
                     prev_char = prev_char.encode("ascii")
                 else:
-                    actualValue = long_string
-                self.assertEqual(lob.size(), len(actualValue))
-                self.assertEqual(lob.read(), actualValue)
+                    expected_value = long_string
+                self.assertEqual(lob.size(), len(expected_value))
+                self.assertEqual(lob.read(), expected_value)
                 if lob_type == "CLOB":
-                    self.assertEqual(str(lob), actualValue)
-                self.assertEqual(lob.read(len(actualValue)), char)
+                    self.assertEqual(str(lob), expected_value)
+                self.assertEqual(lob.read(len(expected_value)), char)
             if integer_value > 1:
                 offset = (integer_value - 1) * 25000 - 4
                 string = prev_char * 5 + char * 5
