@@ -16,10 +16,12 @@ from Crypto.Cipher import AES
 import collections
 import datetime
 import decimal
+import getpass
 import hashlib
 import os
 import socket
 import re
+import sys
 
 cydatetime.import_datetime()
 

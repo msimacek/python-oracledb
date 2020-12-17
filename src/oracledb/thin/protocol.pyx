@@ -125,12 +125,11 @@ cdef class Protocol:
         buf.write_uint8(0)                  # pointer (authovl)
         buf.write_uint8(1)                  # pointer (authovln)
         buf.write_bytes(user_bytes)         # user name
-        self._populate_key_value("AUTH_TERMINAL", "pts/2", 0)
-        self._populate_key_value("AUTH_PROGRAM_NM",
-                                 "python3.8@atc (TNS V1-V3)", 0)
-        self._populate_key_value("AUTH_MACHINE", "atc", 0)
-        self._populate_key_value("AUTH_PID", "83274", 0)
-        self._populate_key_value("AUTH_SID", "anthony", 0)
+        self._populate_key_value("AUTH_TERMINAL", "unknown", 0)
+        self._populate_key_value("AUTH_PROGRAM_NM", sys.executable, 0)
+        self._populate_key_value("AUTH_MACHINE", socket.gethostname(), 0)
+        self._populate_key_value("AUTH_PID", str(os.getpid()), 0)
+        self._populate_key_value("AUTH_SID", getpass.getuser(), 0)
         buf.end_request()
 
         # receive response (session key packet)
