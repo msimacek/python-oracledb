@@ -121,4 +121,7 @@ cdef class Var(BaseVar):
                     if value:
                         lob.write(value)
                     value = lob
+            elif ora_type_num == TNS_DATA_TYPE_ROWID:
+                msg = "Rowid variables cannot be set directly"
+                errors._raise_from_string(exceptions.NotSupportedError, msg)
         self._values[pos] = value
