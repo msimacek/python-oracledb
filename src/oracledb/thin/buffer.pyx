@@ -673,7 +673,7 @@ cdef class WriteBuffer:
     cdef inline ssize_t max_payload_bytes(self):
         return self._max_size - PACKET_HEADER_SIZE - 2
 
-    cdef void start_request(self, uint8_t packet_type):
+    cdef void start_request(self, uint8_t packet_type, uint16_t data_flags=0):
         """
         Indicates that a request from the client is starting. The packet type
         is retained just in case a request spans multiple packets. The packet
@@ -681,6 +681,8 @@ cdef class WriteBuffer:
         sent and so is skipped at this point"""
         self._packet_type = packet_type
         self._actual_size = PACKET_HEADER_SIZE
+        if packet_type == TNS_PACKET_TYPE_DATA:
+            self.write_uint16(data_flags)
 
     cdef int write_binary_double(self, double value) except -1:
         cdef:

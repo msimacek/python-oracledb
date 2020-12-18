@@ -44,7 +44,7 @@ cdef class Protocol:
 
         # send close request
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
-        self._write_buf.write_uint32(0x00000309)
+        self._write_buf.write_uint16(0x0309)
         self._increment_seq_num()
         self._write_buf.write_uint8(self._seq_num)
         self._write_buf.end_request()
@@ -53,8 +53,7 @@ cdef class Protocol:
         self._receive_packet()
 
         # send final close
-        self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
-        self._write_buf.write_uint16(0x0040)
+        self._write_buf.start_request(TNS_PACKET_TYPE_DATA, 0x0040)
         self._write_buf.end_request()
         self._socket.close()
 
@@ -62,7 +61,7 @@ cdef class Protocol:
 
         # send request
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
-        self._write_buf.write_uint32(0x0000030e)
+        self._write_buf.write_uint16(0x030e)
         self._increment_seq_num()
         self._write_buf.write_uint8(self._seq_num)
         self._write_buf.end_request()
@@ -98,7 +97,7 @@ cdef class Protocol:
 
         # send protocol packet
         buf.start_request(TNS_PACKET_TYPE_DATA)
-        buf.write_bytes(b'\x00\x00\x01\x06\x00')
+        buf.write_bytes(b'\x01\x06\x00')
         buf.write_bytes(b'Python_Thin\x00')
         buf.end_request()
 
@@ -115,7 +114,7 @@ cdef class Protocol:
 
         # send session key packet
         buf.start_request(TNS_PACKET_TYPE_DATA)
-        buf.write_bytes(b'\x00\x00\x03\x76\x02')
+        buf.write_bytes(b'\x03\x76\x02')
         buf.write_uint8(1)                  # pointer (authusr)
         buf.write_ub4(user_len)             # length of user name
         buf.write_ub4(1)                    # authentication mode
@@ -139,7 +138,7 @@ cdef class Protocol:
         buf.start_request(TNS_PACKET_TYPE_DATA)
         password, session_key = self._generate_auth_response(session_data,
                                                              password)
-        buf.write_bytes(b'\x00\x00\x03\x73\x03')
+        buf.write_bytes(b'\x03\x73\x03')
         buf.write_uint8(1)                  # pointer (authusr)
         buf.write_ub4(user_len)
         buf.write_ub4(257)                  # authentication mode
@@ -201,7 +200,7 @@ cdef class Protocol:
         buf.start_request(TNS_PACKET_TYPE_DATA)
         cursor._buffer_rowcount = 0
         cursor._buffer_index = 0
-        buf.write_uint32(0x00000305)
+        buf.write_uint16(0x0305)
         self._increment_seq_num()
         buf.write_uint8(self._seq_num)
         buf.write_ub4(cursor._statement._cursor_id)
@@ -301,7 +300,6 @@ cdef class Protocol:
 
         # write header
         buf.start_request(TNS_PACKET_TYPE_DATA)
-        buf.write_uint16(0)                 # data flags
         buf.write_uint32(TNS_NETWORK_MAGIC)
         buf.write_uint16(packet_length)
         buf.write_uint32(TNS_NETWORK_VERSION)
@@ -462,7 +460,6 @@ cdef class Protocol:
             options |= TNS_EXEC_OPTION_COMMIT
 
         # write packet
-        buf.write_uint16(0)                 # data flags
         buf.write_uint16(0x35e)             # function code
         self._increment_seq_num()
         buf.write_uint8(self._seq_num)
@@ -535,7 +532,7 @@ cdef class Protocol:
 
         # send request
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
-        self._write_buf.write_uint32(0x00000393)
+        self._write_buf.write_uint16(0x0393)
         self._increment_seq_num()
         self._write_buf.write_uint8(self._seq_num)
         self._write_buf.end_request()
@@ -1283,7 +1280,7 @@ cdef class Protocol:
 
         # send request
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
-        self._write_buf.write_uint32(0x0000030f)
+        self._write_buf.write_uint16(0x030f)
         self._increment_seq_num()
         self._write_buf.write_uint8(self._seq_num)
         self._write_buf.end_request()
