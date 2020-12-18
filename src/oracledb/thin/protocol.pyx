@@ -693,17 +693,6 @@ cdef class Protocol:
             buf.write_bytes(value_bytes)
         buf.write_ub4(flags)
 
-    cdef int _populate_marker_packet(self, WriteBuffer buf,
-                                     object params) except -1:
-        buf.write_uint8(1)
-        buf.write_uint8(0)
-        buf.write_uint8(2)
-
-    cdef int _populate_protocol_packet(self, WriteBuffer buf,
-                                       object params) except -1:
-        buf.write_bytes(b'\x00\x00\x01\x06\x00')
-        buf.write_bytes(b'Python_Thin\x00')
-
     cdef int _process_accept_packet(self) except -1:
         cdef:
             ReadBuffer buf = self._read_buf
