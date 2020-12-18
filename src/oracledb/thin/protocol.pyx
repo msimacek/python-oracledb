@@ -98,7 +98,6 @@ cdef class Protocol:
 
         # send protocol packet
         buf.start_request(TNS_PACKET_TYPE_DATA)
-        buf.start_request(TNS_PACKET_TYPE_DATA)
         buf.write_bytes(b'\x00\x00\x01\x06\x00')
         buf.write_bytes(b'Python_Thin\x00')
         buf.end_request()
