@@ -31,7 +31,6 @@ cdef class Protocol:
         _OracleErrorInfo _error_info
 
     def __init__(self, sock):
-        self._seq_num = 3
         self._socket = sock
         self._read_buf = ReadBuffer(sock, SDU)
         self._write_buf = WriteBuffer(sock, SDU)
@@ -44,8 +43,7 @@ cdef class Protocol:
 
         # send close request
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
-        self._write_buf.write_uint16(0x0309)
-        self._write_seq_num()
+        self._write_function_code(TNS_FUNC_LOGOFF)
         self._write_buf.end_request()
 
         # receive response
@@ -60,8 +58,7 @@ cdef class Protocol:
 
         # send request
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
-        self._write_buf.write_uint16(0x030e)
-        self._write_seq_num()
+        self._write_function_code(TNS_FUNC_COMMIT)
         self._write_buf.end_request()
 
         # receive response
@@ -112,7 +109,7 @@ cdef class Protocol:
 
         # send session key packet
         buf.start_request(TNS_PACKET_TYPE_DATA)
-        buf.write_bytes(b'\x03\x76\x02')
+        self._write_function_code(TNS_FUNC_AUTH_PHASE_ONE)
         buf.write_uint8(1)                  # pointer (authusr)
         buf.write_ub4(user_len)             # length of user name
         buf.write_ub4(1)                    # authentication mode
@@ -136,7 +133,7 @@ cdef class Protocol:
         buf.start_request(TNS_PACKET_TYPE_DATA)
         password, session_key = self._generate_auth_response(session_data,
                                                              password)
-        buf.write_bytes(b'\x03\x73\x03')
+        self._write_function_code(TNS_FUNC_AUTH_PHASE_TWO)
         buf.write_uint8(1)                  # pointer (authusr)
         buf.write_ub4(user_len)
         buf.write_ub4(257)                  # authentication mode
@@ -198,8 +195,7 @@ cdef class Protocol:
         buf.start_request(TNS_PACKET_TYPE_DATA)
         cursor._buffer_rowcount = 0
         cursor._buffer_index = 0
-        buf.write_uint16(0x0305)
-        self._write_seq_num()
+        self._write_function_code(TNS_FUNC_FETCH)
         buf.write_ub4(cursor._statement._cursor_id)
         buf.write_ub4(fetch_array_size)
         buf.end_request()
@@ -250,7 +246,13 @@ cdef class Protocol:
         self._receive_packet()
         self._process_error_packet()
 
-    cdef _write_seq_num(self):
+    cdef int _write_function_code(self, uint8_t function_code,
+                                  bint piggyback=False) except -1:
+        if piggyback:
+            self._write_buf.write_uint8(TNS_MSG_TYPE_PIGGYBACK)
+        else:
+            self._write_buf.write_uint8(TNS_MSG_TYPE_FUNCTION)
+        self._write_buf.write_uint8(function_code)
         self._seq_num += 1
         if self._seq_num == 0:
             self._seq_num = 1
@@ -318,9 +320,8 @@ cdef class Protocol:
             int i
 
         # create and send packet for LOB operation
-        buf.write_uint16(0)                 # data flags
-        buf.write_uint16(0x360)             # function code
-        self._write_seq_num()
+        buf.start_request(TNS_PACKET_TYPE_DATA)
+        self._write_function_code(TNS_FUNC_LOB_OP)
         if source_lob is None:
             buf.write_uint8(0)              # source pointer
             buf.write_ub4(0)                # source length
@@ -457,8 +458,7 @@ cdef class Protocol:
             options |= TNS_EXEC_OPTION_COMMIT
 
         # write packet
-        buf.write_uint16(0x35e)             # function code
-        self._write_seq_num()
+        self._write_function_code(TNS_FUNC_FULL_EXEC)
         buf.write_ub4(options)              # execute options
         buf.write_ub4(stmt._cursor_id)
         buf.write_uint8(1)                  # pointer (cursor id)
@@ -528,8 +528,7 @@ cdef class Protocol:
 
         # send request
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
-        self._write_buf.write_uint16(0x0393)
-        self._write_seq_num()
+        self._write_function_code(TNS_FUNC_PING)
         self._write_buf.end_request()
 
         # receive response
@@ -1253,8 +1252,7 @@ cdef class Protocol:
 
         # send request
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
-        self._write_buf.write_uint16(0x030f)
-        self._write_seq_num()
+        self._write_function_code(TNS_FUNC_ROLLBACK)
         self._write_buf.end_request()
 
         # receive response
