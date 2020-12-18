@@ -27,14 +27,12 @@ cdef class Protocol:
         object _socket
         ReadBuffer _read_buf
         WriteBuffer _write_buf
-        ChunkedBytesBuffer _chunked_bytes_buf
         _OracleErrorInfo _error_info
 
     def __init__(self, sock):
         self._socket = sock
         self._read_buf = ReadBuffer(sock, SDU)
         self._write_buf = WriteBuffer(sock, SDU)
-        self._chunked_bytes_buf = ChunkedBytesBuffer()
 
     cdef int _close(self) except -1:
 
@@ -403,7 +401,7 @@ cdef class Protocol:
         while buf.bytes_left() > 0:
             message_type = buf.read_uint8()
             if message_type == TNS_MSG_TYPE_LOB_DATA:
-                temp_bytes = self._read_bytes(buf.read_uint8())
+                temp_bytes = buf.read_bytes(buf.read_uint8())
                 if source_lob.type._ora_type_num == TNS_DATA_TYPE_BLOB:
                     return_value = temp_bytes
                 else:
@@ -727,8 +725,7 @@ cdef class Protocol:
         buf.skip_bytes(1)                   # v7 length of name
         num_bytes = buf.read_ub4()
         if num_bytes > 0:
-            buf.skip_bytes(1)               # skip repeated length
-            var.name = buf.read_str(num_bytes)
+            var.name = buf.read_str(buf.read_uint8())
         num_bytes = buf.read_ub4()
         if num_bytes > 0:
             buf.skip_bytes(1)               # skip repeated length
@@ -797,7 +794,7 @@ cdef class Protocol:
         buf.read_ub4()                      # success iters
         num_bytes = buf.read_ub4()          # oerrdd (logical rowid)
         if num_bytes > 0:
-            self._read_bytes(buf.read_uint8())
+            buf.read_bytes(buf.read_uint8())
 
         # batch error codes
         num_entries = buf.read_ub2()        # batch error codes array
@@ -830,7 +827,7 @@ cdef class Protocol:
             for i in range(num_entries):
                 buf.read_ub2()              # skip chunk length
                 info.batcherrors[i].message = \
-                        self._read_bytes(buf.read_uint8()).decode().rstrip()
+                        buf.read_str(buf.read_uint8()).rstrip()
                 buf.skip_bytes(2)           # ignore end marker
 
         info.num = buf.read_ub4()           # error number (extended)
@@ -1048,7 +1045,7 @@ cdef class Protocol:
         elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
                 or ora_type_num == TNS_DATA_TYPE_CHAR \
                 or ora_type_num == TNS_DATA_TYPE_LONG:
-            temp_bytes = self._read_bytes(num_bytes)
+            temp_bytes = buf.read_bytes(num_bytes)
             if csfrm == 1:
                 column_value = temp_bytes.decode()
             else:
@@ -1057,7 +1054,7 @@ cdef class Protocol:
                 buf.skip_bytes(2)
         elif ora_type_num == TNS_DATA_TYPE_RAW \
                 or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
-            column_value = self._read_bytes(num_bytes)
+            column_value = buf.read_bytes(num_bytes)
             if ora_type_num == TNS_DATA_TYPE_LONG_RAW:
                 buf.skip_bytes(2)
         elif ora_type_num == TNS_DATA_TYPE_NUMBER:
@@ -1071,7 +1068,7 @@ cdef class Protocol:
             column_value = buf.read_rowid()
         elif ora_type_num == TNS_DATA_TYPE_UROWID:
             buf.skip_bytes(num_bytes)           # skip length
-            temp_bytes = self._read_bytes(buf.read_uint8())
+            temp_bytes = buf.read_bytes(buf.read_uint8())
             column_value = buf.read_urowid(temp_bytes)
         elif ora_type_num == TNS_DATA_TYPE_BINARY_DOUBLE:
             column_value = buf.read_binary_double()
@@ -1094,9 +1091,8 @@ cdef class Protocol:
             lob = Lob()
             lob.type = var._dbtype
             num_bytes = buf.read_uint8()
-            buf.skip_bytes(1)           # skip repeated length
             lob._connection = conn
-            lob._locator = self._read_bytes(num_bytes)
+            lob._locator = buf.read_bytes(buf.read_uint8())
             column_value = lob
         else:
             msg = f"unhandled data type {var.type}"
@@ -1170,12 +1166,10 @@ cdef class Protocol:
         num_params = buf.read_ub2()
         for i in range(num_params):
             num_bytes = buf.read_ub4()
-            buf.skip_bytes(1)           # skip redundant length
-            key = buf.read_str(num_bytes)
+            key = buf.read_str(buf.read_uint8())
             num_bytes = buf.read_ub4()
             if num_bytes > 0:
-                buf.skip_bytes(1)           # skip redundant length
-                value = buf.read_str(num_bytes)
+                value = buf.read_str(buf.read_uint8())
             else:
                 value = ""
             flags = buf.read_ub4()
@@ -1190,48 +1184,6 @@ cdef class Protocol:
                      (full_version_num >> 12) & 0x0F,
                      (full_version_num >> 4) & 0xFF,
                      (full_version_num & 0x0F))
-
-    cdef bytes _read_bytes(self, uint32_t num_bytes):
-        cdef:
-            ReadBuffer buf = self._read_buf
-            const char_type *source_ptr
-            uint32_t num_bytes_left
-            char_type *dest_ptr
-        if num_bytes != TNS_LONG_LENGTH_INDICATOR:
-            num_bytes_left = <uint32_t> buf.bytes_left()
-            if num_bytes < num_bytes_left:
-                return buf.read_bytes(num_bytes)
-            self._chunked_bytes_buf.start_chunked_read()
-            self._read_split_bytes(num_bytes_left, num_bytes - num_bytes_left)
-            return self._chunked_bytes_buf.end_chunked_read()
-        self._chunked_bytes_buf.start_chunked_read()
-        while True:
-            num_bytes = buf.read_ub4()
-            if num_bytes == 0:
-                break
-            num_bytes_left = <uint32_t> buf.bytes_left()
-            if num_bytes < num_bytes_left:
-                source_ptr = buf._get_raw(num_bytes)
-                dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes)
-                memcpy(dest_ptr, source_ptr, num_bytes)
-            else:
-                self._read_split_bytes(num_bytes_left,
-                                       num_bytes - num_bytes_left)
-        return self._chunked_bytes_buf.end_chunked_read()
-
-    cdef int _read_split_bytes(self, uint32_t num_bytes_1,
-                               uint32_t num_bytes_2) except -1:
-        cdef:
-            const char_type *source_ptr
-            char_type *dest_ptr
-        dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_1)
-        source_ptr = self._read_buf._get_raw(num_bytes_1)
-        memcpy(dest_ptr, source_ptr, num_bytes_1)
-        self._receive_packet()
-        self._read_buf.skip_bytes(2)
-        dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_2)
-        source_ptr = self._read_buf._get_raw(num_bytes_2)
-        memcpy(dest_ptr, source_ptr, num_bytes_2)
 
     cdef int _receive_packet(self, Cursor cursor=None,
                              bint arraydmlrowcounts=False) except -1:

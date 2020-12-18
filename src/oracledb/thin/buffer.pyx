@@ -146,6 +146,7 @@ cdef class ReadBuffer:
 
     cdef:
         ssize_t _max_packet_size, _max_size, _size, _offset, _bytes_to_process
+        ChunkedBytesBuffer _chunked_bytes_buf
         ssize_t _packet_start_offset
         uint16_t _protocol_version
         const char_type *_data
@@ -159,6 +160,7 @@ cdef class ReadBuffer:
         self._max_packet_size = max_packet_size
         self._data_obj = bytearray(self._max_size)
         self._data = <const char_type*> self._data_obj
+        self._chunked_bytes_buf = ChunkedBytesBuffer()
 
     def __getbuffer__(self, Py_buffer *buf, int flags):
         cdef char* ptr = <char*> &self._data[self._packet_start_offset]
@@ -195,6 +197,21 @@ cdef class ReadBuffer:
             raise BufferError(msg)
         self._offset += num_bytes
         return ptr
+
+    cdef int _read_split_bytes(self, uint32_t num_bytes_1,
+                               uint32_t num_bytes_2) except -1:
+        cdef:
+            const char_type *source_ptr
+            char_type *dest_ptr
+            uint8_t packet_type
+        dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_1)
+        source_ptr = self._get_raw(num_bytes_1)
+        memcpy(dest_ptr, source_ptr, num_bytes_1)
+        self.receive_packet(&packet_type)
+        self.skip_bytes(2)                  # skip data flags
+        dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_2)
+        source_ptr = self._get_raw(num_bytes_2)
+        memcpy(dest_ptr, source_ptr, num_bytes_2)
 
     cdef inline ssize_t bytes_left(self):
         return self._size - self._offset
@@ -358,8 +375,32 @@ cdef class ReadBuffer:
         return <uint64_t> self.read_oracle_int()
 
     cdef bytes read_bytes(self, ssize_t num_bytes):
-        cdef const char_type *ptr = self._get_raw(num_bytes)
-        return ptr[:num_bytes]
+        cdef:
+            const char_type *source_ptr
+            uint32_t num_bytes_left
+            char_type *dest_ptr
+        if num_bytes != TNS_LONG_LENGTH_INDICATOR:
+            num_bytes_left = <uint32_t> self.bytes_left()
+            if num_bytes < num_bytes_left:
+                source_ptr = self._get_raw(num_bytes)
+                return source_ptr[:num_bytes]
+            self._chunked_bytes_buf.start_chunked_read()
+            self._read_split_bytes(num_bytes_left, num_bytes - num_bytes_left)
+            return self._chunked_bytes_buf.end_chunked_read()
+        self._chunked_bytes_buf.start_chunked_read()
+        while True:
+            num_bytes = self.read_ub4()
+            if num_bytes == 0:
+                break
+            num_bytes_left = <uint32_t> self.bytes_left()
+            if num_bytes < num_bytes_left:
+                source_ptr = self._get_raw(num_bytes)
+                dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes)
+                memcpy(dest_ptr, source_ptr, num_bytes)
+            else:
+                self._read_split_bytes(num_bytes_left,
+                                       num_bytes - num_bytes_left)
+        return self._chunked_bytes_buf.end_chunked_read()
 
     cdef object read_interval_ds(self, uint8_t num_bytes):
         cdef:
@@ -375,9 +416,6 @@ cdef class ReadBuffer:
 
     cdef str read_str(self, ssize_t num_bytes):
         return self.read_bytes(num_bytes).decode()
-
-    cdef str read_nstr(self, ssize_t num_bytes):
-        return self.read_bytes(num_bytes).decode(TNS_ENCODING_UTF16)
 
     cdef object read_oracle_date(self, uint8_t num_bytes):
         cdef:
