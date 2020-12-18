@@ -126,6 +126,11 @@ DEF TNS_VERSION_DESIRED = 316
 DEF TNS_VERSION_MINIMUM = 300
 DEF TNS_VERSION_MIN_LARGE_SDU = 315
 
+# other connection constants
+DEF TNS_SERVICE_OPTIONS = 0xc01
+DEF TNS_PROTOCOL_CHARACTERISTICS = 0x4f98
+DEF TNS_CONNECT_FLAGS = 0x4141
+
 # TTC functions
 DEF TNS_FUNC_AUTH_PHASE_ONE = 118
 DEF TNS_FUNC_AUTH_PHASE_TWO = 115
@@ -158,7 +163,7 @@ cdef bytearray TNS_BASE64_ALPHABET_ARRAY = \
 
 # packet data
 cdef bytes TNS_DATA_TYPES_PACKET_DATA = \
-        b'\x02\x69\x03\x69\x03\x01\x29\x06\x01\x00\x00\x0f\x01\x01' \
+        b'\x69\x03\x69\x03\x01\x29\x06\x01\x00\x00\x0f\x01\x01' \
         b'\x08\x01\x01\x01\x01\x01\x01\x00\x29\x90\x03\x07\x03\x00\x01\x00' \
         b'\x4f\x01\x37\x04\x01\x00\x00\x00\x1c\x00\x00\x09\x20\x03\xb9\x00' \
         b'\x00\x02\x07\x02\x00\x00\x00\x00\x00\x05\x00\x01\x00\x01\x00\x01' \

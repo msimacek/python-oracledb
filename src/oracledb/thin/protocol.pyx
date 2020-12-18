@@ -92,17 +92,17 @@ cdef class Protocol:
 
         # send protocol packet
         buf.start_request(TNS_PACKET_TYPE_DATA)
-        buf.write_bytes(b'\x01\x06\x00')
-        buf.write_bytes(b'Python_Thin\x00')
+        buf.write_uint8(TNS_MSG_TYPE_PROTOCOL)
+        buf.write_uint8(6)                  # protocol version (8.1 and higher)
+        buf.write_uint8(0)                  # "array" terminator
+        buf.write_bytes(b'py-oracledb\x00') # unique name for driver
         buf.end_request()
 
         # receive response (server protocol)
         self._receive_packet()
 
         # send data types packet
-        buf.start_request(TNS_PACKET_TYPE_DATA)
-        buf.write_bytes(TNS_DATA_TYPES_PACKET_DATA)
-        buf.end_request()
+        self._send_data_types_packet()
 
         # receive response (server data type support)
         self._receive_packet()
@@ -268,16 +268,16 @@ cdef class Protocol:
         connect_string_length = <uint16_t> len(connect_string_bytes)
         buf.write_uint16(TNS_VERSION_DESIRED)
         buf.write_uint16(TNS_VERSION_MINIMUM)
-        buf.write_uint16(0xc01)             # service options
-        buf.write_uint16(SDU)               # SDU
-        buf.write_uint16(TDU)               # TDU
-        buf.write_uint16(0x4f98)            # protocol characteristics
+        buf.write_uint16(TNS_SERVICE_OPTIONS)
+        buf.write_uint16(SDU)
+        buf.write_uint16(TDU)
+        buf.write_uint16(TNS_PROTOCOL_CHARACTERISTICS)
         buf.write_uint16(0)                 # line turnaround
         buf.write_uint16(1)                 # value of 1
         buf.write_uint16(connect_string_length)
         buf.write_uint16(70)                # offset to connect data
         buf.write_uint32(0)                 # max receivable data
-        buf.write_uint16(0x4141)            # connect flags
+        buf.write_uint16(TNS_CONNECT_FLAGS)
         buf.write_uint64(0)                 # obsolete
         buf.write_uint64(0)                 # obsolete
         buf.write_uint64(0)                 # obsolete
@@ -285,6 +285,13 @@ cdef class Protocol:
         buf.write_uint32(TDU)               # TDU (large)
         buf.write_uint32(0)                 # compression flags
         buf.write_bytes(connect_string_bytes)
+        buf.end_request()
+
+    cdef int _send_data_types_packet(self) except -1:
+        cdef WriteBuffer buf = self._write_buf
+        buf.start_request(TNS_PACKET_TYPE_DATA)
+        buf.write_uint8(TNS_MSG_TYPE_DATA_TYPES)
+        buf.write_bytes(TNS_DATA_TYPES_PACKET_DATA)
         buf.end_request()
 
     cdef int _send_services_packet(self) except -1:
