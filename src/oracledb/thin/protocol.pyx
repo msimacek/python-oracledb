@@ -45,8 +45,7 @@ cdef class Protocol:
         # send close request
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
         self._write_buf.write_uint16(0x0309)
-        self._increment_seq_num()
-        self._write_buf.write_uint8(self._seq_num)
+        self._write_seq_num()
         self._write_buf.end_request()
 
         # receive response
@@ -62,8 +61,7 @@ cdef class Protocol:
         # send request
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
         self._write_buf.write_uint16(0x030e)
-        self._increment_seq_num()
-        self._write_buf.write_uint8(self._seq_num)
+        self._write_seq_num()
         self._write_buf.end_request()
 
         # receive response
@@ -201,8 +199,7 @@ cdef class Protocol:
         cursor._buffer_rowcount = 0
         cursor._buffer_index = 0
         buf.write_uint16(0x0305)
-        self._increment_seq_num()
-        buf.write_uint8(self._seq_num)
+        self._write_seq_num()
         buf.write_ub4(cursor._statement._cursor_id)
         buf.write_ub4(fetch_array_size)
         buf.end_request()
@@ -253,10 +250,11 @@ cdef class Protocol:
         self._receive_packet()
         self._process_error_packet()
 
-    cdef _increment_seq_num(self):
+    cdef _write_seq_num(self):
         self._seq_num += 1
         if self._seq_num == 0:
             self._seq_num = 1
+        self._write_buf.write_uint8(self._seq_num)
 
     cdef int _send_connect_packet(self, str connect_string) except -1:
         cdef:
@@ -322,8 +320,7 @@ cdef class Protocol:
         # create and send packet for LOB operation
         buf.write_uint16(0)                 # data flags
         buf.write_uint16(0x360)             # function code
-        self._increment_seq_num()
-        buf.write_uint8(self._seq_num)
+        self._write_seq_num()
         if source_lob is None:
             buf.write_uint8(0)              # source pointer
             buf.write_ub4(0)                # source length
@@ -461,8 +458,7 @@ cdef class Protocol:
 
         # write packet
         buf.write_uint16(0x35e)             # function code
-        self._increment_seq_num()
-        buf.write_uint8(self._seq_num)
+        self._write_seq_num()
         buf.write_ub4(options)              # execute options
         buf.write_ub4(stmt._cursor_id)
         buf.write_uint8(1)                  # pointer (cursor id)
@@ -533,8 +529,7 @@ cdef class Protocol:
         # send request
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
         self._write_buf.write_uint16(0x0393)
-        self._increment_seq_num()
-        self._write_buf.write_uint8(self._seq_num)
+        self._write_seq_num()
         self._write_buf.end_request()
 
         # receive response
@@ -664,17 +659,6 @@ cdef class Protocol:
         else:
             errors._raise_from_string(exceptions.NotSupportedError,
                                       f"unsupported type {var.type}")
-
-    cdef int _populate_fetch_packet(self, WriteBuffer buf, Cursor cursor,
-                                    list params,
-                                    uint32_t fetch_array_size) except -1:
-        cursor._buffer_rowcount = 0
-        cursor._buffer_index = 0
-        buf.write_uint32(0x00000305)
-        self._increment_seq_num()
-        buf.write_uint8(self._seq_num)
-        buf.write_ub4(cursor._statement._cursor_id)
-        buf.write_ub4(fetch_array_size)
 
     cdef int _populate_key_value(self, str key, str value,
                                  uint32_t flags) except -1:
@@ -1270,8 +1254,7 @@ cdef class Protocol:
         # send request
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA)
         self._write_buf.write_uint16(0x030f)
-        self._increment_seq_num()
-        self._write_buf.write_uint8(self._seq_num)
+        self._write_seq_num()
         self._write_buf.end_request()
 
         # receive response
