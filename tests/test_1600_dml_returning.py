@@ -9,6 +9,7 @@
 import test_env
 
 import oracledb
+import unittest
 
 class TestCase(test_env.BaseTestCase):
 
@@ -179,6 +180,8 @@ class TestCase(test_env.BaseTestCase):
         ]
         self.assertEqual(str_var.values, expected_values)
 
+    @unittest.skipIf(test_env.get_is_thin(),
+                     "thin driver doesn't support database objects yet")
     def test_1607_insert_and_return_object(self):
         "1607 - test inserting an object with DML returning"
         type_obj = self.connection.gettype("UDT_OBJECT")
