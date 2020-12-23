@@ -1098,6 +1098,9 @@ cdef class PingMessage(Message):
 
 @cython.final
 cdef class ProtocolMessage(Message):
+    cdef:
+        bytearray server_compile_caps
+        bytearray server_runtime_caps
 
     cdef int _write_message(self, WriteBuffer buf) except -1:
         buf.write_uint8(TNS_MSG_TYPE_PROTOCOL)
@@ -1105,8 +1108,24 @@ cdef class ProtocolMessage(Message):
         buf.write_uint8(0)                  # "array" terminator
         buf.write_bytes(b'py-oracledb\x00') # unique name for driver
 
-    cdef int process(self, ReadBuffer buf) except -1:
-        pass
+    cdef int _process_message(self, ReadBuffer buf,
+                              uint8_t message_type) except -1:
+        cdef uint16_t num_elem, fdo_length
+        if message_type == TNS_MSG_TYPE_PROTOCOL:
+            buf.skip_bytes(2)               # skip protocol array
+            while buf.read_uint8() != 0:    # skip server banner
+                pass
+            buf.skip_bytes(2)               # skip charset (LSB)
+            buf.skip_bytes(1)               # skip server flags
+            num_elem = buf.read_uint16(BYTE_ORDER_LSB)
+            if num_elem > 0:                # skip elements
+                buf.skip_bytes(num_elem * 5)
+            fdo_length = buf.read_uint16()
+            buf.skip_bytes(fdo_length)
+            self.server_compile_caps = \
+                    bytearray(buf.read_bytes(buf.read_uint8()))
+            self.server_runtime_caps = \
+                    bytearray(buf.read_bytes(buf.read_uint8()))
 
 
 @cython.final

@@ -8,7 +8,7 @@ from libc.string cimport memcpy, memset
 
 ctypedef unsigned char char_type
 
-include "hton.pxd"
+include "bswap.pxd"
 
 DEF PACKET_HEADER_SIZE = 8
 DEF NUMBER_AS_TEXT_CHARS = 172
@@ -347,23 +347,17 @@ cdef class ReadBuffer:
     cdef int8_t read_int8(self) except *:
         return <int8_t> self.read_uint8()
 
-    cdef uint16_t read_uint16(self) except *:
+    cdef uint16_t read_uint16(self, byte_order=BYTE_ORDER_MSB) except *:
         cdef const char_type *ptr = self._get_raw(2)
-        return unpack_uint16(ptr)
+        return unpack_uint16(ptr, byte_order)
 
-    cdef int16_t read_int16(self) except *:
-        return <int16_t> self.read_uint16()
-
-    cdef uint32_t read_uint32(self) except *:
+    cdef uint32_t read_uint32(self, byte_order=BYTE_ORDER_MSB) except *:
         cdef const char_type *ptr = self._get_raw(4)
-        return unpack_uint32(ptr)
+        return unpack_uint32(ptr, byte_order)
 
-    cdef uint32_t read_uint64(self) except *:
+    cdef uint32_t read_uint64(self, byte_order=BYTE_ORDER_MSB) except *:
         cdef const char_type *ptr = self._get_raw(8)
-        return unpack_uint64(ptr)
-
-    cdef int32_t read_int32(self) except *:
-        return <int32_t> self.read_uint32()
+        return unpack_uint64(ptr, byte_order)
 
     cdef inline uint16_t read_ub2(self) except *:
         return <uint16_t> self.read_oracle_int()
@@ -406,8 +400,8 @@ cdef class ReadBuffer:
         cdef:
             uint32_t days, hours, minutes, second, total_seconds, fseconds
             const uint8_t *ptr = <uint8_t*> self._get_raw(num_bytes)
-        days = unpack_uint32(ptr) - TNS_DURATION_MID
-        fseconds = unpack_uint32(&ptr[7]) - TNS_DURATION_MID
+        days = unpack_uint32(ptr, BYTE_ORDER_MSB) - TNS_DURATION_MID
+        fseconds = unpack_uint32(&ptr[7], BYTE_ORDER_MSB) - TNS_DURATION_MID
         hours = ptr[4] - TNS_DURATION_OFFSET
         minutes = ptr[5] - TNS_DURATION_OFFSET
         seconds = ptr[6] - TNS_DURATION_OFFSET
@@ -424,7 +418,7 @@ cdef class ReadBuffer:
             uint16_t year
         year = (<uint8_t> ptr[0] - 100) * 100 + <uint8_t> ptr[1] - 100
         if num_bytes >= 11:
-            fsecond = unpack_uint32(&ptr[7]) // 1000
+            fsecond = unpack_uint32(&ptr[7], BYTE_ORDER_MSB) // 1000
         return cydatetime.datetime_new(year, ptr[2], ptr[3], ptr[4] - 1,
                                        ptr[5] - 1, ptr[6] - 1, fsecond, None)
 
@@ -821,14 +815,14 @@ cdef class WriteBuffer:
             uint32_t days, seconds, fseconds
             char_type buf[11]
         days = cydatetime.timedelta_days(value)
-        pack_uint32(buf, days + TNS_DURATION_MID)
+        pack_uint32(buf, days + TNS_DURATION_MID, BYTE_ORDER_MSB)
         seconds = cydatetime.timedelta_seconds(value)
         buf[4] = (seconds // 3600) + TNS_DURATION_OFFSET
         seconds = seconds % 3600
         buf[5] = (seconds // 60) + TNS_DURATION_OFFSET
         buf[6] = (seconds % 60) + TNS_DURATION_OFFSET
         fseconds = cydatetime.timedelta_microseconds(value) * 1000
-        pack_uint32(&buf[7], fseconds + TNS_DURATION_MID)
+        pack_uint32(&buf[7], fseconds + TNS_DURATION_MID, BYTE_ORDER_MSB)
         self.write_uint8(sizeof(buf))
         self.write_raw(buf, sizeof(buf))
 
@@ -848,9 +842,9 @@ cdef class WriteBuffer:
         buf[6] = <uint8_t> cydatetime.datetime_second(value) + 1
         if length > 7:
             fsecond = <uint32_t> cydatetime.datetime_microsecond(value) * 1000
-            pack_uint32(&buf[7], fsecond)
+            pack_uint32(&buf[7], fsecond, BYTE_ORDER_MSB)
         if length > 11:
-            pack_uint16(&buf[11], 0)
+            pack_uint16(&buf[11], 0, BYTE_ORDER_MSB)
         self.write_raw(buf, length)
 
     cdef int write_oracle_number(self, bytes num_bytes) except -1:
@@ -1016,25 +1010,22 @@ cdef class WriteBuffer:
         self._data[self._actual_size] = value
         self._actual_size += 1
 
-    cdef int write_uint16(self, uint16_t value) except -1:
+    cdef int write_uint16(self, uint16_t value,
+                          int byte_order=BYTE_ORDER_MSB) except -1:
         self._ensure_available(2)
-        pack_uint16(&self._data[self._actual_size], value)
+        pack_uint16(&self._data[self._actual_size], value, byte_order)
         self._actual_size += 2
 
-    cdef int write_uint16_at_offset(self, uint16_t value,
-                                    ssize_t offset) except -1:
-        if offset + 2 > self._actual_size:
-            raise BufferError("Buffer is too small")
-        pack_uint16(&self._data[offset], value)
-
-    cdef int write_uint32(self, uint32_t value) except -1:
+    cdef int write_uint32(self, uint32_t value,
+                          int byte_order=BYTE_ORDER_MSB) except -1:
         self._ensure_available(4)
-        pack_uint32(&self._data[self._actual_size], value)
+        pack_uint32(&self._data[self._actual_size], value, byte_order)
         self._actual_size += 4
 
-    cdef int write_uint64(self, uint64_t value) except -1:
+    cdef int write_uint64(self, uint64_t value,
+                          byte_order=BYTE_ORDER_MSB) except -1:
         self._ensure_available(8)
-        pack_uint64(&self._data[self._actual_size], value)
+        pack_uint64(&self._data[self._actual_size], value, byte_order)
         self._actual_size += 8
 
     cdef int write_ub4(self, uint32_t value) except -1:

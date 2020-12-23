@@ -32,7 +32,7 @@ source_dir = os.path.join("src", "oracledb", "thin")
 thin_depends = [os.path.join(source_dir, n) \
                 for n in sorted(os.listdir(source_dir))
                 if n.endswith(".pyx") and n != "driver.pyx"
-                or n.endswith(".pxi") or n.endswith(".pxd") or n == "hton.c"]
+                or n.endswith(".pxi") or n.endswith(".pxd") or n == "bswap.c"]
 
 setup(
     ext_modules=[
