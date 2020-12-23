@@ -381,7 +381,7 @@ cdef class ReadBuffer:
             char_type *dest_ptr
         if num_bytes != TNS_LONG_LENGTH_INDICATOR:
             num_bytes_left = <uint32_t> self.bytes_left()
-            if num_bytes < num_bytes_left:
+            if num_bytes <= num_bytes_left:
                 source_ptr = self._get_raw(num_bytes)
                 return source_ptr[:num_bytes]
             self._chunked_bytes_buf.start_chunked_read()
@@ -649,6 +649,7 @@ cdef class WriteBuffer:
         char_type *_data
         object _socket
         int _view_count
+        uint8_t _seq_num
 
     def __cinit__(self, object sock, ssize_t max_size):
         self._socket = sock
@@ -792,6 +793,28 @@ cdef class WriteBuffer:
             char_type *ptr
         cpython.PyBytes_AsStringAndSize(value, <char**> &ptr, &value_len)
         self.write_raw(ptr, value_len)
+
+    cdef int write_bytes_chunked(self, bytes value) except -1:
+        cdef:
+            ssize_t value_len, bytes_left
+            char_type *ptr
+        cpython.PyBytes_AsStringAndSize(value, <char**> &ptr, &value_len)
+        if value_len <= TNS_MAX_SHORT_LENGTH:
+            self.write_uint8(<uint8_t> value_len)
+            self.write_raw(ptr, value_len)
+        else:
+            self.write_uint8(TNS_LONG_LENGTH_INDICATOR)
+            self.write_ub4(value_len)
+            bytes_left = self.bytes_left()
+            while True:
+                if bytes_left >= value_len:
+                    self.write_raw(ptr, value_len)
+                    break
+                self.write_raw(ptr, bytes_left)
+                value_len -= bytes_left
+                ptr += bytes_left
+                bytes_left = self.max_payload_bytes()
+            self.write_ub4(0)
 
     cdef int write_interval_ds(self, object value) except -1:
         cdef:
@@ -979,6 +1002,12 @@ cdef class WriteBuffer:
         self._ensure_available(length)
         memcpy(self._data + self._actual_size, <void*> data, <size_t> length)
         self._actual_size += length
+
+    cdef int write_seq_num(self) except -1:
+        self._seq_num += 1
+        if self._seq_num == 0:
+            self._seq_num = 1
+        self.write_uint8(self._seq_num)
 
     cdef int write_str(self, str value) except -1:
         self.write_bytes(value.encode())

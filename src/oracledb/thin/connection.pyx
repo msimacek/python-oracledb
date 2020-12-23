@@ -7,6 +7,9 @@ cdef class Connection(BaseConnection):
     cdef:
         StatementCache _statement_cache
         Protocol _protocol
+        str _server_version
+        uint32_t _session_id
+        uint32_t _serial_num
 
     cdef int _close(self) except -1:
         self._protocol._close()
@@ -18,7 +21,7 @@ cdef class Connection(BaseConnection):
         sock = socket.socket()
         sock.connect((host, port))
         self._protocol = Protocol(sock)
-        self._protocol._connect(connect_string, self.username, password)
+        self._protocol._connect(self, connect_string, password)
         self._statement_cache = StatementCache(30)
         self._is_connected = True
 
@@ -29,7 +32,7 @@ cdef class Connection(BaseConnection):
         return Lob._create_temp_lob(self, dbtype)
 
     cdef str _get_version(self):
-        return self._protocol._server_version
+        return self._server_version
 
     cdef int _ping(self) except -1:
         self._protocol._ping()

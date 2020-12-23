@@ -36,7 +36,7 @@ cdef class Cursor(BaseCursor):
 
     cdef int _fetch_rows(self) except -1:
         cdef Connection connection = self.connection
-        connection._protocol._fetch(self, self._fetch_array_size)
+        connection._protocol._fetch(self)
 
     cdef object _get_array_dml_row_counts(self):
         if self._dmlrowcounts is None:
