@@ -9,7 +9,6 @@ cdef class Protocol:
         object _socket
         ReadBuffer _read_buf
         WriteBuffer _write_buf
-        _OracleErrorInfo _error_info
 
     def __init__(self, sock):
         self._socket = sock
@@ -82,24 +81,6 @@ cdef class Protocol:
                                   offset=message.error_info.pos)
             exc_type = get_exception_class(message.error_info.num)
             raise exc_type(error)
-
-    cdef int _process_msg_parameter(self, ReadBuffer buf) except -1:
-        cdef:
-            _OracleErrorInfo error_info = self._error_info
-            uint32_t num_params, num_bytes, i
-        num_params = buf.read_ub2()         # al8o4l (ignored)
-        for i in range(num_params):
-            buf.read_ub4()
-        num_bytes = buf.read_ub2()          # al8txl (ignored)
-        if num_bytes > 0:
-            buf.skip_bytes(num_bytes)
-        buf.read_ub2()                      # num key/val pairs
-        num_bytes = buf.read_ub4()          # registration
-        if num_bytes > 0:
-            buf.skip_bytes(num_bytes)
-        if error_info.dmlrowcounts is not None:
-            for i in range(buf.read_ub4()):
-                error_info.dmlrowcounts.append(buf.read_ub8())
 
     cdef int _receive_packet(self, Message message) except -1:
         cdef:
