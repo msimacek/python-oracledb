@@ -33,8 +33,10 @@ from ..common.driver cimport BaseLob
 
 include "constants.pxi"
 include "utils.pyx"
+include "capabilities.pyx"
 include "buffer.pyx"
 include "network_services.pyx"
+include "data_types.pyx"
 include "messages.pyx"
 include "protocol.pyx"
 include "connection.pyx"

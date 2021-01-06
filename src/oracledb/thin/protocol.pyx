@@ -12,8 +12,9 @@ cdef class Protocol:
 
     def __init__(self, sock):
         self._socket = sock
-        self._read_buf = ReadBuffer(sock, TNS_SDU)
-        self._write_buf = WriteBuffer(sock, TNS_SDU)
+        caps = Capabilities()
+        self._read_buf = ReadBuffer(sock, TNS_SDU, caps)
+        self._write_buf = WriteBuffer(sock, TNS_SDU, caps)
 
     cdef int _close(self) except -1:
         self._rollback()                    # rollback any transaction first
@@ -42,8 +43,6 @@ cdef class Protocol:
         connect_message = ConnectMessage(connect_string)
         self._process_message(connect_message)
         self._process_message(connect_message)
-        self._read_buf._protocol_version = connect_message.version
-        self._write_buf._protocol_version = connect_message.version
 
         # send services, protocol and data types messages and process responses
         self._process_message(NetworkServicesMessage())

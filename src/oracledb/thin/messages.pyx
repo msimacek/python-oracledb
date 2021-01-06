@@ -786,7 +786,6 @@ cdef class ConnectMessage(Message):
         uint16_t connect_string_len
         bytes connect_string_bytes
         bint first_packet
-        uint16_t version
 
     def __cinit__(self, connect_string):
         self.connect_string_bytes = connect_string.encode()
@@ -797,7 +796,7 @@ cdef class ConnectMessage(Message):
         if self.first_packet:
             self.first_packet = False
         else:
-            self.version = buf.read_uint16()
+            buf._caps.protocol_version = buf.read_uint16()
 
     cdef int send(self, WriteBuffer buf) except -1:
         buf.start_request(TNS_PACKET_TYPE_CONNECT)
@@ -827,8 +826,31 @@ cdef class ConnectMessage(Message):
 cdef class DataTypesMessage(Message):
 
     cdef int _write_message(self, WriteBuffer buf) except -1:
+        cdef:
+            DataType* data_type
+            int i
+
+        # write character set and capabilities
         buf.write_uint8(TNS_MSG_TYPE_DATA_TYPES)
-        buf.write_bytes(TNS_DATA_TYPES_PACKET_DATA)
+        buf.write_uint16(TNS_CHARSET_UTF8, BYTE_ORDER_LSB)
+        buf.write_uint16(TNS_CHARSET_UTF8, BYTE_ORDER_LSB)
+        buf.write_ub4(len(buf._caps.compile_caps))
+        buf.write_bytes(bytes(buf._caps.compile_caps))
+        buf.write_uint8(len(buf._caps.runtime_caps))
+        buf.write_bytes(bytes(buf._caps.runtime_caps))
+
+        # write data types
+        i = 0
+        while True:
+            data_type = &DATA_TYPES[i]
+            if data_type.data_type == 0:
+                break
+            i += 1
+            buf.write_uint16(data_type.data_type)
+            buf.write_uint16(data_type.conv_data_type)
+            buf.write_uint16(data_type.representation)
+            buf.write_uint16(0)
+        buf.write_uint16(0)
 
     cdef int process(self, ReadBuffer buf) except -1:
         pass
@@ -1126,6 +1148,8 @@ cdef class ProtocolMessage(Message):
                     bytearray(buf.read_bytes(buf.read_uint8()))
             self.server_runtime_caps = \
                     bytearray(buf.read_bytes(buf.read_uint8()))
+        else:
+            Message._process_message(self, buf, message_type)
 
 
 @cython.final

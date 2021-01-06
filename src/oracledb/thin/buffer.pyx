@@ -148,14 +148,16 @@ cdef class ReadBuffer:
         ssize_t _max_packet_size, _max_size, _size, _offset, _bytes_to_process
         ChunkedBytesBuffer _chunked_bytes_buf
         ssize_t _packet_start_offset
-        uint16_t _protocol_version
         const char_type *_data
         bytearray _data_obj
+        Capabilities _caps
         int _view_count
         object _socket
 
-    def __cinit__(self, object sock, ssize_t max_packet_size):
+    def __cinit__(self, object sock, ssize_t max_packet_size,
+                  Capabilities caps):
         self._socket = sock
+        self._caps = caps
         self._max_size = max_packet_size * 2
         self._max_packet_size = max_packet_size
         self._data_obj = bytearray(self._max_size)
@@ -254,7 +256,7 @@ cdef class ReadBuffer:
         # packet are available; note that as of version 12.2 the packet size is
         # 32 bits in size instead of 16 bits, but this doesn't take effect
         # until it is known that the server is capable of that as well
-        if self._protocol_version >= TNS_VERSION_MIN_LARGE_SDU:
+        if self._caps.protocol_version >= TNS_VERSION_MIN_LARGE_SDU:
             self._size += 4
             packet_size = self.read_uint32()
         else:
@@ -269,7 +271,7 @@ cdef class ReadBuffer:
         # process remainder of packet header and set size to the new packet
         self._size = self._packet_start_offset + packet_size
         self._bytes_to_process -= packet_size
-        if self._protocol_version < TNS_VERSION_MIN_LARGE_SDU:
+        if self._caps.protocol_version < TNS_VERSION_MIN_LARGE_SDU:
             self.skip_bytes(2)          # skip packet checksum
         packet_type[0] = self.read_uint8()
         self.skip_bytes(3)              # skip reserved byte, header checksum
@@ -637,16 +639,17 @@ cdef class WriteBuffer:
 
     cdef:
         ssize_t _max_size, _actual_size
-        uint16_t _protocol_version
         uint8_t _packet_type
         bytearray _data_obj
+        Capabilities _caps
         char_type *_data
         object _socket
         int _view_count
         uint8_t _seq_num
 
-    def __cinit__(self, object sock, ssize_t max_size):
+    def __cinit__(self, object sock, ssize_t max_size, Capabilities caps):
         self._socket = sock
+        self._caps = caps
         self._data_obj = bytearray(max_size)
         self._data = <char_type*> self._data_obj
         self._max_size = max_size
@@ -678,7 +681,7 @@ cdef class WriteBuffer:
         """
         cdef ssize_t size = self._actual_size
         self._actual_size = 0
-        if self._protocol_version >= TNS_VERSION_MIN_LARGE_SDU:
+        if self._caps.protocol_version >= TNS_VERSION_MIN_LARGE_SDU:
             self.write_uint32(size)
         else:
             self.write_uint16(size)
