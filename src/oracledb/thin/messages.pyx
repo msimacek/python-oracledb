@@ -939,6 +939,9 @@ cdef class ExecuteMessage(MessageWithData):
         buf.write_uint8(0)                  # pointer (SQL ID)
         buf.write_ub4(0)                    # allocated size of SQL ID
         buf.write_uint8(0)                  # pointer (length of SQL ID)
+        if buf._caps.ttc_field_version >= TNS_CCAP_FIELD_VERSION_12_2_EXT1:
+            buf.write_uint8(0)              # pointer (chunk ids)
+            buf.write_ub4(0)                # number of chunk ids
         buf.write_bytes(stmt._sql_bytes)
         buf.write_ub4(1)                    # al8i4[0] parse
         if stmt._is_query:
@@ -1120,9 +1123,6 @@ cdef class PingMessage(Message):
 
 @cython.final
 cdef class ProtocolMessage(Message):
-    cdef:
-        bytearray server_compile_caps
-        bytearray server_runtime_caps
 
     cdef int _write_message(self, WriteBuffer buf) except -1:
         buf.write_uint8(TNS_MSG_TYPE_PROTOCOL)
@@ -1132,7 +1132,10 @@ cdef class ProtocolMessage(Message):
 
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:
-        cdef uint16_t num_elem, fdo_length
+        cdef:
+            uint16_t num_elem, fdo_length
+            bytearray server_compile_caps
+            bytearray server_runtime_caps
         if message_type == TNS_MSG_TYPE_PROTOCOL:
             buf.skip_bytes(2)               # skip protocol array
             while buf.read_uint8() != 0:    # skip server banner
@@ -1144,10 +1147,10 @@ cdef class ProtocolMessage(Message):
                 buf.skip_bytes(num_elem * 5)
             fdo_length = buf.read_uint16()
             buf.skip_bytes(fdo_length)
-            self.server_compile_caps = \
-                    bytearray(buf.read_bytes(buf.read_uint8()))
-            self.server_runtime_caps = \
-                    bytearray(buf.read_bytes(buf.read_uint8()))
+            server_compile_caps = bytearray(buf.read_bytes(buf.read_uint8()))
+            server_runtime_caps = bytearray(buf.read_bytes(buf.read_uint8()))
+            buf._caps._adjust_for_server_compile_caps(server_compile_caps)
+            buf._caps._adjust_for_server_runtime_caps(server_runtime_caps)
         else:
             Message._process_message(self, buf, message_type)
 

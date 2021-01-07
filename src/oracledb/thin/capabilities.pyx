@@ -14,12 +14,23 @@ cdef class Capabilities:
         self._init_runtime_caps()
 
     @cython.boundscheck(False)
+    cdef void _adjust_for_server_compile_caps(self, bytearray server_caps):
+        if server_caps[TNS_CCAP_FIELD_VERSION] < self.ttc_field_version:
+            self.ttc_field_version = server_caps[TNS_CCAP_FIELD_VERSION]
+            self.compile_caps[TNS_CCAP_FIELD_VERSION] = self.ttc_field_version
+
+    @cython.boundscheck(False)
+    cdef void _adjust_for_server_runtime_caps(self, bytearray server_caps):
+        pass
+
+    @cython.boundscheck(False)
     cdef void _init_compile_caps(self):
+        self.ttc_field_version = TNS_CCAP_FIELD_VERSION_MAX
         self.compile_caps = bytearray(TNS_CCAP_MAX)
         self.compile_caps[TNS_CCAP_SQL_VERSION] = TNS_CCAP_SQL_VERSION_MAX
         self.compile_caps[TNS_CCAP_LOGON_TYPES] = \
                 TNS_CCAP_O5LOGON | TNS_CCAP_O5LOGON_NP
-        self.compile_caps[TNS_CCAP_FIELD_VERSION] = TNS_CCAP_FIELD_VERSION_MAX
+        self.compile_caps[TNS_CCAP_FIELD_VERSION] = self.ttc_field_version
         self.compile_caps[TNS_CCAP_TTC1] = \
                 TNS_CCAP_FAST_BVEC | TNS_CCAP_END_OF_CALL_STATUS | \
                 TNS_CCAP_IND_RCD
