@@ -249,7 +249,7 @@ cdef class MessageWithData(Message):
             raise Exception(msg)
         if not self.in_fetch:
             actual_num_bytes = buf.read_ub4()
-            if actual_num_bytes != 0:
+            if actual_num_bytes != 0 and column_value is not None:
                 unit_type = "bytes" if isinstance(column_value, bytes) \
                             else "characters"
                 message = f"column truncated to {len(column_value)} " \
