@@ -1010,6 +1010,7 @@ cdef class WriteBuffer:
         self.write_bytes(value.encode())
 
     cdef int write_uint8(self, uint8_t value) except -1:
+        self._ensure_available(1)
         self._data[self._actual_size] = value
         self._actual_size += 1
 
