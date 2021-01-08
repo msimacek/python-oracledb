@@ -1,4 +1,4 @@
-This directory contains samples for the oracledb module.
+This directory contains samples for py-oracledb.
 
 1. The schemas and SQL objects that are referenced in the samples can be
    created by running the Python script [SetupSamples.py][1]. The script
@@ -19,12 +19,12 @@ This directory contains samples for the oracledb module.
 
         python Query.py
 
-3. After running the samples, the schemas and SQL objects can be dropped by
-   running the Python script [DropSamples.py][4]. The script requires SYSDBA
-   privileges and will prompt for these credentials as well as the names of the
-   schemas and edition that will be dropped, unless a number of environment
-   variables are set as documented in the Python script [sample_env.py][2]. Run
-   the script using the following command:
+3. After running py-oracledb samples, the schemas and SQL objects can be
+   dropped by running the Python script [DropSamples.py][4]. The script
+   requires SYSDBA privileges and will prompt for these credentials as well as
+   the names of the schemas and edition that will be dropped, unless a number
+   of environment variables are set as documented in the Python script
+   [sample_env.py][2]. Run the script using the following command:
 
        python DropSamples.py
 

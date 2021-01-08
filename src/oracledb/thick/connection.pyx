@@ -205,7 +205,7 @@ cdef class Connection(BaseConnection):
             params.dsn_ptr = params.dsn
             params.dsn_len = <uint32_t> len(params.dsn)
         if cclass is not None:
-            params.cclass = cclass.decode()
+            params.cclass = cclass.encode()
             params.cclass_ptr = params.cclass
             params.cclass_len = <uint32_t> len(params.cclass)
         if newpassword is not None:
@@ -242,7 +242,7 @@ cdef class Connection(BaseConnection):
             conn_params.externalAuth = 1
         if cclass:
             conn_params.connectionClass = params.cclass_ptr
-            conn_params.connectionClassLength = params.cclass_ptr_len
+            conn_params.connectionClassLength = params.cclass_len
         if newpassword:
             conn_params.newPassword = params.new_password_ptr
             conn_params.newPasswordLength = params.new_password_len
