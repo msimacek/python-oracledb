@@ -412,7 +412,15 @@ cdef class MessageWithData(Message):
         num_bytes = buf.read_ub2()          # al8txl (ignored)
         if num_bytes > 0:
             buf.skip_bytes(num_bytes)
-        buf.read_ub2()                      # num key/val pairs
+        num_params = buf.read_ub2()         # num key/value pairs
+        for i in range(num_params):
+            num_bytes = buf.read_ub2()      # key
+            if num_bytes > 0:
+                buf.read_bytes(buf.read_uint8())
+            num_bytes = buf.read_ub2()      # value
+            if num_bytes > 0:
+                buf.read_bytes(buf.read_uint8())
+            buf.read_ub2()                  # keyword num
         num_bytes = buf.read_ub4()          # registration
         if num_bytes > 0:
             buf.skip_bytes(num_bytes)
@@ -633,6 +641,130 @@ cdef class MessageWithData(Message):
                     self._write_bind_params_column(buf, var, value)
             else:
                 self._write_bind_params_column(buf, var, var._values[pos])
+
+    cdef int _write_end_to_end_piggyback(self, WriteBuffer buf) except -1:
+        cdef:
+            bytes action_bytes, client_identifier_bytes, client_info_bytes
+            bytes module_bytes, dbop_bytes
+            Connection conn = self.conn
+            uint32_t flags = 0
+
+        # determine which flags to send
+        if conn._action_modified:
+            flags |= TNS_END_TO_END_ACTION
+        if conn._client_identifier_modified:
+            flags |= TNS_END_TO_END_CLIENT_IDENTIFIER
+        if conn._client_info_modified:
+            flags |= TNS_END_TO_END_CLIENT_INFO
+        if conn._module_modified:
+            flags |= TNS_END_TO_END_MODULE
+        if conn._dbop_modified:
+            flags |= TNS_END_TO_END_DBOP
+
+        # write initial packet data
+        buf.write_uint8(TNS_MSG_TYPE_PIGGYBACK)
+        buf.write_uint8(TNS_FUNC_SET_END_TO_END_ATTR)
+        buf.write_seq_num()
+        buf.write_uint8(0)                  # pointer (cidnam)
+        buf.write_uint8(0)                  # pointer (cidser)
+        buf.write_ub4(flags)
+
+        # write client identifier header info
+        if conn._client_identifier_modified:
+            buf.write_uint8(1)              # pointer (client identifier)
+            if conn._client_identifier is None:
+                buf.write_ub4(0)
+            else:
+                client_identifier_bytes = conn._client_identifier.encode()
+                buf.write_ub4(len(client_identifier_bytes))
+        else:
+            buf.write_uint8(0)              # pointer (client identifier)
+            buf.write_ub4(0)                # length of client identifier
+
+        # write module header info
+        if conn._module_modified:
+            buf.write_uint8(1)              # pointer (module)
+            if conn._module is None:
+                buf.write_ub4(0)
+            else:
+                module_bytes = conn._module.encode()
+                buf.write_ub4(len(module_bytes))
+        else:
+            buf.write_uint8(0)              # pointer (module)
+            buf.write_ub4(0)                # length of module
+
+        # write action header info
+        if conn._action_modified:
+            buf.write_uint8(1)              # pointer (action)
+            if conn._action is None:
+                buf.write_ub4(0)
+            else:
+                action_bytes = conn._action.encode()
+                buf.write_ub4(len(action_bytes))
+        else:
+            buf.write_uint8(0)              # pointer (action)
+            buf.write_ub4(0)                # length of action
+
+        # write unsupported bits
+        buf.write_uint8(0)                  # pointer (cideci)
+        buf.write_ub4(0)                    # length (cideci)
+        buf.write_uint8(0)                  # cidcct
+        buf.write_ub4(0)                    # cidecs
+
+        # write client info header info
+        if conn._client_info_modified:
+            buf.write_uint8(1)              # pointer (client info)
+            if conn._client_info is None:
+                buf.write_ub4(0)
+            else:
+                client_info_bytes = conn._client_info.encode()
+                buf.write_ub4(len(client_info_bytes))
+        else:
+            buf.write_uint8(0)              # pointer (client info)
+            buf.write_ub4(0)                # length of client info
+
+        # write more unsupported bits
+        buf.write_uint8(0)                  # pointer (cidkstk)
+        buf.write_ub4(0)                    # length (cidkstk)
+        buf.write_uint8(0)                  # pointer (cidktgt)
+        buf.write_ub4(0)                    # length (cidktgt)
+
+        # write dbop header info
+        if conn._dbop_modified:
+            buf.write_uint8(1)              # pointer (dbop)
+            if conn._dbop is None:
+                buf.write_ub4(0)
+            else:
+                dbop_bytes = conn._dbop.encode()
+                buf.write_ub4(len(dbop_bytes))
+        else:
+            buf.write_uint8(0)              # pointer (dbop)
+            buf.write_ub4(0)                # length of dbop
+
+        # write strings
+        if conn._client_identifier_modified \
+                and conn._client_identifier is not None:
+            buf.write_bytes(client_identifier_bytes)
+        if conn._module_modified and conn._module is not None:
+            buf.write_bytes(module_bytes)
+        if conn._action_modified and conn._action is not None:
+            buf.write_bytes(action_bytes)
+        if conn._client_info_modified and conn._client_info is not None:
+            buf.write_bytes(client_info_bytes)
+        if conn._dbop_modified and conn._dbop is not None:
+            buf.write_bytes(dbop_bytes)
+
+        # reset flags and values
+        conn._action_modified = False
+        conn._action = None
+        conn._client_identifier_modified = False
+        conn._client_identifier = None
+        conn._client_info_modified = False
+        conn._client_info = None
+        conn._dbop_modified = False
+        conn._dbop = None
+        conn._module_modified = False
+        conn._module = None
 
 
 @cython.final
@@ -891,6 +1023,14 @@ cdef class ExecuteMessage(MessageWithData):
             dml_options = TNS_EXEC_OPTION_DML_ROWCOUNTS
         if self.cursor.connection.autocommit:
             options |= TNS_EXEC_OPTION_COMMIT
+
+        # write end to end attribute piggyback if needed
+        if self.conn._action_modified \
+                or self.conn._client_identifier_modified \
+                or self.conn._client_info_modified \
+                or self.conn._dbop_modified \
+                or self.conn._module_modified:
+            self._write_end_to_end_piggyback(buf)
 
         # write body of message
         self._write_function_code(buf)

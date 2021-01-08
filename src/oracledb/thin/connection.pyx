@@ -10,6 +10,16 @@ cdef class Connection(BaseConnection):
         str _server_version
         uint32_t _session_id
         uint32_t _serial_num
+        str _action
+        bint _action_modified
+        str _dbop
+        bint _dbop_modified
+        str _client_info
+        bint _client_info_modified
+        str _client_identifier
+        bint _client_identifier_modified
+        str _module
+        bint _module_modified
 
     cdef int _close(self) except -1:
         self._protocol._close()
@@ -39,3 +49,26 @@ cdef class Connection(BaseConnection):
 
     cdef int _rollback(self) except -1:
         self._protocol._rollback()
+
+    cdef int _set_action(self, str value) except -1:
+        self._action = value
+        self._action_modified = True
+
+    cdef int _set_client_identifier(self, str value) except -1:
+        self._client_identifier = value
+        self._client_identifier_modified = True
+
+    cdef int _set_client_info(self, str value) except -1:
+        self._client_info = value
+        self._client_info_modified = True
+
+    cdef int _set_dbop(self, str value) except -1:
+        self._dbop = value
+        self._dbop_modified = True
+
+    cdef int _set_module(self, str value) except -1:
+        self._module = value
+        self._module_modified = True
+        # setting the module by itself results in an error so always force the
+        # action to be set as well (which eliminates this error)
+        self._action_modified = True
