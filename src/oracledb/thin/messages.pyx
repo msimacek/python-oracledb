@@ -1003,7 +1003,7 @@ cdef class ExecuteMessage(MessageWithData):
         # determine the options to use for the execute
         if params:
             num_params = <uint32_t> len(params)
-        options = TNS_EXEC_OPTION_EXECUTE
+        options = TNS_EXEC_OPTION_EXECUTE | TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
         dml_options = TNS_EXEC_OPTION_IMPLICIT_RESULTSET
         if stmt._cursor_id == 0:
             options |= TNS_EXEC_OPTION_PARSE
