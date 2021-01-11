@@ -22,6 +22,7 @@ import os
 import socket
 import re
 import sys
+import weakref
 
 cydatetime.import_datetime()
 

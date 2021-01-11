@@ -20,9 +20,12 @@ cdef class Connection(BaseConnection):
         bint _client_identifier_modified
         str _module
         bint _module_modified
+        object __weakref__
+        object _finalizer
 
     cdef int _close(self) except -1:
         self._protocol._close()
+        self._finalizer.detach()
 
     cdef int _commit(self) except -1:
         self._protocol._commit()
@@ -34,6 +37,7 @@ cdef class Connection(BaseConnection):
         self._protocol._connect(self, connect_string, password)
         self._statement_cache = StatementCache(30)
         self._is_connected = True
+        self._finalizer = weakref.finalize(self, self._protocol._close)
 
     cdef BaseCursor _create_cursor(self):
         return Cursor.__new__(Cursor, self)

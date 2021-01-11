@@ -16,7 +16,7 @@ cdef class Protocol:
         self._read_buf = ReadBuffer(sock, TNS_SDU, caps)
         self._write_buf = WriteBuffer(sock, TNS_SDU, caps)
 
-    cdef int _close(self) except -1:
+    cpdef int _close(self) except -1:
         self._rollback()                    # rollback any transaction first
         self._process_message(LogoffMessage())
 
