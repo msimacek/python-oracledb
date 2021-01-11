@@ -17,6 +17,13 @@
     #include <endian.h>
 #elif defined(__APPLE__)
     #include <machine/endian.h>
+    #define __LITTLE_ENDIAN 1234
+    #define __BIG_ENDIAN 4321
+    #if defined(__DARWIN_LITTLE_ENDIAN)
+        #define __BYTE_ORDER __LITTLE_ENDIAN
+    #elif defined(__DARWIN_BIG_ENDIAN)
+        #define __BYTE_ORDER __BIG_ENDIAN
+    #endif
 #elif defined(_WIN32)
     #define __LITTLE_ENDIAN 1234
     #define __BIG_ENDIAN 4321
