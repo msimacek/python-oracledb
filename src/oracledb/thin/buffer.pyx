@@ -865,9 +865,11 @@ cdef class WriteBuffer:
         # zero length string cannot be converted
         num_bytes_length = len(num_bytes)
         if num_bytes_length == 0:
-            raise Exception("zero length string representation of number")
+            errors._raise_from_string(exceptions.DatabaseError,
+                                      "invalid number (zero length string)")
         elif num_bytes_length > NUMBER_AS_TEXT_CHARS:
-            raise Exception("string representation of number too long")
+            errors._raise_from_string(exceptions.DatabaseError,
+                                      "invalid number (too long)")
 
         # check to see if number is negative (first character is '-')
         ptr = num_bytes
@@ -880,7 +882,8 @@ cdef class WriteBuffer:
             if ptr[pos] == b'.' or ptr[pos] == b'e' or ptr[pos] == b'E':
                 break
             if ptr[pos] < b'0' or ptr[pos] > b'9':
-                raise Exception("invalid string representation of number")
+                message = "invalid number"
+                errors._raise_from_string(exceptions.DatabaseError, message)
             digit = ptr[pos] - <uint8_t> b'0'
             pos += 1
             if digit == 0 and num_digits == 0:
@@ -915,10 +918,12 @@ cdef class WriteBuffer:
             exponent_pos = pos
             while pos < num_bytes_length:
                 if ptr[pos] < b'0' or ptr[pos] > b'9':
-                    raise Exception("invalid exponent")
+                    msg = "invalid number (exponent invalid)"
+                    errors._raise_from_string(exceptions.DatabaseError, msg)
                 pos += 1
             if exponent_pos == pos:
-                raise Exception("no digits in exponent")
+                errors._raise_from_string(exceptions.DatabaseError,
+                                          "invalid number (exponent empty)")
             exponent = <int16_t> int(ptr[exponent_pos:pos])
             if exponent_is_negative:
                 exponent = -exponent
@@ -927,7 +932,8 @@ cdef class WriteBuffer:
         # if there is anything left in the string, that indicates an invalid
         # number as well
         if pos < num_bytes_length:
-            raise Exception("invalid number")
+            msg = "invalid number (content after number)"
+            errors._raise_from_string(exceptions.DatabaseError, msg)
 
         # skip trailing zeros
         while num_digits > 0 and digits[num_digits - 1] == 0:
@@ -937,7 +943,8 @@ cdef class WriteBuffer:
         # digits also cannot exceed the maximum precision of Oracle numbers
         if num_digits > NUMBER_MAX_DIGITS or decimal_point_index > 126 \
                 or decimal_point_index < -129:
-            raise Exception("value cannot be represented as an Oracle number")
+            msg = "value cannot be represented as an Oracle number"
+            errors._raise_from_string(exceptions.DatabaseError, msg)
 
         # if the exponent is odd, prepend a zero
         if (decimal_point_index > 0 and decimal_point_index % 2 == 1) \
