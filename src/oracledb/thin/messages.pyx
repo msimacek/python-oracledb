@@ -584,6 +584,8 @@ cdef class MessageWithData(Message):
             buf.write_bytes_chunked(value)
         elif ora_type_num == TNS_DATA_TYPE_NUMBER \
                 or ora_type_num == TNS_DATA_TYPE_BINARY_INTEGER:
+            if isinstance(value, bool):
+                value = int(value)
             buf.write_oracle_number(str(value).encode())
         elif ora_type_num == TNS_DATA_TYPE_DATE \
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
