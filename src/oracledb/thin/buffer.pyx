@@ -947,8 +947,7 @@ cdef class WriteBuffer:
             errors._raise_from_string(exceptions.DatabaseError, msg)
 
         # if the exponent is odd, prepend a zero
-        if (decimal_point_index > 0 and decimal_point_index % 2 == 1) \
-                or (decimal_point_index < 0 and decimal_point_index % 2 == -1):
+        if decimal_point_index % 2 == 1:
             prepend_zero = True
             if num_digits > 0:
                 digits[num_digits] = 0
@@ -977,7 +976,7 @@ cdef class WriteBuffer:
             return 0
 
         # write the exponent
-        exponent_on_wire = <int8_t> ((decimal_point_index - 2) / 2 + 193)
+        exponent_on_wire = <int8_t> (decimal_point_index / 2) + 192
         if is_negative:
             exponent_on_wire = ~exponent_on_wire
         self.write_uint8(exponent_on_wire)
