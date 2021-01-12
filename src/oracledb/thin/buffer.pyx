@@ -557,7 +557,7 @@ cdef class ReadBuffer:
                                                  num_bytes).decode()
         if is_integer:
             return int(text)
-        return decimal.Decimal(text)
+        return float(text)
 
     cdef object read_rowid(self):
         cdef:
