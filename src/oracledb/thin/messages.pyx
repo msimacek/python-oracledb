@@ -382,7 +382,10 @@ cdef class MessageWithData(Message):
             Message._process_error_info(self, buf)
             self.cursor._statement._cursor_id = self.error_info.cursor_id
             self.cursor.rowcount = self.error_info.rowcount
-            self.cursor._lastrowid = self.error_info.rowid
+            if self.error_info.rowcount > 0:
+                self.cursor._lastrowid = self.error_info.rowid
+            else:
+                self.cursor._lastrowid = None
             self.cursor._batcherrors = self.error_info.batcherrors
             if self.error_info.num == TNS_ERR_NO_DATA_FOUND:
                 self.error_info.num = 0
