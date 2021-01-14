@@ -492,6 +492,8 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiConn_getStmtCacheSize(dpiConn *conn, uint32_t *cacheSize) nogil
 
+    int dpiConn_getCallTimeout(dpiConn *conn, uint32_t *value) nogil
+
     int dpiConn_newMsgProps(dpiConn *conn, dpiMsgProps **props) nogil
 
     int dpiConn_newQueue(dpiConn *conn, const char *name,
@@ -542,6 +544,8 @@ cdef extern from "odpi/embed/dpi.c":
             uint32_t valueLength) nogil
 
     int dpiConn_setStmtCacheSize(dpiConn *conn, uint32_t cacheSize) nogil
+
+    int dpiConn_setCallTimeout(dpiConn *conn, uint32_t value) nogil
 
     int dpiConn_subscribe(dpiConn *conn, dpiSubscrCreateParams *params,
             dpiSubscr **subscr) nogil

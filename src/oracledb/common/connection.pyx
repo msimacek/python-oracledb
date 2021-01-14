@@ -126,6 +126,12 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
+    cdef int _get_calltimeout(self, uint32_t *value ) except -1:
+        """
+        Internal method for returning the call timeout.
+        """
+        raise NotImplementedError()
+
     cdef BaseDbObjectType _get_type(self, str name):
         """
         Internal method for returning an object type given its name.
@@ -207,6 +213,12 @@ cdef class BaseConnection:
     cdef int _set_stmtcachesize(self, uint32_t value) except -1:
         """
         Internal method for setting the size of the statement cache.
+        """
+        raise NotImplementedError()
+
+    cdef int _set_calltimeout(self, uint32_t value) except -1:
+        """
+        Internal method for setting the call timeout.
         """
         raise NotImplementedError()
 
@@ -435,6 +447,18 @@ cdef class BaseConnection:
     def stmtcachesize(self, value):
         self._verify_connected()
         self._set_stmtcachesize(value)
+
+    @property
+    def callTimeout(self):
+        cdef uint32_t value
+        self._verify_connected()
+        self._get_calltimeout(&value)
+        return value
+
+    @callTimeout.setter
+    def callTimeout(self, value):
+        self._verify_connected()
+        self._set_calltimeout(value)
 
     def subscribe(self, namespace=constants.SUBSCR_NAMESPACE_DBCHANGE,
                   protocol=constants.SUBSCR_PROTOCOL_CALLBACK, callback=None,

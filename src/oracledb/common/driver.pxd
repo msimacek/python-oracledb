@@ -70,6 +70,7 @@ cdef class BaseConnection:
     cdef bytes _get_ltxid(self)
     cdef BaseSodaDatabase _get_soda_database(self)
     cdef uint32_t _get_stmtcachesize(self) except *
+    cdef int _get_calltimeout(self, uint32_t *value) except -1
     cdef BaseDbObjectType _get_type(self, str name)
     cdef str _get_version(self)
     cdef int _ping(self) except -1
@@ -84,6 +85,7 @@ cdef class BaseConnection:
     cdef int _set_internal_name(self, str value) except -1
     cdef int _set_module(self, str value) except -1
     cdef int _set_stmtcachesize(self, uint32_t value) except -1
+    cdef int _set_calltimeout(self, uint32_t value) except -1
     cdef int _verify_connected(self) except -1
 
 

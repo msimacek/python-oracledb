@@ -357,6 +357,10 @@ cdef class Connection(BaseConnection):
             _raise_from_odpi()
         return size
 
+    cdef int _get_calltimeout(self, uint32_t *value) except -1:  
+        if dpiConn_getCallTimeout(self._handle, value) < 0:
+            _raise_from_odpi()
+
     cdef BaseDbObjectType _get_type(self, str name):
         cdef:
             BaseDbObjectType objtype
@@ -443,6 +447,10 @@ cdef class Connection(BaseConnection):
 
     cdef int _set_stmtcachesize(self, uint32_t value) except -1:
         if dpiConn_setStmtCacheSize(self._handle, value) < 0:
+            _raise_from_odpi()
+
+    cdef int _set_calltimeout(self, uint32_t value) except -1:
+        if dpiConn_setCallTimeout(self._handle, value) < 0:
             _raise_from_odpi()
 
     cdef int _set_text_attr(self, dpiConnSetTextAttrFunc func,
