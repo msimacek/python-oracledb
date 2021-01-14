@@ -357,7 +357,7 @@ cdef class Connection(BaseConnection):
             _raise_from_odpi()
         return size
 
-    cdef int _get_calltimeout(self, uint32_t *value) except -1:  
+    cdef int _get_calltimeout(self, uint32_t *value) except -1:
         if dpiConn_getCallTimeout(self._handle, value) < 0:
             _raise_from_odpi()
 
