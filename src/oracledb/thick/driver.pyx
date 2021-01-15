@@ -28,6 +28,7 @@ from ..common.driver cimport BaseSodaCollection, BaseSodaDoc, BaseSodaDocCursor
 from ..common.driver cimport BaseSodaOperation, BaseQueue, BaseDeqOptions
 from ..common.driver cimport BaseEnqOptions, BaseMsgProps, BaseSubscription
 from ..common.driver cimport Message, MessageQuery, MessageRow, MessageTable
+from ..common.driver cimport NUM_TYPE_FLOAT, NUM_TYPE_INT, NUM_TYPE_DECIMAL
 from libc.string cimport memchr, memset
 
 include "odpi.pxd"

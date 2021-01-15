@@ -451,7 +451,8 @@ cdef class ReadBuffer:
             value = -value
         return value
 
-    cdef object read_oracle_number(self, uint8_t num_bytes):
+    cdef object read_oracle_number(self, uint8_t num_bytes,
+                                   int preferred_num_type):
         cdef uint8_t num_digits, byte, digit
         cdef bint is_positive, is_integer
         cdef int16_t decimal_point_index
@@ -555,8 +556,10 @@ cdef class ReadBuffer:
         # convert result to an integer or a decimal number
         text = cpython.PyBytes_FromStringAndSize(<char*> buf,
                                                  num_bytes).decode()
-        if is_integer:
+        if preferred_num_type == NUM_TYPE_INT and is_integer:
             return int(text)
+        elif preferred_num_type == NUM_TYPE_DECIMAL:
+            return decimal.Decimal(text)
         return float(text)
 
     cdef object read_rowid(self):

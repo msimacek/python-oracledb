@@ -13,6 +13,11 @@ cdef enum:
     FETCH_MODE_LAST = 0x0008
     FETCH_MODE_RELATIVE = 0x0040
 
+cdef enum:
+    NUM_TYPE_FLOAT = 0
+    NUM_TYPE_INT = 1
+    NUM_TYPE_DECIMAL = 2
+
 cdef class ApiType:
     cdef:
         readonly str name
@@ -33,9 +38,6 @@ cdef class DbType:
 
     @staticmethod
     cdef DbType _from_ora_type_and_csfrm(uint8_t ora_type_num, uint8_t csfrm)
-
-    @staticmethod
-    cdef DbType _from_type(object typ)
 
     @staticmethod
     cdef DbType _from_value(object value, uint32_t *size, bint is_plsql=*)
@@ -186,6 +188,7 @@ cdef class BaseVar:
         readonly bint nulls_allowed
         DbType _dbtype
         BaseDbObjectType _objtype
+        int _preferred_num_type
 
     cdef int _bind(self, BaseCursor cursor, str name=*,
                    uint32_t pos=*) except -1
@@ -194,6 +197,7 @@ cdef class BaseVar:
     cdef list _get_array_value(self, uint32_t num_elements)
     cdef object _get_single_value(self, uint32_t pos)
     cdef int _set_array_value(self, list value) except -1
+    cdef int _set_dbtype_from_type(self, object typ) except -1
     cdef int _set_single_value(self, uint32_t pos, object value) except -1
     cdef int _set_value(self, uint32_t pos, object value) except -1
 

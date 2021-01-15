@@ -152,15 +152,9 @@ cdef class BaseCursor:
         Internal method for creating a variable that can contain the specified
         type.
         """
-        cdef:
-            uint32_t size = 0
-            DbType dbtype
-            BaseVar var
+        cdef BaseVar var
         if value is None:
             return None
-        elif isinstance(value, int):
-            dbtype = DB_TYPE_VARCHAR
-            size = value
         elif isinstance(value, BaseVar):
             return value
         elif isinstance(value, list):
@@ -168,18 +162,18 @@ cdef class BaseCursor:
                 message = "expecting a list of two elements [type, numelems]"
                 errors._raise_from_string(exceptions.ProgrammingError, message)
             return self.arrayvar(*value)
-        else:
-            dbtype = DbType._from_type(value)
-            size = dbtype.default_size
         var = self._create_var()
-        var._dbtype = dbtype
-        var.num_elements = num_elements
-        var.size = size
-        if size > 0:
-            var.buffer_size = size * dbtype._buffer_size_factor
+        if isinstance(value, int):
+            var._dbtype = DB_TYPE_VARCHAR
+            var.size = value
         else:
-            var.buffer_size = dbtype._buffer_size_factor
-        var.is_array = False
+            var._set_dbtype_from_type(value)
+            var.size = var._dbtype.default_size
+        var.num_elements = num_elements
+        if var.size > 0:
+            var.buffer_size = var.size * var._dbtype._buffer_size_factor
+        else:
+            var.buffer_size = var._dbtype._buffer_size_factor
         var._finalize_init()
         return var
 
@@ -422,20 +416,17 @@ cdef class BaseCursor:
         Create an array variable associated with the cursor of the given type
         and size and return it.
         """
-        cdef:
-            DbType dbtype
-            BaseVar var
-        dbtype = DbType._from_type(typ)
+        cdef BaseVar var
         var = self._create_var()
+        var._set_dbtype_from_type(typ)
         var.is_array = True
-        var._dbtype = dbtype
         if isinstance(typ, BaseDbObjectType):
             var._objtype = typ
-        if dbtype.default_size > 0:
-            var.size = size or dbtype.default_size
-            var.buffer_size = var.size * dbtype._buffer_size_factor
+        if var._dbtype.default_size > 0:
+            var.size = size or var._dbtype.default_size
+            var.buffer_size = var.size * var._dbtype._buffer_size_factor
         else:
-            var.buffer_size = dbtype._buffer_size_factor
+            var.buffer_size = var._dbtype._buffer_size_factor
         if isinstance(value, list):
             var.num_elements = len(value)
         elif isinstance(value, int):
@@ -706,23 +697,20 @@ cdef class BaseCursor:
 
     def var(self, typ, size=0, arraysize=1, inconverter=None,
             outconverter=None, typename=None, encoding_errors=None):
-        cdef:
-            DbType dbtype
-            BaseVar var
+        cdef BaseVar var
         var = self._create_var()
         if isinstance(typ, BaseDbObjectType):
             var._objtype = typ
-            dbtype = DB_TYPE_OBJECT
+            var._dbtype = DB_TYPE_OBJECT
         else:
-            dbtype = DbType._from_type(typ)
-        var._dbtype = dbtype
+            var._set_dbtype_from_type(typ)
         if typename:
             var._objtype = self.connection._get_type(typename)
-        if dbtype.default_size > 0:
-            var.size = size or dbtype.default_size
-            var.buffer_size = var.size * dbtype._buffer_size_factor
+        if var._dbtype.default_size > 0:
+            var.size = size or var._dbtype.default_size
+            var.buffer_size = var.size * var._dbtype._buffer_size_factor
         else:
-            var.buffer_size = dbtype._buffer_size_factor
+            var.buffer_size = var._dbtype._buffer_size_factor
         var.num_elements = arraysize
         var.inconverter = inconverter
         var.outconverter = outconverter

@@ -29,6 +29,7 @@ cydatetime.import_datetime()
 from .. import constants, errors, exceptions
 
 from ..common.driver cimport get_exception_class
+from ..common.driver cimport NUM_TYPE_FLOAT, NUM_TYPE_INT, NUM_TYPE_DECIMAL
 from ..common.driver cimport BaseConnection, BaseCursor, BaseVar, DbType
 from ..common.driver cimport BaseLob
 

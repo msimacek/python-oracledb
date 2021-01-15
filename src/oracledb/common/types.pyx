@@ -66,40 +66,6 @@ cdef class DbType:
         errors._raise_from_string(exceptions.NotSupportedError, msg)
 
     @staticmethod
-    cdef DbType _from_type(object typ):
-        cdef ApiType apitype
-        if isinstance(typ, DbType):
-            return typ
-        elif isinstance(typ, ApiType):
-            apitype = typ
-            return apitype.dbtypes[0]
-        elif isinstance(typ, BaseDbObjectType):
-            return DB_TYPE_OBJECT
-        elif not isinstance(typ, type):
-            errors._raise_from_string(TypeError, "expecting type")
-        elif typ is int:
-            return DB_TYPE_NUMBER
-        elif typ is float:
-            return DB_TYPE_NUMBER
-        elif typ is str:
-            return DB_TYPE_VARCHAR
-        elif typ is bytes:
-            return DB_TYPE_RAW
-        elif typ is decimal.Decimal:
-            return DB_TYPE_NUMBER
-        elif typ is bool:
-            return DB_TYPE_BOOLEAN
-        elif typ is datetime.date:
-            return DB_TYPE_DATE
-        elif typ is datetime.datetime:
-            return DB_TYPE_TIMESTAMP
-        elif typ is datetime.timedelta:
-            return DB_TYPE_INTERVAL_DS
-        else:
-            errors._raise_from_string(exceptions.NotSupportedError,
-                                      f"Python type {typ} not supported")
-
-    @staticmethod
     cdef DbType _from_value(object value, uint32_t *size, bint is_plsql=True):
         cdef BaseLob lob
         if value is None:

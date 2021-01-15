@@ -241,7 +241,7 @@ cdef class Cursor(BaseCursor):
                                                   type_info.objectType)
         if dbtype.num == DPI_ORACLE_TYPE_NUMBER:
             if var.scale == 0 or (var.scale == -127 and var.precision == 0):
-                var._number_as_int = True
+                var._preferred_num_type = NUM_TYPE_INT
         var._finalize_init()
         return var
 

@@ -208,7 +208,8 @@ cdef class MessageWithData(Message):
             if ora_type_num == TNS_DATA_TYPE_LONG_RAW:
                 buf.skip_bytes(2)
         elif ora_type_num == TNS_DATA_TYPE_NUMBER:
-            column_value = buf.read_oracle_number(num_bytes)
+            column_value = buf.read_oracle_number(num_bytes,
+                                                  var._preferred_num_type)
         elif ora_type_num == TNS_DATA_TYPE_DATE \
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_LTZ \
@@ -225,7 +226,7 @@ cdef class MessageWithData(Message):
         elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
             column_value = buf.read_binary_float()
         elif ora_type_num == TNS_DATA_TYPE_BINARY_INTEGER:
-            column_value = int(buf.read_oracle_number(num_bytes))
+            column_value = buf.read_oracle_number(num_bytes, NUM_TYPE_INT)
         elif ora_type_num == TNS_DATA_TYPE_CURSOR:
             if not self.in_fetch:
                 cursor = var._values[pos]
@@ -288,6 +289,9 @@ cdef class MessageWithData(Message):
         var.size = buf.read_ub4()
         if data_type == TNS_DATA_TYPE_RAW:
             var.size = var.buffer_size
+        elif data_type == TNS_DATA_TYPE_NUMBER:
+            if var.scale == 0 or (var.scale == -127 and var.precision == 0):
+                var._preferred_num_type = NUM_TYPE_INT
         buf.read_ub4()                      # oaccolid
         var.nulls_allowed = buf.read_uint8()
         buf.skip_bytes(1)                   # v7 length of name

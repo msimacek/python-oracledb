@@ -55,6 +55,46 @@ cdef class BaseVar:
         """
         raise NotImplementedError()
 
+    cdef int _set_dbtype_from_type(self, object typ) except -1:
+        """
+        Internal method used to set the database type associated with the
+        variable given a type.
+        """
+        cdef ApiType apitype
+        if isinstance(typ, DbType):
+            self._dbtype = typ
+        elif isinstance(typ, ApiType):
+            apitype = typ
+            self._dbtype = apitype.dbtypes[0]
+        elif isinstance(typ, BaseDbObjectType):
+            self._dbtype = DB_TYPE_OBJECT
+        elif not isinstance(typ, type):
+            errors._raise_from_string(TypeError, "expecting type")
+        elif typ is int:
+            self._dbtype = DB_TYPE_NUMBER
+            self._preferred_num_type = NUM_TYPE_INT
+        elif typ is float:
+            self._dbtype = DB_TYPE_NUMBER
+            self._preferred_num_type = NUM_TYPE_FLOAT
+        elif typ is str:
+            self._dbtype = DB_TYPE_VARCHAR
+        elif typ is bytes:
+            self._dbtype = DB_TYPE_RAW
+        elif typ is decimal.Decimal:
+            self._dbtype = DB_TYPE_NUMBER
+            self._preferred_num_type = NUM_TYPE_DECIMAL
+        elif typ is bool:
+            self._dbtype = DB_TYPE_BOOLEAN
+        elif typ is datetime.date:
+            self._dbtype = DB_TYPE_DATE
+        elif typ is datetime.datetime:
+            self._dbtype = DB_TYPE_TIMESTAMP
+        elif typ is datetime.timedelta:
+            self._dbtype = DB_TYPE_INTERVAL_DS
+        else:
+            errors._raise_from_string(exceptions.NotSupportedError,
+                                      f"Python type {typ} not supported")
+
     cdef int _set_single_value(self, uint32_t pos, object value) except -1:
         """
         Set a single element of the variable to the specified value.

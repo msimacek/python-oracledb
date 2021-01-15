@@ -13,7 +13,6 @@ cdef class Var(BaseVar):
         dpiData *_data
         Connection _connection
         uint32_t _native_type_num
-        bint _number_as_int
         bint _is_value_set
         bint _get_returned_data
 
@@ -111,7 +110,7 @@ cdef class Var(BaseVar):
         if not data.isNull:
             value = _convert_to_python(self._connection, self._dbtype,
                                        self._objtype, &data.value,
-                                       self._number_as_int)
+                                       self._preferred_num_type)
             if self.outconverter:
                 value = self.outconverter(value)
             return value
