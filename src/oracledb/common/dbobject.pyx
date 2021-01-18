@@ -82,7 +82,7 @@ cdef class BaseDbObject:
         """
         raise NotImplementedError()
 
-    cdef bint _exists_by_index(self, int32_t index) except *:
+    cdef int _exists_by_index(self, int32_t index, bint *exists) except -1:
         """
         Internal method for determining if an entry exists in a collection that
         is indexed by integers.
@@ -132,7 +132,7 @@ cdef class BaseDbObject:
         """
         raise NotImplementedError()
 
-    cdef int32_t _get_size(self) except *:
+    cdef int _get_size(self, int32_t *size) except -1:
         """
         Internal method for getting the size of a collection.
         """
@@ -213,7 +213,9 @@ cdef class BaseDbObject:
         Return a boolean indicating if an entry exists in the collection with
         the given index.
         """
-        return self._exists_by_index(index)
+        cdef bint exists
+        self._exists_by_index(index, &exists)
+        return exists
 
     def extend(self, values):
         """
@@ -286,7 +288,9 @@ cdef class BaseDbObject:
         """
         Returns the number of elements in the collection
         """
-        return self._get_size()
+        cdef int32_t size
+        self._get_size(&size)
+        return size
 
     def trim(self, num_to_trim):
         """

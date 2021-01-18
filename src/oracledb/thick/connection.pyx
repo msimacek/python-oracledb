@@ -351,11 +351,9 @@ cdef class Connection(BaseConnection):
             _raise_from_odpi()
         return db
 
-    cdef uint32_t _get_stmtcachesize(self) except *:
-        cdef uint32_t size
-        if dpiConn_getStmtCacheSize(self._handle, &size) < 0:
+    cdef int _get_stmtcachesize(self, uint32_t *value) except -1:
+        if dpiConn_getStmtCacheSize(self._handle, value) < 0:
             _raise_from_odpi()
-        return size
 
     cdef int _get_calltimeout(self, uint32_t *value) except -1:
         if dpiConn_getCallTimeout(self._handle, value) < 0:
@@ -406,13 +404,12 @@ cdef class Connection(BaseConnection):
         if status < 0:
             _raise_from_odpi()
 
-    cdef bint _prepare(self) except *:
-        cdef int commit_needed, status
+    cdef int _prepare(self, bint *commit_needed) except -1:
+        cdef int status
         with nogil:
-            status = dpiConn_prepareDistribTrans(self._handle, &commit_needed)
+            status = dpiConn_prepareDistribTrans(self._handle, commit_needed)
         if status < 0:
             _raise_from_odpi()
-        return commit_needed
 
     cdef int _rollback(self) except -1:
         cdef int status

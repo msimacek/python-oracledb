@@ -133,11 +133,9 @@ cdef class DbObject(BaseDbObject):
         if dpiObject_deleteElementByIndex(self._handle, index) < 0:
             _raise_from_odpi()
 
-    cdef bint _exists_by_index(self, int32_t index) except *:
-        cdef bint exists
-        if dpiObject_getElementExistsByIndex(self._handle, index, &exists) < 0:
+    cdef int _exists_by_index(self, int32_t index, bint* exists) except -1:
+        if dpiObject_getElementExistsByIndex(self._handle, index, exists) < 0:
             _raise_from_odpi()
-        return exists
 
     cdef int _convert_from_python(self, object value, DbType dbtype,
                                   DbObjectType objtype, dpiData *data,
@@ -205,11 +203,9 @@ cdef class DbObject(BaseDbObject):
         if dpiObject_getPrevIndex(self._handle, index, prev_index, exists) < 0:
             _raise_from_odpi()
 
-    cdef int32_t _get_size(self) except *:
-        cdef int32_t size
-        if dpiObject_getSize(self._handle, &size) < 0:
+    cdef int _get_size(self, int32_t *size) except -1:
+        if dpiObject_getSize(self._handle, size) < 0:
             _raise_from_odpi()
-        return size
 
     @staticmethod
     cdef DbObject _new_object(DbObjectType objtype, dpiObject *handle):

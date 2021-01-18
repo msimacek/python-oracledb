@@ -509,7 +509,7 @@ cdef extern from "odpi/embed/dpi.c":
 
     int dpiConn_ping(dpiConn *conn) nogil
 
-    int dpiConn_prepareDistribTrans(dpiConn *conn, int *commitNeeded) nogil
+    int dpiConn_prepareDistribTrans(dpiConn *conn, bint *commitNeeded) nogil
 
     int dpiConn_prepareStmt(dpiConn *conn, int scrollable, const char *sql,
             uint32_t sqlLength, const char *tag, uint32_t tagLength,

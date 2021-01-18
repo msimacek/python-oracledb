@@ -71,12 +71,12 @@ cdef class BaseConnection:
     cdef str _get_internal_name(self)
     cdef bytes _get_ltxid(self)
     cdef BaseSodaDatabase _get_soda_database(self)
-    cdef uint32_t _get_stmtcachesize(self) except *
+    cdef int _get_stmtcachesize(self, uint32_t *value) except -1
     cdef int _get_calltimeout(self, uint32_t *value) except -1
     cdef BaseDbObjectType _get_type(self, str name)
     cdef str _get_version(self)
     cdef int _ping(self) except -1
-    cdef bint _prepare(self) except *
+    cdef int _prepare(self, bint *commit_needed) except -1
     cdef int _rollback(self) except -1
     cdef int _set_action(self, str value) except -1
     cdef int _set_client_identifier(self, str value) except -1
@@ -249,7 +249,7 @@ cdef class BaseDbObject:
     cdef int _append(self, object value) except -1
     cdef object _copy(self)
     cdef int _delete_by_index(self, int32_t index) except -1
-    cdef bint _exists_by_index(self, int32_t index) except *
+    cdef int _exists_by_index(self, int32_t index, bint* exists) except -1
     cdef object _get_attr_value(self, BaseDbObjectAttr attr)
     cdef object _get_element_by_index(self, int32_t index)
     cdef int _get_first_index(self, int32_t* index, bint* exists) except -1
@@ -258,7 +258,7 @@ cdef class BaseDbObject:
                              bint* exists) except -1
     cdef int _get_prev_index(self, int32_t index, int32_t* prev_index,
                              bint* exists) except -1
-    cdef int32_t _get_size(self) except *
+    cdef int _get_size(self, int32_t *size) except -1
     cdef int _set_attr_value(self, BaseDbObjectAttr attr,
                              object value) except -1
     cdef int _set_element_by_index(self, int32_t index, object value) except -1

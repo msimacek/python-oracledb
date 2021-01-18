@@ -120,13 +120,13 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
-    cdef uint32_t _get_stmtcachesize(self) except *:
+    cdef int _get_stmtcachesize(self, uint32_t *value) except -1:
         """
         Internal method for returning the size of the statement cache.
         """
         raise NotImplementedError()
 
-    cdef int _get_calltimeout(self, uint32_t *value ) except -1:
+    cdef int _get_calltimeout(self, uint32_t *value) except -1:
         """
         Internal method for returning the call timeout.
         """
@@ -150,7 +150,7 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
-    cdef bint _prepare(self) except *:
+    cdef int _prepare(self, bint *commit_needed) except -1:
         """
         Internal method for preparing to commit a distributed transaction.
         """
@@ -415,8 +415,10 @@ cdef class BaseConnection:
         Prepares the distributed transaction for commit. Returns a boolean
         indicating if a commit is in fact needed.
         """
+        cdef bint commit_needed
         self._verify_connected()
-        return self._prepare()
+        self._prepare(&commit_needed)
+        return commit_needed
 
     def queue(self, name, payloadType=None):
         """
@@ -440,8 +442,10 @@ cdef class BaseConnection:
 
     @property
     def stmtcachesize(self):
+        cdef uint32_t value
         self._verify_connected()
-        return self._get_stmtcachesize()
+        self._get_stmtcachesize(&value)
+        return value
 
     @stmtcachesize.setter
     def stmtcachesize(self, value):
