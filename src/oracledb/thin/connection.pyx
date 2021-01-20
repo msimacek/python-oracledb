@@ -22,10 +22,14 @@ cdef class Connection(BaseConnection):
         bint _module_modified
         object __weakref__
         object _finalizer
+        Pool _pool
 
     cdef int _close(self) except -1:
-        self._protocol._close()
-        self._finalizer.detach()
+        if self._pool is not None:
+            self._pool._free_busy_connection(self)
+        else:
+            self._protocol._close()
+            self._finalizer.detach()
 
     cdef int _commit(self) except -1:
         self._protocol._commit()

@@ -1,0 +1,268 @@
+#------------------------------------------------------------------------------
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+# pool.pyx
+#   Cython file defining the pool class (embedded in driver.pyx).
+#------------------------------------------------------------------------------
+
+cdef class Pool(BasePool):
+
+    cdef:
+        list _free_new_connections
+        list _free_used_connections
+        list _busy_connections
+        uint8_t _getmode
+        uint32_t _stmt_cache_size
+        uint32_t _timeout
+        uint32_t _port
+        uint32_t _max_lifetime_session
+        uint32_t _num_pending_requests
+        uint32_t _wait_timeout
+        object _create_exc
+        object _create_thread
+        object _create_thread_condition
+        object _condition
+        str _host
+        str _connect_string
+        str _password
+        bint _shutdown
+
+    def __init__(self, user, dsn, min, max, increment, homogeneous, port,
+                 host, connect_string, password, getmode, wait_timeout):
+        self.username = user
+        self.dsn = dsn
+        self.min = min
+        self.max = max
+        self.increment = increment
+        self.homogeneous = homogeneous
+        self._port = port
+        self._host = host
+        self._connect_string = connect_string
+        self._password = password
+        self._getmode = getmode
+        self._wait_timeout = wait_timeout
+        self._free_new_connections = []
+        self._free_used_connections = []
+        self._busy_connections = []
+        self._condition = threading.Condition()
+        self._create_thread_condition = threading.Condition()
+        self._create_thread = threading.Thread(target=self._create_connections,
+                                               daemon=True)
+        self._create_thread.start()
+
+    cdef BaseConnection _acquire(self, str user, str password, str cclass,
+                                 uint32_t purity, str tag, bint match_any_tag,
+                                 list sharding_key, list super_sharding_key):
+        cdef:
+            Connection connection
+            object wait_timeout
+            object predicate
+            object exc
+
+        # session tagging has not been implemented yet
+        if tag is not None:
+            raise NotImplementedError("Tagging has not been implemented yet")
+
+        # determine wait timeout to use
+        if self._getmode == constants.POOL_GETMODE_TIMEDWAIT:
+            wait_timeout = self._wait_timeout / 1000
+        elif self._getmode == constants.POOL_GETMODE_WAIT \
+                or self._getmode == constants.POOL_GETMODE_FORCEGET:
+            wait_timeout = None
+        else:
+            wait_timeout = 0
+
+        # ensure manipulation of busy and free lists are done with the lock
+        # held (in order to accommodate multiple threads attempting to acquire
+        # a connection simultaneously)
+        with self._condition:
+
+            # wait for pool to have room available; if no room available after
+            # timeout has been reached (if set), raise an exception
+            predicate = lambda: self._has_room(purity)
+            self._num_pending_requests += 1
+            if not self._condition.wait_for(predicate, wait_timeout):
+                message = "No connection available in pool"
+                self._num_pending_requests -= 1
+                errors._raise_from_string(exceptions.DatabaseError, message)
+
+            # if an exception was raised while creating a connection, raise it
+            # now (and clear it so subsequent attempts will try to create a
+            # connection again)
+            if self._create_exc is not None:
+                exc = self._create_exc
+                self._create_exc = None
+                raise exc
+
+            # if a free new connection is available, it can be used without any
+            # other considerations
+            if self._free_new_connections:
+                connection = self._free_new_connections.pop()
+                self._busy_connections.append(connection)
+
+            # if a free used connection is available and the purity allows the
+            # use of such a connection, it can also be used directly;
+            # otherwise, if a new connection is required, that connection will
+            # be closed and a new one will be created instead
+            elif self._free_used_connections:
+                connection = self._free_used_connections.pop(0)
+                connection._is_connected = True
+                if purity == constants.PURITY_NEW:
+                    connection._pool = None
+                    connection._close()
+                    connection = self._create_connection()
+                self._busy_connections.append(connection)
+
+            # finally, if no new or used free connections are available, the
+            # get mode must be POOL_GETMODE_FORCEGET; in this case a brand new
+            # connection is created which is not returned to the pool
+            else:
+                connection = self._create_connection()
+                connection._pool = None
+
+            self._num_pending_requests -= 1
+            return connection
+
+    cdef Connection _create_connection(self):
+        """
+        Create a single connection using the pool's information. This
+        connection may be placed in the pool or may be returned directly (such
+        as when the pool is full and POOL_GETMODE_FORCEWAIT is being used).
+        """
+        cdef Connection connection
+        connection = Connection(self.username, self.dsn)
+        connection._connect(self._host, self._port, self._connect_string,
+                            self._password)
+        connection._pool = self
+        return connection
+
+    def _create_connections(self):
+        """
+        Method which runs in a dedicated thread and is used to create
+        connections when needed. This happens initially when the pool is
+        created (pool.min connections are created) and when no free connections
+        are available (pool.increment up to a maximum of pool.max connections
+        are created).
+        """
+        cdef:
+            uint32_t open_count, num_conns = 0, i
+            Connection connection
+            bint wait, shutdown
+
+        # create the initial set of connections requested
+        self._create_connections_helper(self.min)
+
+        # wait for requests to create additional connections and then create
+        # them; continue creating connections (self.increment at a time) up
+        # until the maximum number of connections exists in the pool
+        while True:
+            with self._condition:
+                wait = self._num_pending_requests == 0 \
+                        or self._create_exc is not None
+            if wait:
+                with self._create_thread_condition:
+                    self._create_thread_condition.wait()
+            if self._shutdown:
+                break
+            with self._condition:
+                self._get_open_count(&open_count)
+                num_conns = min(self.increment, self.max - open_count)
+            self._create_connections_helper(num_conns)
+
+    cdef int _create_connections_helper(self, uint32_t num_conns) except -1:
+        """
+        Helper method which creates the specified number of connections. In
+        order to prevent the thread from dying, exceptions are captured and
+        stored on the pool object. The next attempt to acquire a connection
+        will return this exception.
+        """
+        cdef:
+            Connection conn
+            object exc
+            uint32_t i
+        for i in range(num_conns):
+            conn = None
+            try:
+                conn = self._create_connection()
+            except Exception as e:
+                exc = e
+            with self._condition:
+                if conn is not None:
+                    self._free_new_connections.append(conn)
+                else:
+                    self._create_exc = exc
+                self._condition.notify()
+                if conn is None:
+                    break
+
+    cdef int _drop(self, BaseConnection connection) except -1:
+        cdef Connection thin_connection = <Connection> connection
+        with self._condition:
+            self._busy_connections.remove(thin_connection)
+            self._condition.notify()
+        thin_connection._pool = None
+        thin_connection._close()
+
+    cdef int _free_busy_connection(self, Connection connection) except -1:
+        connection._rollback()
+        with self._condition:
+            self._busy_connections.remove(connection)
+            self._free_used_connections.append(connection)
+            self._condition.notify()
+
+    cdef int _get_busy_count(self, uint32_t *value) except -1:
+        value[0] = len(self._busy_connections)
+
+    cdef int _get_getmode(self, uint8_t *value) except -1:
+        value[0] = self._getmode
+
+    cdef int _get_max_lifetime_session(self, uint32_t *value) except -1:
+        value[0] = self._max_lifetime_session
+
+    cdef int _get_open_count(self, uint32_t *value) except -1:
+        value[0] = len(self._busy_connections) + \
+                   len(self._free_used_connections) + \
+                   len(self._free_new_connections)
+
+    cdef int _get_stmt_cache_size(self, uint32_t *value) except -1:
+        value[0] = self._stmt_cache_size
+
+    cdef int _get_timeout(self, uint32_t *value) except -1:
+        value[0] = self._timeout
+
+    def _has_room(self, purity):
+        """
+        Returns a boolean indicating if room is available in the pool. This is
+        true if there are free connections available. If no free connections
+        are available but there is free space available in the pool, the
+        creation thread is notified to create additional connections.
+        """
+        cdef uint32_t open_count
+        if self._create_exc is not None or self._free_new_connections:
+            return True
+        self._get_open_count(&open_count)
+        if self._free_used_connections:
+            if purity != constants.PURITY_NEW or open_count == self.max:
+                return True
+        if open_count < self.max:
+            with self._create_thread_condition:
+                self._create_thread_condition.notify()
+            return False
+        return self._getmode == constants.POOL_GETMODE_FORCEGET
+
+    cdef int _release(self, BaseConnection connection, str tag) except -1:
+        self._free_busy_connection(<Connection> connection)
+
+    cdef int _set_getmode(self, uint8_t value) except -1:
+        self._getmode = value
+
+    cdef int _set_max_lifetime_session(self, uint32_t value) except -1:
+        self._max_lifetime_session = value
+
+    cdef int _set_stmt_cache_size(self, uint32_t value) except -1:
+        self._stmt_cache_size = value
+
+    cdef int _set_timeout(self, uint32_t value) except -1:
+        self._timeout = value

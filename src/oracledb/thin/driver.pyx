@@ -22,6 +22,7 @@ import os
 import socket
 import re
 import sys
+import threading
 import weakref
 
 cydatetime.import_datetime()
@@ -31,7 +32,7 @@ from .. import constants, errors, exceptions
 from ..common.driver cimport get_exception_class
 from ..common.driver cimport NUM_TYPE_FLOAT, NUM_TYPE_INT, NUM_TYPE_DECIMAL
 from ..common.driver cimport BaseConnection, BaseCursor, BaseVar, DbType
-from ..common.driver cimport BaseLob
+from ..common.driver cimport BaseLob, BasePool
 
 include "constants.pxi"
 include "utils.pyx"
@@ -46,3 +47,4 @@ include "statement.pyx"
 include "cursor.pyx"
 include "var.pyx"
 include "lob.pyx"
+include "pool.pyx"

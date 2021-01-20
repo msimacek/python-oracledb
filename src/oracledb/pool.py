@@ -8,7 +8,7 @@ from .thin import driver as thin_driver
 
 def create_pool(dsn=None, *, user=None, password=None, host=None, port=None,
                 service_name=None, thin=True, min=1, max=2, increment=1,
-                threaded=False, getmode=constants.POOL_GETMODE_NOWAIT,
+                threaded=False, getmode=constants.POOL_GETMODE_WAIT,
                 events=False, homogeneous=True, externalauth=False,
                 edition=None, timeout=0, wait_timeout=0,
                 max_lifetime_session=0, session_callback=None,
@@ -19,8 +19,9 @@ def create_pool(dsn=None, *, user=None, password=None, host=None, port=None,
                                         service_name, thin)
     dsn, user, password, host, port, connect_data = result
     if thin:
-        pool = thin_driver.Pool(user, dsn, min, max, increment, homogeneous)
-        pool._create(host, port, connect_data, password)
+        pool = thin_driver.Pool(user, dsn, min, max, increment, homogeneous,
+                                port, host, connect_data, password, getmode,
+                                wait_timeout)
     else:
         pool = thick_driver.Pool(user, dsn, min, max, increment, homogeneous)
         pool._create(password=password, threaded=threaded, getmode=getmode,
