@@ -198,8 +198,37 @@ cdef class SodaCollection(BaseSodaCollection):
             _raise_from_odpi()
         self.name = name[:name_len].decode()
 
-    cdef object _insert_many(self, list documents, bint return_doc):
-        raise NotImplementedError()
+    cdef object _insert_many(self, list documents, bint return_docs):
+        cdef:
+            dpiSodaDoc **output_handles = NULL
+            uint32_t i, num_docs, flags
+            dpiSodaDoc **handles
+            ssize_t num_bytes
+            list output_docs
+            SodaDoc doc
+            int status
+        num_docs = <uint32_t> len(documents)
+        num_bytes = num_docs * sizeof(dpiSodaDoc *)
+        handles = <dpiSodaDoc**> cpython.PyMem_Malloc(num_bytes)
+        if return_docs:
+            output_handles = <dpiSodaDoc**> _calloc(num_docs,
+                                                    sizeof(dpiSodaDoc*))
+        for i, doc in enumerate(documents):
+            handles[i] = doc._handle
+        self._get_flags(&flags)
+        with nogil:
+            status = dpiSodaColl_insertMany(self._handle, num_docs, handles,
+                                            flags, output_handles)
+        if status < 0:
+            _raise_from_odpi()
+        if return_docs:
+            output_docs = []
+            for i in range(num_docs):
+                doc = SodaDoc.__new__(SodaDoc)
+                doc._db = self._db
+                doc._handle = output_handles[i]
+                output_docs.append(doc)
+            return output_docs
 
     cdef object _insert_one(self, BaseSodaDoc doc, bint return_doc):
         cdef:
