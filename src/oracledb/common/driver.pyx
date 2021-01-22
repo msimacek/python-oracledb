@@ -71,7 +71,7 @@ cdef object get_exception_class(int32_t code):
     if is_code_in_array(code, INTEGRITY_ERROR_CODES):
         return exceptions.IntegrityError
     if is_code_in_array(code, OPERATIONAL_ERROR_CODES):
-        return exceptions.IntegrityError
+        return exceptions.OperationalError
     return exceptions.DatabaseError
 
 
