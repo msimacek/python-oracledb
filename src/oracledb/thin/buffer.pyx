@@ -649,6 +649,7 @@ cdef class WriteBuffer:
         object _socket
         int _view_count
         uint8_t _seq_num
+        bint _packet_sent
 
     def __cinit__(self, object sock, ssize_t max_size, Capabilities caps):
         self._socket = sock
@@ -696,6 +697,7 @@ cdef class WriteBuffer:
         if DEBUG_PACKETS:
             _print_packet("Sending packet:", memoryview(self))
         self._socket.send(memoryview(self))
+        self._packet_sent = True
         self._actual_size = PACKET_HEADER_SIZE
 
     cdef inline ssize_t bytes_left(self):
@@ -718,6 +720,7 @@ cdef class WriteBuffer:
         is retained just in case a request spans multiple packets. The packet
         header (8 bytes in length) is written when a packet is actually being
         sent and so is skipped at this point"""
+        self._packet_sent = False
         self._packet_type = packet_type
         self._actual_size = PACKET_HEADER_SIZE
         if packet_type == TNS_PACKET_TYPE_DATA:

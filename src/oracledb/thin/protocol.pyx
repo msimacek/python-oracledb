@@ -16,6 +16,14 @@ cdef class Protocol:
         self._read_buf = ReadBuffer(sock, TNS_SDU, caps)
         self._write_buf = WriteBuffer(sock, TNS_SDU, caps)
 
+    cdef int _break(self):
+        cdef WriteBuffer buf = self._write_buf
+        buf.start_request(TNS_PACKET_TYPE_MARKER)
+        buf.write_uint8(1)
+        buf.write_uint8(0)
+        buf.write_uint8(TNS_MARKER_TYPE_BREAK)
+        buf.end_request()
+
     cpdef int _close(self) except -1:
         self._rollback()                    # rollback any transaction first
         self._process_message(LogoffMessage())
@@ -71,9 +79,15 @@ cdef class Protocol:
         self._process_message(PingMessage())
 
     cdef int _process_message(self, Message message) except -1:
-        message.send(self._write_buf)
-        self._receive_packet(message)
-        message.process(self._read_buf)
+        try:
+            message.send(self._write_buf)
+            self._receive_packet(message)
+            message.process(self._read_buf)
+        except:
+            if self._write_buf._packet_sent:
+                self._break()
+                self._reset()
+            raise
         if message.error_occurred:
             error = errors._Error(message.error_info.message,
                                   code=message.error_info.num,
@@ -87,16 +101,29 @@ cdef class Protocol:
             uint8_t packet_type
         self._read_buf.receive_packet(&packet_type)
         if packet_type == TNS_PACKET_TYPE_MARKER:
-
-            # on error a second packet is sent which is ignored
-            self._read_buf.receive_packet(&packet_type)
-
-            # write error request
-            buf.start_request(TNS_PACKET_TYPE_MARKER)
-            buf.write_bytes(b'\x01\x00\x02')
-            buf.end_request()
-            self._read_buf.receive_packet(&packet_type)
+            self._reset()
             message.error_occurred = True
+
+    cdef int _reset(self):
+        cdef:
+            WriteBuffer buf = self._write_buf
+            uint8_t packet_type
+
+        # send marker packet indicating a reset is desired
+        buf.start_request(TNS_PACKET_TYPE_MARKER)
+        buf.write_uint8(1)
+        buf.write_uint8(0)
+        buf.write_uint8(TNS_MARKER_TYPE_RESET)
+        buf.end_request()
+
+        # read and discard all packets until a marker packet is received
+        while True:
+            self._read_buf.receive_packet(&packet_type)
+            if packet_type == TNS_PACKET_TYPE_MARKER:
+                break
+
+        # read error packet
+        self._read_buf.receive_packet(&packet_type)
 
     cdef int _rollback(self) except -1:
         self._process_message(RollbackMessage())
