@@ -91,7 +91,6 @@ cdef class Connection(BaseConnection):
         if self._handle != NULL:
             dpiConn_release(self._handle)
 
-
     cdef int _begin(self, long format_id, str transaction_id,
                     str branch_id) except -1:
         cdef:

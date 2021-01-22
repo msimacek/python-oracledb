@@ -794,7 +794,7 @@ cdef class AuthMessage(Message):
         self.user_bytes_len = <uint8_t> len(self.user_bytes)
 
     def _encrypt_cbc(self, key, plain_text):
-        iv = b"\x00" * AES.block_size
+        iv = bytes(AES.block_size)
         b = AES.new(key, AES.MODE_CBC, iv)
         n = AES.block_size - len(plain_text) % AES.block_size
         if n:
@@ -820,7 +820,7 @@ cdef class AuthMessage(Message):
 
         # create combo key used for encrypting password
         b = bytearray(24)
-        for i in range (16, 40):
+        for i in range(16, 40):
             b[i - 16] = server_key[i] ^ client_key[i]
         part1 = hashlib.md5(b[:16]).digest()
         part2 = hashlib.md5(b[16:]).digest()
@@ -1187,7 +1187,7 @@ cdef class LobOpMessage(Message):
             buf.write_uint8(1)              # pointer (character set)
         else:
             buf.write_uint8(0)              # pointer (character set)
-        buf.write_uint8(0)              # pointer (amount)
+        buf.write_uint8(0)                  # pointer (amount)
         if self.operation == TNS_LOB_OP_CREATE_TEMP \
                 or self.operation == TNS_LOB_OP_IS_OPEN:
             buf.write_uint8(1)              # pointer (NULL LOB)
