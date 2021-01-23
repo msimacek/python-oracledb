@@ -453,7 +453,6 @@ cdef class MessageWithData(Message):
                     var = bind_info._bind_var
                     values[j] = self._process_column_data(buf, var, j)
                 bind_info._bind_var._values[self.row_index] = values
-            self.row_index += 1
         else:
             for i, var in enumerate(self.row_vars):
                 if var.is_array:
@@ -464,9 +463,9 @@ cdef class MessageWithData(Message):
                 else:
                     value = self._process_column_data(buf, var, self.row_index)
                     var._values[self.row_index] = value
-            if self.in_fetch:
-                self.cursor._buffer_rowcount += 1
-                self.row_index = self.cursor._buffer_rowcount
+        self.row_index += 1
+        if self.in_fetch:
+            self.cursor._buffer_rowcount = self.row_index
 
     cdef int _process_row_header(self, ReadBuffer buf) except -1:
         buf.skip_bytes(1)                   # flags
