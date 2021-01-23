@@ -496,29 +496,29 @@ cdef class MessageWithData(Message):
             num_bytes = buf.read_ub2()
             buf.skip_bytes(num_bytes + 1)
         elif opcode == TNS_SERVER_PIGGYBACK_SYNC:
-            buf.read_ub2()              # skip number of DTYs
-            buf.read_uint8()            # skip length of DTYs
+            buf.read_ub2()                  # skip number of DTYs
+            buf.read_uint8()                # skip length of DTYs
             num_elements = buf.read_ub4()
-            buf.skip_bytes(1)           # skip length
+            buf.skip_bytes(1)               # skip length
             for i in range(num_elements):
                 num_bytes = buf.read_ub2()
-                if num_bytes > 0:       # skip key
+                if num_bytes > 0:           # skip key
                     buf.skip_bytes(num_bytes + 1)
                 num_bytes = buf.read_ub2()
-                if num_bytes > 0:       # skip value
+                if num_bytes > 0:           # skip value
                     buf.skip_bytes(num_bytes + 1)
-                buf.read_ub2()          # skip flags
-            buf.read_ub4()              # skip overall flags
+                buf.read_ub2()              # skip flags
+            buf.read_ub4()                  # skip overall flags
         elif opcode == TNS_SERVER_PIGGYBACK_EXT_SYNC:
-            buf.read_ub2()              # skip number of DTYs
-            buf.read_uint8()            # skip length of DTYs
+            buf.read_ub2()                  # skip number of DTYs
+            buf.read_uint8()                # skip length of DTYs
         elif opcode == TNS_SERVER_PIGGYBACK_AC_REPLAY_CONTEXT:
-            buf.read_ub2()              # skip number of DTYs
-            buf.read_uint8()            # skip length of DTYs
-            buf.read_ub4()              # skip flags
-            buf.read_ub4()              # skip error code
-            buf.read_uint8()            # skip queue
-            num_bytes = buf.read_ub4()  # skip replay context
+            buf.read_ub2()                  # skip number of DTYs
+            buf.read_uint8()                # skip length of DTYs
+            buf.read_ub4()                  # skip flags
+            buf.read_ub4()                  # skip error code
+            buf.read_uint8()                # skip queue
+            num_bytes = buf.read_ub4()      # skip replay context
             if num_bytes > 0:
                 buf.skip_bytes(num_bytes)
         else:
