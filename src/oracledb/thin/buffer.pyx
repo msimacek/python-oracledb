@@ -90,7 +90,7 @@ cdef class ChunkedBytesBuffer:
         return (size + CHUNKED_BYTES_CHUNK_SIZE - 1) & \
                ~(CHUNKED_BYTES_CHUNK_SIZE - 1)
 
-    cdef bytes end_chunked_read(self):
+    cdef char_type* end_chunked_read(self) except NULL:
         """
         Called when a chunked read has ended. Since a chunked read is never
         started until at least some bytes are being read, it is assumed that at
@@ -118,7 +118,7 @@ cdef class ChunkedBytesBuffer:
             self._chunks[0].ptr = ptr
             self._chunks[0].length = total_num_bytes
             self._chunks[0].allocated_length = num_allocated_bytes
-        return self._chunks[0].ptr[:self._chunks[0].length]
+        return self._chunks[0].ptr
 
     cdef char_type* get_chunk_ptr(self, uint32_t size_required) except NULL:
         """
@@ -188,32 +188,62 @@ cdef class ReadBuffer:
             value = value >> 6
         return offset + size
 
-    cdef inline const char_type* _get_raw(self, ssize_t num_bytes) except NULL:
+    cdef const char_type* _get_raw(self, ssize_t num_bytes,
+                                   bint in_chunked_read=False) except NULL:
         """
-        Returns a pointer to the buffer after ensuring that the specified
-        number of bytes are available.
+        Returns a pointer to a buffer containing the requested number of bytes.
+        This may be split across multiple packets in which case a chunked bytes
+        buffer is used.
         """
-        cdef const char_type *ptr = &self._data[self._offset]
-        if self._offset + num_bytes > self._size:
-            msg = f"Not enough data in buffer: need {num_bytes} bytes!"
-            raise BufferError(msg)
-        self._offset += num_bytes
-        return ptr
-
-    cdef int _read_split_bytes(self, uint32_t num_bytes_1,
-                               uint32_t num_bytes_2) except -1:
         cdef:
+            ssize_t num_bytes_left, num_bytes_split
             const char_type *source_ptr
-            char_type *dest_ptr
             uint8_t packet_type
-        dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_1)
-        source_ptr = self._get_raw(num_bytes_1)
-        memcpy(dest_ptr, source_ptr, num_bytes_1)
+            char_type *dest_ptr
+
+        # if no bytes are left in the buffer, a new packet needs to be fetched
+        # before anything else can take place
+        if self._offset == self._size:
+            self.receive_packet(&packet_type)
+            self.skip_bytes(2)              # skip data flags
+
+        # if there is enough room in the buffer to satisfy the number of bytes
+        # requested, return a pointer to the current location and advance the
+        # offset the required number of bytes
+        source_ptr = &self._data[self._offset]
+        num_bytes_left = self._size - self._offset
+        if num_bytes <= num_bytes_left:
+            if in_chunked_read:
+                dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes)
+                memcpy(dest_ptr, source_ptr, num_bytes)
+            self._offset += num_bytes
+            return source_ptr
+
+        # the bytes required are split across multiple packets so a chunked
+        # read is started -- unless one was already started (such as takes
+        # place when a "long" string is read)
+        if not in_chunked_read:
+            self._chunked_bytes_buf.start_chunked_read()
+
+        # get a chunk to accommodate the number of bytes left in the current
+        # packet and copy the remainder of the packet into that chunk
+        dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_left)
+        memcpy(dest_ptr, source_ptr, num_bytes_left)
+
+        # acquire a new packet and copy the split bytes into the chunked buffer
         self.receive_packet(&packet_type)
         self.skip_bytes(2)                  # skip data flags
-        dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_2)
-        source_ptr = self._get_raw(num_bytes_2)
-        memcpy(dest_ptr, source_ptr, num_bytes_2)
+        source_ptr = &self._data[self._offset]
+        num_bytes_split = num_bytes - num_bytes_left
+        dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_split)
+        memcpy(dest_ptr, source_ptr, num_bytes_split)
+        self._offset += num_bytes_split
+
+        # if not previously in a chunked read, end the chunked read that was
+        # started earlier in this method
+        if not in_chunked_read:
+            return self._chunked_bytes_buf.end_chunked_read()
+        return source_ptr
 
     cdef inline ssize_t bytes_left(self):
         return self._size - self._offset
@@ -372,31 +402,21 @@ cdef class ReadBuffer:
 
     cdef bytes read_bytes(self, ssize_t num_bytes):
         cdef:
-            const char_type *source_ptr
-            uint32_t num_bytes_left
-            char_type *dest_ptr
+            ssize_t total_length
+            const char_type *ptr
         if num_bytes != TNS_LONG_LENGTH_INDICATOR:
-            num_bytes_left = <uint32_t> self.bytes_left()
-            if num_bytes <= num_bytes_left:
-                source_ptr = self._get_raw(num_bytes)
-                return source_ptr[:num_bytes]
-            self._chunked_bytes_buf.start_chunked_read()
-            self._read_split_bytes(num_bytes_left, num_bytes - num_bytes_left)
-            return self._chunked_bytes_buf.end_chunked_read()
+            ptr = self._get_raw(num_bytes)
+            return ptr[:num_bytes]
         self._chunked_bytes_buf.start_chunked_read()
+        total_length = 0
         while True:
             num_bytes = self.read_ub4()
             if num_bytes == 0:
                 break
-            num_bytes_left = <uint32_t> self.bytes_left()
-            if num_bytes < num_bytes_left:
-                source_ptr = self._get_raw(num_bytes)
-                dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes)
-                memcpy(dest_ptr, source_ptr, num_bytes)
-            else:
-                self._read_split_bytes(num_bytes_left,
-                                       num_bytes - num_bytes_left)
-        return self._chunked_bytes_buf.end_chunked_read()
+            total_length += num_bytes
+            self._get_raw(num_bytes, in_chunked_read=True)
+        ptr = self._chunked_bytes_buf.end_chunked_read()
+        return ptr[:total_length]
 
     cdef object read_interval_ds(self, uint8_t num_bytes):
         cdef:
