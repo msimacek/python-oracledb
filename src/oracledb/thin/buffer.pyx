@@ -420,7 +420,7 @@ cdef class ReadBuffer:
 
     cdef object read_interval_ds(self, uint8_t num_bytes):
         cdef:
-            uint32_t days, hours, minutes, second, total_seconds, fseconds
+            int32_t days, hours, minutes, second, total_seconds, fseconds
             const uint8_t *ptr = <uint8_t*> self._get_raw(num_bytes)
         days = unpack_uint32(ptr, BYTE_ORDER_MSB) - TNS_DURATION_MID
         fseconds = unpack_uint32(&ptr[7], BYTE_ORDER_MSB) - TNS_DURATION_MID
@@ -841,7 +841,7 @@ cdef class WriteBuffer:
 
     cdef int write_interval_ds(self, object value) except -1:
         cdef:
-            uint32_t days, seconds, fseconds
+            int32_t days, seconds, fseconds
             char_type buf[11]
         days = cydatetime.timedelta_days(value)
         pack_uint32(buf, days + TNS_DURATION_MID, BYTE_ORDER_MSB)

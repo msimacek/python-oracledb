@@ -148,5 +148,12 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(self.cursor.fetchone(), self.data_by_key[4])
         self.assertEqual(self.cursor.fetchone(), None)
 
+    def test_1811_bind_and_fetch_negative_interval(self):
+        "1811 - test binding and fetching a negative interval"
+        value = datetime.timedelta(days=-1, seconds=86314, microseconds=431152)
+        self.cursor.execute("select :1 from dual", [value])
+        result, = self.cursor.fetchone()
+        self.assertEqual(result, value)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
