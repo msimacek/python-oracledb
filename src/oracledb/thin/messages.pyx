@@ -1091,7 +1091,10 @@ cdef class ExecuteMessage(MessageWithData):
         buf.write_bytes(stmt._sql_bytes)
         buf.write_ub4(1)                    # al8i4[0] parse
         if stmt._is_query:
-            buf.write_ub4(0)                # al8i4[1] execution count
+            if stmt._cursor_id == 0:
+                buf.write_ub4(0)            # al8i4[1] execution count
+            else:
+                buf.write_ub4(num_iters)
         else:
             buf.write_ub4(self.num_execs)   # al8i4[1] execution count
         buf.write_ub4(0)                    # al8i4[2]
