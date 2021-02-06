@@ -2,6 +2,12 @@
 # Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# base_impl.pyx
+#   Cython file for the base implementation that the thin and thick
+# implementations use.
+#------------------------------------------------------------------------------
+
 # cython: language_level=3
 
 cimport cython
@@ -15,7 +21,7 @@ import decimal
 import json
 import sys
 
-from .. import constants, errors, exceptions
+from . import constants, errors, exceptions
 
 cdef int32_t* INTEGRITY_ERROR_CODES = [
         1,          # unique constraint violated
@@ -75,13 +81,13 @@ cdef object get_exception_class(int32_t code):
     return exceptions.DatabaseError
 
 
-include "connection.pyx"
-include "pool.pyx"
-include "cursor.pyx"
-include "var.pyx"
-include "dbobject.pyx"
-include "lob.pyx"
-include "soda.pyx"
-include "queue.pyx"
-include "subscr.pyx"
-include "types.pyx"
+include "impl/base/connection.pyx"
+include "impl/base/pool.pyx"
+include "impl/base/cursor.pyx"
+include "impl/base/var.pyx"
+include "impl/base/dbobject.pyx"
+include "impl/base/lob.pyx"
+include "impl/base/soda.pyx"
+include "impl/base/queue.pyx"
+include "impl/base/subscr.pyx"
+include "impl/base/types.pyx"

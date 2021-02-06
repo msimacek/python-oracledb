@@ -5,9 +5,4 @@ __pycache__/
 build/
 dist/
 doc/build
-src/oracledb/common/driver.c
-src/oracledb/thick/driver.c
-src/oracledb/thin/driver.c
-src/oracledb/common/*.so
-src/oracledb/thick/*.so
-src/oracledb/thin/*.so
+src/oracledb/*.c

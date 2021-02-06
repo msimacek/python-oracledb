@@ -10,8 +10,8 @@ from .pool import create_pool
 from .constants import *
 from .constructors import *
 
-from .common.driver import *
-from .thick.driver import clientversion, init_oracle_client
+from .base_impl import *
+from .thick_impl import clientversion, init_oracle_client
 
 LOB = BaseLob
 ObjectType = BaseDbObjectType
@@ -45,3 +45,7 @@ NCHAR = DB_TYPE_NVARCHAR
 OBJECT = DB_TYPE_OBJECT
 NCLOB = DB_TYPE_NCLOB
 TIMESTAMP = DB_TYPE_TIMESTAMP
+
+# remove unnecessary symbols
+del version, exceptions, errors, connection, pool, constants
+del constructors, base_impl, thick_impl, thin_impl, utils

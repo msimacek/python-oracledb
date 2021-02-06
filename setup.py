@@ -5,46 +5,50 @@
 import os
 from setuptools import setup, Extension
 
-# determine the common driver dependent source files (included)
-source_dir = os.path.join("src", "oracledb", "common")
-common_depends = [os.path.join(source_dir, n) \
-                  for n in sorted(os.listdir(source_dir))
-                  if n.endswith(".pyx") and n != "driver.pyx"
-                  or n.endswith(".pxd")]
+# base source directory
+source_dir = os.path.join("src", "oracledb")
 
-# determine the thick driver dependent source files (included)
-base_dir = os.path.join("src", "oracledb", "thick")
+# determine the base implementation dependent source files (included)
+impl_dir = os.path.join(source_dir, "impl", "base")
+base_depends = [os.path.join(impl_dir, n) \
+                for n in sorted(os.listdir(impl_dir)) if n.endswith(".pyx")]
+base_pxd = os.path.join(source_dir, "base_impl.pxd")
+base_depends.append(base_pxd)
+
+# determine the thick implementation dependent source files (included)
+impl_dir = os.path.join(source_dir, "impl", "thick")
 source_dirs = [
-        os.path.join(base_dir, "odpi", "src"),
-        os.path.join(base_dir, "odpi", "include")
+        os.path.join(impl_dir, "odpi", "src"),
+        os.path.join(impl_dir, "odpi", "include")
 ]
 thick_depends = [os.path.join(d, n) \
                  for d in source_dirs
                  for n in sorted(os.listdir(d)) \
                  if n.endswith(".c") or n.endswith(".h")]
-thick_depends.extend(os.path.join(base_dir, n) \
-                     for n in sorted(os.listdir(base_dir))
-                     if n.endswith(".pyx") and n != "driver.pyx"
-                     or n.endswith(".pxd"))
+thick_depends.extend(os.path.join(impl_dir, n) \
+                     for n in sorted(os.listdir(impl_dir))
+                     if n.endswith(".pyx") or n.endswith(".pxd"))
+thick_depends.append(base_pxd)
 
 # determine the thin driver dependent source files (included)
-source_dir = os.path.join("src", "oracledb", "thin")
-thin_depends = [os.path.join(source_dir, n) \
-                for n in sorted(os.listdir(source_dir))
-                if n.endswith(".pyx") and n != "driver.pyx"
-                or n.endswith(".pxi") or n.endswith(".pxd") or n == "bswap.c"]
+impl_dir = os.path.join(source_dir, "impl", "thin")
+thin_depends = [os.path.join(impl_dir, n) \
+                for n in sorted(os.listdir(impl_dir))
+                if n.endswith(".pyx") or n.endswith(".pxi")
+                        or n.endswith(".pxd") or n == "bswap.c"]
+thin_depends.append(base_pxd)
 
 setup(
     ext_modules=[
-        Extension("oracledb.common.driver",
-                  sources=["src/oracledb/common/driver.pyx"],
-                  depends=common_depends),
-        Extension("oracledb.thin.driver",
-                  sources=["src/oracledb/thin/driver.pyx"],
+        Extension("oracledb.base_impl",
+                  sources=["src/oracledb/base_impl.pyx"],
+                  depends=base_depends),
+        Extension("oracledb.thin_impl",
+                  sources=["src/oracledb/thin_impl.pyx"],
                   depends=thin_depends),
-        Extension("oracledb.thick.driver",
-                  sources=["src/oracledb/thick/driver.pyx"],
-                  include_dirs=["src/oracledb/thick/odpi/include"],
+        Extension("oracledb.thick_impl",
+                  sources=["src/oracledb/thick_impl.pyx"],
+                  include_dirs=["src/oracledb/impl/thick/odpi/include"],
                   depends=thick_depends)
     ]
 )

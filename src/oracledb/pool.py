@@ -2,9 +2,7 @@
 # Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
-from . import constants, utils
-from .thick import driver as thick_driver
-from .thin import driver as thin_driver
+from . import constants, utils, thick_impl, thin_impl
 
 def create_pool(dsn=None, *, user=None, password=None, host=None, port=None,
                 service_name=None, thin=True, min=1, max=2, increment=1,
@@ -19,11 +17,11 @@ def create_pool(dsn=None, *, user=None, password=None, host=None, port=None,
                                         service_name, thin)
     dsn, user, password, host, port, connect_data = result
     if thin:
-        pool = thin_driver.Pool(user, dsn, min, max, increment, homogeneous,
-                                port, host, connect_data, password, getmode,
-                                wait_timeout)
+        pool = thin_impl.Pool(user, dsn, min, max, increment, homogeneous,
+                              port, host, connect_data, password, getmode,
+                              wait_timeout)
     else:
-        pool = thick_driver.Pool(user, dsn, min, max, increment, homogeneous)
+        pool = thick_impl.Pool(user, dsn, min, max, increment, homogeneous)
         pool._create(password=password, threaded=threaded, getmode=getmode,
                      events=events, externalauth=externalauth, edition=edition,
                      timeout=timeout, wait_timeout=wait_timeout,
