@@ -2,15 +2,12 @@ include MANIFEST.in
 include pyproject.toml
 include tox.ini
 include *.txt
-recursive-include src/oracledb/common *.pxd
-recursive-include src/oracledb/common *.pyx
-include src/oracledb/thin/bswap.c
-recursive-include src/oracledb/thin *.pxd
-recursive-include src/oracledb/thin *.pxi
-recursive-include src/oracledb/thin *.pyx
-recursive-include src/oracledb/thick/odpi *.c
-recursive-include src/oracledb/thick/odpi *.h
-recursive-include src/oracledb/thick *.pxd
-prune src/oracledb/thick/odpi/test
-prune src/oracledb/thick/odpi/samples
+recursive-include src/oracledb *.pxd
+recursive-include src/oracledb *.pxi
+recursive-include src/oracledb *.pyx
+recursive-include src/oracledb/impl/thick/odpi *.c
+recursive-include src/oracledb/impl/thick/odpi *.h
+prune src/oracledb/impl/thick/odpi/test
+prune src/oracledb/impl/thick/odpi/samples
+include src/oracledb/impl/thin/bswap.c
 recursive-include tests *.py

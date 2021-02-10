@@ -3,8 +3,7 @@
 #------------------------------------------------------------------------------
 
 from . import constants, errors, exceptions, utils
-from .thick import driver as thick_driver
-from .thin import driver as thin_driver
+from . import thick_impl, thin_impl
 
 def connect(dsn=None, *, user=None, password=None, host=None, port=None,
             service_name=None, thin=True, mode=constants.DEFAULT_AUTH,
@@ -19,10 +18,10 @@ def connect(dsn=None, *, user=None, password=None, host=None, port=None,
                                         service_name, thin)
     dsn, user, password, host, port, connect_data = result
     if thin:
-        conn = thin_driver.Connection(user, dsn)
+        conn = thin_impl.Connection(user, dsn)
         conn._connect(host, port, connect_data, password)
     else:
-        conn = thick_driver.Connection(user, dsn)
+        conn = thick_impl.Connection(user, dsn)
         conn._connect(password=password, mode=mode, handle=handle,
                       pool=pool, threaded=threaded, events=events,
                       cclass=cclass, purity=purity, newpassword=newpassword,

@@ -2,8 +2,6 @@
 # Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
-from .. import constants
-
 cdef class BaseCursor:
 
     def __cinit__(self, connection):

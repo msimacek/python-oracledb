@@ -2,7 +2,7 @@
 # Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
-cdef extern from "./bswap.c":
+cdef extern from "impl/thin/bswap.c":
 
     int BYTE_ORDER_LSB
     int BYTE_ORDER_MSB
