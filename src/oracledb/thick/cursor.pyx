@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -138,7 +138,7 @@ cdef class Cursor(BaseCursor):
                                        &num_rows_in_buffer,
                                        &more_rows_to_fetch)
         if status < 0:
-            errors._raise_from_odpi()
+            _raise_from_odpi()
         self._buffer_rowcount = num_rows_in_buffer
         self._buffer_index = temp_buffer_row_index
         self._more_rows_to_fetch = more_rows_to_fetch
