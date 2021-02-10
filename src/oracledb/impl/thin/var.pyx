@@ -12,6 +12,7 @@ cdef class Var(BaseVar):
         Connection _connection
         list _values
         uint32_t _num_elements_in_array
+        object _conv_func
 
     def __cinit__(self, connection):
         self._connection = connection
@@ -65,7 +66,13 @@ cdef class Var(BaseVar):
         return self._values[:num_elements]
 
     cdef object _get_single_value(self, uint32_t pos):
-        return self._values[pos]
+        cdef object value
+        value = self._values[pos]
+        if self._conv_func is not None:
+            value = self._conv_func(value)
+        if self.outconverter:
+            value = self.outconverter(value)
+        return value
 
     cdef int _set_array_value(self, list value) except -1:
         cdef uint32_t i

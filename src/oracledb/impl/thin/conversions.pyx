@@ -1,0 +1,100 @@
+#------------------------------------------------------------------------------
+# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+#------------------------------------------------------------------------------
+
+cdef converter_dict = {
+    (TNS_DATA_TYPE_CHAR, TNS_DATA_TYPE_NUMBER): float,
+    (TNS_DATA_TYPE_VARCHAR, TNS_DATA_TYPE_NUMBER): float,
+    (TNS_DATA_TYPE_LONG, TNS_DATA_TYPE_NUMBER): float,
+    (TNS_DATA_TYPE_BINARY_INTEGER, TNS_DATA_TYPE_NUMBER):float,
+    (TNS_DATA_TYPE_CHAR, TNS_DATA_TYPE_BINARY_INTEGER):_to_binary_int,
+    (TNS_DATA_TYPE_VARCHAR, TNS_DATA_TYPE_BINARY_INTEGER): _to_binary_int,
+    (TNS_DATA_TYPE_LONG, TNS_DATA_TYPE_BINARY_INTEGER): _to_binary_int,
+    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_BINARY_INTEGER): _to_binary_int,
+    (TNS_DATA_TYPE_BINARY_FLOAT, TNS_DATA_TYPE_BINARY_INTEGER):
+            _to_binary_int,
+    (TNS_DATA_TYPE_BINARY_DOUBLE, TNS_DATA_TYPE_BINARY_INTEGER):
+            _to_binary_int,
+    (TNS_DATA_TYPE_DATE, TNS_DATA_TYPE_CHAR): str,
+    (TNS_DATA_TYPE_DATE, TNS_DATA_TYPE_VARCHAR): str,
+    (TNS_DATA_TYPE_DATE, TNS_DATA_TYPE_LONG): str,
+    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_VARCHAR): str,
+    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_CHAR): str,
+    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_LONG): str,
+    (TNS_DATA_TYPE_BINARY_DOUBLE, TNS_DATA_TYPE_VARCHAR): str,
+    (TNS_DATA_TYPE_BINARY_FLOAT, TNS_DATA_TYPE_VARCHAR): str,
+    (TNS_DATA_TYPE_BINARY_DOUBLE, TNS_DATA_TYPE_CHAR): str,
+    (TNS_DATA_TYPE_BINARY_FLOAT, TNS_DATA_TYPE_CHAR): str,
+    (TNS_DATA_TYPE_BINARY_DOUBLE, TNS_DATA_TYPE_LONG): str,
+    (TNS_DATA_TYPE_BINARY_FLOAT, TNS_DATA_TYPE_LONG): str,
+    (TNS_DATA_TYPE_TIMESTAMP, TNS_DATA_TYPE_VARCHAR): str,
+    (TNS_DATA_TYPE_TIMESTAMP, TNS_DATA_TYPE_CHAR): str,
+    (TNS_DATA_TYPE_TIMESTAMP, TNS_DATA_TYPE_LONG): str,
+    (TNS_DATA_TYPE_TIMESTAMP_TZ, TNS_DATA_TYPE_VARCHAR): str,
+    (TNS_DATA_TYPE_TIMESTAMP_TZ, TNS_DATA_TYPE_CHAR): str,
+    (TNS_DATA_TYPE_TIMESTAMP_TZ, TNS_DATA_TYPE_LONG): str,
+    (TNS_DATA_TYPE_TIMESTAMP_LTZ, TNS_DATA_TYPE_VARCHAR): str,
+    (TNS_DATA_TYPE_TIMESTAMP_LTZ, TNS_DATA_TYPE_CHAR): str,
+    (TNS_DATA_TYPE_TIMESTAMP_LTZ, TNS_DATA_TYPE_LONG): str,
+    (TNS_DATA_TYPE_ROWID, TNS_DATA_TYPE_VARCHAR): str,
+    (TNS_DATA_TYPE_ROWID, TNS_DATA_TYPE_CHAR): str,
+    (TNS_DATA_TYPE_ROWID, TNS_DATA_TYPE_LONG): str,
+    (TNS_DATA_TYPE_INTERVAL_DS, TNS_DATA_TYPE_VARCHAR): str,
+    (TNS_DATA_TYPE_INTERVAL_DS, TNS_DATA_TYPE_CHAR): str,
+    (TNS_DATA_TYPE_INTERVAL_DS, TNS_DATA_TYPE_LONG): str,
+    (TNS_DATA_TYPE_BINARY_INTEGER, TNS_DATA_TYPE_VARCHAR): str,
+    (TNS_DATA_TYPE_BINARY_INTEGER, TNS_DATA_TYPE_CHAR): str,
+    (TNS_DATA_TYPE_BINARY_INTEGER, TNS_DATA_TYPE_LONG): str,
+    (TNS_DATA_TYPE_TIMESTAMP, TNS_DATA_TYPE_DATE): _tstamp_to_date,
+    (TNS_DATA_TYPE_TIMESTAMP_TZ, TNS_DATA_TYPE_DATE): _tstamp_to_date,
+    (TNS_DATA_TYPE_TIMESTAMP_LTZ, TNS_DATA_TYPE_DATE): _tstamp_to_date,
+    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_BINARY_DOUBLE): float,
+    (TNS_DATA_TYPE_BINARY_FLOAT, TNS_DATA_TYPE_BINARY_DOUBLE): float,
+    (TNS_DATA_TYPE_CHAR, TNS_DATA_TYPE_BINARY_DOUBLE): float,
+    (TNS_DATA_TYPE_VARCHAR, TNS_DATA_TYPE_BINARY_DOUBLE): float,
+    (TNS_DATA_TYPE_LONG, TNS_DATA_TYPE_BINARY_DOUBLE): float,
+    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_BINARY_FLOAT): float,
+    (TNS_DATA_TYPE_BINARY_DOUBLE, TNS_DATA_TYPE_BINARY_FLOAT): float,
+    (TNS_DATA_TYPE_CHAR, TNS_DATA_TYPE_BINARY_FLOAT): float,
+    (TNS_DATA_TYPE_VARCHAR, TNS_DATA_TYPE_BINARY_FLOAT): float,
+    (TNS_DATA_TYPE_LONG, TNS_DATA_TYPE_BINARY_FLOAT): float,
+    (TNS_DATA_TYPE_BINARY_FLOAT, TNS_DATA_TYPE_NUMBER): float,
+    (TNS_DATA_TYPE_BINARY_DOUBLE, TNS_DATA_TYPE_NUMBER): float,
+    (TNS_DATA_TYPE_TIMESTAMP_TZ, TNS_DATA_TYPE_TIMESTAMP_LTZ): None,
+    (TNS_DATA_TYPE_TIMESTAMP_TZ, TNS_DATA_TYPE_TIMESTAMP): None,
+    (TNS_DATA_TYPE_TIMESTAMP_LTZ, TNS_DATA_TYPE_TIMESTAMP_TZ): None,
+    (TNS_DATA_TYPE_TIMESTAMP_LTZ, TNS_DATA_TYPE_TIMESTAMP): None,
+    (TNS_DATA_TYPE_TIMESTAMP, TNS_DATA_TYPE_TIMESTAMP_LTZ): None,
+    (TNS_DATA_TYPE_TIMESTAMP, TNS_DATA_TYPE_TIMESTAMP_TZ): None,
+    (TNS_DATA_TYPE_DATE, TNS_DATA_TYPE_TIMESTAMP_LTZ): None,
+    (TNS_DATA_TYPE_DATE, TNS_DATA_TYPE_TIMESTAMP): None,
+    (TNS_DATA_TYPE_DATE, TNS_DATA_TYPE_TIMESTAMP_TZ): None,
+    (TNS_DATA_TYPE_CHAR, TNS_DATA_TYPE_VARCHAR): None,
+    (TNS_DATA_TYPE_VARCHAR, TNS_DATA_TYPE_CHAR): None,
+    (TNS_DATA_TYPE_LONG, TNS_DATA_TYPE_VARCHAR): None,
+    (TNS_DATA_TYPE_LONG, TNS_DATA_TYPE_CHAR): None,
+    (TNS_DATA_TYPE_VARCHAR, TNS_DATA_TYPE_LONG): None,
+    (TNS_DATA_TYPE_CHAR, TNS_DATA_TYPE_LONG): None,
+}
+
+cdef object _to_binary_int(object fetch_value):
+    return int(decimal.Decimal(fetch_value))
+
+cdef object _tstamp_to_date(object fetch_value):
+    return fetch_value.replace(microsecond=0)
+
+cdef int conversion_helper(DbType output_type, Var fetch_var) except -1:
+    cdef:
+        uint8_t fetch_ora_num, output_ora_num
+        object key
+
+    fetch_ora_num = fetch_var._dbtype._ora_type_num
+    output_ora_num = output_type._ora_type_num
+
+    key = (fetch_ora_num, output_ora_num)
+    try:
+        fetch_var._conv_func = converter_dict[key]
+    except:
+        message = f"Cannot convert from type {fetch_var._dbtype.name} " \
+                  f"to {output_type.name}"
+        errors._raise_from_string(exceptions.DatabaseError, message)

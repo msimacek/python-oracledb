@@ -314,14 +314,31 @@ cdef class MessageWithData(Message):
 
     cdef int _process_describe_info(self, ReadBuffer buf,
                                     Cursor cursor) except -1:
-        cdef uint32_t num_bytes, num_columns, i
+        cdef:
+            uint32_t num_bytes, num_columns, i
+            str message
+            object type_handler
+            Var output_var
         buf.read_ub4()                      # max row size
         num_columns = buf.read_ub4()
         cursor._fetch_vars = cpython.PyList_New(num_columns)
         buf.skip_bytes(1)
+        type_handler = cursor.outputtypehandler \
+                or cursor.connection.outputtypehandler
         for i in range(num_columns):
             var = self._process_column_info(buf, cursor)
             cpython.Py_INCREF(var)
+            if type_handler:
+                output_var = type_handler(cursor, var.name,  var._dbtype,
+                                          var.size, var.precision, var.scale)
+                if not isinstance(output_var, Var):
+                    message = "Expecting cursor.var object from " \
+                              "outputtypehandler method"
+                    errors._raise_from_string(TypeError, message)
+                if output_var._dbtype != var._dbtype:
+                    conversion_helper(output_var._dbtype, var)
+                if output_var.outconverter:
+                    var.outconverter = output_var.outconverter
             cpython.PyList_SET_ITEM(cursor._fetch_vars, i, var)
         num_bytes = buf.read_ub4()
         if num_bytes > 0:
