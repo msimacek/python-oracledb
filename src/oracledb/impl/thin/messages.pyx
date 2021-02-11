@@ -810,12 +810,15 @@ cdef class AuthMessage(Message):
         self.user_bytes_len = <uint8_t> len(self.user_bytes)
 
     def _encrypt_cbc(self, key, plain_text):
-        iv = bytes(AES.block_size)
-        b = AES.new(key, AES.MODE_CBC, iv)
-        n = AES.block_size - len(plain_text) % AES.block_size
+        block_size = 16
+        iv = bytes(block_size)
+        algo = algorithms.AES(key)
+        cipher = Cipher(algo, modes.CBC(iv))
+        encryptor = cipher.encryptor()
+        n = block_size - len(plain_text) % block_size
         if n:
             plain_text += (bytes([n]) * n)
-        return b.encrypt(plain_text)
+        return encryptor.update(plain_text) + encryptor.finalize()
 
     cdef int _generate_auth_response(self) except -1:
 
@@ -831,8 +834,11 @@ cdef class AuthMessage(Message):
 
         # decode server key
         encoded_server_key = bytes.fromhex(self.session_data['AUTH_SESSKEY'])
-        b = AES.new(password_hash, AES.MODE_CBC, b"\x00" * AES.block_size)
-        server_key = b.decrypt(encoded_server_key)
+        iv = bytes(16)
+        algo = algorithms.AES(password_hash)
+        cipher = Cipher(algo, modes.CBC(iv))
+        decryptor = cipher.decryptor()
+        server_key = decryptor.update(encoded_server_key)
 
         # create combo key used for encrypting password
         b = bytearray(24)
