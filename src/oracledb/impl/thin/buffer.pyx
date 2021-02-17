@@ -257,7 +257,7 @@ cdef class ReadBuffer:
         two complete packets.
         """
         cdef:
-            ssize_t offset, bytes_to_read, packet_size
+            ssize_t offset, bytes_to_read, bytes_read = 0, packet_size
             char_type[:] view
 
         # if no bytes are left over from a previous read, perform a read of the
@@ -266,9 +266,8 @@ cdef class ReadBuffer:
         if self._bytes_to_process == 0:
             self._packet_start_offset = 0
             self._offset = 0
-            self._bytes_to_process = \
-                    self._socket.recv_into(self._data_obj,
-                                           self._max_packet_size)
+            bytes_read = self._socket.recv_into(self._data_obj,
+                                                self._max_packet_size)
 
         # otherwise, set the offset to the end of the previous packet and
         # ensure that there are at least enough bytes available to cover the
@@ -279,8 +278,18 @@ cdef class ReadBuffer:
             if self._bytes_to_process < PACKET_HEADER_SIZE:
                 offset = self._size + self._bytes_to_process
                 bytes_to_read = PACKET_HEADER_SIZE - self._bytes_to_process
-                self._bytes_to_process += \
-                        self._socket.recv_into(view[offset:], bytes_to_read)
+                bytes_read = self._socket.recv_into(view[offset:],
+                                                    bytes_to_read)
+
+        # if no bytes were read this means the server closed the connection
+        if self._bytes_to_process < PACKET_HEADER_SIZE:
+            if bytes_read == 0:
+                self._socket.shutdown(socket.SHUT_RDWR)
+                self._socket.close()
+                self._socket = None
+                errors._raise_from_string(exceptions.DatabaseError,
+                                          "server closed connection")
+            self._bytes_to_process += bytes_read
 
         # determine the packet length and ensure that all of the bytes for the
         # packet are available; note that as of version 12.2 the packet size is

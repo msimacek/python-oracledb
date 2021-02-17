@@ -84,7 +84,8 @@ cdef class Protocol:
             self._receive_packet(message)
             message.process(self._read_buf)
         except:
-            if self._write_buf._packet_sent:
+            if self._write_buf._packet_sent \
+                    and self._read_buf._socket is not None:
                 self._break()
                 self._reset()
             raise
