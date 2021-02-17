@@ -31,6 +31,7 @@ cdef class Protocol:
         # send final close
         self._write_buf.start_request(TNS_PACKET_TYPE_DATA, 0x0040)
         self._write_buf.end_request()
+        self._socket.shutdown(socket.SHUT_RDWR)
         self._socket.close()
 
     cdef int _commit(self) except -1:
