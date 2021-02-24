@@ -5,7 +5,7 @@
 cdef class BaseSodaDatabase:
 
     def __repr__(self):
-        return f"<oracledb.SodaDatabase on {self._connection!r}"
+        return f"<oracledb.SodaDatabase on {self._conn!r}"
 
     cdef BaseSodaCollection _create_collection(self, str name, str metadata,
                                                bint map_mode):

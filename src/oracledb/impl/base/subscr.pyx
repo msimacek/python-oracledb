@@ -14,13 +14,7 @@ cdef class BaseSubscription:
         """
         raise NotImplementedError()
 
-    cdef int _subscribe(self) except -1:
-        """
-        Internal method for creating the subscription.
-        """
-        raise NotImplementedError()
-
-    cdef int _unsubscribe(self, BaseConnection connection) except -1:
+    cdef int _unsubscribe(self, BaseConnImpl connection) except -1:
         """
         Internal method for destroying the subscription.
         """
@@ -37,6 +31,12 @@ cdef class BaseSubscription:
         self._register_query(sql, args, &query_id)
         if self.qos & constants.SUBSCR_QOS_QUERY:
             return query_id
+
+    def subscribe(self):
+        """
+        Internal method for creating the subscription.
+        """
+        raise NotImplementedError()
 
 
 cdef class Message:

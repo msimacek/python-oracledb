@@ -63,7 +63,8 @@ cdef class Lob(BaseLob):
             _raise_from_odpi()
 
     @staticmethod
-    cdef Lob _new_lob(Connection connection, DbType lob_type, dpiLob *handle):
+    cdef Lob _new_lob(ThickConnImpl connection, DbType lob_type,
+                      dpiLob *handle):
         cdef Lob lob = Lob.__new__(Lob)
         lob.type = lob_type
         lob._connection = connection

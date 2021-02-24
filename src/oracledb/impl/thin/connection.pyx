@@ -2,7 +2,7 @@
 # Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
-cdef class Connection(BaseConnection):
+cdef class ThinConnImpl(BaseConnImpl):
 
     cdef:
         StatementCache _statement_cache
@@ -20,16 +20,7 @@ cdef class Connection(BaseConnection):
         bint _client_identifier_modified
         str _module
         bint _module_modified
-        object __weakref__
-        object _finalizer
         Pool _pool
-
-    cdef int _close(self) except -1:
-        if self._pool is not None:
-            self._pool._free_busy_connection(self)
-        else:
-            self._protocol._close()
-            self._finalizer.detach()
 
     cdef int _commit(self) except -1:
         self._protocol._commit()
@@ -41,10 +32,6 @@ cdef class Connection(BaseConnection):
         self._protocol._connect(self, connect_string, password)
         self._statement_cache = StatementCache(30)
         self._is_connected = True
-        self._finalizer = weakref.finalize(self, self._protocol._close)
-
-    cdef BaseCursor _create_cursor(self):
-        return Cursor.__new__(Cursor, self)
 
     cdef BaseLob _create_temp_lob(self, DbType dbtype):
         return Lob._create_temp_lob(self, dbtype)
@@ -80,3 +67,12 @@ cdef class Connection(BaseConnection):
         # setting the module by itself results in an error so always force the
         # action to be set as well (which eliminates this error)
         self._action_modified = True
+
+    def close(self, in_del=False):
+        if self._pool is not None:
+            self._pool._free_busy_connection(self)
+        else:
+            self._protocol._close()
+
+    def create_cursor_impl(self):
+        return ThinCursorImpl.__new__(ThinCursorImpl, self)

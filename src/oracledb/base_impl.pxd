@@ -43,7 +43,7 @@ cdef class DbType:
     cdef DbType _from_value(object value, uint32_t *size, bint is_plsql=*)
 
 
-cdef class BaseConnection:
+cdef class BaseConnImpl:
     cdef:
         readonly str username
         readonly str dsn
@@ -58,22 +58,20 @@ cdef class BaseConnection:
     cdef int _cancel(self) except -1
     cdef int _change_password(self, str old_password,
                               str new_password) except -1
-    cdef int _close(self) except -1
     cdef int _commit(self) except -1
-    cdef BaseCursor _create_cursor(self)
     cdef BaseMsgProps _create_msg_props(self)
     cdef BaseQueue _create_queue(self)
-    cdef BaseSubscription _create_subscription(self)
+    cdef BaseSubscription _create_subscription(self, object connection)
     cdef BaseLob _create_temp_lob(self, DbType dbtype)
     cdef str _get_current_schema(self)
     cdef str _get_edition(self)
     cdef str _get_external_name(self)
     cdef str _get_internal_name(self)
     cdef bytes _get_ltxid(self)
-    cdef BaseSodaDatabase _get_soda_database(self)
+    cdef BaseSodaDatabase _get_soda_database(self, object connection)
     cdef int _get_stmtcachesize(self, uint32_t *value) except -1
     cdef int _get_calltimeout(self, uint32_t *value) except -1
-    cdef BaseDbObjectType _get_type(self, str name)
+    cdef BaseDbObjectType _get_type(self, object conn, str name)
     cdef str _get_version(self)
     cdef int _ping(self) except -1
     cdef int _prepare(self, bint *commit_needed) except -1
@@ -88,7 +86,6 @@ cdef class BaseConnection:
     cdef int _set_module(self, str value) except -1
     cdef int _set_stmtcachesize(self, uint32_t value) except -1
     cdef int _set_calltimeout(self, uint32_t value) except -1
-    cdef int _verify_connected(self) except -1
 
 
 cdef class BasePool:
@@ -100,12 +97,13 @@ cdef class BasePool:
         readonly uint32_t max
         readonly str username
         readonly str name
+        object connection_type
 
-    cdef BaseConnection _acquire(self, str user, str password, str cclass,
-                                 uint32_t purity, str tag, bint match_any_tag,
-                                 list sharding_key, list super_sharding_key)
+    cdef object _acquire(self, str user, str password, str cclass,
+                         uint32_t purity, str tag, bint match_any_tag,
+                         list sharding_key, list super_sharding_key)
     cdef int _close(self, bint force) except -1
-    cdef int _drop(self, BaseConnection connection) except -1
+    cdef int _drop(self, BaseConnImpl connection) except -1
     cdef int _get_busy_count(self, uint32_t *value) except -1
     cdef int _get_getmode(self, uint8_t *value) except -1
     cdef int _get_max_lifetime_session(self, uint32_t *value) except -1
@@ -113,7 +111,7 @@ cdef class BasePool:
     cdef int _get_stmt_cache_size(self, uint32_t *value) except -1
     cdef int _get_timeout(self, uint32_t *value) except -1
     cdef int _get_wait_timeout(self, uint32_t *value) except -1
-    cdef int _release(self, BaseConnection connection, str tag) except -1
+    cdef int _release(self, BaseConnImpl connection, str tag) except -1
     cdef int _set_getmode(self, uint8_t value) except -1
     cdef int _set_max_lifetime_session(self, uint32_t value) except -1
     cdef int _set_stmt_cache_size(self, uint32_t value) except -1
@@ -121,9 +119,8 @@ cdef class BasePool:
     cdef int _set_wait_timeout(self, uint32_t value) except -1
 
 
-cdef class BaseCursor:
+cdef class BaseCursorImpl:
     cdef:
-        readonly BaseConnection connection
         readonly str statement
         readonly uint64_t rowcount
         public uint32_t arraysize
@@ -132,46 +129,37 @@ cdef class BaseCursor:
         public object outputtypehandler
         public object rowfactory
         public bint scrollable
+        public list fetch_vars
+        public object bind_vars
         uint32_t _buffer_rowcount
         uint32_t _buffer_index
         uint32_t _fetch_array_size
-        list _fetch_vars
-        object _bind_vars
         bint _more_rows_to_fetch
-        bint _set_input_sizes
-        bint _is_open
 
-    cdef int _bind_by_name(self, dict params, uint32_t num_elements=*,
-                           uint32_t pos=*) except -1
-    cdef int _bind_by_position(self, object params, uint32_t num_elements=*,
+    cdef int _bind_by_name(self, object cursor, dict params,
+                           uint32_t num_elements=*, uint32_t pos=*) except -1
+    cdef int _bind_by_position(self, object cursor, object params,
+                               uint32_t num_elements=*,
                                uint32_t pos=*) except -1
     cdef object _bindnames(self)
     cdef int _close(self) except -1
     cdef object _create_row(self)
-    cdef BaseVar _create_var(self)
-    cdef BaseVar _create_var_by_type(self, object value,
+    cdef BaseVar _create_var(self, object connection)
+    cdef BaseVar _create_var_by_type(self, object connection, object value,
                                      uint32_t num_elements=?)
-    cdef BaseVar _create_var_by_value(self, object value,
+    cdef BaseVar _create_var_by_value(self, object cursor, object value,
                                       uint32_t num_elements)
-    cdef int _execute(self) except -1
-    cdef int _executemany(self, uint32_t num_execs, bint batcherrors,
-                          bint arraydmlrowcounts) except -1
-    cdef object _fetch_next_row(self)
-    cdef int _fetch_rows(self) except -1
+    cdef int _fetch_rows(self, object cursor) except -1
     cdef object _get_array_dml_row_counts(self)
     cdef object _get_batch_errors(self)
-    cdef BaseVar _get_bind_var(self, uint32_t num_elements, uint32_t pos,
-                               object value, BaseVar orig_var)
-    cdef object _get_implicit_results(self)
+    cdef BaseVar _get_bind_var(self, object cursor, uint32_t num_elements,
+                               uint32_t pos, object value, BaseVar orig_var)
     cdef object _get_lastrowid(self)
     cdef bint _is_plsql(self)
-    cdef bint _is_query(self) except *
-    cdef int _perform_binds(self) except -1
-    cdef int _parse(self) except -1
+    cdef int _perform_binds(self, uint32_t num_execs=*) except -1
+    cdef int _parse(self, object connection) except -1
     cdef int _prepare(self, str statement, str tag=*) except -1
     cdef int _scroll(self, int32_t offset, uint32_t mode) except -1
-    cdef int _verify_fetch(self) except -1
-    cdef int _verify_open(self) except -1
 
 
 cdef class BaseVar:
@@ -186,16 +174,21 @@ cdef class BaseVar:
         readonly uint32_t buffer_size
         readonly bint is_array
         readonly bint nulls_allowed
+        uint32_t _num_elements_in_array
+        object _conn
+        list _values
         DbType _dbtype
         BaseDbObjectType _objtype
         int _preferred_num_type
+        bint _is_value_set
 
-    cdef int _bind(self, BaseCursor cursor, str name=*,
+    cdef int _bind(self, BaseCursorImpl cursor, uint32_t num_execs, str name=*,
                    uint32_t pos=*) except -1
     cdef int _finalize_init(self) except -1
-    cdef uint32_t _get_actual_elements(self) except *
+    cdef uint32_t _get_actual_elements(self)
     cdef list _get_array_value(self, uint32_t num_elements)
     cdef object _get_single_value(self, uint32_t pos)
+    cdef int _resize(self, uint32_t new_size) except -1
     cdef int _set_array_value(self, list value) except -1
     cdef int _set_dbtype_from_type(self, object typ) except -1
     cdef int _set_single_value(self, uint32_t pos, object value) except -1
@@ -205,7 +198,7 @@ cdef class BaseVar:
 cdef class BaseLob:
     cdef:
         readonly DbType type
-        readonly BaseConnection _connection
+        readonly BaseConnImpl _connection
 
     cdef int _close(self) except -1
     cdef int _file_exists(self, bint* exists) except -1
@@ -227,7 +220,7 @@ cdef class BaseDbObjectType:
         readonly str name
         readonly list attributes
         readonly bint iscollection
-        readonly BaseConnection _connection
+        readonly object _conn
         readonly dict _attributesByName
         DbType _element_dbtype
         BaseDbObjectType _element_objtype
@@ -267,7 +260,7 @@ cdef class BaseDbObject:
 
 cdef class BaseSodaDatabase:
     cdef:
-        BaseConnection _connection
+        object _conn
 
     cdef BaseSodaCollection _create_collection(self, str name, str metadata,
                                                bint map_mode)
@@ -337,7 +330,7 @@ cdef class BaseSodaOperation:
 
 cdef class BaseQueue:
     cdef:
-        readonly BaseConnection connection
+        readonly BaseConnImpl connection
         readonly str name
         readonly BaseDbObjectType payloadType
         readonly BaseDeqOptions deqOptions
@@ -407,7 +400,7 @@ cdef class BaseMsgProps:
 cdef class BaseSubscription:
     cdef:
         readonly object callback
-        readonly BaseConnection connection
+        readonly object connection
         readonly uint32_t namespace
         readonly str name
         readonly uint32_t protocol
@@ -421,11 +414,11 @@ cdef class BaseSubscription:
         readonly uint32_t grouping_value
         readonly uint8_t grouping_type
         readonly bint client_initiated
+        BaseConnImpl _conn_impl
 
     cdef int _register_query(self, str sql, object args,
                              uint64_t* query_id) except -1
-    cdef int _subscribe(self) except -1
-    cdef int _unsubscribe(self, BaseConnection connection) except -1
+    cdef int _unsubscribe(self, BaseConnImpl connection) except -1
 
 
 cdef class Message:

@@ -85,25 +85,24 @@ cdef class Subscription(BaseSubscription):
                              uint64_t* query_id) except -1:
         cdef:
             StringBuffer sql_buf = StringBuffer()
-            Cursor cursor
+            ThickCursorImpl cursor_impl
+            object cursor
         sql_buf.set_value(sql)
-        cursor = Cursor.__new__(Cursor, self.connection)
+        cursor = self.connection.cursor()
+        cursor_impl = <ThickCursorImpl> cursor._impl
         if dpiSubscr_prepareStmt(self._handle, sql_buf.ptr, sql_buf.length,
-                                 &cursor._handle) < 0:
+                                 &cursor_impl._handle) < 0:
             _raise_from_odpi()
         if args is not None:
-            if isinstance(args, dict):
-                cursor._bind_by_name(args)
-            else:
-                cursor._bind_by_position(args)
-        cursor._execute()
+            cursor_impl.bind_one(args)
+        cursor_impl.execute(cursor)
         if self.qos & DPI_SUBSCR_QOS_QUERY:
-            if dpiStmt_getSubscrQueryId(cursor._handle, query_id) < 0:
+            if dpiStmt_getSubscrQueryId(cursor_impl._handle, query_id) < 0:
                 _raise_from_odpi()
 
-    cdef int _subscribe(self) except -1:
+    def subscribe(self):
         cdef:
-            Connection thick_connection = self.connection
+            ThickConnImpl thick_conn_impl = self.connection._impl
             StringBuffer ip_address_buf = StringBuffer()
             StringBuffer name_buf = StringBuffer()
             dpiSubscrCreateParams params
@@ -130,18 +129,17 @@ cdef class Subscription(BaseSubscription):
         params.groupingValue = self.grouping_value
         params.clientInitiated = self.client_initiated
         with nogil:
-            status = dpiConn_subscribe(thick_connection._handle, &params,
+            status = dpiConn_subscribe(thick_conn_impl._handle, &params,
                                        &self._handle)
         if status < 0:
             _raise_from_odpi()
         self.id = params.outRegId
 
-    cdef int _unsubscribe(self, BaseConnection connection) except -1:
+    def unsubscribe(self, conn_impl):
         cdef:
-            Connection thick_connection = connection
+            ThickConnImpl thick_conn_impl = conn_impl
             int status
         with nogil:
-            status = dpiConn_unsubscribe(thick_connection._handle,
-                                         self._handle)
+            status = dpiConn_unsubscribe(thick_conn_impl._handle, self._handle)
         if status < 0:
             _raise_from_odpi()

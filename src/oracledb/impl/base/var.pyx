@@ -16,8 +16,8 @@ cdef class BaseVar:
             f"{repr(value)}>"
         return r
 
-    cdef int _bind(self, BaseCursor cursor, str name=None,
-                   uint32_t pos=0) except -1:
+    cdef int _bind(self, BaseCursorImpl cursor, uint32_t num_execs,
+                   str name=None, uint32_t pos=0) except -1:
         """
         Binds a variable to the cursor.
         """
@@ -27,33 +27,51 @@ cdef class BaseVar:
         """
         Finalizes initialization.
         """
-        raise NotImplementedError()
+        if self.num_elements == 0:
+            self.num_elements = 1
+        self._values = [None] * self.num_elements
+        if self.size > 0:
+            self.buffer_size = self.size * self._dbtype._buffer_size_factor
+        else:
+            self.buffer_size = self._dbtype._buffer_size_factor
 
-    cdef uint32_t _get_actual_elements(self) except *:
+    cdef uint32_t _get_actual_elements(self):
         """
         Return the number of elements in the variable. This will either be the
         number of elements in a PL/SQL array or the number of elements that
         were originally allocated for the variable.
         """
-        raise NotImplementedError()
+        if self.is_array:
+            return self._num_elements_in_array
+        return self.num_elements
 
     cdef list _get_array_value(self, uint32_t num_elements):
         """
         Return the values stored in the variable as a list.
         """
-        raise NotImplementedError()
+        return self._values[:num_elements]
     
     cdef object _get_single_value(self, uint32_t pos):
         """
         Return the value stored in the variable at the specified position.
         """
-        raise NotImplementedError()
+        return self._values[pos]
+
+    cdef int _resize(self, uint32_t new_size) except -1:
+        """
+        Resize the variable to the new size provided.
+        """
+        self.size = new_size
+        self.buffer_size = new_size * self._dbtype._buffer_size_factor
 
     cdef int _set_array_value(self, list value) except -1:
         """
         Set the array elements to the value of the list.
         """
-        raise NotImplementedError()
+        cdef uint32_t i
+        for i, element_value in enumerate(value):
+            self._set_single_value(i, element_value)
+        self._num_elements_in_array = <uint32_t> len(value)
 
     cdef int _set_dbtype_from_type(self, object typ) except -1:
         """
@@ -99,7 +117,63 @@ cdef class BaseVar:
         """
         Set a single element of the variable to the specified value.
         """
-        raise NotImplementedError()
+        cdef:
+            uint32_t size
+            DbType dbtype
+            BaseLob lob
+        if self.inconverter is not None:
+            value = self.inconverter(value)
+        if value is not None:
+            dbtype = self._dbtype
+            if dbtype is DB_TYPE_NUMBER or dbtype is DB_TYPE_BINARY_INTEGER:
+                if not isinstance(value, (bool, int, float, decimal.Decimal)):
+                    raise TypeError("expecting number or boolean")
+            elif dbtype is DB_TYPE_VARCHAR or dbtype is DB_TYPE_NVARCHAR \
+                    or dbtype is DB_TYPE_CHAR or dbtype is DB_TYPE_NCHAR \
+                    or dbtype is DB_TYPE_LONG:
+                if not isinstance(value, str):
+                    raise TypeError("expecting string")
+                size = <uint32_t> len(value)
+                if size > self.size:
+                    self._resize(size)
+            elif dbtype is DB_TYPE_RAW or dbtype is DB_TYPE_LONG_RAW:
+                if not isinstance(value, bytes):
+                    raise TypeError("expecting bytes")
+                size = <uint32_t> len(value)
+                if size > self.size:
+                    self._resize(size)
+            elif dbtype is DB_TYPE_DATE or dbtype is DB_TYPE_TIMESTAMP \
+                    or dbtype is DB_TYPE_TIMESTAMP_LTZ \
+                    or dbtype is DB_TYPE_TIMESTAMP_TZ:
+                if not isinstance(value, (datetime.date, datetime.datetime)):
+                    message = "expecting datetime.date or datetime.datetime"
+                    raise TypeError(message)
+            elif dbtype is DB_TYPE_CLOB or dbtype is DB_TYPE_NCLOB \
+                    or dbtype is DB_TYPE_BLOB:
+                if isinstance(value, BaseLob):
+                    lob = <BaseLob> value
+                    if lob.type is not dbtype:
+                        message = f"LOB must be of type {dbtype}"
+                        raise TypeError(message)
+                else:
+                    lob = <BaseLob> self._values[pos]
+                    if lob is None:
+                        lob = self._conn.createlob(dbtype)
+                    if value:
+                        lob.write(value)
+                    value = lob
+            elif dbtype is DB_TYPE_ROWID:
+                msg = "Rowid variables cannot be set directly"
+                errors._raise_from_string(exceptions.NotSupportedError, msg)
+            elif dbtype is DB_TYPE_OBJECT:
+                if not isinstance(value, BaseDbObject):
+                    raise TypeError("expecting DbObject")
+                if value.type != self._objtype:
+                    msg = f"found object of type {value.type.schema}." \
+                          f"{value.type.name} when expecting object of type " \
+                          f"{self._objtype.schema}.{self._objtype.name}"
+                    errors._raise_from_string(exceptions.DatabaseError, msg)
+        self._values[pos] = value
 
     cdef int _set_value(self, uint32_t pos, object value) except -1:
         """
@@ -119,6 +193,7 @@ cdef class BaseVar:
             if pos >= self.num_elements:
                 raise IndexError("position out of range")
             self._set_single_value(pos, value)
+        self._is_value_set = True
 
     @property
     def actualElements(self):
@@ -134,8 +209,10 @@ cdef class BaseVar:
 
     @property
     def description(self):
+        size_in_bytes = 0
         if self.size > 0:
             display_size = self.size
+            size_in_bytes = self.buffer_size
         elif self._dbtype is DB_TYPE_DATE \
                 or self._dbtype is DB_TYPE_TIMESTAMP \
                 or self._dbtype is DB_TYPE_TIMESTAMP_LTZ \
@@ -153,8 +230,6 @@ cdef class BaseVar:
                 display_size = 127
         else:
             display_size = 0
-        size_in_bytes = self.buffer_size \
-                if self._dbtype.default_size != 0 else 0
         if self.precision or self.scale:
             precision = self.precision
             scale = self.scale

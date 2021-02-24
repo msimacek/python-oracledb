@@ -10,9 +10,9 @@
 cdef class Pool(BasePool):
 
     cdef:
-        list _free_new_connections
-        list _free_used_connections
-        list _busy_connections
+        list _free_new_conn_impls
+        list _free_used_conn_impls
+        list _busy_conn_impls
         uint8_t _getmode
         uint32_t _stmt_cache_size
         uint32_t _timeout
@@ -30,33 +30,35 @@ cdef class Pool(BasePool):
         bint _shutdown
 
     def __init__(self, user, dsn, min, max, increment, homogeneous, port,
-                 host, connect_string, password, getmode, wait_timeout):
+                 host, connect_string, password, getmode, wait_timeout,
+                 connection_type):
         self.username = user
         self.dsn = dsn
         self.min = min
         self.max = max
         self.increment = increment
         self.homogeneous = homogeneous
+        self.connection_type = connection_type
         self._port = port
         self._host = host
         self._connect_string = connect_string
         self._password = password
         self._getmode = getmode
         self._wait_timeout = wait_timeout
-        self._free_new_connections = []
-        self._free_used_connections = []
-        self._busy_connections = []
+        self._free_new_conn_impls = []
+        self._free_used_conn_impls = []
+        self._busy_conn_impls = []
         self._condition = threading.Condition()
         self._create_thread_condition = threading.Condition()
-        self._create_thread = threading.Thread(target=self._create_connections,
+        self._create_thread = threading.Thread(target=self._create_conn_impls,
                                                daemon=True)
         self._create_thread.start()
 
-    cdef BaseConnection _acquire(self, str user, str password, str cclass,
-                                 uint32_t purity, str tag, bint match_any_tag,
-                                 list sharding_key, list super_sharding_key):
+    cdef object _acquire(self, str user, str password, str cclass,
+                         uint32_t purity, str tag, bint match_any_tag,
+                         list sharding_key, list super_sharding_key):
         cdef:
-            Connection connection
+            ThinConnImpl conn_impl
             object wait_timeout
             object predicate
             object exc
@@ -98,47 +100,47 @@ cdef class Pool(BasePool):
 
             # if a free new connection is available, it can be used without any
             # other considerations
-            if self._free_new_connections:
-                connection = self._free_new_connections.pop()
-                self._busy_connections.append(connection)
+            if self._free_new_conn_impls:
+                conn_impl = self._free_new_conn_impls.pop()
+                self._busy_conn_impls.append(conn_impl)
 
             # if a free used connection is available and the purity allows the
             # use of such a connection, it can also be used directly;
             # otherwise, if a new connection is required, that connection will
             # be closed and a new one will be created instead
-            elif self._free_used_connections:
-                connection = self._free_used_connections.pop(0)
-                connection._is_connected = True
+            elif self._free_used_conn_impls:
+                conn_impl = self._free_used_conn_impls.pop(0)
                 if purity == constants.PURITY_NEW:
-                    connection._pool = None
-                    connection._close()
-                    connection = self._create_connection()
-                self._busy_connections.append(connection)
+                    conn_impl._pool = None
+                    conn_impl._close()
+                    conn_impl = self._create_conn_impl()
+                self._busy_conn_impls.append(conn_impl)
 
             # finally, if no new or used free connections are available, the
             # get mode must be POOL_GETMODE_FORCEGET; in this case a brand new
             # connection is created which is not returned to the pool
             else:
-                connection = self._create_connection()
-                connection._pool = None
+                conn_impl = self._create_conn_impl()
+                conn_impl._pool = None
 
             self._num_pending_requests -= 1
-            return connection
+            return self.connection_type._from_impl(conn_impl, self.dsn,
+                                                   self.username)
 
-    cdef Connection _create_connection(self):
+    cdef ThinConnImpl _create_conn_impl(self):
         """
         Create a single connection using the pool's information. This
         connection may be placed in the pool or may be returned directly (such
         as when the pool is full and POOL_GETMODE_FORCEWAIT is being used).
         """
-        cdef Connection connection
-        connection = Connection(self.username, self.dsn)
-        connection._connect(self._host, self._port, self._connect_string,
+        cdef ThinConnImpl conn_impl
+        conn_impl = ThinConnImpl(self.username, self.dsn)
+        conn_impl._connect(self._host, self._port, self._connect_string,
                             self._password)
-        connection._pool = self
-        return connection
+        conn_impl._pool = self
+        return conn_impl
 
-    def _create_connections(self):
+    def _create_conn_impls(self):
         """
         Method which runs in a dedicated thread and is used to create
         connections when needed. This happens initially when the pool is
@@ -148,11 +150,11 @@ cdef class Pool(BasePool):
         """
         cdef:
             uint32_t open_count, num_conns = 0, i
-            Connection connection
+            ThinConnImpl connection
             bint wait, shutdown
 
         # create the initial set of connections requested
-        self._create_connections_helper(self.min)
+        self._create_conn_impls_helper(self.min)
 
         # wait for requests to create additional connections and then create
         # them; continue creating connections (self.increment at a time) up
@@ -169,9 +171,9 @@ cdef class Pool(BasePool):
             with self._condition:
                 self._get_open_count(&open_count)
                 num_conns = min(self.increment, self.max - open_count)
-            self._create_connections_helper(num_conns)
+            self._create_conn_impls_helper(num_conns)
 
-    cdef int _create_connections_helper(self, uint32_t num_conns) except -1:
+    cdef int _create_conn_impls_helper(self, uint32_t num_conns) except -1:
         """
         Helper method which creates the specified number of connections. In
         order to prevent the thread from dying, exceptions are captured and
@@ -179,41 +181,41 @@ cdef class Pool(BasePool):
         will return this exception.
         """
         cdef:
-            Connection conn
+            ThinConnImpl conn
             object exc
             uint32_t i
         for i in range(num_conns):
             conn = None
             try:
-                conn = self._create_connection()
+                conn = self._create_conn_impl()
             except Exception as e:
                 exc = e
             with self._condition:
                 if conn is not None:
-                    self._free_new_connections.append(conn)
+                    self._free_new_conn_impls.append(conn)
                 else:
                     self._create_exc = exc
                 self._condition.notify()
                 if conn is None:
                     break
 
-    cdef int _drop(self, BaseConnection connection) except -1:
-        cdef Connection thin_connection = <Connection> connection
+    cdef int _drop(self, BaseConnImpl connection) except -1:
+        cdef ThinConnImpl thin_connection = connection
         with self._condition:
-            self._busy_connections.remove(thin_connection)
+            self._busy_conn_impls.remove(thin_connection)
             self._condition.notify()
         thin_connection._pool = None
         thin_connection._close()
 
-    cdef int _free_busy_connection(self, Connection connection) except -1:
+    cdef int _free_busy_connection(self, ThinConnImpl connection) except -1:
         connection._rollback()
         with self._condition:
-            self._busy_connections.remove(connection)
-            self._free_used_connections.append(connection)
+            self._busy_conn_impls.remove(connection)
+            self._free_used_conn_impls.append(connection)
             self._condition.notify()
 
     cdef int _get_busy_count(self, uint32_t *value) except -1:
-        value[0] = len(self._busy_connections)
+        value[0] = len(self._busy_conn_impls)
 
     cdef int _get_getmode(self, uint8_t *value) except -1:
         value[0] = self._getmode
@@ -222,9 +224,9 @@ cdef class Pool(BasePool):
         value[0] = self._max_lifetime_session
 
     cdef int _get_open_count(self, uint32_t *value) except -1:
-        value[0] = len(self._busy_connections) + \
-                   len(self._free_used_connections) + \
-                   len(self._free_new_connections)
+        value[0] = len(self._busy_conn_impls) + \
+                   len(self._free_used_conn_impls) + \
+                   len(self._free_new_conn_impls)
 
     cdef int _get_stmt_cache_size(self, uint32_t *value) except -1:
         value[0] = self._stmt_cache_size
@@ -240,10 +242,10 @@ cdef class Pool(BasePool):
         creation thread is notified to create additional connections.
         """
         cdef uint32_t open_count
-        if self._create_exc is not None or self._free_new_connections:
+        if self._create_exc is not None or self._free_new_conn_impls:
             return True
         self._get_open_count(&open_count)
-        if self._free_used_connections:
+        if self._free_used_conn_impls:
             if purity != constants.PURITY_NEW or open_count == self.max:
                 return True
         if open_count < self.max:
@@ -252,8 +254,8 @@ cdef class Pool(BasePool):
             return False
         return self._getmode == constants.POOL_GETMODE_FORCEGET
 
-    cdef int _release(self, BaseConnection connection, str tag) except -1:
-        self._free_busy_connection(<Connection> connection)
+    cdef int _release(self, BaseConnImpl connection, str tag) except -1:
+        self._free_busy_connection(connection)
 
     cdef int _set_getmode(self, uint8_t value) except -1:
         self._getmode = value

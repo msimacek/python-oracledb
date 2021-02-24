@@ -2,35 +2,14 @@
 # Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
-cdef class BaseCursor:
+cdef class BaseCursorImpl:
 
-    def __cinit__(self, connection):
-        self.connection = connection
+    def __cinit__(self, conn_impl):
         self.arraysize = 100
         self.prefetchrows = 2
-        self._is_open = True
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, exc_tb):
-        self.close()
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        self._verify_fetch()
-        row = self._fetch_next_row()
-        if row is not None:
-            return row
-        raise StopIteration
-
-    def __repr__(self):
-        return f"<oracledb.Cursor on {self.connection!r}>"
-
-    cdef int _bind_by_name(self, dict params, uint32_t num_elements=1,
-                           uint32_t pos=0) except -1:
+    cdef int _bind_by_name(self, object cursor, dict params,
+                           uint32_t num_elements=1, uint32_t pos=0) except -1:
         """
         Internal method used for binding variables by name.
         """
@@ -38,14 +17,16 @@ cdef class BaseCursor:
             BaseVar orig_var, var
             object value
             str name
-        if self._bind_vars is None:
-            self._bind_vars = {}
+        if self.bind_vars is None:
+            self.bind_vars = {}
         for name, value in params.items():
-            orig_var = self._bind_vars.get(name)
-            var = self._get_bind_var(num_elements, pos, value, orig_var)
-            self._bind_vars[name] = var
+            orig_var = self.bind_vars.get(name)
+            var = self._get_bind_var(cursor, num_elements, pos, value,
+                                     orig_var)
+            self.bind_vars[name] = var
 
-    cdef int _bind_by_position(self, object params, uint32_t num_elements=1,
+    cdef int _bind_by_position(self, object cursor, object params,
+                               uint32_t num_elements=1,
                                uint32_t pos=0) except -1:
         """
         Internal method used for binding variables by position.
@@ -54,59 +35,29 @@ cdef class BaseCursor:
             Py_ssize_t i, orig_num_vars
             BaseVar orig_var, var
             object value
-        if self._bind_vars is None:
+        if self.bind_vars is None:
             orig_num_vars = 0
-            self._bind_vars = [None] * len(params)
+            self.bind_vars = [None] * len(params)
         else:
-            orig_num_vars = len(self._bind_vars)
+            orig_num_vars = len(self.bind_vars)
         for i, value in enumerate(params):
             if i < orig_num_vars:
-                orig_var = <BaseVar> cpython.PyList_GET_ITEM(self._bind_vars,
+                orig_var = <BaseVar> cpython.PyList_GET_ITEM(self.bind_vars,
                                                              i)
             else:
                 orig_var = None
-            var = self._get_bind_var(num_elements, pos, value, orig_var)
-            if i < len(self._bind_vars):
-                self._bind_vars[i] = var
+            var = self._get_bind_var(cursor, num_elements, pos, value,
+                                     orig_var)
+            if i < len(self.bind_vars):
+                self.bind_vars[i] = var
             else:
-                self._bind_vars.append(var)
+                self.bind_vars.append(var)
 
     cdef object _bindnames(self):
         """
         Internal method used for getting bind names.
         """
         raise NotImplementedError()
-
-    def _call(self, name, parameters, keyword_parameters, return_value=None):
-
-        # verify parameters
-        if parameters is not None \
-                and not isinstance(parameters, (list, tuple)):
-            raise TypeError("arguments must be a list or tuple")
-        if keyword_parameters is not None \
-                and not isinstance(keyword_parameters, dict):
-            raise TypeError("keyword arguments must be a dict")
-        self._verify_open()
-
-        # build statement
-        bind_names = []
-        bind_values = []
-        statement_parts = ["begin "]
-        if return_value is not None:
-            statement_parts.append(":retval := ")
-            bind_values.append(return_value)
-        statement_parts.append(name + "(")
-        if parameters:
-            bind_values.extend(parameters)
-            bind_names = [":%d" % (i + 1) for i in range(len(parameters))]
-        if keyword_parameters:
-            for arg_name, arg_value in keyword_parameters.items():
-                bind_values.append(arg_value)
-                bind_names.append(f"{arg_name} => :{len(bind_names) + 1}")
-        statement_parts.append(",".join(bind_names))
-        statement_parts.append("); end;")
-        statement = "".join(statement_parts)
-        self.execute(statement, bind_values)
 
     cdef int _close(self) except -1:
         """
@@ -124,10 +75,10 @@ cdef class BaseCursor:
             Py_ssize_t i, num_vars
             object row, value
             BaseVar var
-        num_vars = cpython.PyList_GET_SIZE(self._fetch_vars)
+        num_vars = cpython.PyList_GET_SIZE(self.fetch_vars)
         row = cpython.PyTuple_New(num_vars)
         for i in range(num_vars):
-            var = self._fetch_vars[i]
+            var = self.fetch_vars[i]
             value = var._get_single_value(self._buffer_index)
             cpython.Py_INCREF(value)
             cpython.PyTuple_SET_ITEM(row, i, value)
@@ -138,13 +89,13 @@ cdef class BaseCursor:
         self.rowcount += 1
         return row
 
-    cdef BaseVar _create_var(self):
+    cdef BaseVar _create_var(self, object connection):
         """
         Internal method for creating a variable.
         """
         raise NotImplementedError()
 
-    cdef BaseVar _create_var_by_type(self, object value,
+    cdef BaseVar _create_var_by_type(self, object connection, object value,
                                      uint32_t num_elements=1):
         """
         Internal method for creating a variable that can contain the specified
@@ -159,8 +110,8 @@ cdef class BaseCursor:
             if len(value) != 2:
                 message = "expecting a list of two elements [type, numelems]"
                 errors._raise_from_string(exceptions.ProgrammingError, message)
-            return self.arrayvar(*value)
-        var = self._create_var()
+            return self.arrayvar(connection, *value)
+        var = self._create_var(connection)
         if isinstance(value, int):
             var._dbtype = DB_TYPE_VARCHAR
             var.size = value
@@ -168,14 +119,10 @@ cdef class BaseCursor:
             var._set_dbtype_from_type(value)
             var.size = var._dbtype.default_size
         var.num_elements = num_elements
-        if var.size > 0:
-            var.buffer_size = var.size * var._dbtype._buffer_size_factor
-        else:
-            var.buffer_size = var._dbtype._buffer_size_factor
         var._finalize_init()
         return var
 
-    cdef BaseVar _create_var_by_value(self, object value,
+    cdef BaseVar _create_var_by_value(self, object cursor, object value,
                                       uint32_t num_elements):
         """
         Internal method for creating a variable that can contain the
@@ -196,10 +143,10 @@ cdef class BaseCursor:
         # should return a variable or None; the value None implies that the
         # default processing should take place just as if no input type handler
         # was defined
-        type_handler = self.inputtypehandler \
-                or self.connection.inputtypehandler
+        type_handler = cursor.inputtypehandler or \
+                cursor.connection.inputtypehandler
         if type_handler:
-            result = type_handler(self, value, num_elements)
+            result = type_handler(cursor, value, num_elements)
             if result is not None:
                 if not isinstance(result, BaseVar):
                     message = "expecting variable from input type handler"
@@ -242,42 +189,16 @@ cdef class BaseCursor:
             size = 1
 
         # create the variable
-        var = self._create_var()
+        var = self._create_var(cursor.connection)
         var._dbtype = dbtype
         var._objtype = objtype
         var.num_elements = num_elements
         var.is_array = is_array
         var.size = size
-        if size > 0:
-            var.buffer_size = size * dbtype._buffer_size_factor
-        else:
-            var.buffer_size = dbtype._buffer_size_factor
         var._finalize_init()
         return var
 
-    cdef int _execute(self) except -1:
-        """
-        Internal method used for executing a statement.
-        """
-        raise NotImplementedError()
-
-    cdef int _executemany(self, uint32_t num_execs, bint batcherrors,
-                          bint arraydmlrowcounts) except -1:
-        """
-        Internal method used for executing a statement many times.
-        """
-        raise NotImplementedError()
-
-    cdef object _fetch_next_row(self):
-        """
-        Internal method used for fetching the next row from a cursor.
-        """
-        if self._buffer_rowcount == 0 and self._more_rows_to_fetch:
-            self._fetch_rows()
-        if self._buffer_rowcount > 0:
-            return self._create_row()
-
-    cdef int _fetch_rows(self) except -1:
+    cdef int _fetch_rows(self, object cursor) except -1:
         """
         Internal method used for fetching rows from a cursor.
         """
@@ -295,8 +216,8 @@ cdef class BaseCursor:
         """
         raise NotImplementedError()
 
-    cdef BaseVar _get_bind_var(self, uint32_t num_elements, uint32_t pos,
-                               object value, BaseVar orig_var):
+    cdef BaseVar _get_bind_var(self, object cursor, uint32_t num_elements,
+                               uint32_t pos, object value, BaseVar orig_var):
         """
         Internal method that returns the variable that will be bound with the
         specified value.
@@ -308,13 +229,12 @@ cdef class BaseCursor:
             if num_elements <= orig_var.num_elements:
                 var = orig_var
             else:
-                var = self._create_var()
+                var = self._create_var(cursor.connection)
                 var.num_elements = num_elements
                 var._dbtype = orig_var._dbtype
                 var._objtype = orig_var._objtype
                 var.is_array = orig_var.is_array
                 var.size = orig_var.size
-                var.buffer_size = orig_var.buffer_size
                 var.inconverter = orig_var.inconverter
                 var.outconverter = orig_var.outconverter
                 var._finalize_init()
@@ -324,16 +244,9 @@ cdef class BaseCursor:
             except TypeError:
                 if pos > 0:
                     raise
-        var = self._create_var_by_value(value, num_elements)
+        var = self._create_var_by_value(cursor, value, num_elements)
         var._set_value(pos, value)
         return var
-
-    cdef object _get_implicit_results(self):
-        """
-        Internal method for returning a list of cursors corresponding to the
-        implicit results made available from a PL/SQL block or procedure.
-        """
-        raise NotImplementedError()
 
     cdef object _get_lastrowid(self):
         """
@@ -348,21 +261,14 @@ cdef class BaseCursor:
         """
         raise NotImplementedError()
 
-    cdef bint _is_query(self) except *:
-        """
-        Internal method that indicates whether the currently statement is a
-        query or not.
-        """
-        raise NotImplementedError()
-
-    cdef int _parse(self) except -1:
+    cdef int _parse(self, object connection) except -1:
         """
         Internal method for parsing the currently prepared statement without
         executing it.
         """
         raise NotImplementedError()
 
-    cdef int _perform_binds(self) except -1:
+    cdef int _perform_binds(self, uint32_t num_execs=1) except -1:
         """
         Perform all binds on the cursor.
         """
@@ -370,13 +276,12 @@ cdef class BaseCursor:
             Py_ssize_t pos
             BaseVar var
             str key
-        self._set_input_sizes = False
-        if isinstance(self._bind_vars, dict):
-            for key, var in self._bind_vars.items():
-                var._bind(self, key)
+        if isinstance(self.bind_vars, dict):
+            for key, var in self.bind_vars.items():
+                var._bind(self, num_execs, key)
         else:
-            for pos, var in enumerate(self._bind_vars):
-                var._bind(self, None, pos + 1)
+            for pos, var in enumerate(self.bind_vars):
+                var._bind(self, num_execs, None, pos + 1)
 
     cdef int _prepare(self, str statement, str tag=None) except -1:
         """
@@ -390,41 +295,19 @@ cdef class BaseCursor:
         """
         raise NotImplementedError()
 
-    cdef int _verify_fetch(self) except -1:
-        """
-        Verifies that fetching is possible from this cursor.
-        """
-        self._verify_open()
-        if not self._is_query():
-            errors._raise_from_string(exceptions.InterfaceError, "not a query")
-
-    cdef int _verify_open(self) except -1:
-        """
-        Verifies that the cursor is open and the associated connection is
-        connected. If either condition is false an exception is raised.
-        """
-        cdef BaseConnection connection
-        if not self._is_open:
-            errors._raise_from_string(exceptions.InterfaceError, "not open")
-        connection = <BaseConnection> self.connection
-        connection._verify_connected()
-
-    def arrayvar(self, typ, value, size=None):
+    def arrayvar(self, connection, typ, value, size=None):
         """
         Create an array variable associated with the cursor of the given type
         and size and return it.
         """
         cdef BaseVar var
-        var = self._create_var()
+        var = self._create_var(connection)
         var._set_dbtype_from_type(typ)
         var.is_array = True
         if isinstance(typ, BaseDbObjectType):
             var._objtype = typ
         if var._dbtype.default_size > 0:
             var.size = size or var._dbtype.default_size
-            var.buffer_size = var.size * var._dbtype._buffer_size_factor
-        else:
-            var.buffer_size = var._dbtype._buffer_size_factor
         if isinstance(value, list):
             var.num_elements = len(value)
         elif isinstance(value, int):
@@ -441,175 +324,60 @@ cdef class BaseCursor:
         """
         Returns a list of bind names.
         """
-        self._verify_open()
-        if self.statement is None:
-            message = "statement must be prepared first"
-            errors._raise_from_string(exceptions.ProgrammingError, message)
         return self._bindnames()
 
-    @property
-    def bindvars(self):
-        return self._bind_vars or []
+    def bind_many(self, cursor, parameters):
+        """
+        Internal method used for binding multiple rows of data.
+        """
+        cdef:
+            object params_row, value
+            ssize_t i, num_rows
+        num_rows = len(parameters)
+        for i in range(num_rows):
+            params_row = parameters[i]
+            if isinstance(params_row, dict):
+                self._bind_by_name(cursor, params_row, num_rows, i)
+            else:
+                self._bind_by_position(cursor, params_row, num_rows, i)
 
-    def callfunc(self, name, return_type, parameters=None, **kwargs):
+    def bind_one(self, cursor, parameters):
         """
-        Call a stored function and return the return value from the stored
-        function.
+        Internal method used for binding a single row of data.
         """
-        var = self.var(return_type)
-        self._call(name, parameters, kwargs, var)
-        return var.getvalue()
-
-    def callproc(self, name, parameters=None, kwargs=None):
-        """
-        Call a stored procedure and return the (possibly modified) arguments.
-        Note that only the positional arguments are returned.
-        """
-        self._call(name, parameters, kwargs)
-        if parameters is None:
-            return []
-        return [v.getvalue() for v in self._bind_vars[:len(parameters)]]
+        if isinstance(parameters, dict):
+            self._bind_by_name(cursor, parameters)
+        else:
+            self._bind_by_position(cursor, parameters)
 
     def close(self):
         """
         Closes the cursor and makes it unusable for further operations.
         """
-        self._verify_open()
-        self._bind_vars = None
-        self._fetch_vars = None
+        self.bind_vars = None
+        self.fetch_vars = None
         self._close()
-        self._is_open = False
 
-    @property
-    def description(self):
-        if self._is_query():
-            return [v.description for v in self._fetch_vars]
-
-    def execute(self, statement=None, parameters=None, **keyword_parameters):
+    def execute(self, cursor):
         """
-        Executes a statement, passing any parameters to the database.
+        Internal method used for executing a statement.
         """
+        raise NotImplementedError()
 
-        # verify parameters
-        if statement is None and self.statement is None:
-            message = "no statement specified and no prior statement prepared"
-            errors._raise_from_string(exceptions.ProgrammingError, message)
-        if keyword_parameters:
-            if parameters:
-                errors._raise_from_string(exceptions.InterfaceError,
-                        "expecting arguments or keyword arguments, not both")
-            parameters = keyword_parameters
-        elif parameters is not None \
-                and not isinstance(parameters, (list, tuple, dict)):
-            errors._raise_from_string(exceptions.InterfaceError,
-                    "expecting a dictionary, list or tuple, or keyword args")
-        prepare_needed = statement and statement != self.statement
-        if not (prepare_needed and not self._set_input_sizes) \
-                and self._bind_vars is not None and parameters is not None:
-            if isinstance(self._bind_vars, dict) \
-                    and not isinstance(parameters, dict) \
-                    or isinstance(self._bind_vars, list) \
-                    and isinstance(parameters, dict):
-                message = "positional and named binds cannot be intermixed"
-                errors._raise_from_string(exceptions.ProgrammingError, message)
-
-        # prepare statement, if necessary
-        self._verify_open()
-        if prepare_needed:
-            self._fetch_vars = None
-            if not self._set_input_sizes:
-                self._bind_vars = None
-            self._prepare(statement)
-
-        # perform bind and execute
-        if parameters is not None:
-            if isinstance(parameters, dict):
-                self._bind_by_name(parameters)
-            else:
-                self._bind_by_position(parameters)
-        self._execute()
-        if self._fetch_vars is not None:
-            return self
-
-    def executemany(self, statement, parameters, batcherrors=False,
-                    arraydmlrowcounts=False):
+    def executemany(self, cursor, num_execs, batcherrors, arraydmlrowcounts):
         """
-        Executes a statement many times equal to the number of elements in the
-        list of parameters or the provided integer. Arraydmlrowcounts and
-        batcherrors can be set.
+        Internal method used for executing a statement many times.
         """
-        cdef uint32_t num_execs, i
+        raise NotImplementedError()
 
-        # verify parameters
-        if statement is None and self.statement is None:
-            message = "no statement specified and no prior statement prepared"
-            errors._raise_from_string(exceptions.ProgrammingError, message)
-        if not isinstance(parameters, (list, int)):
-            message = "parameters should be a list of sequences or " \
-                      "dictionaries, or an integer specifying the number of " \
-                      "times to execute the statement"
-            errors._raise_from_string(TypeError, message)
-
-        # prepare statement if necessary
-        self._verify_open()
-        if statement and statement != self.statement:
-            self._fetch_vars = None
-            if not self._set_input_sizes:
-                self._bind_vars = None
-            self._prepare(statement)
-
-        # perform binds
-        if isinstance(parameters, int):
-            num_execs = parameters
-        else:
-            num_execs = len(parameters)
-            for i in range(num_execs):
-                if isinstance(parameters[i], dict):
-                    self._bind_by_name(parameters[i], num_execs, i)
-                else:
-                    self._bind_by_position(parameters[i], num_execs, i)
-
-        self._executemany(num_execs, bool(batcherrors),
-                          bool(arraydmlrowcounts))
-
-    def fetchall(self):
+    def fetch_next_row(self, cursor):
         """
-        Fetches all of the remaining rows available from the cursor and returns
-        them as a list.
+        Internal method used for fetching the next row from a cursor.
         """
-        self._verify_fetch()
-        result = []
-        while True:
-            row = self._fetch_next_row()
-            if row is None:
-                break
-            result.append(row)
-        return result
-
-    def fetchmany(self, num_rows=None):
-        """
-        Fetches up to the specified number of rows from the cursor and returns
-        them as a list. If the number of rows is not specified, the cursor's
-        arraysize is used instead.
-        """
-        self._verify_fetch()
-        if num_rows is None:
-            num_rows = self.arraysize
-        result = []
-        while len(result) < num_rows:
-            row = self._fetch_next_row()
-            if row is None:
-                break
-            result.append(row)
-        return result
-
-    def fetchone(self):
-        """
-        Fetches a single row from the cursor and returns it. If no rows are
-        available, None is returned.
-        """
-        self._verify_fetch()
-        return self._fetch_next_row()
+        if self._buffer_rowcount == 0 and self._more_rows_to_fetch:
+            self._fetch_rows(cursor)
+        if self._buffer_rowcount > 0:
+            return self._create_row()
 
     def getarraydmlrowcounts(self):
         """
@@ -623,27 +391,35 @@ cdef class BaseCursor:
         """
         return self._get_batch_errors()
 
-    def getimplicitresults(self):
+    def get_description(self):
         """
-        returning a list of cursors corresponding to the implicit results made
-        available from a PL/SQL block or procedure.
+        Internal method for populating the cursor description.
         """
-        self._verify_open()
-        return self._get_implicit_results()
+        return [v.description for v in self.fetch_vars]
+
+    def get_implicit_results(self, connection):
+        """
+        Internal method to return a list of cursors corresponding to the
+        implicit results made available from a PL/SQL block or procedure.
+        """
+        raise NotImplementedError()
+
+    def is_query(self, cursor):
+        """
+        Internal method for determining if the cursor last executed a query.
+        """
+        raise NotImplementedError()
 
     @property
     def lastrowid(self):
-        self._verify_open()
         return self._get_lastrowid()
 
-    def parse(self, statement):
+    def parse(self, cursor):
         """
         Parse the statement without executing it. This also retrieves
         describe information for queries.
         """
-        self._verify_open()
-        self._prepare(statement)
-        self._parse()
+        self._parse(cursor)
 
     def prepare(self, statement):
         """
@@ -667,48 +443,30 @@ cdef class BaseCursor:
         else:
             message = "mode must be one of relative, absolute, first or last"
             errors._raise_from_string(exceptions.InterfaceError, message)
-        self._verify_open()
         self._scroll(value, int_mode)
 
-    def setinputsizes(self, *args, **kwargs):
-        if args and kwargs:
-            message = "expecting arguments or keyword arguments, not both"
-            errors._raise_from_string(exceptions.InterfaceError, message)
-        self._verify_open()
+    def setinputsizes(self, cursor, args, kwargs):
+        conn = cursor.connection
         if kwargs:
-            self._bind_vars = {}
+            self.bind_vars = {}
             for key, value in kwargs.items():
-                self._bind_vars[key] = self._create_var_by_type(value)
-        elif args:
-            self._bind_vars = [self._create_var_by_type(v) for v in args]
+                self.bind_vars[key] = self._create_var_by_type(conn, value)
         else:
-            return []
-        self._set_input_sizes = True
-        return self._bind_vars
+            self.bind_vars = [self._create_var_by_type(conn, v) for v in args]
 
-    def setoutputsize(self, size, column=0):
-        """
-        Sets a column buffer size for fetches of long columns but the driver
-        does not require it so nothing is done here.
-        """
-        pass
-
-    def var(self, typ, size=0, arraysize=1, inconverter=None,
+    def var(self, cursor, typ, size=0, arraysize=1, inconverter=None,
             outconverter=None, typename=None, encoding_errors=None):
         cdef BaseVar var
-        var = self._create_var()
+        var = self._create_var(cursor.connection)
         if isinstance(typ, BaseDbObjectType):
             var._objtype = typ
             var._dbtype = DB_TYPE_OBJECT
         else:
             var._set_dbtype_from_type(typ)
         if typename:
-            var._objtype = self.connection._get_type(typename)
+            var._objtype = cursor.connection.gettype(typename)
         if var._dbtype.default_size > 0:
             var.size = size or var._dbtype.default_size
-            var.buffer_size = var.size * var._dbtype._buffer_size_factor
-        else:
-            var.buffer_size = var._dbtype._buffer_size_factor
         var.num_elements = arraysize
         var.inconverter = inconverter
         var.outconverter = outconverter

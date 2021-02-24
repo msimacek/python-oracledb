@@ -138,53 +138,61 @@ cdef class Message:
 
 cdef class MessageWithData(Message):
     cdef:
+        ThinCursorImpl cursor_impl
+        ThinConnImpl conn_impl
         bint arraydmlrowcounts
         uint32_t row_index
         uint32_t num_execs
         list dmlrowcounts
         bint batcherrors
-        Connection conn
-        Cursor cursor
         list row_vars
         bint in_fetch
+        object cursor
+        object conn
 
     def __cinit__(self, cursor):
         self.cursor = cursor
+        self.cursor_impl = cursor._impl
         self.conn = cursor.connection
+        self.conn_impl = self.conn._impl
         self.num_execs = 1
 
-    cdef Cursor _create_cursor_from_describe(self, ReadBuffer buf,
-                                             Cursor cursor=None):
+    cdef object _create_cursor_from_describe(self, ReadBuffer buf,
+                                             object cursor=None):
+        cdef ThinCursorImpl cursor_impl
         if cursor is None:
             cursor = Cursor(self.conn)
-        cursor._statement = Statement()
-        cursor._fetch_array_size = cursor.arraysize
-        cursor._more_rows_to_fetch = True
-        cursor._statement._is_query = True
+        cursor_impl = cursor._impl
+        cursor_impl._statement = Statement()
+        cursor_impl._fetch_array_size = cursor.arraysize
+        cursor_impl._more_rows_to_fetch = True
+        cursor_impl._statement._is_query = True
         self._process_describe_info(buf, cursor)
         return cursor
 
     cdef int _preprocess(self) except -1:
-        cdef Var var
-        if self.cursor._statement._is_query:
+        cdef:
+            ThinCursorImpl cursor_impl = self.cursor_impl
+            Var var
+        if cursor_impl._statement._is_query:
             self.in_fetch = True
-            self.row_vars = self.cursor._fetch_vars
-            self.cursor._more_rows_to_fetch = True
-            self.cursor._fetch_array_size = self.cursor.arraysize
-            self.cursor._buffer_rowcount = self.cursor._buffer_index = 0
+            self.row_vars = cursor_impl.fetch_vars
+            cursor_impl._more_rows_to_fetch = True
+            cursor_impl._fetch_array_size = cursor_impl.arraysize
+            cursor_impl._buffer_rowcount = cursor_impl._buffer_index = 0
             if self.row_vars is not None:
                 for var in self.row_vars:
-                    if var.num_elements < self.cursor._fetch_array_size:
-                        var.num_elements = self.cursor._fetch_array_size
+                    if var.num_elements < cursor_impl._fetch_array_size:
+                        var.num_elements = cursor_impl._fetch_array_size
                         var._finalize_init()
 
     cdef object _process_column_data(self, ReadBuffer buf, Var var,
                                      uint32_t pos):
         cdef:
             uint8_t num_bytes, ora_type_num, csfrm
+            ThinCursorImpl cursor_impl
+            object column_value = None
             uint32_t actual_num_bytes
-            Cursor cursor = None
-            object column_value
             bytes temp_bytes
             Lob lob
         ora_type_num = var._dbtype._ora_type_num
@@ -229,10 +237,10 @@ cdef class MessageWithData(Message):
             column_value = int(buf.read_oracle_number(num_bytes, NUM_TYPE_INT))
         elif ora_type_num == TNS_DATA_TYPE_CURSOR:
             if not self.in_fetch:
-                cursor = var._values[pos]
-            cursor = self._create_cursor_from_describe(buf, cursor)
-            cursor._statement._cursor_id = buf.read_ub4()
-            column_value = cursor
+                column_value = var._values[pos]
+            column_value = self._create_cursor_from_describe(buf, column_value)
+            cursor_impl = column_value._impl
+            cursor_impl._statement._cursor_id = buf.read_ub4()
         elif ora_type_num == TNS_DATA_TYPE_BOOLEAN:
             column_value = buf.read_uint32() != 0
         elif ora_type_num == TNS_DATA_TYPE_INTERVAL_DS:
@@ -242,7 +250,7 @@ cdef class MessageWithData(Message):
             lob = Lob()
             lob.type = var._dbtype
             num_bytes = buf.read_uint8()
-            lob._connection = self.conn
+            lob._connection = self.conn_impl
             lob._locator = buf.read_bytes(buf.read_uint8())
             column_value = lob
         else:
@@ -258,13 +266,14 @@ cdef class MessageWithData(Message):
                 errors._raise_from_string(exceptions.DatabaseError, message)
         return column_value
 
-    cdef Var _process_column_info(self, ReadBuffer buf, Cursor cursor):
+    cdef Var _process_column_info(self, ReadBuffer buf,
+                                  ThinCursorImpl cursor_impl):
         cdef:
             uint8_t data_type, csfrm
             uint16_t charset_id
             uint32_t num_bytes
             Var var
-        var = cursor._create_var()
+        var = cursor_impl._create_var(self.conn)
         data_type = buf.read_uint8()
         buf.read_uint8()                    # flags
         var.precision = buf.read_uint8()
@@ -308,25 +317,26 @@ cdef class MessageWithData(Message):
             buf.skip_bytes(num_bytes)       # type name
         buf.read_ub2()                      # column position
         buf.read_ub4()                      # uds flag
-        var.num_elements = cursor._fetch_array_size
+        var.num_elements = cursor_impl._fetch_array_size
         var._finalize_init()
         return var
 
     cdef int _process_describe_info(self, ReadBuffer buf,
-                                    Cursor cursor) except -1:
+                                    object cursor) except -1:
         cdef:
+            ThinCursorImpl cursor_impl = cursor._impl
             uint32_t num_bytes, num_columns, i
             str message
             object type_handler
             Var output_var
         buf.read_ub4()                      # max row size
         num_columns = buf.read_ub4()
-        cursor._fetch_vars = cpython.PyList_New(num_columns)
+        cursor_impl.fetch_vars = cpython.PyList_New(num_columns)
         buf.skip_bytes(1)
-        type_handler = cursor.outputtypehandler \
-                or cursor.connection.outputtypehandler
+        type_handler = cursor_impl.outputtypehandler \
+                or cursor_impl._conn_impl.outputtypehandler
         for i in range(num_columns):
-            var = self._process_column_info(buf, cursor)
+            var = self._process_column_info(buf, cursor_impl)
             cpython.Py_INCREF(var)
             if type_handler:
                 output_var = type_handler(cursor, var.name,  var._dbtype,
@@ -339,7 +349,7 @@ cdef class MessageWithData(Message):
                     conversion_helper(output_var._dbtype, var)
                 if output_var.outconverter:
                     var.outconverter = output_var.outconverter
-            cpython.PyList_SET_ITEM(cursor._fetch_vars, i, var)
+            cpython.PyList_SET_ITEM(cursor_impl.fetch_vars, i, var)
         num_bytes = buf.read_ub4()
         if num_bytes > 0:
             buf.skip_bytes(num_bytes + 1)   # current date
@@ -350,20 +360,22 @@ cdef class MessageWithData(Message):
         num_bytes = buf.read_ub4()
         if num_bytes > 0:
             buf.skip_bytes(num_bytes + 1)   # dcbqcky
-        cursor._statement._fetch_vars = cursor._fetch_vars
+        cursor_impl._statement._fetch_vars = cursor_impl.fetch_vars
 
     cdef int _process_implicit_result(self, ReadBuffer buf) except -1:
         cdef:
-            Cursor child_cursor
+            ThinCursorImpl child_cursor_impl
+            object child_cursor
             uint8_t num_bytes
             uint32_t i
-        self.cursor._implicit_resultsets = []
+        self.cursor_impl._implicit_resultsets = []
         for i in range(buf.read_ub4()):
             num_bytes = buf.read_uint8()
             buf.skip_bytes(num_bytes)
             child_cursor = self._create_cursor_from_describe(buf)
-            child_cursor._statement._cursor_id = buf.read_ub4()
-            self.cursor._implicit_resultsets.append(child_cursor)
+            child_cursor_impl = child_cursor._impl
+            child_cursor_impl._statement._cursor_id = buf.read_ub4()
+            self.cursor_impl._implicit_resultsets.append(child_cursor)
 
     cdef int _process_io_vector(self, ReadBuffer buf) except -1:
         cdef:
@@ -386,11 +398,12 @@ cdef class MessageWithData(Message):
             bind_dir = buf.read_uint8()
             if bind_dir == TNS_BIND_DIR_INPUT:
                 continue
-            bind_info = self.cursor._statement._bind_info_list[i]
+            bind_info = self.cursor_impl._statement._bind_info_list[i]
             self.row_vars.append(bind_info._bind_var)
 
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:
+        cdef ThinCursorImpl cursor_impl = self.cursor_impl
         if message_type == TNS_MSG_TYPE_ROW_HEADER:
             self._process_row_header(buf)
         elif message_type == TNS_MSG_TYPE_ROW_DATA:
@@ -398,19 +411,19 @@ cdef class MessageWithData(Message):
         elif message_type == TNS_MSG_TYPE_DESCRIBE_INFO:
             buf.skip_bytes(buf.read_uint8())
             self._process_describe_info(buf, self.cursor)
-            self.row_vars = self.cursor._fetch_vars
+            self.row_vars = cursor_impl.fetch_vars
         elif message_type == TNS_MSG_TYPE_ERROR:
             Message._process_error_info(self, buf)
-            self.cursor._statement._cursor_id = self.error_info.cursor_id
-            self.cursor.rowcount = self.error_info.rowcount
+            cursor_impl._statement._cursor_id = self.error_info.cursor_id
+            cursor_impl.rowcount = self.error_info.rowcount
             if self.error_info.rowcount > 0:
-                self.cursor._lastrowid = self.error_info.rowid
+                cursor_impl._lastrowid = self.error_info.rowid
             else:
-                self.cursor._lastrowid = None
-            self.cursor._batcherrors = self.error_info.batcherrors
+                cursor_impl._lastrowid = None
+            cursor_impl._batcherrors = self.error_info.batcherrors
             if self.error_info.num == TNS_ERR_NO_DATA_FOUND:
                 self.error_info.num = 0
-                self.cursor._more_rows_to_fetch = False
+                cursor_impl._more_rows_to_fetch = False
             if self.error_info.batcherrors is not None:
                 self.error_occurred = False
         elif message_type == TNS_MSG_TYPE_BIT_VECTOR:
@@ -449,7 +462,7 @@ cdef class MessageWithData(Message):
         if num_bytes > 0:
             buf.skip_bytes(num_bytes)
         if self.arraydmlrowcounts:
-            self.cursor._dmlrowcounts = \
+            self.cursor_impl._dmlrowcounts = \
                     [buf.read_ub8() for i in range(buf.read_ub4())]
 
     cdef int _process_row_data(self, ReadBuffer buf) except -1:
@@ -460,8 +473,8 @@ cdef class MessageWithData(Message):
             list values
             ssize_t i
             Var var
-        if self.cursor._statement._is_returning:
-            for bind_info in self.cursor._statement._bind_info_list:
+        if self.cursor_impl._statement._is_returning:
+            for bind_info in self.cursor_impl._statement._bind_info_list:
                 if not bind_info._is_return_bind:
                     continue
                 num_rows = buf.read_ub4()
@@ -482,7 +495,7 @@ cdef class MessageWithData(Message):
                     var._values[self.row_index] = value
         self.row_index += 1
         if self.in_fetch:
-            self.cursor._buffer_rowcount = self.row_index
+            self.cursor_impl._buffer_rowcount = self.row_index
 
     cdef int _process_row_header(self, ReadBuffer buf) except -1:
         buf.skip_bytes(1)                   # flags
@@ -588,9 +601,9 @@ cdef class MessageWithData(Message):
                                        object value) except -1:
         cdef:
             uint8_t ora_type_num = var._dbtype._ora_type_num
+            ThinCursorImpl cursor
             uint8_t num_bytes
             bytes temp_bytes
-            Cursor cursor
             Lob lob
         if value is None:
             buf.write_uint8(0)
@@ -620,7 +633,7 @@ cdef class MessageWithData(Message):
         elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
             buf.write_binary_float(value)
         elif ora_type_num == TNS_DATA_TYPE_CURSOR:
-            cursor = <Cursor> value
+            cursor = value._impl
             if cursor._statement is None:
                 cursor._statement = Statement()
             if cursor._statement._cursor_id == 0:
@@ -668,8 +681,8 @@ cdef class MessageWithData(Message):
     cdef int _write_end_to_end_piggyback(self, WriteBuffer buf) except -1:
         cdef:
             bytes action_bytes, client_identifier_bytes, client_info_bytes
+            ThinConnImpl conn = self.conn_impl
             bytes module_bytes, dbop_bytes
-            Connection conn = self.conn
             uint32_t flags = 0
 
         # determine which flags to send
@@ -793,7 +806,7 @@ cdef class MessageWithData(Message):
 @cython.final
 cdef class AuthMessage(Message):
     cdef:
-        Connection conn
+        ThinConnImpl conn_impl
         str encoded_password
         str password
         str session_key
@@ -801,12 +814,12 @@ cdef class AuthMessage(Message):
         bytes user_bytes
         dict session_data
 
-    def __cinit__(self, conn, password):
+    def __cinit__(self, conn_impl, password):
         self.function_code = TNS_FUNC_AUTH_PHASE_ONE
-        self.conn = conn
+        self.conn_impl = conn_impl
         self.session_data = {}
         self.password = password
-        self.user_bytes = conn.username.encode()
+        self.user_bytes = conn_impl.username.encode()
         self.user_bytes_len = <uint8_t> len(self.user_bytes)
 
     def _encrypt_cbc(self, key, plain_text):
@@ -875,12 +888,12 @@ cdef class AuthMessage(Message):
         if self.function_code == TNS_FUNC_AUTH_PHASE_ONE:
             self.function_code = TNS_FUNC_AUTH_PHASE_TWO
         else:
-            self.conn._session_id = \
+            self.conn_impl._session_id = \
                     <uint32_t> int(self.session_data["AUTH_SESSION_ID"])
-            self.conn._serial_num = \
+            self.conn_impl._serial_num = \
                     <uint32_t> int(self.session_data["AUTH_SERIAL_NUM"])
             full_version_num = int(self.session_data["AUTH_VERSION_NO"])
-            self.conn._server_version = "%d.%d.%d.%d.%d" % \
+            self.conn_impl._server_version = "%d.%d.%d.%d.%d" % \
                     ((full_version_num >> 24) & 0xFF,
                      (full_version_num >> 16) & 0xFF,
                      (full_version_num >> 12) & 0x0F,
@@ -1026,7 +1039,7 @@ cdef class ExecuteMessage(MessageWithData):
     cdef int _write_message(self, WriteBuffer buf) except -1:
         cdef:
             uint32_t options, dml_options = 0, num_params = 0, num_iters = 1
-            Statement stmt = self.cursor._statement
+            Statement stmt = self.cursor_impl._statement
             list params = stmt._bind_info_list
 
         # determine the options to use for the execute
@@ -1041,24 +1054,24 @@ cdef class ExecuteMessage(MessageWithData):
         elif num_params > 0:
             options |= TNS_EXEC_OPTION_PLSQL_BIND
         if stmt._is_query:
-            if self.cursor.prefetchrows > 0:
+            if self.cursor_impl.prefetchrows > 0:
                 options |= TNS_EXEC_OPTION_FETCH
-            num_iters = self.cursor.prefetchrows
+            num_iters = self.cursor_impl.prefetchrows
         if num_params > 0:
             options |= TNS_EXEC_OPTION_BIND
         if self.batcherrors:
             options |= TNS_EXEC_OPTION_BATCH_ERRORS
         if self.arraydmlrowcounts:
             dml_options = TNS_EXEC_OPTION_DML_ROWCOUNTS
-        if self.cursor.connection.autocommit:
+        if self.conn_impl.autocommit:
             options |= TNS_EXEC_OPTION_COMMIT
 
         # write end to end attribute piggyback if needed
-        if self.conn._action_modified \
-                or self.conn._client_identifier_modified \
-                or self.conn._client_info_modified \
-                or self.conn._dbop_modified \
-                or self.conn._module_modified:
+        if self.conn_impl._action_modified \
+                or self.conn_impl._client_identifier_modified \
+                or self.conn_impl._client_info_modified \
+                or self.conn_impl._dbop_modified \
+                or self.conn_impl._module_modified:
             self._write_end_to_end_piggyback(buf)
 
         # write body of message
@@ -1143,8 +1156,8 @@ cdef class FetchMessage(MessageWithData):
 
     cdef int _write_message(self, WriteBuffer buf) except -1:
         self._write_function_code(buf)
-        buf.write_ub4(self.cursor._statement._cursor_id)
-        buf.write_ub4(self.cursor._fetch_array_size)
+        buf.write_ub4(self.cursor_impl._statement._cursor_id)
+        buf.write_ub4(self.cursor_impl._fetch_array_size)
 
 
 @cython.final
