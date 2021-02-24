@@ -21,7 +21,7 @@ cydatetime.import_datetime()
 from . import constants, errors, exceptions
 
 from .base_impl cimport get_exception_class
-from .base_impl cimport BaseConnection, BaseCursor, BaseVar, DbType
+from .base_impl cimport BaseConnImpl, BaseCursorImpl, BaseVar, DbType
 from .base_impl cimport BaseDbObjectType, BaseDbObjectAttr, BaseDbObject
 from .base_impl cimport BaseLob, BasePool, BaseSodaDatabase
 from .base_impl cimport BaseSodaCollection, BaseSodaDoc, BaseSodaDocCursor

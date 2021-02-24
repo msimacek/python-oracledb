@@ -83,7 +83,8 @@ cdef int _convert_from_python(object value, DbType dbtype,
         elif isinstance(value, (int, float, decimal.Decimal)):
             buf.set_value(str(value))
         else:
-            raise TypeError("expecting number")
+            message = f"expecting number, got {type(value)}"
+            raise TypeError(message)
         dbvalue.asBytes.ptr = buf.ptr
         dbvalue.asBytes.length = buf.length
     elif oracle_type == DPI_ORACLE_TYPE_NATIVE_DOUBLE \
@@ -189,7 +190,7 @@ cdef int _convert_from_python(object value, DbType dbtype,
                                   f"database type {dbtype} not supported")
 
 
-cdef object _convert_to_python(Connection connection, DbType dbtype,
+cdef object _convert_to_python(object connection, DbType dbtype,
                                DbObjectType objtype, dpiDataBuffer *dbvalue,
                                int preferred_num_type=NUM_TYPE_FLOAT):
     cdef:
@@ -200,7 +201,6 @@ cdef object _convert_to_python(Connection connection, DbType dbtype,
         dpiBytes *as_bytes
         const char *rowid
         int32_t seconds
-        Cursor cursor
         str temp_str
     if oracle_type == DPI_ORACLE_TYPE_CHAR \
             or oracle_type == DPI_ORACLE_TYPE_NCHAR \
@@ -248,7 +248,7 @@ cdef object _convert_to_python(Connection connection, DbType dbtype,
             or oracle_type == DPI_ORACLE_TYPE_BLOB \
             or oracle_type == DPI_ORACLE_TYPE_NCLOB \
             or oracle_type == DPI_ORACLE_TYPE_BFILE:
-        return Lob._new_lob(connection, dbtype, dbvalue.asLOB)
+        return Lob._new_lob(connection._impl, dbtype, dbvalue.asLOB)
     elif oracle_type == DPI_ORACLE_TYPE_OBJECT:
         return DbObject._new_object(objtype, dbvalue.asObject)
     elif oracle_type == DPI_ORACLE_TYPE_INTERVAL_DS:
@@ -257,13 +257,6 @@ cdef object _convert_to_python(Connection connection, DbType dbtype,
                 dbvalue.asIntervalDS.seconds
         return cydatetime.timedelta_new(dbvalue.asIntervalDS.days, seconds,
                                         dbvalue.asIntervalDS.fseconds // 1000)
-    elif oracle_type == DPI_ORACLE_TYPE_STMT:
-        cursor = Cursor.__new__(Cursor, connection)
-        if dpiStmt_addRef(dbvalue.asStmt) < 0:
-            _raise_from_odpi()
-        cursor._handle = dbvalue.asStmt
-        cursor._fixup_ref_cursor = True
-        return cursor
     elif oracle_type == DPI_ORACLE_TYPE_JSON:
         if dpiJson_getValue(dbvalue.asJson, DPI_JSON_OPT_NUMBER_AS_STRING,
                             &json_node) < 0:

@@ -37,7 +37,7 @@ cdef class Protocol:
     cdef int _commit(self) except -1:
         self._process_message(CommitMessage())
 
-    cdef _connect(self, Connection conn, str connect_string, str password):
+    cdef _connect(self, ThinConnImpl conn, str connect_string, str password):
         cdef:
             ConnectMessage connect_message
             AuthMessage auth_message
@@ -64,7 +64,7 @@ cdef class Protocol:
         self._process_message(auth_message)
         self._process_message(auth_message)
 
-    cdef int _execute(self, Cursor cursor, uint32_t num_execs=1,
+    cdef int _execute(self, object cursor, uint32_t num_execs=1,
                       bint arraydmlrowcounts=False,
                       bint batcherrors=False) except -1:
         cdef ExecuteMessage message = ExecuteMessage(cursor)
@@ -73,7 +73,7 @@ cdef class Protocol:
         message.num_execs = num_execs
         self._process_message(message)
 
-    cdef int _fetch(self, Cursor cursor) except -1:
+    cdef int _fetch(self, object cursor) except -1:
         self._process_message(FetchMessage(cursor))
 
     cdef int _ping(self) except -1:

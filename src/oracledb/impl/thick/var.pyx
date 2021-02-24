@@ -11,191 +11,140 @@ cdef class Var(BaseVar):
     cdef:
         dpiVar *_handle
         dpiData *_data
-        Connection _connection
+        ThickConnImpl _conn_impl
         uint32_t _native_type_num
-        bint _is_value_set
         bint _get_returned_data
+        uint32_t _last_size
 
-    def __cinit__(self, connection):
-        self._connection = connection
+    def __cinit__(self, conn):
+        self._conn = conn
+        self._conn_impl = conn._impl
 
     def __dealloc__(self):
         if self._handle != NULL:
             dpiVar_release(self._handle)
 
-    cdef int _bind(self, BaseCursor cursor, str name=None,
-                   uint32_t pos=0) except -1:
+    cdef int _bind(self, BaseCursorImpl cursor_impl, uint32_t num_execs,
+                   str name=None, uint32_t pos=0) except -1:
         cdef:
+            ThickCursorImpl thick_cursor_impl = cursor_impl
+            uint32_t name_length, i
             const char *name_ptr
-            uint32_t name_length
-            Cursor thick_cursor
             bytes name_bytes
-        thick_cursor = <Cursor> cursor
+        self._check_handle()
+        if self._is_value_set:
+            self._transform_from_python(num_execs)
         if name is not None:
             name_bytes = name.encode()
             name_ptr = name_bytes
             name_length = <uint32_t> len(name_bytes)
-            if dpiStmt_bindByName(thick_cursor._handle, name_ptr,
+            if dpiStmt_bindByName(thick_cursor_impl._handle, name_ptr,
                                   name_length, self._handle) < 0:
                 _raise_from_odpi()
         else:
-            if dpiStmt_bindByPos(thick_cursor._handle, pos, self._handle) < 0:
+            if dpiStmt_bindByPos(thick_cursor_impl._handle, pos,
+                                 self._handle) < 0:
                 _raise_from_odpi()
-        if thick_cursor._stmt_info.isReturning and not self._is_value_set:
+        if thick_cursor_impl._stmt_info.isReturning and not self._is_value_set:
             self._get_returned_data = True
+        self._is_value_set = False
 
-    cdef int _finalize_init(self) except -1:
+    cdef int _check_handle(self) except -1:
+        """
+        Check to see if a handle needs to be created. This will be true if:
+            - a handle has never been created before
+            - the size of strings/bytes bound is larger than previously bound
+            - a bound cursor has been closed since it was last bound
+        """
+        cdef:
+            ThickCursorImpl cursor_impl
+            dpiStmtInfo stmt_info
+            dpiData *data
+            object cursor
+            uint32_t i
+        if self._handle == NULL or self._last_size < self.size:
+            return self._create_handle()
+        if self._native_type_num == DPI_NATIVE_TYPE_STMT:
+            for i in range(self.num_elements):
+                cursor = self._values[i]
+                if cursor is not None:
+                    cursor_impl = <ThickCursorImpl> cursor._impl
+                    if cursor_impl._handle != NULL:
+                        continue
+                data = &self._data[i]
+                if dpiStmt_getInfo(data.value.asStmt, &stmt_info) < 0:
+                    return self._create_handle()
+
+    cdef int _create_handle(self) except -1:
         cdef:
             dpiObjectType *obj_type_handle = NULL
             DbObjectType obj_type
-        if self.num_elements == 0:
-            self.num_elements = 1
+        if self._handle != NULL:
+            dpiVar_release(self._handle)
+            self._handle = NULL
         if self._objtype is not None:
             obj_type = <DbObjectType> self._objtype
             obj_type_handle = obj_type._handle
         self._native_type_num = _get_native_type_num(self._dbtype)
-        if dpiConn_newVar(self._connection._handle, self._dbtype.num,
+        if dpiConn_newVar(self._conn_impl._handle, self._dbtype.num,
                           self._native_type_num, self.num_elements, self.size,
                           0, self.is_array, obj_type_handle, &self._handle,
                           &self._data) < 0:
             _raise_from_odpi()
-        if dpiVar_getSizeInBytes(self._handle, &self.buffer_size) < 0:
-            _raise_from_odpi()
+        self._last_size = self.size
 
-    cdef uint32_t _get_actual_elements(self) except *:
-        cdef uint32_t num_elements
-        if not self.is_array:
-            return self.num_elements
-        if dpiVar_getNumElementsInArray(self._handle, &num_elements) < 0:
-            _raise_from_odpi()
-        return num_elements
-
-    cdef list _get_array_value(self, uint32_t num_elements):
-        return self._get_array_value_with_data(num_elements, NULL)
-
-    cdef object _get_array_value_with_data(self, uint32_t num_elements,
-                                           dpiData *data):
+    cdef object _get_cursor_value(self, dpiDataBuffer *dbvalue, uint32_t pos,
+                                  bint in_fetch):
         cdef:
-            object element_value
-            list return_value
-            uint32_t i
-        return_value = cpython.PyList_New(num_elements)
-        for i in range(num_elements):
-            element_value = self._get_single_value_with_data(i, data)
-            cpython.Py_INCREF(element_value)
-            cpython.PyList_SET_ITEM(return_value, i, element_value)
-        return return_value
-
-    cdef object _get_single_value(self, uint32_t pos):
-        return self._get_single_value_with_data(pos, NULL)
-
-    cdef object _get_single_value_with_data(self, uint32_t pos, dpiData *data):
-        cdef:
-            uint32_t num_returned_rows
-            dpiData *returned_data
-            object value
-
-        # handle DML returning
-        if data == NULL and self._get_returned_data:
-            if dpiVar_getReturnedData(self._handle, pos, &num_returned_rows,
-                                      &returned_data) < 0:
+            ThickCursorImpl cursor_impl
+            object cursor
+        cursor = self._values[pos]
+        if cursor is None or in_fetch:
+            cursor = self._conn.cursor()
+        cursor_impl = <ThickCursorImpl> cursor._impl
+        if cursor_impl._handle != dbvalue.asStmt:
+            if cursor_impl._handle != NULL:
+                dpiStmt_release(cursor_impl._handle)
+                cursor_impl._handle = NULL
+            if dpiStmt_addRef(dbvalue.asStmt) < 0:
                 _raise_from_odpi()
-            return self._get_array_value_with_data(num_returned_rows,
-                                                   returned_data)
-        # in all other cases, just get the value at the specified position
-        if data != NULL:
-            data = &data[pos]
-        else:
-            data = &self._data[pos]
-        if not data.isNull:
-            value = _convert_to_python(self._connection, self._dbtype,
-                                       self._objtype, &data.value,
-                                       self._preferred_num_type)
-            if self.outconverter:
-                value = self.outconverter(value)
-            return value
+            cursor_impl._handle = dbvalue.asStmt
+            cursor_impl._fixup_ref_cursor = True
+        return cursor
 
-    cdef int _resize(self, uint32_t new_size, uint32_t pos) except -1:
+    cdef int _set_cursor_value(self, object cursor, uint32_t pos) except -1:
         cdef:
-            uint32_t num_elements, i
-            dpiData *source_data
-            dpiVar *temp_handle
-            dpiData *temp_data
-            const char *ptr
-        if dpiConn_newVar(self._connection._handle, self.type.num,
-                          self._native_type_num, self.num_elements, new_size,
-                          1, self.is_array, NULL, &temp_handle,
-                          &temp_data) < 0:
-            _raise_from_odpi()
-        try:
-            if self.is_array:
-                if dpiVar_getNumElementsInArray(self._handle,
-                                                &num_elements) < 0:
-                    _raise_from_odpi()
-                if dpiVar_setNumElementsInArray(temp_handle, num_elements) < 0:
-                    _raise_from_odpi()
-            for i in range(self.num_elements):
-                source_data = &self._data[i]
-                if i == pos or source_data.isNull:
-                    continue
-                if dpiVar_setFromBytes(temp_handle, i,
-                                       source_data.value.asBytes.ptr,
-                                       source_data.value.asBytes.length) < 0:
-                    _raise_from_odpi()
-            self._handle, temp_handle = temp_handle, self._handle
-            self._data = temp_data
-            self.size = new_size
-            self.buffer_size = new_size
-        finally:
-            dpiVar_release(temp_handle)
-
-    cdef int _set_array_value(self, list value) except -1:
-        cdef:
-            uint32_t num_elements = <uint32_t> len(value)
-            object element_value
-            uint32_t i
-        if dpiVar_setNumElementsInArray(self._handle, num_elements) < 0:
-            _raise_from_odpi()
-        for i in range(num_elements):
-            self._set_single_value(i, value[i])
-
-    cdef int _set_cursor_value(self, Cursor cursor, uint32_t pos) except -1:
-        cdef:
-            dpiStmtInfo stmt_info
+            ThickCursorImpl cursor_impl = cursor._impl
             dpiData *data
 
         # if the cursor already has a handle, use it directly
-        if cursor._handle != NULL:
-            if dpiVar_setFromStmt(self._handle, pos, cursor._handle) < 0:
+        if cursor_impl._handle != NULL:
+            if dpiVar_setFromStmt(self._handle, pos, cursor_impl._handle) < 0:
                 _raise_from_odpi()
 
         # otherwise, make use of the statement handle allocated by the variable
-        # BUT, make sure the statement handle is still valid as it may have
-        # been closed by some other code; the call to dpiStmt_getInfo() will
-        # ensure the statement is still open; if an error occurs, this bind
-        # will be discarded and a second attempt will be made with a new cursor
         else:
             data = &self._data[pos]
-            if dpiStmt_getInfo(data.value.asStmt, &stmt_info) < 0:
-                _raise_from_odpi()
             if dpiStmt_addRef(data.value.asStmt) < 0:
                 _raise_from_odpi()
-            cursor._handle = data.value.asStmt
-        if dpiStmt_setPrefetchRows(cursor._handle, cursor.prefetchrows) < 0:
+            cursor_impl._handle = data.value.asStmt
+        if dpiStmt_setPrefetchRows(cursor_impl._handle,
+                                   cursor_impl.prefetchrows) < 0:
             _raise_from_odpi()
-        cursor._fixup_ref_cursor = True
+        cursor_impl._fixup_ref_cursor = True
 
-    cdef int _set_single_value(self, uint32_t pos, object value) except -1:
+    cdef int _transform_element_from_python(self, uint32_t pos,
+                                            object value) except -1:
+        """
+        Transforms a single element from the Python value to the value required
+        by ODPI-C.
+        """
         cdef:
-            StringBuffer buf = StringBuffer()
             dpiDataBuffer temp_dbvalue
             dpiDataBuffer *dbvalue
             dpiBytes *as_bytes
+            StringBuffer buf
             dpiData *data
-            object x
-        self._is_value_set = True
-        if self.inconverter:
-            value = self.inconverter(value)
         data = &self._data[pos]
         data.isNull = (value is None)
         if not data.isNull:
@@ -206,12 +155,93 @@ cdef class Var(BaseVar):
                     dbvalue = &temp_dbvalue
                 else:
                     dbvalue = &data.value
+                buf = StringBuffer()
                 _convert_from_python(value, self._dbtype, self._objtype,
                                      dbvalue, buf, self, pos)
                 if self._native_type_num == DPI_NATIVE_TYPE_BYTES:
                     as_bytes = &dbvalue.asBytes
-                    if as_bytes.length > self.buffer_size:
-                        self._resize(as_bytes.length, pos)
                     if dpiVar_setFromBytes(self._handle, pos, as_bytes.ptr,
                                            as_bytes.length) < 0:
                         _raise_from_odpi()
+
+    cdef int _transform_from_python(self, uint32_t num_elements) except -1:
+        """
+        Transforms all elements from the Python value to the value required by
+        ODPI-C. The number of elements passed corresponds to the number of
+        elements requested by execute() or executemany(). For arrays (where
+        num_elements must always be 1) the number of elements corresponds to
+        the number of elements in the array.
+        """
+        cdef uint32_t i
+        if self.is_array:
+            if dpiVar_setNumElementsInArray(self._handle,
+                                            self._num_elements_in_array) < 0:
+                _raise_from_odpi()
+            num_elements = self._num_elements_in_array
+        for i in range(num_elements):
+            self._transform_element_from_python(i, self._values[i])
+
+    cdef object _transform_array_to_python(self, uint32_t num_elements,
+                                           dpiData *data):
+        """
+        Transforms an array from ODPI-C to a Python list.
+        """
+        cdef:
+            object element_value
+            list return_value
+            uint32_t i
+        return_value = cpython.PyList_New(num_elements)
+        for i in range(num_elements):
+            element_value = self._transform_element_to_python(i, data)
+            cpython.Py_INCREF(element_value)
+            cpython.PyList_SET_ITEM(return_value, i, element_value)
+        return return_value
+
+    cdef object _transform_element_to_python(self, uint32_t pos,
+                                             dpiData *data,
+                                             bint in_fetch=False):
+        """
+        Transforms a single element from the value supplied by ODPI-C to its
+        equivalent Python value.
+        """
+        cdef object value
+        data = &data[pos]
+        if not data.isNull:
+            if self._native_type_num == DPI_NATIVE_TYPE_STMT:
+                value = self._get_cursor_value(&data.value, pos, in_fetch)
+            else:
+                value = _convert_to_python(self._conn, self._dbtype,
+                                           self._objtype, &data.value,
+                                           self._preferred_num_type)
+            if self.outconverter:
+                value = self.outconverter(value)
+            return value
+
+    cdef int _transform_to_python(self, uint32_t num_elements,
+                                  bint in_fetch=False, uint32_t offset=0):
+        """
+        Transforms all elements from the value supplied by ODPI-C to its
+        equivalent Python values. The number of elements will either be the
+        number of rows fetched or the number of iterations executed. For arrays
+        the number of elements is acquired from ODPI-C itself.
+        """
+        cdef:
+            uint32_t i, num_returned_rows
+            dpiData *returned_data
+            object value
+        if self.is_array:
+            if dpiVar_getNumElementsInArray(self._handle, &num_elements) < 0:
+                _raise_from_odpi()
+            self._num_elements_in_array = num_elements
+        for i in range(num_elements):
+            if self._get_returned_data:
+                if dpiVar_getReturnedData(self._handle, i + offset,
+                                          &num_returned_rows,
+                                          &returned_data) < 0:
+                    _raise_from_odpi()
+                value = self._transform_array_to_python(num_returned_rows,
+                                                        returned_data)
+            else:
+                value = self._transform_element_to_python(i + offset,
+                                                          self._data, in_fetch)
+            self._values[i] = value

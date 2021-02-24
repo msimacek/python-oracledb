@@ -82,9 +82,10 @@ cdef class ConnectionParams:
             self._process_context_str(value, &entry.value, &entry.valueLength)
 
 
-cdef class Connection(BaseConnection):
+cdef class ThickConnImpl(BaseConnImpl):
     cdef:
         dpiConn *_handle
+        bint _is_external
         public str tag
 
     def __dealloc__(self):
@@ -145,26 +146,6 @@ cdef class Connection(BaseConnection):
                                             username_len, old_password_ptr,
                                             old_password_len, new_password_ptr,
                                             new_password_len)
-        if status < 0:
-            _raise_from_odpi()
-
-    cdef int _close(self) except -1:
-        cdef:
-            uint32_t mode = DPI_MODE_CONN_CLOSE_DEFAULT
-            const char *tag_ptr = NULL
-            uint32_t tag_length = 0
-            bytes tag_bytes
-            int status
-        if self.tag is not None:
-            mode = DPI_MODE_CONN_CLOSE_RETAG
-            tag_bytes = self.tag.encode()
-            tag_ptr = tag_bytes
-            tag_length = <uint32_t> len(tag_bytes)
-        with nogil:
-            status = dpiConn_close(self._handle, mode, tag_ptr, tag_length)
-            if status == DPI_SUCCESS:
-                dpiConn_release(self._handle)
-                self._handle = NULL
         if status < 0:
             _raise_from_odpi()
 
@@ -253,6 +234,7 @@ cdef class Connection(BaseConnection):
             conn_params.tagLength = params.tag_len
         if handle:
             conn_params.externalHandle = <void*> (<uint64_t> handle)
+            self._is_external = True
         if pool is not None:
             thick_pool = pool
             conn_params.pool = thick_pool._handle
@@ -274,17 +256,8 @@ cdef class Connection(BaseConnection):
         if conn_params.outTagLength > 0:
             self.tag = conn_params.outTag[:conn_params.outTagLength].decode()
 
-    cdef BaseMsgProps _create_msg_props(self):
-        cdef MsgProps props = MsgProps.__new__(MsgProps)
-        if dpiConn_newMsgProps(self._handle, &props._handle) < 0:
-            _raise_from_odpi()
-        return props
-
     cdef BaseQueue _create_queue(self):
         return Queue.__new__(Queue)
-
-    cdef BaseSubscription _create_subscription(self):
-        return Subscription.__new__(Subscription)
 
     cdef BaseLob _create_temp_lob(self, DbType dbtype):
         cdef:
@@ -343,9 +316,9 @@ cdef class Connection(BaseConnection):
             _raise_from_odpi()
         return value[:value_length]
 
-    cdef BaseSodaDatabase _get_soda_database(self):
+    cdef BaseSodaDatabase _get_soda_database(self, object conn):
         cdef SodaDatabase db = SodaDatabase.__new__(SodaDatabase)
-        db._connection = self
+        db._conn = conn
         if dpiConn_getSodaDb(self._handle, &db._handle) < 0:
             _raise_from_odpi()
         return db
@@ -358,7 +331,7 @@ cdef class Connection(BaseConnection):
         if dpiConn_getCallTimeout(self._handle, value) < 0:
             _raise_from_odpi()
 
-    cdef BaseDbObjectType _get_type(self, str name):
+    cdef BaseDbObjectType _get_type(self, object conn, str name):
         cdef:
             BaseDbObjectType objtype
             dpiObjectType *handle
@@ -374,7 +347,7 @@ cdef class Connection(BaseConnection):
                                            &handle)
         if status < 0:
             _raise_from_odpi()
-        objtype = DbObjectType._new_type(self, handle)
+        objtype = DbObjectType._new_type(conn, handle)
         dpiObjectType_release(handle)
         return objtype
 
@@ -382,7 +355,6 @@ cdef class Connection(BaseConnection):
         cdef:
             dpiVersionInfo version_info
             int status
-        self._verify_connected()
         with nogil:
             status = dpiConn_getServerVersion(self._handle, NULL, NULL,
                                               &version_info)
@@ -392,9 +364,6 @@ cdef class Connection(BaseConnection):
                 (version_info.versionNum, version_info.releaseNum,
                  version_info.updateNum, version_info.portReleaseNum,
                  version_info.portUpdateNum)
-
-    cdef BaseCursor _create_cursor(self):
-        return Cursor.__new__(Cursor, self)
 
     cdef int _ping(self) except -1:
         cdef int status
@@ -461,10 +430,60 @@ cdef class Connection(BaseConnection):
         if func(self._handle, value_ptr, value_length) < 0:
             _raise_from_odpi()
 
-    @property
-    def handle(self):
+    def close(self, in_del=False):
+        cdef:
+            uint32_t mode = DPI_MODE_CONN_CLOSE_DEFAULT
+            const char *tag_ptr = NULL
+            uint32_t tag_length = 0
+            bytes tag_bytes
+            int status
+        if in_del and self._is_external:
+            return 0
+        if self.tag is not None:
+            mode = DPI_MODE_CONN_CLOSE_RETAG
+            tag_bytes = self.tag.encode()
+            tag_ptr = tag_bytes
+            tag_length = <uint32_t> len(tag_bytes)
+        with nogil:
+            status = dpiConn_close(self._handle, mode, tag_ptr, tag_length)
+            if status == DPI_SUCCESS:
+                dpiConn_release(self._handle)
+                self._handle = NULL
+        if status < 0 and not in_del:
+            _raise_from_odpi()
+
+    def create_cursor_impl(self):
+        return ThickCursorImpl.__new__(ThickCursorImpl, self)
+
+    def create_msg_props(self):
+        cdef MsgProps props = MsgProps.__new__(MsgProps)
+        if dpiConn_newMsgProps(self._handle, &props._handle) < 0:
+            _raise_from_odpi()
+        return props
+
+    def create_subscription(self, connection, callback, namespace, name,
+                            protocol, ip_address, port, timeout, operations,
+                            qos, grouping_class, grouping_value, grouping_type,
+                            client_initiated):
+        cdef Subscription subscr = Subscription.__new__(Subscription)
+        subscr.connection = connection
+        subscr.callback = callback
+        subscr.namespace = namespace
+        subscr.name = name
+        subscr.protocol = protocol
+        subscr.ip_address = ip_address
+        subscr.port = port
+        subscr.timeout = timeout
+        subscr.operations = operations
+        subscr.qos = qos
+        subscr.grouping_class = grouping_class
+        subscr.grouping_value = grouping_value
+        subscr.grouping_type = grouping_type
+        subscr.client_initiated = client_initiated
+        return subscr
+
+    def get_handle(self):
         cdef void* handle
-        self._verify_connected()
         if dpiConn_getHandle(self._handle, &handle) < 0:
             _raise_from_odpi()
         return <uint64_t> handle

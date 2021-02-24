@@ -13,14 +13,14 @@ cdef class Lob(BaseLob):
 
     cdef int _close(self) except -1:
         cdef:
-            Connection conn = self._connection
+            ThinConnImpl conn = self._connection
             LobOpMessage message = LobOpMessage()
         message.operation = TNS_LOB_OP_CLOSE
         message.source_lob = self
         conn._protocol._process_message(message)
 
     @staticmethod
-    cdef Lob _create_temp_lob(Connection conn, DbType lob_type):
+    cdef Lob _create_temp_lob(ThinConnImpl conn, DbType lob_type):
         cdef:
             LobOpMessage message = LobOpMessage()
             Lob lob = Lob.__new__(Lob)
@@ -41,7 +41,7 @@ cdef class Lob(BaseLob):
 
     cdef int _get_is_open(self, bint* is_open) except -1:
         cdef:
-            Connection conn = self._connection
+            ThinConnImpl conn = self._connection
             LobOpMessage message = LobOpMessage()
         message.operation = TNS_LOB_OP_IS_OPEN
         message.source_lob = self
@@ -50,7 +50,7 @@ cdef class Lob(BaseLob):
 
     cdef int _get_size(self, uint64_t* size) except -1:
         cdef:
-            Connection conn = self._connection
+            ThinConnImpl conn = self._connection
             LobOpMessage message = LobOpMessage()
         message.operation = TNS_LOB_OP_GET_LENGTH
         message.source_lob = self
@@ -60,7 +60,7 @@ cdef class Lob(BaseLob):
 
     cdef int _open(self) except -1:
         cdef:
-            Connection conn = self._connection
+            ThinConnImpl conn = self._connection
             LobOpMessage message = LobOpMessage()
         message.operation = TNS_LOB_OP_OPEN
         message.source_lob = self
@@ -68,7 +68,7 @@ cdef class Lob(BaseLob):
 
     cdef object _read(self, uint64_t offset, uint64_t amount):
         cdef:
-            Connection conn = self._connection
+            ThinConnImpl conn = self._connection
             LobOpMessage message = LobOpMessage()
         message.operation = TNS_LOB_OP_READ
         message.source_lob = self
@@ -84,7 +84,7 @@ cdef class Lob(BaseLob):
 
     cdef int _trim(self, uint64_t new_size=0) except -1:
         cdef:
-            Connection conn = self._connection
+            ThinConnImpl conn = self._connection
             LobOpMessage message = LobOpMessage()
         message.operation = TNS_LOB_OP_TRIM
         message.source_lob = self
@@ -94,7 +94,7 @@ cdef class Lob(BaseLob):
 
     cdef int _write(self, object value, uint64_t offset) except -1:
         cdef:
-            Connection conn = self._connection
+            ThinConnImpl conn = self._connection
             LobOpMessage message = LobOpMessage()
         message.operation = TNS_LOB_OP_WRITE
         message.source_lob = self

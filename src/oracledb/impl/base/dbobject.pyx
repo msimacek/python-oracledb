@@ -11,10 +11,9 @@ cdef class BaseDbObjectType:
         cdef other_type
         if isinstance(other, BaseDbObjectType):
             other_type = <BaseDbObjectType> other
-            if other_type._connection is other_type._connection \
-                    and other_type.schema == other_type.schema \
-                    and other_type.name == other_type.name:
-                return True
+            return other_type._conn is self._conn \
+                    and other_type.schema == self.schema \
+                    and other_type.name == self.name
         return NotImplemented
 
     def __repr__(self):

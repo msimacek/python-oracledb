@@ -25,7 +25,7 @@ cdef class DbObjectType(BaseDbObjectType):
         return obj
 
     @staticmethod
-    cdef DbObjectType _new_type(Connection connection, dpiObjectType *handle):
+    cdef DbObjectType _new_type(object conn, dpiObjectType *handle):
         cdef:
             dpiObjectAttr **attributes = NULL
             DbObjectType objtype, temp
@@ -36,7 +36,7 @@ cdef class DbObjectType(BaseDbObjectType):
             uint16_t i
             object typ
         objtype = DbObjectType.__new__(DbObjectType)
-        objtype._connection = connection
+        objtype._conn = conn
         if dpiObjectType_addRef(handle) < 0:
             _raise_from_odpi()
         objtype._handle = handle
@@ -49,7 +49,7 @@ cdef class DbObjectType(BaseDbObjectType):
             dbtype = DbType._from_num(info.elementTypeInfo.oracleTypeNum)
             objtype._element_dbtype = dbtype
             if info.elementTypeInfo.objectType != NULL:
-                temp = DbObjectType._new_type(connection,
+                temp = DbObjectType._new_type(conn,
                                               info.elementTypeInfo.objectType)
                 objtype._element_objtype = temp
             objtype._element_native_type_num = \
@@ -62,7 +62,7 @@ cdef class DbObjectType(BaseDbObjectType):
                                            attributes) < 0:
                 _raise_from_odpi()
             for i in range(info.numAttributes):
-                attr = DbObjectAttr._new_attr(connection, attributes[i])
+                attr = DbObjectAttr._new_attr(conn, attributes[i])
                 objtype.attributes[i] = attr
         finally:
             if attributes != NULL:
@@ -82,7 +82,7 @@ cdef class DbObjectAttr(BaseDbObjectAttr):
             dpiObjectAttr_release(self._handle)
 
     @staticmethod
-    cdef DbObjectAttr _new_attr(Connection connection, dpiObjectAttr *handle):
+    cdef DbObjectAttr _new_attr(object conn, dpiObjectAttr *handle):
         cdef:
             dpiObjectAttrInfo info
             DbObjectAttr attr
@@ -93,7 +93,7 @@ cdef class DbObjectAttr(BaseDbObjectAttr):
         attr.name = info.name[:info.nameLength].decode()
         attr._dbtype = DbType._from_num(info.typeInfo.oracleTypeNum)
         if info.typeInfo.objectType:
-            attr._objtype = DbObjectType._new_type(connection,
+            attr._objtype = DbObjectType._new_type(conn,
                                                    info.typeInfo.objectType)
         attr._native_type_num = _get_native_type_num(attr._dbtype)
         return attr
@@ -161,7 +161,7 @@ cdef class DbObject(BaseDbObject):
             _raise_from_odpi()
         if data.isNull:
             return None
-        return _convert_to_python(self.type._connection, a._dbtype, a._objtype,
+        return _convert_to_python(self.type._conn, a._dbtype, a._objtype,
                                   &data.value)
 
     cdef object _get_element_by_index(self, int32_t index):
@@ -181,8 +181,7 @@ cdef class DbObject(BaseDbObject):
             _raise_from_odpi()
         if data.isNull:
             return None
-        return _convert_to_python(self.type._connection,
-                                  objtype._element_dbtype,
+        return _convert_to_python(self.type._conn, objtype._element_dbtype,
                                   objtype._element_objtype, &data.value)
 
     cdef int _get_first_index(self, int32_t* index, bint* exists) except -1:

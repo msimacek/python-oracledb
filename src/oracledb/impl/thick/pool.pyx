@@ -15,19 +15,14 @@ cdef class Pool(BasePool):
         if self._handle != NULL:
             dpiPool_release(self._handle)
 
-    cdef BaseConnection _acquire(self, str user, str password, str cclass,
-                                 uint32_t purity, str tag, bint match_any_tag,
-                                 list sharding_key, list super_sharding_key):
-        cdef Connection connection
-        connection = Connection(user, self.name)
-        connection._connect(password=password, mode=constants.DEFAULT_AUTH,
-                            handle=0, pool=self, threaded=False,
-                            events=False, cclass=cclass, purity=purity,
-                            newpassword=None, edition=None, appcontext=None,
-                            tag=tag, matchanytag=match_any_tag,
-                            shardingkey=sharding_key,
-                            supershardingkey=super_sharding_key)
-        return connection
+    cdef object _acquire(self, str user, str password, str cclass,
+                         uint32_t purity, str tag, bint match_any_tag,
+                         list sharding_key, list super_sharding_key):
+        cls = self.connection_type
+        return cls(pool=self, user=user, password=password, cclass=cclass,
+                   purity=purity, tag=tag, matchanytag=match_any_tag,
+                   shardingkey=sharding_key, thin=False,
+                   supershardingkey=super_sharding_key)
 
     cdef int _close(self, bint force) except -1:
         raise NotImplementedError()
@@ -103,9 +98,9 @@ cdef class Pool(BasePool):
         name_bytes = pool_params.outPoolName[:pool_params.outPoolNameLength]
         self.name = name_bytes.decode()
 
-    cdef int _drop(self, BaseConnection connection) except -1:
+    cdef int _drop(self, BaseConnImpl connection) except -1:
         cdef:
-            Connection thick_connection = <Connection> connection
+            ThickConnImpl thick_connection = connection
             int status
         with nogil:
             status = dpiConn_close(thick_connection._handle,
@@ -144,12 +139,11 @@ cdef class Pool(BasePool):
         if dpiPool_getWaitTimeout(self._handle, value) < 0:
             _raise_from_odpi()
 
-    cdef int _release(self, BaseConnection connection, str tag) except -1:
-        cdef Connection thick_connection = <Connection> connection
+    cdef int _release(self, BaseConnImpl connection, str tag) except -1:
+        cdef ThickConnImpl thick_connection = connection
         if tag is not None:
             thick_connection.tag = tag
-        thick_connection._close()
-        thick_connection._is_connected = False
+        thick_connection.close()
 
     cdef int _set_getmode(self, uint8_t value) except -1:
         if dpiPool_setGetMode(self._handle, value) < 0:

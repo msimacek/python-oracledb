@@ -82,7 +82,7 @@ cdef class Queue(BaseQueue):
 
     cdef int _initialize(self) except -1:
         cdef:
-            Connection thick_connection = self.connection
+            ThickConnImpl thick_connection = self.connection
             DbObjectType thick_objtype = self.payloadType
             dpiObjectType* type_handle = NULL
             StringBuffer buf = StringBuffer()

@@ -4,17 +4,19 @@
 
 cdef class BasePool:
 
-    def __init__(self, user, dsn, min, max, increment, homogeneous):
+    def __init__(self, user, dsn, min, max, increment, homogeneous,
+                 connection_type):
         self.username = user
         self.dsn = dsn
         self.min = min
         self.max = max
         self.increment = increment
         self.homogeneous = homogeneous
+        self.connection_type = connection_type
 
-    cdef BaseConnection _acquire(self, str user, str password, str cclass,
-                                 uint32_t purity, str tag, bint match_any_tag,
-                                 list sharding_key, list super_sharding_key):
+    cdef object _acquire(self, str user, str password, str cclass,
+                         uint32_t purity, str tag, bint match_any_tag,
+                         list sharding_key, list super_sharding_key):
         """
         Internal method for acquiring a connection from the pool.
         """
@@ -26,7 +28,7 @@ cdef class BasePool:
         """
         raise NotImplementedError()
 
-    cdef int _drop(self, BaseConnection connection) except -1:
+    cdef int _drop(self, BaseConnImpl connection) except -1:
         """
         Internal method for dropping a connection from the pool.
         """
@@ -75,7 +77,7 @@ cdef class BasePool:
         """
         raise NotImplementedError()
 
-    cdef int _release(self, BaseConnection connection, str tag) except -1:
+    cdef int _release(self, BaseConnImpl connection, str tag) except -1:
         """
         Internal method for releasing a connection from the pool.
         """
@@ -133,7 +135,8 @@ cdef class BasePool:
         self._close(force)
 
     def drop(self, connection):
-        self._drop(connection)
+        self._drop(connection._impl)
+        connection._impl = None
 
     @property
     def getmode(self):
@@ -162,7 +165,8 @@ cdef class BasePool:
         return value
 
     def release(self, connection, tag=None):
-        self._release(connection, tag)
+        self._release(connection._impl, tag)
+        connection._impl = None
 
     @property
     def stmtcachesize(self):

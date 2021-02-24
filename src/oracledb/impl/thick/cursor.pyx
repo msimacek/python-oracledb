@@ -7,12 +7,16 @@
 #   Cython file defining the cursor class (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
-cdef class Cursor(BaseCursor):
+cdef class ThickCursorImpl(BaseCursorImpl):
     cdef:
+        ThickConnImpl _conn_impl
         bint _fixup_ref_cursor
         dpiStmtInfo _stmt_info
         dpiStmt *_handle
         str _tag
+
+    def __cinit__(self, conn_impl):
+        self._conn_impl = conn_impl
 
     def __dealloc__(self):
         if self._handle != NULL:
@@ -52,78 +56,19 @@ cdef class Cursor(BaseCursor):
         Internal method for closing the cursor.
         """
         if self._handle != NULL:
-            if dpiStmt_close(self._handle, NULL, 0) < 0:
-                _raise_from_odpi()
+            if self._conn_impl._handle != NULL:
+                if dpiStmt_close(self._handle, NULL, 0) < 0:
+                    _raise_from_odpi()
             dpiStmt_release(self._handle)
             self._handle = NULL
 
-    cdef BaseVar _create_var(self):
+    cdef BaseVar _create_var(self, object connection):
         """
         Internal method for creating a variable.
         """
-        return Var.__new__(Var, self.connection)
+        return Var.__new__(Var, connection)
 
-    cdef int _execute(self) except -1:
-        """
-        Internal method for executing a statement.
-        """
-        cdef:
-            uint64_t rowcount
-            uint32_t mode, num_query_cols
-            int status
-        if self._bind_vars is not None:
-            self._perform_binds()
-        if self.connection.autocommit:
-            mode = DPI_MODE_EXEC_COMMIT_ON_SUCCESS
-        else:
-            mode = DPI_MODE_EXEC_DEFAULT
-        with nogil:
-            status = dpiStmt_execute(self._handle, mode, &num_query_cols)
-            if status == DPI_SUCCESS:
-                status = dpiStmt_getRowCount(self._handle, &rowcount)
-        if status < 0:
-            _raise_from_odpi()
-        self.rowcount = rowcount
-        if num_query_cols > 0:
-            self._perform_define(num_query_cols)
-
-    cdef int _executemany(self, uint32_t num_execs, bint batcherrors,
-                          bint arraydmlrowcounts) except -1:
-        """
-        Internal method for executing a statement many times
-        equal to the number of elements in the list of parameters
-        or the provided integer. Arraydmlrowcounts and batcherrors
-        can be set.
-        """
-        cdef:
-            dpiErrorInfo error_info
-            uint64_t rowcount
-            uint32_t mode
-            int status
-
-        if self.connection.autocommit:
-            mode = DPI_MODE_EXEC_COMMIT_ON_SUCCESS
-        else:
-            mode = DPI_MODE_EXEC_DEFAULT
-        if arraydmlrowcounts:
-            mode |= DPI_MODE_EXEC_ARRAY_DML_ROWCOUNTS
-        if batcherrors:
-            mode |= DPI_MODE_EXEC_BATCH_ERRORS
-
-        if self._bind_vars is not None:
-            self._perform_binds()
-
-        if num_execs > 0:
-            with nogil:
-                status = dpiStmt_executeMany(self._handle, mode, num_execs)
-                if status < 0:
-                    dpiContext_getError(driver_context, &error_info)
-                dpiStmt_getRowCount(self._handle, &rowcount)
-            self.rowcount = rowcount
-            if status < 0:
-                _raise_from_info(&error_info)
-
-    cdef int _fetch_rows(self) except -1:
+    cdef int _fetch_rows(self, object cursor) except -1:
         """
         Internal method for fetching rows from a cursor.
         """
@@ -131,6 +76,7 @@ cdef class Cursor(BaseCursor):
             uint32_t temp_buffer_row_index, num_rows_in_buffer
             bint more_rows_to_fetch
             int status
+            Var var
         with nogil:
             status = dpiStmt_fetchRows(self._handle,
                                        self._fetch_array_size,
@@ -139,8 +85,11 @@ cdef class Cursor(BaseCursor):
                                        &more_rows_to_fetch)
         if status < 0:
             _raise_from_odpi()
+        for var in self.fetch_vars:
+            var._transform_to_python(num_rows_in_buffer, in_fetch=True,
+                                     offset=temp_buffer_row_index)
+        self._buffer_index = 0
         self._buffer_rowcount = num_rows_in_buffer
-        self._buffer_index = temp_buffer_row_index
         self._more_rows_to_fetch = more_rows_to_fetch
 
     cdef object _get_array_dml_row_counts(self):
@@ -192,7 +141,7 @@ cdef class Cursor(BaseCursor):
 
         return result
 
-    cdef Var _get_define_var(self, uint32_t pos):
+    cdef Var _get_define_var(self, object cursor, uint32_t pos):
         """
         Internal method that returns the variable that will be used for
         fetching data in the specified position. If an output type handler is
@@ -215,11 +164,11 @@ cdef class Cursor(BaseCursor):
             size = query_info.typeInfo.sizeInChars
         else:
             size = query_info.typeInfo.clientSizeInBytes
-        type_handler = self.outputtypehandler \
-                or self.connection.outputtypehandler
+        type_handler = cursor.outputtypehandler \
+                or cursor.connection.outputtypehandler
         name = query_info.name[:query_info.nameLength].decode()
         if type_handler:
-            result = type_handler(self, name, dbtype, size,
+            result = type_handler(cursor, name, dbtype, size,
                                   query_info.typeInfo.precision,
                                   query_info.typeInfo.scale)
             if isinstance(result, Var):
@@ -228,7 +177,7 @@ cdef class Cursor(BaseCursor):
                 message = "expecting variable from output type handler"
                 errors._raise_from_error(TypeError, message)
         type_info = &query_info.typeInfo
-        var = Var.__new__(Var, self.connection)
+        var = Var.__new__(Var, cursor.connection)
         var._dbtype = dbtype
         var.size = size
         var.num_elements = self._fetch_array_size
@@ -237,32 +186,13 @@ cdef class Cursor(BaseCursor):
         var.name = name
         var.nulls_allowed = query_info.nullOk
         if type_info.objectType != NULL:
-            var._objtype = DbObjectType._new_type(self.connection,
+            var._objtype = DbObjectType._new_type(cursor.connection,
                                                   type_info.objectType)
         if dbtype.num == DPI_ORACLE_TYPE_NUMBER:
             if var.scale == 0 or (var.scale == -127 and var.precision == 0):
                 var._preferred_num_type = NUM_TYPE_INT
         var._finalize_init()
         return var
-
-    cdef object _get_implicit_results(self):
-        cdef:
-            Cursor child_cursor
-            dpiStmt *child_stmt
-            list result = []
-        if self._handle == NULL:
-            errors._raise_from_string(exceptions.InterfaceError,
-                                      "no statement executed")
-        while True:
-            if dpiStmt_getImplicitResult(self._handle, &child_stmt) < 0:
-                _raise_from_odpi()
-            if child_stmt == NULL:
-                break
-            child_cursor = Cursor.__new__(Cursor, self.connection)
-            child_cursor._handle = child_stmt
-            child_cursor._fixup_ref_cursor = True
-            result.append(child_cursor)
-        return result
 
     cdef object _get_lastrowid(self):
         cdef:
@@ -281,20 +211,7 @@ cdef class Cursor(BaseCursor):
     cdef bint _is_plsql(self):
         return <bint> self._stmt_info.isPLSQL
 
-    cdef bint _is_query(self) except *:
-        cdef uint32_t num_query_cols
-        if self._fixup_ref_cursor:
-            self._fetch_array_size = self.arraysize
-            if dpiStmt_setFetchArraySize(self._handle,
-                                         self._fetch_array_size) < 0:
-                _raise_from_odpi()
-            if dpiStmt_getNumQueryColumns(self._handle, &num_query_cols) < 0:
-                _raise_from_odpi()
-            self._perform_define(num_query_cols)
-            self._fixup_ref_cursor = False
-        return self._fetch_vars is not None
-
-    cdef int _parse(self) except -1:
+    cdef int _parse(self, object cursor) except -1:
         cdef:
             uint32_t mode, num_query_cols
             int status
@@ -307,9 +224,10 @@ cdef class Cursor(BaseCursor):
         if status < 0:
             _raise_from_odpi()
         if num_query_cols > 0:
-            self._perform_define(num_query_cols)
+            self._perform_define(cursor, num_query_cols)
 
-    cdef int _perform_define(self, uint32_t num_query_cols) except -1:
+    cdef int _perform_define(self, object cursor,
+                             uint32_t num_query_cols) except -1:
         """
         Internal method for performing defines. At this point it is assumed
         that the statement executed was in fact a query.
@@ -327,18 +245,19 @@ cdef class Cursor(BaseCursor):
         # if fetch variables already exist, nothing to do (the same statement
         # is being executed and therefore all defines have already been
         # performed
-        if self._fetch_vars is not None:
+        if self.fetch_vars is not None:
             return 0
 
         # populate list to contain fetch variables that are created
         self._fetch_array_size = self.arraysize
-        self._fetch_vars = cpython.PyList_New(num_query_cols)
+        self.fetch_vars = cpython.PyList_New(num_query_cols)
         for i in range(num_query_cols):
-            var = self._get_define_var(i + 1)
+            var = self._get_define_var(cursor, i + 1)
+            var._create_handle()
             if dpiStmt_define(self._handle, i + 1, var._handle) < 0:
                 _raise_from_odpi()
             cpython.Py_INCREF(var)
-            cpython.PyList_SET_ITEM(self._fetch_vars, i, var)
+            cpython.PyList_SET_ITEM(self.fetch_vars, i, var)
 
     cdef int _prepare(self, str statement, str tag=None) except -1:
         """
@@ -346,10 +265,10 @@ cdef class Cursor(BaseCursor):
         """
         cdef:
             uint32_t statement_bytes_length, tag_bytes_length = 0
+            ThickConnImpl conn_impl = self._conn_impl
             bytes statement_bytes, tag_bytes
             const char *tag_ptr = NULL
             const char *statement_ptr
-            Connection connection
             int status
         self.statement = statement
         statement_bytes = statement.encode()
@@ -360,12 +279,11 @@ cdef class Cursor(BaseCursor):
             tag_bytes = tag.encode()
             tag_bytes_length = <uint32_t> len(tag_bytes)
             tag_ptr = <const char*> tag_bytes
-        connection = self.connection
         with nogil:
             if self._handle != NULL:
                 dpiStmt_release(self._handle)
                 self._handle = NULL
-            status = dpiConn_prepareStmt(connection._handle, self.scrollable,
+            status = dpiConn_prepareStmt(conn_impl._handle, self.scrollable,
                                          statement_ptr, statement_bytes_length,
                                          tag_ptr, tag_bytes_length,
                                          &self._handle)
@@ -386,6 +304,7 @@ cdef class Cursor(BaseCursor):
             uint32_t temp_buffer_row_index = 0, num_rows_in_buffer = 0
             bint more_rows_to_fetch = False
             int status
+            Var var
         with nogil:
             status = dpiStmt_scroll(self._handle, mode, offset,
                                     0 - self._buffer_rowcount)
@@ -399,7 +318,113 @@ cdef class Cursor(BaseCursor):
                 status = dpiStmt_getRowCount(self._handle, &self.rowcount)
         if status < 0:
             _raise_from_odpi()
+        for var in self.fetch_vars:
+            var._transform_to_python(num_rows_in_buffer, in_fetch=True,
+                                     offset=temp_buffer_row_index)
+        self._buffer_index = 0
         self._buffer_rowcount = num_rows_in_buffer
-        self._buffer_index = temp_buffer_row_index
         self._more_rows_to_fetch = more_rows_to_fetch
         self.rowcount -= num_rows_in_buffer
+
+    cdef int _transform_binds(self, uint32_t num_execs=1) except -1:
+        cdef Var var
+        if isinstance(self.bind_vars, dict):
+            for var in self.bind_vars.values():
+                var._transform_to_python(num_execs)
+        elif isinstance(self.bind_vars, list):
+            for var in self.bind_vars:
+                var._transform_to_python(num_execs)
+
+    def execute(self, cursor):
+        """
+        Internal method for executing a statement.
+        """
+        cdef:
+            uint32_t mode, num_query_cols
+            uint64_t rowcount
+            int status
+        if self.bind_vars is not None:
+            self._perform_binds()
+        if self._conn_impl.autocommit:
+            mode = DPI_MODE_EXEC_COMMIT_ON_SUCCESS
+        else:
+            mode = DPI_MODE_EXEC_DEFAULT
+        with nogil:
+            status = dpiStmt_execute(self._handle, mode, &num_query_cols)
+            if status == DPI_SUCCESS:
+                status = dpiStmt_getRowCount(self._handle, &rowcount)
+        if status < 0:
+            _raise_from_odpi()
+        self.rowcount = rowcount
+        if num_query_cols > 0:
+            self._perform_define(cursor, num_query_cols)
+        elif self._stmt_info.isReturning or self._stmt_info.isPLSQL:
+            self._transform_binds()
+
+    def executemany(self, cursor, num_execs, batcherrors, arraydmlrowcounts):
+        """
+        Internal method for executing a statement multiple times.
+        """
+        cdef:
+            uint32_t mode, num_execs_int = num_execs
+            dpiErrorInfo error_info
+            uint64_t rowcount
+            int status
+
+        if self._conn_impl.autocommit:
+            mode = DPI_MODE_EXEC_COMMIT_ON_SUCCESS
+        else:
+            mode = DPI_MODE_EXEC_DEFAULT
+        if arraydmlrowcounts:
+            mode |= DPI_MODE_EXEC_ARRAY_DML_ROWCOUNTS
+        if batcherrors:
+            mode |= DPI_MODE_EXEC_BATCH_ERRORS
+
+        if self.bind_vars is not None:
+            self._perform_binds(num_execs_int)
+
+        if num_execs_int > 0:
+            with nogil:
+                status = dpiStmt_executeMany(self._handle, mode, num_execs_int)
+                if status < 0:
+                    dpiContext_getError(driver_context, &error_info)
+                dpiStmt_getRowCount(self._handle, &rowcount)
+            self.rowcount = rowcount
+            if status < 0:
+                _raise_from_info(&error_info)
+            if self._stmt_info.isReturning or self._stmt_info.isPLSQL:
+                self._transform_binds(num_execs_int)
+
+    def get_implicit_results(self, connection):
+        cdef:
+            ThickCursorImpl child_cursor_impl
+            object child_cursor
+            dpiStmt *child_stmt
+            list result = []
+        if self._handle == NULL:
+            errors._raise_from_string(exceptions.InterfaceError,
+                                      "no statement executed")
+        while True:
+            if dpiStmt_getImplicitResult(self._handle, &child_stmt) < 0:
+                _raise_from_odpi()
+            if child_stmt == NULL:
+                break
+            child_cursor = connection.cursor()
+            child_cursor_impl = child_cursor._impl
+            child_cursor_impl._handle = child_stmt
+            child_cursor_impl._fixup_ref_cursor = True
+            result.append(child_cursor)
+        return result
+
+    def is_query(self, cursor):
+        cdef uint32_t num_query_cols
+        if self._fixup_ref_cursor:
+            self._fetch_array_size = self.arraysize
+            if dpiStmt_setFetchArraySize(self._handle,
+                                         self._fetch_array_size) < 0:
+                _raise_from_odpi()
+            if dpiStmt_getNumQueryColumns(self._handle, &num_query_cols) < 0:
+                _raise_from_odpi()
+            self._perform_define(cursor, num_query_cols)
+            self._fixup_ref_cursor = False
+        return self.fetch_vars is not None

@@ -2,24 +2,11 @@
 # Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
-cdef class BaseConnection:
+cdef class BaseConnImpl:
 
     def __init__(self, user, dsn):
         self.username = user
         self.dsn = dsn
-
-    def __enter__(self):
-        self._verify_connected()
-        return self
-
-    def __exit__(self, exc_type, exc_value, exc_tb):
-        self.close()
-
-    def __repr__(self):
-        cls_name = type(self).__name__
-        if self.username is None:
-            return f"<oracledb.{cls_name} to externally identified user>"
-        return f"<oracledb.{cls_name} to {self.username}@{self.dsn}>"
 
     cdef int _begin(self, long format_id, str transaction_id,
                     str branch_id) except -1:
@@ -42,21 +29,9 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
-    cdef int _close(self) except -1:
-        """
-        Internal method for closing the connection.
-        """
-        raise NotImplementedError()
-
     cdef int _commit(self) except -1:
         """
         Internal method for committing the transaction.
-        """
-        raise NotImplementedError()
-
-    cdef BaseCursor _create_cursor(self):
-        """
-        Internal method for creating a cursor.
         """
         raise NotImplementedError()
 
@@ -72,7 +47,7 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
-    cdef BaseSubscription _create_subscription(self):
+    cdef BaseSubscription _create_subscription(self, object connection):
         """
         Internal method for creating a subscription.
         """
@@ -114,7 +89,7 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
-    cdef BaseSodaDatabase _get_soda_database(self):
+    cdef BaseSodaDatabase _get_soda_database(self, object connection):
         """
         Internal method for returning a SODA database for the connection.
         """
@@ -132,7 +107,7 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
-    cdef BaseDbObjectType _get_type(self, str name):
+    cdef BaseDbObjectType _get_type(self, object conn, str name):
         """
         Internal method for returning an object type given its name.
         """
@@ -222,44 +197,41 @@ cdef class BaseConnection:
         """
         raise NotImplementedError()
 
-    cdef int _verify_connected(self) except -1:
-        """
-        Verifies that the connection is connected to the database. If it is not
-        an exception is raised.
-        """
-        if not self._is_connected:
-            errors._raise_from_string(exceptions.InterfaceError,
-                                      "not connected")
-
     @property
     def action(self):
         raise AttributeError("action is not readable")
 
     @action.setter
     def action(self, value):
-        self._verify_connected()
         self._set_action(value)
 
     def begin(self, format_id=-1, transaction_id="", branch_id=""):
         """
         Begins a distributed transaction.
         """
-        self._verify_connected()
         self._begin(format_id, transaction_id, branch_id)
+
+    @property
+    def calltimeout(self):
+        cdef uint32_t value
+        self._get_calltimeout(&value)
+        return value
+
+    @calltimeout.setter
+    def calltimeout(self, value):
+        self._set_calltimeout(value)
 
     def cancel(self):
         """
         Issues an immediate (asynchronous) abort of any currently executing
         statement.
         """
-        self._verify_connected()
         self._cancel()
 
     def changepassword(self, old_password, new_password):
         """
         Changes the password for the user to which the connection is connected.
         """
-        self._verify_connected()
         self._change_password(old_password, new_password)
 
     @property
@@ -268,7 +240,6 @@ cdef class BaseConnection:
 
     @client_identifier.setter
     def client_identifier(self, value):
-        self._verify_connected()
         self._set_client_identifier(value)
 
     @property
@@ -277,53 +248,39 @@ cdef class BaseConnection:
 
     @clientinfo.setter
     def clientinfo(self, value):
-        self._verify_connected()
         self._set_client_info(value)
 
-    def close(self):
+    def close(self, in_del=False):
         """
-        Closes the connection and makes it unusable for further operations.
+        Internal method used to close the connection to the database.
         """
-        self._verify_connected()
-        self._close()
-        self._is_connected = False
+        raise NotImplementedError()
 
     def commit(self):
         """
         Commits any outstanding connection.
         """
-        self._verify_connected()
         self._commit()
+
+    def create_cursor_impl(self):
+        """
+        Internal method for creating a cursor implementation.
+        """
+        raise NotImplementedError()
 
     def createlob(self, lob_type):
         """
         Create and return a new temporary LOB of the specified type.
         """
-        self._verify_connected()
-        if lob_type not in (DB_TYPE_CLOB, DB_TYPE_NCLOB, DB_TYPE_BLOB):
-            message = "parameter should be one of oracledb.DB_TYPE_CLOB, " \
-                      "oracledb.DB_TYPE_BLOB or oracledb.DB_TYPE_NCLOB"
-            raise TypeError(message)
         return self._create_temp_lob(lob_type)
 
     @property
     def current_schema(self):
-        self._verify_connected()
         return self._get_current_schema()
 
     @current_schema.setter
     def current_schema(self, value):
-        self._verify_connected()
         self._set_current_schema(value)
-
-    def cursor(self, scrollable=False):
-        """
-        Returns a cursor associated with the connection.
-        """
-        cdef BaseCursor cursor
-        cursor = self._create_cursor()
-        cursor.scrollable = scrollable
-        return cursor
 
     @property
     def dbop(self):
@@ -331,45 +288,42 @@ cdef class BaseConnection:
 
     @dbop.setter
     def dbop(self, value):
-        self._verify_connected()
         self._set_dbop(value)
 
     @property
     def edition(self):
-        self._verify_connected()
         return self._get_edition()
 
     @property
     def external_name(self):
-        self._verify_connected()
         return self._get_external_name()
 
     @external_name.setter
     def external_name(self, value):
-        self._verify_connected()
         self._set_external_name(value)
 
-    def getSodaDatabase(self):
-        self._verify_connected()
-        return self._get_soda_database()
+    def get_handle(self):
+        """
+        Internal method for getting the OCI service context handle.
+        """
+        raise NotImplementedError()
+
+    def getSodaDatabase(self, conn):
+        return self._get_soda_database(conn)
 
     def gettype(self, name):
-        self._verify_connected()
-        return self._get_type(name)
+        return self._get_type(self, name)
 
     @property
     def internal_name(self):
-        self._verify_connected()
         return self._get_internal_name()
 
     @internal_name.setter
     def internal_name(self, value):
-        self._verify_connected()
         self._set_internal_name(value)
 
     @property
     def ltxid(self):
-        self._verify_connected()
         return self._get_ltxid()
 
     @property
@@ -378,7 +332,6 @@ cdef class BaseConnection:
 
     @module.setter
     def module(self, value):
-        self._verify_connected()
         self._set_module(value)
 
     def msgproperties(self, payload=None, correlation=None, delay=None,
@@ -407,7 +360,6 @@ cdef class BaseConnection:
         """
         Pings the database to verify the connection is valid.
         """
-        self._verify_connected()
         self._ping()
 
     def prepare(self):
@@ -416,7 +368,6 @@ cdef class BaseConnection:
         indicating if a commit is in fact needed.
         """
         cdef bint commit_needed
-        self._verify_connected()
         self._prepare(&commit_needed)
         return commit_needed
 
@@ -425,7 +376,6 @@ cdef class BaseConnection:
         Returns a queue used to enqueue and dequeue messages in AQ.
         """
         cdef BaseQueue queue
-        self._verify_connected()
         queue = self._create_queue()
         queue.connection = self
         queue.name = name
@@ -437,67 +387,22 @@ cdef class BaseConnection:
         """
         Rolls back any outstanding connection.
         """
-        self._verify_connected()
         self._rollback()
 
     @property
     def stmtcachesize(self):
         cdef uint32_t value
-        self._verify_connected()
         self._get_stmtcachesize(&value)
         return value
 
     @stmtcachesize.setter
     def stmtcachesize(self, value):
-        self._verify_connected()
         self._set_stmtcachesize(value)
-
-    @property
-    def callTimeout(self):
-        cdef uint32_t value
-        self._verify_connected()
-        self._get_calltimeout(&value)
-        return value
-
-    @callTimeout.setter
-    def callTimeout(self, value):
-        self._verify_connected()
-        self._set_calltimeout(value)
-
-    def subscribe(self, namespace=constants.SUBSCR_NAMESPACE_DBCHANGE,
-                  protocol=constants.SUBSCR_PROTOCOL_CALLBACK, callback=None,
-                  timeout=0, operations=constants.OPCODE_ALLOPS, port=0,
-                  qos=constants.SUBSCR_QOS_DEFAULT, ipAddress=None,
-                  groupingClass=constants.SUBSCR_GROUPING_CLASS_NONE,
-                  groupingValue=0,
-                  groupingType=constants.SUBSCR_GROUPING_TYPE_SUMMARY,
-                  name=None, clientInitiated=False):
-        cdef BaseSubscription subscr
-        subscr = self._create_subscription()
-        subscr.connection = self
-        subscr.callback = callback
-        subscr.namespace = namespace
-        subscr.name = name
-        subscr.protocol = protocol
-        subscr.ip_address = ipAddress
-        subscr.port = port
-        subscr.timeout = timeout
-        subscr.operations = operations
-        subscr.qos = qos
-        subscr.grouping_class = groupingClass
-        subscr.grouping_value = groupingValue
-        subscr.grouping_type = groupingType
-        subscr.client_initiated = clientInitiated
-        subscr._subscribe()
-        return subscr
 
     def unsubscribe(self, subscr):
         cdef BaseSubscription common_subscr = subscr
-        self._verify_connected()
         common_subscr._unsubscribe(self)
 
     @property
     def version(self):
-        if self._version is None:
-            self._version = self._get_version()
-        return self._version
+        return self._get_version()

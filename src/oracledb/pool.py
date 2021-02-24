@@ -3,13 +3,14 @@
 #------------------------------------------------------------------------------
 
 from . import constants, utils, thick_impl, thin_impl
+from .connection import Connection
 
 def create_pool(dsn=None, *, user=None, password=None, host=None, port=None,
                 service_name=None, thin=True, min=1, max=2, increment=1,
-                threaded=False, getmode=constants.POOL_GETMODE_WAIT,
-                events=False, homogeneous=True, externalauth=False,
-                edition=None, timeout=0, wait_timeout=0,
-                max_lifetime_session=0, session_callback=None,
+                connectiontype=Connection, threaded=False,
+                getmode=constants.POOL_GETMODE_WAIT, events=False,
+                homogeneous=True, externalauth=False, edition=None, timeout=0,
+                wait_timeout=0, max_lifetime_session=0, session_callback=None,
                 max_sessions_per_shard=0):
     """
     """
@@ -19,9 +20,10 @@ def create_pool(dsn=None, *, user=None, password=None, host=None, port=None,
     if thin:
         pool = thin_impl.Pool(user, dsn, min, max, increment, homogeneous,
                               port, host, connect_data, password, getmode,
-                              wait_timeout)
+                              wait_timeout, connectiontype)
     else:
-        pool = thick_impl.Pool(user, dsn, min, max, increment, homogeneous)
+        pool = thick_impl.Pool(user, dsn, min, max, increment, homogeneous,
+                               connectiontype)
         pool._create(password=password, threaded=threaded, getmode=getmode,
                      events=events, externalauth=externalauth, edition=edition,
                      timeout=timeout, wait_timeout=wait_timeout,

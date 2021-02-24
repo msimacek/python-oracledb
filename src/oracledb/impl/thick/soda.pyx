@@ -89,8 +89,8 @@ cdef class SodaDatabase(BaseSodaDatabase):
                 _raise_from_odpi()
 
     cdef int _get_flags(self, uint32_t* flags) except -1:
-        self._connection._verify_connected()
-        if self._connection.autocommit:
+        self._conn._verify_connected()
+        if self._conn.autocommit:
             flags[0] = DPI_SODA_FLAGS_ATOMIC_COMMIT
         else:
             flags[0] = DPI_SODA_FLAGS_DEFAULT
