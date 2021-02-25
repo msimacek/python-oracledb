@@ -92,70 +92,6 @@ cdef class ThickConnImpl(BaseConnImpl):
         if self._handle != NULL:
             dpiConn_release(self._handle)
 
-    cdef int _begin(self, long format_id, str transaction_id,
-                    str branch_id) except -1:
-        cdef:
-            bytes transaction_id_bytes, branch_id_bytes
-            uint32_t transaction_id_len, branch_id_len
-            const char *transaction_id_ptr
-            const char *branch_id_ptr
-            int status
-        transaction_id_bytes = transaction_id.encode()
-        transaction_id_ptr = transaction_id_bytes
-        transaction_id_len = <uint32_t> len(transaction_id_bytes)
-        branch_id_bytes = branch_id.encode()
-        branch_id_ptr = branch_id_bytes
-        branch_id_len = <uint32_t> len(branch_id_bytes)
-        with nogil:
-            status = dpiConn_beginDistribTrans(self._handle, format_id,
-                                               transaction_id_ptr,
-                                               transaction_id_len,
-                                               branch_id_ptr, branch_id_len)
-        if status < 0:
-            _raise_from_odpi()
-
-    cdef int _cancel(self) except -1:
-        cdef int status
-        with nogil:
-            status = dpiConn_breakExecution(self._handle)
-        if status < 0:
-            _raise_from_odpi()
-
-    cdef int _change_password(self, str old_password,
-                              str new_password) except -1:
-        cdef:
-            bytes username_bytes, old_password_bytes, new_password_bytes
-            uint32_t username_len = 0, old_password_len = 0
-            const char *old_password_ptr = NULL
-            const char *new_password_ptr = NULL
-            const char *username_ptr = NULL
-            uint32_t new_password_len = 0
-            int status
-        if self.username is not None:
-            username_bytes = self.username.encode()
-            username_ptr = username_bytes
-            username_len = <uint32_t> len(username_bytes)
-        old_password_bytes = old_password.encode()
-        old_password_ptr = old_password_bytes
-        old_password_len = <uint32_t> len(old_password_bytes)
-        new_password_bytes = new_password.encode()
-        new_password_ptr = new_password_bytes
-        new_password_len = <uint32_t> len(new_password_bytes)
-        with nogil:
-            status = dpiConn_changePassword(self._handle, username_ptr,
-                                            username_len, old_password_ptr,
-                                            old_password_len, new_password_ptr,
-                                            new_password_len)
-        if status < 0:
-            _raise_from_odpi()
-
-    cdef int _commit(self) except -1:
-        cdef int status
-        with nogil:
-            status = dpiConn_commit(self._handle)
-        if status < 0:
-            _raise_from_odpi()
-
     def _connect(self, password, mode, handle, pool, threaded, events, cclass,
                  purity, newpassword, edition, appcontext, tag, matchanytag,
                  shardingkey, supershardingkey):
@@ -272,152 +208,6 @@ cdef class ThickConnImpl(BaseConnImpl):
         finally:
             dpiLob_release(handle)
 
-    cdef str _get_current_schema(self):
-        cdef:
-            uint32_t value_length
-            const char *value
-        if dpiConn_getCurrentSchema(self._handle, &value, &value_length) < 0:
-            _raise_from_odpi()
-        if value is not NULL:
-            return value[:value_length].decode()
-
-    cdef str _get_edition(self):
-        cdef:
-            uint32_t value_length
-            const char *value
-        if dpiConn_getEdition(self._handle, &value, &value_length) < 0:
-            _raise_from_odpi()
-        if value is not NULL:
-            return value[:value_length].decode()
-
-    cdef str _get_external_name(self):
-        cdef:
-            uint32_t value_length
-            const char *value
-        if dpiConn_getExternalName(self._handle, &value, &value_length) < 0:
-            _raise_from_odpi()
-        if value is not NULL:
-            return value[:value_length].decode()
-
-    cdef str _get_internal_name(self):
-        cdef:
-            uint32_t value_length
-            const char *value
-        if dpiConn_getInternalName(self._handle, &value, &value_length) < 0:
-            _raise_from_odpi()
-        if value is not NULL:
-            return value[:value_length].decode()
-
-    cdef bytes _get_ltxid(self):
-        cdef:
-            uint32_t value_length
-            const char *value
-        if dpiConn_getLTXID(self._handle, &value, &value_length) < 0:
-            _raise_from_odpi()
-        return value[:value_length]
-
-    cdef BaseSodaDatabase _get_soda_database(self, object conn):
-        cdef SodaDatabase db = SodaDatabase.__new__(SodaDatabase)
-        db._conn = conn
-        if dpiConn_getSodaDb(self._handle, &db._handle) < 0:
-            _raise_from_odpi()
-        return db
-
-    cdef int _get_stmtcachesize(self, uint32_t *value) except -1:
-        if dpiConn_getStmtCacheSize(self._handle, value) < 0:
-            _raise_from_odpi()
-
-    cdef int _get_calltimeout(self, uint32_t *value) except -1:
-        if dpiConn_getCallTimeout(self._handle, value) < 0:
-            _raise_from_odpi()
-
-    cdef BaseDbObjectType _get_type(self, object conn, str name):
-        cdef:
-            BaseDbObjectType objtype
-            dpiObjectType *handle
-            const char *name_ptr
-            uint32_t name_len
-            bytes name_bytes
-            int status
-        name_bytes = name.encode()
-        name_ptr = name_bytes
-        name_len = <uint32_t> len(name_bytes)
-        with nogil:
-            status = dpiConn_getObjectType(self._handle, name_ptr, name_len,
-                                           &handle)
-        if status < 0:
-            _raise_from_odpi()
-        objtype = DbObjectType._new_type(conn, handle)
-        dpiObjectType_release(handle)
-        return objtype
-
-    cdef str _get_version(self):
-        cdef:
-            dpiVersionInfo version_info
-            int status
-        with nogil:
-            status = dpiConn_getServerVersion(self._handle, NULL, NULL,
-                                              &version_info)
-        if status < 0:
-            _raise_from_odpi()
-        return "%d.%d.%d.%d.%d" % \
-                (version_info.versionNum, version_info.releaseNum,
-                 version_info.updateNum, version_info.portReleaseNum,
-                 version_info.portUpdateNum)
-
-    cdef int _ping(self) except -1:
-        cdef int status
-        with nogil:
-            status = dpiConn_ping(self._handle)
-        if status < 0:
-            _raise_from_odpi()
-
-    cdef int _prepare(self, bint *commit_needed) except -1:
-        cdef int status
-        with nogil:
-            status = dpiConn_prepareDistribTrans(self._handle, commit_needed)
-        if status < 0:
-            _raise_from_odpi()
-
-    cdef int _rollback(self) except -1:
-        cdef int status
-        with nogil:
-            status = dpiConn_rollback(self._handle)
-        if status < 0:
-            _raise_from_odpi()
-
-    cdef int _set_action(self, str value) except -1:
-        self._set_text_attr(dpiConn_setAction, value)
-
-    cdef int _set_client_identifier(self, str value) except -1:
-        self._set_text_attr(dpiConn_setClientIdentifier, value)
-
-    cdef int _set_client_info(self, str value) except -1:
-        self._set_text_attr(dpiConn_setClientInfo, value)
-
-    cdef int _set_current_schema(self, str value) except -1:
-        self._set_text_attr(dpiConn_setCurrentSchema, value)
-
-    cdef int _set_dbop(self, str value) except -1:
-        self._set_text_attr(dpiConn_setDbOp, value)
-
-    cdef int _set_external_name(self, str value) except -1:
-        self._set_text_attr(dpiConn_setExternalName, value)
-
-    cdef int _set_internal_name(self, str value) except -1:
-        self._set_text_attr(dpiConn_setInternalName, value)
-
-    cdef int _set_module(self, str value) except -1:
-        self._set_text_attr(dpiConn_setModule, value)
-
-    cdef int _set_stmtcachesize(self, uint32_t value) except -1:
-        if dpiConn_setStmtCacheSize(self._handle, value) < 0:
-            _raise_from_odpi()
-
-    cdef int _set_calltimeout(self, uint32_t value) except -1:
-        if dpiConn_setCallTimeout(self._handle, value) < 0:
-            _raise_from_odpi()
-
     cdef int _set_text_attr(self, dpiConnSetTextAttrFunc func,
                             str value) except -1:
         cdef:
@@ -430,7 +220,62 @@ cdef class ThickConnImpl(BaseConnImpl):
         if func(self._handle, value_ptr, value_length) < 0:
             _raise_from_odpi()
 
-    def close(self, in_del=False):
+    def begin(self, long format_id, str transaction_id, str branch_id):
+        cdef:
+            bytes transaction_id_bytes, branch_id_bytes
+            uint32_t transaction_id_len, branch_id_len
+            const char *transaction_id_ptr
+            const char *branch_id_ptr
+            int status
+        transaction_id_bytes = transaction_id.encode()
+        transaction_id_ptr = transaction_id_bytes
+        transaction_id_len = <uint32_t> len(transaction_id_bytes)
+        branch_id_bytes = branch_id.encode()
+        branch_id_ptr = branch_id_bytes
+        branch_id_len = <uint32_t> len(branch_id_bytes)
+        with nogil:
+            status = dpiConn_beginDistribTrans(self._handle, format_id,
+                                               transaction_id_ptr,
+                                               transaction_id_len,
+                                               branch_id_ptr, branch_id_len)
+        if status < 0:
+            _raise_from_odpi()
+
+    def cancel(self):
+        cdef int status
+        with nogil:
+            status = dpiConn_breakExecution(self._handle)
+        if status < 0:
+            _raise_from_odpi()
+
+    def change_password(self, str old_password, str new_password):
+        cdef:
+            bytes username_bytes, old_password_bytes, new_password_bytes
+            uint32_t username_len = 0, old_password_len = 0
+            const char *old_password_ptr = NULL
+            const char *new_password_ptr = NULL
+            const char *username_ptr = NULL
+            uint32_t new_password_len = 0
+            int status
+        if self.username is not None:
+            username_bytes = self.username.encode()
+            username_ptr = username_bytes
+            username_len = <uint32_t> len(username_bytes)
+        old_password_bytes = old_password.encode()
+        old_password_ptr = old_password_bytes
+        old_password_len = <uint32_t> len(old_password_bytes)
+        new_password_bytes = new_password.encode()
+        new_password_ptr = new_password_bytes
+        new_password_len = <uint32_t> len(new_password_bytes)
+        with nogil:
+            status = dpiConn_changePassword(self._handle, username_ptr,
+                                            username_len, old_password_ptr,
+                                            old_password_len, new_password_ptr,
+                                            new_password_len)
+        if status < 0:
+            _raise_from_odpi()
+
+    def close(self, bint in_del=False):
         cdef:
             uint32_t mode = DPI_MODE_CONN_CLOSE_DEFAULT
             const char *tag_ptr = NULL
@@ -450,6 +295,13 @@ cdef class ThickConnImpl(BaseConnImpl):
                 dpiConn_release(self._handle)
                 self._handle = NULL
         if status < 0 and not in_del:
+            _raise_from_odpi()
+
+    def commit(self):
+        cdef int status
+        with nogil:
+            status = dpiConn_commit(self._handle)
+        if status < 0:
             _raise_from_odpi()
 
     def create_cursor_impl(self):
@@ -482,8 +334,161 @@ cdef class ThickConnImpl(BaseConnImpl):
         subscr.client_initiated = client_initiated
         return subscr
 
+    def get_call_timeout(self):
+        cdef uint32_t value
+        if dpiConn_getCallTimeout(self._handle, &value) < 0:
+            _raise_from_odpi()
+        return value
+
+    def get_current_schema(self):
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiConn_getCurrentSchema(self._handle, &value, &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
+
+    def get_edition(self):
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiConn_getEdition(self._handle, &value, &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
+
+    def get_external_name(self):
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiConn_getExternalName(self._handle, &value, &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
+
     def get_handle(self):
         cdef void* handle
         if dpiConn_getHandle(self._handle, &handle) < 0:
             _raise_from_odpi()
         return <uint64_t> handle
+
+    def get_internal_name(self):
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiConn_getInternalName(self._handle, &value, &value_length) < 0:
+            _raise_from_odpi()
+        if value is not NULL:
+            return value[:value_length].decode()
+
+    def get_ltxid(self):
+        cdef:
+            uint32_t value_length
+            const char *value
+        if dpiConn_getLTXID(self._handle, &value, &value_length) < 0:
+            _raise_from_odpi()
+        return value[:value_length]
+
+    def get_soda_database(self, conn):
+        cdef SodaDatabase db = SodaDatabase.__new__(SodaDatabase)
+        db._conn = conn
+        if dpiConn_getSodaDb(self._handle, &db._handle) < 0:
+            _raise_from_odpi()
+        return db
+
+    def get_stmt_cache_size(self):
+        cdef uint32_t value
+        if dpiConn_getStmtCacheSize(self._handle, &value) < 0:
+            _raise_from_odpi()
+        return value
+
+    def get_type(self, object conn, str name):
+        cdef:
+            BaseDbObjectType objtype
+            dpiObjectType *handle
+            const char *name_ptr
+            uint32_t name_len
+            bytes name_bytes
+            int status
+        name_bytes = name.encode()
+        name_ptr = name_bytes
+        name_len = <uint32_t> len(name_bytes)
+        with nogil:
+            status = dpiConn_getObjectType(self._handle, name_ptr, name_len,
+                                           &handle)
+        if status < 0:
+            _raise_from_odpi()
+        objtype = DbObjectType._new_type(conn, handle)
+        dpiObjectType_release(handle)
+        return objtype
+
+    def get_version(self):
+        cdef:
+            dpiVersionInfo version_info
+            int status
+        with nogil:
+            status = dpiConn_getServerVersion(self._handle, NULL, NULL,
+                                              &version_info)
+        if status < 0:
+            _raise_from_odpi()
+        return "%d.%d.%d.%d.%d" % \
+                (version_info.versionNum, version_info.releaseNum,
+                 version_info.updateNum, version_info.portReleaseNum,
+                 version_info.portUpdateNum)
+
+    def set_action(self, str value):
+        self._set_text_attr(dpiConn_setAction, value)
+
+    def set_call_timeout(self, uint32_t value):
+        if dpiConn_setCallTimeout(self._handle, value) < 0:
+            _raise_from_odpi()
+
+    def set_client_identifier(self, str value):
+        self._set_text_attr(dpiConn_setClientIdentifier, value)
+
+    def set_client_info(self, str value):
+        self._set_text_attr(dpiConn_setClientInfo, value)
+
+    def set_current_schema(self, str value):
+        self._set_text_attr(dpiConn_setCurrentSchema, value)
+
+    def set_dbop(self, str value):
+        self._set_text_attr(dpiConn_setDbOp, value)
+
+    def ping(self):
+        cdef int status
+        with nogil:
+            status = dpiConn_ping(self._handle)
+        if status < 0:
+            _raise_from_odpi()
+
+    def prepare(self):
+        cdef:
+            bint commit_needed
+            int status
+        with nogil:
+            status = dpiConn_prepareDistribTrans(self._handle, &commit_needed)
+        if status < 0:
+            _raise_from_odpi()
+        return commit_needed
+
+    def rollback(self):
+        cdef int status
+        with nogil:
+            status = dpiConn_rollback(self._handle)
+        if status < 0:
+            _raise_from_odpi()
+
+    def set_external_name(self, str value):
+        self._set_text_attr(dpiConn_setExternalName, value)
+
+    def set_internal_name(self, str value):
+        self._set_text_attr(dpiConn_setInternalName, value)
+
+    def set_module(self, str value):
+        self._set_text_attr(dpiConn_setModule, value)
+
+    def set_stmt_cache_size(self, uint32_t value):
+        if dpiConn_setStmtCacheSize(self._handle, value) < 0:
+            _raise_from_odpi()

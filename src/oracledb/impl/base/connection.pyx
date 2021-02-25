@@ -8,33 +8,6 @@ cdef class BaseConnImpl:
         self.username = user
         self.dsn = dsn
 
-    cdef int _begin(self, long format_id, str transaction_id,
-                    str branch_id) except -1:
-        """
-        Internal method for beginning a distributed transaction.
-        """
-        raise NotImplementedError()
-
-    cdef int _cancel(self) except -1:
-        """
-        Internal method for breaking execution of any currently executing
-        statement.
-        """
-        raise NotImplementedError()
-
-    cdef int _change_password(self, str old_password,
-                              str new_password) except -1:
-        """
-        Internal method for changing the password.
-        """
-        raise NotImplementedError()
-
-    cdef int _commit(self) except -1:
-        """
-        Internal method for committing the transaction.
-        """
-        raise NotImplementedError()
-
     cdef BaseMsgProps _create_msg_props(self):
         """
         Internal method for creating a message property object.
@@ -59,196 +32,24 @@ cdef class BaseConnImpl:
         """
         raise NotImplementedError()
 
-    cdef str _get_current_schema(self):
+    def begin(self, format_id, transaction_id, branch_id):
         """
-        Internal method for returning the current schema.
-        """
-        raise NotImplementedError()
-
-    cdef str _get_edition(self):
-        """
-        Internal method for returning the edition.
+        Internal method for beginning a distributed transaction.
         """
         raise NotImplementedError()
-
-    cdef str _get_external_name(self):
-        """
-        Internal method for returning the external name.
-        """
-        raise NotImplementedError()
-
-    cdef str _get_internal_name(self):
-        """
-        Internal method for returning the internal name.
-        """
-        raise NotImplementedError()
-
-    cdef bytes _get_ltxid(self):
-        """
-        Internal method for returning the logical transaction id.
-        """
-        raise NotImplementedError()
-
-    cdef BaseSodaDatabase _get_soda_database(self, object connection):
-        """
-        Internal method for returning a SODA database for the connection.
-        """
-        raise NotImplementedError()
-
-    cdef int _get_stmtcachesize(self, uint32_t *value) except -1:
-        """
-        Internal method for returning the size of the statement cache.
-        """
-        raise NotImplementedError()
-
-    cdef int _get_calltimeout(self, uint32_t *value) except -1:
-        """
-        Internal method for returning the call timeout.
-        """
-        raise NotImplementedError()
-
-    cdef BaseDbObjectType _get_type(self, object conn, str name):
-        """
-        Internal method for returning an object type given its name.
-        """
-        raise NotImplementedError()
-
-    cdef str _get_version(self):
-        """
-        Return the version associated with the connection.
-        """
-        raise NotImplementedError()
-
-    cdef int _ping(self) except -1:
-        """
-        Internal method for pinging the database.
-        """
-        raise NotImplementedError()
-
-    cdef int _prepare(self, bint *commit_needed) except -1:
-        """
-        Internal method for preparing to commit a distributed transaction.
-        """
-        raise NotImplementedError()
-
-    cdef int _rollback(self) except -1:
-        """
-        Internal method for rolling back the transaction.
-        """
-        raise NotImplementedError()
-
-    cdef int _set_action(self, str value) except -1:
-        """
-        Internal method for setting the action.
-        """
-        raise NotImplementedError()
-
-    cdef int _set_client_identifier(self, str value) except -1:
-        """
-        Internal method for setting the client identifier.
-        """
-        raise NotImplementedError()
-
-    cdef int _set_client_info(self, str value) except -1:
-        """
-        Internal method for setting the client info.
-        """
-        raise NotImplementedError()
-
-    cdef int _set_current_schema(self, str value) except -1:
-        """
-        Internal method for setting the current schema.
-        """
-        raise NotImplementedError()
-
-    cdef int _set_dbop(self, str value) except -1:
-        """
-        Internal method for setting the database operation.
-        """
-        raise NotImplementedError()
-
-    cdef int _set_external_name(self, str value) except -1:
-        """
-        Internal method for setting the external name.
-        """
-        raise NotImplementedError()
-
-    cdef int _set_internal_name(self, str value) except -1:
-        """
-        Internal method for setting the internal name.
-        """
-        raise NotImplementedError()
-
-    cdef int _set_module(self, str value) except -1:
-        """
-        Internal method for setting the module.
-        """
-        raise NotImplementedError()
-
-    cdef int _set_stmtcachesize(self, uint32_t value) except -1:
-        """
-        Internal method for setting the size of the statement cache.
-        """
-        raise NotImplementedError()
-
-    cdef int _set_calltimeout(self, uint32_t value) except -1:
-        """
-        Internal method for setting the call timeout.
-        """
-        raise NotImplementedError()
-
-    @property
-    def action(self):
-        raise AttributeError("action is not readable")
-
-    @action.setter
-    def action(self, value):
-        self._set_action(value)
-
-    def begin(self, format_id=-1, transaction_id="", branch_id=""):
-        """
-        Begins a distributed transaction.
-        """
-        self._begin(format_id, transaction_id, branch_id)
-
-    @property
-    def calltimeout(self):
-        cdef uint32_t value
-        self._get_calltimeout(&value)
-        return value
-
-    @calltimeout.setter
-    def calltimeout(self, value):
-        self._set_calltimeout(value)
 
     def cancel(self):
         """
         Issues an immediate (asynchronous) abort of any currently executing
         statement.
         """
-        self._cancel()
+        raise NotImplementedError()
 
-    def changepassword(self, old_password, new_password):
+    def change_password(self, old_password, new_password):
         """
         Changes the password for the user to which the connection is connected.
         """
-        self._change_password(old_password, new_password)
-
-    @property
-    def client_identifier(self):
-        raise AttributeError("client_identifier is not readable")
-
-    @client_identifier.setter
-    def client_identifier(self, value):
-        self._set_client_identifier(value)
-
-    @property
-    def clientinfo(self):
-        raise AttributeError("clientinfo is not readable")
-
-    @clientinfo.setter
-    def clientinfo(self, value):
-        self._set_client_info(value)
+        raise NotImplementedError()
 
     def close(self, in_del=False):
         """
@@ -260,7 +61,7 @@ cdef class BaseConnImpl:
         """
         Commits any outstanding connection.
         """
-        self._commit()
+        raise NotImplementedError()
 
     def create_cursor_impl(self):
         """
@@ -274,33 +75,29 @@ cdef class BaseConnImpl:
         """
         return self._create_temp_lob(lob_type)
 
-    @property
-    def current_schema(self):
-        return self._get_current_schema()
+    def get_call_timeout(self):
+        """
+        Internal method for returning the call timeout.
+        """
+        raise NotImplementedError()
 
-    @current_schema.setter
-    def current_schema(self, value):
-        self._set_current_schema(value)
+    def get_current_schema(self):
+        """
+        Internal method for returning the current schema.
+        """
+        raise NotImplementedError()
 
-    @property
-    def dbop(self):
-        raise AttributeError("dbop is not readable")
+    def get_edition(self):
+        """
+        Internal method for returning the edition.
+        """
+        raise NotImplementedError()
 
-    @dbop.setter
-    def dbop(self, value):
-        self._set_dbop(value)
-
-    @property
-    def edition(self):
-        return self._get_edition()
-
-    @property
-    def external_name(self):
-        return self._get_external_name()
-
-    @external_name.setter
-    def external_name(self, value):
-        self._set_external_name(value)
+    def get_external_name(self):
+        """
+        Internal method for returning the external name.
+        """
+        raise NotImplementedError()
 
     def get_handle(self):
         """
@@ -308,31 +105,41 @@ cdef class BaseConnImpl:
         """
         raise NotImplementedError()
 
-    def getSodaDatabase(self, conn):
-        return self._get_soda_database(conn)
+    def get_internal_name(self):
+        """
+        Internal method for returning the internal name.
+        """
+        raise NotImplementedError()
 
-    def gettype(self, name):
-        return self._get_type(self, name)
+    def get_ltxid(self):
+        """
+        Internal method for returning the logical transaction id.
+        """
+        raise NotImplementedError()
 
-    @property
-    def internal_name(self):
-        return self._get_internal_name()
+    def get_soda_database(self, conn):
+        """
+        Internal method for returning a SODA database for the connection.
+        """
+        raise NotImplementedError()
 
-    @internal_name.setter
-    def internal_name(self, value):
-        self._set_internal_name(value)
+    def get_stmt_cache_size(self):
+        """
+        Internal method for returning the size of the statement cache.
+        """
+        raise NotImplementedError()
 
-    @property
-    def ltxid(self):
-        return self._get_ltxid()
+    def get_type(self, conn, name):
+        """
+        Internal method for returning an object type given its name.
+        """
+        raise NotImplementedError()
 
-    @property
-    def module(self):
-        raise AttributeError("module is not readable")
-
-    @module.setter
-    def module(self, value):
-        self._set_module(value)
+    def get_version(self):
+        """
+        Return the version associated with the connection.
+        """
+        raise NotImplementedError()
 
     def msgproperties(self, payload=None, correlation=None, delay=None,
                       exceptionq=None, expiration=None, priority=None):
@@ -360,16 +167,14 @@ cdef class BaseConnImpl:
         """
         Pings the database to verify the connection is valid.
         """
-        self._ping()
+        raise NotImplementedError()
 
     def prepare(self):
         """
         Prepares the distributed transaction for commit. Returns a boolean
         indicating if a commit is in fact needed.
         """
-        cdef bint commit_needed
-        self._prepare(&commit_needed)
-        return commit_needed
+        raise NotImplementedError()
 
     def queue(self, name, payloadType=None):
         """
@@ -387,22 +192,68 @@ cdef class BaseConnImpl:
         """
         Rolls back any outstanding connection.
         """
-        self._rollback()
+        raise NotImplementedError()
 
-    @property
-    def stmtcachesize(self):
-        cdef uint32_t value
-        self._get_stmtcachesize(&value)
-        return value
+    def set_action(self, value):
+        """
+        Internal method for setting the action.
+        """
+        raise NotImplementedError()
 
-    @stmtcachesize.setter
-    def stmtcachesize(self, value):
-        self._set_stmtcachesize(value)
+    def set_call_timeout(self, value):
+        """
+        Internal method for setting the call timeout.
+        """
+        raise NotImplementedError()
+
+    def set_client_identifier(self, value):
+        """
+        Internal method for setting the client identifier.
+        """
+        raise NotImplementedError()
+
+    def set_client_info(self, value):
+        """
+        Internal method for setting the client info.
+        """
+        raise NotImplementedError()
+
+    def set_current_schema(self, value):
+        """
+        Internal method for setting the current schema.
+        """
+        raise NotImplementedError()
+
+    def set_dbop(self, value):
+        """
+        Internal method for setting the database operation.
+        """
+        raise NotImplementedError()
+
+    def set_external_name(self, value):
+        """
+        Internal method for setting the external name.
+        """
+        raise NotImplementedError()
+
+    def set_internal_name(self, value):
+        """
+        Internal method for setting the internal name.
+        """
+        raise NotImplementedError()
+
+    def set_module(self, value):
+        """
+        Internal method for setting the module.
+        """
+        raise NotImplementedError()
+
+    def set_stmt_cache_size(self, value):
+        """
+        Internal method for setting the size of the statement cache.
+        """
+        raise NotImplementedError()
 
     def unsubscribe(self, subscr):
         cdef BaseSubscription common_subscr = subscr
         common_subscr._unsubscribe(self)
-
-    @property
-    def version(self):
-        return self._get_version()

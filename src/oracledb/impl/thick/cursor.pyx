@@ -22,35 +22,6 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         if self._handle != NULL:
             dpiStmt_release(self._handle)
 
-    cdef object _bindnames(self):
-        cdef:
-            uint32_t *name_lengths = NULL
-            const char **names = NULL
-            uint32_t num_binds, i
-            ssize_t num_bytes
-            list result
-        if dpiStmt_getBindCount(self._handle, &num_binds) < 0:
-            _raise_from_odpi()
-        if num_binds == 0:
-            return []
-        try:
-            num_bytes = num_binds * sizeof(char*)
-            names = <const char**> cpython.PyMem_Malloc(num_bytes)
-            num_bytes = num_binds * sizeof(uint32_t)
-            name_lengths = <uint32_t*> cpython.PyMem_Malloc(num_bytes)
-            if dpiStmt_getBindNames(self._handle, &num_binds, names,
-                                    name_lengths) < 0:
-                _raise_from_odpi()
-            result = [None] * num_binds
-            for i in range(num_binds):
-                result[i] = names[i][:name_lengths[i]].decode()
-            return result
-        finally:
-            if names:
-                cpython.PyMem_Free(names)
-            if name_lengths:
-                cpython.PyMem_Free(name_lengths)
-
     cdef int _close(self) except -1:
         """
         Internal method for closing the cursor.
@@ -91,55 +62,6 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         self._buffer_index = 0
         self._buffer_rowcount = num_rows_in_buffer
         self._more_rows_to_fetch = more_rows_to_fetch
-
-    cdef object _get_array_dml_row_counts(self):
-        """
-        Internal method for populating arraydmlrowcount
-        list.
-        """
-        cdef:
-            uint32_t num_row_count, i
-            uint64_t *rowcount
-            int status
-
-        status = dpiStmt_getRowCounts(self._handle, &num_row_count, &rowcount)
-        if status < 0:
-            _raise_from_odpi()
-
-        result = cpython.PyList_New(num_row_count)
-        for i in range(num_row_count):
-            cpython.PyList_SET_ITEM(result, i, rowcount[i])
-        return result
-
-    cdef object _get_batch_errors(self):
-        """
-        Internal method for populating a list of batch error
-        objects.
-        """
-        cdef:
-            uint32_t num_errors, i
-            dpiErrorInfo *errors
-
-        if dpiStmt_getBatchErrorCount(self._handle, &num_errors) < 0:
-            _raise_from_odpi()
-        if num_errors == 0:
-            return []
-
-        errors = <dpiErrorInfo*> \
-                cpython.PyMem_Malloc(num_errors * sizeof(dpiErrorInfo))
-
-        try:
-            if dpiStmt_getBatchErrors(self._handle, num_errors, errors) < 0:
-                _raise_from_odpi()
-            result = cpython.PyList_New(num_errors)
-            for i in range(num_errors):
-                error = _create_new_from_info(&errors[i])
-                cpython.Py_INCREF(error)
-                cpython.PyList_SET_ITEM(result, i, error)
-        finally:
-            cpython.PyMem_Free(errors)
-
-        return result
 
     cdef Var _get_define_var(self, object cursor, uint32_t pos):
         """
@@ -193,20 +115,6 @@ cdef class ThickCursorImpl(BaseCursorImpl):
                 var._preferred_num_type = NUM_TYPE_INT
         var._finalize_init()
         return var
-
-    cdef object _get_lastrowid(self):
-        cdef:
-            uint32_t rowid_length
-            const char *rowid_ptr
-            dpiRowid *rowid
-        if self._handle is not NULL:
-            if dpiStmt_getLastRowid(self._handle, &rowid) < 0:
-                _raise_from_odpi()
-            if rowid:
-                if dpiRowid_getStringValue(rowid, &rowid_ptr,
-                                           &rowid_length) < 0:
-                    _raise_from_odpi()
-                return rowid_ptr[:rowid_length].decode()
 
     cdef bint _is_plsql(self):
         return <bint> self._stmt_info.isPLSQL
@@ -395,6 +303,83 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             if self._stmt_info.isReturning or self._stmt_info.isPLSQL:
                 self._transform_binds(num_execs_int)
 
+    def get_array_dml_row_counts(self):
+        """
+        Internal method for returning a list of array DML row counts for the
+        last operation executed.
+        """
+        cdef:
+            uint32_t num_row_count, i
+            uint64_t *rowcount
+            int status
+
+        status = dpiStmt_getRowCounts(self._handle, &num_row_count, &rowcount)
+        if status < 0:
+            _raise_from_odpi()
+
+        result = cpython.PyList_New(num_row_count)
+        for i in range(num_row_count):
+            cpython.PyList_SET_ITEM(result, i, rowcount[i])
+        return result
+
+    def get_batch_errors(self):
+        """
+        Internal method for returning a list of batch errors.
+        """
+        cdef:
+            uint32_t num_errors, i
+            dpiErrorInfo *errors
+
+        if dpiStmt_getBatchErrorCount(self._handle, &num_errors) < 0:
+            _raise_from_odpi()
+        if num_errors == 0:
+            return []
+
+        errors = <dpiErrorInfo*> \
+                cpython.PyMem_Malloc(num_errors * sizeof(dpiErrorInfo))
+
+        try:
+            if dpiStmt_getBatchErrors(self._handle, num_errors, errors) < 0:
+                _raise_from_odpi()
+            result = cpython.PyList_New(num_errors)
+            for i in range(num_errors):
+                error = _create_new_from_info(&errors[i])
+                cpython.Py_INCREF(error)
+                cpython.PyList_SET_ITEM(result, i, error)
+        finally:
+            cpython.PyMem_Free(errors)
+
+        return result
+
+    def get_bind_names(self):
+        cdef:
+            uint32_t *name_lengths = NULL
+            const char **names = NULL
+            uint32_t num_binds, i
+            ssize_t num_bytes
+            list result
+        if dpiStmt_getBindCount(self._handle, &num_binds) < 0:
+            _raise_from_odpi()
+        if num_binds == 0:
+            return []
+        try:
+            num_bytes = num_binds * sizeof(char*)
+            names = <const char**> cpython.PyMem_Malloc(num_bytes)
+            num_bytes = num_binds * sizeof(uint32_t)
+            name_lengths = <uint32_t*> cpython.PyMem_Malloc(num_bytes)
+            if dpiStmt_getBindNames(self._handle, &num_binds, names,
+                                    name_lengths) < 0:
+                _raise_from_odpi()
+            result = [None] * num_binds
+            for i in range(num_binds):
+                result[i] = names[i][:name_lengths[i]].decode()
+            return result
+        finally:
+            if names:
+                cpython.PyMem_Free(names)
+            if name_lengths:
+                cpython.PyMem_Free(name_lengths)
+
     def get_implicit_results(self, connection):
         cdef:
             ThickCursorImpl child_cursor_impl
@@ -415,6 +400,24 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             child_cursor_impl._fixup_ref_cursor = True
             result.append(child_cursor)
         return result
+
+    def get_lastrowid(self):
+        """
+        Internal method for returning the rowid of the row that was last
+        modified by an operation.
+        """
+        cdef:
+            uint32_t rowid_length
+            const char *rowid_ptr
+            dpiRowid *rowid
+        if self._handle is not NULL:
+            if dpiStmt_getLastRowid(self._handle, &rowid) < 0:
+                _raise_from_odpi()
+            if rowid:
+                if dpiRowid_getStringValue(rowid, &rowid_ptr,
+                                           &rowid_length) < 0:
+                    _raise_from_odpi()
+                return rowid_ptr[:rowid_length].decode()
 
     def is_query(self, cursor):
         cdef uint32_t num_query_cols

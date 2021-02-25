@@ -112,7 +112,7 @@ cdef class Pool(BasePool):
                 conn_impl = self._free_used_conn_impls.pop(0)
                 if purity == constants.PURITY_NEW:
                     conn_impl._pool = None
-                    conn_impl._close()
+                    conn_impl.close()
                     conn_impl = self._create_conn_impl()
                 self._busy_conn_impls.append(conn_impl)
 
@@ -199,16 +199,16 @@ cdef class Pool(BasePool):
                 if conn is None:
                     break
 
-    cdef int _drop(self, BaseConnImpl connection) except -1:
-        cdef ThinConnImpl thin_connection = connection
+    cdef int _drop(self, BaseConnImpl conn_impl) except -1:
+        cdef ThinConnImpl thin_conn_impl = conn_impl
         with self._condition:
-            self._busy_conn_impls.remove(thin_connection)
+            self._busy_conn_impls.remove(thin_conn_impl)
             self._condition.notify()
-        thin_connection._pool = None
-        thin_connection._close()
+        thin_conn_impl._pool = None
+        thin_conn_impl.close()
 
     cdef int _free_busy_connection(self, ThinConnImpl connection) except -1:
-        connection._rollback()
+        connection.rollback()
         with self._condition:
             self._busy_conn_impls.remove(connection)
             self._free_used_conn_impls.append(connection)

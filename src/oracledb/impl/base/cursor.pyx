@@ -53,12 +53,6 @@ cdef class BaseCursorImpl:
             else:
                 self.bind_vars.append(var)
 
-    cdef object _bindnames(self):
-        """
-        Internal method used for getting bind names.
-        """
-        raise NotImplementedError()
-
     cdef int _close(self) except -1:
         """
         Internal method for closing the cursor.
@@ -204,18 +198,6 @@ cdef class BaseCursorImpl:
         """
         raise NotImplementedError()
 
-    cdef object _get_array_dml_row_counts(self):
-        """
-        Internal method used for populating list with arraydmlrowcount.
-        """
-        raise NotImplementedError()
-
-    cdef object _get_batch_errors(self):
-        """
-        Internal method used for populating list with batch error objects.
-        """
-        raise NotImplementedError()
-
     cdef BaseVar _get_bind_var(self, object cursor, uint32_t num_elements,
                                uint32_t pos, object value, BaseVar orig_var):
         """
@@ -247,12 +229,6 @@ cdef class BaseCursorImpl:
         var = self._create_var_by_value(cursor, value, num_elements)
         var._set_value(pos, value)
         return var
-
-    cdef object _get_lastrowid(self):
-        """
-        Internal method for returning the last rowid associated with a cursor.
-        """
-        raise NotImplementedError()
 
     cdef bint _is_plsql(self):
         """
@@ -320,12 +296,6 @@ cdef class BaseCursorImpl:
             var.setvalue(0, value)
         return var
 
-    def bindnames(self):
-        """
-        Returns a list of bind names.
-        """
-        return self._bindnames()
-
     def bind_many(self, cursor, parameters):
         """
         Internal method used for binding multiple rows of data.
@@ -379,17 +349,23 @@ cdef class BaseCursorImpl:
         if self._buffer_rowcount > 0:
             return self._create_row()
 
-    def getarraydmlrowcounts(self):
+    def get_array_dml_row_counts(self):
         """
-        Populates the arraydmlrowcount row count list.
+        Internal method used for returning the list of array DML row counts.
         """
-        return self._get_array_dml_row_counts()
+        raise NotImplementedError()
 
-    def getbatcherrors(self):
+    def get_batch_errors(self):
         """
-        Populates the batch error list with error objects.
+        Internal method used for returning a list with batch errors.
         """
-        return self._get_batch_errors()
+        raise NotImplementedError()
+
+    def get_bind_names(self):
+        """
+        Internal method used for getting bind names.
+        """
+        raise NotImplementedError()
 
     def get_description(self):
         """
@@ -404,15 +380,17 @@ cdef class BaseCursorImpl:
         """
         raise NotImplementedError()
 
+    def get_lastrowid(self):
+        """
+        Internal method for returning the last rowid associated with a cursor.
+        """
+        raise NotImplementedError()
+
     def is_query(self, cursor):
         """
         Internal method for determining if the cursor last executed a query.
         """
         raise NotImplementedError()
-
-    @property
-    def lastrowid(self):
-        return self._get_lastrowid()
 
     def parse(self, cursor):
         """
@@ -427,7 +405,7 @@ cdef class BaseCursorImpl:
         """
         self._prepare(statement)
 
-    def scroll(self, value=0, mode="relative"):
+    def scroll(self, value, mode):
         """
         Scrolls a scrollable cursor.
         """

@@ -22,9 +22,6 @@ cdef class ThinConnImpl(BaseConnImpl):
         bint _module_modified
         Pool _pool
 
-    cdef int _commit(self) except -1:
-        self._protocol._commit()
-
     def _connect(self, host, port, connect_string, password):
         sock = socket.socket()
         sock.connect((host, port))
@@ -36,43 +33,46 @@ cdef class ThinConnImpl(BaseConnImpl):
     cdef BaseLob _create_temp_lob(self, DbType dbtype):
         return Lob._create_temp_lob(self, dbtype)
 
-    cdef str _get_version(self):
-        return self._server_version
-
-    cdef int _ping(self) except -1:
-        self._protocol._ping()
-
-    cdef int _rollback(self) except -1:
-        self._protocol._rollback()
-
-    cdef int _set_action(self, str value) except -1:
-        self._action = value
-        self._action_modified = True
-
-    cdef int _set_client_identifier(self, str value) except -1:
-        self._client_identifier = value
-        self._client_identifier_modified = True
-
-    cdef int _set_client_info(self, str value) except -1:
-        self._client_info = value
-        self._client_info_modified = True
-
-    cdef int _set_dbop(self, str value) except -1:
-        self._dbop = value
-        self._dbop_modified = True
-
-    cdef int _set_module(self, str value) except -1:
-        self._module = value
-        self._module_modified = True
-        # setting the module by itself results in an error so always force the
-        # action to be set as well (which eliminates this error)
-        self._action_modified = True
-
-    def close(self, in_del=False):
+    def close(self, bint in_del=False):
         if self._pool is not None:
             self._pool._free_busy_connection(self)
         else:
             self._protocol._close()
 
+    def commit(self):
+        self._protocol._commit()
+
     def create_cursor_impl(self):
         return ThinCursorImpl.__new__(ThinCursorImpl, self)
+
+    def get_version(self):
+        return self._server_version
+
+    def ping(self):
+        self._protocol._ping()
+
+    def rollback(self):
+        self._protocol._rollback()
+
+    def set_action(self, str value):
+        self._action = value
+        self._action_modified = True
+
+    def set_client_identifier(self, str value):
+        self._client_identifier = value
+        self._client_identifier_modified = True
+
+    def set_client_info(self, str value):
+        self._client_info = value
+        self._client_info_modified = True
+
+    def set_dbop(self, str value):
+        self._dbop = value
+        self._dbop_modified = True
+
+    def set_module(self, str value):
+        self._module = value
+        self._module_modified = True
+        # setting the module by itself results in an error so always force the
+        # action to be set as well (which eliminates this error)
+        self._action_modified = True

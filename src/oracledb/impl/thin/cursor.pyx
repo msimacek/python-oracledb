@@ -22,23 +22,8 @@ cdef class ThinCursorImpl(BaseCursorImpl):
     cdef BaseVar _create_var(self, object connection):
         return Var.__new__(Var, connection)
 
-    cdef object _bindnames(self):
-        return list(self._statement._bind_info_dict.keys())
-
     cdef int _fetch_rows(self, object cursor) except -1:
         self._conn_impl._protocol._fetch(cursor)
-
-    cdef object _get_array_dml_row_counts(self):
-        if self._dmlrowcounts is None:
-            errors._raise_from_string(exceptions.DatabaseError,
-                                      "Array DML row counts not available")
-        return self._dmlrowcounts
-
-    cdef object _get_batch_errors(self):
-        return self._batcherrors
-
-    cdef object _get_lastrowid(self):
-        return self._lastrowid
 
     cdef bint _is_plsql(self):
         return self._statement._is_plsql
@@ -76,11 +61,26 @@ cdef class ThinCursorImpl(BaseCursorImpl):
     def fetch_rows(self, cursor):
         self._conn_impl._protocol._fetch(cursor)
 
+    def get_array_dml_row_counts(self):
+        if self._dmlrowcounts is None:
+            errors._raise_from_string(exceptions.DatabaseError,
+                                      "Array DML row counts not available")
+        return self._dmlrowcounts
+
+    def get_batch_errors(self):
+        return self._batcherrors
+
+    def get_bind_names(self):
+        return list(self._statement._bind_info_dict.keys())
+
     def get_implicit_results(self, connection):
         if self._implicit_resultsets is None:
             errors._raise_from_string(exceptions.InterfaceError,
                                       "no statement executed")
         return self._implicit_resultsets
+
+    def get_lastrowid(self):
+        return self._lastrowid
 
     def is_query(self, connection):
         return self.fetch_vars is not None

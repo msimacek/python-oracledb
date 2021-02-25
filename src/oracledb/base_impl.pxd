@@ -53,39 +53,10 @@ cdef class BaseConnImpl:
         str _version
         bint _is_connected
 
-    cdef int _begin(self, long format_id, str transaction_id,
-                    str branch_id) except -1
-    cdef int _cancel(self) except -1
-    cdef int _change_password(self, str old_password,
-                              str new_password) except -1
-    cdef int _commit(self) except -1
     cdef BaseMsgProps _create_msg_props(self)
     cdef BaseQueue _create_queue(self)
     cdef BaseSubscription _create_subscription(self, object connection)
     cdef BaseLob _create_temp_lob(self, DbType dbtype)
-    cdef str _get_current_schema(self)
-    cdef str _get_edition(self)
-    cdef str _get_external_name(self)
-    cdef str _get_internal_name(self)
-    cdef bytes _get_ltxid(self)
-    cdef BaseSodaDatabase _get_soda_database(self, object connection)
-    cdef int _get_stmtcachesize(self, uint32_t *value) except -1
-    cdef int _get_calltimeout(self, uint32_t *value) except -1
-    cdef BaseDbObjectType _get_type(self, object conn, str name)
-    cdef str _get_version(self)
-    cdef int _ping(self) except -1
-    cdef int _prepare(self, bint *commit_needed) except -1
-    cdef int _rollback(self) except -1
-    cdef int _set_action(self, str value) except -1
-    cdef int _set_client_identifier(self, str value) except -1
-    cdef int _set_client_info(self, str value) except -1
-    cdef int _set_current_schema(self, str value) except -1
-    cdef int _set_dbop(self, str value) except -1
-    cdef int _set_external_name(self, str value) except -1
-    cdef int _set_internal_name(self, str value) except -1
-    cdef int _set_module(self, str value) except -1
-    cdef int _set_stmtcachesize(self, uint32_t value) except -1
-    cdef int _set_calltimeout(self, uint32_t value) except -1
 
 
 cdef class BasePool:
@@ -141,7 +112,6 @@ cdef class BaseCursorImpl:
     cdef int _bind_by_position(self, object cursor, object params,
                                uint32_t num_elements=*,
                                uint32_t pos=*) except -1
-    cdef object _bindnames(self)
     cdef int _close(self) except -1
     cdef object _create_row(self)
     cdef BaseVar _create_var(self, object connection)
@@ -150,11 +120,8 @@ cdef class BaseCursorImpl:
     cdef BaseVar _create_var_by_value(self, object cursor, object value,
                                       uint32_t num_elements)
     cdef int _fetch_rows(self, object cursor) except -1
-    cdef object _get_array_dml_row_counts(self)
-    cdef object _get_batch_errors(self)
     cdef BaseVar _get_bind_var(self, object cursor, uint32_t num_elements,
                                uint32_t pos, object value, BaseVar orig_var)
-    cdef object _get_lastrowid(self)
     cdef bint _is_plsql(self)
     cdef int _perform_binds(self, uint32_t num_execs=*) except -1
     cdef int _parse(self, object connection) except -1

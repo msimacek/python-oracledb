@@ -152,7 +152,7 @@ class Cursor:
         if self.statement is None:
             message = "statement must be prepared first"
             errors._raise_from_string(exceptions.ProgrammingError, message)
-        return self._impl.bindnames()
+        return self._impl.get_bind_names()
 
     @property
     def bindvars(self):
@@ -429,7 +429,7 @@ class Cursor:
         each element of the array passed to executemany().
         """
         self._verify_open()
-        return self._impl.getarraydmlrowcounts()
+        return self._impl.get_array_dml_row_counts()
 
     def getbatcherrors(self):
         """
@@ -439,7 +439,7 @@ class Cursor:
         looking at the offset attribute of the error object.
         """
         self._verify_open()
-        return self._impl.getbatcherrors()
+        return self._impl.get_batch_errors()
 
     def getimplicitresults(self):
         """
@@ -481,7 +481,7 @@ class Cursor:
         is returned.
         """
         self._verify_open()
-        return self._impl.lastrowid
+        return self._impl.get_lastrowid()
 
     @property
     def outputtypehandler(self):

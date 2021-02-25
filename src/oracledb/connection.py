@@ -84,7 +84,7 @@ class Connection:
         attribute and cannot be set to None -- use the empty string instead.
         """
         self._verify_connected()
-        self._impl.action = value
+        self._impl.set_action(value)
 
     @property
     def autocommit(self):
@@ -123,12 +123,12 @@ class Connection:
         means that no timeout will take place.
         """
         self._verify_connected()
-        return self._impl.calltimeout
+        return self._impl.get_call_timeout()
 
     @callTimeout.setter
     def callTimeout(self, value):
         self._verify_connected()
-        self._impl.calltimeout = value
+        self._impl.set_call_timeout(value)
 
     def cancel(self):
         """
@@ -142,7 +142,7 @@ class Connection:
         Changes the password for the user to which the connection is connected.
         """
         self._verify_connected()
-        self._impl.changepassword(old_password, new_password)
+        self._impl.change_password(old_password, new_password)
 
     @property
     def client_identifier(self):
@@ -154,7 +154,7 @@ class Connection:
         Specifies the client_identifier column in the v$session table.
         """
         self._verify_connected()
-        self._impl.client_identifier = value
+        self._impl.set_client_identifier(value)
 
     @property
     def clientinfo(self):
@@ -166,7 +166,7 @@ class Connection:
         Specifies the client_info column in the v$session table.
         """
         self._verify_connected()
-        self._impl.clientinfo = value
+        self._impl.set_client_info(value)
 
     def close(self):
         """
@@ -199,12 +199,12 @@ class Connection:
     @property
     def current_schema(self):
         self._verify_connected()
-        return self._impl.current_schema
+        return self._impl.get_current_schema()
 
     @current_schema.setter
     def current_schema(self, value):
         self._verify_connected()
-        self._impl.current_schema = value
+        self._impl.set_current_schema(value)
 
     def cursor(self, scrollable=False):
         """
@@ -224,7 +224,7 @@ class Connection:
         viewed in the DBOP_NAME column of the V$SQL_MONITOR table.
         """
         self._verify_connected()
-        self._impl.dbop = value
+        self._impl.set_dbop(value)
 
     @property
     def dsn(self):
@@ -240,7 +240,7 @@ class Connection:
         Specifies the session edition.
         """
         self._verify_connected()
-        return self._impl.edition
+        return self._impl.get_edition()
 
     @property
     def encoding(self):
@@ -257,12 +257,12 @@ class Connection:
         distributed transactions.
         """
         self._verify_connected()
-        return self._impl.external_name
+        return self._impl.get_external_name()
 
     @external_name.setter
     def external_name(self, value):
         self._verify_connected()
-        self._impl.external_name = value
+        self._impl.set_external_name(value)
 
     def getSodaDatabase(self):
         """
@@ -270,7 +270,7 @@ class Connection:
         Oracle Document Access (SODA).
         """
         self._verify_connected()
-        return self._impl.getSodaDatabase(self)
+        return self._impl.get_soda_database(self)
 
     def gettype(self, name):
         """
@@ -278,7 +278,7 @@ class Connection:
         objects which can be bound to cursors created by this connection.
         """
         self._verify_connected()
-        return self._impl.gettype(name)
+        return self._impl.get_type(self, name)
 
     @property
     def handle(self):
@@ -317,12 +317,12 @@ class Connection:
         distributed transactions.
         """
         self._verify_connected()
-        return self._impl.internal_name
+        return self._impl.get_internal_name()
 
     @internal_name.setter
     def internal_name(self, value):
         self._verify_connected()
-        self._impl.internal_name = value
+        self._impl.set_internal_name(value)
 
     @property
     def ltxid(self):
@@ -333,7 +333,7 @@ class Connection:
         provided sample for more information.
         """
         self._verify_connected()
-        return self._impl.ltxid
+        return self._impl.get_ltxid()
 
     @property
     def module(self):
@@ -347,7 +347,7 @@ class Connection:
         ORA-24960.
         """
         self._verify_connected()
-        self._impl.module = value
+        self._impl.set_module(value)
 
     def msgproperties(self, payload=None, correlation=None, delay=None,
                       exceptionq=None, expiration=None, priority=None):
@@ -466,12 +466,12 @@ class Connection:
         number of statements that you execute repeatedly.
         """
         self._verify_connected()
-        return self._impl.stmtcachesize
+        return self._impl.get_stmt_cache_size()
 
     @stmtcachesize.setter
     def stmtcachesize(self, value):
         self._verify_connected()
-        self._impl.stmtcachesize = value
+        self._impl.set_stmt_cache_size(value)
 
     def subscribe(self, namespace=constants.SUBSCR_NAMESPACE_DBCHANGE,
                   protocol=constants.SUBSCR_PROTOCOL_CALLBACK, callback=None,
@@ -550,7 +550,7 @@ class Connection:
         """
         if self._version is None:
             self._verify_connected()
-            self._version = self._impl.version
+            self._version = self._impl.get_version()
         return self._version
 
 # alias required by the DB API
