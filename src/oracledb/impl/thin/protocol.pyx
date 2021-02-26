@@ -67,11 +67,19 @@ cdef class Protocol:
     cdef int _execute(self, object cursor, uint32_t num_execs=1,
                       bint arraydmlrowcounts=False,
                       bint batcherrors=False) except -1:
-        cdef ExecuteMessage message = ExecuteMessage(cursor)
+        cdef:
+            ThinCursorImpl cursor_impl = cursor._impl
+            Statement stmt = cursor_impl._statement
+            MessageWithData message
+        if stmt._cursor_id and not stmt._requires_full_execute:
+            message = <MessageWithData> ReExecuteMessage(cursor)
+        else:
+            message = <MessageWithData> ExecuteMessage(cursor)
         message.arraydmlrowcounts = arraydmlrowcounts
         message.batcherrors = batcherrors
         message.num_execs = num_execs
         self._process_message(message)
+        stmt._requires_full_execute = False
 
     cdef int _fetch(self, object cursor) except -1:
         self._process_message(FetchMessage(cursor))

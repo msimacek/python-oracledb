@@ -16,10 +16,11 @@ cdef class Var(BaseVar):
         self._conn = conn
         self._conn_impl = <ThinConnImpl> conn._impl
 
-    cdef int _bind(self, BaseCursorImpl cursor, uint32_t num_execs,
+    cdef int _bind(self, BaseCursorImpl cursor_impl, uint32_t num_execs,
                    str name=None, uint32_t pos=0) except -1:
         cdef:
-            ThinCursorImpl thin_cursor = cursor
+            ThinCursorImpl thin_cursor_impl = <ThinCursorImpl> cursor_impl
+            Statement stmt = thin_cursor_impl._statement
             uint32_t idx, num_binds, num_vars
             object var_list, bind_info_dict
             list bind_info_list
@@ -27,21 +28,22 @@ cdef class Var(BaseVar):
             str upper_name
             Var var
 
-        bind_info_dict = thin_cursor._statement._bind_info_dict
-        bind_info_list = thin_cursor._statement._bind_info_list
-        var_list = thin_cursor.bind_vars
+        bind_info_dict = stmt._bind_info_dict
+        bind_info_list = stmt._bind_info_list
+        var_list = thin_cursor_impl.bind_vars
 
+        # Bind by name
         if name is not None:
-            # Bind by name
             upper_name = name.upper()
             if upper_name not in bind_info_dict:
                 message = f"Invalid named bind: {name}."
                 errors._raise_from_string(exceptions.DatabaseError, message)
             var = var_list[name]
             for bind_info in bind_info_dict[upper_name]:
-                bind_info._bind_var = var
+                stmt._set_var(bind_info, var)
+
+        # Bind by position
         else:
-            # Bind by position
             num_binds = len(bind_info_list)
             num_vars = len(var_list)
             if len(bind_info_list) != len(var_list):
@@ -50,7 +52,7 @@ cdef class Var(BaseVar):
                 errors._raise_from_string(exceptions.DatabaseError, message)
             idx = pos - 1
             bind_info = bind_info_list[idx]
-            bind_info._bind_var = var_list[idx]
+            stmt._set_var(bind_info, var_list[idx])
 
     cdef object _get_single_value(self, uint32_t pos):
         cdef object value

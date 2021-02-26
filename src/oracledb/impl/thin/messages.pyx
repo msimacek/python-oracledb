@@ -381,7 +381,6 @@ cdef class MessageWithData(Message):
         cdef:
             uint32_t i, temp, num_bytes
             BindInfo bind_info
-            uint8_t bind_dir
         buf.skip_bytes(1)                   # flag
         temp = buf.read_ub2()               # num requests
         self.row_index = buf.read_ub4()     # iter num
@@ -395,10 +394,10 @@ cdef class MessageWithData(Message):
             buf.skip_bytes(num_bytes)
         self.row_vars = []
         for i in range(temp):               # bind directions
-            bind_dir = buf.read_uint8()
-            if bind_dir == TNS_BIND_DIR_INPUT:
-                continue
             bind_info = self.cursor_impl._statement._bind_info_list[i]
+            bind_info.bind_dir = buf.read_uint8()
+            if bind_info.bind_dir == TNS_BIND_DIR_INPUT:
+                continue
             self.row_vars.append(bind_info._bind_var)
 
     cdef int _process_message(self, ReadBuffer buf,
@@ -557,38 +556,36 @@ cdef class MessageWithData(Message):
 
     cdef int _write_bind_params(self, WriteBuffer buf, list params) except -1:
         cdef:
-            uint8_t ora_type_num, flag
             bint returning_only
             BindInfo bind_info
             bytes temp_bytes
+            uint8_t flag
             object value
             uint32_t i
-            Var var
 
         # write parameter header information
         returning_only = True
-        for i, bind_info in enumerate(params):
+        for bind_info in params:
             if not bind_info._is_return_bind:
                 returning_only = False
-            var = bind_info._bind_var
             flag = TNS_BIND_USE_INDICATORS | TNS_BIND_USE_LENGTH
-            if var.is_array:
+            if bind_info.is_array:
                 flag |= TNS_BIND_ARRAY
-            buf.write_uint8(var._dbtype._ora_type_num)
+            buf.write_uint8(bind_info.ora_type_num)
             buf.write_uint8(flag)
-            buf.write_uint8(var.precision)
-            buf.write_uint8(var.scale)
-            buf.write_ub4(var.buffer_size)
-            if var.is_array:
-                buf.write_ub4(var.num_elements)
+            buf.write_uint8(bind_info.precision)
+            buf.write_uint8(bind_info.scale)
+            buf.write_ub4(bind_info.buffer_size)
+            if bind_info.is_array:
+                buf.write_ub4(bind_info.num_elements)
             else:
                 buf.write_ub4(0)            # max num elements
             buf.write_ub4(0)                # cont flag
             buf.write_ub4(0)                # OID
             buf.write_ub4(0)                # version
             buf.write_ub4(TNS_CHARSET_UTF8)
-            buf.write_uint8(var._dbtype._csfrm)
-            buf.write_ub4(var.size)
+            buf.write_uint8(bind_info.csfrm)
+            buf.write_ub4(bind_info.size)
             buf.write_ub4(0)                # oaccolid
 
         # write parameter values unless statement contains only returning binds
@@ -1146,6 +1143,57 @@ cdef class ExecuteMessage(MessageWithData):
         buf.write_ub4(0)                    # al8i4[12]
         if num_params > 0:
             self._write_bind_params(buf, params)
+
+
+@cython.final
+cdef class ReExecuteMessage(MessageWithData):
+
+    def __cinit__(self, cursor):
+        cdef ThinCursorImpl cursor_impl = self.cursor_impl
+        if cursor_impl._statement._is_query and cursor_impl.prefetchrows > 0:
+            self.function_code = TNS_FUNC_REEXECUTE_AND_FETCH
+        else:
+            self.function_code = TNS_FUNC_REEXECUTE
+
+    cdef int _write_message(self, WriteBuffer buf) except -1:
+        cdef:
+            uint32_t i, exec_flags_1 = 0, exec_flags_2 = 0, num_iters
+            Statement stmt = self.cursor_impl._statement
+            list params = stmt._bind_info_list
+            BindInfo bind_info
+
+        if params:
+            self.row_vars = [bind_info._bind_var \
+                             for bind_info in stmt._bind_info_list \
+                             if bind_info.bind_dir != TNS_BIND_DIR_INPUT]
+            params = [bind_info for bind_info in stmt._bind_info_list \
+                      if bind_info.bind_dir != TNS_BIND_DIR_OUTPUT]
+        if self.function_code == TNS_FUNC_REEXECUTE_AND_FETCH:
+            exec_flags_1 |= TNS_EXEC_OPTION_EXECUTE | \
+                            TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
+            num_iters = self.cursor.prefetchrows
+        else:
+            if self.cursor.connection.autocommit:
+                exec_flags_2 |= TNS_EXEC_OPTION_COMMIT
+            num_iters = self.num_execs
+
+        # write end to end attribute piggyback if needed
+        if self.conn_impl._action_modified \
+                or self.conn_impl._client_identifier_modified \
+                or self.conn_impl._client_info_modified \
+                or self.conn_impl._dbop_modified \
+                or self.conn_impl._module_modified:
+            self._write_end_to_end_piggyback(buf)
+
+        self._write_function_code(buf)
+        buf.write_ub4(stmt._cursor_id)
+        buf.write_ub4(num_iters)
+        buf.write_ub4(exec_flags_1)
+        buf.write_ub4(exec_flags_2)
+        if params:
+            for i in range(self.num_execs):
+                buf.write_uint8(TNS_MSG_TYPE_ROW_DATA)
+                self._write_bind_params_row(buf, params, i)
 
 
 @cython.final
