@@ -1076,7 +1076,10 @@ cdef class ExecuteMessage(MessageWithData):
         buf.write_ub4(options)              # execute options
         buf.write_ub4(stmt._cursor_id)
         buf.write_uint8(1)                  # pointer (cursor id)
-        buf.write_ub4(stmt._sql_bytes_length)
+        if stmt._cursor_id == 0:
+            buf.write_ub4(stmt._sql_bytes_length)
+        else:
+            buf.write_ub4(0)
         buf.write_uint8(1)                  # pointer (vector)
         buf.write_ub4(13)                   # al8i4 array length
         buf.write_uint8(0)                  # pointer (al8o4)
@@ -1121,7 +1124,8 @@ cdef class ExecuteMessage(MessageWithData):
         if buf._caps.ttc_field_version >= TNS_CCAP_FIELD_VERSION_12_2_EXT1:
             buf.write_uint8(0)              # pointer (chunk ids)
             buf.write_ub4(0)                # number of chunk ids
-        buf.write_bytes(stmt._sql_bytes)
+        if stmt._cursor_id == 0:
+            buf.write_bytes(stmt._sql_bytes)
         buf.write_ub4(1)                    # al8i4[0] parse
         if stmt._is_query:
             if stmt._cursor_id == 0:
