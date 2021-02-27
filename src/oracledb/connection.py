@@ -198,6 +198,13 @@ class Connection:
 
     @property
     def current_schema(self):
+        """
+        Specifies the current schema for the session. Setting this value is the
+        same as executing the SQL statement "ALTER SESSION SET CURRENT_SCHEMA".
+        The attribute is set (and verified) on the next call that does a round
+        trip to the server. The value is placed before unqualified database
+        objects in SQL statements you then execute.
+        """
         self._verify_connected()
         return self._impl.get_current_schema()
 
