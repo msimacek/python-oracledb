@@ -16,6 +16,75 @@ class Connection:
                  purity=constants.ATTR_PURITY_DEFAULT, newpassword=None,
                  edition=None, appcontext=[], tag=None, matchanytag=False,
                  shardingkey=[], supershardingkey=[]):
+        """
+        Constructor for creating a connection to the database. All parameters
+        are optional.
+
+        The dsn (data source name) can be a string in the format
+        user/password@connect_string or can simply be the connect string (and
+        all of the other parameters need to be specified as well. See the
+        documentation on connection strings for more information.
+
+        If the mode is specified, it must be one of the connection
+        authorization modes which are defined at the module level.
+
+        If the handle is specified, it must be of type OCISvcCtx* and is only
+        of use when embedding Python in an application (like PowerBuilder)
+        which has already made the connection. The connection thus created
+        should never be used after the source handle has been closed or
+        destroyed. This parameter is only useful when creating a thick
+        connection.
+
+        The pool parameter is expected to be a pool object and the use of this
+        parameter is the equivalent of calling acquire() on the pool.
+        Parameters not accepted by that method are ignored.
+
+        The threaded parameter is expected to be a boolean expression which
+        indicates whether or not Oracle should wrap accesses to connections
+        with a mutex. Doing so in single threaded applications imposes a
+        performance penalty of about 10-15% which is why the default is False.
+
+        The events parameter is expected to be a boolean expression which
+        indicates whether or not to initialize Oracle in events mode. This is
+        required for continuous query notification and high availability event
+        notifications.
+
+        The cclass parameter is expected to be a string and defines the
+        connection class for database resident connection pooling (DRCP).
+
+        The purity parameter is expected to be one of PURITY_DEFAULT,
+        PURITY_NEW, or PURITY_ANY.
+
+        The newpassword parameter is expected to be a string if specified and
+        sets the password for the logon during the connection process.
+
+        The edition parameter is expected to be a string if specified and sets
+        the edition to use for the session. It is only relevant if both the
+        client and the database are at least Oracle Database 11.2. If this
+        parameter is used with the cclass parameter the exception "DPI-1058:
+        edition not supported with connection class" will be raised.
+
+        The appcontext parameter is expected to be a list of 3-tuples, if
+        specified, and sets the application context for the connection.
+        Application context is available in the database by using the
+        sys_context() PL/SQL method and can be used within a logon trigger as
+        well as any other PL/SQL procedures. Each entry in the list is expected
+        to contain three strings: the namespace, the name and the value.
+
+        The tag parameter, if specified, is expected to be a string and will
+        limit the sessions that can be returned from a session pool unless the
+        matchanytag parameter is set to True. In that case sessions with the
+        specified tag will be preferred over others, but if no such sessions
+        are available a session with a different tag may be returned instead.
+        In any case, untagged sessions will always be returned if no sessions
+        with the specified tag are available. Sessions are tagged when they are
+        released back to the pool.
+
+        The shardingkey and supershardingkey parameters, if specified, are
+        expected to be a sequence of values which will be used to identify the
+        database shard to connect to. The key values can be strings, numbers,
+        bytes or dates.
+        """
         self._impl = None
         result = utils.parse_connect_params(dsn, user, password, host, port,
                                             service_name, thin)
