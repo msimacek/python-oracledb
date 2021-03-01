@@ -25,4 +25,4 @@ def _raise_from_string(exc_type, message):
     Raises an exception from a given string. This ensures that an _Error object
     is created for all exceptions that are raised.
     """
-    raise exc_type(_Error(message))
+    raise exc_type(_Error(message)) from None
