@@ -1236,7 +1236,7 @@ cdef class LobOpMessage(Message):
             if self.source_lob.type._ora_type_num == TNS_DATA_TYPE_BLOB:
                 self.data = temp_bytes
             else:
-                self.data = temp_bytes.decode(TNS_ENCODING_UTF16)
+                self.data = temp_bytes.decode(self.source_lob._get_encoding())
         else:
             Message._process_message(self, buf, message_type)
 

@@ -36,6 +36,13 @@ cdef class Lob(BaseLob):
         conn._protocol._process_message(message)
         return lob
 
+    cdef str _get_encoding(self):
+        if self.type._csfrm == TNS_CS_NCHAR \
+                or self._locator[TNS_LOB_LOCATOR_OFFSET_FLAG_3] & \
+                TNS_LOB_LOCATOR_VAR_LENGTH_CHARSET:
+            return TNS_ENCODING_UTF16
+        return TNS_ENCODING_UTF8
+
     cdef int _get_max_amount(self, uint64_t* max_amount) except -1:
         max_amount[0] = 2**32 - 1
 
@@ -104,5 +111,5 @@ cdef class Lob(BaseLob):
         if self.type._ora_type_num == TNS_DATA_TYPE_BLOB:
             message.data = value
         else:
-            message.data = value.encode(TNS_ENCODING_UTF16)
+            message.data = value.encode(self._get_encoding())
         conn._protocol._process_message(message)
