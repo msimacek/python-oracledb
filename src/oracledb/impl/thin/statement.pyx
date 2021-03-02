@@ -43,11 +43,11 @@ cdef class StatementCache:
         self._statements[statement._sql] = statement
         self._statements.move_to_end(statement._sql)
         if len(self._statements) > self._max_entries:
-            self.statements.popitem(last=False)
+            self._statements.popitem(last=False)
 
     def set_max_entries(self, max_entries):
         while len(self._statements) > max_entries:
-            self.statements.popitem(last=False)
+            self._statements.popitem(last=False)
         self._max_entries = max_entries
 
 
