@@ -92,14 +92,16 @@ cdef class ThickConnImpl(BaseConnImpl):
         if self._handle != NULL:
             dpiConn_release(self._handle)
 
-    def _connect(self, password, mode, handle, pool, threaded, events, cclass,
-                 purity, newpassword, edition, appcontext, tag, matchanytag,
-                 shardingkey, supershardingkey):
+    def _connect(self, str password=None, uint32_t mode=0, uint64_t handle=0,
+                 ThickPoolImpl pool_impl=None, bint threaded=False, bint
+                 events=False, str cclass=None, uint32_t purity=0,
+                 str newpassword=None, str edition=None, list appcontext=None,
+                 str tag=None, bint matchanytag=False, list shardingkey=None,
+                 list supershardingkey=None):
         cdef:
             dpiCommonCreateParams common_params
             dpiConnCreateParams conn_params
             ConnectionParams params
-            Pool thick_pool
             int status
 
         # ensure that the Oracle Client library is initialized
@@ -147,7 +149,7 @@ cdef class ThickConnImpl(BaseConnImpl):
             common_params.createMode |= DPI_MODE_CREATE_THREADED
         if events:
             common_params.createMode |= DPI_MODE_CREATE_EVENTS
-        if edition:
+        if edition is not None:
             common_params.edition = params.edition_ptr
             common_params.editionLength = params.edition_len
 
@@ -156,24 +158,23 @@ cdef class ThickConnImpl(BaseConnImpl):
             _raise_from_odpi()
         if params.username_len == 0 and params.password_len == 0:
             conn_params.externalAuth = 1
-        if cclass:
+        if cclass is not None:
             conn_params.connectionClass = params.cclass_ptr
             conn_params.connectionClassLength = params.cclass_len
-        if newpassword:
+        if newpassword is not None:
             conn_params.newPassword = params.new_password_ptr
             conn_params.newPasswordLength = params.new_password_len
         if appcontext:
             conn_params.appContext = params.app_context
             conn_params.numAppContext = params.num_app_context
-        if tag:
+        if tag is not None:
             conn_params.tag = params.tag_ptr
             conn_params.tagLength = params.tag_len
         if handle:
             conn_params.externalHandle = <void*> (<uint64_t> handle)
             self._is_external = True
-        if pool is not None:
-            thick_pool = pool
-            conn_params.pool = thick_pool._handle
+        if pool_impl is not None:
+            conn_params.pool = pool_impl._handle
         conn_params.matchAnyTag = matchanytag
         conn_params.purity = purity
 
@@ -186,7 +187,6 @@ cdef class ThickConnImpl(BaseConnImpl):
                                     &conn_params, &self._handle)
         if status < 0:
             _raise_from_odpi()
-        self._is_connected = True
 
         # set tag property, if applicable
         if conn_params.outTagLength > 0:

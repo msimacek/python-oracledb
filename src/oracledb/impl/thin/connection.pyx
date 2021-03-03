@@ -20,7 +20,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         bint _client_identifier_modified
         str _module
         bint _module_modified
-        Pool _pool
+        ThinPoolImpl _pool
 
     def _connect(self, host, port, connect_string, password):
         sock = socket.socket()

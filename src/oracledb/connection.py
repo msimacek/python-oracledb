@@ -4,6 +4,7 @@
 
 from . import constants, errors, exceptions, utils
 from . import thick_impl, thin_impl
+from . import pool as pool_module
 from .cursor import Cursor
 from .base_impl import DB_TYPE_BLOB, DB_TYPE_CLOB, DB_TYPE_NCLOB
 
@@ -86,6 +87,14 @@ class Connection:
         bytes or dates.
         """
         self._impl = None
+        if pool is None:
+            pool_impl = None
+        elif not isinstance(pool, pool_module.Pool):
+            message = "pool must be an instance of oracledb.Pool"
+            raise TypeError(message)
+        else:
+            pool._verify_open()
+            pool_impl = pool._impl
         result = utils.parse_connect_params(dsn, user, password, host, port,
                                             service_name, thin)
         dsn, user, password, host, port, connect_data = result
@@ -95,23 +104,23 @@ class Connection:
         else:
             impl = thick_impl.ThickConnImpl(user, dsn)
             impl._connect(password=password, mode=mode, handle=handle,
-                          pool=pool, threaded=threaded, events=events,
-                          cclass=cclass, purity=purity,
+                          pool_impl=pool_impl, threaded=threaded,
+                          events=events, cclass=cclass, purity=purity,
                           newpassword=newpassword, edition=edition,
                           appcontext=appcontext, tag=tag,
                           matchanytag=matchanytag, shardingkey=shardingkey,
                           supershardingkey=supershardingkey)
         self._impl = impl
-        self._dsn = dsn
-        self._username = user
         self._version = None
 
-    @staticmethod
-    def _from_impl(impl, dsn, username):
-        conn = Connection.__new__(Connection)
+    @classmethod
+    def _from_impl(cls, impl):
+        """
+        Internal method used by the pool to create a connection object given
+        its implementation.
+        """
+        conn = cls.__new__(cls)
         conn._impl = impl
-        conn._dsn = dsn
-        conn._username = username
         conn._version = None
         return conn
 
@@ -308,7 +317,8 @@ class Connection:
         Specifies the connection string (TNS entry) of the database to which a
         connection has been established.
         """
-        return self._dsn
+        self._verify_connected()
+        return self._impl.dsn
 
     @property
     def edition(self):
@@ -616,7 +626,8 @@ class Connection:
         Returns the name of the user which established the connection to the
         database.
         """
-        return self._username
+        self._verify_connected()
+        return self._impl.username
 
     @property
     def version(self):

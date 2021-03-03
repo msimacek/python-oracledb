@@ -7,7 +7,7 @@ from .exceptions import *
 from .errors import _Error
 from .connection import connect, Connection
 from .cursor import Cursor
-from .pool import create_pool
+from .pool import create_pool, Pool
 from .constants import *
 from .constructors import *
 
@@ -29,7 +29,7 @@ class Future:
 
 __future__ = Future()
 
-# synonyms for database types (for backwards compatibility)
+# aliases for database types (for backwards compatibility)
 BFILE = DB_TYPE_BFILE
 BLOB = DB_TYPE_BLOB
 BOOLEAN = DB_TYPE_BOOLEAN

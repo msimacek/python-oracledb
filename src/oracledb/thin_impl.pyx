@@ -39,7 +39,7 @@ from . import constants, errors, exceptions
 from .base_impl cimport get_exception_class
 from .base_impl cimport NUM_TYPE_FLOAT, NUM_TYPE_INT, NUM_TYPE_DECIMAL
 from .base_impl cimport BaseConnImpl, BaseCursorImpl, BaseVar, DbType
-from .base_impl cimport BaseLob, BasePool
+from .base_impl cimport BaseLob, BasePoolImpl
 from .cursor import Cursor
 
 include "impl/thin/constants.pxi"

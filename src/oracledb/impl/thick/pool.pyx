@@ -7,25 +7,13 @@
 #   Cython file defining the pool class (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
-cdef class Pool(BasePool):
+cdef class ThickPoolImpl(BasePoolImpl):
     cdef:
         dpiPool *_handle
 
     def __dealloc__(self):
         if self._handle != NULL:
             dpiPool_release(self._handle)
-
-    cdef object _acquire(self, str user, str password, str cclass,
-                         uint32_t purity, str tag, bint match_any_tag,
-                         list sharding_key, list super_sharding_key):
-        cls = self.connection_type
-        return cls(pool=self, user=user, password=password, cclass=cclass,
-                   purity=purity, tag=tag, matchanytag=match_any_tag,
-                   shardingkey=sharding_key, thin=False,
-                   supershardingkey=super_sharding_key)
-
-    cdef int _close(self, bint force) except -1:
-        raise NotImplementedError()
 
     def _create(self, password, threaded, getmode, events, externalauth,
                 edition, timeout, wait_timeout, max_lifetime_session,
@@ -98,69 +86,135 @@ cdef class Pool(BasePool):
         name_bytes = pool_params.outPoolName[:pool_params.outPoolNameLength]
         self.name = name_bytes.decode()
 
-    cdef int _drop(self, BaseConnImpl connection) except -1:
-        cdef:
-            ThickConnImpl thick_connection = connection
-            int status
+    def acquire(self, str user, str password, str cclass, uint32_t purity,
+                str tag, bint matchanytag, list shardingkey,
+                list supershardingkey):
+        """
+        Internal method for acquiring a connection from the pool.
+        """
+        cdef ThickConnImpl conn_impl
+        conn_impl = ThickConnImpl(user, None)
+        conn_impl._connect(pool_impl=self, password=password, cclass=cclass,
+                           purity=purity, tag=tag, matchanytag=matchanytag,
+                           shardingkey=shardingkey,
+                           supershardingkey=supershardingkey)
+        return conn_impl
+
+    def close(self, bint force):
+        """
+        Internal method for closing the pool.
+        """
+        raise NotImplementedError()
+
+    def drop(self, ThickConnImpl conn_impl):
+        """
+        Internal method for dropping a connection from the pool.
+        """
+        cdef int status
         with nogil:
-            status = dpiConn_close(thick_connection._handle,
-                                   DPI_MODE_CONN_CLOSE_DROP, NULL, 0)
+            status = dpiConn_close(conn_impl._handle, DPI_MODE_CONN_CLOSE_DROP,
+                                   NULL, 0)
         if status < 0:
             _raise_from_odpi()
-        dpiConn_release(thick_connection._handle)
-        thick_connection._handle = NULL
-        thick_connection._is_connected = False
+        dpiConn_release(conn_impl._handle)
+        conn_impl._handle = NULL
 
-    cdef int _get_busy_count(self, uint32_t *value) except -1:
-        if dpiPool_getBusyCount(self._handle, value) < 0:
+    def get_busy_count(self):
+        """
+        Internal method for getting the number of busy connections in the pool.
+        """
+        cdef uint32_t value
+        if dpiPool_getBusyCount(self._handle, &value) < 0:
             _raise_from_odpi()
+        return value
 
-    cdef int _get_getmode(self, uint8_t *value) except -1:
-        if dpiPool_getGetMode(self._handle, value) < 0:
+    def get_getmode(self):
+        """
+        Internal method for getting the method by which connections are
+        acquired from the pool.
+        """
+        cdef uint8_t value
+        if dpiPool_getGetMode(self._handle, &value) < 0:
             _raise_from_odpi()
+        return value
 
-    cdef int _get_max_lifetime_session(self, uint32_t *value) except -1:
-        if dpiPool_getMaxLifetimeSession(self._handle, value) < 0:
+    def get_max_lifetime_session(self):
+        """
+        Internal method for getting the maximum lifetime of each session.
+        """
+        cdef uint32_t value
+        if dpiPool_getMaxLifetimeSession(self._handle, &value) < 0:
             _raise_from_odpi()
+        return value
 
-    cdef int _get_open_count(self, uint32_t *value) except -1:
-        if dpiPool_getOpenCount(self._handle, value) < 0:
+    def get_open_count(self):
+        """
+        Internal method for getting the number of connections in the pool.
+        """
+        cdef uint32_t value
+        if dpiPool_getOpenCount(self._handle, &value) < 0:
             _raise_from_odpi()
+        return value
 
-    cdef int _get_stmt_cache_size(self, uint32_t *value) except -1:
-        if dpiPool_getStmtCacheSize(self._handle, value) < 0:
+    def get_stmt_cache_size(self):
+        """
+        Internal method for getting the size of the statement cache.
+        """
+        cdef uint32_t value
+        if dpiPool_getStmtCacheSize(self._handle, &value) < 0:
             _raise_from_odpi()
+        return value
 
-    cdef int _get_timeout(self, uint32_t *value) except -1:
-        if dpiPool_getTimeout(self._handle, value) < 0:
+    def get_timeout(self):
+        """
+        Internal method for getting the timeout for idle sessions.
+        """
+        cdef uint32_t value
+        if dpiPool_getTimeout(self._handle, &value) < 0:
             _raise_from_odpi()
+        return value
 
-    cdef int _get_wait_timeout(self, uint32_t *value) except -1:
-        if dpiPool_getWaitTimeout(self._handle, value) < 0:
+    def get_wait_timeout(self):
+        """
+        Internal method for getting the wait timeout for acquiring sessions.
+        """
+        cdef uint32_t value
+        if dpiPool_getWaitTimeout(self._handle, &value) < 0:
             _raise_from_odpi()
+        return value
 
-    cdef int _release(self, BaseConnImpl connection, str tag) except -1:
-        cdef ThickConnImpl thick_connection = connection
-        if tag is not None:
-            thick_connection.tag = tag
-        thick_connection.close()
-
-    cdef int _set_getmode(self, uint8_t value) except -1:
+    def set_getmode(self, uint8_t value):
+        """
+        Internal method for setting the method by which connections are
+        acquired from the pool.
+        """
         if dpiPool_setGetMode(self._handle, value) < 0:
             _raise_from_odpi()
 
-    cdef int _set_max_lifetime_session(self, uint32_t value) except -1:
+    def set_max_lifetime_session(self, uint32_t value):
+        """
+        Internal method for setting the maximum lifetime of each session.
+        """
         if dpiPool_setMaxLifetimeSession(self._handle, value) < 0:
             _raise_from_odpi()
 
-    cdef int _set_stmt_cache_size(self, uint32_t value) except -1:
+    def set_stmt_cache_size(self, uint32_t value):
+        """
+        Internal method for setting the size of the statement cache.
+        """
         if dpiPool_setStmtCacheSize(self._handle, value) < 0:
             _raise_from_odpi()
 
-    cdef int _set_timeout(self, uint32_t value) except -1:
+    def set_timeout(self, uint32_t value):
+        """
+        Internal method for setting the timeout for idle sessions.
+        """
         if dpiPool_setTimeout(self._handle, value) < 0:
             _raise_from_odpi()
 
-    cdef int _set_wait_timeout(self, uint32_t value) except -1:
+    def set_wait_timeout(self, uint32_t value):
+        """
+        Internal method for setting the wait timeout for acquiring sessions.
+        """
         if dpiPool_setWaitTimeout(self._handle, value) < 0:
             _raise_from_odpi()
