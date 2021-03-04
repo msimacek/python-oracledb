@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -7,7 +7,7 @@
 #   Cython file defining the Lob class (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
-cdef class Lob(BaseLob):
+cdef class ThickLobImpl(BaseLobImpl):
     cdef:
         dpiLob *_handle
 
@@ -15,25 +15,62 @@ cdef class Lob(BaseLob):
         if self._handle != NULL:
             dpiLob_release(self._handle)
 
-    cdef int _close(self) except -1:
+    @staticmethod
+    cdef ThickLobImpl _create(ThickConnImpl conn_impl, DbType dbtype,
+                             dpiLob *handle):
+        cdef:
+            ThickLobImpl impl = ThickLobImpl.__new__(ThickLobImpl)
+            int status
+        impl.dbtype = dbtype
+        if handle == NULL:
+            with nogil:
+                status = dpiConn_newTempLob(conn_impl._handle, dbtype.num,
+                                            &handle)
+            if status < 0:
+                _raise_from_odpi()
+        elif dpiLob_addRef(handle) < 0:
+            _raise_from_odpi()
+        impl._handle = handle
+        return impl
+
+    def close(self):
+        """
+        Internal method for closing a LOB that was opened earlier.
+        """
         cdef int status
         with nogil:
             status = dpiLob_closeResource(self._handle)
         if status < 0:
             _raise_from_odpi()
 
-    cdef int _file_exists(self, bint* exists) except -1:
-        cdef int status
+    def file_exists(self):
+        """
+        Internal method for returning whether the file referenced by a BFILE
+        exists.
+        """
+        cdef:
+            bint exists
+            int status
         with nogil:
-            status = dpiLob_getFileExists(self._handle, exists)
+            status = dpiLob_getFileExists(self._handle, &exists)
         if status < 0:
             _raise_from_odpi()
+        return exists
 
-    cdef int _get_chunk_size(self, uint32_t* size) except -1:
-        if dpiLob_getChunkSize(self._handle, size) < 0:
+    def get_chunk_size(self):
+        """
+        Internal method for returning the chunk size of the LOB.
+        """
+        cdef uint32_t chunk_size
+        if dpiLob_getChunkSize(self._handle, &chunk_size) < 0:
             _raise_from_odpi()
+        return chunk_size
 
-    cdef object _get_file_name(self):
+    def get_file_name(self):
+        """
+        Internal method for returning a 2-tuple constaining the directory alias
+        and file name of a BFILE type LOB.
+        """
         cdef:
             uint32_t dir_alias_len, file_name_len
             const char *dir_alias
@@ -48,39 +85,48 @@ cdef class Lob(BaseLob):
         return (dir_alias[:dir_alias_len].decode(),
                 file_name[:file_name_len].decode())
 
-    cdef int _get_is_open(self, bint* is_open) except -1:
-        cdef int status
+    def get_is_open(self):
+        """
+        Internal method for returning whether the LOB is open or not.
+        """
+        cdef:
+            bint is_open
+            int status
         with nogil:
-            status = dpiLob_getIsResourceOpen(self._handle, is_open)
+            status = dpiLob_getIsResourceOpen(self._handle, &is_open)
         if status < 0:
             _raise_from_odpi()
+        return is_open
 
-    cdef int _get_max_amount(self, uint64_t* max_amount) except -1:
-        return self._get_size(max_amount)
+    def get_max_amount(self):
+        """
+        Internal method for returning the maximum amount that can be read.
+        """
+        return self.get_size()
 
-    cdef int _get_size(self, uint64_t* size) except -1:
-        if dpiLob_getSize(self._handle, size) < 0:
+    def get_size(self):
+        """
+        Internal method for returning the size of a LOB.
+        """
+        cdef uint64_t size
+        if dpiLob_getSize(self._handle, &size) < 0:
             _raise_from_odpi()
+        return size
 
-    @staticmethod
-    cdef Lob _new_lob(ThickConnImpl connection, DbType lob_type,
-                      dpiLob *handle):
-        cdef Lob lob = Lob.__new__(Lob)
-        lob.type = lob_type
-        lob._connection = connection
-        if dpiLob_addRef(handle) < 0:
-            _raise_from_odpi()
-        lob._handle = handle
-        return lob
-
-    cdef int _open(self) except -1:
+    def open(self):
+        """
+        Internal method for opening a LOB.
+        """
         cdef int status
         with nogil:
             status = dpiLob_openResource(self._handle)
         if status < 0:
             _raise_from_odpi()
 
-    cdef object _read(self, uint64_t offset, uint64_t amount):
+    def read(self, uint64_t offset, uint64_t amount):
+        """
+        Internal method for reading a portion (or all) of the data in the LOB.
+        """
         cdef:
             uint64_t buf_size
             object result
@@ -96,14 +142,18 @@ cdef class Lob(BaseLob):
             if status < 0:
                 _raise_from_odpi()
             result = buf[:buf_size]
-            if self.type.num == DPI_ORACLE_TYPE_CLOB \
-                    or self.type.num == DPI_ORACLE_TYPE_NCLOB:
+            if self.dbtype.num == DPI_ORACLE_TYPE_CLOB \
+                    or self.dbtype.num == DPI_ORACLE_TYPE_NCLOB:
                 result = result.decode()
             return result
         finally:
             cpython.PyMem_Free(buf)
 
-    cdef int _set_file_name(self, str dir_alias, str name) except -1:
+    def set_file_name(self, str dir_alias, str name):
+        """
+        Internal method for setting the directory alias and file name
+        associated with a BFILE LOB.
+        """
         cdef:
             bytes dir_alias_bytes, name_bytes
             uint32_t dir_alias_len, name_len
@@ -124,14 +174,20 @@ cdef class Lob(BaseLob):
         if status < 0:
             _raise_from_odpi()
 
-    cdef int _trim(self, uint64_t new_size=0) except -1:
+    def trim(self, uint64_t new_size):
+        """
+        Internal method for trimming the data in the LOB to the new size
+        """
         cdef int status
         with nogil:
             status = dpiLob_trim(self._handle, new_size)
         if status < 0:
             _raise_from_odpi()
 
-    cdef int _write(self, object value, uint64_t offset) except -1:
+    def write(self, object value, uint64_t offset):
+        """
+        Internal method for writing data to the LOB object.
+        """
         cdef:
             StringBuffer buf = StringBuffer()
             int status

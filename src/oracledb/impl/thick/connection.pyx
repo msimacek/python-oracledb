@@ -195,19 +195,6 @@ cdef class ThickConnImpl(BaseConnImpl):
     cdef BaseQueue _create_queue(self):
         return Queue.__new__(Queue)
 
-    cdef BaseLob _create_temp_lob(self, DbType dbtype):
-        cdef:
-            dpiLob *handle
-            int status
-        with nogil:
-            status = dpiConn_newTempLob(self._handle, dbtype.num, &handle)
-        if status < 0:
-            _raise_from_odpi()
-        try:
-            return Lob._new_lob(self, dbtype, handle)
-        finally:
-            dpiLob_release(handle)
-
     cdef int _set_text_attr(self, dpiConnSetTextAttrFunc func,
                             str value) except -1:
         cdef:
@@ -333,6 +320,9 @@ cdef class ThickConnImpl(BaseConnImpl):
         subscr.grouping_type = grouping_type
         subscr.client_initiated = client_initiated
         return subscr
+
+    def create_temp_lob_impl(self, DbType dbtype):
+        return ThickLobImpl._create(self, dbtype, NULL)
 
     def get_call_timeout(self):
         cdef uint32_t value

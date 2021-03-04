@@ -30,9 +30,6 @@ cdef class ThinConnImpl(BaseConnImpl):
         self._statement_cache = StatementCache(30)
         self._is_connected = True
 
-    cdef BaseLob _create_temp_lob(self, DbType dbtype):
-        return Lob._create_temp_lob(self, dbtype)
-
     def close(self, bint in_del=False):
         if self._pool is not None:
             self._pool._free_busy_connection(self)
@@ -44,6 +41,9 @@ cdef class ThinConnImpl(BaseConnImpl):
 
     def create_cursor_impl(self):
         return ThinCursorImpl.__new__(ThinCursorImpl, self)
+
+    def create_temp_lob_impl(self, DbType dbtype):
+        return ThinLobImpl._create(self, dbtype)
 
     def get_version(self):
         return self._server_version

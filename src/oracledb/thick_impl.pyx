@@ -19,11 +19,12 @@ import decimal
 cydatetime.import_datetime()
 
 from . import constants, errors, exceptions
+from .lob import LOB
 
 from .base_impl cimport get_exception_class
 from .base_impl cimport BaseConnImpl, BaseCursorImpl, BaseVar, DbType
 from .base_impl cimport BaseDbObjectType, BaseDbObjectAttr, BaseDbObject
-from .base_impl cimport BaseLob, BasePoolImpl, BaseSodaDatabase
+from .base_impl cimport BaseLobImpl, BasePoolImpl, BaseSodaDatabase
 from .base_impl cimport BaseSodaCollection, BaseSodaDoc, BaseSodaDocCursor
 from .base_impl cimport BaseSodaOperation, BaseQueue, BaseDeqOptions
 from .base_impl cimport BaseEnqOptions, BaseMsgProps, BaseSubscription

@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -23,6 +23,7 @@ import sys
 
 from . import constants, errors, exceptions
 from .cursor import Cursor
+from .lob import LOB
 
 cdef int32_t* INTEGRITY_ERROR_CODES = [
         1,          # unique constraint violated

@@ -26,12 +26,6 @@ cdef class BaseConnImpl:
         """
         raise NotImplementedError()
 
-    cdef BaseLob _create_temp_lob(self, DbType dbtype):
-        """
-        Internal method for creating a temporary LOB.
-        """
-        raise NotImplementedError()
-
     def begin(self, format_id, transaction_id, branch_id):
         """
         Internal method for beginning a distributed transaction.
@@ -69,11 +63,11 @@ cdef class BaseConnImpl:
         """
         raise NotImplementedError()
 
-    def createlob(self, lob_type):
+    def create_temp_lob_impl(self, DbType dbtype):
         """
-        Create and return a new temporary LOB of the specified type.
+        Internal method for creating a LOB implementation.
         """
-        return self._create_temp_lob(lob_type)
+        raise NotImplementedError()
 
     def get_call_timeout(self):
         """

@@ -70,10 +70,10 @@ cdef int _convert_from_python(object value, DbType dbtype,
     cdef:
         uint32_t oracle_type = dbtype.num
         dpiTimestamp *timestamp
+        ThickLobImpl lob_impl
         int seconds, status
         JsonBuffer json_buf
         DbObject obj
-        Lob lob
     if oracle_type == DPI_ORACLE_TYPE_NUMBER:
         if isinstance(value, bool):
             if value:
@@ -162,24 +162,17 @@ cdef int _convert_from_python(object value, DbType dbtype,
     elif oracle_type == DPI_ORACLE_TYPE_CLOB \
             or oracle_type == DPI_ORACLE_TYPE_BLOB \
             or oracle_type == DPI_ORACLE_TYPE_NCLOB:
-        if isinstance(value, Lob):
-            lob = <Lob> value
+        if isinstance(value, LOB):
+            lob_impl = value._impl
             if var is not None:
-                if dpiVar_setFromLob(var._handle, pos, lob._handle) < 0:
+                if dpiVar_setFromLob(var._handle, pos, lob_impl._handle) < 0:
                     _raise_from_odpi()
             else:
-                dbvalue.asLOB = lob._handle
+                dbvalue.asLOB = lob_impl._handle
         else:
             buf.set_value(value)
-            if var is not None:
-                with nogil:
-                    status = dpiLob_setFromBytes(dbvalue.asLOB, buf.ptr,
-                                                 buf.length)
-                if status < 0:
-                    _raise_from_odpi()
-            else:
-                dbvalue.asBytes.ptr = buf.ptr
-                dbvalue.asBytes.length = buf.length
+            dbvalue.asBytes.ptr = buf.ptr
+            dbvalue.asBytes.length = buf.length
     elif oracle_type == DPI_ORACLE_TYPE_JSON:
         json_buf = JsonBuffer()
         json_buf.from_object(value)
@@ -197,6 +190,7 @@ cdef object _convert_to_python(object connection, DbType dbtype,
         uint32_t oracle_type = dbtype.num
         dpiTimestamp *as_timestamp
         dpiJsonNode *json_node
+        ThickLobImpl lob_impl
         uint32_t rowid_length
         dpiBytes *as_bytes
         const char *rowid
@@ -248,7 +242,9 @@ cdef object _convert_to_python(object connection, DbType dbtype,
             or oracle_type == DPI_ORACLE_TYPE_BLOB \
             or oracle_type == DPI_ORACLE_TYPE_NCLOB \
             or oracle_type == DPI_ORACLE_TYPE_BFILE:
-        return Lob._new_lob(connection._impl, dbtype, dbvalue.asLOB)
+        lob_impl = ThickLobImpl._create(connection._impl, dbtype,
+                                        dbvalue.asLOB)
+        return LOB._from_impl(lob_impl)
     elif oracle_type == DPI_ORACLE_TYPE_OBJECT:
         return DbObject._new_object(objtype, dbvalue.asObject)
     elif oracle_type == DPI_ORACLE_TYPE_INTERVAL_DS:

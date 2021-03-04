@@ -193,8 +193,8 @@ cdef class MessageWithData(Message):
             ThinCursorImpl cursor_impl
             object column_value = None
             uint32_t actual_num_bytes
+            ThinLobImpl lob_impl
             bytes temp_bytes
-            Lob lob
         ora_type_num = var._dbtype._ora_type_num
         csfrm = var._dbtype._csfrm
         num_bytes = buf.read_uint8()
@@ -247,12 +247,11 @@ cdef class MessageWithData(Message):
             column_value = buf.read_interval_ds(num_bytes)
         elif ora_type_num == TNS_DATA_TYPE_CLOB \
                 or ora_type_num == TNS_DATA_TYPE_BLOB:
-            lob = Lob()
-            lob.type = var._dbtype
-            num_bytes = buf.read_uint8()
-            lob._connection = self.conn_impl
-            lob._locator = buf.read_bytes(buf.read_uint8())
-            column_value = lob
+            buf.skip_bytes(1)
+            temp_bytes = buf.read_bytes(buf.read_uint8())
+            lob_impl = ThinLobImpl._create(self.conn_impl, var._dbtype,
+                                           temp_bytes)
+            column_value = LOB._from_impl(lob_impl)
         else:
             msg = f"unhandled data type {var.type}"
             raise Exception(msg)
@@ -598,10 +597,10 @@ cdef class MessageWithData(Message):
                                        object value) except -1:
         cdef:
             uint8_t ora_type_num = var._dbtype._ora_type_num
-            ThinCursorImpl cursor
+            ThinCursorImpl cursor_impl
+            ThinLobImpl lob_impl
             uint8_t num_bytes
             bytes temp_bytes
-            Lob lob
         if value is None:
             buf.write_uint8(0)
         elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
@@ -630,15 +629,15 @@ cdef class MessageWithData(Message):
         elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
             buf.write_binary_float(value)
         elif ora_type_num == TNS_DATA_TYPE_CURSOR:
-            cursor = value._impl
-            if cursor._statement is None:
-                cursor._statement = Statement()
-            if cursor._statement._cursor_id == 0:
+            cursor_impl = value._impl
+            if cursor_impl._statement is None:
+                cursor_impl._statement = Statement()
+            if cursor_impl._statement._cursor_id == 0:
                 buf.write_uint8(1)
                 buf.write_uint8(0)
             else:
                 buf.write_ub4(1)
-                buf.write_ub4(cursor._statement._cursor_id)
+                buf.write_ub4(cursor_impl._statement._cursor_id)
         elif ora_type_num == TNS_DATA_TYPE_BOOLEAN:
             if value:
                 buf.write_uint16(0x0101)
@@ -648,11 +647,11 @@ cdef class MessageWithData(Message):
             buf.write_interval_ds(value)
         elif ora_type_num == TNS_DATA_TYPE_CLOB \
                 or ora_type_num == TNS_DATA_TYPE_BLOB:
-            lob = <Lob> value
-            num_bytes = <uint8_t> len(lob._locator)
+            lob_impl = value._impl
+            num_bytes = <uint8_t> len(lob_impl._locator)
             buf.write_ub4(num_bytes)
             buf.write_uint8(num_bytes)
-            buf.write_bytes(lob._locator)
+            buf.write_bytes(lob_impl._locator)
         else:
             errors._raise_from_string(exceptions.NotSupportedError,
                                       f"unsupported type {var.type}")
@@ -1216,8 +1215,8 @@ cdef class FetchMessage(MessageWithData):
 cdef class LobOpMessage(Message):
     cdef:
         uint32_t operation
-        Lob source_lob
-        Lob dest_lob
+        ThinLobImpl source_lob_impl
+        ThinLobImpl dest_lob_impl
         uint64_t source_offset
         uint64_t dest_offset
         uint64_t amount
@@ -1230,24 +1229,27 @@ cdef class LobOpMessage(Message):
 
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:
-        cdef bytes temp_bytes
+        cdef:
+            bytes temp_bytes
+            str encoding
         if message_type == TNS_MSG_TYPE_LOB_DATA:
             temp_bytes = buf.read_bytes(buf.read_uint8())
-            if self.source_lob.type._ora_type_num == TNS_DATA_TYPE_BLOB:
+            if self.source_lob_impl.dbtype._ora_type_num == TNS_DATA_TYPE_BLOB:
                 self.data = temp_bytes
             else:
-                self.data = temp_bytes.decode(self.source_lob._get_encoding())
+                encoding = self.source_lob_impl._get_encoding()
+                self.data = temp_bytes.decode(encoding)
         else:
             Message._process_message(self, buf, message_type)
 
     cdef int _process_return_parameters(self, ReadBuffer buf) except -1:
         cdef uint32_t temp_num
-        if self.source_lob is not None:
-            temp_num = <uint32_t> len(self.source_lob._locator)
-            self.source_lob._locator = buf.read_bytes(temp_num)
-        if self.dest_lob is not None:
-            temp_num = <uint32_t> len(self.dest_lob._locator)
-            self.dest_lob._locator = buf.read_bytes(temp_num)
+        if self.source_lob_impl is not None:
+            temp_num = <uint32_t> len(self.source_lob_impl._locator)
+            self.source_lob_impl._locator = buf.read_bytes(temp_num)
+        if self.dest_lob_impl is not None:
+            temp_num = <uint32_t> len(self.dest_lob_impl._locator)
+            self.dest_lob_impl._locator = buf.read_bytes(temp_num)
         if self.operation == TNS_LOB_OP_CREATE_TEMP:
             buf.read_ub2()                  # skip character set
         if self.send_amount:
@@ -1259,18 +1261,18 @@ cdef class LobOpMessage(Message):
     cdef int _write_message(self, WriteBuffer buf) except -1:
         cdef int i
         self._write_function_code(buf)
-        if self.source_lob is None:
+        if self.source_lob_impl is None:
             buf.write_uint8(0)              # source pointer
             buf.write_ub4(0)                # source length
         else:
             buf.write_uint8(1)              # source pointer
-            buf.write_ub4(len(self.source_lob._locator))
-        if self.dest_lob is None:
+            buf.write_ub4(len(self.source_lob_impl._locator))
+        if self.dest_lob_impl is None:
             buf.write_uint8(0)              # dest pointer
             buf.write_ub4(0)                # dest length
         else:
             buf.write_uint8(1)              # dest pointer
-            buf.write_ub4(len(self.dest_lob._locator))
+            buf.write_ub4(len(self.dest_lob_impl._locator))
         buf.write_ub4(0)                    # short source offset
         buf.write_ub4(0)                    # short dest offset
         if self.operation == TNS_LOB_OP_CREATE_TEMP:
@@ -1298,12 +1300,12 @@ cdef class LobOpMessage(Message):
             buf.write_uint8(0)              # pointer (amount)
         for i in range(3):                  # array LOB (not used)
             buf.write_uint16(0)
-        if self.source_lob is not None:
-            buf.write_bytes(self.source_lob._locator)
-        if self.dest_lob is not None:
-            buf.write_bytes(self.dest_lob._locator)
+        if self.source_lob_impl is not None:
+            buf.write_bytes(self.source_lob_impl._locator)
+        if self.dest_lob_impl is not None:
+            buf.write_bytes(self.dest_lob_impl._locator)
         if self.operation == TNS_LOB_OP_CREATE_TEMP:
-            if self.source_lob.type._csfrm == TNS_CS_NCHAR:
+            if self.source_lob_impl.dbtype._csfrm == TNS_CS_NCHAR:
                 buf.write_ub4(TNS_CHARSET_UTF16)
             else:
                 buf.write_ub4(TNS_CHARSET_UTF8)

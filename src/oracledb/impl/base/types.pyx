@@ -67,7 +67,6 @@ cdef class DbType:
 
     @staticmethod
     cdef DbType _from_value(object value, uint32_t *size, bint is_plsql=True):
-        cdef BaseLob lob
         if value is None:
             return None
         elif isinstance(value, bool):
@@ -88,9 +87,8 @@ cdef class DbType:
             return DB_TYPE_INTERVAL_DS
         elif isinstance(value, BaseDbObject):
             return DB_TYPE_OBJECT
-        elif isinstance(value, BaseLob):
-            lob = <BaseLob> value
-            return lob.type
+        elif isinstance(value, LOB):
+            return value.type
         elif isinstance(value, Cursor):
             return DB_TYPE_CURSOR
         else:

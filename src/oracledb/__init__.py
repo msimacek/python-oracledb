@@ -8,13 +8,13 @@ from .errors import _Error
 from .connection import connect, Connection
 from .cursor import Cursor
 from .pool import create_pool, Pool
+from .lob import LOB
 from .constants import *
 from .constructors import *
 
 from .base_impl import *
 from .thick_impl import clientversion, init_oracle_client
 
-LOB = BaseLob
 ObjectType = BaseDbObjectType
 Object = BaseDbObject
 

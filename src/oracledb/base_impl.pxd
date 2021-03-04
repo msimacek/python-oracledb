@@ -56,7 +56,6 @@ cdef class BaseConnImpl:
     cdef BaseMsgProps _create_msg_props(self)
     cdef BaseQueue _create_queue(self)
     cdef BaseSubscription _create_subscription(self, object connection)
-    cdef BaseLob _create_temp_lob(self, DbType dbtype)
 
 
 cdef class BasePoolImpl:
@@ -142,23 +141,9 @@ cdef class BaseVar:
     cdef int _set_value(self, uint32_t pos, object value) except -1
 
 
-cdef class BaseLob:
+cdef class BaseLobImpl:
     cdef:
-        readonly DbType type
-        readonly BaseConnImpl _connection
-
-    cdef int _close(self) except -1
-    cdef int _file_exists(self, bint* exists) except -1
-    cdef int _get_chunk_size(self, uint32_t* size) except -1
-    cdef object _get_file_name(self)
-    cdef int _get_is_open(self, bint* is_open) except -1
-    cdef int _get_max_amount(self, uint64_t* max_amount) except -1
-    cdef int _get_size(self, uint64_t* size) except -1
-    cdef int _open(self) except -1
-    cdef object _read(self, uint64_t offset, uint64_t amount)
-    cdef int _set_file_name(self, str dir_alias, str name) except -1
-    cdef int _trim(self, uint64_t new_size=*) except -1
-    cdef int _write(self, object value, uint64_t offset) except -1
+        readonly DbType dbtype
 
 
 cdef class BaseDbObjectType:

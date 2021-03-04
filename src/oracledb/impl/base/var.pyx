@@ -120,7 +120,7 @@ cdef class BaseVar:
         cdef:
             uint32_t size
             DbType dbtype
-            BaseLob lob
+            object lob
         if self.inconverter is not None:
             value = self.inconverter(value)
         if value is not None:
@@ -150,15 +150,16 @@ cdef class BaseVar:
                     raise TypeError(message)
             elif dbtype is DB_TYPE_CLOB or dbtype is DB_TYPE_NCLOB \
                     or dbtype is DB_TYPE_BLOB:
-                if isinstance(value, BaseLob):
-                    lob = <BaseLob> value
-                    if lob.type is not dbtype:
+                if isinstance(value, LOB):
+                    if value.type is not dbtype:
                         message = f"LOB must be of type {dbtype}"
                         raise TypeError(message)
                 else:
-                    lob = <BaseLob> self._values[pos]
+                    lob = self._values[pos]
                     if lob is None:
                         lob = self._conn.createlob(dbtype)
+                    else:
+                        lob.trim()
                     if value:
                         lob.write(value)
                     value = lob

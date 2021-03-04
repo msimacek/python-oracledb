@@ -1,11 +1,12 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 from . import constants, errors, exceptions, utils
 from . import thick_impl, thin_impl
 from . import pool as pool_module
 from .cursor import Cursor
+from .lob import LOB
 from .base_impl import DB_TYPE_BLOB, DB_TYPE_CLOB, DB_TYPE_NCLOB
 
 class Connection:
@@ -272,7 +273,8 @@ class Connection:
             message = "parameter should be one of oracledb.DB_TYPE_CLOB, " \
                       "oracledb.DB_TYPE_BLOB or oracledb.DB_TYPE_NCLOB"
             raise TypeError(message)
-        return self._impl.createlob(lob_type)
+        impl = self._impl.create_temp_lob_impl(lob_type)
+        return LOB._from_impl(impl)
 
     @property
     def current_schema(self):
