@@ -20,12 +20,6 @@ cdef class BaseConnImpl:
         """
         raise NotImplementedError()
 
-    cdef BaseSubscription _create_subscription(self, object connection):
-        """
-        Internal method for creating a subscription.
-        """
-        raise NotImplementedError()
-
     def begin(self, format_id, transaction_id, branch_id):
         """
         Internal method for beginning a distributed transaction.
@@ -60,6 +54,17 @@ cdef class BaseConnImpl:
     def create_cursor_impl(self):
         """
         Internal method for creating a cursor implementation.
+        """
+        raise NotImplementedError()
+
+    def create_subscr_impl(self, object conn, object callback,
+                           uint32_t namespace, str name, uint32_t protocol,
+                           str ip_address, uint32_t port, uint32_t timeout,
+                           uint32_t operations, uint32_t qos,
+                           uint8_t grouping_class, uint32_t grouping_value,
+                           uint8_t grouping_type, bint client_initiated):
+        """
+        Internal method for creating a subscription implementation.
         """
         raise NotImplementedError()
 
@@ -247,7 +252,3 @@ cdef class BaseConnImpl:
         Internal method for setting the size of the statement cache.
         """
         raise NotImplementedError()
-
-    def unsubscribe(self, subscr):
-        cdef BaseSubscription common_subscr = subscr
-        common_subscr._unsubscribe(self)

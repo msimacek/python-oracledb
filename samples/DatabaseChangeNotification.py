@@ -46,8 +46,8 @@ def callback(message):
 
 connection = oracledb.connect(sample_env.get_main_connect_string(),
                               thin=False, events=True)
-sub = connection.subscribe(callback = callback, timeout = 1800,
-        qos = oracledb.SUBSCR_QOS_ROWIDS)
+sub = connection.subscribe(callback=callback, timeout=1800,
+                           qos=oracledb.SUBSCR_QOS_ROWIDS)
 print("Subscription:", sub)
 print("--> Connection:", sub.connection)
 print("--> ID:", sub.id)

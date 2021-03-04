@@ -300,26 +300,28 @@ cdef class ThickConnImpl(BaseConnImpl):
             _raise_from_odpi()
         return props
 
-    def create_subscription(self, connection, callback, namespace, name,
-                            protocol, ip_address, port, timeout, operations,
-                            qos, grouping_class, grouping_value, grouping_type,
-                            client_initiated):
-        cdef Subscription subscr = Subscription.__new__(Subscription)
-        subscr.connection = connection
-        subscr.callback = callback
-        subscr.namespace = namespace
-        subscr.name = name
-        subscr.protocol = protocol
-        subscr.ip_address = ip_address
-        subscr.port = port
-        subscr.timeout = timeout
-        subscr.operations = operations
-        subscr.qos = qos
-        subscr.grouping_class = grouping_class
-        subscr.grouping_value = grouping_value
-        subscr.grouping_type = grouping_type
-        subscr.client_initiated = client_initiated
-        return subscr
+    def create_subscr_impl(self, object conn, object callback,
+                           uint32_t namespace, str name, uint32_t protocol,
+                           str ip_address, uint32_t port, uint32_t timeout,
+                           uint32_t operations, uint32_t qos,
+                           uint8_t grouping_class, uint32_t grouping_value,
+                           uint8_t grouping_type, bint client_initiated):
+        cdef ThickSubscrImpl impl = ThickSubscrImpl.__new__(ThickSubscrImpl)
+        impl.connection = conn
+        impl.callback = callback
+        impl.namespace = namespace
+        impl.name = name
+        impl.protocol = protocol
+        impl.ip_address = ip_address
+        impl.port = port
+        impl.timeout = timeout
+        impl.operations = operations
+        impl.qos = qos
+        impl.grouping_class = grouping_class
+        impl.grouping_value = grouping_value
+        impl.grouping_type = grouping_type
+        impl.client_initiated = client_initiated
+        return impl
 
     def create_temp_lob_impl(self, DbType dbtype):
         return ThickLobImpl._create(self, dbtype, NULL)

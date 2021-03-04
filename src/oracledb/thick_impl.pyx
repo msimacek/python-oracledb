@@ -19,6 +19,7 @@ import decimal
 cydatetime.import_datetime()
 
 from . import constants, errors, exceptions
+from .subscr import Message, MessageQuery, MessageRow, MessageTable
 from .lob import LOB
 
 from .base_impl cimport get_exception_class
@@ -27,8 +28,7 @@ from .base_impl cimport BaseDbObjectType, BaseDbObjectAttr, BaseDbObject
 from .base_impl cimport BaseLobImpl, BasePoolImpl, BaseSodaDatabase
 from .base_impl cimport BaseSodaCollection, BaseSodaDoc, BaseSodaDocCursor
 from .base_impl cimport BaseSodaOperation, BaseQueue, BaseDeqOptions
-from .base_impl cimport BaseEnqOptions, BaseMsgProps, BaseSubscription
-from .base_impl cimport Message, MessageQuery, MessageRow, MessageTable
+from .base_impl cimport BaseEnqOptions, BaseMsgProps, BaseSubscrImpl
 from .base_impl cimport NUM_TYPE_FLOAT, NUM_TYPE_INT, NUM_TYPE_DECIMAL
 from libc.string cimport memchr, memset
 

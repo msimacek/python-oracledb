@@ -7,6 +7,7 @@ from . import thick_impl, thin_impl
 from . import pool as pool_module
 from .cursor import Cursor
 from .lob import LOB
+from .subscr import Subscription
 from .base_impl import DB_TYPE_BLOB, DB_TYPE_CLOB, DB_TYPE_NCLOB
 
 class Connection:
@@ -574,13 +575,13 @@ class Connection:
         that take place in the database that match the given parameters.
         """
         self._verify_connected()
-        subscr = self._impl.create_subscription(self, callback, namespace,
-                                                name, protocol, ipAddress,
-                                                port, timeout, operations,
-                                                qos, groupingClass,
-                                                groupingValue, groupingType,
-                                                clientInitiated)
-        subscr.subscribe()
+        impl = self._impl.create_subscr_impl(self, callback, namespace, name,
+                                             protocol, ipAddress, port,
+                                             timeout, operations, qos,
+                                             groupingClass, groupingValue,
+                                             groupingType, clientInitiated)
+        subscr = Subscription._from_impl(impl)
+        impl.subscribe(subscr, self._impl)
         return subscr
 
     @property
@@ -620,7 +621,9 @@ class Connection:
         database and be connected as the same user name.
         """
         self._verify_connected()
-        subscr.unsubscribe(self._impl)
+        if not isinstance(subscr, Subscription):
+            raise TypeError("expecting subscription")
+        subscr._impl.unsubscribe(self._impl)
 
     @property
     def username(self):
