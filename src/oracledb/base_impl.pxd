@@ -50,8 +50,6 @@ cdef class BaseConnImpl:
         public object inputtypehandler
         public object outputtypehandler
         public bint autocommit
-        str _version
-        bint _is_connected
 
     cdef BaseMsgProps _create_msg_props(self)
     cdef BaseQueue _create_queue(self)

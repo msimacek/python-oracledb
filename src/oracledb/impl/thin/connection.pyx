@@ -28,7 +28,6 @@ cdef class ThinConnImpl(BaseConnImpl):
         self._protocol = Protocol(sock)
         self._protocol._connect(self, connect_string, password)
         self._statement_cache = StatementCache(30)
-        self._is_connected = True
 
     def close(self, bint in_del=False):
         if self._pool is not None:
