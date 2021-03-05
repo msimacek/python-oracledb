@@ -192,9 +192,6 @@ cdef class ThickConnImpl(BaseConnImpl):
         if conn_params.outTagLength > 0:
             self.tag = conn_params.outTag[:conn_params.outTagLength].decode()
 
-    cdef BaseQueue _create_queue(self):
-        return Queue.__new__(Queue)
-
     cdef int _set_text_attr(self, dpiConnSetTextAttrFunc func,
                             str value) except -1:
         cdef:
@@ -294,11 +291,15 @@ cdef class ThickConnImpl(BaseConnImpl):
     def create_cursor_impl(self):
         return ThickCursorImpl.__new__(ThickCursorImpl, self)
 
-    def create_msg_props(self):
-        cdef MsgProps props = MsgProps.__new__(MsgProps)
-        if dpiConn_newMsgProps(self._handle, &props._handle) < 0:
+    def create_msg_props_impl(self):
+        cdef ThickMsgPropsImpl impl
+        impl = ThickMsgPropsImpl.__new__(ThickMsgPropsImpl)
+        if dpiConn_newMsgProps(self._handle, &impl._handle) < 0:
             _raise_from_odpi()
-        return props
+        return impl
+
+    def create_queue_impl(self):
+        return ThickQueueImpl.__new__(ThickQueueImpl)
 
     def create_subscr_impl(self, object conn, object callback,
                            uint32_t namespace, str name, uint32_t protocol,

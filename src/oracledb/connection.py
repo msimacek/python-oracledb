@@ -8,6 +8,7 @@ from . import pool as pool_module
 from .cursor import Cursor
 from .lob import LOB
 from .subscr import Subscription
+from .aq import Queue, MessageProperties
 from .base_impl import DB_TYPE_BLOB, DB_TYPE_CLOB, DB_TYPE_NCLOB
 
 class Connection:
@@ -445,7 +446,8 @@ class Connection:
         not None, they act as a shortcut for setting each of the equivalently
         named properties.
         """
-        props = self._impl.create_msg_props()
+        impl = self._impl.create_msg_props_impl()
+        props = MessageProperties._from_impl(impl)
         if payload is not None:
             props.payload = payload
         if correlation is not None:
@@ -516,7 +518,9 @@ class Connection:
         specified, RAW data is enqueued and dequeued.
         """
         self._verify_connected()
-        return self._impl.queue(name, payloadType)
+        impl = self._impl.create_queue_impl()
+        impl.initialize(self._impl, name, payloadType)
+        return Queue._from_impl(self, impl)
 
     def rollback(self):
         """

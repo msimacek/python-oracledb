@@ -8,18 +8,6 @@ cdef class BaseConnImpl:
         self.username = user
         self.dsn = dsn
 
-    cdef BaseMsgProps _create_msg_props(self):
-        """
-        Internal method for creating a message property object.
-        """
-        raise NotImplementedError()
-
-    cdef BaseQueue _create_queue(self):
-        """
-        Internal method for creating a queue.
-        """
-        raise NotImplementedError()
-
     def begin(self, format_id, transaction_id, branch_id):
         """
         Internal method for beginning a distributed transaction.
@@ -54,6 +42,12 @@ cdef class BaseConnImpl:
     def create_cursor_impl(self):
         """
         Internal method for creating a cursor implementation.
+        """
+        raise NotImplementedError()
+
+    def create_queue_impl(self):
+        """
+        Internal method for creating a queue.
         """
         raise NotImplementedError()
 
@@ -140,28 +134,6 @@ cdef class BaseConnImpl:
         """
         raise NotImplementedError()
 
-    def msgproperties(self, payload=None, correlation=None, delay=None,
-                      exceptionq=None, expiration=None, priority=None):
-        """
-        Create and return a message properties object. If the parameters are
-        not None, they act as a shortcut for setting each of the equivalently
-        named properties.
-        """
-        cdef BaseMsgProps props = self._create_msg_props()
-        if payload is not None:
-            props.payload = payload
-        if correlation is not None:
-            props.correlation = correlation
-        if delay is not None:
-            props.delay = delay
-        if exceptionq is not None:
-            props.exceptionq = exceptionq
-        if expiration is not None:
-            props.expiration = expiration
-        if priority is not None:
-            props.priority = priority
-        return props
-
     def ping(self):
         """
         Pings the database to verify the connection is valid.
@@ -174,18 +146,6 @@ cdef class BaseConnImpl:
         indicating if a commit is in fact needed.
         """
         raise NotImplementedError()
-
-    def queue(self, name, payloadType=None):
-        """
-        Returns a queue used to enqueue and dequeue messages in AQ.
-        """
-        cdef BaseQueue queue
-        queue = self._create_queue()
-        queue.connection = self
-        queue.name = name
-        queue.payloadType = payloadType
-        queue._initialize()
-        return queue
 
     def rollback(self):
         """

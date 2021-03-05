@@ -27,8 +27,8 @@ from .base_impl cimport BaseConnImpl, BaseCursorImpl, BaseVar, DbType
 from .base_impl cimport BaseDbObjectType, BaseDbObjectAttr, BaseDbObject
 from .base_impl cimport BaseLobImpl, BasePoolImpl, BaseSodaDatabase
 from .base_impl cimport BaseSodaCollection, BaseSodaDoc, BaseSodaDocCursor
-from .base_impl cimport BaseSodaOperation, BaseQueue, BaseDeqOptions
-from .base_impl cimport BaseEnqOptions, BaseMsgProps, BaseSubscrImpl
+from .base_impl cimport BaseSodaOperation, BaseQueueImpl, BaseDeqOptionsImpl
+from .base_impl cimport BaseEnqOptionsImpl, BaseMsgPropsImpl, BaseSubscrImpl
 from .base_impl cimport NUM_TYPE_FLOAT, NUM_TYPE_INT, NUM_TYPE_DECIMAL
 from libc.string cimport memchr, memset
 
