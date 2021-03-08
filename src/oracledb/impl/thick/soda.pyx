@@ -7,7 +7,7 @@
 #   Cython file defining the SODA classes (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
-cdef class SodaDatabase(BaseSodaDatabase):
+cdef class ThickSodaDbImpl(BaseSodaDbImpl):
     cdef:
         dpiSodaDb* _handle
 
@@ -15,12 +15,21 @@ cdef class SodaDatabase(BaseSodaDatabase):
         if self._handle != NULL:
             dpiSodaDb_release(self._handle)
 
-    cdef BaseSodaCollection _create_collection(self, str name, str metadata,
-                                               bint map_mode):
+    cdef int _get_flags(self, uint32_t* flags) except -1:
+        self._conn._verify_connected()
+        if self._conn.autocommit:
+            flags[0] = DPI_SODA_FLAGS_ATOMIC_COMMIT
+        else:
+            flags[0] = DPI_SODA_FLAGS_DEFAULT
+
+    def create_collection(self, str name, str metadata, bint map_mode):
+        """
+        Internal method for creating a collection.
+        """
         cdef:
             StringBuffer metadata_buf = StringBuffer()
             StringBuffer name_buf = StringBuffer()
-            SodaCollection collection
+            ThickSodaCollImpl coll_impl
             uint32_t flags
             int status
         name_buf.set_value(name)
@@ -28,39 +37,44 @@ cdef class SodaDatabase(BaseSodaDatabase):
         self._get_flags(&flags)
         if map_mode:
             flags |= DPI_SODA_FLAGS_CREATE_COLL_MAP
-        collection = SodaCollection.__new__(SodaCollection)
-        collection._db = self
+        coll_impl = ThickSodaCollImpl.__new__(ThickSodaCollImpl)
+        coll_impl._db_impl = self
         with nogil:
             status = dpiSodaDb_createCollection(self._handle, name_buf.ptr,
                                                 name_buf.length,
                                                 metadata_buf.ptr,
                                                 metadata_buf.length, flags,
-                                                &collection._handle)
+                                                &coll_impl._handle)
         if status < 0:
             _raise_from_odpi()
-        collection._initialize()
-        return collection
+        coll_impl._get_name()
+        return coll_impl
 
-    cdef BaseSodaDoc _create_document(self, bytes content, str key,
-                                      str media_type):
+    def create_document(self, bytes content, str key, str media_type):
+        """
+        Internal method for creating a document.
+        """
         cdef:
             StringBuffer media_type_buf = StringBuffer()
             StringBuffer content_buf = StringBuffer()
             StringBuffer key_buf = StringBuffer()
-            SodaDoc doc
+            ThickSodaDocImpl doc_impl
         content_buf.set_value(content)
         key_buf.set_value(key)
         media_type_buf.set_value(media_type)
-        doc = SodaDoc.__new__(SodaDoc)
-        doc._db = self
+        doc_impl = ThickSodaDocImpl.__new__(ThickSodaDocImpl)
         if dpiSodaDb_createDocument(self._handle, key_buf.ptr, key_buf.length,
                                     content_buf.ptr, content_buf.length,
                                     media_type_buf.ptr, media_type_buf.length,
-                                    DPI_SODA_FLAGS_DEFAULT, &doc._handle) < 0:
+                                    DPI_SODA_FLAGS_DEFAULT,
+                                    &doc_impl._handle) < 0:
             _raise_from_odpi()
-        return doc
+        return doc_impl
 
-    cdef object _get_collection_names(self, str start_name, uint32_t limit):
+    def get_collection_names(self, str start_name, uint32_t limit):
+        """
+        Internal method for getting the list of collection names.
+        """
         cdef:
             StringBuffer start_name_buf = StringBuffer()
             dpiSodaCollNames coll_names
@@ -88,109 +102,43 @@ cdef class SodaDatabase(BaseSodaDatabase):
             if dpiSodaDb_freeCollectionNames(self._handle, &coll_names) < 0:
                 _raise_from_odpi()
 
-    cdef int _get_flags(self, uint32_t* flags) except -1:
-        self._conn._verify_connected()
-        if self._conn.autocommit:
-            flags[0] = DPI_SODA_FLAGS_ATOMIC_COMMIT
-        else:
-            flags[0] = DPI_SODA_FLAGS_DEFAULT
-
-    cdef BaseSodaCollection _open_collection(self, str name):
+    def open_collection(self, str name):
+        """
+        Internal method for opening a collection.
+        """
         cdef:
             StringBuffer name_buf = StringBuffer()
-            SodaCollection collection
+            ThickSodaCollImpl coll_impl
             uint32_t flags
             int status
         name_buf.set_value(name)
         self._get_flags(&flags)
-        collection = SodaCollection.__new__(SodaCollection)
-        collection._db = self
+        coll_impl = ThickSodaCollImpl.__new__(ThickSodaCollImpl)
+        coll_impl._db_impl = self
         with nogil:
             status = dpiSodaDb_openCollection(self._handle, name_buf.ptr,
                                               name_buf.length, flags,
-                                              &collection._handle)
+                                              &coll_impl._handle)
         if status < 0:
             _raise_from_odpi()
-        if collection._handle != NULL:
-            collection._initialize()
-            return collection
+        if coll_impl._handle != NULL:
+            coll_impl._get_name()
+            return coll_impl
 
 
-cdef class SodaCollection(BaseSodaCollection):
+cdef class ThickSodaCollImpl(BaseSodaCollImpl):
     cdef:
+        ThickSodaDbImpl _db_impl
         dpiSodaColl* _handle
 
     def __dealloc__(self):
         if self._handle != NULL:
             dpiSodaColl_release(self._handle)
 
-    cdef int _create_index(self, str spec) except -1:
-        cdef:
-            StringBuffer buf = StringBuffer()
-            uint32_t flags
-            int status
-        buf.set_value(spec)
-        self._get_flags(&flags)
-        with nogil:
-            status = dpiSodaColl_createIndex(self._handle, buf.ptr, buf.length,
-                                             flags)
-        if status < 0:
-            _raise_from_odpi()
-
-    cdef BaseSodaOperation _create_operation(self):
-        return SodaOperation.__new__(SodaOperation)
-
-    cdef int _drop(self, bint* is_dropped) except -1:
-        cdef uint32_t flags
-        self._get_flags(&flags)
-        if dpiSodaColl_drop(self._handle, flags, is_dropped) < 0:
-            _raise_from_odpi()
-
-    cdef int _drop_index(self, str name, bint force,
-                         bint* is_dropped) except -1:
-        cdef:
-            StringBuffer buf = StringBuffer()
-            uint32_t flags
-            int status
-        buf.set_value(name)
-        self._get_flags(&flags)
-        if force:
-            flags |= DPI_SODA_FLAGS_INDEX_DROP_FORCE
-        with nogil:
-            status = dpiSodaColl_dropIndex(self._handle, buf.ptr, buf.length,
-                                           flags, is_dropped)
-        if status < 0:
-            _raise_from_odpi()
-
-    cdef BaseSodaDoc _get_data_guide(self):
-        cdef:
-            uint32_t flags
-            SodaDoc doc
-            int status
-        self._get_flags(&flags)
-        doc = SodaDoc.__new__(SodaDoc)
-        doc._db = self._db
-        with nogil:
-            status = dpiSodaColl_getDataGuide(self._handle, flags,
-                                              &doc._handle)
-        if status < 0:
-            _raise_from_odpi()
-        if doc._handle != NULL:
-            return doc
-
-    cdef int _get_flags(self, uint32_t* flags) except -1:
-        cdef SodaDatabase db = <SodaDatabase> self._db
-        db._get_flags(flags)
-
-    cdef object _get_metadata(self):
-        cdef:
-            uint32_t value_len
-            const char* value
-        if dpiSodaColl_getMetadata(self._handle, &value, &value_len) < 0:
-            _raise_from_odpi()
-        return value[:value_len].decode()
-
-    cdef int _initialize(self) except -1:
+    cdef int _get_name(self) except -1:
+        """
+        Internal method for getting the name of the collection.
+        """
         cdef:
             uint32_t name_len
             const char *name
@@ -198,62 +146,244 @@ cdef class SodaCollection(BaseSodaCollection):
             _raise_from_odpi()
         self.name = name[:name_len].decode()
 
-    cdef object _insert_many(self, list documents, bint return_docs):
+    def create_index(self, str spec):
+        """
+        Internal method for creating an index on a collection.
+        """
+        cdef:
+            StringBuffer buf = StringBuffer()
+            uint32_t flags
+            int status
+        buf.set_value(spec)
+        self._db_impl._get_flags(&flags)
+        with nogil:
+            status = dpiSodaColl_createIndex(self._handle, buf.ptr, buf.length,
+                                             flags)
+        if status < 0:
+            _raise_from_odpi()
+
+    def drop(self):
+        """
+        Internal method for dropping a collection.
+        """
+        cdef:
+            bint is_dropped
+            uint32_t flags
+        self._db_impl._get_flags(&flags)
+        if dpiSodaColl_drop(self._handle, flags, &is_dropped) < 0:
+            _raise_from_odpi()
+        return is_dropped
+
+    def drop_index(self, str name, bint force):
+        """
+        Internal method for dropping an index on a collection.
+        """
+        cdef:
+            StringBuffer buf = StringBuffer()
+            bint is_dropped
+            uint32_t flags
+            int status
+        buf.set_value(name)
+        self._db_impl._get_flags(&flags)
+        if force:
+            flags |= DPI_SODA_FLAGS_INDEX_DROP_FORCE
+        with nogil:
+            status = dpiSodaColl_dropIndex(self._handle, buf.ptr, buf.length,
+                                           flags, &is_dropped)
+        if status < 0:
+            _raise_from_odpi()
+        return is_dropped
+
+    def get_count(self, object op):
+        """
+        Internal method for getting the count of documents matching the
+        criteria.
+        """
+        cdef:
+            ThickSodaOpImpl options = ThickSodaOpImpl._from_op(op)
+            uint64_t count
+            uint32_t flags
+            int status
+        self._db_impl._get_flags(&flags)
+        with nogil:
+            status = dpiSodaColl_getDocCount(self._handle, &options._options,
+                                             flags, &count)
+        if status < 0:
+            _raise_from_odpi()
+        return count
+
+    def get_cursor(self, object op):
+        """
+        Internal method for getting a cursor which will return the documents
+        matching the criteria.
+        """
+        cdef:
+            ThickSodaOpImpl options = ThickSodaOpImpl._from_op(op)
+            ThickSodaDocCursorImpl cursor_impl
+            uint32_t flags
+            int status
+        self._db_impl._get_flags(&flags)
+        cursor_impl = ThickSodaDocCursorImpl.__new__(ThickSodaDocCursorImpl)
+        cursor_impl._db_impl = self._db_impl
+        with nogil:
+            status = dpiSodaColl_find(self._handle, &options._options, flags,
+                                      &cursor_impl._handle)
+        if status < 0:
+            _raise_from_odpi()
+        return cursor_impl
+
+    def get_data_guide(self):
+        """
+        Internal method for getting the data guide for a collection.
+        """
+        cdef:
+            ThickSodaDocImpl doc_impl
+            uint32_t flags
+            int status
+        self._db_impl._get_flags(&flags)
+        doc_impl = ThickSodaDocImpl.__new__(ThickSodaDocImpl)
+        with nogil:
+            status = dpiSodaColl_getDataGuide(self._handle, flags,
+                                              &doc_impl._handle)
+        if status < 0:
+            _raise_from_odpi()
+        if doc_impl._handle != NULL:
+            return doc_impl
+
+    def get_metadata(self):
+        """
+        Internal method for getting the metadata for a collection.
+        """
+        cdef:
+            uint32_t value_len
+            const char* value
+        if dpiSodaColl_getMetadata(self._handle, &value, &value_len) < 0:
+            _raise_from_odpi()
+        return value[:value_len].decode()
+
+    def get_one(self, object op):
+        """
+        Internal method for getting a document matching the criteria.
+        """
+        cdef:
+            ThickSodaOpImpl options = ThickSodaOpImpl._from_op(op)
+            ThickSodaDocImpl doc_impl
+            uint32_t flags
+            int status
+        self._db_impl._get_flags(&flags)
+        doc_impl = ThickSodaDocImpl.__new__(ThickSodaDocImpl)
+        with nogil:
+            status = dpiSodaColl_findOne(self._handle, &options._options,
+                                         flags, &doc_impl._handle)
+        if status < 0:
+            _raise_from_odpi()
+        if doc_impl._handle != NULL:
+            return doc_impl
+
+    def insert_many(self, list doc_impls, bint return_docs):
+        """
+        Internal method for inserting many documents into a collection at once.
+        """
         cdef:
             dpiSodaDoc **output_handles = NULL
             uint32_t i, num_docs, flags
+            ThickSodaDocImpl doc_impl
+            list output_doc_impls
             dpiSodaDoc **handles
             ssize_t num_bytes
-            list output_docs
-            SodaDoc doc
             int status
-        num_docs = <uint32_t> len(documents)
+        num_docs = <uint32_t> len(doc_impls)
         num_bytes = num_docs * sizeof(dpiSodaDoc *)
         handles = <dpiSodaDoc**> cpython.PyMem_Malloc(num_bytes)
         if return_docs:
             output_handles = <dpiSodaDoc**> _calloc(num_docs,
                                                     sizeof(dpiSodaDoc*))
-        for i, doc in enumerate(documents):
-            handles[i] = doc._handle
-        self._get_flags(&flags)
+        for i, doc_impl in enumerate(doc_impls):
+            handles[i] = doc_impl._handle
+        self._db_impl._get_flags(&flags)
         with nogil:
             status = dpiSodaColl_insertMany(self._handle, num_docs, handles,
                                             flags, output_handles)
         if status < 0:
             _raise_from_odpi()
         if return_docs:
-            output_docs = []
+            output_doc_impls = []
             for i in range(num_docs):
-                doc = SodaDoc.__new__(SodaDoc)
-                doc._db = self._db
-                doc._handle = output_handles[i]
-                output_docs.append(doc)
-            return output_docs
+                doc_impl = ThickSodaDocImpl.__new__(ThickSodaDocImpl)
+                doc_impl._handle = output_handles[i]
+                output_doc_impls.append(doc_impl)
+            return output_doc_impls
 
-    cdef object _insert_one(self, BaseSodaDoc doc, bint return_doc):
+    def insert_one(self, ThickSodaDocImpl doc_impl, bint return_doc):
+        """
+        Internal method for inserting a single document into a collection.
+        """
         cdef:
             dpiSodaDoc **output_handle = NULL
-            SodaDoc thick_doc, output_doc
+            ThickSodaDocImpl output_doc_impl
             uint32_t flags
             int status
-        thick_doc = <SodaDoc> doc
         if return_doc:
-            output_doc = SodaDoc.__new__(SodaDoc)
-            output_doc._db = self._db
-            output_handle = &output_doc._handle
-        self._get_flags(&flags)
+            output_doc_impl = ThickSodaDocImpl.__new__(ThickSodaDocImpl)
+            output_handle = &output_doc_impl._handle
+        self._db_impl._get_flags(&flags)
         with nogil:
-            status = dpiSodaColl_insertOne(self._handle, thick_doc._handle,
+            status = dpiSodaColl_insertOne(self._handle, doc_impl._handle,
                                            flags, output_handle)
         if status < 0:
             _raise_from_odpi()
         if return_doc:
-            return output_doc
+            return output_doc_impl
 
-    cdef object _save(self, BaseSodaDoc doc, bint return_doc):
-        raise NotImplementedError()
+    def remove(self, object op):
+        """
+        Internal method for removing all of the documents matching the
+        criteria.
+        """
+        cdef:
+            ThickSodaOpImpl options = ThickSodaOpImpl._from_op(op)
+            uint64_t count
+            uint32_t flags
+            int status
+        self._db_impl._get_flags(&flags)
+        with nogil:
+            status = dpiSodaColl_remove(self._handle, &options._options, flags,
+                                        &count)
+        if status < 0:
+            _raise_from_odpi()
+        return count
 
-    cdef int _truncate(self) except -1:
+    def replace_one(self, object op, ThickSodaDocImpl doc_impl,
+                    bint return_doc):
+        """
+        Internal method for replacing the document matching the criteria with
+        the supplied coument.
+        """
+        cdef:
+            ThickSodaOpImpl options = ThickSodaOpImpl._from_op(op)
+            dpiSodaDoc **output_handle = NULL
+            ThickSodaDocImpl output_doc_impl
+            uint32_t flags
+            bint replaced
+            int status
+        if return_doc:
+            output_doc_impl = ThickSodaDocImpl.__new__(ThickSodaDocImpl)
+            output_handle = &output_doc_impl._handle
+        self._db_impl._get_flags(&flags)
+        with nogil:
+            status = dpiSodaColl_replaceOne(self._handle, &options._options,
+                                            doc_impl._handle, flags, &replaced,
+                                            output_handle)
+        if status < 0:
+            _raise_from_odpi()
+        if return_doc:
+            return output_doc_impl
+
+    def truncate(self):
+        """
+        Internal method for truncating the collection (removing all documents
+        from it).
+        """
         cdef int status
         with nogil:
             status = dpiSodaColl_truncate(self._handle)
@@ -261,7 +391,7 @@ cdef class SodaCollection(BaseSodaCollection):
             _raise_from_odpi()
 
 
-cdef class SodaDoc(BaseSodaDoc):
+cdef class ThickSodaDocImpl(BaseSodaDocImpl):
     cdef:
         dpiSodaDoc* _handle
 
@@ -269,16 +399,31 @@ cdef class SodaDoc(BaseSodaDoc):
         if self._handle != NULL:
             dpiSodaDoc_release(self._handle)
 
-    cdef object _get_content(self, const char **encoding):
+    def get_content(self):
+        """
+        Internal method for returning the content of the document.
+        """
         cdef:
+            bytes out_content = None
+            str out_encoding = None
+            const char *encoding
             uint32_t content_len
             const char *content
         if dpiSodaDoc_getContent(self._handle, &content, &content_len,
-                                 encoding) < 0:
+                                 &encoding) < 0:
             _raise_from_odpi()
-        return content[:content_len]
+        if content != NULL:
+            out_content = content[:content_len]
+        if encoding != NULL:
+            out_encoding = encoding.decode()
+        else:
+            out_encoding = "UTF-8"
+        return (out_content, out_encoding)
 
-    cdef object _get_created_on(self):
+    def get_created_on(self):
+        """
+        Internal method for getting the date the document was created.
+        """
         cdef:
             uint32_t value_len
             const char *value
@@ -287,7 +432,10 @@ cdef class SodaDoc(BaseSodaDoc):
         if value_len > 0:
             return value[:value_len].decode()
 
-    cdef object _get_key(self):
+    def get_key(self):
+        """
+        Internal method for getting the key of the document.
+        """
         cdef:
             uint32_t value_len
             const char *value
@@ -296,7 +444,10 @@ cdef class SodaDoc(BaseSodaDoc):
         if value_len > 0:
             return value[:value_len].decode()
 
-    cdef object _get_last_modified(self):
+    def get_last_modified(self):
+        """
+        Internal method for getting the date the document was last modified.
+        """
         cdef:
             uint32_t value_len
             const char *value
@@ -305,7 +456,10 @@ cdef class SodaDoc(BaseSodaDoc):
         if value_len > 0:
             return value[:value_len].decode()
 
-    cdef object _get_media_type(self):
+    def get_media_type(self):
+        """
+        Internal method for getting the media type of the document.
+        """
         cdef:
             uint32_t value_len
             const char *value
@@ -314,7 +468,10 @@ cdef class SodaDoc(BaseSodaDoc):
         if value_len > 0:
             return value[:value_len].decode()
 
-    cdef object _get_version(self):
+    def get_version(self):
+        """
+        Internal method for getting the version of the document.
+        """
         cdef:
             uint32_t value_len
             const char *value
@@ -324,44 +481,46 @@ cdef class SodaDoc(BaseSodaDoc):
             return value[:value_len].decode()
 
 
-cdef class SodaDocCursor(BaseSodaDocCursor):
+cdef class ThickSodaDocCursorImpl(BaseSodaDocCursorImpl):
     cdef:
         dpiSodaDocCursor* _handle
+        ThickSodaDbImpl _db_impl
 
     def __dealloc__(self):
         if self._handle != NULL:
             dpiSodaDocCursor_release(self._handle)
 
-    cdef int _close(self) except -1:
-        raise NotImplementedError()
-
-    cdef object _get_next_doc(self):
+    def get_next_doc(self):
+        """
+        Internal method for getting the next document from the cursor.
+        """
         cdef:
-            SodaDatabase db = <SodaDatabase> self._db
+            ThickSodaDocImpl doc_impl
             uint32_t flags
-            SodaDoc doc
             int status
-        db._get_flags(&flags)
-        doc = SodaDoc.__new__(SodaDoc)
-        doc._db = db
+        self._db_impl._get_flags(&flags)
+        doc_impl = ThickSodaDocImpl.__new__(ThickSodaDocImpl)
         with nogil:
             status = dpiSodaDocCursor_getNext(self._handle, flags,
-                                              &doc._handle)
+                                              &doc_impl._handle)
         if status < 0:
             _raise_from_odpi()
-        if doc._handle != NULL:
-            return doc
+        if doc_impl._handle != NULL:
+            return doc_impl
 
 
-cdef class SodaOperation(BaseSodaOperation):
+cdef class ThickSodaOpImpl:
     cdef:
-        uint32_t _allocated_keys
-        uint32_t* _key_lengths
+        dpiSodaOperOptions _options
         const char** _key_values
+        uint32_t* _key_lengths
         list _buffers
 
     def __dealloc__(self):
-        self._clear_keys()
+        if self._key_values != NULL:
+            cpython.PyMem_Free(self._key_values)
+        if self._key_lengths != NULL:
+            cpython.PyMem_Free(self._key_lengths)
 
     cdef int _add_buf(self, object value, const char **ptr,
                       uint32_t *length) except -1:
@@ -371,131 +530,43 @@ cdef class SodaOperation(BaseSodaOperation):
         ptr[0] = buf.ptr
         length[0] = buf.length
 
-    cdef void _clear_keys(self):
-        if self._key_values != NULL:
-            cpython.PyMem_Free(self._key_values)
-        if self._key_lengths != NULL:
-            cpython.PyMem_Free(self._key_lengths)
-
-    cdef int _count(self, uint64_t* count) except -1:
+    @staticmethod
+    cdef ThickSodaOpImpl _from_op(object op):
+        """
+        Internal method for creating a SODA operations implementation object
+        given the object supplied by the user.
+        """
         cdef:
-            SodaCollection collection = <SodaCollection> self._collection
-            dpiSodaOperOptions options
-            uint32_t flags
-            int status
-        collection._get_flags(&flags)
-        self._get_options(&options)
-        with nogil:
-            status = dpiSodaColl_getDocCount(collection._handle, &options,
-                                             flags, count)
-        if status < 0:
-            _raise_from_odpi()
-
-    cdef int _get_options(self, dpiSodaOperOptions* options) except -1:
-        cdef:
+            ThickSodaOpImpl impl = ThickSodaOpImpl.__new__(ThickSodaOpImpl)
+            dpiSodaOperOptions *options
             ssize_t num_bytes
             uint32_t i
-        self._buffers = []
+        impl._buffers = []
+        options = &impl._options
         if dpiContext_initSodaOperOptions(driver_context, options) < 0:
             _raise_from_odpi()
-        if self._key is not None:
-            self._add_buf(self._key, &options.key, &options.keyLength)
-        if self._keys:
-            options.numKeys = <uint32_t> len(self._keys)
-            if options.numKeys > self._allocated_keys:
-                self._clear_keys()
-                num_bytes = options.numKeys * sizeof(char*)
-                self._key_values = \
-                        <const char**> cpython.PyMem_Malloc(num_bytes)
-                num_bytes = options.numKeys * sizeof(uint32_t)
-                self._key_lengths = <uint32_t*> cpython.PyMem_Malloc(num_bytes)
-                self._allocated_keys = options.numKeys
-            options.keys = self._key_values
-            options.keyLengths = self._key_lengths
+        if op._keys:
+            options.numKeys = <uint32_t> len(op._keys)
+            num_bytes = options.numKeys * sizeof(char*)
+            impl._key_values = <const char**> cpython.PyMem_Malloc(num_bytes)
+            num_bytes = options.numKeys * sizeof(uint32_t)
+            impl._key_lengths = <uint32_t*> cpython.PyMem_Malloc(num_bytes)
+            options.keys = impl._key_values
+            options.keyLengths = impl._key_lengths
             for i in range(options.numKeys):
-                self._add_buf(self._keys[i], &self._key_values[i],
-                              &self._key_lengths[i])
-        if self._version is not None:
-            self._add_buf(self._version, &options.version,
+                impl._add_buf(op._keys[i], &impl._key_values[i],
+                              &impl._key_lengths[i])
+        if op._key is not None:
+            impl._add_buf(op._key, &options.key, &options.keyLength)
+        if op._version is not None:
+            impl._add_buf(op._version, &options.version,
                           &options.versionLength)
-        if self._filter is not None:
-            self._add_buf(self._filter, &options.filter, &options.filterLength)
-        options.skip = self._skip
-        options.limit = self._limit
-        options.fetchArraySize = self._fetch_array_size
-
-    cdef BaseSodaDocCursor _get_cursor(self):
-        cdef:
-            SodaCollection collection = <SodaCollection> self._collection
-            dpiSodaOperOptions options
-            SodaDocCursor cursor
-            uint32_t flags
-            int status
-        collection._get_flags(&flags)
-        self._get_options(&options)
-        cursor = SodaDocCursor.__new__(SodaDocCursor)
-        cursor._db = collection._db
-        with nogil:
-            status = dpiSodaColl_find(collection._handle, &options, flags,
-                                      &cursor._handle)
-        if status < 0:
-            _raise_from_odpi()
-        return cursor
-
-    cdef BaseSodaDoc _get_one(self):
-        cdef:
-            SodaCollection collection = <SodaCollection> self._collection
-            dpiSodaOperOptions options
-            uint32_t flags
-            SodaDoc doc
-            int status
-        collection._get_flags(&flags)
-        self._get_options(&options)
-        doc = SodaDoc.__new__(SodaDoc)
-        doc._db = collection._db
-        with nogil:
-            status = dpiSodaColl_findOne(collection._handle, &options, flags,
-                                         &doc._handle)
-        if status < 0:
-            _raise_from_odpi()
-        if doc._handle != NULL:
-            return doc
-
-    cdef int _remove(self, uint64_t* count) except -1:
-        cdef:
-            SodaCollection collection = <SodaCollection> self._collection
-            dpiSodaOperOptions options
-            uint32_t flags
-            int status
-        collection._get_flags(&flags)
-        self._get_options(&options)
-        with nogil:
-            status = dpiSodaColl_remove(collection._handle, &options, flags,
-                                        count)
-        if status < 0:
-            _raise_from_odpi()
-
-    cdef object _replace_one(self, BaseSodaDoc doc, bint return_doc,
-                             bint* replaced):
-        cdef:
-            SodaCollection collection = <SodaCollection> self._collection
-            dpiSodaDoc **output_handle = NULL
-            SodaDoc thick_doc, output_doc
-            dpiSodaOperOptions options
-            uint32_t flags
-            int status
-        thick_doc = <SodaDoc> doc
-        if return_doc:
-            output_doc = SodaDoc.__new__(SodaDoc)
-            output_doc._db = collection._db
-            output_handle = &output_doc._handle
-        collection._get_flags(&flags)
-        self._get_options(&options)
-        with nogil:
-            status = dpiSodaColl_replaceOne(collection._handle, &options,
-                                            thick_doc._handle, flags, replaced,
-                                            output_handle)
-        if status < 0:
-            _raise_from_odpi()
-        if return_doc:
-            return output_doc
+        if op._filter is not None:
+            impl._add_buf(op._filter, &options.filter, &options.filterLength)
+        if op._skip is not None:
+            options.skip = op._skip
+        if op._limit is not None:
+            options.limit = op._limit
+        if op._fetch_array_size is not None:
+            options.fetchArraySize = op._fetch_array_size
+        return impl

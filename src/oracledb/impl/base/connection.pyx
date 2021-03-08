@@ -51,6 +51,12 @@ cdef class BaseConnImpl:
         """
         raise NotImplementedError()
 
+    def create_soda_database_impl(self, conn):
+        """
+        Internal method for returning a SODA database for the connection.
+        """
+        raise NotImplementedError()
+
     def create_subscr_impl(self, object conn, object callback,
                            uint32_t namespace, str name, uint32_t protocol,
                            str ip_address, uint32_t port, uint32_t timeout,
@@ -107,12 +113,6 @@ cdef class BaseConnImpl:
     def get_ltxid(self):
         """
         Internal method for returning the logical transaction id.
-        """
-        raise NotImplementedError()
-
-    def get_soda_database(self, conn):
-        """
-        Internal method for returning a SODA database for the connection.
         """
         raise NotImplementedError()
 

@@ -25,10 +25,11 @@ from .lob import LOB
 from .base_impl cimport get_exception_class
 from .base_impl cimport BaseConnImpl, BaseCursorImpl, BaseVar, DbType
 from .base_impl cimport BaseDbObjectType, BaseDbObjectAttr, BaseDbObject
-from .base_impl cimport BaseLobImpl, BasePoolImpl, BaseSodaDatabase
-from .base_impl cimport BaseSodaCollection, BaseSodaDoc, BaseSodaDocCursor
-from .base_impl cimport BaseSodaOperation, BaseQueueImpl, BaseDeqOptionsImpl
-from .base_impl cimport BaseEnqOptionsImpl, BaseMsgPropsImpl, BaseSubscrImpl
+from .base_impl cimport BaseLobImpl, BasePoolImpl, BaseSodaDbImpl
+from .base_impl cimport BaseSodaCollImpl, BaseSodaDocImpl
+from .base_impl cimport BaseSodaDocCursorImpl, BaseQueueImpl
+from .base_impl cimport BaseDeqOptionsImpl, BaseEnqOptionsImpl
+from .base_impl cimport BaseMsgPropsImpl, BaseSubscrImpl
 from .base_impl cimport NUM_TYPE_FLOAT, NUM_TYPE_INT, NUM_TYPE_DECIMAL
 from libc.string cimport memchr, memset
 

@@ -184,74 +184,22 @@ cdef class BaseDbObject:
     cdef int _trim(self, int32_t num_to_trim) except -1
 
 
-cdef class BaseSodaDatabase:
+cdef class BaseSodaDbImpl:
     cdef:
         object _conn
 
-    cdef BaseSodaCollection _create_collection(self, str name, str metadata,
-                                               bint map_mode)
-    cdef BaseSodaDoc _create_document(self, bytes content, str key,
-                                      str media_type)
-    cdef object _get_collection_names(self, str start_name, uint32_t limit)
-    cdef BaseSodaCollection _open_collection(self, str name)
 
-
-cdef class BaseSodaCollection:
+cdef class BaseSodaCollImpl:
     cdef:
-        BaseSodaDatabase _db
         readonly str name
 
-    cdef int _create_index(self, str spec) except -1
-    cdef BaseSodaOperation _create_operation(self)
-    cdef int _drop(self, bint* is_dropped) except -1
-    cdef int _drop_index(self, str name, bint force,
-                         bint* is_dropped) except -1
-    cdef BaseSodaDoc _get_data_guide(self)
-    cdef object _get_metadata(self)
-    cdef object _insert_many(self, list documents, bint return_docs)
-    cdef object _insert_one(self, BaseSodaDoc doc, bint return_doc)
-    cdef BaseSodaDoc _process_doc_arg(self, object doc_arg)
-    cdef object _save(self, BaseSodaDoc doc, bint return_doc)
-    cdef int _truncate(self) except -1
+
+cdef class BaseSodaDocImpl:
+    pass
 
 
-cdef class BaseSodaDoc:
-    cdef:
-        BaseSodaDatabase _db
-
-    cdef object _get_content(self, const char **encoding)
-    cdef object _get_created_on(self)
-    cdef object _get_key(self)
-    cdef object _get_last_modified(self)
-    cdef object _get_media_type(self)
-    cdef object _get_version(self)
-
-
-cdef class BaseSodaDocCursor:
-    cdef:
-        BaseSodaDatabase _db
-
-    cdef object _get_next_doc(self)
-    cdef int _close(self) except -1
-
-
-cdef class BaseSodaOperation:
-    cdef:
-        BaseSodaCollection _collection
-        str _key
-        list _keys
-        str _version
-        str _filter
-        uint32_t _skip
-        uint32_t _limit
-        uint32_t _fetch_array_size
-
-    cdef int _count(self, uint64_t* count) except -1
-    cdef BaseSodaDocCursor _get_cursor(self)
-    cdef BaseSodaDoc _get_one(self)
-    cdef int _remove(self, uint64_t* count) except -1
-    cdef object _replace_one(self, BaseSodaDoc doc, bint return_doc,
-                             bint* replaced)
+cdef class BaseSodaDocCursorImpl:
+    pass
 
 
 cdef class BaseQueueImpl:

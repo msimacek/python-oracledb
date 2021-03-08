@@ -25,6 +25,12 @@ connection.autocommit = True
 # Create the parent object for SODA
 soda = connection.getSodaDatabase()
 
+# drop the collection if it already exists in order to ensure that the sample
+# runs smoothly each time
+collection = soda.openCollection("mycollection")
+if collection is not None:
+    collection.drop()
+
 # Create a new SODA collection and index
 # This will open an existing collection, if the name is already in use.
 collection = soda.createCollection("mycollection")

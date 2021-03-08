@@ -301,6 +301,13 @@ cdef class ThickConnImpl(BaseConnImpl):
     def create_queue_impl(self):
         return ThickQueueImpl.__new__(ThickQueueImpl)
 
+    def create_soda_database_impl(self, conn):
+        cdef ThickSodaDbImpl impl = ThickSodaDbImpl.__new__(ThickSodaDbImpl)
+        impl._conn = conn
+        if dpiConn_getSodaDb(self._handle, &impl._handle) < 0:
+            _raise_from_odpi()
+        return impl
+
     def create_subscr_impl(self, object conn, object callback,
                            uint32_t namespace, str name, uint32_t protocol,
                            str ip_address, uint32_t port, uint32_t timeout,
@@ -382,13 +389,6 @@ cdef class ThickConnImpl(BaseConnImpl):
         if dpiConn_getLTXID(self._handle, &value, &value_length) < 0:
             _raise_from_odpi()
         return value[:value_length]
-
-    def get_soda_database(self, conn):
-        cdef SodaDatabase db = SodaDatabase.__new__(SodaDatabase)
-        db._conn = conn
-        if dpiConn_getSodaDb(self._handle, &db._handle) < 0:
-            _raise_from_odpi()
-        return db
 
     def get_stmt_cache_size(self):
         cdef uint32_t value

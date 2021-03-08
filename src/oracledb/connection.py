@@ -9,6 +9,7 @@ from .cursor import Cursor
 from .lob import LOB
 from .subscr import Subscription
 from .aq import Queue, MessageProperties
+from .soda import SodaDatabase
 from .base_impl import DB_TYPE_BLOB, DB_TYPE_CLOB, DB_TYPE_NCLOB
 
 class Connection:
@@ -360,7 +361,8 @@ class Connection:
         Oracle Document Access (SODA).
         """
         self._verify_connected()
-        return self._impl.get_soda_database(self)
+        db_impl = self._impl.create_soda_database_impl(self)
+        return SodaDatabase._from_impl(self, db_impl)
 
     def gettype(self, name):
         """
