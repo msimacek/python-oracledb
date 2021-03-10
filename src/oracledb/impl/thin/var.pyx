@@ -7,10 +7,22 @@
 #   Cython file defining the variable class (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
+cdef class FetchInfo:
+    cdef:
+        int16_t _precision
+        int16_t _scale
+        uint32_t _buffer_size
+        uint32_t _size
+        bint _nulls_allowed
+        str _name
+        DbType _dbtype
+
+
 cdef class Var(BaseVar):
     cdef:
         ThinConnImpl _conn_impl
         object _conv_func
+        FetchInfo _fetch_info
 
     def __cinit__(self, conn):
         self._conn = conn

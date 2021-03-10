@@ -79,6 +79,8 @@ cdef class Protocol:
         message.batcherrors = batcherrors
         message.num_execs = num_execs
         self._process_message(message)
+        if message.requires_define:
+            self._process_message(message)
         stmt._requires_full_execute = False
 
     cdef int _fetch(self, object cursor) except -1:

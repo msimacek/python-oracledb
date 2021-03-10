@@ -60,6 +60,11 @@ cdef converter_dict = {
     (TNS_DATA_TYPE_LONG, TNS_DATA_TYPE_BINARY_FLOAT): float,
     (TNS_DATA_TYPE_BINARY_FLOAT, TNS_DATA_TYPE_NUMBER): float,
     (TNS_DATA_TYPE_BINARY_DOUBLE, TNS_DATA_TYPE_NUMBER): float,
+    (TNS_DATA_TYPE_BLOB, TNS_DATA_TYPE_LONG_RAW): TNS_DATA_TYPE_LONG_RAW,
+    (TNS_DATA_TYPE_BLOB, TNS_DATA_TYPE_RAW): TNS_DATA_TYPE_LONG_RAW,
+    (TNS_DATA_TYPE_CLOB, TNS_DATA_TYPE_CHAR): TNS_DATA_TYPE_LONG,
+    (TNS_DATA_TYPE_CLOB, TNS_DATA_TYPE_VARCHAR): TNS_DATA_TYPE_LONG,
+    (TNS_DATA_TYPE_CLOB, TNS_DATA_TYPE_LONG): TNS_DATA_TYPE_LONG,
     (TNS_DATA_TYPE_TIMESTAMP_TZ, TNS_DATA_TYPE_TIMESTAMP_LTZ): None,
     (TNS_DATA_TYPE_TIMESTAMP_TZ, TNS_DATA_TYPE_TIMESTAMP): None,
     (TNS_DATA_TYPE_TIMESTAMP_LTZ, TNS_DATA_TYPE_TIMESTAMP_TZ): None,
@@ -83,18 +88,25 @@ cdef object _to_binary_int(object fetch_value):
 cdef object _tstamp_to_date(object fetch_value):
     return fetch_value.replace(microsecond=0)
 
-cdef int conversion_helper(DbType output_type, Var fetch_var) except -1:
+cdef int conversion_helper(Var output_var, FetchInfo fetch_info,
+                           bint *requires_define) except -1:
     cdef:
-        uint8_t fetch_ora_num, output_ora_num
-        object key
+        uint8_t fetch_ora_type_num, output_ora_type_num, csfrm
+        object key, value
 
-    fetch_ora_num = fetch_var._dbtype._ora_type_num
-    output_ora_num = output_type._ora_type_num
+    fetch_ora_type_num = fetch_info._dbtype._ora_type_num
+    output_ora_type_num = output_var._dbtype._ora_type_num
 
-    key = (fetch_ora_num, output_ora_num)
+    key = (fetch_ora_type_num, output_ora_type_num)
     try:
-        fetch_var._conv_func = converter_dict[key]
+        value = converter_dict[key]
+        if isinstance(value, int):
+            requires_define[0] = True
+            csfrm = output_var._dbtype._csfrm
+            fetch_info._dbtype = DbType._from_ora_type_and_csfrm(value, csfrm)
+        else:
+            output_var._conv_func = value
     except:
-        message = f"Cannot convert from type {fetch_var._dbtype.name} " \
-                  f"to {output_type.name}"
+        message = f"Cannot convert from type {fetch_info._dbtype.name} " \
+                  f"to {output_var._dbtype.name}"
         errors._raise_from_string(exceptions.DatabaseError, message)

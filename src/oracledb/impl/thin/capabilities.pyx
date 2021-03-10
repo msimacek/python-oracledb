@@ -31,6 +31,7 @@ cdef class Capabilities:
         self.compile_caps[TNS_CCAP_LOGON_TYPES] = \
                 TNS_CCAP_O5LOGON | TNS_CCAP_O5LOGON_NP
         self.compile_caps[TNS_CCAP_FIELD_VERSION] = self.ttc_field_version
+        self.compile_caps[TNS_CCAP_SERVER_DEFINE_CONV] = 1
         self.compile_caps[TNS_CCAP_TTC1] = \
                 TNS_CCAP_FAST_BVEC | TNS_CCAP_END_OF_CALL_STATUS | \
                 TNS_CCAP_IND_RCD

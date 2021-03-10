@@ -28,6 +28,48 @@ class TestCase(test_env.BaseTestCase):
         fetched_value, = self.cursor.fetchone()
         self.assertEqual(fetched_value, expected_out_value)
 
+    def __test_type_handler_blob(self, output_type):
+        def type_handler(cursor, name, default_type, size,
+                            precision, scale):
+            if default_type == oracledb.DB_TYPE_BLOB:
+                return cursor.var(output_type, arraysize=cursor.arraysize)
+        self.cursor.outputtypehandler = type_handler
+        in_value = b"Some binary data"
+        self.cursor.execute("truncate table TestBLOBs")
+        self.cursor.execute("insert into TestBLOBs values(1, :val)",
+                            val=in_value)
+        self.connection.commit()
+        self.cursor.execute("select BlobCol, IntCol, BlobCol from TestBLOBs")
+        self.assertEqual(self.cursor.fetchone(), (in_value, 1, in_value))
+
+    def __test_type_handler_clob(self, output_type):
+        def type_handler(cursor, name, default_type, size,
+                            precision, scale):
+            if default_type == oracledb.DB_TYPE_CLOB:
+                return cursor.var(output_type, arraysize=cursor.arraysize)
+        self.cursor.outputtypehandler = type_handler
+        in_value = "Some clob data"
+        self.cursor.execute("truncate table TestCLOBs")
+        self.cursor.execute("insert into TestCLOBs values(1, :val)",
+                            val=in_value)
+        self.connection.commit()
+        self.cursor.execute("select ClobCol, IntCol, ClobCol from TestCLOBs")
+        self.assertEqual(self.cursor.fetchone(), (in_value, 1, in_value))
+
+    def __test_type_handler_nclob(self, output_type):
+        def type_handler(cursor, name, default_type, size,
+                            precision, scale):
+            if default_type == oracledb.DB_TYPE_NCLOB:
+                return cursor.var(output_type, arraysize=cursor.arraysize)
+        self.cursor.outputtypehandler = type_handler
+        in_value = "Some nclob data"
+        self.cursor.execute("truncate table TestNCLOBs")
+        self.cursor.execute("insert into TestNCLOBs values(1, :val)",
+                            val=in_value)
+        self.connection.commit()
+        self.cursor.execute("select NClobCol, IntCol, NClobCol from TestNCLOBs")
+        self.assertEqual(self.cursor.fetchone(), (in_value, 1, in_value))
+
     def setUp(self):
         super().setUp()
         stmt = "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'" \
@@ -327,6 +369,86 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaises(oracledb.DatabaseError, self.__test_type_handler,
                           oracledb.DB_TYPE_NUMBER, oracledb.DB_TYPE_DATE, 3,
                           3)
+
+    def test_3651_CLOB_TO_CHAR(self):
+        "3651 outtypehandler from CLOB to CHAR"
+        val = "Some Clob String"
+        self.__test_type_handler(oracledb.DB_TYPE_CLOB,
+                                 oracledb.DB_TYPE_CHAR, val, val)
+
+    def test_3652_CLOB_TO_VARCHAR(self):
+        "3652 outtypehandler from CLOB to VARCHAR"
+        val = "Some Clob String"
+        self.__test_type_handler(oracledb.DB_TYPE_CLOB,
+                                 oracledb.DB_TYPE_VARCHAR, val, val)
+
+    def test_3653_CLOB_TO_LONG(self):
+        "3653 outtypehandler from CLOB to LONG"
+        val = "Some Clob String"
+        self.__test_type_handler(oracledb.DB_TYPE_CLOB,
+                                 oracledb.DB_TYPE_LONG, val, val)
+
+    def test_3654_BLOB_TO_RAW(self):
+        "3654 outtypehandler from BLOB to RAW"
+        val = b"Some binary data"
+        self.__test_type_handler(oracledb.DB_TYPE_BLOB,
+                                 oracledb.DB_TYPE_RAW, val, val)
+
+    def test_3655_BLOB_TO_LONG_RAW(self):
+        "3655 outtypehandler from BLOB to LONGRAW"
+        val = b"Some binary data"
+        self.__test_type_handler(oracledb.DB_TYPE_BLOB,
+                                 oracledb.DB_TYPE_LONG_RAW, val, val)
+
+    def test_3656_BLOB_TO_LONG_RAW(self):
+        "3656 outtypehandler from permanant BLOBs to LONG_RAW"
+        self.__test_type_handler_blob(oracledb.DB_TYPE_LONG_RAW)
+
+    def test_3657_BLOB_TO_RAW(self):
+        "3657 outtypehandler from permanant BLOBs to RAW"
+        self.__test_type_handler_blob(oracledb.DB_TYPE_RAW)
+
+    def test_3658_CLOB_TO_VARCHAR(self):
+        "3658 outtypehandler from permanant CLOBs to VARCHAR"
+        self.__test_type_handler_clob(oracledb.DB_TYPE_VARCHAR)
+
+    def test_3659_CLOB_TO_CHAR(self):
+        "3659 outtypehandler from permanant CLOBs to CHAR"
+        self.__test_type_handler_clob(oracledb.DB_TYPE_CHAR)
+
+    def test_3660_CLOB_TO_LONG(self):
+        "3660 outtypehandler from permanant CLOBs to LONG"
+        self.__test_type_handler_clob(oracledb.DB_TYPE_LONG)
+
+    def test_3661_NCLOB_TO_CHAR(self):
+        "3661 outtypehandler from NCLOB to CHAR"
+        val = "Some nclob data"
+        self.__test_type_handler(oracledb.DB_TYPE_NCLOB,
+                                 oracledb.DB_TYPE_CHAR, val, val)
+
+    def test_3662_NCLOB_TO_VARCHAR(self):
+        "3662 outtypehandler from NCLOB to VARCHAR"
+        val = "Some nclob data"
+        self.__test_type_handler(oracledb.DB_TYPE_NCLOB,
+                                 oracledb.DB_TYPE_VARCHAR, val, val)
+
+    def test_3663_NCLOB_TO_LONG(self):
+        "3663 outtypehandler from NCLOB to LONG"
+        val = "Some nclob data"
+        self.__test_type_handler(oracledb.DB_TYPE_NCLOB,
+                                 oracledb.DB_TYPE_LONG, val, val)
+
+    def test_3664_NCLOB_TO_VARCHAR(self):
+        "3664 outtypehandler from permanant NCLOBs to VARCHAR"
+        self.__test_type_handler_nclob(oracledb.DB_TYPE_VARCHAR)
+
+    def test_3665_NCLOB_TO_CHAR(self):
+        "3665 outtypehandler from permanant NCLOBs to CHAR"
+        self.__test_type_handler_nclob(oracledb.DB_TYPE_CHAR)
+
+    def test_3666_NCLOB_TO_LONG(self):
+        "3666 outtypehandler from permanant NCLOBs to LONG"
+        self.__test_type_handler_nclob(oracledb.DB_TYPE_LONG)
 
 if __name__ == "__main__":
     test_env.run_test_cases()
