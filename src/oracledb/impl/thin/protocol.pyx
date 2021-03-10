@@ -82,6 +82,8 @@ cdef class Protocol:
         if message.requires_define:
             self._process_message(message)
         stmt._requires_full_execute = False
+        if cursor_impl._statement._is_query:
+            cursor_impl.rowcount = 0
 
     cdef int _fetch(self, object cursor) except -1:
         self._process_message(FetchMessage(cursor))
