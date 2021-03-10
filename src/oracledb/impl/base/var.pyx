@@ -128,6 +128,8 @@ cdef class BaseVar:
             if dbtype is DB_TYPE_NUMBER or dbtype is DB_TYPE_BINARY_INTEGER:
                 if not isinstance(value, (bool, int, float, decimal.Decimal)):
                     raise TypeError("expecting number or boolean")
+                if dbtype is DB_TYPE_BINARY_INTEGER:
+                    value = int(value)
             elif dbtype is DB_TYPE_VARCHAR or dbtype is DB_TYPE_NVARCHAR \
                     or dbtype is DB_TYPE_CHAR or dbtype is DB_TYPE_NCHAR \
                     or dbtype is DB_TYPE_LONG:
