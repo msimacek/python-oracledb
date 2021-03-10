@@ -24,6 +24,7 @@ import sys
 from . import constants, errors, exceptions
 from .cursor import Cursor
 from .lob import LOB
+from .dbobject import DbObject, DbObjectType
 
 cdef int32_t* INTEGRITY_ERROR_CODES = [
         1,          # unique constraint violated

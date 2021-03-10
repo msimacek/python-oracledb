@@ -9,14 +9,12 @@ from .connection import connect, Connection
 from .cursor import Cursor
 from .pool import create_pool, Pool
 from .lob import LOB
+from .dbobject import DbObject, DbObjectType
 from .constants import *
 from .constructors import *
 
 from .base_impl import *
 from .thick_impl import clientversion, init_oracle_client
-
-ObjectType = BaseDbObjectType
-Object = BaseDbObject
 
 # future object used for managing backwards incompatible changes
 class Future:
@@ -28,6 +26,10 @@ class Future:
         pass
 
 __future__ = Future()
+
+# aliases for classes
+ObjectType = DbObjectType
+Object = DbObject
 
 # aliases for database types (for backwards compatibility)
 BFILE = DB_TYPE_BFILE

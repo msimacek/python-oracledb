@@ -89,7 +89,7 @@ cdef class ThickQueueImpl(BaseQueueImpl):
             _raise_from_odpi()
 
     def initialize(self, ThickConnImpl conn_impl, str name,
-                   DbObjectType payload_type):
+                   ThickDbObjectTypeImpl payload_type):
         """
         Internal method for initializing the queue.
         """
@@ -369,22 +369,22 @@ cdef class ThickMsgPropsImpl(BaseMsgPropsImpl):
         if self._handle != NULL:
             dpiMsgProps_release(self._handle)
 
-    cdef int _initialize(self, DbObjectType payload_type) except -1:
+    cdef int _initialize(self, ThickDbObjectTypeImpl payload_type) except -1:
         cdef:
             dpiObject *payload_obj_handle
+            ThickDbObjectImpl obj_impl
             const char *payload_ptr
-            DbObject payload_obj
             uint32_t payload_len
         if dpiMsgProps_getPayload(self._handle, &payload_obj_handle,
                                   &payload_ptr, &payload_len) < 0:
             _raise_from_odpi()
         if payload_obj_handle != NULL:
-            payload_obj = DbObject.__new__(DbObject)
-            payload_obj.type = payload_type
+            obj_impl = ThickDbObjectImpl.__new__(ThickDbObjectImpl)
+            obj_impl.type = payload_type
             if dpiObject_addRef(payload_obj_handle) < 0:
                 _raise_from_odpi()
-            payload_obj._handle = payload_obj_handle
-            self.payload = payload_obj
+            obj_impl._handle = payload_obj_handle
+            self.payload = DbObject._from_impl(obj_impl)
         else:
             self.payload = payload_ptr[:payload_len]
 
@@ -541,11 +541,11 @@ cdef class ThickMsgPropsImpl(BaseMsgPropsImpl):
         if dpiMsgProps_setPayloadBytes(self._handle, buf.ptr, buf.length) < 0:
             _raise_from_odpi()
 
-    def set_payload_object(self, DbObject obj):
+    def set_payload_object(self, ThickDbObjectImpl obj_impl):
         """
         Internal method for setting the payload from an object.
         """
-        if dpiMsgProps_setPayloadObject(self._handle, obj._handle) < 0:
+        if dpiMsgProps_setPayloadObject(self._handle, obj_impl._handle) < 0:
             _raise_from_odpi()
 
     def set_priority(self, int32_t value):

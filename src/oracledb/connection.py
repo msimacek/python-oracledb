@@ -10,6 +10,7 @@ from .lob import LOB
 from .subscr import Subscription
 from .aq import Queue, MessageProperties
 from .soda import SodaDatabase
+from .dbobject import DbObjectType
 from .base_impl import DB_TYPE_BLOB, DB_TYPE_CLOB, DB_TYPE_NCLOB
 
 class Connection:
@@ -370,7 +371,8 @@ class Connection:
         objects which can be bound to cursors created by this connection.
         """
         self._verify_connected()
-        return self._impl.get_type(self, name)
+        obj_type_impl = self._impl.get_type(self, name)
+        return DbObjectType._from_impl(obj_type_impl)
 
     @property
     def handle(self):
@@ -520,8 +522,13 @@ class Connection:
         specified, RAW data is enqueued and dequeued.
         """
         self._verify_connected()
+        payload_type_impl = None
+        if payloadType is not None:
+            if not isinstance(payloadType, DbObjectType):
+                raise TypeError("expecting DbObjectType")
+            payload_type_impl = payloadType._impl
         impl = self._impl.create_queue_impl()
-        impl.initialize(self._impl, name, payloadType)
+        impl.initialize(self._impl, name, payload_type_impl)
         return Queue._from_impl(self, impl)
 
     def rollback(self):

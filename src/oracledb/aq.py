@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------
 
 from . import errors
-from .base_impl import BaseDbObject
+from .dbobject import DbObject, DbObjectType
 
 class Queue:
 
@@ -13,6 +13,7 @@ class Queue:
         queue._connection = connection
         queue._deq_options = DeqOptions._from_impl(impl.deq_options_impl)
         queue._enq_options = EnqOptions._from_impl(impl.enq_options_impl)
+        queue._payload_type = None
         queue._impl = impl
         return queue
 
@@ -105,7 +106,10 @@ class Queue:
         Returns the object type for payloads that can be enqueued and dequeued.
         If using a raw queue, this returns the value None.
         """
-        return self._impl.payload_type
+        if self._payload_type is None:
+            self._payload_type = \
+                    DbObjectType._from_impl(self._impl.payload_type)
+        return self._payload_type
 
 
 class DeqOptions:
@@ -412,8 +416,8 @@ class MessageProperties:
 
     @payload.setter
     def payload(self, value):
-        if isinstance(value, BaseDbObject):
-            self._impl.set_payload_object(value)
+        if isinstance(value, DbObject):
+            self._impl.set_payload_object(value._impl)
         else:
             if isinstance(value, str):
                 value_bytes = value.encode()

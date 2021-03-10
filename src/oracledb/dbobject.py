@@ -1,0 +1,280 @@
+#------------------------------------------------------------------------------
+# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+#------------------------------------------------------------------------------
+
+class DbObject:
+
+    def __getattr__(self, name):
+        attr_impl = self._impl.type.attrs_by_name[name]
+        return self._impl.get_attr_value(attr_impl)
+
+    def __repr__(self):
+        return f"<oracledb.Object {self.type.schema}.{self.type.name} at " \
+               f"{hex(id(self))}>"
+
+    def __setattr__(self, name, value):
+        if name == "_impl" or name == "_type":
+            super().__setattr__(name, value)
+        else:
+            attr_impl = self._impl.type.attrs_by_name[name]
+            self._impl.set_attr_value(attr_impl, value)
+
+    @classmethod
+    def _from_impl(cls, impl):
+        obj = cls.__new__(cls)
+        obj._impl = impl
+        obj._type = None
+        return obj
+
+    def append(self, element):
+        """
+        Append an element to the collection object. If no elements exist in the
+        collection, this creates an element at index 0; otherwise, it creates
+        an element immediately following the highest index available in the
+        collection.
+        """
+        self._impl.append(element)
+
+    def asdict(self):
+        """
+        Return a dictionary where the collection’s indexes are the keys and the
+        elements are its values.
+        """
+        result = {}
+        ix = self._impl.get_first_index()
+        while ix is not None:
+            result[ix] = self._impl.get_element_by_index(ix)
+            ix = self._impl.get_next_index(ix)
+        return result
+
+    def aslist(self):
+        """
+        Return a list of each of the collection’s elements in index order.
+        """
+        result = []
+        ix = self._impl.get_first_index()
+        while ix is not None:
+            result.append(self._impl.get_element_by_index(ix))
+            ix = self._impl.get_next_index(ix)
+        return result
+
+    def copy(self):
+        """
+        Create a copy of the object and return it.
+        """
+        copied_impl = self._impl.copy()
+        return DbObject._from_impl(copied_impl)
+
+    def delete(self, index):
+        """
+        Delete the element at the specified index of the collection. If the
+        element does not exist or is otherwise invalid, an error is raised.
+        Note that the indices of the remaining elements in the collection are
+        not changed. In other words, the delete operation creates holes in the
+        collection.
+        """
+        self._impl.delete_by_index(index)
+
+    def exists(self, index):
+        """
+        Return True or False indicating if an element exists in the collection
+        at the specified index.
+        """
+        return self._impl.exists_by_index(index)
+
+    def extend(self, seq):
+        """
+        Append all of the elements in the sequence to the collection. This is
+        the equivalent of performing append() for each element found in the
+        sequence.
+        """
+        for value in seq:
+            self.append(value)
+
+    def first(self):
+        """
+        Return the index of the first element in the collection. If the
+        collection is empty, None is returned.
+        """
+        return self._impl.get_first_index()
+
+    def getelement(self, index):
+        """
+        Return the element at the specified index of the collection. If no
+        element exists at that index, an exception is raised.
+        """
+        return self._impl.get_element_by_index(index)
+
+    def last(self):
+        """
+        Return the index of the last element in the collection. If the
+        collection is empty, None is returned.
+        """
+        return self._impl.get_last_index()
+
+    def next(self, index):
+        """
+        Return the index of the next element in the collection following the
+        specified index. If there are no elements in the collection following
+        the specified index, None is returned.
+        """
+        return self._impl.get_next_index(index)
+
+    def prev(self, index):
+        """
+        Return the index of the element in the collection preceding the
+        specified index. If there are no elements in the collection preceding
+        the specified index, None is returned.
+        """
+        return self._impl.get_prev_index(index)
+
+    def setelement(self, index, value):
+        """
+        Set the value in the collection at the specified index to the given
+        value.
+        """
+        self._impl.set_element_by_index(index, value)
+
+    def size(self):
+        """
+        Return the number of elements in the collection.
+        """
+        return self._impl.get_size()
+
+    def trim(self, num):
+        """
+        Remove the specified number of elements from the end of the collection.
+        """
+        self._impl.trim(num)
+
+    @property
+    def type(self):
+        """
+        Returns an ObjectType corresponding to the type of the object.
+        """
+        if self._type is None:
+            self._type = DbObjectType._from_impl(self._impl.type)
+        return self._type
+
+
+class DbObjectAttr:
+
+    def __repr__(self):
+        return f"<oracledb.DbObjectAttr {self.name}>"
+
+    @classmethod
+    def _from_impl(cls, impl):
+        attr = cls.__new__(cls)
+        attr._impl = impl
+        attr._type = None
+        return attr
+
+    @property
+    def name(self):
+        """
+        This read-only attribute returns the name of the attribute.
+        """
+        return self._impl.name
+
+    @property
+    def type(self):
+        """
+        This read-only attribute returns the type of the attribute. This will
+        be an Oracle Object Type if the variable binds Oracle objects;
+        otherwise, it will be one of the database type constants.
+        """
+        if self._type is None:
+            if self._impl.objtype is not None:
+                self._type = DbObjectType._from_impl(self._impl.objtype)
+            else:
+                self._type = self._impl.dbtype
+        return self._type
+
+
+class DbObjectType:
+
+    def __call__(self, value=None):
+        return self.newobject(value)
+
+    def __eq__(self, other):
+        if isinstance(other, DbObjectType):
+            return other._impl._conn is self._impl._conn \
+                    and other.schema == self.schema \
+                    and other.name == self.name
+        return NotImplemented
+
+    def __repr__(self):
+        return f"<oracledb.DbObjectType {self.schema}.{self.name}>"
+
+    @classmethod
+    def _from_impl(cls, impl):
+        typ = cls.__new__(cls)
+        typ._impl = impl
+        typ._attributes = None
+        typ._element_type = None
+        return typ
+
+
+    @property
+    def attributes(self):
+        """
+        This read-only attribute returns a list of the attributes that make up
+        the object type.
+        """
+        if self._attributes is None:
+            self._attributes = [DbObjectAttr._from_impl(i) \
+                                for i in self._impl.attrs]
+        return self._attributes
+
+    @property
+    def iscollection(self):
+        """
+        This read-only attribute returns a boolean indicating if the object
+        type refers to a collection or not.
+        """
+        return self._impl.is_collection
+
+    @property
+    def name(self):
+        """
+        This read-only attribute returns the name of the type.
+        """
+        return self._impl.name
+
+    @property
+    def element_type(self):
+        """
+        This read-only attribute returns the type of elements found in
+        collections of this type, if iscollection is True; otherwise, it
+        returns None. If the collection contains objects, this will be another
+        object type; otherwise, it will be one of the database type constants.
+        """
+        if self._element_type is None:
+            if self._impl.element_objtype is not None:
+                typ_impl = self._impl.element_objtype
+                self._element_type = DbObjectType._from_impl(typ_impl)
+            else:
+                self._element_type = self._impl.element_dbtype
+        return self._element_type
+
+    def newobject(self, value=None):
+        """
+        Return a new Oracle object of the given type. This object can then be
+        modified by setting its attributes and then bound to a cursor for
+        interaction with Oracle. If the object type refers to a collection, a
+        sequence may be passed and the collection will be initialized with the
+        items in that sequence.
+        """
+        obj_impl = self._impl.create_new_object()
+        obj = DbObject._from_impl(obj_impl)
+        if value is not None:
+            obj.extend(value)
+        return obj
+
+    @property
+    def schema(self):
+        """
+        This read-only attribute returns the name of the schema that owns the
+        type.
+        """
+        return self._impl.schema

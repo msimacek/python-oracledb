@@ -118,7 +118,7 @@ cdef class BaseVar:
         object _conn
         list _values
         DbType _dbtype
-        BaseDbObjectType _objtype
+        BaseDbObjectTypeImpl _objtype
         int _preferred_num_type
         bint _is_value_set
 
@@ -140,48 +140,28 @@ cdef class BaseLobImpl:
         readonly DbType dbtype
 
 
-cdef class BaseDbObjectType:
+cdef class BaseDbObjectTypeImpl:
     cdef:
         readonly str schema
         readonly str name
-        readonly list attributes
-        readonly bint iscollection
+        readonly list attrs
+        readonly bint is_collection
+        readonly dict attrs_by_name
+        readonly DbType element_dbtype
+        readonly BaseDbObjectTypeImpl element_objtype
         readonly object _conn
-        readonly dict _attributesByName
-        DbType _element_dbtype
-        BaseDbObjectType _element_objtype
-
-    cdef BaseDbObject _new_object(self)
 
 
-cdef class BaseDbObjectAttr:
+cdef class BaseDbObjectAttrImpl:
     cdef:
         readonly str name
-        DbType _dbtype
-        BaseDbObjectType _objtype
+        readonly DbType dbtype
+        readonly BaseDbObjectTypeImpl objtype
 
 
-cdef class BaseDbObject:
+cdef class BaseDbObjectImpl:
     cdef:
-        readonly BaseDbObjectType type
-
-    cdef int _append(self, object value) except -1
-    cdef object _copy(self)
-    cdef int _delete_by_index(self, int32_t index) except -1
-    cdef int _exists_by_index(self, int32_t index, bint* exists) except -1
-    cdef object _get_attr_value(self, BaseDbObjectAttr attr)
-    cdef object _get_element_by_index(self, int32_t index)
-    cdef int _get_first_index(self, int32_t* index, bint* exists) except -1
-    cdef int _get_last_index(self, int32_t* index, bint* exists) except -1
-    cdef int _get_next_index(self, int32_t index, int32_t* next_index,
-                             bint* exists) except -1
-    cdef int _get_prev_index(self, int32_t index, int32_t* prev_index,
-                             bint* exists) except -1
-    cdef int _get_size(self, int32_t *size) except -1
-    cdef int _set_attr_value(self, BaseDbObjectAttr attr,
-                             object value) except -1
-    cdef int _set_element_by_index(self, int32_t index, object value) except -1
-    cdef int _trim(self, int32_t num_to_trim) except -1
+        readonly BaseDbObjectTypeImpl type
 
 
 cdef class BaseSodaDbImpl:
@@ -205,7 +185,7 @@ cdef class BaseSodaDocCursorImpl:
 cdef class BaseQueueImpl:
     cdef:
         readonly str name
-        readonly BaseDbObjectType payload_type
+        readonly BaseDbObjectTypeImpl payload_type
         readonly BaseDeqOptionsImpl deq_options_impl
         readonly BaseEnqOptionsImpl enq_options_impl
 

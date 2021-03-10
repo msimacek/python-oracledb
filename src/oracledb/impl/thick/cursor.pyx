@@ -108,8 +108,9 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         var.name = name
         var.nulls_allowed = query_info.nullOk
         if type_info.objectType != NULL:
-            var._objtype = DbObjectType._new_type(cursor.connection,
-                                                  type_info.objectType)
+            var._objtype = \
+                    ThickDbObjectTypeImpl._from_handle(cursor.connection,
+                                                       type_info.objectType)
         if dbtype.num == DPI_ORACLE_TYPE_NUMBER:
             if var.scale == 0 or (var.scale == -127 and var.precision == 0):
                 var._preferred_num_type = NUM_TYPE_INT

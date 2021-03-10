@@ -85,7 +85,7 @@ cdef class DbType:
             return DB_TYPE_DATE
         elif isinstance(value, datetime.timedelta):
             return DB_TYPE_INTERVAL_DS
-        elif isinstance(value, BaseDbObject):
+        elif isinstance(value, DbObject):
             return DB_TYPE_OBJECT
         elif isinstance(value, LOB):
             return value.type

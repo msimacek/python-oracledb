@@ -78,13 +78,13 @@ cdef class Var(BaseVar):
     cdef int _create_handle(self) except -1:
         cdef:
             dpiObjectType *obj_type_handle = NULL
-            DbObjectType obj_type
+            ThickDbObjectTypeImpl obj_type_impl
         if self._handle != NULL:
             dpiVar_release(self._handle)
             self._handle = NULL
         if self._objtype is not None:
-            obj_type = <DbObjectType> self._objtype
-            obj_type_handle = obj_type._handle
+            obj_type_impl = <ThickDbObjectTypeImpl> self._objtype
+            obj_type_handle = obj_type_impl._handle
         self._native_type_num = _get_native_type_num(self._dbtype)
         if dpiConn_newVar(self._conn_impl._handle, self._dbtype.num,
                           self._native_type_num, self.num_elements, self.size,

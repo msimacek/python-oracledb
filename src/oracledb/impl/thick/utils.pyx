@@ -64,16 +64,16 @@ cdef object _convert_from_json_node(dpiJsonNode *node):
     errors._raise_from_string(exceptions.NotSupportedError, message)
 
 cdef int _convert_from_python(object value, DbType dbtype,
-                              BaseDbObjectType objtype, dpiDataBuffer *dbvalue,
-                              StringBuffer buf, Var var=None,
-                              uint32_t pos=0) except -1:
+                              ThickDbObjectTypeImpl obj_type_impl,
+                              dpiDataBuffer *dbvalue, StringBuffer buf,
+                              Var var=None, uint32_t pos=0) except -1:
     cdef:
         uint32_t oracle_type = dbtype.num
+        ThickDbObjectImpl obj_impl
         dpiTimestamp *timestamp
         ThickLobImpl lob_impl
         int seconds, status
         JsonBuffer json_buf
-        DbObject obj
     if oracle_type == DPI_ORACLE_TYPE_NUMBER:
         if isinstance(value, bool):
             if value:
@@ -153,12 +153,12 @@ cdef int _convert_from_python(object value, DbType dbtype,
     elif oracle_type == DPI_ORACLE_TYPE_OBJECT:
         if not isinstance(value, DbObject):
             raise TypeError("expecting DbObject")
-        obj = <DbObject> value
+        obj_impl = <ThickDbObjectImpl> value._impl
         if var is not None:
-            if dpiVar_setFromObject(var._handle, pos, obj._handle) < 0:
+            if dpiVar_setFromObject(var._handle, pos, obj_impl._handle) < 0:
                 _raise_from_odpi()
         else:
-            dbvalue.asObject = obj._handle
+            dbvalue.asObject = obj_impl._handle
     elif oracle_type == DPI_ORACLE_TYPE_CLOB \
             or oracle_type == DPI_ORACLE_TYPE_BLOB \
             or oracle_type == DPI_ORACLE_TYPE_NCLOB:
@@ -184,10 +184,12 @@ cdef int _convert_from_python(object value, DbType dbtype,
 
 
 cdef object _convert_to_python(object connection, DbType dbtype,
-                               DbObjectType objtype, dpiDataBuffer *dbvalue,
+                               ThickDbObjectTypeImpl obj_type_impl,
+                               dpiDataBuffer *dbvalue,
                                int preferred_num_type=NUM_TYPE_FLOAT):
     cdef:
         uint32_t oracle_type = dbtype.num
+        ThickDbObjectImpl obj_impl
         dpiTimestamp *as_timestamp
         dpiJsonNode *json_node
         ThickLobImpl lob_impl
@@ -246,7 +248,12 @@ cdef object _convert_to_python(object connection, DbType dbtype,
                                         dbvalue.asLOB)
         return LOB._from_impl(lob_impl)
     elif oracle_type == DPI_ORACLE_TYPE_OBJECT:
-        return DbObject._new_object(objtype, dbvalue.asObject)
+        obj_impl = ThickDbObjectImpl.__new__(ThickDbObjectImpl)
+        obj_impl.type = obj_type_impl
+        if dpiObject_addRef(dbvalue.asObject) < 0:
+            _raise_from_odpi()
+        obj_impl._handle = dbvalue.asObject
+        return DbObject._from_impl(obj_impl)
     elif oracle_type == DPI_ORACLE_TYPE_INTERVAL_DS:
         seconds = dbvalue.asIntervalDS.hours * 60 * 60 + \
                 dbvalue.asIntervalDS.minutes * 60 + \

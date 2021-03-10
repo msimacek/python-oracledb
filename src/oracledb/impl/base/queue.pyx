@@ -29,7 +29,7 @@ cdef class BaseQueueImpl:
         raise NotImplementedError()
 
     def initialize(self, BaseConnImpl conn_impl, str name,
-                   BaseDbObject payload_type):
+                   BaseDbObjectImpl payload_type):
         """
         Internal method for initializing the queue.
         """
@@ -284,7 +284,7 @@ cdef class BaseMsgPropsImpl:
         """
         raise NotImplementedError()
 
-    def set_payload_object(self, BaseDbObject value):
+    def set_payload_object(self, BaseDbObjectImpl value):
         """
         Internal method for setting the payload from an object.
         """

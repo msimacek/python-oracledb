@@ -398,7 +398,6 @@ cdef class ThickConnImpl(BaseConnImpl):
 
     def get_type(self, object conn, str name):
         cdef:
-            BaseDbObjectType objtype
             dpiObjectType *handle
             const char *name_ptr
             uint32_t name_len
@@ -412,9 +411,10 @@ cdef class ThickConnImpl(BaseConnImpl):
                                            &handle)
         if status < 0:
             _raise_from_odpi()
-        objtype = DbObjectType._new_type(conn, handle)
-        dpiObjectType_release(handle)
-        return objtype
+        try:
+            return ThickDbObjectTypeImpl._from_handle(conn, handle)
+        finally:
+            dpiObjectType_release(handle)
 
     def get_version(self):
         cdef:

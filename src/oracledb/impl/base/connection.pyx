@@ -122,7 +122,7 @@ cdef class BaseConnImpl:
         """
         raise NotImplementedError()
 
-    def get_type(self, conn, name):
+    def get_type(self, object conn, str name):
         """
         Internal method for returning an object type given its name.
         """

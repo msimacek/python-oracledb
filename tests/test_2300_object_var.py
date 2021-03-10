@@ -436,9 +436,9 @@ class TestCase(test_env.BaseTestCase):
         obj_type = self.connection.gettype("UDT_OBJECT")
         user = test_env.get_main_user()
         self.assertEqual(str(obj_type),
-                         "<oracledb.ObjectType %s.UDT_OBJECT>" % user.upper())
+                         "<oracledb.DbObjectType %s.UDT_OBJECT>" % user.upper())
         self.assertEqual(str(obj_type.attributes[0]),
-                         "<oracledb.ObjectAttribute NUMBERVALUE>")
+                         "<oracledb.DbObjectAttr NUMBERVALUE>")
 
     def test_2315_trim_collection_list(self):
         "2315 - test Trim number of elements from collection"

@@ -84,7 +84,7 @@ cdef class BaseVar:
         elif isinstance(typ, ApiType):
             apitype = typ
             self._dbtype = apitype.dbtypes[0]
-        elif isinstance(typ, BaseDbObjectType):
+        elif isinstance(typ, DbObjectType):
             self._dbtype = DB_TYPE_OBJECT
         elif not isinstance(typ, type):
             errors._raise_from_string(TypeError, "expecting type")
@@ -167,9 +167,9 @@ cdef class BaseVar:
                 msg = "Rowid variables cannot be set directly"
                 errors._raise_from_string(exceptions.NotSupportedError, msg)
             elif dbtype is DB_TYPE_OBJECT:
-                if not isinstance(value, BaseDbObject):
+                if not isinstance(value, DbObject):
                     raise TypeError("expecting DbObject")
-                if value.type != self._objtype:
+                if value._impl.type != self._objtype:
                     msg = f"found object of type {value.type.schema}." \
                           f"{value.type.name} when expecting object of type " \
                           f"{self._objtype.schema}.{self._objtype.name}"

@@ -123,12 +123,12 @@ cdef class BaseCursorImpl:
         specified value.
         """
         cdef:
-            BaseDbObjectType objtype = None, temp_objtype
+            BaseDbObjectTypeImpl objtype = None, temp_objtype
             DbType dbtype = None, temp_dbtype
             uint32_t size = 0, temp_size
             object type_handler, result
             bint is_array = False
-            BaseDbObject obj
+            BaseDbObjectImpl obj
             BaseVar var
 
         # determine if an input type handler should be used; an input type
@@ -158,8 +158,8 @@ cdef class BaseCursorImpl:
                 if temp_dbtype is None:
                     continue
                 if temp_dbtype is DB_TYPE_OBJECT:
-                    obj = <BaseDbObject> value
-                    temp_objtype = obj.type
+                    obj = <BaseDbObjectImpl> value
+                    temp_objtype = obj._impl.type
                 else:
                     temp_objtype = None
                 if dbtype is None:
@@ -176,8 +176,8 @@ cdef class BaseCursorImpl:
         else:
             dbtype = DbType._from_value(value, &size, self._is_plsql())
             if dbtype is DB_TYPE_OBJECT:
-                obj = <BaseDbObject> value
-                objtype = obj.type
+                obj = <BaseDbObjectImpl> value
+                objtype = obj._impl.type
         if dbtype is None:
             dbtype = DB_TYPE_VARCHAR
             size = 1
@@ -280,8 +280,8 @@ cdef class BaseCursorImpl:
         var = self._create_var(connection)
         var._set_dbtype_from_type(typ)
         var.is_array = True
-        if isinstance(typ, BaseDbObjectType):
-            var._objtype = typ
+        if isinstance(typ, DbObjectType):
+            var._objtype = typ._impl
         if var._dbtype.default_size > 0:
             var.size = size or var._dbtype.default_size
         if isinstance(value, list):
@@ -436,13 +436,14 @@ cdef class BaseCursorImpl:
             outconverter=None, typename=None, encoding_errors=None):
         cdef BaseVar var
         var = self._create_var(cursor.connection)
-        if isinstance(typ, BaseDbObjectType):
-            var._objtype = typ
+        if isinstance(typ, DbObjectType):
+            var._objtype = typ._impl
             var._dbtype = DB_TYPE_OBJECT
         else:
             var._set_dbtype_from_type(typ)
         if typename:
-            var._objtype = cursor.connection.gettype(typename)
+            typ = cursor.connection.gettype(typename)
+            var._objtype = typ._impl
         if var._dbtype.default_size > 0:
             var.size = size or var._dbtype.default_size
         var.num_elements = arraysize
