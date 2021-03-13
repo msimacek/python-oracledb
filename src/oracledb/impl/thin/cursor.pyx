@@ -19,8 +19,8 @@ cdef class ThinCursorImpl(BaseCursorImpl):
         if self._statement is not None:
             self._conn_impl._statement_cache.put_statement(self._statement)
 
-    cdef BaseVar _create_var(self, object connection):
-        return Var.__new__(Var, connection)
+    cdef BaseVarImpl _create_var_impl(self, object connection):
+        return ThinVarImpl.__new__(ThinVarImpl, connection)
 
     cdef int _fetch_rows(self, object cursor) except -1:
         self._conn_impl._protocol._fetch(cursor)

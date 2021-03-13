@@ -38,10 +38,11 @@ from . import constants, errors, exceptions
 
 from .base_impl cimport get_exception_class
 from .base_impl cimport NUM_TYPE_FLOAT, NUM_TYPE_INT, NUM_TYPE_DECIMAL
-from .base_impl cimport BaseConnImpl, BaseCursorImpl, BaseVar, DbType
+from .base_impl cimport BaseConnImpl, BaseCursorImpl, BaseVarImpl, DbType
 from .base_impl cimport BaseLobImpl, BasePoolImpl
 from .cursor import Cursor
 from .lob import LOB
+from .var import Var
 
 include "impl/thin/constants.pxi"
 include "impl/thin/utils.pyx"

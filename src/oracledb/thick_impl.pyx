@@ -21,10 +21,11 @@ cydatetime.import_datetime()
 from . import constants, errors, exceptions
 from .subscr import Message, MessageQuery, MessageRow, MessageTable
 from .lob import LOB
-from .dbobject import DbObject
+from .dbobject import DbObject, DbObjectType
+from .var import Var
 
 from .base_impl cimport get_exception_class
-from .base_impl cimport BaseConnImpl, BaseCursorImpl, BaseVar, DbType
+from .base_impl cimport BaseConnImpl, BaseCursorImpl, BaseVarImpl, DbType
 from .base_impl cimport BaseDbObjectTypeImpl, BaseDbObjectAttrImpl
 from .base_impl cimport BaseDbObjectImpl, BaseLobImpl, BasePoolImpl
 from .base_impl cimport BaseSodaDbImpl, BaseSodaCollImpl, BaseSodaDocImpl

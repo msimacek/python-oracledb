@@ -39,9 +39,6 @@ cdef class DbType:
     @staticmethod
     cdef DbType _from_ora_type_and_csfrm(uint8_t ora_type_num, uint8_t csfrm)
 
-    @staticmethod
-    cdef DbType _from_value(object value, uint32_t *size, bint is_plsql=*)
-
 
 cdef class BaseConnImpl:
     cdef:
@@ -87,22 +84,29 @@ cdef class BaseCursorImpl:
                                uint32_t pos=*) except -1
     cdef int _close(self) except -1
     cdef object _create_row(self)
-    cdef BaseVar _create_var(self, object connection)
-    cdef BaseVar _create_var_by_type(self, object connection, object value,
-                                     uint32_t num_elements=?)
-    cdef BaseVar _create_var_by_value(self, object cursor, object value,
-                                      uint32_t num_elements)
+    cdef BaseVarImpl _create_var_impl(self, object connection)
+    cdef object _create_var_by_type(self, object connection, object value,
+                                    uint32_t num_elements=?)
+    cdef object _create_var_by_value(self, object cursor, object value,
+                                     uint32_t num_elements)
     cdef int _fetch_rows(self, object cursor) except -1
-    cdef BaseVar _get_bind_var(self, object cursor, uint32_t num_elements,
-                               uint32_t pos, object value, BaseVar orig_var)
+    cdef object _get_bind_var(self, object cursor, uint32_t num_elements,
+                              uint32_t pos, object value, object orig_var)
+    cdef object _get_type_and_size(self, object value, uint32_t *size, bint
+                                   is_plsql=*)
     cdef bint _is_plsql(self)
     cdef int _perform_binds(self, uint32_t num_execs=*) except -1
     cdef int _parse(self, object connection) except -1
     cdef int _prepare(self, str statement, str tag=*) except -1
     cdef int _scroll(self, int32_t offset, uint32_t mode) except -1
+    cpdef create_var(self, object conn, object typ, uint32_t size=*,
+                     uint32_t num_elements=*, object inconverter=*,
+                     object outconverter=*, str encoding_errors=*,
+                     int16_t precision=*, int16_t scale=*, str name=*,
+                     bint nulls_allowed=*, bint is_array=*)
 
 
-cdef class BaseVar:
+cdef class BaseVarImpl:
     cdef:
         readonly str name
         readonly int16_t precision
@@ -114,25 +118,20 @@ cdef class BaseVar:
         readonly uint32_t buffer_size
         readonly bint is_array
         readonly bint nulls_allowed
-        uint32_t _num_elements_in_array
+        public uint32_t num_elements_in_array
+        readonly DbType dbtype
+        readonly list values
         object _conn
-        list _values
-        DbType _dbtype
         BaseDbObjectTypeImpl _objtype
         int _preferred_num_type
         bint _is_value_set
 
     cdef int _bind(self, BaseCursorImpl cursor, uint32_t num_execs, str name=*,
                    uint32_t pos=*) except -1
-    cdef int _finalize_init(self) except -1
-    cdef uint32_t _get_actual_elements(self)
-    cdef list _get_array_value(self, uint32_t num_elements)
-    cdef object _get_single_value(self, uint32_t pos)
     cdef int _resize(self, uint32_t new_size) except -1
-    cdef int _set_array_value(self, list value) except -1
-    cdef int _set_dbtype_from_type(self, object typ) except -1
+    cdef int _set_type(self, object typ) except -1
     cdef int _set_single_value(self, uint32_t pos, object value) except -1
-    cdef int _set_value(self, uint32_t pos, object value) except -1
+    cpdef set_value(self, uint32_t pos, object value)
 
 
 cdef class BaseLobImpl:

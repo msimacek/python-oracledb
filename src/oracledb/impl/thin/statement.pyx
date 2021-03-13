@@ -16,7 +16,7 @@ cdef class BindInfo:
         bint is_array
         int16_t scale
         uint8_t csfrm
-        Var _bind_var
+        object _bind_var
         bint _is_dup
 
     def __cinit__(self, str name):
@@ -131,30 +131,31 @@ cdef class Statement:
             if bind_info._bind_name in return_bind_names:
                 bind_info._is_return_bind = True
 
-    cdef int _set_var(self, BindInfo bind_info, Var var) except -1:
+    cdef int _set_var(self, BindInfo bind_info, object var) except -1:
         """
         Set the variable on the bind information and copy across metadata that
         will be used for binding. If the bind metadata has changed, mark the
         statement as requiring a full execute. In addition, binding a REF
         cursor also requires a full execute.
         """
-        if var._dbtype._ora_type_num == TNS_DATA_TYPE_CURSOR:
+        cdef ThinVarImpl var_impl = <ThinVarImpl> var._impl
+        if var_impl.dbtype._ora_type_num == TNS_DATA_TYPE_CURSOR:
             self._requires_full_execute = True
-        if var._dbtype._ora_type_num != bind_info.ora_type_num \
-                or var.size > bind_info.size \
-                or var.buffer_size > bind_info.buffer_size \
-                or var.precision != bind_info.precision \
-                or var.scale != bind_info.scale \
-                or var.is_array != bind_info.is_array \
-                or var.num_elements > bind_info.num_elements \
-                or var._dbtype._csfrm != bind_info.csfrm:
-            bind_info.ora_type_num = var._dbtype._ora_type_num
-            bind_info.csfrm = var._dbtype._csfrm
-            bind_info.is_array = var.is_array
-            bind_info.num_elements = var.num_elements
-            bind_info.size = var.size
-            bind_info.buffer_size = var.buffer_size
-            bind_info.precision = var.precision
-            bind_info.scale = var.scale
+        if var_impl.dbtype._ora_type_num != bind_info.ora_type_num \
+                or var_impl.size > bind_info.size \
+                or var_impl.buffer_size > bind_info.buffer_size \
+                or var_impl.precision != bind_info.precision \
+                or var_impl.scale != bind_info.scale \
+                or var_impl.is_array != bind_info.is_array \
+                or var_impl.num_elements > bind_info.num_elements \
+                or var_impl.dbtype._csfrm != bind_info.csfrm:
+            bind_info.ora_type_num = var_impl.dbtype._ora_type_num
+            bind_info.csfrm = var_impl.dbtype._csfrm
+            bind_info.is_array = var_impl.is_array
+            bind_info.num_elements = var_impl.num_elements
+            bind_info.size = var_impl.size
+            bind_info.buffer_size = var_impl.buffer_size
+            bind_info.precision = var_impl.precision
+            bind_info.scale = var_impl.scale
             self._requires_full_execute = True
         bind_info._bind_var = var

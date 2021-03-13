@@ -65,37 +65,6 @@ cdef class DbType:
         msg = f"Oracle type {ora_type_num} not supported"
         errors._raise_from_string(exceptions.NotSupportedError, msg)
 
-    @staticmethod
-    cdef DbType _from_value(object value, uint32_t *size, bint is_plsql=True):
-        if value is None:
-            return None
-        elif isinstance(value, bool):
-            if is_plsql:
-                return DB_TYPE_BOOLEAN
-            return DB_TYPE_BINARY_INTEGER
-        elif isinstance(value, str):
-            size[0] = <uint32_t> len(value)
-            return DB_TYPE_VARCHAR
-        elif isinstance(value, bytes):
-            size[0] = <uint32_t> len(value)
-            return DB_TYPE_RAW
-        elif isinstance(value, (int, float, decimal.Decimal)):
-            return DB_TYPE_NUMBER
-        elif isinstance(value, (datetime.date, datetime.datetime)):
-            return DB_TYPE_DATE
-        elif isinstance(value, datetime.timedelta):
-            return DB_TYPE_INTERVAL_DS
-        elif isinstance(value, DbObject):
-            return DB_TYPE_OBJECT
-        elif isinstance(value, LOB):
-            return value.type
-        elif isinstance(value, Cursor):
-            return DB_TYPE_CURSOR
-        else:
-            type_name = type(value).__name__
-            message = f"Python value of type {type_name} not supported"
-            errors._raise_from_string(exceptions.NotSupportedError, message)
-
 
 # database types
 DB_TYPE_BFILE = DbType(2020, "DB_TYPE_BFILE", 114)
@@ -117,10 +86,8 @@ DB_TYPE_INTERVAL_DS = DbType(2015, "DB_TYPE_INTERVAL_DS", 183,
                              buffer_size_factor=11)
 DB_TYPE_INTERVAL_YM = DbType(2016, "DB_TYPE_INTERVAL_YM", 189)
 DB_TYPE_JSON = DbType(2027, "DB_TYPE_JSON", 119)
-DB_TYPE_LONG = DbType(2024, "DB_TYPE_LONG", 8, 128 * 1024, csfrm=1,
-                      buffer_size_factor=4)
-DB_TYPE_LONG_RAW = DbType(2025, "DB_TYPE_LONG_RAW", 24, 128 * 1024,
-                          buffer_size_factor=1)
+DB_TYPE_LONG = DbType(2024, "DB_TYPE_LONG", 8, csfrm=1)
+DB_TYPE_LONG_RAW = DbType(2025, "DB_TYPE_LONG_RAW", 24)
 DB_TYPE_NCHAR = DbType(2004, "DB_TYPE_NCHAR", 96, 2000, csfrm=2,
                        buffer_size_factor=4)
 DB_TYPE_NCLOB = DbType(2018, "DB_TYPE_NCLOB", 112, csfrm=2,

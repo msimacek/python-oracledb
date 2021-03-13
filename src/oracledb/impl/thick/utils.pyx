@@ -66,7 +66,8 @@ cdef object _convert_from_json_node(dpiJsonNode *node):
 cdef int _convert_from_python(object value, DbType dbtype,
                               ThickDbObjectTypeImpl obj_type_impl,
                               dpiDataBuffer *dbvalue, StringBuffer buf,
-                              Var var=None, uint32_t pos=0) except -1:
+                              ThickVarImpl var_impl=None,
+                              uint32_t pos=0) except -1:
     cdef:
         uint32_t oracle_type = dbtype.num
         ThickDbObjectImpl obj_impl
@@ -154,8 +155,9 @@ cdef int _convert_from_python(object value, DbType dbtype,
         if not isinstance(value, DbObject):
             raise TypeError("expecting DbObject")
         obj_impl = <ThickDbObjectImpl> value._impl
-        if var is not None:
-            if dpiVar_setFromObject(var._handle, pos, obj_impl._handle) < 0:
+        if var_impl is not None:
+            if dpiVar_setFromObject(var_impl._handle, pos,
+                                    obj_impl._handle) < 0:
                 _raise_from_odpi()
         else:
             dbvalue.asObject = obj_impl._handle
@@ -164,8 +166,9 @@ cdef int _convert_from_python(object value, DbType dbtype,
             or oracle_type == DPI_ORACLE_TYPE_NCLOB:
         if isinstance(value, LOB):
             lob_impl = value._impl
-            if var is not None:
-                if dpiVar_setFromLob(var._handle, pos, lob_impl._handle) < 0:
+            if var_impl is not None:
+                if dpiVar_setFromLob(var_impl._handle, pos,
+                                     lob_impl._handle) < 0:
                     _raise_from_odpi()
             else:
                 dbvalue.asLOB = lob_impl._handle

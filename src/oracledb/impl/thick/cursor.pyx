@@ -33,11 +33,11 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             dpiStmt_release(self._handle)
             self._handle = NULL
 
-    cdef BaseVar _create_var(self, object connection):
+    cdef BaseVarImpl _create_var_impl(self, object connection):
         """
         Internal method for creating a variable.
         """
-        return Var.__new__(Var, connection)
+        return ThickVarImpl.__new__(ThickVarImpl, connection)
 
     cdef int _fetch_rows(self, object cursor) except -1:
         """
@@ -46,8 +46,9 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         cdef:
             uint32_t temp_buffer_row_index, num_rows_in_buffer
             bint more_rows_to_fetch
+            ThickVarImpl var_impl
+            object var
             int status
-            Var var
         with nogil:
             status = dpiStmt_fetchRows(self._handle,
                                        self._fetch_array_size,
@@ -57,13 +58,14 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         if status < 0:
             _raise_from_odpi()
         for var in self.fetch_vars:
-            var._transform_to_python(num_rows_in_buffer, in_fetch=True,
-                                     offset=temp_buffer_row_index)
+            var_impl = <ThickVarImpl> var._impl
+            var_impl._transform_to_python(num_rows_in_buffer, in_fetch=True,
+                                          offset=temp_buffer_row_index)
         self._buffer_index = 0
         self._buffer_rowcount = num_rows_in_buffer
         self._more_rows_to_fetch = more_rows_to_fetch
 
-    cdef Var _get_define_var(self, object cursor, uint32_t pos):
+    cdef object _get_define_var(self, object cursor, uint32_t pos):
         """
         Internal method that returns the variable that will be used for
         fetching data in the specified position. If an output type handler is
@@ -71,14 +73,17 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         used to generate a variable and return it.
         """
         cdef:
-            object type_handler, result
+            object type_handler, result, typ
+            ThickDbObjectTypeImpl typ_impl
+            ThickCursorImpl cursor_impl
             dpiDataTypeInfo *type_info
             dpiQueryInfo query_info
+            BaseVarImpl var_impl
             DbType dbtype
             uint32_t size
+            int16_t scale
             int status
             str name
-            Var var
         if dpiStmt_getQueryInfo(self._handle, pos, &query_info) < 0:
             _raise_from_odpi()
         dbtype = DbType._from_num(query_info.typeInfo.oracleTypeNum)
@@ -89,33 +94,31 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         type_handler = cursor.outputtypehandler \
                 or cursor.connection.outputtypehandler
         name = query_info.name[:query_info.nameLength].decode()
-        if type_handler:
+        if type_handler is not None:
             result = type_handler(cursor, name, dbtype, size,
                                   query_info.typeInfo.precision,
                                   query_info.typeInfo.scale)
-            if isinstance(result, Var):
-                return result
-            elif result is not None:
+            if result is not None:
+                if isinstance(result, Var):
+                    return result
                 message = "expecting variable from output type handler"
                 errors._raise_from_error(TypeError, message)
         type_info = &query_info.typeInfo
-        var = Var.__new__(Var, cursor.connection)
-        var._dbtype = dbtype
-        var.size = size
-        var.num_elements = self._fetch_array_size
-        var.precision = type_info.precision
-        var.scale = type_info.scale + type_info.fsPrecision
-        var.name = name
-        var.nulls_allowed = query_info.nullOk
+        cursor_impl = <ThickCursorImpl> cursor._impl
         if type_info.objectType != NULL:
-            var._objtype = \
-                    ThickDbObjectTypeImpl._from_handle(cursor.connection,
-                                                       type_info.objectType)
-        if dbtype.num == DPI_ORACLE_TYPE_NUMBER:
-            if var.scale == 0 or (var.scale == -127 and var.precision == 0):
-                var._preferred_num_type = NUM_TYPE_INT
-        var._finalize_init()
-        return var
+            typ_impl = ThickDbObjectTypeImpl._from_handle(cursor.connection,
+                                                          type_info.objectType)
+            typ = DbObjectType._from_impl(typ_impl)
+        else:
+            typ = dbtype
+        scale = type_info.scale + type_info.fsPrecision
+        return cursor_impl.create_var(cursor.connection, typ, size=size,
+                                      num_elements=self._fetch_array_size,
+                                      precision=type_info.precision,
+                                      scale=scale, name=name,
+                                      nulls_allowed=query_info.nullOk,
+                                      inconverter=None, outconverter=None,
+                                      encoding_errors=None)
 
     cdef bint _is_plsql(self):
         return <bint> self._stmt_info.isPLSQL
@@ -142,8 +145,9 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         that the statement executed was in fact a query.
         """
         cdef:
+            ThickVarImpl var_impl
             uint32_t i, size
-            Var var
+            object var
 
         # initialize fetching variables; these are used to reduce the number of
         # times that the GIL is released/acquired -- as there is a significant
@@ -162,8 +166,9 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         self.fetch_vars = cpython.PyList_New(num_query_cols)
         for i in range(num_query_cols):
             var = self._get_define_var(cursor, i + 1)
-            var._create_handle()
-            if dpiStmt_define(self._handle, i + 1, var._handle) < 0:
+            var_impl = <ThickVarImpl> var._impl
+            var_impl._create_handle()
+            if dpiStmt_define(self._handle, i + 1, var_impl._handle) < 0:
                 _raise_from_odpi()
             cpython.Py_INCREF(var)
             cpython.PyList_SET_ITEM(self.fetch_vars, i, var)
@@ -212,8 +217,9 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         cdef:
             uint32_t temp_buffer_row_index = 0, num_rows_in_buffer = 0
             bint more_rows_to_fetch = False
+            ThickVarImpl var_impl
             int status
-            Var var
+            object var
         with nogil:
             status = dpiStmt_scroll(self._handle, mode, offset,
                                     0 - self._buffer_rowcount)
@@ -228,21 +234,26 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         if status < 0:
             _raise_from_odpi()
         for var in self.fetch_vars:
-            var._transform_to_python(num_rows_in_buffer, in_fetch=True,
-                                     offset=temp_buffer_row_index)
+            var_impl = <ThickVarImpl> var._impl
+            var_impl._transform_to_python(num_rows_in_buffer, in_fetch=True,
+                                          offset=temp_buffer_row_index)
         self._buffer_index = 0
         self._buffer_rowcount = num_rows_in_buffer
         self._more_rows_to_fetch = more_rows_to_fetch
         self.rowcount -= num_rows_in_buffer
 
     cdef int _transform_binds(self, uint32_t num_execs=1) except -1:
-        cdef Var var
+        cdef:
+            ThickVarImpl var_impl
+            object var
         if isinstance(self.bind_vars, dict):
             for var in self.bind_vars.values():
-                var._transform_to_python(num_execs)
+                var_impl = <ThickVarImpl> var._impl
+                var_impl._transform_to_python(num_execs)
         elif isinstance(self.bind_vars, list):
             for var in self.bind_vars:
-                var._transform_to_python(num_execs)
+                var_impl = <ThickVarImpl> var._impl
+                var_impl._transform_to_python(num_execs)
 
     def execute(self, cursor):
         """

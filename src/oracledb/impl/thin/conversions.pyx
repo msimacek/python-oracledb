@@ -88,25 +88,25 @@ cdef object _to_binary_int(object fetch_value):
 cdef object _tstamp_to_date(object fetch_value):
     return fetch_value.replace(microsecond=0)
 
-cdef int conversion_helper(Var output_var, FetchInfo fetch_info,
+cdef int conversion_helper(ThinVarImpl output_var, FetchInfo fetch_info,
                            bint *requires_define) except -1:
     cdef:
         uint8_t fetch_ora_type_num, output_ora_type_num, csfrm
         object key, value
 
     fetch_ora_type_num = fetch_info._dbtype._ora_type_num
-    output_ora_type_num = output_var._dbtype._ora_type_num
+    output_ora_type_num = output_var.dbtype._ora_type_num
 
     key = (fetch_ora_type_num, output_ora_type_num)
     try:
         value = converter_dict[key]
         if isinstance(value, int):
             requires_define[0] = True
-            csfrm = output_var._dbtype._csfrm
+            csfrm = output_var.dbtype._csfrm
             fetch_info._dbtype = DbType._from_ora_type_and_csfrm(value, csfrm)
         else:
             output_var._conv_func = value
     except:
         message = f"Cannot convert from type {fetch_info._dbtype.name} " \
-                  f"to {output_var._dbtype.name}"
+                  f"to {output_var.dbtype.name}"
         errors._raise_from_string(exceptions.DatabaseError, message)

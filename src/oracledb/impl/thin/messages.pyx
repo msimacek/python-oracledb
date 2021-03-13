@@ -146,7 +146,7 @@ cdef class MessageWithData(Message):
         uint32_t num_execs
         list dmlrowcounts
         bint batcherrors
-        list row_vars
+        list row_var_impls
         bint in_fetch
         object cursor
         object conn
@@ -171,20 +171,6 @@ cdef class MessageWithData(Message):
         self._process_describe_info(buf, cursor)
         return cursor
 
-    cdef Var _create_var_from_fetch_info(self, FetchInfo fetch_info):
-        cdef Var var
-        var = self.cursor_impl._create_var(self.conn)
-        var.precision = fetch_info._precision
-        var.scale = fetch_info._scale
-        var.buffer_size = fetch_info._buffer_size
-        var._dbtype = fetch_info._dbtype
-        var.size = fetch_info._size
-        var.name = fetch_info._name
-        var.nulls_allowed = fetch_info._nulls_allowed
-        var.num_elements = self.cursor_impl._fetch_array_size
-        var._finalize_init()
-        return var
-
     cdef int _write_bind_params(self, WriteBuffer buf, list params) except -1:
         cdef:
             bint returning_only
@@ -207,21 +193,22 @@ cdef class MessageWithData(Message):
     cdef int _preprocess(self) except -1:
         cdef:
             ThinCursorImpl cursor_impl = self.cursor_impl
-            Var var
+            ThinVarImpl var_impl
         if cursor_impl._statement._is_query:
             self.in_fetch = True
-            self.row_vars = cursor_impl.fetch_vars
+            if cursor_impl.fetch_vars is not None:
+                self.row_var_impls = [v._impl for v in cursor_impl.fetch_vars]
             cursor_impl._more_rows_to_fetch = True
             cursor_impl._fetch_array_size = cursor_impl.arraysize
             cursor_impl._buffer_rowcount = cursor_impl._buffer_index = 0
-            if self.row_vars is not None:
-                for var in self.row_vars:
-                    if var.num_elements < cursor_impl._fetch_array_size:
-                        var.num_elements = cursor_impl._fetch_array_size
-                        var._finalize_init()
+            if self.row_var_impls is not None:
+                for var_impl in self.row_var_impls:
+                    if var_impl.num_elements < cursor_impl._fetch_array_size:
+                        var_impl.num_elements = cursor_impl._fetch_array_size
+                        var_impl.values = [None] * var_impl.num_elements
 
-    cdef object _process_column_data(self, ReadBuffer buf, Var var,
-                                     uint32_t pos):
+    cdef object _process_column_data(self, ReadBuffer buf,
+                                     ThinVarImpl var_impl, uint32_t pos):
         cdef:
             uint8_t num_bytes, ora_type_num, csfrm
             ThinCursorImpl cursor_impl
@@ -230,13 +217,13 @@ cdef class MessageWithData(Message):
             ThinLobImpl lob_impl
             bytes temp_bytes
             FetchInfo fetch_info
-        fetch_info = var._fetch_info
-        if fetch_info is None:
-            ora_type_num = var._dbtype._ora_type_num
-            csfrm = var._dbtype._csfrm
-        else:
+        fetch_info = var_impl._fetch_info
+        if fetch_info is not None:
             ora_type_num = fetch_info._dbtype._ora_type_num
             csfrm =  fetch_info._dbtype._csfrm
+        else:
+            ora_type_num = var_impl.dbtype._ora_type_num
+            csfrm = var_impl.dbtype._csfrm
         num_bytes = buf.read_uint8()
         if num_bytes == 0:
             column_value = None
@@ -257,7 +244,7 @@ cdef class MessageWithData(Message):
                 buf.skip_bytes(2)
         elif ora_type_num == TNS_DATA_TYPE_NUMBER:
             column_value = buf.read_oracle_number(num_bytes,
-                                                  var._preferred_num_type)
+                                                  var_impl._preferred_num_type)
         elif ora_type_num == TNS_DATA_TYPE_DATE \
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_LTZ \
@@ -277,7 +264,7 @@ cdef class MessageWithData(Message):
             column_value = int(buf.read_oracle_number(num_bytes, NUM_TYPE_INT))
         elif ora_type_num == TNS_DATA_TYPE_CURSOR:
             if not self.in_fetch:
-                column_value = var._values[pos]
+                column_value = var_impl.values[pos]
             column_value = self._create_cursor_from_describe(buf, column_value)
             cursor_impl = column_value._impl
             cursor_impl._statement._cursor_id = buf.read_ub4()
@@ -289,11 +276,11 @@ cdef class MessageWithData(Message):
                 or ora_type_num == TNS_DATA_TYPE_BLOB:
             buf.skip_bytes(1)
             temp_bytes = buf.read_bytes(buf.read_uint8())
-            lob_impl = ThinLobImpl._create(self.conn_impl, var._dbtype,
+            lob_impl = ThinLobImpl._create(self.conn_impl, var_impl.dbtype,
                                            temp_bytes)
             column_value = LOB._from_impl(lob_impl)
         else:
-            msg = f"unhandled data type {var.type}"
+            msg = f"unhandled data type {var_impl.dbtype}"
             raise Exception(msg)
         if not self.in_fetch:
             actual_num_bytes = buf.read_ub4()
@@ -303,10 +290,14 @@ cdef class MessageWithData(Message):
                 message = f"column truncated to {len(column_value)} " \
                           f"{unit_type} (actual is {actual_num_bytes})"
                 errors._raise_from_string(exceptions.DatabaseError, message)
+        if var_impl._conv_func is not None:
+            column_value = var_impl._conv_func(column_value)
+        if var_impl.outconverter is not None:
+            column_value = var_impl.outconverter(column_value)
         return column_value
 
     cdef FetchInfo _process_column_info(self, ReadBuffer buf,
-                                  ThinCursorImpl cursor_impl):
+                                        ThinCursorImpl cursor_impl):
         cdef:
             uint8_t data_type, csfrm
             uint32_t num_bytes
@@ -357,18 +348,20 @@ cdef class MessageWithData(Message):
     cdef int _process_describe_info(self, ReadBuffer buf,
                                     object cursor) except -1:
         cdef:
-            ThinCursorImpl cursor_impl = cursor._impl
-            uint32_t num_bytes, num_columns, i
-            str message
-            object type_handler
+            ThinCursorImpl cursor_impl = <ThinCursorImpl> cursor._impl
+            uint32_t num_elements, num_bytes, num_columns, i
+            object type_handler, var
+            ThinVarImpl var_impl
             FetchInfo fetch_info
-            Var var
+            bint nulls_allowed
+            str message
         buf.read_ub4()                      # max row size
         num_columns = buf.read_ub4()
         cursor_impl.fetch_vars = cpython.PyList_New(num_columns)
         buf.skip_bytes(1)
         type_handler = cursor_impl.outputtypehandler \
                 or cursor_impl._conn_impl.outputtypehandler
+        num_elements = cursor_impl._fetch_array_size
         for i in range(num_columns):
             var = None
             fetch_info = self._process_column_info(buf, cursor_impl)
@@ -381,16 +374,28 @@ cdef class MessageWithData(Message):
                         message = "Expecting cursor.var object from " \
                                   "outputtypehandler method"
                         errors._raise_from_string(TypeError, message)
-                    if var._dbtype is not fetch_info._dbtype:
-                        conversion_helper(var, fetch_info,
+                    var_impl = <ThinVarImpl> var._impl
+                    if var_impl.dbtype is not fetch_info._dbtype:
+                        conversion_helper(var_impl, fetch_info,
                                           &self.requires_define)
             if var is None:
-                var = self._create_var_from_fetch_info(fetch_info)
+                nulls_allowed = fetch_info._nulls_allowed
+                var = cursor_impl.create_var(self.conn, fetch_info._dbtype,
+                                             size=fetch_info._size,
+                                             scale=fetch_info._scale,
+                                             precision=fetch_info._precision,
+                                             num_elements=num_elements,
+                                             name=fetch_info._name,
+                                             nulls_allowed=nulls_allowed,
+                                             inconverter=None,
+                                             outconverter=None,
+                                             encoding_errors=None)
+            var_impl = <ThinVarImpl> var._impl
+            var_impl._fetch_info = fetch_info
             if fetch_info._dbtype._ora_type_num == TNS_DATA_TYPE_NUMBER:
                 if fetch_info._scale == 0 or (fetch_info._scale == -127 \
                         and fetch_info._precision == 0):
-                    var._preferred_num_type = NUM_TYPE_INT
-            var._fetch_info = fetch_info
+                    var_impl._preferred_num_type = NUM_TYPE_INT
             cpython.Py_INCREF(var)
             cpython.PyList_SET_ITEM(cursor_impl.fetch_vars, i, var)
         num_bytes = buf.read_ub4()
@@ -435,13 +440,13 @@ cdef class MessageWithData(Message):
         num_bytes = buf.read_ub2()          # rowid
         if num_bytes > 0:
             buf.skip_bytes(num_bytes)
-        self.row_vars = []
+        self.row_var_impls = []
         for i in range(temp):               # bind directions
             bind_info = self.cursor_impl._statement._bind_info_list[i]
             bind_info.bind_dir = buf.read_uint8()
             if bind_info.bind_dir == TNS_BIND_DIR_INPUT:
                 continue
-            self.row_vars.append(bind_info._bind_var)
+            self.row_var_impls.append(bind_info._bind_var._impl)
 
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:
@@ -453,7 +458,7 @@ cdef class MessageWithData(Message):
         elif message_type == TNS_MSG_TYPE_DESCRIBE_INFO:
             buf.skip_bytes(buf.read_uint8())
             self._process_describe_info(buf, self.cursor)
-            self.row_vars = cursor_impl.fetch_vars
+            self.row_var_impls = [v._impl for v in cursor_impl.fetch_vars]
         elif message_type == TNS_MSG_TYPE_ERROR:
             Message._process_error_info(self, buf)
             cursor_impl._statement._cursor_id = self.error_info.cursor_id
@@ -510,31 +515,33 @@ cdef class MessageWithData(Message):
     cdef int _process_row_data(self, ReadBuffer buf) except -1:
         cdef:
             uint32_t num_rows, pos
+            ThinVarImpl var_impl
             BindInfo bind_info
-            object value
+            object value, var
             list values
             ssize_t i
-            Var var
         if self.cursor_impl._statement._is_returning:
             for bind_info in self.cursor_impl._statement._bind_info_list:
                 if not bind_info._is_return_bind:
                     continue
                 num_rows = buf.read_ub4()
                 values = [None] * num_rows
+                var = bind_info._bind_var
+                var_impl = <ThinVarImpl> var._impl
                 for j in range(num_rows):
-                    var = bind_info._bind_var
-                    values[j] = self._process_column_data(buf, var, j)
-                bind_info._bind_var._values[self.row_index] = values
+                    values[j] = self._process_column_data(buf, var_impl, j)
+                var_impl.values[self.row_index] = values
         else:
-            for i, var in enumerate(self.row_vars):
-                if var.is_array:
-                    var._num_elements_in_array = buf.read_ub4()
-                    for pos in range(var._num_elements_in_array):
-                        value = self._process_column_data(buf, var, pos)
-                        var._values[pos] = value
+            for i, var_impl in enumerate(self.row_var_impls):
+                if var_impl.is_array:
+                    var_impl.num_elements_in_array = buf.read_ub4()
+                    for pos in range(var_impl.num_elements_in_array):
+                        value = self._process_column_data(buf, var_impl, pos)
+                        var_impl.values[pos] = value
                 else:
-                    value = self._process_column_data(buf, var, self.row_index)
-                    var._values[self.row_index] = value
+                    value = self._process_column_data(buf, var_impl,
+                                                      self.row_index)
+                    var_impl.values[self.row_index] = value
         self.row_index += 1
         if self.in_fetch:
             self.cursor_impl._buffer_rowcount = self.row_index
@@ -601,34 +608,42 @@ cdef class MessageWithData(Message):
                                     list bind_vars) except -1:
         cdef:
             uint8_t ora_type_num, flag
-            Var var
+            ThinVarImpl var_impl
+            object var
 
         # write parameter header information
         for var in bind_vars:
+            var_impl = <ThinVarImpl> var._impl
+            ora_type_num = var_impl.dbtype._ora_type_num
             flag = TNS_BIND_USE_INDICATORS | TNS_BIND_USE_LENGTH
-            if var.is_array:
+            if var_impl.is_array:
                 flag |= TNS_BIND_ARRAY
-            buf.write_uint8(var._dbtype._ora_type_num)
+            buf.write_uint8(ora_type_num)
             buf.write_uint8(flag)
-            buf.write_uint8(var.precision)
-            buf.write_uint8(var.scale)
-            buf.write_ub4(var.buffer_size)
-            if var.is_array:
-                buf.write_ub4(var.num_elements)
+            buf.write_uint8(var_impl.precision)
+            buf.write_uint8(var_impl.scale)
+            if ora_type_num == TNS_DATA_TYPE_LONG \
+                    or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
+                buf.write_ub4(TNS_MAX_LONG_LENGTH)
+            else:
+                buf.write_ub4(var_impl.buffer_size)
+            if var_impl.is_array:
+                buf.write_ub4(var_impl.num_elements)
             else:
                 buf.write_ub4(0)            # max num elements
             buf.write_ub4(0)                # cont flag
             buf.write_ub4(0)                # OID
             buf.write_ub4(0)                # version
             buf.write_ub4(TNS_CHARSET_UTF8)
-            buf.write_uint8(var._dbtype._csfrm)
-            buf.write_ub4(var.size)
+            buf.write_uint8(var_impl.dbtype._csfrm)
+            buf.write_ub4(var_impl.size)
             buf.write_ub4(0)                # oaccolid
 
-    cdef int _write_bind_params_column(self, WriteBuffer buf, Var var,
+    cdef int _write_bind_params_column(self, WriteBuffer buf,
+                                       ThinVarImpl var_impl,
                                        object value) except -1:
         cdef:
-            uint8_t ora_type_num = var._dbtype._ora_type_num
+            uint8_t ora_type_num = var_impl.dbtype._ora_type_num
             ThinCursorImpl cursor_impl
             ThinLobImpl lob_impl
             uint8_t num_bytes
@@ -638,7 +653,7 @@ cdef class MessageWithData(Message):
         elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
                 or ora_type_num == TNS_DATA_TYPE_CHAR \
                 or ora_type_num == TNS_DATA_TYPE_LONG:
-            if var._dbtype._csfrm == 1:
+            if var_impl.dbtype._csfrm == 1:
                 temp_bytes = value.encode()
             else:
                 temp_bytes = value.encode(TNS_ENCODING_UTF16)
@@ -655,7 +670,7 @@ cdef class MessageWithData(Message):
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ \
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_LTZ:
-            buf.write_oracle_date(value, var._dbtype._buffer_size_factor)
+            buf.write_oracle_date(value, var_impl.dbtype._buffer_size_factor)
         elif ora_type_num == TNS_DATA_TYPE_BINARY_DOUBLE:
             buf.write_binary_double(value)
         elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
@@ -686,25 +701,28 @@ cdef class MessageWithData(Message):
             buf.write_bytes(lob_impl._locator)
         else:
             errors._raise_from_string(exceptions.NotSupportedError,
-                                      f"unsupported type {var.type}")
+                                      f"unsupported type {var_impl.dbtype}")
 
     cdef int _write_bind_params_row(self, WriteBuffer buf, list params,
                                     uint32_t pos) except -1:
         cdef:
             uint32_t i, num_elements
+            ThinVarImpl var_impl
             BindInfo bind_info
-            Var var
+            object var
         for i, bind_info in enumerate(params):
             if bind_info._is_return_bind:
                 continue
             var = bind_info._bind_var
-            if var.is_array:
-                num_elements = var._num_elements_in_array
+            var_impl = <ThinVarImpl> var._impl
+            if var_impl.is_array:
+                num_elements = var_impl.num_elements_in_array
                 buf.write_ub4(num_elements)
-                for value in var._values[:num_elements]:
-                    self._write_bind_params_column(buf, var, value)
+                for value in var_impl.values[:num_elements]:
+                    self._write_bind_params_column(buf, var_impl, value)
             else:
-                self._write_bind_params_column(buf, var, var._values[pos])
+                self._write_bind_params_column(buf, var_impl,
+                                               var_impl.values[pos])
 
     cdef int _write_end_to_end_piggyback(self, WriteBuffer buf) except -1:
         cdef:
@@ -1124,7 +1142,7 @@ cdef class ExecuteMessage(MessageWithData):
         buf.write_uint8(0)                  # pointer (al8o4l)
         buf.write_ub4(0)                    # prefetch buffer size
         buf.write_ub4(num_iters)            # prefetch number of rows
-        buf.write_ub4(0x7fffffff)           # maximum long size
+        buf.write_ub4(TNS_MAX_LONG_LENGTH)  # maximum long size
         if num_params == 0:
             buf.write_uint8(0)              # pointer (binds)
             buf.write_ub4(0)                # number of binds
@@ -1214,9 +1232,9 @@ cdef class ReExecuteMessage(MessageWithData):
             BindInfo bind_info
 
         if params:
-            self.row_vars = [bind_info._bind_var \
-                             for bind_info in stmt._bind_info_list \
-                             if bind_info.bind_dir != TNS_BIND_DIR_INPUT]
+            self.row_var_impls = [bind_info._bind_var._impl \
+                                  for bind_info in stmt._bind_info_list \
+                                  if bind_info.bind_dir != TNS_BIND_DIR_INPUT]
             params = [bind_info for bind_info in stmt._bind_info_list \
                       if bind_info.bind_dir != TNS_BIND_DIR_OUTPUT]
         if self.function_code == TNS_FUNC_REEXECUTE_AND_FETCH:

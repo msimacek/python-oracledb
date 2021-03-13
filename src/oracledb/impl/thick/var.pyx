@@ -7,7 +7,7 @@
 #   Cython file defining the variable class (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
-cdef class Var(BaseVar):
+cdef class ThickVarImpl(BaseVarImpl):
     cdef:
         dpiVar *_handle
         dpiData *_data
@@ -18,7 +18,7 @@ cdef class Var(BaseVar):
 
     def __cinit__(self, conn):
         self._conn = conn
-        self._conn_impl = conn._impl
+        self._conn_impl = <ThickConnImpl> conn._impl
 
     def __dealloc__(self):
         if self._handle != NULL:
@@ -66,7 +66,7 @@ cdef class Var(BaseVar):
             return self._create_handle()
         if self._native_type_num == DPI_NATIVE_TYPE_STMT:
             for i in range(self.num_elements):
-                cursor = self._values[i]
+                cursor = self.values[i]
                 if cursor is not None:
                     cursor_impl = <ThickCursorImpl> cursor._impl
                     if cursor_impl._handle != NULL:
@@ -85,8 +85,8 @@ cdef class Var(BaseVar):
         if self._objtype is not None:
             obj_type_impl = <ThickDbObjectTypeImpl> self._objtype
             obj_type_handle = obj_type_impl._handle
-        self._native_type_num = _get_native_type_num(self._dbtype)
-        if dpiConn_newVar(self._conn_impl._handle, self._dbtype.num,
+        self._native_type_num = _get_native_type_num(self.dbtype)
+        if dpiConn_newVar(self._conn_impl._handle, self.dbtype.num,
                           self._native_type_num, self.num_elements, self.size,
                           0, self.is_array, obj_type_handle, &self._handle,
                           &self._data) < 0:
@@ -98,7 +98,7 @@ cdef class Var(BaseVar):
         cdef:
             ThickCursorImpl cursor_impl
             object cursor
-        cursor = self._values[pos]
+        cursor = self.values[pos]
         if cursor is None or in_fetch:
             cursor = self._conn.cursor()
         cursor_impl = <ThickCursorImpl> cursor._impl
@@ -156,7 +156,7 @@ cdef class Var(BaseVar):
                 else:
                     dbvalue = &data.value
                 buf = StringBuffer()
-                _convert_from_python(value, self._dbtype, self._objtype,
+                _convert_from_python(value, self.dbtype, self._objtype,
                                      dbvalue, buf, self, pos)
                 if self._native_type_num == DPI_NATIVE_TYPE_BYTES:
                     as_bytes = &dbvalue.asBytes
@@ -175,11 +175,11 @@ cdef class Var(BaseVar):
         cdef uint32_t i
         if self.is_array:
             if dpiVar_setNumElementsInArray(self._handle,
-                                            self._num_elements_in_array) < 0:
+                                            self.num_elements_in_array) < 0:
                 _raise_from_odpi()
-            num_elements = self._num_elements_in_array
+            num_elements = self.num_elements_in_array
         for i in range(num_elements):
-            self._transform_element_from_python(i, self._values[i])
+            self._transform_element_from_python(i, self.values[i])
 
     cdef object _transform_array_to_python(self, uint32_t num_elements,
                                            dpiData *data):
@@ -210,7 +210,7 @@ cdef class Var(BaseVar):
             if self._native_type_num == DPI_NATIVE_TYPE_STMT:
                 value = self._get_cursor_value(&data.value, pos, in_fetch)
             else:
-                value = _convert_to_python(self._conn, self._dbtype,
+                value = _convert_to_python(self._conn, self.dbtype,
                                            self._objtype, &data.value,
                                            self._preferred_num_type)
             if self.outconverter:
@@ -218,7 +218,8 @@ cdef class Var(BaseVar):
             return value
 
     cdef int _transform_to_python(self, uint32_t num_elements,
-                                  bint in_fetch=False, uint32_t offset=0):
+                                  bint in_fetch=False,
+                                  uint32_t offset=0) except -1:
         """
         Transforms all elements from the value supplied by ODPI-C to its
         equivalent Python values. The number of elements will either be the
@@ -232,7 +233,7 @@ cdef class Var(BaseVar):
         if self.is_array:
             if dpiVar_getNumElementsInArray(self._handle, &num_elements) < 0:
                 _raise_from_odpi()
-            self._num_elements_in_array = num_elements
+            self.num_elements_in_array = num_elements
         for i in range(num_elements):
             if self._get_returned_data:
                 if dpiVar_getReturnedData(self._handle, i + offset,
@@ -244,4 +245,4 @@ cdef class Var(BaseVar):
             else:
                 value = self._transform_element_to_python(i + offset,
                                                           self._data, in_fetch)
-            self._values[i] = value
+            self.values[i] = value

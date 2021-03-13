@@ -18,7 +18,7 @@ cdef class FetchInfo:
         DbType _dbtype
 
 
-cdef class Var(BaseVar):
+cdef class ThinVarImpl(BaseVarImpl):
     cdef:
         ThinConnImpl _conn_impl
         object _conv_func
@@ -38,7 +38,7 @@ cdef class Var(BaseVar):
             list bind_info_list
             BindInfo bind_info
             str upper_name
-            Var var
+            object var
 
         bind_info_dict = stmt._bind_info_dict
         bind_info_list = stmt._bind_info_list
@@ -65,12 +65,3 @@ cdef class Var(BaseVar):
             idx = pos - 1
             bind_info = bind_info_list[idx]
             stmt._set_var(bind_info, var_list[idx])
-
-    cdef object _get_single_value(self, uint32_t pos):
-        cdef object value
-        value = self._values[pos]
-        if self._conv_func is not None:
-            value = self._conv_func(value)
-        if self.outconverter:
-            value = self.outconverter(value)
-        return value

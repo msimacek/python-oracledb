@@ -123,7 +123,7 @@ class Cursor:
         self._verify_open()
         self._impl.arraysize = value
 
-    def arrayvar(self, data_type, value, size=None):
+    def arrayvar(self, typ, value, size=0):
         """
         Create an array variable associated with the cursor of the given type
         and size and return a variable object. The value is either an integer
@@ -137,11 +137,21 @@ class Cursor:
 
         Array variables can only be used for PL/SQL associative arrays with
         contiguous keys. For PL/SQL associative arrays with sparsely populated
-        keys or for varrays and nested tables, the approach shown in this
-        example needs to be used.
+        keys or for varrays and nested tables, the DbObject approach needs to
+        be used instead.
         """
         self._verify_open()
-        return self._impl.arrayvar(self.connection, data_type, value, size)
+        if isinstance(value, list):
+            num_elements = len(value)
+        elif isinstance(value, int):
+            num_elements = value
+        else:
+            raise TypeError("expecting integer or list of values")
+        var = self._impl.create_var(self.connection, typ, size=size,
+                                    num_elements=num_elements, is_array=True)
+        if isinstance(value, list):
+            var.setvalue(0, value)
+        return var
 
     def bindnames(self):
         """
@@ -630,7 +640,7 @@ class Cursor:
         """
         pass
 
-    def var(self, dataType, size=0, arraysize=1, inconverter=None,
+    def var(self, typ, size=0, arraysize=1, inconverter=None,
             outconverter=None, typename=None, encodingErrors=None):
         """
         Create a variable with the specified characteristics. This method was
@@ -677,5 +687,7 @@ class Cursor:
         of the values noted in the builtin decode function.
         """
         self._verify_open()
-        return self._impl.var(self, dataType, size, arraysize, inconverter,
-                              outconverter, typename, encodingErrors)
+        if typename is not None:
+            typ = self.connection.gettype(typename)
+        return self._impl.create_var(self.connection, typ, size, arraysize,
+                                     inconverter, outconverter, encodingErrors)

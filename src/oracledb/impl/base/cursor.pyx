@@ -14,8 +14,7 @@ cdef class BaseCursorImpl:
         Internal method used for binding variables by name.
         """
         cdef:
-            BaseVar orig_var, var
-            object value
+            object orig_var, var, value
             str name
         if self.bind_vars is None:
             self.bind_vars = {}
@@ -33,8 +32,7 @@ cdef class BaseCursorImpl:
         """
         cdef:
             Py_ssize_t i, orig_num_vars
-            BaseVar orig_var, var
-            object value
+            object orig_var, var, value
         if self.bind_vars is None:
             orig_num_vars = 0
             self.bind_vars = [None] * len(params)
@@ -42,8 +40,7 @@ cdef class BaseCursorImpl:
             orig_num_vars = len(self.bind_vars)
         for i, value in enumerate(params):
             if i < orig_num_vars:
-                orig_var = <BaseVar> cpython.PyList_GET_ITEM(self.bind_vars,
-                                                             i)
+                orig_var = self.bind_vars[i]
             else:
                 orig_var = None
             var = self._get_bind_var(cursor, num_elements, pos, value,
@@ -67,13 +64,13 @@ cdef class BaseCursorImpl:
         """
         cdef:
             Py_ssize_t i, num_vars
+            BaseVarImpl var_impl
             object row, value
-            BaseVar var
         num_vars = cpython.PyList_GET_SIZE(self.fetch_vars)
         row = cpython.PyTuple_New(num_vars)
         for i in range(num_vars):
-            var = self.fetch_vars[i]
-            value = var._get_single_value(self._buffer_index)
+            var_impl = self.fetch_vars[i]._impl
+            value = var_impl.values[self._buffer_index]
             cpython.Py_INCREF(value)
             cpython.PyTuple_SET_ITEM(row, i, value)
         if self.rowfactory:
@@ -83,53 +80,42 @@ cdef class BaseCursorImpl:
         self.rowcount += 1
         return row
 
-    cdef BaseVar _create_var(self, object connection):
+    cdef BaseVarImpl _create_var_impl(self, object connection):
         """
         Internal method for creating a variable.
         """
         raise NotImplementedError()
 
-    cdef BaseVar _create_var_by_type(self, object connection, object value,
-                                     uint32_t num_elements=1):
+    cdef object _create_var_by_type(self, object connection, object value,
+                                    uint32_t num_elements=1):
         """
         Internal method for creating a variable that can contain the specified
         type.
         """
-        cdef BaseVar var
         if value is None:
             return None
-        elif isinstance(value, BaseVar):
+        elif isinstance(value, Var):
             return value
         elif isinstance(value, list):
             if len(value) != 2:
                 message = "expecting a list of two elements [type, numelems]"
                 errors._raise_from_string(exceptions.ProgrammingError, message)
-            return self.arrayvar(connection, *value)
-        var = self._create_var(connection)
-        if isinstance(value, int):
-            var._dbtype = DB_TYPE_VARCHAR
-            var.size = value
-        else:
-            var._set_dbtype_from_type(value)
-            var.size = var._dbtype.default_size
-        var.num_elements = num_elements
-        var._finalize_init()
-        return var
+            return self.create_var(connection, typ=value[0],
+                                   num_elements=value[1], is_array=True)
+        elif isinstance(value, int):
+            return self.create_var(connection, DB_TYPE_VARCHAR, size=value,
+                                   num_elements=num_elements)
+        return self.create_var(connection, value, num_elements=num_elements)
 
-    cdef BaseVar _create_var_by_value(self, object cursor, object value,
-                                      uint32_t num_elements):
+    cdef object _create_var_by_value(self, object cursor, object value,
+                                     uint32_t num_elements):
         """
         Internal method for creating a variable that can contain the
         specified value.
         """
         cdef:
-            BaseDbObjectTypeImpl objtype = None, temp_objtype
-            DbType dbtype = None, temp_dbtype
-            uint32_t size = 0, temp_size
-            object type_handler, result
-            bint is_array = False
-            BaseDbObjectImpl obj
-            BaseVar var
+            object type_handler, result, typ, temp_typ
+            uint32_t size, temp_size
 
         # determine if an input type handler should be used; an input type
         # handler defined on the cursor takes precedence over one defined on
@@ -142,55 +128,38 @@ cdef class BaseCursorImpl:
         if type_handler:
             result = type_handler(cursor, value, num_elements)
             if result is not None:
-                if not isinstance(result, BaseVar):
+                if not isinstance(result, Var):
                     message = "expecting variable from input type handler"
                     raise TypeError(message)
-                return <BaseVar> result
+                return result
 
-        # determine the type and size of variable to create
-        if isinstance(value, list):
-            is_array = True
-            if len(value) > num_elements:
-                num_elements = len(value)
-            for element in value:
-                temp_size = 0
-                temp_dbtype = DbType._from_value(element, &temp_size)
-                if temp_dbtype is None:
-                    continue
-                if temp_dbtype is DB_TYPE_OBJECT:
-                    obj = <BaseDbObjectImpl> value
-                    temp_objtype = obj._impl.type
-                else:
-                    temp_objtype = None
-                if dbtype is None:
-                    dbtype = temp_dbtype
-                    objtype = temp_objtype
-                    size = temp_size
-                elif temp_dbtype is not dbtype or temp_objtype is not objtype:
-                    message = f"element {element} is not the same type as " \
-                               "previous elements"
-                    errors._raise_from_string(exceptions.NotSupportedError,
-                                              message)
-                if temp_size > size:
-                    size = temp_size
-        else:
-            dbtype = DbType._from_value(value, &size, self._is_plsql())
-            if dbtype is DB_TYPE_OBJECT:
-                obj = <BaseDbObjectImpl> value
-                objtype = obj._impl.type
-        if dbtype is None:
-            dbtype = DB_TYPE_VARCHAR
-            size = 1
+        # handle scalar values
+        if not isinstance(value, list):
+            typ = self._get_type_and_size(value, &size, self._is_plsql())
+            return self.create_var(cursor.connection, typ, size=size,
+                                   num_elements=num_elements)
 
-        # create the variable
-        var = self._create_var(cursor.connection)
-        var._dbtype = dbtype
-        var._objtype = objtype
-        var.num_elements = num_elements
-        var.is_array = is_array
-        var.size = size
-        var._finalize_init()
-        return var
+        # handle arrays
+        if len(value) > num_elements:
+            num_elements = len(value)
+        size = 0
+        typ = None
+        for element in value:
+            temp_typ = self._get_type_and_size(element, &temp_size,
+                                               self._is_plsql())
+            if temp_typ is None:
+                continue
+            if typ is None:
+                typ = temp_typ
+            elif temp_typ is not typ:
+                message = f"element {element} is not the same type as " \
+                           "previous elements"
+                errors._raise_from_string(exceptions.NotSupportedError,
+                                          message)
+            if temp_size > size:
+                size = temp_size
+        return self.create_var(cursor.connection, typ, size=size,
+                               num_elements=num_elements, is_array=True)
 
     cdef int _fetch_rows(self, object cursor) except -1:
         """
@@ -198,37 +167,78 @@ cdef class BaseCursorImpl:
         """
         raise NotImplementedError()
 
-    cdef BaseVar _get_bind_var(self, object cursor, uint32_t num_elements,
-                               uint32_t pos, object value, BaseVar orig_var):
+    cdef object _get_bind_var(self, object cursor, uint32_t num_elements,
+                              uint32_t pos, object value, object orig_var):
         """
         Internal method that returns the variable that will be bound with the
         specified value.
         """
-        cdef BaseVar var
-        if isinstance(value, BaseVar):
-            return <BaseVar> value
+        cdef BaseVarImpl var_impl, orig_var_impl
+        if isinstance(value, Var):
+            return value
         elif orig_var is not None:
-            if num_elements <= orig_var.num_elements:
+            orig_var_impl = orig_var._impl
+            if num_elements <= orig_var_impl.num_elements:
                 var = orig_var
+                var_impl = orig_var_impl
             else:
-                var = self._create_var(cursor.connection)
-                var.num_elements = num_elements
-                var._dbtype = orig_var._dbtype
-                var._objtype = orig_var._objtype
-                var.is_array = orig_var.is_array
-                var.size = orig_var.size
-                var.inconverter = orig_var.inconverter
-                var.outconverter = orig_var.outconverter
-                var._finalize_init()
+                var_impl = self._create_var_impl(orig_var_impl._conn)
+                var_impl.num_elements = num_elements
+                var_impl.dbtype = orig_var_impl.dbtype
+                var_impl._objtype = orig_var_impl._objtype
+                var_impl.is_array = orig_var_impl.is_array
+                var_impl.size = orig_var_impl.size
+                var_impl.buffer_size = orig_var_impl.buffer_size
+                var_impl.inconverter = orig_var_impl.inconverter
+                var_impl.outconverter = orig_var_impl.outconverter
+                var_impl.values = [None] * num_elements
+                var = Var._from_impl(var_impl, orig_var._type)
             try:
-                var._set_value(pos, value)
+                var_impl.set_value(pos, value)
                 return var
             except TypeError:
                 if pos > 0:
                     raise
         var = self._create_var_by_value(cursor, value, num_elements)
-        var._set_value(pos, value)
+        var_impl = var._impl
+        var_impl.set_value(pos, value)
         return var
+
+    cdef object _get_type_and_size(self, object value, uint32_t *size, bint
+                                   is_plsql=True):
+        """
+        Internal method used for determining the type to use for a variable
+        given a Python value. This will either be a DbObjectType or one of the
+        DbType constants.
+        """
+        if value is None:
+            return None
+        elif isinstance(value, bool):
+            if is_plsql:
+                return DB_TYPE_BOOLEAN
+            return DB_TYPE_BINARY_INTEGER
+        elif isinstance(value, str):
+            size[0] = <uint32_t> len(value)
+            return DB_TYPE_VARCHAR
+        elif isinstance(value, bytes):
+            size[0] = <uint32_t> len(value)
+            return DB_TYPE_RAW
+        elif isinstance(value, (int, float, decimal.Decimal)):
+            return DB_TYPE_NUMBER
+        elif isinstance(value, (datetime.date, datetime.datetime)):
+            return DB_TYPE_DATE
+        elif isinstance(value, datetime.timedelta):
+            return DB_TYPE_INTERVAL_DS
+        elif isinstance(value, DbObject):
+            return value.type
+        elif isinstance(value, LOB):
+            return value.type
+        elif isinstance(value, Cursor):
+            return DB_TYPE_CURSOR
+        else:
+            type_name = type(value).__name__
+            message = f"Python value of type {type_name} not supported"
+            errors._raise_from_string(exceptions.NotSupportedError, message)
 
     cdef bint _is_plsql(self):
         """
@@ -249,15 +259,18 @@ cdef class BaseCursorImpl:
         Perform all binds on the cursor.
         """
         cdef:
+            BaseVarImpl var_impl
             Py_ssize_t pos
-            BaseVar var
+            object var
             str key
         if isinstance(self.bind_vars, dict):
             for key, var in self.bind_vars.items():
-                var._bind(self, num_execs, key)
+                var_impl = <BaseVarImpl> var._impl
+                var_impl._bind(self, num_execs, key)
         else:
             for pos, var in enumerate(self.bind_vars):
-                var._bind(self, num_execs, None, pos + 1)
+                var_impl = <BaseVarImpl> var._impl
+                var_impl._bind(self, num_execs, None, pos + 1)
 
     cdef int _prepare(self, str statement, str tag=None) except -1:
         """
@@ -270,31 +283,6 @@ cdef class BaseCursorImpl:
         Internal method for scrolling a scrollable cursor.
         """
         raise NotImplementedError()
-
-    def arrayvar(self, connection, typ, value, size=None):
-        """
-        Create an array variable associated with the cursor of the given type
-        and size and return it.
-        """
-        cdef BaseVar var
-        var = self._create_var(connection)
-        var._set_dbtype_from_type(typ)
-        var.is_array = True
-        if isinstance(typ, DbObjectType):
-            var._objtype = typ._impl
-        if var._dbtype.default_size > 0:
-            var.size = size or var._dbtype.default_size
-        if isinstance(value, list):
-            var.num_elements = len(value)
-        elif isinstance(value, int):
-            var.num_elements = value
-        else:
-            errors._raise_from_string(TypeError,
-                                      "expecting integer or list of values")
-        var._finalize_init()
-        if isinstance(value, list):
-            var.setvalue(0, value)
-        return var
 
     def bind_many(self, cursor, parameters):
         """
@@ -319,6 +307,36 @@ cdef class BaseCursorImpl:
             self._bind_by_name(cursor, parameters)
         else:
             self._bind_by_position(cursor, parameters)
+
+    cpdef create_var(self, object conn, object typ, uint32_t size=0,
+                     uint32_t num_elements=1, object inconverter=None,
+                     object outconverter=None, str encoding_errors=None,
+                     int16_t precision=0, int16_t scale=0, str name=None,
+                     bint nulls_allowed=False, bint is_array=False):
+        cdef BaseVarImpl impl
+        impl = self._create_var_impl(conn)
+        impl._set_type(typ)
+        if impl.dbtype.default_size > 0:
+            impl.size = size or impl.dbtype.default_size
+            impl.buffer_size = impl.size * impl.dbtype._buffer_size_factor
+        else:
+            impl.buffer_size = impl.dbtype._buffer_size_factor
+        if num_elements == 0:
+            impl.num_elements = 1
+        else:
+            impl.num_elements = num_elements
+        impl.inconverter = inconverter
+        impl.outconverter = outconverter
+        impl.is_array = is_array
+        impl.values = [None] * impl.num_elements
+        impl.precision = precision
+        impl.scale = scale
+        impl.nulls_allowed = nulls_allowed
+        impl.name = name
+        if impl.dbtype is DB_TYPE_NUMBER:
+            if scale == 0 or (scale == -127 and precision == 0):
+                impl._preferred_num_type = NUM_TYPE_INT
+        return Var._from_impl(impl, typ)
 
     def close(self):
         """
@@ -371,7 +389,7 @@ cdef class BaseCursorImpl:
         """
         Internal method for populating the cursor description.
         """
-        return [v.description for v in self.fetch_vars]
+        return [v._impl.get_description() for v in self.fetch_vars]
 
     def get_implicit_results(self, connection):
         """
@@ -431,23 +449,3 @@ cdef class BaseCursorImpl:
                 self.bind_vars[key] = self._create_var_by_type(conn, value)
         else:
             self.bind_vars = [self._create_var_by_type(conn, v) for v in args]
-
-    def var(self, cursor, typ, size=0, arraysize=1, inconverter=None,
-            outconverter=None, typename=None, encoding_errors=None):
-        cdef BaseVar var
-        var = self._create_var(cursor.connection)
-        if isinstance(typ, DbObjectType):
-            var._objtype = typ._impl
-            var._dbtype = DB_TYPE_OBJECT
-        else:
-            var._set_dbtype_from_type(typ)
-        if typename:
-            typ = cursor.connection.gettype(typename)
-            var._objtype = typ._impl
-        if var._dbtype.default_size > 0:
-            var.size = size or var._dbtype.default_size
-        var.num_elements = arraysize
-        var.inconverter = inconverter
-        var.outconverter = outconverter
-        var._finalize_init()
-        return var
