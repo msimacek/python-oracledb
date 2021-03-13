@@ -36,8 +36,8 @@ cydatetime.import_datetime()
 
 from . import constants, errors, exceptions
 
-from .base_impl cimport get_exception_class
-from .base_impl cimport NUM_TYPE_FLOAT, NUM_TYPE_INT, NUM_TYPE_DECIMAL
+from .base_impl cimport get_exception_class, NUM_TYPE_FLOAT
+from .base_impl cimport NUM_TYPE_INT, NUM_TYPE_DECIMAL, NUM_TYPE_STR
 from .base_impl cimport BaseConnImpl, BaseCursorImpl, BaseVarImpl, DbType
 from .base_impl cimport BaseLobImpl, BasePoolImpl
 from .cursor import Cursor

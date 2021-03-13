@@ -18,9 +18,9 @@ cdef converter_dict = {
     (TNS_DATA_TYPE_DATE, TNS_DATA_TYPE_CHAR): str,
     (TNS_DATA_TYPE_DATE, TNS_DATA_TYPE_VARCHAR): str,
     (TNS_DATA_TYPE_DATE, TNS_DATA_TYPE_LONG): str,
-    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_VARCHAR): str,
-    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_CHAR): str,
-    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_LONG): str,
+    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_VARCHAR): NUM_TYPE_STR,
+    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_CHAR): NUM_TYPE_STR,
+    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_LONG): NUM_TYPE_STR,
     (TNS_DATA_TYPE_BINARY_DOUBLE, TNS_DATA_TYPE_VARCHAR): str,
     (TNS_DATA_TYPE_BINARY_FLOAT, TNS_DATA_TYPE_VARCHAR): str,
     (TNS_DATA_TYPE_BINARY_DOUBLE, TNS_DATA_TYPE_CHAR): str,
@@ -48,12 +48,12 @@ cdef converter_dict = {
     (TNS_DATA_TYPE_TIMESTAMP, TNS_DATA_TYPE_DATE): _tstamp_to_date,
     (TNS_DATA_TYPE_TIMESTAMP_TZ, TNS_DATA_TYPE_DATE): _tstamp_to_date,
     (TNS_DATA_TYPE_TIMESTAMP_LTZ, TNS_DATA_TYPE_DATE): _tstamp_to_date,
-    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_BINARY_DOUBLE): float,
+    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_BINARY_DOUBLE): NUM_TYPE_FLOAT,
     (TNS_DATA_TYPE_BINARY_FLOAT, TNS_DATA_TYPE_BINARY_DOUBLE): float,
     (TNS_DATA_TYPE_CHAR, TNS_DATA_TYPE_BINARY_DOUBLE): float,
     (TNS_DATA_TYPE_VARCHAR, TNS_DATA_TYPE_BINARY_DOUBLE): float,
     (TNS_DATA_TYPE_LONG, TNS_DATA_TYPE_BINARY_DOUBLE): float,
-    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_BINARY_FLOAT): float,
+    (TNS_DATA_TYPE_NUMBER, TNS_DATA_TYPE_BINARY_FLOAT): NUM_TYPE_FLOAT,
     (TNS_DATA_TYPE_BINARY_DOUBLE, TNS_DATA_TYPE_BINARY_FLOAT): float,
     (TNS_DATA_TYPE_CHAR, TNS_DATA_TYPE_BINARY_FLOAT): float,
     (TNS_DATA_TYPE_VARCHAR, TNS_DATA_TYPE_BINARY_FLOAT): float,
@@ -101,9 +101,13 @@ cdef int conversion_helper(ThinVarImpl output_var, FetchInfo fetch_info,
     try:
         value = converter_dict[key]
         if isinstance(value, int):
-            requires_define[0] = True
-            csfrm = output_var.dbtype._csfrm
-            fetch_info._dbtype = DbType._from_ora_type_and_csfrm(value, csfrm)
+            if fetch_ora_type_num == TNS_DATA_TYPE_NUMBER:
+                output_var._preferred_num_type = value
+            else:
+                requires_define[0] = True
+                csfrm = output_var.dbtype._csfrm
+                fetch_info._dbtype = DbType._from_ora_type_and_csfrm(value,
+                                                                     csfrm)
         else:
             output_var._conv_func = value
     except:

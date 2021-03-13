@@ -589,6 +589,8 @@ cdef class ReadBuffer:
             return int(text)
         elif preferred_num_type == NUM_TYPE_DECIMAL:
             return decimal.Decimal(text)
+        elif preferred_num_type == NUM_TYPE_STR:
+            return text
         return float(text)
 
     cdef object read_rowid(self):

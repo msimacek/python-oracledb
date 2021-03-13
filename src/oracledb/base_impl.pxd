@@ -17,6 +17,7 @@ cdef enum:
     NUM_TYPE_FLOAT = 0
     NUM_TYPE_INT = 1
     NUM_TYPE_DECIMAL = 2
+    NUM_TYPE_STR = 3
 
 cdef class ApiType:
     cdef:

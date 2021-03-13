@@ -392,7 +392,8 @@ cdef class MessageWithData(Message):
                                              encoding_errors=None)
             var_impl = <ThinVarImpl> var._impl
             var_impl._fetch_info = fetch_info
-            if fetch_info._dbtype._ora_type_num == TNS_DATA_TYPE_NUMBER:
+            if fetch_info._dbtype._ora_type_num == TNS_DATA_TYPE_NUMBER \
+                    and var_impl._preferred_num_type == NUM_TYPE_FLOAT:
                 if fetch_info._scale == 0 or (fetch_info._scale == -127 \
                         and fetch_info._precision == 0):
                     var_impl._preferred_num_type = NUM_TYPE_INT

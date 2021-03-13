@@ -333,7 +333,8 @@ cdef class BaseCursorImpl:
         impl.scale = scale
         impl.nulls_allowed = nulls_allowed
         impl.name = name
-        if impl.dbtype is DB_TYPE_NUMBER:
+        if impl.dbtype is DB_TYPE_NUMBER \
+                and impl._preferred_num_type == NUM_TYPE_FLOAT:
             if scale == 0 or (scale == -127 and precision == 0):
                 impl._preferred_num_type = NUM_TYPE_INT
         return Var._from_impl(impl, typ)
