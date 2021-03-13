@@ -198,9 +198,7 @@ class DbObjectType:
 
     def __eq__(self, other):
         if isinstance(other, DbObjectType):
-            return other._impl._conn is self._impl._conn \
-                    and other.schema == self.schema \
-                    and other.name == self.name
+            return other._impl == self._impl
         return NotImplemented
 
     def __repr__(self):
@@ -213,7 +211,6 @@ class DbObjectType:
         typ._attributes = None
         typ._element_type = None
         return typ
-
 
     @property
     def attributes(self):

@@ -103,6 +103,13 @@ cdef class BaseDbObjectAttrImpl:
 
 cdef class BaseDbObjectTypeImpl:
 
+    def __eq__(self, other):
+        if isinstance(other, BaseDbObjectTypeImpl):
+            return other._conn is self._conn \
+                    and other.schema == self.schema \
+                    and other.name == self.name
+        return NotImplemented
+
     def create_new_object(self):
         """
         Internal method for creating a new object.
