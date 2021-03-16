@@ -72,9 +72,9 @@ cdef class Protocol:
             Statement stmt = cursor_impl._statement
             MessageWithData message
         if stmt._cursor_id and not stmt._requires_full_execute:
-            message = <MessageWithData> ReExecuteMessage(cursor)
+            message = ReExecuteMessage(cursor)
         else:
-            message = <MessageWithData> ExecuteMessage(cursor)
+            message = ExecuteMessage(cursor)
         message.arraydmlrowcounts = arraydmlrowcounts
         message.batcherrors = batcherrors
         message.num_execs = num_execs
