@@ -268,6 +268,7 @@ cdef class MessageWithData(Message):
             column_value = self._create_cursor_from_describe(buf, column_value)
             cursor_impl = column_value._impl
             cursor_impl._statement._cursor_id = buf.read_ub4()
+            cursor_impl._requires_full_execute = True
         elif ora_type_num == TNS_DATA_TYPE_BOOLEAN:
             column_value = buf.read_uint32() != 0
         elif ora_type_num == TNS_DATA_TYPE_INTERVAL_DS:
@@ -1093,6 +1094,10 @@ cdef class ExecuteMessage(MessageWithData):
         if self.requires_define:
             options = TNS_EXEC_OPTION_FETCH
             options |= TNS_EXEC_OPTION_DEFINE
+            num_iters = self.cursor_impl.prefetchrows
+        elif self.cursor_impl._requires_full_execute:
+            options = TNS_EXEC_OPTION_FETCH
+            options |= TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
             num_iters = self.cursor_impl.prefetchrows
         else:
             if params:

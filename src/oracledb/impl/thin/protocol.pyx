@@ -86,7 +86,15 @@ cdef class Protocol:
             cursor_impl.rowcount = 0
 
     cdef int _fetch(self, object cursor) except -1:
-        self._process_message(FetchMessage(cursor))
+        cdef:
+            ThinCursorImpl cursor_impl = cursor._impl
+            MessageWithData message
+        if cursor_impl._requires_full_execute:
+            message = <MessageWithData> ExecuteMessage(cursor)
+            message.num_execs = cursor_impl._fetch_array_size
+            self._process_message(message)
+        else:
+            self._process_message(FetchMessage(cursor))
 
     cdef int _ping(self) except -1:
         self._process_message(PingMessage())

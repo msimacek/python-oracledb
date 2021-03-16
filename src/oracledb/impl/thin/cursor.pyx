@@ -11,6 +11,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
         list _dmlrowcounts
         list _implicit_resultsets
         str _lastrowid
+        bint _requires_full_execute
 
     def __cinit__(self, conn_impl):
         self._conn_impl = conn_impl
