@@ -90,11 +90,11 @@ cdef class Protocol:
             ThinCursorImpl cursor_impl = cursor._impl
             MessageWithData message
         if cursor_impl._requires_full_execute:
-            message = <MessageWithData> ExecuteMessage(cursor)
+            message = ExecuteMessage(cursor)
             message.num_execs = cursor_impl._fetch_array_size
-            self._process_message(message)
         else:
-            self._process_message(FetchMessage(cursor))
+            message = FetchMessage(cursor)
+        self._process_message(message)
 
     cdef int _ping(self) except -1:
         self._process_message(PingMessage())
