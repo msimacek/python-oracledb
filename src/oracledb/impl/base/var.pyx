@@ -88,13 +88,17 @@ cdef class BaseVarImpl:
             elif dbtype is DB_TYPE_VARCHAR or dbtype is DB_TYPE_NVARCHAR \
                     or dbtype is DB_TYPE_CHAR or dbtype is DB_TYPE_NCHAR \
                     or dbtype is DB_TYPE_LONG:
-                if not isinstance(value, str):
+                if isinstance(value, bytes):
+                    value = value.decode()
+                elif not isinstance(value, str):
                     raise TypeError("expecting string")
                 size = <uint32_t> len(value)
                 if size > self.size:
                     self._resize(size)
             elif dbtype is DB_TYPE_RAW or dbtype is DB_TYPE_LONG_RAW:
-                if not isinstance(value, bytes):
+                if isinstance(value, str):
+                    value = value.encode()
+                elif not isinstance(value, bytes):
                     raise TypeError("expecting bytes")
                 size = <uint32_t> len(value)
                 if size > self.size:

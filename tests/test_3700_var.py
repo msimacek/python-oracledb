@@ -64,6 +64,9 @@ class TestCase(test_env.BaseTestCase):
         "3702 - test setting values of correct types to DB_TYPE_VARCHAR"
         value = "A VARCHAR string"
         self._test_positive_set_and_get(oracledb.DB_TYPE_VARCHAR, value, value)
+        value = b"A raw string for VARCHAR"
+        self._test_positive_set_and_get(oracledb.DB_TYPE_VARCHAR, value,
+                                        value.decode())
         self._test_positive_set_and_get(oracledb.DB_TYPE_VARCHAR, None, None)
         self._test_negative_set_and_get(oracledb.DB_TYPE_VARCHAR, 5)
 
@@ -72,13 +75,19 @@ class TestCase(test_env.BaseTestCase):
         value = "A NVARCHAR string"
         self._test_positive_set_and_get(oracledb.DB_TYPE_NVARCHAR, value,
                                         value)
+        value = b"A raw string for NVARCHAR"
+        self._test_positive_set_and_get(oracledb.DB_TYPE_NVARCHAR, value,
+                                        value.decode())
         self._test_positive_set_and_get(oracledb.DB_TYPE_NVARCHAR, None, None)
         self._test_negative_set_and_get(oracledb.DB_TYPE_NVARCHAR, 5)
 
     def test_3704_DB_TYPE_CHAR(self):
         "3704 - test setting values of correct types to DB_TYPE_CHAR"
-        self._test_positive_set_and_get(oracledb.DB_TYPE_CHAR,
-                                        "A CHAR string", "A CHAR string")
+        value = "A CHAR string"
+        self._test_positive_set_and_get(oracledb.DB_TYPE_CHAR, value, value)
+        value = b"A raw string for CHAR"
+        self._test_positive_set_and_get(oracledb.DB_TYPE_CHAR, value,
+                                        value.decode())
         self._test_positive_set_and_get(oracledb.DB_TYPE_CHAR, None, None)
         self._test_negative_set_and_get(oracledb.DB_TYPE_CHAR, 5)
 
@@ -86,6 +95,9 @@ class TestCase(test_env.BaseTestCase):
         "3705 - test setting values of correct types to DB_TYPE_NCHAR"
         value = "A NCHAR string"
         self._test_positive_set_and_get(oracledb.DB_TYPE_NCHAR, value, value)
+        value = b"A raw string for NCHAR"
+        self._test_positive_set_and_get(oracledb.DB_TYPE_CHAR, value,
+                                        value.decode())
         self._test_positive_set_and_get(oracledb.DB_TYPE_NCHAR, None, None)
         self._test_negative_set_and_get(oracledb.DB_TYPE_NCHAR, 5)
 
@@ -93,6 +105,9 @@ class TestCase(test_env.BaseTestCase):
         "3706 - test setting values of correct types to DB_TYPE_LONG"
         value = "Long Data" * 15000
         self._test_positive_set_and_get(oracledb.DB_TYPE_LONG, value, value)
+        value = b"Raw data for LONG" * 15000
+        self._test_positive_set_and_get(oracledb.DB_TYPE_LONG, value,
+                                        value.decode())
         self._test_positive_set_and_get(oracledb.DB_TYPE_LONG, None, None)
         self._test_negative_set_and_get(oracledb.DB_TYPE_LONG, 5)
 
@@ -100,14 +115,20 @@ class TestCase(test_env.BaseTestCase):
         "3707 - test setting values of correct types to DB_TYPE_RAW"
         value = b'Raw Data'
         self._test_positive_set_and_get(oracledb.DB_TYPE_RAW, value, value)
+        value = "String data for RAW"
+        self._test_positive_set_and_get(oracledb.DB_TYPE_RAW, value,
+                                        value.encode())
         self._test_positive_set_and_get(oracledb.DB_TYPE_RAW, None, None)
-        self._test_negative_set_and_get(oracledb.DB_TYPE_RAW, "String")
+        self._test_negative_set_and_get(oracledb.DB_TYPE_RAW, 5)
 
     def test_3708_DB_TYPE_LONG_RAW(self):
         "3708 - test setting values of correct types to DB_TYPE_LONG_RAW"
         value = b'Long Raw Data' * 15000
         self._test_positive_set_and_get(oracledb.DB_TYPE_LONG_RAW, value,
                                         value)
+        value = "String data for LONG RAW" * 15000
+        self._test_positive_set_and_get(oracledb.DB_TYPE_LONG_RAW, value,
+                                        value.encode())
         self._test_positive_set_and_get(oracledb.DB_TYPE_LONG_RAW, None, None)
         self._test_negative_set_and_get(oracledb.DB_TYPE_LONG_RAW, 5)
 
