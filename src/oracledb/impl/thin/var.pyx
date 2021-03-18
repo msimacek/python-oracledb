@@ -52,7 +52,7 @@ cdef class ThinVarImpl(BaseVarImpl):
                 errors._raise_from_string(exceptions.DatabaseError, message)
             var = var_list[name]
             for bind_info in bind_info_dict[upper_name]:
-                stmt._set_var(bind_info, var)
+                stmt._set_var(bind_info, var, thin_cursor_impl)
 
         # Bind by position
         else:
@@ -64,4 +64,4 @@ cdef class ThinVarImpl(BaseVarImpl):
                 errors._raise_from_string(exceptions.DatabaseError, message)
             idx = pos - 1
             bind_info = bind_info_list[idx]
-            stmt._set_var(bind_info, var_list[idx])
+            stmt._set_var(bind_info, var_list[idx], thin_cursor_impl)

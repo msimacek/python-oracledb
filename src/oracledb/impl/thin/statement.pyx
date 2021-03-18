@@ -131,15 +131,22 @@ cdef class Statement:
             if bind_info._bind_name in return_bind_names:
                 bind_info._is_return_bind = True
 
-    cdef int _set_var(self, BindInfo bind_info, object var) except -1:
+    cdef int _set_var(self, BindInfo bind_info, object var,
+                      ThinCursorImpl cursor_impl) except -1:
         """
         Set the variable on the bind information and copy across metadata that
         will be used for binding. If the bind metadata has changed, mark the
         statement as requiring a full execute. In addition, binding a REF
         cursor also requires a full execute.
         """
-        cdef ThinVarImpl var_impl = <ThinVarImpl> var._impl
+        cdef:
+            ThinVarImpl var_impl = <ThinVarImpl> var._impl
+            object value
         if var_impl.dbtype._ora_type_num == TNS_DATA_TYPE_CURSOR:
+            for value in var_impl.values:
+                if value is not None and value._impl is cursor_impl:
+                    errors._raise_from_string(exceptions.DatabaseError,
+                                              "binding to self not supported")
             self._requires_full_execute = True
         if var_impl.dbtype._ora_type_num != bind_info.ora_type_num \
                 or var_impl.size > bind_info.size \
