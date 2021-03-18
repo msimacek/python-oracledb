@@ -146,6 +146,9 @@ cdef class BaseVarImpl:
                           f"{value.type.name} when expecting object of type " \
                           f"{self._objtype.schema}.{self._objtype.name}"
                     errors._raise_from_string(exceptions.DatabaseError, msg)
+            elif dbtype is DB_TYPE_CURSOR:
+                if not isinstance(value, Cursor):
+                    raise TypeError("expecting cursor")
         self.values[pos] = value
 
     def get_description(self):
