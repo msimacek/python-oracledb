@@ -12,6 +12,7 @@
 
 cimport cython
 cimport cpython
+cimport cpython.datetime as cydatetime
 
 from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
@@ -20,6 +21,8 @@ import datetime
 import decimal
 import json
 import sys
+
+cydatetime.import_datetime()
 
 from . import constants, errors, exceptions
 from .cursor import Cursor

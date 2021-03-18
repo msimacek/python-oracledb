@@ -74,10 +74,16 @@ cdef class BaseVarImpl:
             value = self.inconverter(value)
         if value is not None:
             dbtype = self.dbtype
-            if dbtype is DB_TYPE_NUMBER or dbtype is DB_TYPE_BINARY_INTEGER:
+            if dbtype is DB_TYPE_NUMBER or dbtype is DB_TYPE_BINARY_INTEGER \
+                    or dbtype is DB_TYPE_BINARY_DOUBLE \
+                    or dbtype is DB_TYPE_BINARY_FLOAT:
                 if not isinstance(value, (bool, int, float, decimal.Decimal)):
                     raise TypeError("expecting number or boolean")
-                if dbtype is DB_TYPE_BINARY_INTEGER:
+                if dbtype is DB_TYPE_BINARY_FLOAT \
+                        or dbtype is DB_TYPE_BINARY_DOUBLE:
+                    value = float(value)
+                elif dbtype is DB_TYPE_BINARY_INTEGER \
+                        or isinstance(value, bool):
                     value = int(value)
             elif dbtype is DB_TYPE_VARCHAR or dbtype is DB_TYPE_NVARCHAR \
                     or dbtype is DB_TYPE_CHAR or dbtype is DB_TYPE_NCHAR \
@@ -96,9 +102,20 @@ cdef class BaseVarImpl:
             elif dbtype is DB_TYPE_DATE or dbtype is DB_TYPE_TIMESTAMP \
                     or dbtype is DB_TYPE_TIMESTAMP_LTZ \
                     or dbtype is DB_TYPE_TIMESTAMP_TZ:
-                if not isinstance(value, (datetime.date, datetime.datetime)):
+                if isinstance(value, datetime.datetime):
+                    pass
+                elif isinstance(value, datetime.date):
+                    value = cydatetime.datetime_new(value.year, value.month,
+                                                    value.day, 0, 0, 0, 0,
+                                                    None)
+                else:
                     message = "expecting datetime.date or datetime.datetime"
                     raise TypeError(message)
+            elif dbtype is DB_TYPE_INTERVAL_DS:
+                if not isinstance(value, datetime.timedelta):
+                    raise TypeError("expecting datetime.timedelta")
+            elif dbtype is DB_TYPE_BOOLEAN:
+                value = bool(value)
             elif dbtype is DB_TYPE_CLOB or dbtype is DB_TYPE_NCLOB \
                     or dbtype is DB_TYPE_BLOB:
                 if isinstance(value, LOB):
