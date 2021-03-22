@@ -355,6 +355,7 @@ class TestCase(test_env.BaseTestCase):
         cursor = self.connection.cursor()
         self._test_positive_set_and_get(oracledb.DB_TYPE_CURSOR, cursor,
                                         cursor)
+        self._test_positive_set_and_get(oracledb.DB_TYPE_CURSOR, None, None)
         self._test_negative_set_and_get(oracledb.DB_TYPE_CURSOR, 5)
 
 if __name__ == "__main__":
