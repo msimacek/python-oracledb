@@ -22,11 +22,17 @@ cdef class ThinConnImpl(BaseConnImpl):
         bint _module_modified
         ThinPoolImpl _pool
 
-    def _connect(self, host, port, connect_string, password):
-        sock = socket.socket()
-        sock.connect((host, port))
+    def _connect(self, params):
+        sock = socket.create_connection((params.host, params.port))
+        if params.secure_transport:
+            wallet_file_name = params.get_wallet_file_name()
+            ssl_context = ssl.create_default_context(cafile=wallet_file_name)
+            ssl_context.load_cert_chain(certfile=wallet_file_name)
+            ssl_context.check_hostname = False
+            sock = ssl_context.wrap_socket(sock)
         self._protocol = Protocol(sock)
-        self._protocol._connect(self, connect_string, password)
+        self._protocol._connect(self, params.get_connect_data(),
+                                params.password)
         self._statement_cache = StatementCache(30)
 
     def close(self, bint in_del=False):

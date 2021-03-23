@@ -21,7 +21,8 @@ class Connection:
                  threaded=False, events=False, cclass=None,
                  purity=constants.ATTR_PURITY_DEFAULT, newpassword=None,
                  edition=None, appcontext=[], tag=None, matchanytag=False,
-                 shardingkey=[], supershardingkey=[]):
+                 shardingkey=[], supershardingkey=[], secure_transport=False,
+                 config_dir=None):
         """
         Constructor for creating a connection to the database. All parameters
         are optional.
@@ -100,15 +101,20 @@ class Connection:
         else:
             pool._verify_open()
             pool_impl = pool._impl
-        result = utils.parse_connect_params(dsn, user, password, host, port,
-                                            service_name, thin)
-        dsn, user, password, host, port, connect_data = result
+        params = utils.ConnectParams(user=user, password=password, host=host,
+                                     port=port, service_name=service_name,
+                                     secure_transport=secure_transport,
+                                     config_dir=config_dir)
+        if dsn is not None:
+            params.parse_dsn(dsn)
+        user = params.user
+        dsn = params.get_dsn()
         if thin:
             impl = thin_impl.ThinConnImpl(user, dsn)
-            impl._connect(host, port, connect_data, password)
+            impl._connect(params)
         else:
             impl = thick_impl.ThickConnImpl(user, dsn)
-            impl._connect(password=password, mode=mode, handle=handle,
+            impl._connect(password=params.password, mode=mode, handle=handle,
                           pool_impl=pool_impl, threaded=threaded,
                           events=events, cclass=cclass, purity=purity,
                           newpassword=newpassword, edition=edition,

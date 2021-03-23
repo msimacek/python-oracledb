@@ -118,13 +118,27 @@ cdef class Protocol:
             raise exc_type(error)
 
     cdef int _receive_packet(self, Message message) except -1:
-        cdef:
-            WriteBuffer buf = self._write_buf
-            uint8_t packet_type
+        cdef uint8_t packet_type
         self._read_buf.receive_packet(&packet_type)
         if packet_type == TNS_PACKET_TYPE_MARKER:
             self._reset()
             message.error_occurred = True
+        elif packet_type == TNS_PACKET_TYPE_REFUSE:
+            self._write_buf._packet_sent = False
+            self._read_buf.skip_bytes(3)
+            response = self._read_buf.read_str(self._read_buf.read_uint8())
+            error_code = "unknown"
+            error_code_int = 0
+            pos = response.find("(ERR=")
+            if pos > 0:
+                end_pos = response.find(")", pos)
+                if end_pos > 0:
+                    error_code = response[pos + 5:end_pos]
+                    error_code_int = int(error_code)
+            error_msg = f"server refused connection with error {error_code}"
+            error = errors._Error(message=error_msg, code=error_code_int)
+            exc_type = get_exception_class(error_code_int)
+            raise exc_type(error)
 
     cdef int _reset(self):
         cdef:

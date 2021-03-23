@@ -13,7 +13,8 @@ class Pool:
                  getmode=constants.POOL_GETMODE_WAIT, events=False,
                  homogeneous=True, externalauth=False, edition=None, timeout=0,
                  wait_timeout=0, max_lifetime_session=0, session_callback=None,
-                 max_sessions_per_shard=0):
+                 max_sessions_per_shard=0, secure_transport=False,
+                 config_dir=None):
         """
         Constructor for the pool. Connection pooling creates a pool of
         available connections to the database, allowing applications to acquire
@@ -119,19 +120,21 @@ class Pool:
                       "oracledb.Connection"
             raise TypeError(message)
         self._connection_type = connectiontype
-        result = utils.parse_connect_params(dsn, user, password, host, port,
-                                            service_name, thin)
-        dsn, user, password, host, port, connect_data = result
+        params = utils.ConnectParams(user=user, password=password, host=host,
+                                     port=port, service_name=service_name,
+                                     secure_transport=secure_transport,
+                                     config_dir=config_dir)
+        if dsn is not None:
+            params.parse_dsn(dsn)
         if thin:
-            impl = thin_impl.ThinPoolImpl(user, dsn, min, max, increment,
-                                          homogeneous, port, host,
-                                          connect_data, password, getmode,
-                                          wait_timeout)
+            impl = thin_impl.ThinPoolImpl(params, min, max, increment,
+                                          homogeneous, getmode, wait_timeout)
         else:
-            impl = thick_impl.ThickPoolImpl(user, dsn, min, max, increment,
-                                            homogeneous)
-            impl._create(password=password, threaded=threaded, getmode=getmode,
-                         events=events, externalauth=externalauth,
+            impl = thick_impl.ThickPoolImpl(params.user, params.get_dsn(), min,
+                                            max, increment, homogeneous)
+            impl._create(password=params.password, threaded=threaded,
+                         getmode=getmode, events=events,
+                         externalauth=externalauth,
                          edition=edition, timeout=timeout,
                          wait_timeout=wait_timeout,
                          max_lifetime_session=max_lifetime_session,

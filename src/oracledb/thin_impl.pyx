@@ -28,6 +28,7 @@ import hashlib
 import os
 import socket
 import re
+import ssl
 import sys
 import threading
 import weakref

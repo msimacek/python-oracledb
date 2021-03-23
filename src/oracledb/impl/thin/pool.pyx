@@ -16,7 +16,6 @@ cdef class ThinPoolImpl(BasePoolImpl):
         uint8_t _getmode
         uint32_t _stmt_cache_size
         uint32_t _timeout
-        uint32_t _port
         uint32_t _max_lifetime_session
         uint32_t _num_pending_requests
         uint32_t _wait_timeout
@@ -24,23 +23,18 @@ cdef class ThinPoolImpl(BasePoolImpl):
         object _create_thread
         object _create_thread_condition
         object _condition
-        str _host
-        str _connect_string
-        str _password
+        object _params
         bint _shutdown
 
-    def __init__(self, user, dsn, min, max, increment, homogeneous, port,
-                 host, connect_string, password, getmode, wait_timeout):
-        self.username = user
-        self.dsn = dsn
+    def __init__(self, params, min, max, increment, homogeneous, getmode,
+                 wait_timeout):
+        self._params = params
+        self.username = params.user
+        self.dsn = params.get_dsn()
         self.min = min
         self.max = max
         self.increment = increment
         self.homogeneous = homogeneous
-        self._port = port
-        self._host = host
-        self._connect_string = connect_string
-        self._password = password
         self._getmode = getmode
         self._wait_timeout = wait_timeout
         self._free_new_conn_impls = []
@@ -60,8 +54,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
         """
         cdef ThinConnImpl conn_impl
         conn_impl = ThinConnImpl(self.username, self.dsn)
-        conn_impl._connect(self._host, self._port, self._connect_string,
-                            self._password)
+        conn_impl._connect(self._params)
         conn_impl._pool = self
         return conn_impl
 
