@@ -31,15 +31,18 @@ cdef class ThinConnImpl(BaseConnImpl):
             ssl_context.check_hostname = False
             sock = ssl_context.wrap_socket(sock)
         self._protocol = Protocol(sock)
-        self._protocol._connect(self, params.get_connect_data(),
-                                params.password)
+        self._protocol._connect(self, params.secure_transport,
+                                params.get_connect_data(), params.password)
         self._statement_cache = StatementCache(30)
 
     def close(self, bint in_del=False):
         if self._pool is not None:
             self._pool._free_busy_connection(self)
         else:
-            self._protocol._close()
+            try:
+                self._protocol._close()
+            except ssl.SSLError:
+                pass
 
     def commit(self):
         self._protocol._commit()

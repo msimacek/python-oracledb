@@ -7,14 +7,18 @@ cdef class Protocol:
     cdef:
         uint8_t _seq_num
         object _socket
+        object _caps
         ReadBuffer _read_buf
         WriteBuffer _write_buf
 
     def __init__(self, sock):
+        self._caps = Capabilities()
+        self.__set_socket(sock)
+
+    cdef int __set_socket(self, sock):
         self._socket = sock
-        caps = Capabilities()
-        self._read_buf = ReadBuffer(sock, TNS_SDU, caps)
-        self._write_buf = WriteBuffer(sock, TNS_SDU, caps)
+        self._read_buf = ReadBuffer(sock, TNS_SDU, self._caps)
+        self._write_buf = WriteBuffer(sock, TNS_SDU, self._caps)
 
     cdef int _break(self):
         cdef WriteBuffer buf = self._write_buf
@@ -37,9 +41,11 @@ cdef class Protocol:
     cdef int _commit(self) except -1:
         self._process_message(CommitMessage())
 
-    cdef _connect(self, ThinConnImpl conn, str connect_string, str password):
+    cdef _connect(self, ThinConnImpl conn, bint secure_transport,
+                  str connect_string, str password):
         cdef:
             ConnectMessage connect_message
+            object temp_sock, ssl_context
             AuthMessage auth_message
 
         # verify that a password has been specified first
@@ -48,9 +54,16 @@ cdef class Protocol:
                                       "no password specified")
 
         # send connect message and process response; this requests the message
-        # to be resent so the message is sent again
+        # to be resent so the message is sent again; however, if a secure
+        # transport is being used, a new socket needs to be created in order
+        # for the TLS negotiation to be repeated (since the socket is handed
+        # over to a different process)
         connect_message = ConnectMessage(connect_string)
         self._process_message(connect_message)
+        if secure_transport:
+            ssl_context = self._socket.context
+            temp_sock = socket.socket(fileno=self._socket.detach())
+            self.__set_socket(ssl_context.wrap_socket(temp_sock))
         self._process_message(connect_message)
 
         # send services, protocol and data types messages and process responses
