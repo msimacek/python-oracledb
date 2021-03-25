@@ -123,7 +123,7 @@ class ConnectParams:
         protocol = "TCPS" if self.secure_transport else "TCP"
         return f"(DESCRIPTION=(ADDRESS=(PROTOCOL={protocol})" + \
                f"(HOST={self.host})(PORT={self.port}))" + \
-               f"(CONNECT_DATA=(SERVICE_NAME={self.service_name})))"
+               f"(CONNECT_DATA=(SERVICE_NAME={self.service_name})(CID=)))"
 
     def get_dsn(self):
         """
