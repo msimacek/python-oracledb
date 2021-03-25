@@ -148,6 +148,7 @@ cdef class MessageWithData(Message):
         bint batcherrors
         list row_var_impls
         bint in_fetch
+        bint parse_only
         object cursor
         object conn
 
@@ -1099,6 +1100,12 @@ cdef class ExecuteMessage(MessageWithData):
             options = TNS_EXEC_OPTION_FETCH
             options |= TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
             num_iters = self.cursor_impl.prefetchrows
+        elif self.parse_only:
+            options = TNS_EXEC_OPTION_PARSE
+            if not stmt._is_plsql:
+                options |= TNS_EXEC_OPTION_NOT_PLSQL
+            if stmt._is_query:
+                options |= TNS_EXEC_OPTION_DESCRIBE
         else:
             if params:
                 num_params = <uint32_t> len(params)

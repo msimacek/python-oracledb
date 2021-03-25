@@ -123,21 +123,6 @@ cdef class ThickCursorImpl(BaseCursorImpl):
     cdef bint _is_plsql(self):
         return <bint> self._stmt_info.isPLSQL
 
-    cdef int _parse(self, object cursor) except -1:
-        cdef:
-            uint32_t mode, num_query_cols
-            int status
-        if self._stmt_info.isQuery:
-            mode = DPI_MODE_EXEC_DESCRIBE_ONLY
-        else:
-            mode = DPI_MODE_EXEC_PARSE_ONLY
-        with nogil:
-            status = dpiStmt_execute(self._handle, mode, &num_query_cols)
-        if status < 0:
-            _raise_from_odpi()
-        if num_query_cols > 0:
-            self._perform_define(cursor, num_query_cols)
-
     cdef int _perform_define(self, object cursor,
                              uint32_t num_query_cols) except -1:
         """
@@ -443,3 +428,21 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             self._perform_define(cursor, num_query_cols)
             self._fixup_ref_cursor = False
         return self.fetch_vars is not None
+
+    def parse(self, cursor):
+        """
+        Internal method for parsing a statement.
+        """
+        cdef:
+            uint32_t mode, num_query_cols
+            int status
+        if self._stmt_info.isQuery:
+            mode = DPI_MODE_EXEC_DESCRIBE_ONLY
+        else:
+            mode = DPI_MODE_EXEC_PARSE_ONLY
+        with nogil:
+            status = dpiStmt_execute(self._handle, mode, &num_query_cols)
+        if status < 0:
+            _raise_from_odpi()
+        if num_query_cols > 0:
+            self._perform_define(cursor, num_query_cols)

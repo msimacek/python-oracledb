@@ -247,13 +247,6 @@ cdef class BaseCursorImpl:
         """
         raise NotImplementedError()
 
-    cdef int _parse(self, object connection) except -1:
-        """
-        Internal method for parsing the currently prepared statement without
-        executing it.
-        """
-        raise NotImplementedError()
-
     cdef int _perform_binds(self, uint32_t num_execs=1) except -1:
         """
         Perform all binds on the cursor.
@@ -416,7 +409,7 @@ cdef class BaseCursorImpl:
         Parse the statement without executing it. This also retrieves
         describe information for queries.
         """
-        self._parse(cursor)
+        raise NotImplementedError()
 
     def prepare(self, statement):
         """

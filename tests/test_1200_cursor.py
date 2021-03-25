@@ -620,8 +620,8 @@ class TestCase(test_env.BaseTestCase):
                 (test_env.get_main_user(), test_env.get_connect_string())
         self.assertEqual(str(self.cursor), expected_value)
 
-    def test_1254_parse(self):
-        "1254 - test parsing statements"
+    def test_1254_parse_query(self):
+        "1254 - test parsing query statements"
         sql = "select LongIntCol from TestNumbers where IntCol = :val"
         self.cursor.parse(sql)
         self.assertEqual(self.cursor.statement, sql)
@@ -997,6 +997,27 @@ class TestCase(test_env.BaseTestCase):
                 from TestTempTable
                 order by IntCol""")
         self.assertEqual(self.cursor.fetchall(), data_to_insert)
+
+    def test_1282_parse_plsql(self):
+        "1282 - test parsing plsql statements"
+        sql = "begin :value := 5; end;"
+        self.cursor.parse(sql)
+        self.assertEqual(self.cursor.statement, sql)
+        self.assertEqual(self.cursor.description, None)
+
+    def test_1283_parse_ddl(self):
+        "1283 - test parsing ddl statements"
+        sql = "truncate table TestTempTable"
+        self.cursor.parse(sql)
+        self.assertEqual(self.cursor.statement, sql)
+        self.assertEqual(self.cursor.description, None)
+
+    def test_1284_parse_dml(self):
+        "1284 - test parsing dml statements"
+        sql = "insert into TestTempTable (IntCol) values (1)"
+        self.cursor.parse(sql)
+        self.assertEqual(self.cursor.statement, sql)
+        self.assertEqual(self.cursor.description, None)
 
 if __name__ == "__main__":
     test_env.run_test_cases()

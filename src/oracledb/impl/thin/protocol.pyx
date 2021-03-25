@@ -109,6 +109,12 @@ cdef class Protocol:
             message = FetchMessage(cursor)
         self._process_message(message)
 
+    cdef int _parse(self, object cursor) except -1:
+        cdef MessageWithData message
+        message = ExecuteMessage(cursor)
+        message.parse_only = True
+        self._process_message(message)
+
     cdef int _ping(self) except -1:
         self._process_message(PingMessage())
 

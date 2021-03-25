@@ -85,3 +85,6 @@ cdef class ThinCursorImpl(BaseCursorImpl):
 
     def is_query(self, connection):
         return self.fetch_vars is not None
+
+    def parse(self, cursor):
+        self._conn_impl._protocol._parse(cursor)
