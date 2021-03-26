@@ -174,7 +174,7 @@ class ConnectParams:
             message = f"invalid connect data: {connect_data}"
             raise ConfigParseError(message)
 
-    def parse_dsn(self, dsn):
+    def parse_dsn(self, dsn, thin):
         """
         Parse a string provided by the user. This will be in the form
         user/password@connect_string where user and password are optional. The
@@ -199,6 +199,10 @@ class ConnectParams:
 
         # store DSN provided by user
         self._dsn = dsn
+
+        # for the thick client, use that DSN without further parsing
+        if not thin:
+            return
 
         # check for structured connect data
         if dsn.startswith("("):

@@ -107,7 +107,7 @@ class Connection:
                                      secure_transport=secure_transport,
                                      config_dir=config_dir)
         if dsn is not None:
-            params.parse_dsn(dsn)
+            params.parse_dsn(dsn, thin=thin)
         user = params.user
         dsn = params.get_dsn()
         if thin:

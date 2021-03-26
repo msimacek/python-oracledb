@@ -125,7 +125,7 @@ class Pool:
                                      secure_transport=secure_transport,
                                      config_dir=config_dir)
         if dsn is not None:
-            params.parse_dsn(dsn)
+            params.parse_dsn(dsn, thin=thin)
         if thin:
             impl = thin_impl.ThinPoolImpl(params, min, max, increment,
                                           homogeneous, getmode, wait_timeout)
