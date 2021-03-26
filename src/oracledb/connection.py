@@ -14,6 +14,7 @@ from .dbobject import DbObjectType
 from .base_impl import DB_TYPE_BLOB, DB_TYPE_CLOB, DB_TYPE_NCLOB
 
 class Connection:
+    _impl = None
 
     def __init__(self, dsn=None, *, user=None, password=None, host=None,
                  port=None, service_name=None, thin=True,
