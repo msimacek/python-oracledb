@@ -493,7 +493,10 @@ cdef class MessageWithData(Message):
             Message._process_message(self, buf, message_type)
 
     cdef int _process_return_parameters(self, ReadBuffer buf) except -1:
-        cdef uint32_t num_params, num_bytes, i
+        cdef:
+            uint32_t num_params, num_bytes, i
+            uint16_t keyword_num
+            bytes key_value
         num_params = buf.read_ub2()         # al8o4l (ignored)
         for i in range(num_params):
             buf.read_ub4()
@@ -504,11 +507,13 @@ cdef class MessageWithData(Message):
         for i in range(num_params):
             num_bytes = buf.read_ub2()      # key
             if num_bytes > 0:
-                buf.read_bytes(buf.read_uint8())
+                key_value = buf.read_bytes(buf.read_uint8())
             num_bytes = buf.read_ub2()      # value
             if num_bytes > 0:
                 buf.read_bytes(buf.read_uint8())
-            buf.read_ub2()                  # keyword num
+            keyword_num = buf.read_ub2()    # keyword num
+            if keyword_num == TNS_KEYWORD_NUM_CURRENT_SCHEMA:
+                self.conn_impl._current_schema = key_value.decode()
         num_bytes = buf.read_ub4()          # registration
         if num_bytes > 0:
             buf.skip_bytes(num_bytes)
