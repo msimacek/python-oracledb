@@ -733,6 +733,16 @@ cdef class MessageWithData(Message):
                 self._write_bind_params_column(buf, var_impl,
                                                var_impl.values[pos])
 
+    cdef int _write_current_schema_piggyback(self, WriteBuffer buf) except -1:
+        cdef bytes schema_bytes
+        buf.write_uint8(TNS_MSG_TYPE_PIGGYBACK)
+        buf.write_uint8(TNS_FUNC_SET_SCHEMA)
+        buf.write_seq_num()
+        buf.write_uint8(1)                  # pointer
+        schema_bytes = self.conn_impl._current_schema.encode()
+        buf.write_ub4(len(schema_bytes))
+        buf.write_bytes(schema_bytes)
+
     cdef int _write_end_to_end_piggyback(self, WriteBuffer buf) except -1:
         cdef:
             bytes action_bytes, client_identifier_bytes, client_info_bytes
@@ -856,6 +866,16 @@ cdef class MessageWithData(Message):
         conn._dbop = None
         conn._module_modified = False
         conn._module = None
+
+    cdef int _write_piggybacks(self, WriteBuffer buf) except -1:
+        if self.conn_impl._current_schema_modified:
+            self._write_current_schema_piggyback(buf)
+        if self.conn_impl._action_modified \
+                or self.conn_impl._client_identifier_modified \
+                or self.conn_impl._client_info_modified \
+                or self.conn_impl._dbop_modified \
+                or self.conn_impl._module_modified:
+            self._write_end_to_end_piggyback(buf)
 
 
 @cython.final
@@ -1137,13 +1157,8 @@ cdef class ExecuteMessage(MessageWithData):
             if self.conn_impl.autocommit:
                 options |= TNS_EXEC_OPTION_COMMIT
 
-        # write end to end attribute piggyback if needed
-        if self.conn_impl._action_modified \
-                or self.conn_impl._client_identifier_modified \
-                or self.conn_impl._client_info_modified \
-                or self.conn_impl._dbop_modified \
-                or self.conn_impl._module_modified:
-            self._write_end_to_end_piggyback(buf)
+        # write piggybacks, if needed
+        self._write_piggybacks(buf)
 
         # write body of message
         self._write_function_code(buf)
@@ -1265,14 +1280,7 @@ cdef class ReExecuteMessage(MessageWithData):
                 exec_flags_2 |= TNS_EXEC_OPTION_COMMIT
             num_iters = self.num_execs
 
-        # write end to end attribute piggyback if needed
-        if self.conn_impl._action_modified \
-                or self.conn_impl._client_identifier_modified \
-                or self.conn_impl._client_info_modified \
-                or self.conn_impl._dbop_modified \
-                or self.conn_impl._module_modified:
-            self._write_end_to_end_piggyback(buf)
-
+        self._write_piggybacks(buf)
         self._write_function_code(buf)
         buf.write_ub4(stmt._cursor_id)
         buf.write_ub4(num_iters)

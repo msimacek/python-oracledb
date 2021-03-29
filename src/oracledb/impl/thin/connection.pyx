@@ -23,6 +23,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         ThinPoolImpl _pool
         bytes _ltxid
         str _current_schema
+        bint _current_schema_modified
 
     def _connect(self, params):
         sock = socket.create_connection((params.host, params.port))
@@ -81,6 +82,10 @@ cdef class ThinConnImpl(BaseConnImpl):
     def set_client_info(self, str value):
         self._client_info = value
         self._client_info_modified = True
+
+    def set_current_schema(self, value):
+        self._current_schema = value
+        self._current_schema_modified = True
 
     def set_dbop(self, str value):
         self._dbop = value
