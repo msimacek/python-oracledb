@@ -166,7 +166,7 @@ cdef class MessageWithData(Message):
             cursor = Cursor(self.conn)
         cursor_impl = cursor._impl
         cursor_impl._statement = Statement()
-        cursor_impl._fetch_array_size = cursor.arraysize
+        cursor_impl._fetch_array_size = cursor.arraysize + cursor.prefetchrows
         cursor_impl._more_rows_to_fetch = True
         cursor_impl._statement._is_query = True
         self._process_describe_info(buf, cursor)
@@ -200,7 +200,8 @@ cdef class MessageWithData(Message):
             if cursor_impl.fetch_vars is not None:
                 self.row_var_impls = [v._impl for v in cursor_impl.fetch_vars]
             cursor_impl._more_rows_to_fetch = True
-            cursor_impl._fetch_array_size = cursor_impl.arraysize
+            if self.in_fetch and not cursor_impl._requires_full_execute:
+                cursor_impl._fetch_array_size = cursor_impl.arraysize
             cursor_impl._buffer_rowcount = cursor_impl._buffer_index = 0
             if self.row_var_impls is not None:
                 for var_impl in self.row_var_impls:
@@ -1099,7 +1100,7 @@ cdef class ExecuteMessage(MessageWithData):
         elif self.cursor_impl._requires_full_execute:
             options = TNS_EXEC_OPTION_FETCH
             options |= TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
-            num_iters = self.cursor_impl.prefetchrows
+            num_iters = self.cursor_impl._fetch_array_size
         elif self.parse_only:
             options = TNS_EXEC_OPTION_PARSE
             if not stmt._is_plsql:

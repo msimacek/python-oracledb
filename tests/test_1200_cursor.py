@@ -830,11 +830,11 @@ class TestCase(test_env.BaseTestCase):
         # create refcursor and execute stored procedure
         with self.connection.cursor() as cursor:
             refcursor = self.connection.cursor()
-            refcursor.prefetchrows = 300
-            refcursor.arraysize = 300
+            refcursor.prefetchrows = 150
+            refcursor.arraysize = 50
             cursor.callproc("myrefcursorproc", [refcursor])
             refcursor.fetchall()
-            self.assertRoundTrips(2)
+            self.assertRoundTrips(4)
 
     def test_1267_existing_cursor_prefetchrows(self):
         "1267 - test prefetch rows using existing cursor"
