@@ -21,6 +21,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         str _module
         bint _module_modified
         ThinPoolImpl _pool
+        bytes _ltxid
 
     def _connect(self, params):
         sock = socket.create_connection((params.host, params.port))
@@ -52,6 +53,9 @@ cdef class ThinConnImpl(BaseConnImpl):
 
     def create_temp_lob_impl(self, DbType dbtype):
         return ThinLobImpl._create(self, dbtype)
+
+    def get_ltxid(self):
+        return self._ltxid or b''
 
     def get_version(self):
         return self._server_version
