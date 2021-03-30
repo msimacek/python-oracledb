@@ -514,6 +514,8 @@ cdef class MessageWithData(Message):
             keyword_num = buf.read_ub2()    # keyword num
             if keyword_num == TNS_KEYWORD_NUM_CURRENT_SCHEMA:
                 self.conn_impl._current_schema = key_value.decode()
+            elif keyword_num == TNS_KEYWORD_NUM_EDITION:
+                self.conn_impl._edition = key_value.decode()
         num_bytes = buf.read_ub4()          # registration
         if num_bytes > 0:
             buf.skip_bytes(num_bytes)

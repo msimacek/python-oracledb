@@ -24,6 +24,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         bytes _ltxid
         str _current_schema
         bint _current_schema_modified
+        str _edition
 
     def _connect(self, params):
         sock = socket.create_connection((params.host, params.port))
@@ -58,6 +59,9 @@ cdef class ThinConnImpl(BaseConnImpl):
 
     def get_current_schema(self):
         return self._current_schema
+
+    def get_edition(self):
+        return self._edition
 
     def get_ltxid(self):
         return self._ltxid or b''
