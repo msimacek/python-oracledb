@@ -45,7 +45,7 @@ cdef class StatementCache:
         if len(self._statements) > self._max_entries:
             self._statements.popitem(last=False)
 
-    def set_max_entries(self, max_entries):
+    def set_max_entries(self, uint32_t max_entries):
         while len(self._statements) > max_entries:
             self._statements.popitem(last=False)
         self._max_entries = max_entries

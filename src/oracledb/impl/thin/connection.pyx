@@ -74,6 +74,9 @@ cdef class ThinConnImpl(BaseConnImpl):
     def get_ltxid(self):
         return self._ltxid or b''
 
+    def get_stmt_cache_size(self):
+        return self._statement_cache._max_entries
+
     def get_version(self):
         return self._server_version
 
@@ -115,3 +118,6 @@ cdef class ThinConnImpl(BaseConnImpl):
         # setting the module by itself results in an error so always force the
         # action to be set as well (which eliminates this error)
         self._action_modified = True
+
+    def set_stmt_cache_size(self, value):
+        self._statement_cache.set_max_entries(value)
