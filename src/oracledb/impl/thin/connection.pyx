@@ -25,6 +25,8 @@ cdef class ThinConnImpl(BaseConnImpl):
         str _current_schema
         bint _current_schema_modified
         str _edition
+        str _internal_name
+        str _external_name
 
     def _connect(self, params):
         sock = socket.create_connection((params.host, params.port))
@@ -63,6 +65,12 @@ cdef class ThinConnImpl(BaseConnImpl):
     def get_edition(self):
         return self._edition
 
+    def get_external_name(self):
+        return self._external_name
+
+    def get_internal_name(self):
+        return self._internal_name
+
     def get_ltxid(self):
         return self._ltxid or b''
 
@@ -94,6 +102,12 @@ cdef class ThinConnImpl(BaseConnImpl):
     def set_dbop(self, str value):
         self._dbop = value
         self._dbop_modified = True
+
+    def set_external_name(self, value):
+        self._external_name = value
+
+    def set_internal_name(self, value):
+        self._internal_name = value
 
     def set_module(self, str value):
         self._module = value
