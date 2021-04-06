@@ -13,12 +13,12 @@
 # database.
 #
 # The primary advantage to this approach over the equivalent approach shown in
-# SessionCallback.py is when DRCP is used, as the callback is invoked on the
+# session_callback.py is when DRCP is used, as the callback is invoked on the
 # server and no round trip is required to set state.
 #
 # Currently, this script runs with the thick driver only.
 #
-# Also see SessionCallback.py
+# Also see session_callback.py
 #
 #------------------------------------------------------------------------------
 

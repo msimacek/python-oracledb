@@ -14,7 +14,7 @@
 # If all your connections should have the same session state, you can simplify
 # the session callback by removing the tagging logic.
 #
-# Also see SessionCallbackPLSQL.py
+# Also see session_callback_plsql.py
 #
 #------------------------------------------------------------------------------
 
