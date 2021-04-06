@@ -7,7 +7,7 @@
 #   This script demonstrates using advanced queuing notification. Once this
 # script is running, use another session to enqueue a few messages to the
 # "DEMO_BOOK_QUEUE" queue. This is most easily accomplished by running the
-# ObjectAQ.py sample.
+# object_aq.py sample.
 #
 # Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------

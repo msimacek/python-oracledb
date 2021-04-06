@@ -16,7 +16,7 @@
 # the 'threaded' parameter to True. Note only one operation (such as an execute
 # or fetch) can take place at a time on each connection.
 #
-# Also see SessionCallback.py.
+# Also see session_callback.py.
 #
 #------------------------------------------------------------------------------
 

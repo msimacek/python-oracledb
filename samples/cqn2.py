@@ -9,7 +9,7 @@
 # running, use another session to insert, update or delete rows from the table
 # TestTempTable and you will see the notification of that change.
 #
-#   This script differs from CQN.py in that it shows how a connection can be
+#   This script differs from cqn.py in that it shows how a connection can be
 # acquired from a session pool and used to query the changes that have been
 # made.
 #

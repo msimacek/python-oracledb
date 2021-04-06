@@ -7,7 +7,7 @@
 #   Shows some JSON features of Oracle Database 21c.
 #   See https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=ADJSN
 #
-#   For JSON with older databases see JSONBLOB.py
+#   For JSON with older databases see json_blob.py
 #
 # Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------

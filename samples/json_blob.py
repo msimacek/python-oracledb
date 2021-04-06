@@ -7,7 +7,7 @@
 #   Shows how to use a BLOB as a JSON column store.
 #
 #   Note: with Oracle Database 21c using the new JSON type is recommended
-#   instead, see JSON.py
+#   instead, see json_direct.py
 #
 #   Documentation:
 #   oracledb:        https://oracledb.readthedocs.io/en/latest/user_guide/json_data_type.html
