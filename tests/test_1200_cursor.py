@@ -1019,5 +1019,14 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(self.cursor.statement, sql)
         self.assertEqual(self.cursor.description, None)
 
+    def test_1285_executemany_with_plsql_binds(self):
+        "1285 - test executing plsql statements multiple times (with binds)"
+        var = self.cursor.var(int, arraysize=5)
+        self.cursor.setinputsizes(var)
+        data = [[25], [30], [None], [35], [None]]
+        exepected_data = [25, 30, None, 35, None]
+        self.cursor.executemany("declare t number; begin t := :1; end;", data)
+        self.assertEqual(var.values, exepected_data)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
