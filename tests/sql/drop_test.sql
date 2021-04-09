@@ -3,12 +3,11 @@
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
- * SetupTest.sql
- *   Creates and populates schemas with the database objects used by the
- * oracledb test suite.
+ * drop_test.sql
+ *   Drops database objects used for oracledb tests.
  *
  * Run this like:
- *   sqlplus sys/syspassword@hostname/servicename as sysdba @SetupTest
+ *   sqlplus sys/syspassword@hostname/servicename as sysdba @drop_test
  *---------------------------------------------------------------------------*/
 
 whenever sqlerror exit failure
@@ -17,14 +16,11 @@ whenever sqlerror exit failure
 set echo off termout on feedback off verify off
 accept main_user char default pythontest -
         prompt "Name of main schema [pythontest]: "
-accept main_password char prompt "Password for &main_user: " HIDE
 accept proxy_user char default pythontestproxy -
-        prompt "Name of edition schema [pythontestproxy]: "
-accept proxy_password char prompt "Password for &proxy_user: " HIDE
+        prompt "Name of proxy schema [pythontestproxy]: "
 set feedback on
 
 -- perform work
-@@DropTestExec.sql
-@@SetupTestExec.sql
+@@drop_test_exec.sql
 
 exit

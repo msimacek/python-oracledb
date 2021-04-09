@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# SetupTest.py
+# setup_test.py
 #
 # Creates users and populates their schemas with the tables and packages
 # necessary for the oracledb test suite.
@@ -12,14 +12,14 @@
 import oracledb
 
 import test_env
-import DropTest
+import drop_test
 
 # connect as administrative user (usually SYSTEM or ADMIN)
 conn = oracledb.connect(test_env.get_admin_connect_string(),
                         thin=test_env.get_is_thin())
 
 # drop existing users and editions, if applicable
-DropTest.drop_tests(conn)
+drop_test.drop_tests(conn)
 
 # create test schemas
 print("Creating test schemas...")
