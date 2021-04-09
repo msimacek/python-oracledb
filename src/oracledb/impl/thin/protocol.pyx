@@ -31,17 +31,19 @@ cdef class Protocol:
         buf.end_request()
 
     cpdef int _close(self) except -1:
-        self._rollback()                    # rollback any transaction first
-        self._process_message(LogoffMessage())
+        with self._request_lock:
+            self._process_message(RollbackMessage())
+            self._process_message(LogoffMessage())
 
-        # send final close
-        self._write_buf.start_request(TNS_PACKET_TYPE_DATA, 0x0040)
-        self._write_buf.end_request()
-        self._socket.shutdown(socket.SHUT_RDWR)
-        self._socket.close()
+            # send final close
+            self._write_buf.start_request(TNS_PACKET_TYPE_DATA, 0x0040)
+            self._write_buf.end_request()
+            self._socket.shutdown(socket.SHUT_RDWR)
+            self._socket.close()
 
     cdef int _commit(self) except -1:
-        self._process_message(CommitMessage())
+        with self._request_lock:
+            self._process_message(CommitMessage())
 
     cdef _connect(self, ThinConnImpl conn, bint secure_transport,
                   str connect_string, str password):
@@ -86,46 +88,49 @@ cdef class Protocol:
             ThinCursorImpl cursor_impl = cursor._impl
             Statement stmt = cursor_impl._statement
             MessageWithData message
-        if stmt._cursor_id and not stmt._requires_full_execute:
-            message = ReExecuteMessage(cursor)
-        else:
-            message = ExecuteMessage(cursor)
-        message.arraydmlrowcounts = arraydmlrowcounts
-        message.batcherrors = batcherrors
-        message.num_execs = num_execs
-        self._process_message(message)
-        if message.requires_define:
+        with self._request_lock:
+            if stmt._cursor_id and not stmt._requires_full_execute:
+                message = ReExecuteMessage(cursor)
+            else:
+                message = ExecuteMessage(cursor)
+            message.arraydmlrowcounts = arraydmlrowcounts
+            message.batcherrors = batcherrors
+            message.num_execs = num_execs
             self._process_message(message)
-        stmt._requires_full_execute = False
-        if cursor_impl._statement._is_query:
-            cursor_impl.rowcount = 0
+            if message.requires_define:
+                self._process_message(message)
+            stmt._requires_full_execute = False
+            if cursor_impl._statement._is_query:
+                cursor_impl.rowcount = 0
 
     cdef int _fetch(self, object cursor) except -1:
         cdef:
             ThinCursorImpl cursor_impl = cursor._impl
             MessageWithData message
-        if cursor_impl._requires_full_execute:
-            message = ExecuteMessage(cursor)
-            message.num_execs = cursor_impl._fetch_array_size
-        else:
-            message = FetchMessage(cursor)
-        self._process_message(message)
+        with self._request_lock:
+            if cursor_impl._requires_full_execute:
+                message = ExecuteMessage(cursor)
+                message.num_execs = cursor_impl._fetch_array_size
+            else:
+                message = FetchMessage(cursor)
+            self._process_message(message)
 
     cdef int _parse(self, object cursor) except -1:
         cdef MessageWithData message
-        message = ExecuteMessage(cursor)
-        message.parse_only = True
-        self._process_message(message)
+        with self._request_lock:
+            message = ExecuteMessage(cursor)
+            message.parse_only = True
+            self._process_message(message)
 
     cdef int _ping(self) except -1:
-        self._process_message(PingMessage())
+        with self._request_lock:
+            self._process_message(PingMessage())
 
     cdef int _process_message(self, Message message) except -1:
         try:
-            with self._request_lock:
-                message.send(self._write_buf)
-                self._receive_packet(message)
-                message.process(self._read_buf)
+            message.send(self._write_buf)
+            self._receive_packet(message)
+            message.process(self._read_buf)
         except:
             if self._write_buf._packet_sent \
                     and self._read_buf._socket is not None:
@@ -184,4 +189,5 @@ cdef class Protocol:
         self._read_buf.receive_packet(&packet_type)
 
     cdef int _rollback(self) except -1:
-        self._process_message(RollbackMessage())
+        with self._request_lock:
+            self._process_message(RollbackMessage())
