@@ -702,6 +702,10 @@ cdef class WriteBuffer:
         self._view_count -= 1
 
     cdef inline int _ensure_available(self, ssize_t additional_size) except -1:
+        """
+        Ensure that the specified number of bytes are available in the packet.
+        If not, send the current packet and begin a new packet.
+        """
         cdef ssize_t new_size = self._actual_size + additional_size
         if self._view_count > 0:
             raise BufferError('Buffer is used in a memoryview!')
@@ -732,6 +736,10 @@ cdef class WriteBuffer:
         self._actual_size = PACKET_HEADER_SIZE
 
     cdef inline ssize_t bytes_left(self):
+        """
+        Return the number of bytes that can still be added to the packet before
+        it is full and must be sent to the server.
+        """
         return self._max_size - self._actual_size
 
     cdef int end_request(self) except -1:
@@ -743,6 +751,11 @@ cdef class WriteBuffer:
             self._send_packet()
 
     cdef inline ssize_t max_payload_bytes(self):
+        """
+        Return the maximum number of bytes that can be sent in a packet. This
+        is the maximum size of the entire packet, less the bytes in the header
+        and 2 bytes for the data flags.
+        """
         return self._max_size - PACKET_HEADER_SIZE - 2
 
     cdef void start_request(self, uint8_t packet_type, uint16_t data_flags=0):
@@ -750,7 +763,8 @@ cdef class WriteBuffer:
         Indicates that a request from the client is starting. The packet type
         is retained just in case a request spans multiple packets. The packet
         header (8 bytes in length) is written when a packet is actually being
-        sent and so is skipped at this point"""
+        sent and so is skipped at this point.
+        """
         self._packet_sent = False
         self._packet_type = packet_type
         self._actual_size = PACKET_HEADER_SIZE
