@@ -13,7 +13,7 @@ import test_env
 
 def drop_tests(conn):
     print("Dropping test schemas...")
-    test_env.run_sql_script(conn, "DropTest",
+    test_env.run_sql_script(conn, "drop_test",
                             main_user=test_env.get_main_user(),
                             proxy_user=test_env.get_proxy_user())
 

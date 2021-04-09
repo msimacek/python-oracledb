@@ -23,7 +23,7 @@ drop_test.drop_tests(conn)
 
 # create test schemas
 print("Creating test schemas...")
-test_env.run_sql_script(conn, "SetupTest",
+test_env.run_sql_script(conn, "setup_test",
                         main_user=test_env.get_main_user(),
                         main_password=test_env.get_main_password(),
                         proxy_user=test_env.get_proxy_user(),

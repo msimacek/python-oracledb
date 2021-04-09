@@ -13,7 +13,7 @@ import sample_env
 
 def drop_samples(conn):
     print("Dropping sample schemas and edition...")
-    sample_env.run_sql_script(conn, "DropSamples",
+    sample_env.run_sql_script(conn, "drop_samples",
                               main_user=sample_env.get_main_user(),
                               edition_user=sample_env.get_edition_user(),
                               edition_name=sample_env.get_edition_name())

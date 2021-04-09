@@ -24,7 +24,7 @@ drop_samples.drop_samples(conn)
 
 # create sample schema and edition
 print("Creating sample schemas and edition...")
-sample_env.run_sql_script(conn, "SetupSamples",
+sample_env.run_sql_script(conn, "setup_samples",
                           main_user=sample_env.get_main_user(),
                           main_password=sample_env.get_main_password(),
                           edition_user=sample_env.get_edition_user(),
