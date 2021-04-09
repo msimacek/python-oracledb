@@ -10,10 +10,12 @@ cdef class Protocol:
         object _caps
         ReadBuffer _read_buf
         WriteBuffer _write_buf
+        object _request_lock
 
     def __init__(self, sock):
         self._caps = Capabilities()
         self.__set_socket(sock)
+        self._request_lock = threading.Lock()
 
     cdef int __set_socket(self, sock):
         self._socket = sock
@@ -120,9 +122,10 @@ cdef class Protocol:
 
     cdef int _process_message(self, Message message) except -1:
         try:
-            message.send(self._write_buf)
-            self._receive_packet(message)
-            message.process(self._read_buf)
+            with self._request_lock:
+                message.send(self._write_buf)
+                self._receive_packet(message)
+                message.process(self._read_buf)
         except:
             if self._write_buf._packet_sent \
                     and self._read_buf._socket is not None:

@@ -25,6 +25,14 @@ class TestCase(test_env.BaseTestCase):
         count, = cursor.fetchone()
         self.assertEqual(count, 10)
 
+    def __verify_fetched_data(self, connection):
+        expected_data = [f"String {i + 1}" for i in range(10)]
+        sql = "select StringCol from TestStrings order by IntCol"
+        for i in range(5):
+            with connection.cursor() as cursor:
+                fetched_data = [s for s, in cursor.execute(sql)]
+                self.assertEqual(fetched_data, expected_data)
+
     def __verify_args(self, connection):
         self.assertEqual(connection.username, test_env.get_main_user(),
                          "user name differs")
@@ -250,7 +258,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(count, 0)
 
     def test_1119_threading(self):
-        "1119 - connection to database with multiple threads"
+        "1119 - multiple connections to database with multiple threads"
         threads = []
         for i in range(20):
             thread = threading.Thread(None, self.__connect_and_drop)
@@ -336,6 +344,16 @@ class TestCase(test_env.BaseTestCase):
         cursor.execute("select count(*) from TestTempTable")
         count, = cursor.fetchone()
         self.assertEqual(count, 0)
+
+    def test_1126_threading_single_connection(self):
+        "1126 - single connection to database with multiple threads"
+        with test_env.get_connection(threaded=True) as connection:
+            threads = [threading.Thread(target=self.__verify_fetched_data,
+                                        args=(connection,)) for i in range(3)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
 
 if __name__ == "__main__":
     test_env.run_test_cases()
