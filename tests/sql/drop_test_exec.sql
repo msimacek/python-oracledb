@@ -3,11 +3,11 @@
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
- * DropTestExec.sql
+ * drop_test_exec.sql
  *   This script performs the actual work of dropping the database schemas used
- * by the oracledb test suite. It is called by the DropTest.sql and
- * SetupTest.sql scripts after acquiring the necessary parameters and also by
- * the Python script DropTest.py.
+ * by the oracledb test suite. It is called by the drop_test.sql and
+ * setup_test.sql scripts after acquiring the necessary parameters and also by
+ * the Python script drop_test.py.
  *---------------------------------------------------------------------------*/
 
 begin
