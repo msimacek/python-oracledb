@@ -68,9 +68,6 @@ cdef class Statement:
         object _bind_info_dict
         bint _requires_full_execute
 
-    def __cinit__(self):
-        self._requires_full_execute = True
-
     cdef _determine_statement_type(self, str sql):
         tokens = sql.strip()[:10].split()
         if tokens:
