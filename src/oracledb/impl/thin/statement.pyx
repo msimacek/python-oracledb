@@ -17,38 +17,14 @@ cdef class BindInfo:
         int16_t scale
         uint8_t csfrm
         object _bind_var
-        bint _is_dup
 
     def __cinit__(self, str name):
         self._bind_name = name
 
-
-cdef class StatementCache:
-
-    cdef:
-        uint32_t _max_entries
-        object _statements
-
-    def __init__(self, max_entries):
-        self._max_entries = max_entries
-        self._statements = collections.OrderedDict()
-
-    def get_statement(self, sql):
-        statement = self._statements.get(sql)
-        if statement is not None:
-            self._statements.move_to_end(sql)
-        return statement
-
-    cdef put_statement(self, Statement statement):
-        self._statements[statement._sql] = statement
-        self._statements.move_to_end(statement._sql)
-        if len(self._statements) > self._max_entries:
-            self._statements.popitem(last=False)
-
-    def set_max_entries(self, uint32_t max_entries):
-        while len(self._statements) > max_entries:
-            self._statements.popitem(last=False)
-        self._max_entries = max_entries
+    cdef BindInfo copy(self):
+        cdef BindInfo copied_bind_info = BindInfo(self._bind_name)
+        copied_bind_info._is_return_bind = self._is_return_bind
+        return copied_bind_info
 
 
 cdef class Statement:
@@ -67,6 +43,33 @@ cdef class Statement:
         list _fetch_vars
         object _bind_info_dict
         bint _requires_full_execute
+        bint _return_to_cache
+        bint _in_use
+
+    cdef Statement copy(self):
+        cdef:
+            Statement copied_statement = Statement()
+            object bind_info_dict
+            BindInfo bind_info
+        copied_statement._sql = self._sql
+        copied_statement._sql_bytes = self._sql_bytes
+        copied_statement._sql_bytes_length = self._sql_bytes_length
+        copied_statement._is_query = self._is_query
+        copied_statement._is_plsql = self._is_plsql
+        copied_statement._is_dml = self._is_dml
+        copied_statement._is_ddl = self._is_ddl
+        copied_statement._is_returning = self._is_returning
+        copied_statement._bind_info_list = \
+                [bind_info.copy() for bind_info in self._bind_info_list]
+        copied_statement._bind_info_dict = collections.OrderedDict()
+        bind_info_dict = copied_statement._bind_info_dict
+        for bind_info in copied_statement._bind_info_list:
+            if bind_info._bind_name in bind_info_dict:
+                bind_info_dict[bind_info._bind_name].append(bind_info)
+            else:
+                bind_info_dict[bind_info._bind_name] = [bind_info]
+        copied_statement._return_to_cache = False
+        return copied_statement
 
     cdef _determine_statement_type(self, str sql):
         tokens = sql.strip()[:10].split()
@@ -121,7 +124,6 @@ cdef class Statement:
         self._bind_info_list = [BindInfo(name) for name in bind_names]
         for bind_info in self._bind_info_list:
             if bind_info._bind_name in self._bind_info_dict:
-                bind_info._is_dup = True
                 self._bind_info_dict[bind_info._bind_name].append(bind_info)
             else:
                 self._bind_info_dict[bind_info._bind_name] = [bind_info]

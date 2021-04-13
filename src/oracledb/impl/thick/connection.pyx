@@ -92,106 +92,6 @@ cdef class ThickConnImpl(BaseConnImpl):
         if self._handle != NULL:
             dpiConn_release(self._handle)
 
-    def _connect(self, str password=None, uint32_t mode=0, uint64_t handle=0,
-                 ThickPoolImpl pool_impl=None, bint threaded=False, bint
-                 events=False, str cclass=None, uint32_t purity=0,
-                 str newpassword=None, str edition=None, list appcontext=None,
-                 str tag=None, bint matchanytag=False, list shardingkey=None,
-                 list supershardingkey=None):
-        cdef:
-            dpiCommonCreateParams common_params
-            dpiConnCreateParams conn_params
-            ConnectionParams params
-            int status
-
-        # ensure that the Oracle Client library is initialized
-        if driver_context == NULL:
-            init_oracle_client()
-
-        # set up connection parameters
-        params = ConnectionParams()
-        if self.username is not None:
-            params.username = self.username.encode()
-            params.username_ptr = params.username
-            params.username_len = <uint32_t> len(params.username)
-        if password is not None:
-            params.password = password.encode()
-            params.password_ptr = params.password
-            params.password_len = <uint32_t> len(params.password)
-        if self.dsn is not None:
-            params.dsn = self.dsn.encode()
-            params.dsn_ptr = params.dsn
-            params.dsn_len = <uint32_t> len(params.dsn)
-        if cclass is not None:
-            params.cclass = cclass.encode()
-            params.cclass_ptr = params.cclass
-            params.cclass_len = <uint32_t> len(params.cclass)
-        if newpassword is not None:
-            params.new_password = newpassword.decode()
-            params.new_password_ptr = params.new_password
-            params.new_password_len = <uint32_t> len(params.new_password)
-        if edition is not None:
-            params.edition = edition.encode()
-            params.edition_ptr = params.edition
-            params.edition_len = <uint32_t> len(params.edition)
-        if tag is not None:
-            params.tag = tag.encode()
-            params.tag_ptr = params.tag
-            params.tag_len = <uint32_t> len(params.tag)
-        if appcontext:
-            params.process_appcontext(appcontext)
-
-        # set up common creation parameters
-        if dpiContext_initCommonCreateParams(driver_context,
-                                             &common_params) < 0:
-            _raise_from_odpi()
-        if threaded:
-            common_params.createMode |= DPI_MODE_CREATE_THREADED
-        if events:
-            common_params.createMode |= DPI_MODE_CREATE_EVENTS
-        if edition is not None:
-            common_params.edition = params.edition_ptr
-            common_params.editionLength = params.edition_len
-
-        # set up connection specific creation parameters
-        if dpiContext_initConnCreateParams(driver_context, &conn_params) < 0:
-            _raise_from_odpi()
-        if params.username_len == 0 and params.password_len == 0:
-            conn_params.externalAuth = 1
-        if cclass is not None:
-            conn_params.connectionClass = params.cclass_ptr
-            conn_params.connectionClassLength = params.cclass_len
-        if newpassword is not None:
-            conn_params.newPassword = params.new_password_ptr
-            conn_params.newPasswordLength = params.new_password_len
-        if appcontext:
-            conn_params.appContext = params.app_context
-            conn_params.numAppContext = params.num_app_context
-        if tag is not None:
-            conn_params.tag = params.tag_ptr
-            conn_params.tagLength = params.tag_len
-        if handle:
-            conn_params.externalHandle = <void*> (<uint64_t> handle)
-            self._is_external = True
-        if pool_impl is not None:
-            conn_params.pool = pool_impl._handle
-        conn_params.matchAnyTag = matchanytag
-        conn_params.purity = purity
-
-        # perform connection
-        with nogil:
-            status = dpiConn_create(driver_context, params.username_ptr,
-                                    params.username_len, params.password_ptr,
-                                    params.password_len, params.dsn_ptr,
-                                    params.dsn_len, &common_params,
-                                    &conn_params, &self._handle)
-        if status < 0:
-            _raise_from_odpi()
-
-        # set tag property, if applicable
-        if conn_params.outTagLength > 0:
-            self.tag = conn_params.outTag[:conn_params.outTagLength].decode()
-
     cdef int _set_text_attr(self, dpiConnSetTextAttrFunc func,
                             str value) except -1:
         cdef:
@@ -287,6 +187,106 @@ cdef class ThickConnImpl(BaseConnImpl):
             status = dpiConn_commit(self._handle)
         if status < 0:
             _raise_from_odpi()
+
+    def connect(self, str password=None, uint32_t mode=0, uint64_t handle=0,
+                ThickPoolImpl pool_impl=None, bint threaded=False, bint
+                events=False, str cclass=None, uint32_t purity=0,
+                str newpassword=None, str edition=None, list appcontext=None,
+                str tag=None, bint matchanytag=False, list shardingkey=None,
+                list supershardingkey=None):
+        cdef:
+            dpiCommonCreateParams common_params
+            dpiConnCreateParams conn_params
+            ConnectionParams params
+            int status
+
+        # ensure that the Oracle Client library is initialized
+        if driver_context == NULL:
+            init_oracle_client()
+
+        # set up connection parameters
+        params = ConnectionParams()
+        if self.username is not None:
+            params.username = self.username.encode()
+            params.username_ptr = params.username
+            params.username_len = <uint32_t> len(params.username)
+        if password is not None:
+            params.password = password.encode()
+            params.password_ptr = params.password
+            params.password_len = <uint32_t> len(params.password)
+        if self.dsn is not None:
+            params.dsn = self.dsn.encode()
+            params.dsn_ptr = params.dsn
+            params.dsn_len = <uint32_t> len(params.dsn)
+        if cclass is not None:
+            params.cclass = cclass.encode()
+            params.cclass_ptr = params.cclass
+            params.cclass_len = <uint32_t> len(params.cclass)
+        if newpassword is not None:
+            params.new_password = newpassword.decode()
+            params.new_password_ptr = params.new_password
+            params.new_password_len = <uint32_t> len(params.new_password)
+        if edition is not None:
+            params.edition = edition.encode()
+            params.edition_ptr = params.edition
+            params.edition_len = <uint32_t> len(params.edition)
+        if tag is not None:
+            params.tag = tag.encode()
+            params.tag_ptr = params.tag
+            params.tag_len = <uint32_t> len(params.tag)
+        if appcontext:
+            params.process_appcontext(appcontext)
+
+        # set up common creation parameters
+        if dpiContext_initCommonCreateParams(driver_context,
+                                             &common_params) < 0:
+            _raise_from_odpi()
+        if threaded:
+            common_params.createMode |= DPI_MODE_CREATE_THREADED
+        if events:
+            common_params.createMode |= DPI_MODE_CREATE_EVENTS
+        if edition is not None:
+            common_params.edition = params.edition_ptr
+            common_params.editionLength = params.edition_len
+
+        # set up connection specific creation parameters
+        if dpiContext_initConnCreateParams(driver_context, &conn_params) < 0:
+            _raise_from_odpi()
+        if params.username_len == 0 and params.password_len == 0:
+            conn_params.externalAuth = 1
+        if cclass is not None:
+            conn_params.connectionClass = params.cclass_ptr
+            conn_params.connectionClassLength = params.cclass_len
+        if newpassword is not None:
+            conn_params.newPassword = params.new_password_ptr
+            conn_params.newPasswordLength = params.new_password_len
+        if appcontext:
+            conn_params.appContext = params.app_context
+            conn_params.numAppContext = params.num_app_context
+        if tag is not None:
+            conn_params.tag = params.tag_ptr
+            conn_params.tagLength = params.tag_len
+        if handle:
+            conn_params.externalHandle = <void*> (<uint64_t> handle)
+            self._is_external = True
+        if pool_impl is not None:
+            conn_params.pool = pool_impl._handle
+        conn_params.matchAnyTag = matchanytag
+        conn_params.purity = purity
+
+        # perform connection
+        with nogil:
+            status = dpiConn_create(driver_context, params.username_ptr,
+                                    params.username_len, params.password_ptr,
+                                    params.password_len, params.dsn_ptr,
+                                    params.dsn_len, &common_params,
+                                    &conn_params, &self._handle)
+        if status < 0:
+            _raise_from_odpi()
+
+        # set tag property, if applicable
+        if conn_params.outTagLength > 0:
+            self.tag = conn_params.outTag[:conn_params.outTagLength].decode()
 
     def create_cursor_impl(self):
         return ThickCursorImpl.__new__(ThickCursorImpl, self)

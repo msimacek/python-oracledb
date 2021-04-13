@@ -5,7 +5,9 @@
 cdef class ThinConnImpl(BaseConnImpl):
 
     cdef:
-        StatementCache _statement_cache
+        object _statement_cache
+        uint32_t _statement_cache_size
+        object _statement_cache_lock
         Protocol _protocol
         str _server_version
         uint32_t _session_id
@@ -27,19 +29,47 @@ cdef class ThinConnImpl(BaseConnImpl):
         str _edition
         str _internal_name
         str _external_name
+        array.array _cursors_to_close
+        ssize_t _num_cursors_to_close
 
-    def _connect(self, params):
-        sock = socket.create_connection((params.host, params.port))
-        if params.secure_transport:
-            wallet_file_name = params.get_wallet_file_name()
-            ssl_context = ssl.create_default_context(cafile=wallet_file_name)
-            ssl_context.load_cert_chain(certfile=wallet_file_name)
-            ssl_context.check_hostname = False
-            sock = ssl_context.wrap_socket(sock)
-        self._protocol = Protocol(sock)
-        self._protocol._connect(self, params.secure_transport,
-                                params.get_connect_data(), params.password)
-        self._statement_cache = StatementCache(30)
+    cdef int _add_cursor_to_close(self, Statement stmt) except -1:
+        if self._num_cursors_to_close == TNS_MAX_CURSORS_TO_CLOSE:
+            raise Exception("too many cursors to close!")
+        self._cursors_to_close[self._num_cursors_to_close] = stmt._cursor_id
+        self._num_cursors_to_close += 1
+
+    cdef int _adjust_statement_cache(self) except -1:
+        cdef Statement stmt
+        while len(self._statement_cache) > self._statement_cache_size:
+            stmt = <Statement> self._statement_cache.popitem(last=False)
+            if stmt._in_use:
+                stmt._return_to_cache = False
+            elif stmt._cursor_id != 0:
+                self._add_cursor_to_close(stmt)
+
+    cdef Statement _get_statement(self, str sql):
+        cdef Statement statement
+        with self._statement_cache_lock:
+            statement = self._statement_cache.get(sql)
+            if statement is None:
+                statement = Statement()
+                statement._prepare(sql)
+            elif statement._in_use:
+                statement = statement.copy()
+            else:
+                self._statement_cache.move_to_end(sql)
+            statement._in_use = True
+            self._statement_cache[sql] = statement
+            return statement
+
+    cdef int _return_statement(self, Statement statement) except -1:
+        with self._statement_cache_lock:
+            if statement._return_to_cache:
+                statement._in_use = False
+                self._statement_cache.move_end_end(statement._sql)
+                self._adjust_statement_cache()
+            elif statement._cursor_id != 0:
+                self._add_cursor_to_close(statement)
 
     def close(self, bint in_del=False):
         if self._pool is not None:
@@ -52,6 +82,23 @@ cdef class ThinConnImpl(BaseConnImpl):
 
     def commit(self):
         self._protocol._commit()
+
+    def connect(self, params):
+        sock = socket.create_connection((params.host, params.port))
+        if params.secure_transport:
+            wallet_file_name = params.get_wallet_file_name()
+            ssl_context = ssl.create_default_context(cafile=wallet_file_name)
+            ssl_context.load_cert_chain(certfile=wallet_file_name)
+            ssl_context.check_hostname = False
+            sock = ssl_context.wrap_socket(sock)
+        self._protocol = Protocol(sock)
+        self._protocol._connect(self, params.secure_transport,
+                                params.get_connect_data(), params.password)
+        self._statement_cache = collections.OrderedDict()
+        self._statement_cache_size = TNS_DEFAULT_STMT_CACHE_SIZE
+        self._statement_cache_lock = threading.Lock()
+        self._cursors_to_close = array.array('I')
+        array.resize(self._cursors_to_close, TNS_MAX_CURSORS_TO_CLOSE)
 
     def create_cursor_impl(self):
         return ThinCursorImpl.__new__(ThinCursorImpl, self)
@@ -75,7 +122,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         return self._ltxid or b''
 
     def get_stmt_cache_size(self):
-        return self._statement_cache._max_entries
+        return self._statement_cache_size
 
     def get_version(self):
         return self._server_version
@@ -119,5 +166,6 @@ cdef class ThinConnImpl(BaseConnImpl):
         # action to be set as well (which eliminates this error)
         self._action_modified = True
 
-    def set_stmt_cache_size(self, value):
-        self._statement_cache.set_max_entries(value)
+    def set_stmt_cache_size(self, uint32_t value):
+        self._statement_cache_size = value
+        self._adjust_statement_cache()

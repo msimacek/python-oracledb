@@ -748,6 +748,20 @@ cdef class MessageWithData(Message):
                 self._write_bind_params_column(buf, var_impl,
                                                var_impl.values[pos])
 
+    cdef int _write_close_cursors_piggyback(self, WriteBuffer buf) except -1:
+        cdef:
+            unsigned int *cursor_ids
+            ssize_t i
+        buf.write_uint8(TNS_MSG_TYPE_PIGGYBACK)
+        buf.write_uint8(TNS_FUNC_CLOSE_CURSORS)
+        buf.write_seq_num()
+        buf.write_uint8(1)                  # pointer
+        buf.write_ub4(self.conn_impl._num_cursors_to_close)
+        cursor_ids = self.conn_impl._cursors_to_close.data.as_uints
+        for i in range(self.conn_impl._num_cursors_to_close):
+            buf.write_ub4(cursor_ids[i])
+        self.conn_impl._num_cursors_to_close = 0
+
     cdef int _write_current_schema_piggyback(self, WriteBuffer buf) except -1:
         cdef bytes schema_bytes
         buf.write_uint8(TNS_MSG_TYPE_PIGGYBACK)
@@ -885,6 +899,8 @@ cdef class MessageWithData(Message):
     cdef int _write_piggybacks(self, WriteBuffer buf) except -1:
         if self.conn_impl._current_schema_modified:
             self._write_current_schema_piggyback(buf)
+        if self.conn_impl._num_cursors_to_close > 0:
+            self._write_close_cursors_piggyback(buf)
         if self.conn_impl._action_modified \
                 or self.conn_impl._client_identifier_modified \
                 or self.conn_impl._client_info_modified \

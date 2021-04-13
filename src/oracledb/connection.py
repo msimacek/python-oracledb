@@ -112,16 +112,15 @@ class Connection:
         dsn = params.get_dsn()
         if thin:
             impl = thin_impl.ThinConnImpl(user, dsn)
-            impl._connect(params)
+            impl.connect(params)
         else:
             impl = thick_impl.ThickConnImpl(user, dsn)
-            impl._connect(password=params.password, mode=mode, handle=handle,
-                          pool_impl=pool_impl, threaded=threaded,
-                          events=events, cclass=cclass, purity=purity,
-                          newpassword=newpassword, edition=edition,
-                          appcontext=appcontext, tag=tag,
-                          matchanytag=matchanytag, shardingkey=shardingkey,
-                          supershardingkey=supershardingkey)
+            impl.connect(password=params.password, mode=mode, handle=handle,
+                         pool_impl=pool_impl, threaded=threaded, events=events,
+                         cclass=cclass, purity=purity, newpassword=newpassword,
+                         edition=edition, appcontext=appcontext, tag=tag,
+                         matchanytag=matchanytag, shardingkey=shardingkey,
+                         supershardingkey=supershardingkey)
         self._impl = impl
         self._version = None
 

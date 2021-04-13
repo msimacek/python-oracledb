@@ -94,10 +94,10 @@ cdef class ThickPoolImpl(BasePoolImpl):
         """
         cdef ThickConnImpl conn_impl
         conn_impl = ThickConnImpl(user, None)
-        conn_impl._connect(pool_impl=self, password=password, cclass=cclass,
-                           purity=purity, tag=tag, matchanytag=matchanytag,
-                           shardingkey=shardingkey,
-                           supershardingkey=supershardingkey)
+        conn_impl.connect(pool_impl=self, password=password, cclass=cclass,
+                          purity=purity, tag=tag, matchanytag=matchanytag,
+                          shardingkey=shardingkey,
+                          supershardingkey=supershardingkey)
         return conn_impl
 
     def close(self, bint force):

@@ -18,7 +18,8 @@ cdef class ThinCursorImpl(BaseCursorImpl):
 
     cdef int _close(self) except -1:
         if self._statement is not None:
-            self._conn_impl._statement_cache.put_statement(self._statement)
+            self._conn_impl._return_statement(self._statement)
+            self._statement = None
 
     cdef BaseVarImpl _create_var_impl(self, object connection):
         return ThinVarImpl.__new__(ThinVarImpl, connection)
@@ -32,14 +33,10 @@ cdef class ThinCursorImpl(BaseCursorImpl):
     cdef int _prepare(self, str sql, str tag=None) except -1:
         self.statement = sql
         if self._statement is not None:
-            self._conn_impl._statement_cache.put_statement(self._statement)
+            self._conn_impl._return_statement(self._statement)
             self._statement = None
-        self._statement = self._conn_impl._statement_cache.get_statement(sql)
-        if self._statement is not None:
-            self.fetch_vars = self._statement._fetch_vars
-        else:
-            self._statement = Statement()
-            self._statement._prepare(sql)
+        self._statement = self._conn_impl._get_statement(sql)
+        self.fetch_vars = self._statement._fetch_vars
 
     cdef int _preprocess_execute(self) except -1:
         cdef BindInfo bind_info
