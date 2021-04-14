@@ -37,7 +37,7 @@ cdef class Message:
             uint32_t num_bytes, i
             uint8_t first_byte
             str error_msg
-        buf.read_ub4()                      # end of call status
+        self.call_status = buf.read_ub4()   # end of call status
         buf.read_ub2()                      # end to end seq#
         buf.read_ub4()                      # current row number
         buf.read_ub2()                      # error number

@@ -11,6 +11,7 @@ cdef class Protocol:
         ReadBuffer _read_buf
         WriteBuffer _write_buf
         object _request_lock
+        bint _txn_in_progress
 
     def __init__(self, sock):
         self._caps = Capabilities()
@@ -32,7 +33,8 @@ cdef class Protocol:
 
     cpdef int _close(self) except -1:
         with self._request_lock:
-            self._process_message(RollbackMessage())
+            if self._txn_in_progress:
+                self._process_message(RollbackMessage())
             self._process_message(LogoffMessage())
 
             # send final close
@@ -137,6 +139,7 @@ cdef class Protocol:
                 self._break()
                 self._reset()
             raise
+        self._txn_in_progress = message.call_status & TNS_TXN_IN_PROGRESS
         if message.error_occurred:
             error = errors._Error(message.error_info.message,
                                   code=message.error_info.num,
