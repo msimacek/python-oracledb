@@ -34,7 +34,7 @@ class Queue:
         """
         return self._connection
 
-    def deqMany(self, max_num_messages):
+    def deqmany(self, max_num_messages):
         """
         Dequeues up to the specified number of messages from the queue and
         returns a list of these messages.
@@ -42,7 +42,13 @@ class Queue:
         message_impls = self._impl.deq_many(max_num_messages)
         return [MessageProperties._from_impl(impl) for impl in message_impls]
 
-    def deqOne(self):
+    def deqMany(self, max_num_messages):
+        """
+        Deprecated: use deqmany() instead.
+        """
+        return self.deqmany(max_num_messages)
+
+    def deqone(self):
         """
         Dequeues at most one message from the queue and returns it. If no
         message is dequeued, None is returned.
@@ -51,24 +57,28 @@ class Queue:
         if message_impl is not None:
             return MessageProperties._from_impl(message_impl)
 
+    def deqOne(self):
+        """
+        Deprecated: use deqone() instead.
+        """
+        return self.deqone()
+
     @property
-    def deqOptions(self):
+    def deqoptions(self):
         """
         Returns the options that will be used when dequeuing messages from the
         queue.
         """
         return self._deq_options
 
-    def enqOne(self, message):
+    @property
+    def deqOptions(self):
         """
-        Enqueues a single message into the queue. The message must be a message
-        property object which has had its payload attribute set to a value that
-        the queue supports.
+        Deprecated: use deqoptions instead.
         """
-        self._verify_message(message)
-        self._impl.enq_one(message._impl)
+        return self.deqoptions
 
-    def enqMany(self, messages):
+    def enqmany(self, messages):
         """
         Enqueues multiple messages into the queue. The messages parameter must
         be a sequence containing message property objects which have all had
@@ -85,13 +95,41 @@ class Queue:
         message_impls = [m._impl for m in messages]
         self._impl.enq_many(message_impls)
 
+    def enqMany(self, messages):
+        """
+        Deprecated: use enqmany() instead.
+        """
+        return self.enqmany(messages)
+
+    def enqone(self, message):
+        """
+        Enqueues a single message into the queue. The message must be a message
+        property object which has had its payload attribute set to a value that
+        the queue supports.
+        """
+        self._verify_message(message)
+        self._impl.enq_one(message._impl)
+
+    def enqOne(self, message):
+        """
+        Deprecated: use enqone() instead.
+        """
+        return self.enqone(message)
+
     @property
-    def enqOptions(self):
+    def enqoptions(self):
         """
         Returns the options that will be used when enqueuing messages into the
         queue.
         """
         return self._enq_options
+
+    @property
+    def enqOptions(self):
+        """
+        Deprecated: use enqoptions() instead.
+        """
+        return self.enqoptions
 
     @property
     def name(self):
@@ -101,7 +139,7 @@ class Queue:
         return self._impl.name
 
     @property
-    def payloadType(self):
+    def payload_type(self):
         """
         Returns the object type for payloads that can be enqueued and dequeued.
         If using a raw queue, this returns the value None.
@@ -110,6 +148,13 @@ class Queue:
             self._payload_type = \
                     DbObjectType._from_impl(self._impl.payload_type)
         return self._payload_type
+
+    @property
+    def payloadType(self):
+        """
+        Deprecated: use payload_type instead.
+        """
+        return self.payload_type
 
 
 class DeqOptions:
