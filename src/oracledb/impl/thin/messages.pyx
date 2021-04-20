@@ -285,7 +285,7 @@ cdef class MessageWithData(Message):
             cursor_impl._statement._cursor_id = buf.read_ub4()
             cursor_impl._requires_full_execute = True
         elif ora_type_num == TNS_DATA_TYPE_BOOLEAN:
-            column_value = buf.read_uint32() != 0
+            column_value = buf.read_ub4() != 0
         elif ora_type_num == TNS_DATA_TYPE_INTERVAL_DS:
             column_value = buf.read_interval_ds(num_bytes)
         elif ora_type_num == TNS_DATA_TYPE_CLOB \
@@ -673,7 +673,11 @@ cdef class MessageWithData(Message):
             uint8_t num_bytes
             bytes temp_bytes
         if value is None:
-            buf.write_uint8(0)
+            if ora_type_num == TNS_DATA_TYPE_BOOLEAN:
+                buf.write_uint8(TNS_ESCAPE_CHAR)
+                buf.write_uint8(1)
+            else:
+                buf.write_uint8(0)
         elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
                 or ora_type_num == TNS_DATA_TYPE_CHAR \
                 or ora_type_num == TNS_DATA_TYPE_LONG:
@@ -711,6 +715,7 @@ cdef class MessageWithData(Message):
                 buf.write_ub4(cursor_impl._statement._cursor_id)
         elif ora_type_num == TNS_DATA_TYPE_BOOLEAN:
             if value:
+                buf.write_uint8(2)
                 buf.write_uint16(0x0101)
             else:
                 buf.write_uint16(0x0100)
