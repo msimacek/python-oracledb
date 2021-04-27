@@ -31,6 +31,7 @@ import hashlib
 import os
 import socket
 import re
+import secrets
 import ssl
 import sys
 import threading

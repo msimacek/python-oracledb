@@ -953,7 +953,7 @@ cdef class AuthMessage(Message):
         password_hash = h.digest() + b"\x00\x00\x00\x00"
 
         # encrypt client session key
-        client_key = b'\x08' * 48
+        client_key = secrets.token_bytes(48)
         encoded_client_key = self._encrypt_cbc(password_hash, client_key)
 
         # decode server key
@@ -973,7 +973,7 @@ cdef class AuthMessage(Message):
         combo_key = (part1 + part2)[:24]
 
         # encrypt password
-        salt = bytes.fromhex("4C31AFE05F3B012C0AE9AB0CDFF0C508")
+        salt = secrets.token_bytes(16)
         password_with_salt = salt + self.password.encode()
         encoded_password = self._encrypt_cbc(combo_key, password_with_salt)
         self.encoded_password = encoded_password.hex().upper()
