@@ -27,6 +27,9 @@ cdef class Message:
         self.message_type = TNS_MSG_TYPE_FUNCTION
         self.error_info = _OracleErrorInfo()
 
+    cdef bint _has_more_data(self, ReadBuffer buf):
+        return buf.bytes_left() > 0
+
     cdef int _preprocess(self) except -1:
         pass
 
@@ -127,7 +130,7 @@ cdef class Message:
     cdef int process(self, ReadBuffer buf) except -1:
         self._preprocess()
         buf.skip_bytes(2)                   # skip data flags
-        while buf.bytes_left() > 0:
+        while self._has_more_data(buf):
             self._process_message(buf, buf.read_uint8())
 
     cdef int send(self, WriteBuffer buf) except -1:
@@ -149,6 +152,7 @@ cdef class MessageWithData(Message):
         list row_var_impls
         bint in_fetch
         bint parse_only
+        bint processed_error
         object cursor
         object conn
 
@@ -171,6 +175,9 @@ cdef class MessageWithData(Message):
         cursor_impl._statement._is_query = True
         self._process_describe_info(buf, cursor)
         return cursor
+
+    cdef bint _has_more_data(self, ReadBuffer buf):
+        return not self.processed_error
 
     cdef int _write_bind_params(self, WriteBuffer buf, list params) except -1:
         cdef:
@@ -490,6 +497,7 @@ cdef class MessageWithData(Message):
                 cursor_impl._more_rows_to_fetch = False
             if self.error_info.batcherrors is not None:
                 self.error_occurred = False
+            self.processed_error = True
         elif message_type == TNS_MSG_TYPE_BIT_VECTOR:
             num_bits = buf.read_ub2()
             num_bytes = num_bits // 8

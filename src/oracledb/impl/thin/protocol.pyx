@@ -100,6 +100,7 @@ cdef class Protocol:
             message.num_execs = num_execs
             self._process_message(message)
             if message.requires_define:
+                message.processed_error = False
                 self._process_message(message)
             stmt._requires_full_execute = False
             if cursor_impl._statement._is_query:
