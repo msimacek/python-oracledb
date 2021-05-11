@@ -223,6 +223,8 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
         uint32_t editionLength
         const char *driverName
         uint32_t driverNameLength
+        int sodaMetadataCache
+        uint32_t stmtCacheSize
 
     ctypedef struct dpiConnCreateParams:
         uint32_t authMode
@@ -818,7 +820,13 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
 
     int dpiPool_getMaxLifetimeSession(dpiPool *pool, uint32_t *value) nogil
 
+    int dpiPool_getMaxSessionsPerShard(dpiPool *pool, uint32_t *value) nogil
+
     int dpiPool_getOpenCount(dpiPool *pool, uint32_t *value) nogil
+
+    int dpiPool_getPingInterval(dpiPool *pool, int *value) nogil
+
+    int dpiPool_getSodaMetadataCache(dpiPool *pool, bint *enabled) nogil
 
     int dpiPool_getStmtCacheSize(dpiPool *pool, uint32_t *cacheSize) nogil
 
@@ -828,9 +836,18 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
 
     int dpiPool_release(dpiPool *pool) nogil
 
+    int dpiPool_reconfigure(dpiPool *pool, uint32_t minSessions,
+            uint32_t maxSessions, uint32_t sessionIncrement) nogil
+
     int dpiPool_setGetMode(dpiPool *pool, uint8_t value) nogil
 
     int dpiPool_setMaxLifetimeSession(dpiPool *pool, uint32_t value) nogil
+
+    int dpiPool_setMaxSessionsPerShard(dpiPool *pool, uint32_t value) nogil
+
+    int dpiPool_setPingInterval(dpiPool *pool, int value) nogil
+
+    int dpiPool_setSodaMetadataCache(dpiPool *pool, bint enabled) nogil
 
     int dpiPool_setStmtCacheSize(dpiPool *pool, uint32_t cacheSize) nogil
 

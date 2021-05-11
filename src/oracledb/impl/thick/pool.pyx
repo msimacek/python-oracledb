@@ -17,7 +17,8 @@ cdef class ThickPoolImpl(BasePoolImpl):
 
     def _create(self, password, threaded, getmode, events, externalauth,
                 edition, timeout, wait_timeout, max_lifetime_session,
-                session_callback, max_sessions_per_shard):
+                session_callback, max_sessions_per_shard, soda_metadata_cache,
+                stmtcachesize, ping_interval):
         cdef:
             bytes edition_bytes, user_bytes, password_bytes, dsn_bytes
             uint32_t password_len = 0, user_len = 0, dsn_len = 0
@@ -59,7 +60,13 @@ cdef class ThickPoolImpl(BasePoolImpl):
             pool_params.plsqlFixupCallback = session_callback_bytes
             pool_params.plsqlFixupCallbackLength = \
                     <uint32_t> len(session_callback_bytes)
+        pool_params.timeout = timeout
+        pool_params.waitTimeout = wait_timeout
         pool_params.maxSessionsPerShard = max_sessions_per_shard
+        pool_params.maxLifetimeSession = max_lifetime_session
+        pool_params.pingInterval = ping_interval
+        common_params.stmtCacheSize = stmtcachesize
+        common_params.sodaMetadataCache = <bint> soda_metadata_cache
 
         # prepare user, password and DSN for use
         if self.username is not None:
@@ -147,6 +154,15 @@ cdef class ThickPoolImpl(BasePoolImpl):
             _raise_from_odpi()
         return value
 
+    def get_max_sessions_per_shard(self):
+        """
+        Internal method for getting the maximum sessions per shard in the pool.
+        """
+        cdef uint32_t value
+        if dpiPool_getMaxSessionsPerShard(self._handle, &value) < 0:
+            _raise_from_odpi()
+        return value
+
     def get_open_count(self):
         """
         Internal method for getting the number of connections in the pool.
@@ -155,6 +171,24 @@ cdef class ThickPoolImpl(BasePoolImpl):
         if dpiPool_getOpenCount(self._handle, &value) < 0:
             _raise_from_odpi()
         return value
+
+    def get_ping_interval(self):
+        """
+        Internal method for getting the value of the pool-ping-interval.
+        """
+        cdef int value
+        if dpiPool_getPingInterval(self._handle, &value) < 0:
+            _raise_from_odpi
+        return value
+
+    def get_soda_metadata_cache(self):
+        """
+        Internal method for getting the value of soda metadata cache.
+        """
+        cdef bint value
+        if dpiPool_getSodaMetadataCache(self._handle, &value) < 0:
+            _raise_from_odpi
+        return value 
 
     def get_stmt_cache_size(self):
         """
@@ -183,6 +217,16 @@ cdef class ThickPoolImpl(BasePoolImpl):
             _raise_from_odpi()
         return value
 
+    def reconfigure(self, uint32_t min, uint32_t max, uint32_t increment):
+        """
+        Internal method for reconfiguring the size of the pool.
+        """
+        if dpiPool_reconfigure(self._handle, min, max, increment) < 0:
+            _raise_from_odpi()
+        self.min = min
+        self.max = max
+        self.increment = increment
+
     def set_getmode(self, uint8_t value):
         """
         Internal method for setting the method by which connections are
@@ -197,6 +241,27 @@ cdef class ThickPoolImpl(BasePoolImpl):
         """
         if dpiPool_setMaxLifetimeSession(self._handle, value) < 0:
             _raise_from_odpi()
+
+    def set_max_sessions_per_shard(self, uint32_t value):
+        """
+        Internal method for setting the maximum sessions per shard in the pool.
+        """
+        if dpiPool_setMaxSessionsPerShard(self._handle, value) < 0:
+            _raise_from_odpi()
+
+    def set_ping_interval(self, int value):
+        """
+        Internal method for setting the value of the pool-ping-interval.
+        """
+        if dpiPool_setPingInterval(self._handle, value) < 0:
+            _raise_from_odpi
+
+    def set_soda_metadata_cache(self, bint value):
+        """
+        Internal method for enabling or disabling the soda metadata cache.
+        """
+        if dpiPool_setSodaMetadataCache(self._handle, value) < 0:
+            _raise_from_odpi
 
     def set_stmt_cache_size(self, uint32_t value):
         """

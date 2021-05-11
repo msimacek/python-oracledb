@@ -51,9 +51,27 @@ cdef class BasePoolImpl:
         """
         raise NotImplementedError()
 
+    def get_max_sessions_per_shard(self):
+        """
+        Internal method for getting the maximum sessions per shard in the pool.
+        """
+        raise NotImplementedError()
+
     def get_open_count(self):
         """
         Internal method for getting the number of connections in the pool.
+        """
+        raise NotImplementedError()
+
+    def get_ping_interval(self):
+        """
+        Internal method for getting the value of the pool-ping-interval.
+        """
+        raise NotImplementedError()
+
+    def get_soda_metadata_cache(self):
+        """
+        Internal method for getting the value of soda metadata cache.
         """
         raise NotImplementedError()
 
@@ -75,6 +93,11 @@ cdef class BasePoolImpl:
         """
         raise NotImplementedError()
 
+    def reconfigure(self, uint32_t min, uint32_t max, uint32_t increment):
+        """
+        Internal method for reconfiguring the size of the pool.
+        """
+
     def set_getmode(self, uint8_t value):
         """
         Internal method for setting the method by which connections are
@@ -85,6 +108,24 @@ cdef class BasePoolImpl:
     def set_max_lifetime_session(self, uint32_t value):
         """
         Internal method for setting the maximum lifetime of each session.
+        """
+        raise NotImplementedError()
+
+    def set_max_sessions_per_shard(self, uint32_t value):
+        """
+        Internal method for setting the maximum sessions per shard in the pool.
+        """
+        raise NotImplementedError()
+
+    def set_ping_interval(self, int value):
+        """
+        Internal method for setting the value of the pool-ping-interval.
+        """
+        raise NotImplementedError()
+
+    def set_soda_metadata_cache(self, bint value):
+        """
+        Internal method for enabling or disabling soda metadata cache.
         """
         raise NotImplementedError()
 

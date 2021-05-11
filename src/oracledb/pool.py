@@ -13,7 +13,10 @@ class Pool:
                  getmode=constants.POOL_GETMODE_WAIT, events=False,
                  homogeneous=True, externalauth=False, edition=None, timeout=0,
                  wait_timeout=0, max_lifetime_session=0, session_callback=None,
-                 max_sessions_per_shard=0, secure_transport=False,
+                 max_sessions_per_shard=0, soda_metadata_cache=False,
+                 stmtcachesize=20, ping_interval=60, waitTimeout=0,
+                 maxLifetimeSession=0, sessionCallback=None,
+                 maxSessionsPerShard=0, secure_transport=False,
                  config_dir=None):
         """
         Constructor for the pool. Connection pooling creates a pool of
@@ -126,6 +129,31 @@ class Pool:
                                      config_dir=config_dir)
         if dsn is not None:
             params.parse_dsn(dsn, thin=thin)
+
+        if waitTimeout != 0:
+            if wait_timeout != 0:
+                message = "waitTimeout and wait_timeout cannot both be specified"
+                raise TypeError(message)     
+            wait_timeout = waitTimeout
+        if maxLifetimeSession != 0:
+            if max_lifetime_session != 0:
+                message = "maxLifetimeSession and max_lifetime_session cannot " \
+                          "both be specified"
+                raise TypeError(message)
+            max_lifetime_session = maxLifetimeSession
+        if sessionCallback is not None:
+            if session_callback is not None:
+                message = "sessionCallback and session_callback cannot both be " \
+                          "specified"
+                raise TypeError(message)
+            session_callback = sessionCallback
+        if maxSessionsPerShard != 0:
+            if max_sessions_per_shard != 0:
+                message = "maxSessionsPerShard and max_sessions_per_shard cannot " \
+                          "both be specified"
+                raise TypeError(message)
+            max_sessions_per_shard = maxSessionsPerShard
+
         if thin:
             impl = thin_impl.ThinPoolImpl(params, min, max, increment,
                                           homogeneous, getmode, wait_timeout)
@@ -139,7 +167,10 @@ class Pool:
                          wait_timeout=wait_timeout,
                          max_lifetime_session=max_lifetime_session,
                          session_callback=session_callback,
-                         max_sessions_per_shard=max_sessions_per_shard)
+                         max_sessions_per_shard=max_sessions_per_shard,
+                         soda_metadata_cache=soda_metadata_cache,
+                         stmtcachesize=stmtcachesize,
+                         ping_interval=ping_interval)
         self._impl = impl
 
     def _verify_open(self):
@@ -287,6 +318,24 @@ class Pool:
         self._impl.set_max_lifetime_session(value)
 
     @property
+    def max_sessions_per_shard(self):
+        """
+        Returns the number of sessions that can be created per shard in the pool.
+        Setting this attribute greater than zero specifies the maximum number of
+        sessions in the pool that can be used for any given shard in a sharded
+        database. This lets connections in the pool be balanced across the shards.
+        A value of zero will not set any maximum number of sessions for each shard.
+        This attribute is only available in Oracle Client 18.3 and higher.
+        """
+        self._verify_open()
+        return self._impl.get_max_sessions_per_shard()
+
+    @max_sessions_per_shard.setter
+    def max_sessions_per_shard(self, value):
+        self._verify_open()
+        self._impl.set_max_sessions_per_shard(value)
+
+    @property
     def min(self):
         """
         Returns the minimum number of connections that the pool will control.
@@ -311,6 +360,26 @@ class Pool:
         """
         self._verify_open()
         return self._impl.get_open_count()
+
+    @property
+    def ping_interval(self):
+        """
+        Returns the pool ping interval in seconds. When a connection is
+        acquired from the pool, a check is first made to see how long it
+        has been since the connection was put into the pool. If
+        this idle time exceeds ping_interval, then a round-trip ping to the
+        database is performed. If the connection is unusable, it is discarded
+        and a different connection is selected to be returned by
+        SessionPool.acquire(). Setting ping_interval to a negative value
+        disables pinging. Setting it to 0 forces a ping for every aquire()
+        and is not recommended.
+        """
+        self._verify_open()
+        return self._impl.get_ping_interval()
+
+    @ping_interval.setter
+    def ping_interval(self, value):
+        self._impl.set_ping_interval(value)
 
     def release(self, connection, tag=None):
         """
@@ -342,6 +411,94 @@ class Pool:
         if tag is not None:
             connection.tag = tag
         connection.close()
+
+    def reconfigure(self, min=None, max=None, increment=None, getmode=None,
+                    timeout=None, wait_timeout=None, max_lifetime_session=None,
+                    max_sessions_per_shard=None, soda_metadata_cache=None,
+                    stmtcachesize=None, ping_interval=None):
+        """
+        Reconfigures various parameters of a connection pool. The pool size
+        can be altered with reconfigure() by passing values for min, max
+        or increment. The getmode, timeout, wait_timeout,
+        max_lifetime_session, max_sessions_per_shard, soda_metadata_cache,
+        stmtcachesize and ping_interval can be set directly or by using
+        reconfigure(). All parameters are optional. Unspecified parameters
+        will leave those pool attributes unchanged. The parameters are
+        processed in two stages. After any size change has been processed,
+        reconfiguration on the other parameters is done sequentially. If
+        an error such as an invalid value occurs when changing one attribute,
+        then an exception will be generated but any already changed
+        attributes will retain their new values.
+
+        During reconfiguration of a pool's size, the behavior of acquire()
+        depends on the getmode in effect when acquire() is called:
+
+        * With mode POOL_GETMODE_FORCEGET, an acquire() call will wait until
+        the pool has been reconfigured.
+
+        * With mode POOL_GETMODE__TIMEDWAIT, an acquire() call will try to
+        acquire a connection in the time specified by pool.wait_timeout and
+        return an error if the time taken exceeds that value.
+
+        * With mode POOL_GETMODE_WAIT, an acquire() call will wait until after the
+        pool has been reconfigured and a connection is available.
+
+        * With mode POOL_GETMODE_NOWAIT, if the number of busy connections is
+        less than the pool size, ``acquire()`` will return a new connection
+        after pool reconfiguration is complete.
+
+        Closing connections with pool.release() or connection.close() will
+        wait until any pool size reconfiguration is complete.
+
+        Closing the connection pool with pool.close() will wait until
+        reconfiguration is complete.
+        """
+
+        if min is None:
+            min = self.min
+        if max is None:
+            max = self.max
+        if increment is None:
+            increment = self.increment
+        if self.min != min or self.max != max or self.increment != increment:
+            self._impl.reconfigure(min, max, increment)
+        if getmode is not None:
+            self.getmode = getmode
+        if timeout is not None:
+            self.timeout = timeout
+        if wait_timeout is not None:
+            self.wait_timeout = wait_timeout
+        if max_lifetime_session is not None:
+            self.max_lifetime_session = max_lifetime_session
+        if max_sessions_per_shard is not None:
+            self.max_sessions_per_shard = max_sessions_per_shard
+        if soda_metadata_cache is not None:
+            self.soda_metadata_cache = soda_metadata_cache
+        if stmtcachesize is not None:
+            self.stmtcachesize = stmtcachesize
+        if ping_interval is not None:
+            self.ping_interval = ping_interval
+
+    @property
+    def soda_metadata_cache(self):
+        """
+        Specifies whether the SODA metadata cache is enabled or not. Enabling
+        the cache significantly improves the performance of methods
+        SodaDatabase.createCollection() (when not specifying a value for the
+        metadata parameter) and SodaDatabase.openCollection(). Note that the
+        cache can become out of date if changes to the metadata of cached
+        collections are made externally.
+        """
+        self._verify_open()
+        return self._impl.get_soda_metadata_cache()
+
+    @soda_metadata_cache.setter
+    def soda_metadata_cache(self, value):
+        if not isinstance(value, bool):
+            message = "soda_metadata_cache must be a boolean value."
+            raise TypeError(message)
+        self._verify_open()
+        self._impl.set_soda_metadata_cache(value)
 
     @property
     def stmtcachesize(self):
