@@ -92,13 +92,16 @@ cdef class ThinConnImpl(BaseConnImpl):
             ssl_context.check_hostname = False
             sock = ssl_context.wrap_socket(sock)
         self._protocol = Protocol(sock)
-        self._protocol._connect(self, params.secure_transport,
-                                params.get_connect_data(), params.password)
-        self._statement_cache = collections.OrderedDict()
-        self._statement_cache_size = TNS_DEFAULT_STMT_CACHE_SIZE
-        self._statement_cache_lock = threading.Lock()
-        self._cursors_to_close = array.array('I')
-        array.resize(self._cursors_to_close, TNS_MAX_CURSORS_TO_CLOSE)
+        redirect_data = self._protocol._connect(self, params.secure_transport,
+                                                params.get_connect_data(),
+                                                params.password)
+        if redirect_data is None:
+            self._statement_cache = collections.OrderedDict()
+            self._statement_cache_size = TNS_DEFAULT_STMT_CACHE_SIZE
+            self._statement_cache_lock = threading.Lock()
+            self._cursors_to_close = array.array('I')
+            array.resize(self._cursors_to_close, TNS_MAX_CURSORS_TO_CLOSE)
+        return redirect_data
 
     def create_cursor_impl(self):
         return ThinCursorImpl.__new__(ThinCursorImpl, self)

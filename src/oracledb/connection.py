@@ -112,7 +112,11 @@ class Connection:
         dsn = params.get_dsn()
         if thin:
             impl = thin_impl.ThinConnImpl(user, dsn)
-            impl.connect(params)
+            while True:
+                redirect_data = impl.connect(params)
+                if redirect_data is None:
+                    break
+                params.parse_redirect_data(redirect_data)
         else:
             impl = thick_impl.ThickConnImpl(user, dsn)
             impl.connect(password=params.password, mode=mode, handle=handle,

@@ -66,6 +66,8 @@ cdef class Protocol:
         # over to a different process)
         connect_message = ConnectMessage(connect_string)
         self._process_message(connect_message)
+        if connect_message.redirect_data is not None:
+            return connect_message.redirect_data
         if secure_transport:
             ssl_context = self._socket.context
             temp_sock = socket.socket(fileno=self._socket.detach())
@@ -149,12 +151,11 @@ cdef class Protocol:
             raise exc_type(error)
 
     cdef int _receive_packet(self, Message message) except -1:
-        cdef uint8_t packet_type
-        self._read_buf.receive_packet(&packet_type)
-        if packet_type == TNS_PACKET_TYPE_MARKER:
+        self._read_buf.receive_packet(&message.packet_type)
+        if message.packet_type == TNS_PACKET_TYPE_MARKER:
             self._reset()
             message.error_occurred = True
-        elif packet_type == TNS_PACKET_TYPE_REFUSE:
+        elif message.packet_type == TNS_PACKET_TYPE_REFUSE:
             self._write_buf._packet_sent = False
             self._read_buf.skip_bytes(3)
             response = self._read_buf.read_str(self._read_buf.read_uint8())

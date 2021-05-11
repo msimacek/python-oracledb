@@ -21,6 +21,7 @@ cdef class Message:
         uint8_t function_code
         uint32_t call_status
         uint16_t end_to_end_seq_num
+        uint8_t packet_type
         bint error_occurred
 
     def __cinit__(self):
@@ -1078,6 +1079,7 @@ cdef class ConnectMessage(Message):
     cdef:
         uint16_t connect_string_len
         bytes connect_string_bytes
+        str redirect_data
         bint first_packet
 
     def __cinit__(self, connect_string):
@@ -1086,7 +1088,17 @@ cdef class ConnectMessage(Message):
         self.first_packet = True
 
     cdef int process(self, ReadBuffer buf) except -1:
+        cdef:
+            const char_type *redirect_data
+            uint16_t redirect_data_length
         if self.first_packet:
+            if self.packet_type == TNS_PACKET_TYPE_REDIRECT:
+                redirect_data_length = buf.read_uint16()
+                buf.receive_packet(&self.packet_type)
+                buf.skip_bytes(2)           # skip data flags
+                redirect_data = buf._get_raw(redirect_data_length)
+                self.redirect_data = \
+                        redirect_data[:redirect_data_length].decode()
             self.first_packet = False
         else:
             buf._caps.protocol_version = buf.read_uint16()

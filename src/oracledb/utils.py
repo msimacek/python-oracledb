@@ -229,6 +229,21 @@ class ConnectParams:
         else:
             self.search_tnsnames(dsn.upper())
 
+    def parse_redirect_data(self, redirect_data):
+        """
+        Parse the redirect data that is returned from a listener in order to
+        determine the new host and port that should be used to connect to the
+        database.
+        """
+        pos = redirect_data.find('\x00')
+        if pos < 0:
+            message = f"invalid redirect data: {redirect_data}"
+        adjusted_data = redirect_data[pos + 1:]
+        node = parse_structured_data(ConfigNode(), redirect_data[:pos])
+        address_node = node.description.address
+        self.host = address_node.host
+        self.port = int(address_node.port)
+
     def search_tnsnames(self, name):
         sqlnet_config = get_config_file(self.config_dir, "sqlnet.ora")
         tnsnames_config = get_config_file(self.config_dir, "tnsnames.ora")
@@ -251,7 +266,7 @@ def parse_structured_data(node, data):
     Utility function used to parse structured data in the form (KEY = VALUE)
     where value can itself be another nested set of structured data.
     """
-    if data[0] != "(" and data[-1] != ")":
+    if data[0] != "(" or data[-1] != ")":
         raise ConfigParseError(f"invalid structured data: {data}")
     data = data[1:-1]
     pos = data.find("=")
@@ -259,9 +274,9 @@ def parse_structured_data(node, data):
         raise ConfigParseError(f"invalid structured data: {data}")
     name = data[:pos].strip().lower()
     data = data[pos + 1:].strip()
-    if not data.startswith("("):
+    if not data or not data.startswith("("):
         value = data
-        if value[0] == '"' and value[-1] == '"':
+        if value and value[0] == '"' and value[-1] == '"':
             value = value[1:-1]
     else:
         value = ConfigNode()
