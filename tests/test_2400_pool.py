@@ -6,11 +6,11 @@
 2400 - Module for testing pools
 """
 
-import test_env
-
-import oracledb
 import threading
 import unittest
+
+import oracledb
+import test_env
 
 class TestCase(test_env.BaseTestCase):
     require_connection = False
@@ -27,6 +27,36 @@ class TestCase(test_env.BaseTestCase):
             cursor = connection.cursor()
             self.assertRaises(oracledb.DatabaseError, cursor.execute,
                             "select 1 / 0 from dual")
+
+    def __perform_reconfigure_test(self, parameter_name, parameter_value,
+                                   min=3, max=30, increment=4, timeout=5,
+                                   wait_timeout=5000, stmtcachesize=25,
+                                   max_lifetime_session=1000,
+                                   max_sessions_per_shard=3, ping_interval=30,
+                                   getmode=oracledb.SPOOL_ATTRVAL_WAIT):
+        creation_args = dict(min=min, max=max, increment=increment,
+                             timeout=timeout, wait_timeout=wait_timeout,
+                             stmtcachesize=stmtcachesize,
+                             max_lifetime_session=max_lifetime_session,
+                             max_sessions_per_shard=max_sessions_per_shard,
+                             ping_interval=ping_interval, getmode=getmode)
+        reconfigure_args = {}
+        reconfigure_args[parameter_name] = parameter_value
+
+        pool = test_env.get_pool(**creation_args)
+        connection = pool.acquire()
+        pool.reconfigure(**reconfigure_args)
+        actual_args = dict(min=pool.min, max=pool.max,
+                           increment=pool.increment, timeout=pool.timeout,
+                           wait_timeout=pool.wait_timeout,
+                           stmtcachesize=pool.stmtcachesize,
+                           max_lifetime_session=pool.max_lifetime_session,
+                           max_sessions_per_shard=pool.max_sessions_per_shard,
+                           ping_interval=pool.ping_interval,
+                           getmode=pool.getmode)
+        expected_args = creation_args.copy()
+        expected_args.update(reconfigure_args)
+        self.assertEqual(actual_args, expected_args)
 
     def __verify_connection(self, connection, expected_user,
                             expected_proxy_user=None):
@@ -422,6 +452,22 @@ class TestCase(test_env.BaseTestCase):
 
     @unittest.skipIf(test_env.get_is_thin(),
                      "thin driver doesn't support all the pool params yet")
+    def test_2416_test_reconfigure_pool_with_missing_values(self):
+        "2416 - test the reconfigure values are changed and rest unchanged"
+        self.__perform_reconfigure_test("min", 5)
+        self.__perform_reconfigure_test("max", 20)
+        self.__perform_reconfigure_test("increment", 5)
+        self.__perform_reconfigure_test("timeout", 10)
+        self.__perform_reconfigure_test("wait_timeout", 8000)
+        self.__perform_reconfigure_test("stmtcachesize", 40)
+        self.__perform_reconfigure_test("max_lifetime_session", 2000)
+        self.__perform_reconfigure_test("max_sessions_per_shard", 5)
+        self.__perform_reconfigure_test("ping_interval", 50)
+        self.__perform_reconfigure_test("getmode",
+                                        oracledb.POOL_GETMODE_NOWAIT)
+
+    @unittest.skipIf(test_env.get_is_thin(),
+                     "thin driver doesn't support all the pool params yet")
     def test_2417_setting_each_pool_param(self):
         "2417 - test to see if specified parameters are set during creation"
         pool = test_env.get_pool(min=1, max=2, increment=1, timeout=10,
@@ -442,6 +488,7 @@ class TestCase(test_env.BaseTestCase):
                         "max_sessions_per_shard (1)")
         self.assertEqual(pool.stmtcachesize, 25, "stmtcachesize (25)")
         self.assertEqual(pool.ping_interval, 25, "ping_interval (25)")
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()
