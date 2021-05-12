@@ -23,10 +23,10 @@ class Cursor(oracledb.Cursor):
 
     def execute(self, statement, args = None):
         prepare_needed = (self.statement != statement)
-        result = super(Cursor, self).execute(statement, args or [])
+        result = super().execute(statement, args or [])
         if prepare_needed:
             description = self.description
-            if description:
+            if description is not None:
                 names = [d[0] for d in description]
                 self.rowfactory = collections.namedtuple("GenericQuery", names)
         return result

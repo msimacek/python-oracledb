@@ -17,7 +17,7 @@
 import oracledb
 import sample_env
 
-class Test(object):
+class Test:
 
     def __init__(self, a, b, c):
         self.a = a

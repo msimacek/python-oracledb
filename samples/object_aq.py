@@ -37,12 +37,12 @@ cursor = connection.cursor()
 # create queue
 books_type = connection.gettype(BOOK_TYPE_NAME)
 queue = connection.queue(QUEUE_NAME, books_type)
-queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
-queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
+queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
 
 # dequeue all existing messages to ensure the queue is empty, just so that
 # the results are consistent
-while queue.deqOne():
+while queue.deqone():
     pass
 
 # enqueue a few messages
@@ -53,13 +53,13 @@ for title, authors, price in BOOK_DATA:
     book.AUTHORS = authors
     book.PRICE = price
     print(title)
-    queue.enqOne(connection.msgproperties(payload=book))
+    queue.enqone(connection.msgproperties(payload=book))
 connection.commit()
 
 # dequeue the messages
 print("\nDequeuing messages...")
 while True:
-    props = queue.deqOne()
+    props = queue.deqone()
     if not props:
         break
     print(props.payload.TITLE)

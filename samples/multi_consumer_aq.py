@@ -33,22 +33,22 @@ cursor = connection.cursor()
 
 # create queue
 queue = connection.queue(QUEUE_NAME)
-queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
-queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
+queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
 
 # enqueue a few messages
 print("Enqueuing messages...")
 for data in PAYLOAD_DATA:
     print(data)
-    queue.enqOne(connection.msgproperties(payload=data))
+    queue.enqone(connection.msgproperties(payload=data))
 connection.commit()
 print()
 
 # dequeue the messages for consumer A
 print("Dequeuing the messages for consumer A...")
-queue.deqOptions.consumername = "SUBSCRIBER_A"
+queue.deqoptions.consumername = "SUBSCRIBER_A"
 while True:
-    props = queue.deqOne()
+    props = queue.deqone()
     if not props:
         break
     print(props.payload.decode())
@@ -57,9 +57,9 @@ print()
 
 # dequeue the message for consumer B
 print("Dequeuing the messages for consumer B...")
-queue.deqOptions.consumername = "SUBSCRIBER_B"
+queue.deqoptions.consumername = "SUBSCRIBER_B"
 while True:
-    props = queue.deqOne()
+    props = queue.deqone()
     if not props:
         break
     print(props.payload.decode())

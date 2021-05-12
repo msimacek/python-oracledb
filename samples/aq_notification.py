@@ -19,7 +19,7 @@ import time
 
 registered = True
 
-def ProcessMessages(message):
+def process_messages(message):
     global registered
     print("Message type:", message.type)
     if message.type == oracledb.EVENT_DEREG:
@@ -32,7 +32,7 @@ def ProcessMessages(message):
 connection = oracledb.connect(sample_env.get_main_connect_string(),
                               thin=False, events=True)
 sub = connection.subscribe(namespace=oracledb.SUBSCR_NAMESPACE_AQ,
-                           name="DEMO_BOOK_QUEUE", callback=ProcessMessages,
+                           name="DEMO_BOOK_QUEUE", callback=process_messages,
                            timeout=300)
 print("Subscription:", sub)
 print("--> Connection:", sub.connection)

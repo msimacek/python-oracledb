@@ -42,12 +42,12 @@ cursor = connection.cursor()
 
 # create queue
 queue = connection.queue(QUEUE_NAME)
-queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
-queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
+queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
 
 # dequeue all existing messages to ensure the queue is empty, just so that
 # the results are consistent
-while queue.deqOne():
+while queue.deqone():
     pass
 
 # enqueue a few messages
@@ -60,14 +60,14 @@ while data_to_enqueue:
     messages = [connection.msgproperties(payload=d) for d in batch_data]
     for data in batch_data:
         print(data)
-    queue.enqMany(messages)
+    queue.enqmany(messages)
 connection.commit()
 
 # dequeue the messages
 print("\nDequeuing messages...")
 batch_size = 8
 while True:
-    messages = queue.deqMany(batch_size)
+    messages = queue.deqmany(batch_size)
     if not messages:
         break
     for props in messages:

@@ -49,8 +49,8 @@ def callback(message):
 
 connection = oracledb.connect(sample_env.get_main_connect_string(),
                               thin=False, events=True)
-sub = connection.subscribe(callback = callback, timeout = 1800,
-        qos = oracledb.SUBSCR_QOS_QUERY | oracledb.SUBSCR_QOS_ROWIDS)
+qos = oracledb.SUBSCR_QOS_QUERY | oracledb.SUBSCR_QOS_ROWIDS
+sub = connection.subscribe(callback=callback, timeout=1800, qos=qos)
 print("Subscription:", sub)
 print("--> Connection:", sub.connection)
 print("--> Callback:", sub.callback)
@@ -59,8 +59,8 @@ print("--> Protocol:", sub.protocol)
 print("--> Timeout:", sub.timeout)
 print("--> Operations:", sub.operations)
 print("--> Rowids?:", bool(sub.qos & oracledb.SUBSCR_QOS_ROWIDS))
-queryId = sub.registerquery("select * from TestTempTable")
-print("Registered query:", queryId)
+query_id = sub.registerquery("select * from TestTempTable")
+print("Registered query:", query_id)
 
 while registered:
     print("Waiting for notifications....")

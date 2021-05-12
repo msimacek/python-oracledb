@@ -21,7 +21,7 @@ class Connection(oracledb.Connection):
     def __init__(self):
         connect_string = sample_env.get_main_connect_string()
         print("CONNECT to database")
-        return super(Connection, self).__init__(connect_string)
+        super().__init__(connect_string)
 
     def cursor(self):
         return Cursor(self)
@@ -36,11 +36,11 @@ class Cursor(oracledb.Cursor):
         print("ARGS:")
         for arg_index, arg in enumerate(args):
             print("   ", arg_index + 1, "=>", repr(arg))
-        return super(Cursor, self).execute(statement, args)
+        return super().execute(statement, args)
 
     def fetchone(self):
         print("FETCH ONE")
-        return super(Cursor, self).fetchone()
+        return super().fetchone()
 
 
 # create instances of the subclassed connection and cursor

@@ -26,18 +26,18 @@ class TestCase(test_env.BaseTestCase):
     def __clear_books_queue(self):
         books_type = self.connection.gettype(self.book_type_name)
         queue = self.connection.queue(self.book_queue_name, books_type)
-        queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
-        queue.deqOptions.deliverymode = oracledb.MSG_PERSISTENT_OR_BUFFERED
-        queue.deqOptions.visibility = oracledb.ENQ_IMMEDIATE
-        while queue.deqOne():
+        queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+        queue.deqoptions.deliverymode = oracledb.MSG_PERSISTENT_OR_BUFFERED
+        queue.deqoptions.visibility = oracledb.ENQ_IMMEDIATE
+        while queue.deqone():
             pass
 
     def __deq_in_thread(self, results):
         connection = test_env.get_connection(threaded=True)
         books_type = connection.gettype(self.book_type_name)
         queue = connection.queue(self.book_queue_name, books_type)
-        queue.deqOptions.wait = 10
-        props = queue.deqOne()
+        queue.deqoptions.wait = 10
+        props = queue.deqone()
         if props is not None:
             book = props.payload
             results.append((book.TITLE, book.AUTHORS, book.PRICE))
@@ -52,8 +52,8 @@ class TestCase(test_env.BaseTestCase):
         self.__clear_books_queue()
         books_type = self.connection.gettype(self.book_type_name)
         queue = self.connection.queue(self.book_queue_name, books_type)
-        queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
-        props = queue.deqOne()
+        queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+        props = queue.deqone()
         self.assertTrue(props is None)
 
     def test_2701_deq_enq(self):
@@ -67,12 +67,12 @@ class TestCase(test_env.BaseTestCase):
             book.TITLE = title
             book.AUTHORS = authors
             book.PRICE = price
-            queue.enqOne(props)
-        queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
-        queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
+            queue.enqone(props)
+        queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
+        queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
         results = []
         while True:
-            props = queue.deqOne()
+            props = queue.deqone()
             if props is None:
                 break
             book = props.payload
@@ -92,11 +92,11 @@ class TestCase(test_env.BaseTestCase):
         book.AUTHORS = authors
         book.PRICE = price
         props = self.connection.msgproperties(payload=book)
-        queue.enqOne(props)
-        queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
-        queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
-        queue.deqOptions.mode = oracledb.DEQ_REMOVE_NODATA
-        props = queue.deqOne()
+        queue.enqone(props)
+        queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
+        queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+        queue.deqoptions.mode = oracledb.DEQ_REMOVE_NODATA
+        props = queue.deqone()
         self.assertTrue(props is not None)
         self.assertTrue(props.payload.TITLE is None)
 
@@ -104,7 +104,7 @@ class TestCase(test_env.BaseTestCase):
         "2703 - test getting/setting dequeue options attributes"
         books_type = self.connection.gettype(self.book_type_name)
         queue = self.connection.queue(self.book_queue_name, books_type)
-        options = queue.deqOptions
+        options = queue.deqoptions
         self.__verify_attr(options, "condition", "TEST_CONDITION")
         self.__verify_attr(options, "consumername", "TEST_CONSUMERNAME")
         self.__verify_attr(options, "correlation", "TEST_CORRELATION")
@@ -131,7 +131,7 @@ class TestCase(test_env.BaseTestCase):
         book.AUTHORS = authors
         book.PRICE = price
         props = self.connection.msgproperties(payload=book)
-        queue.enqOne(props)
+        queue.enqone(props)
         self.connection.commit()
         thread.join()
         self.assertEqual(results, [(title, authors, price)])
@@ -140,7 +140,7 @@ class TestCase(test_env.BaseTestCase):
         "2705 - test getting/setting enqueue options attributes"
         books_type = self.connection.gettype(self.book_type_name)
         queue = self.connection.queue(self.book_queue_name, books_type)
-        options = queue.enqOptions
+        options = queue.enqoptions
         self.__verify_attr(options, "visibility", oracledb.ENQ_IMMEDIATE)
 
     def test_2706_errors_for_invalid_values(self):
@@ -148,7 +148,7 @@ class TestCase(test_env.BaseTestCase):
         books_type = self.connection.gettype(self.book_type_name)
         queue = self.connection.queue(self.book_queue_name, books_type)
         book = books_type.newobject()
-        self.assertRaises(TypeError, queue.enqOne, book)
+        self.assertRaises(TypeError, queue.enqone, book)
 
     def test_2707_msg_props(self):
         "2707 - test getting/setting message properties attributes"
@@ -170,19 +170,19 @@ class TestCase(test_env.BaseTestCase):
         queue = self.connection.queue(self.book_queue_name, books_type)
         book = books_type.newobject()
         book.TITLE, book.AUTHORS, book.PRICE = self.book_data[0]
-        queue.enqOptions.visibility = oracledb.ENQ_ON_COMMIT
+        queue.enqoptions.visibility = oracledb.ENQ_ON_COMMIT
         props = self.connection.msgproperties(payload=book)
-        queue.enqOne(props)
+        queue.enqone(props)
 
         other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
-        queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
-        queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
-        props = queue.deqOne()
+        queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
+        queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+        props = queue.deqone()
         self.assertTrue(props is None)
         self.connection.commit()
-        props = queue.deqOne()
+        props = queue.deqone()
         self.assertTrue(props is not None)
 
     def test_2709_visibility_mode_immediate(self):
@@ -192,17 +192,17 @@ class TestCase(test_env.BaseTestCase):
         queue = self.connection.queue(self.book_queue_name, books_type)
         book = books_type.newobject()
         book.TITLE, book.AUTHORS, book.PRICE = self.book_data[0]
-        queue.enqOptions.visibility = oracledb.ENQ_IMMEDIATE
+        queue.enqoptions.visibility = oracledb.ENQ_IMMEDIATE
         props = self.connection.msgproperties(payload=book)
-        queue.enqOne(props)
+        queue.enqone(props)
 
         other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
-        queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
-        queue.deqOptions.visibility = oracledb.DEQ_ON_COMMIT
-        queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
-        props = queue.deqOne()
+        queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
+        queue.deqoptions.visibility = oracledb.DEQ_ON_COMMIT
+        queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+        props = queue.deqone()
         book = props.payload
         results = (book.TITLE, book.AUTHORS, book.PRICE)
         other_connection.commit()
@@ -215,19 +215,19 @@ class TestCase(test_env.BaseTestCase):
         queue = self.connection.queue(self.book_queue_name, books_type)
         book = books_type.newobject()
         book.TITLE, book.AUTHORS, book.PRICE = self.book_data[0]
-        queue.enqOptions.deliverymode = oracledb.MSG_BUFFERED
-        queue.enqOptions.visibility = oracledb.ENQ_IMMEDIATE
+        queue.enqoptions.deliverymode = oracledb.MSG_BUFFERED
+        queue.enqoptions.visibility = oracledb.ENQ_IMMEDIATE
         props = self.connection.msgproperties(payload=book)
-        queue.enqOne(props)
+        queue.enqone(props)
 
         other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
-        queue.deqOptions.deliverymode = oracledb.MSG_BUFFERED
-        queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
-        queue.deqOptions.visibility = oracledb.DEQ_IMMEDIATE
-        queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
-        props = queue.deqOne()
+        queue.deqoptions.deliverymode = oracledb.MSG_BUFFERED
+        queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
+        queue.deqoptions.visibility = oracledb.DEQ_IMMEDIATE
+        queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+        props = queue.deqone()
         book = props.payload
         results = (book.TITLE, book.AUTHORS, book.PRICE)
         other_connection.commit()
@@ -240,19 +240,19 @@ class TestCase(test_env.BaseTestCase):
         queue = self.connection.queue(self.book_queue_name, books_type)
         book = books_type.newobject()
         book.TITLE, book.AUTHORS, book.PRICE = self.book_data[0]
-        queue.enqOptions.deliverymode = oracledb.MSG_PERSISTENT
-        queue.enqOptions.visibility = oracledb.ENQ_IMMEDIATE
+        queue.enqoptions.deliverymode = oracledb.MSG_PERSISTENT
+        queue.enqoptions.visibility = oracledb.ENQ_IMMEDIATE
         props = self.connection.msgproperties(payload=book)
-        queue.enqOne(props)
+        queue.enqone(props)
 
         other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
-        queue.deqOptions.deliverymode = oracledb.MSG_PERSISTENT
-        queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
-        queue.deqOptions.visibility = oracledb.DEQ_IMMEDIATE
-        queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
-        props = queue.deqOne()
+        queue.deqoptions.deliverymode = oracledb.MSG_PERSISTENT
+        queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
+        queue.deqoptions.visibility = oracledb.DEQ_IMMEDIATE
+        queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+        props = queue.deqone()
         book = props.payload
         results = (book.TITLE, book.AUTHORS, book.PRICE)
         other_connection.commit()
@@ -265,19 +265,19 @@ class TestCase(test_env.BaseTestCase):
         queue = self.connection.queue(self.book_queue_name, books_type)
         book = books_type.newobject()
         book.TITLE, book.AUTHORS, book.PRICE = self.book_data[0]
-        queue.enqOptions.deliverymode = oracledb.MSG_PERSISTENT_OR_BUFFERED
-        queue.enqOptions.visibility = oracledb.ENQ_IMMEDIATE
+        queue.enqoptions.deliverymode = oracledb.MSG_PERSISTENT_OR_BUFFERED
+        queue.enqoptions.visibility = oracledb.ENQ_IMMEDIATE
         props = self.connection.msgproperties(payload=book)
-        queue.enqOne(props)
+        queue.enqone(props)
 
         other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
-        queue.deqOptions.deliverymode = oracledb.MSG_PERSISTENT_OR_BUFFERED
-        queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
-        queue.deqOptions.visibility = oracledb.DEQ_IMMEDIATE
-        queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
-        props = queue.deqOne()
+        queue.deqoptions.deliverymode = oracledb.MSG_PERSISTENT_OR_BUFFERED
+        queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
+        queue.deqoptions.visibility = oracledb.DEQ_IMMEDIATE
+        queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+        props = queue.deqone()
         book = props.payload
         results = (book.TITLE, book.AUTHORS, book.PRICE)
         other_connection.commit()
@@ -290,19 +290,19 @@ class TestCase(test_env.BaseTestCase):
         queue = self.connection.queue(self.book_queue_name, books_type)
         book = books_type.newobject()
         book.TITLE, book.AUTHORS, book.PRICE = self.book_data[0]
-        queue.enqOptions.deliverymode = oracledb.MSG_BUFFERED
-        queue.enqOptions.visibility = oracledb.ENQ_IMMEDIATE
+        queue.enqoptions.deliverymode = oracledb.MSG_BUFFERED
+        queue.enqoptions.visibility = oracledb.ENQ_IMMEDIATE
         props = self.connection.msgproperties(payload=book)
-        queue.enqOne(props)
+        queue.enqone(props)
 
         other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
-        queue.deqOptions.deliverymode = oracledb.MSG_PERSISTENT
-        queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
-        queue.deqOptions.visibility = oracledb.DEQ_IMMEDIATE
-        queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
-        props = queue.deqOne()
+        queue.deqoptions.deliverymode = oracledb.MSG_PERSISTENT
+        queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
+        queue.deqoptions.visibility = oracledb.DEQ_IMMEDIATE
+        queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+        props = queue.deqone()
         self.assertTrue(props is None)
 
     def test_2714_dequeue_transformation(self):
@@ -314,18 +314,18 @@ class TestCase(test_env.BaseTestCase):
         book.TITLE, book.AUTHORS, book.PRICE = self.book_data[0]
         expected_price = book.PRICE + 10
         props = self.connection.msgproperties(payload=book)
-        queue.enqOne(props)
+        queue.enqone(props)
         self.connection.commit()
 
         other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
-        queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
-        queue.deqOptions.visibility = oracledb.DEQ_IMMEDIATE
-        queue.deqOptions.transformation = \
+        queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
+        queue.deqoptions.visibility = oracledb.DEQ_IMMEDIATE
+        queue.deqoptions.transformation = \
                 "%s.transform2" % self.connection.username
-        queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
-        props = queue.deqOne()
+        queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+        props = queue.deqone()
         self.assertEqual(props.payload.PRICE, expected_price)
 
     def test_2715_enqueue_transformation(self):
@@ -336,19 +336,19 @@ class TestCase(test_env.BaseTestCase):
         book = books_type.newobject()
         book.TITLE, book.AUTHORS, book.PRICE = self.book_data[0]
         expected_price = book.PRICE + 5
-        queue.enqOptions.transformation = \
+        queue.enqoptions.transformation = \
                 "%s.transform1" % self.connection.username
         props = self.connection.msgproperties(payload=book)
-        queue.enqOne(props)
+        queue.enqone(props)
         self.connection.commit()
 
         other_connection = test_env.get_connection()
         books_type = other_connection.gettype(self.book_type_name)
         queue = other_connection.queue(self.book_queue_name, books_type)
-        queue.deqOptions.navigation = oracledb.DEQ_FIRST_MSG
-        queue.deqOptions.visibility = oracledb.DEQ_IMMEDIATE
-        queue.deqOptions.wait = oracledb.DEQ_NO_WAIT
-        props = queue.deqOne()
+        queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
+        queue.deqoptions.visibility = oracledb.DEQ_IMMEDIATE
+        queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+        props = queue.deqone()
         self.assertEqual(props.payload.PRICE, expected_price)
 
 if __name__ == "__main__":
