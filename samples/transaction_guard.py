@@ -33,9 +33,10 @@
 # Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
+import sys
+
 import oracledb
 import sample_env
-import sys
 
 # constants
 CONNECT_STRING = "localhost/orcl-tg"

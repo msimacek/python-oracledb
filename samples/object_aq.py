@@ -16,9 +16,10 @@
 # Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
+import decimal
+
 import oracledb
 import sample_env
-import decimal
 
 BOOK_TYPE_NAME = "UDT_BOOK"
 QUEUE_NAME = "DEMO_BOOK_QUEUE"

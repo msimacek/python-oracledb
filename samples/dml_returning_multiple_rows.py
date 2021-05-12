@@ -13,8 +13,9 @@
 # returned at once.
 #------------------------------------------------------------------------------
 
-import oracledb
 import datetime
+
+import oracledb
 import sample_env
 
 # truncate table first so that script can be rerun

@@ -17,9 +17,10 @@
 # Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
+import os
+
 import oracledb
 import sample_env
-import os
 
 # connect to the editions user and create a procedure
 edition_connect_string = sample_env.get_edition_connect_string()

@@ -19,12 +19,12 @@
 import oracledb
 
 # the connection must be in PRELIM_AUTH mode
-connection = oracledb.connect("/", thin=False,
+connection = oracledb.connect(thin=False,
                               mode=oracledb.SYSDBA | oracledb.PRELIM_AUTH)
 connection.startup()
 
 # the following statements must be issued in normal SYSDBA mode
-connection = oracledb.connect("/", thin=False, mode=oracledb.SYSDBA)
+connection = oracledb.connect(thin=False, mode=oracledb.SYSDBA)
 cursor = connection.cursor()
 cursor.execute("alter database mount")
 cursor.execute("alter database open")

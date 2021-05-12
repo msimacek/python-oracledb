@@ -16,8 +16,9 @@
 # Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
-import sys
 import json
+import sys
+
 import oracledb
 import sample_env
 

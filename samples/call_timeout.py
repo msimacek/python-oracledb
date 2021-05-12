@@ -19,8 +19,8 @@ import sample_env
 
 connection = oracledb.connect(sample_env.get_main_connect_string(),
                               thin=False)
-connection.callTimeout = 2000
-print("Call timeout set at", connection.callTimeout, "milliseconds...")
+connection.call_timeout = 2000
+print("Call timeout set at", connection.call_timeout, "milliseconds...")
 
 cursor = connection.cursor()
 cursor.execute("select sysdate from dual")

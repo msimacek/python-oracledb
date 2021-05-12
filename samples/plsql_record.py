@@ -12,9 +12,10 @@
 # Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
+import datetime
+
 import oracledb
 import sample_env
-import datetime
 
 connection = oracledb.connect(sample_env.get_main_connect_string(),
                               thin=False)

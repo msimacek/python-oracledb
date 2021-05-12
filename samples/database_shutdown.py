@@ -19,7 +19,7 @@
 import oracledb
 
 # need to connect as SYSDBA or SYSOPER
-connection = oracledb.connect("/", thin=False, mode=oracledb.SYSDBA)
+connection = oracledb.connect(thin=False, mode=oracledb.SYSDBA)
 
 # first shutdown() call must specify the mode, if DBSHUTDOWN_ABORT is used,
 # there is no need for any of the other steps

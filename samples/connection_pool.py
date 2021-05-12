@@ -20,9 +20,10 @@
 #
 #------------------------------------------------------------------------------
 
+import threading
+
 import oracledb
 import sample_env
-import threading
 
 # Create a Connection Pool
 pool = oracledb.create_pool(user=sample_env.get_main_user(),

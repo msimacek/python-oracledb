@@ -12,10 +12,10 @@
 # Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
+import time
+
 import oracledb
 import sample_env
-import threading
-import time
 
 registered = True
 

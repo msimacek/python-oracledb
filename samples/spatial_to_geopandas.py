@@ -24,10 +24,11 @@
 # Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
-import sample_env
-import oracledb
 from shapely.wkb import loads
 import geopandas as gpd
+
+import sample_env
+import oracledb
 
 # create Oracle connection and cursor objects
 connection = oracledb.connect(sample_env.get_main_connect_string(),
