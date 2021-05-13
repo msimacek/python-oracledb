@@ -5,12 +5,12 @@
 #------------------------------------------------------------------------------
 # subclassing.py
 #
-#   Demonstrate how to subclass cx_Oracle connections and cursors in order to
+#   Demonstrate how to subclass oracledb connections and cursors in order to
 # add additional functionality (like logging) or create specialized interfaces
 # for paticular applications.
 #------------------------------------------------------------------------------
 
-import cx_Oracle as oracledb
+import oracledb
 import sample_env
 
 # sample subclassed connection which overrides the constructor (so no
