@@ -9,6 +9,7 @@ cdef class _OracleErrorInfo:
         uint16_t cursor_id
         uint16_t pos
         uint64_t rowcount
+        bint is_warning
         str message
         str rowid
         list batcherrors
@@ -103,11 +104,14 @@ cdef class Message:
         info.rowcount = buf.read_ub8()      # row number (extended)
         if info.num != 0:
             info.message = buf.read_str(buf.read_uint8()).rstrip()
+        info.is_warning = False
 
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:
         if message_type == TNS_MSG_TYPE_ERROR:
             self._process_error_info(buf)
+        elif message_type == TNS_MSG_TYPE_WARNING:
+            self._process_warning_info(buf)
         elif message_type == TNS_MSG_TYPE_STATUS:
             self.call_status = buf.read_ub4()
             self.end_to_end_seq_num = buf.read_ub2()
@@ -119,6 +123,17 @@ cdef class Message:
 
     cdef int _process_return_parameters(self, ReadBuffer buf) except -1:
         raise NotImplementedError()
+
+    cdef int _process_warning_info(self, ReadBuffer buf) except -1:
+        cdef:
+            _OracleErrorInfo info = self.error_info
+            uint32_t num_bytes
+        info.num = buf.read_ub2()           # error number
+        num_bytes = buf.read_ub2()          # length of error message
+        buf.read_ub2()                      # flags
+        if info.num != 0 and num_bytes > 0:
+            info.message = buf.read_str(num_bytes).rstrip()
+        info.is_warning = True
 
     cdef int _write_function_code(self, WriteBuffer buf) except -1:
         buf.write_uint8(self.message_type)
