@@ -40,12 +40,19 @@ class Subscription:
         return self._impl.id
 
     @property
-    def ipAddress(self):
+    def ip_address(self):
         """
         Returns the IP address used for callback notifications from the
         database server. If not set during construction, this value is None.
         """
         return self._impl.ip_address
+
+    @property
+    def ipAddress(self):
+        """
+        Deprecated. Use property ip_address instead.
+        """
+        return self.ip_address
 
     @property
     def name(self):
@@ -132,13 +139,20 @@ class Message:
 
 
     @property
-    def consumerName(self):
+    def consumer_name(self):
         """
         Returns the name of the consumer which generated the notification. It
         will be populated if the subscription was created with the namespace
         SUBSCR_NAMESPACE_AQ and the queue is a multiple consumer queue.
         """
         return self._consumer_name
+
+    @property
+    def consumerName(self):
+        """
+        Deprecated. Use property consumer_name instead.
+        """
+        return self.consumer_name
 
     @property
     def dbname(self):
@@ -158,13 +172,20 @@ class Message:
         return self._queries
 
     @property
-    def queueName(self):
+    def queue_name(self):
         """
         Returns the name of the queue which generated the notification. It will
         only be populated if the subscription was created with the namespace
         SUBSCR_NAMESPACE_AQ.
         """
         return self._queue_name
+
+    @property
+    def queueName(self):
+        """
+        Deprecated. Use property queue_name instead.
+        """
+        return self.queue_name
 
     @property
     def registered(self):

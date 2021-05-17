@@ -496,12 +496,11 @@ cdef class ThickSodaDocCursorImpl(BaseSodaDocCursorImpl):
         """
         cdef:
             ThickSodaDocImpl doc_impl
-            uint32_t flags
             int status
-        self._db_impl._get_flags(&flags)
         doc_impl = ThickSodaDocImpl.__new__(ThickSodaDocImpl)
         with nogil:
-            status = dpiSodaDocCursor_getNext(self._handle, flags,
+            status = dpiSodaDocCursor_getNext(self._handle,
+                                              DPI_SODA_FLAGS_DEFAULT,
                                               &doc_impl._handle)
         if status < 0:
             _raise_from_odpi()

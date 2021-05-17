@@ -26,8 +26,8 @@ def process_messages(message):
         print("Deregistration has taken place...")
         registered = False
         return
-    print("Queue name:", message.queueName)
-    print("Consumer name:", message.consumerName)
+    print("Queue name:", message.queue_name)
+    print("Consumer name:", message.consumer_name)
 
 connection = oracledb.connect(sample_env.get_main_connect_string(),
                               thin=False, events=True)

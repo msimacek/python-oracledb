@@ -209,7 +209,7 @@ class Connection:
         self._impl.begin(format_id, transaction_id, branch_id)
 
     @property
-    def callTimeout(self):
+    def call_timeout(self):
         """
         Specifies the amount of time (in milliseconds) that a single round-trip
         to the database may take before a timeout will occur. A value of 0
@@ -217,6 +217,18 @@ class Connection:
         """
         self._verify_connected()
         return self._impl.get_call_timeout()
+
+    @call_timeout.setter
+    def call_timeout(self, value):
+        self._verify_connected()
+        self._impl.set_call_timeout(value)
+
+    @property
+    def callTimeout(self):
+        """
+        Deprecated. Use property call_timeout instead.
+        """
+        return self.call_timeout
 
     @callTimeout.setter
     def callTimeout(self, value):
@@ -519,7 +531,7 @@ class Connection:
         self._verify_connected()
         return self._impl.prepare()
 
-    def queue(self, name, payloadType=None):
+    def queue(self, name, payload_type=None, *, payloadType=None):
         """
         Creates and returns a queue which is used to enqueue and dequeue
         messages in Advanced Queueing (AQ).
@@ -527,16 +539,22 @@ class Connection:
         The name parameter is expected to be a string identifying the queue in
         which messages are to be enqueued or dequeued.
 
-        The payloadType parameter, if specified, is expected to be an object
+        The payload_type parameter, if specified, is expected to be an object
         type that identifies the type of payload the queue expects. If not
         specified, RAW data is enqueued and dequeued.
         """
         self._verify_connected()
         payload_type_impl = None
         if payloadType is not None:
-            if not isinstance(payloadType, DbObjectType):
+            if payload_type is not None:
+                message = "payloadType and payload_type cannot both be" \
+                          "specified"
+                raise exceptions.ProgrammingError(message)
+            payload_type = payloadType
+        if payload_type is not None:
+            if not isinstance(payload_type, DbObjectType):
                 raise TypeError("expecting DbObjectType")
-            payload_type_impl = payloadType._impl
+            payload_type_impl = payload_type._impl
         impl = self._impl.create_queue_impl()
         impl.initialize(self._impl, name, payload_type_impl)
         return Queue._from_impl(self, impl)
@@ -588,21 +606,54 @@ class Connection:
     def subscribe(self, namespace=constants.SUBSCR_NAMESPACE_DBCHANGE,
                   protocol=constants.SUBSCR_PROTOCOL_CALLBACK, callback=None,
                   timeout=0, operations=constants.OPCODE_ALLOPS, port=0,
-                  qos=constants.SUBSCR_QOS_DEFAULT, ipAddress=None,
+                  qos=constants.SUBSCR_QOS_DEFAULT, ip_address=None,
+                  grouping_class=constants.SUBSCR_GROUPING_CLASS_NONE,
+                  grouping_value=0,
+                  grouping_type=constants.SUBSCR_GROUPING_TYPE_SUMMARY,
+                  name=None, client_initiated=False, *, ipAddress=None,
                   groupingClass=constants.SUBSCR_GROUPING_CLASS_NONE,
                   groupingValue=0,
                   groupingType=constants.SUBSCR_GROUPING_TYPE_SUMMARY,
-                  name=None, clientInitiated=False):
+                  clientInitiated=False):
         """
         Return a new subscription object that receives notification for events
         that take place in the database that match the given parameters.
         """
         self._verify_connected()
+        if ipAddress is not None:
+            if ip_address is not None:
+                message = "ipAddress and ip_address cannot both be specified"
+                raise exceptions.ProgrammingError(message)
+            ip_address = ipAddress
+        if groupingClass != constants.SUBSCR_GROUPING_CLASS_NONE:
+            if grouping_class != constants.SUBSCR_GROUPING_CLASS_NONE:
+                message = "groupingClass and grouping_class cannot both be" \
+                          "specified"
+                raise exceptions.ProgrammingError(message)
+            grouping_class = groupingClass
+        if groupingValue != 0:
+            if grouping_value != 0:
+                message = "groupingValue and grouping_value cannot both be" \
+                          "specified"
+                raise exceptions.ProgrammingError(message)
+            grouping_value = groupingValue
+        if groupingType != constants.SUBSCR_GROUPING_TYPE_SUMMARY:
+            if grouping_type != constants.SUBSCR_GROUPING_TYPE_SUMMARY:
+                message = "groupingType and grouping_type cannot both be" \
+                          "specified"
+                raise exceptions.ProgrammingError(message)
+            grouping_type = groupingType
+        if clientInitiated:
+            if client_initiated:
+                message = "clientInitiated and client_initiated cannot both" \
+                          "be specified"
+                raise exceptions.ProgrammingError(message)
+            client_initiated = clientInitiated
         impl = self._impl.create_subscr_impl(self, callback, namespace, name,
-                                             protocol, ipAddress, port,
+                                             protocol, ip_address, port,
                                              timeout, operations, qos,
-                                             groupingClass, groupingValue,
-                                             groupingType, clientInitiated)
+                                             grouping_class, grouping_value,
+                                             grouping_type, client_initiated)
         subscr = Subscription._from_impl(impl)
         impl.subscribe(subscr, self._impl)
         return subscr

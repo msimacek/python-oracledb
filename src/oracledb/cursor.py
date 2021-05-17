@@ -176,7 +176,7 @@ class Cursor:
         return self._impl.bind_vars or []
 
     def callfunc(self, name, return_type, parameters=None,
-                 keywordParameters=None):
+                 keyword_parameters=None, *, keywordParameters=None):
         """
         Call a function with the given name. The return type is specified in
         the same notation as is required by setinputsizes(). The sequence of
@@ -185,10 +185,17 @@ class Cursor:
         parameters. The result of the call is the return value of the function.
         """
         var = self.var(return_type)
-        self._call(name, parameters, keywordParameters, var)
+        if keywordParameters is not None:
+            if keyword_parameters is not None:
+                message = "keywordParameters and keyword_parameters cannot" \
+                          "both be specified"
+                raise exceptions.ProgrammingError(message)
+            keyword_parameters = keywordParameters
+        self._call(name, parameters, keyword_parameters, var)
         return var.getvalue()
 
-    def callproc(self, name, parameters=None, keywordParameters=None):
+    def callproc(self, name, parameters=None, keyword_parameters=None, *,
+                 keywordParameters=None):
         """
         Call a procedure with the given name. The sequence of parameters must
         contain one entry for each parameter that the procedure expects. The
@@ -198,7 +205,13 @@ class Cursor:
         after the positional parameters and are not returned as part of the
         output sequence.
         """
-        self._call(name, parameters, keywordParameters)
+        if keywordParameters is not None:
+            if keyword_parameters is not None:
+                message = "keywordParameters and keyword_parameters cannot" \
+                          "both be specified"
+                raise exceptions.ProgrammingError(message)
+            keyword_parameters = keywordParameters
+        self._call(name, parameters, keyword_parameters)
         if parameters is None:
             return []
         return [v.getvalue() for v in self._impl.bind_vars[:len(parameters)]]
@@ -641,7 +654,8 @@ class Cursor:
         pass
 
     def var(self, typ, size=0, arraysize=1, inconverter=None,
-            outconverter=None, typename=None, encodingErrors=None):
+            outconverter=None, typename=None, encoding_errors=None, *,
+            encodingErrors=None):
         """
         Create a variable with the specified characteristics. This method was
         designed for use with PL/SQL in/out variables where the length or type
@@ -682,12 +696,19 @@ class Cursor:
         be specified when using type DB_TYPE_OBJECT unless the type object
         was passed directly as the first parameter.
 
-        The encodingErrors parameter specifies what should happen when decoding
-        byte strings fetched from the database into strings. It should be one
-        of the values noted in the builtin decode function.
+        The encoding_errors parameter specifies what should happen when
+        decoding byte strings fetched from the database into strings. It should
+        be one of the values noted in the builtin decode function.
         """
         self._verify_open()
         if typename is not None:
             typ = self.connection.gettype(typename)
+        if encodingErrors is not None:
+            if encoding_errors is not None:
+                message = "encodingErrors and encoding_errors cannot both be" \
+                          "specified"
+                raise exceptions.ProgrammingError(message)
+            encoding_errors = encodingErrors
         return self._impl.create_var(self.connection, typ, size, arraysize,
-                                     inconverter, outconverter, encodingErrors)
+                                     inconverter, outconverter,
+                                     encoding_errors)
