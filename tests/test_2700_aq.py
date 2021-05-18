@@ -351,5 +351,13 @@ class TestCase(test_env.BaseTestCase):
         props = queue.deqone()
         self.assertEqual(props.payload.PRICE, expected_price)
 
+    def test_2716_payloadType_deprecation(self):
+        "2716 - test to verify payloadType is deprecated"
+        self.__clear_books_queue()
+        books_type = self.connection.gettype(self.book_type_name)
+        self.assertRaises(oracledb.ProgrammingError, self.connection.queue,
+                          self.book_queue_name, books_type,
+                          payloadType=books_type)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

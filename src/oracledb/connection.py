@@ -547,7 +547,7 @@ class Connection:
         payload_type_impl = None
         if payloadType is not None:
             if payload_type is not None:
-                message = "payloadType and payload_type cannot both be" \
+                message = "payloadType and payload_type cannot both be " \
                           "specified"
                 raise exceptions.ProgrammingError(message)
             payload_type = payloadType
@@ -627,26 +627,26 @@ class Connection:
             ip_address = ipAddress
         if groupingClass != constants.SUBSCR_GROUPING_CLASS_NONE:
             if grouping_class != constants.SUBSCR_GROUPING_CLASS_NONE:
-                message = "groupingClass and grouping_class cannot both be" \
+                message = "groupingClass and grouping_class cannot both be " \
                           "specified"
                 raise exceptions.ProgrammingError(message)
             grouping_class = groupingClass
         if groupingValue != 0:
             if grouping_value != 0:
-                message = "groupingValue and grouping_value cannot both be" \
+                message = "groupingValue and grouping_value cannot both be " \
                           "specified"
                 raise exceptions.ProgrammingError(message)
             grouping_value = groupingValue
         if groupingType != constants.SUBSCR_GROUPING_TYPE_SUMMARY:
             if grouping_type != constants.SUBSCR_GROUPING_TYPE_SUMMARY:
-                message = "groupingType and grouping_type cannot both be" \
+                message = "groupingType and grouping_type cannot both be " \
                           "specified"
                 raise exceptions.ProgrammingError(message)
             grouping_type = groupingType
         if clientInitiated:
             if client_initiated:
-                message = "clientInitiated and client_initiated cannot both" \
-                          "be specified"
+                message = "clientInitiated and client_initiated cannot " \
+                          "both be specified"
                 raise exceptions.ProgrammingError(message)
             client_initiated = clientInitiated
         impl = self._impl.create_subscr_impl(self, callback, namespace, name,

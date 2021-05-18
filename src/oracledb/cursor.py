@@ -187,7 +187,7 @@ class Cursor:
         var = self.var(return_type)
         if keywordParameters is not None:
             if keyword_parameters is not None:
-                message = "keywordParameters and keyword_parameters cannot" \
+                message = "keywordParameters and keyword_parameters cannot " \
                           "both be specified"
                 raise exceptions.ProgrammingError(message)
             keyword_parameters = keywordParameters
@@ -207,7 +207,7 @@ class Cursor:
         """
         if keywordParameters is not None:
             if keyword_parameters is not None:
-                message = "keywordParameters and keyword_parameters cannot" \
+                message = "keywordParameters and keyword_parameters cannot " \
                           "both be specified"
                 raise exceptions.ProgrammingError(message)
             keyword_parameters = keywordParameters
@@ -705,8 +705,8 @@ class Cursor:
             typ = self.connection.gettype(typename)
         if encodingErrors is not None:
             if encoding_errors is not None:
-                message = "encodingErrors and encoding_errors cannot both be" \
-                          "specified"
+                message = "encodingErrors and encoding_errors cannot both " \
+                          "be specified"
                 raise exceptions.ProgrammingError(message)
             encoding_errors = encodingErrors
         return self._impl.create_var(self.connection, typ, size, arraysize,
