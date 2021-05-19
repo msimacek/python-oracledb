@@ -2,7 +2,7 @@
 # Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
-from . import constants, utils, thick_impl, thin_impl
+from . import constants, exceptions, utils, thick_impl, thin_impl
 from . import connection as connection_module
 
 class Pool:
@@ -133,25 +133,25 @@ class Pool:
         if waitTimeout != 0:
             if wait_timeout != 0:
                 message = "waitTimeout and wait_timeout cannot both be specified"
-                raise TypeError(message)     
+                raise exceptions.ProgrammingError(message)
             wait_timeout = waitTimeout
         if maxLifetimeSession != 0:
             if max_lifetime_session != 0:
                 message = "maxLifetimeSession and max_lifetime_session cannot " \
                           "both be specified"
-                raise TypeError(message)
+                raise exceptions.ProgrammingError(message)
             max_lifetime_session = maxLifetimeSession
         if sessionCallback is not None:
             if session_callback is not None:
                 message = "sessionCallback and session_callback cannot both be " \
                           "specified"
-                raise TypeError(message)
+                raise exceptions.ProgrammingError(message)
             session_callback = sessionCallback
         if maxSessionsPerShard != 0:
             if max_sessions_per_shard != 0:
                 message = "maxSessionsPerShard and max_sessions_per_shard cannot " \
                           "both be specified"
-                raise TypeError(message)
+                raise exceptions.ProgrammingError(message)
             max_sessions_per_shard = maxSessionsPerShard
 
         if thin:

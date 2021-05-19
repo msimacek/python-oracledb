@@ -125,6 +125,9 @@ class TestCase(test_env.BaseTestCase):
         "3001 - test to verify deprecations"
         connection = test_env.get_connection(threaded=True, events=True)
         self.assertRaises(oracledb.ProgrammingError, connection.subscribe,
+                          ip_address='www.oracle.in',
+                          ipAddress='www.oracle.in')
+        self.assertRaises(oracledb.ProgrammingError, connection.subscribe,
                           grouping_class=1, groupingClass=1)
         self.assertRaises(oracledb.ProgrammingError, connection.subscribe,
                           grouping_value=3, groupingValue=3)
