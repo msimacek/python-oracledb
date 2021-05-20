@@ -132,25 +132,26 @@ class Pool:
 
         if waitTimeout != 0:
             if wait_timeout != 0:
-                message = "waitTimeout and wait_timeout cannot both be specified"
+                message = "waitTimeout and wait_timeout cannot both be " \
+                          "specified"
                 raise exceptions.ProgrammingError(message)
             wait_timeout = waitTimeout
         if maxLifetimeSession != 0:
             if max_lifetime_session != 0:
-                message = "maxLifetimeSession and max_lifetime_session cannot " \
-                          "both be specified"
+                message = "maxLifetimeSession and max_lifetime_session " \
+                          "cannot both be specified"
                 raise exceptions.ProgrammingError(message)
             max_lifetime_session = maxLifetimeSession
         if sessionCallback is not None:
             if session_callback is not None:
-                message = "sessionCallback and session_callback cannot both be " \
-                          "specified"
+                message = "sessionCallback and session_callback cannot both " \
+                          "be specified"
                 raise exceptions.ProgrammingError(message)
             session_callback = sessionCallback
         if maxSessionsPerShard != 0:
             if max_sessions_per_shard != 0:
-                message = "maxSessionsPerShard and max_sessions_per_shard cannot " \
-                          "both be specified"
+                message = "maxSessionsPerShard and max_sessions_per_shard " \
+                          "cannot both be specified"
                 raise exceptions.ProgrammingError(message)
             max_sessions_per_shard = maxSessionsPerShard
 
@@ -434,18 +435,18 @@ class Pool:
         depends on the getmode in effect when acquire() is called:
 
         * With mode POOL_GETMODE_FORCEGET, an acquire() call will wait until
-        the pool has been reconfigured.
+          the pool has been reconfigured.
 
         * With mode POOL_GETMODE__TIMEDWAIT, an acquire() call will try to
-        acquire a connection in the time specified by pool.wait_timeout and
-        return an error if the time taken exceeds that value.
+          acquire a connection in the time specified by pool.wait_timeout and
+          return an error if the time taken exceeds that value.
 
-        * With mode POOL_GETMODE_WAIT, an acquire() call will wait until after the
-        pool has been reconfigured and a connection is available.
+        * With mode POOL_GETMODE_WAIT, an acquire() call will wait until after
+          the pool has been reconfigured and a connection is available.
 
         * With mode POOL_GETMODE_NOWAIT, if the number of busy connections is
-        less than the pool size, ``acquire()`` will return a new connection
-        after pool reconfiguration is complete.
+          less than the pool size, ``acquire()`` will return a new connection
+          after pool reconfiguration is complete.
 
         Closing connections with pool.release() or connection.close() will
         wait until any pool size reconfiguration is complete.
