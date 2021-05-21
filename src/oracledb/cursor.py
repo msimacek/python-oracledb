@@ -663,7 +663,7 @@ class Cursor:
         for use in input and output type handlers defined on cursors or
         connections.
 
-        The dataType parameter specifies the type of data that should be stored
+        The typ parameter specifies the type of data that should be stored
         in the variable. This should be one of the database type constants, DB
         API constants, an object type returned from the method
         Connection.gettype() or one of the following Python types:

@@ -83,7 +83,7 @@ cdef class ThinConnImpl(BaseConnImpl):
     def commit(self):
         self._protocol._commit()
 
-    def connect(self, params):
+    def connect(self, params, uint32_t stmtcachesize):
         sock = socket.create_connection((params.host, params.port))
         if params.secure_transport:
             wallet_file_name = params.get_wallet_file_name()
@@ -97,7 +97,7 @@ cdef class ThinConnImpl(BaseConnImpl):
                                                 params.password)
         if redirect_data is None:
             self._statement_cache = collections.OrderedDict()
-            self._statement_cache_size = TNS_DEFAULT_STMT_CACHE_SIZE
+            self._statement_cache_size = stmtcachesize
             self._statement_cache_lock = threading.Lock()
             self._cursors_to_close = array.array('I')
             array.resize(self._cursors_to_close, TNS_MAX_CURSORS_TO_CLOSE)

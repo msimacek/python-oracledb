@@ -193,7 +193,7 @@ cdef class ThickConnImpl(BaseConnImpl):
                 events=False, str cclass=None, uint32_t purity=0,
                 str newpassword=None, str edition=None, list appcontext=None,
                 str tag=None, bint matchanytag=False, list shardingkey=None,
-                list supershardingkey=None):
+                list supershardingkey=None, uint32_t stmtcachesize=0):
         cdef:
             dpiCommonCreateParams common_params
             dpiConnCreateParams conn_params
@@ -271,6 +271,7 @@ cdef class ThickConnImpl(BaseConnImpl):
             self._is_external = True
         if pool_impl is not None:
             conn_params.pool = pool_impl._handle
+        common_params.stmtCacheSize = stmtcachesize
         conn_params.matchAnyTag = matchanytag
         conn_params.purity = purity
 

@@ -22,16 +22,16 @@ class Connection:
                  threaded=False, events=False, cclass=None,
                  purity=constants.ATTR_PURITY_DEFAULT, newpassword=None,
                  edition=None, appcontext=[], tag=None, matchanytag=False,
-                 shardingkey=[], supershardingkey=[], secure_transport=False,
-                 config_dir=None):
+                 shardingkey=[], supershardingkey=[], stmtcachesize=20,
+                 secure_transport=False, config_dir=None):
         """
         Constructor for creating a connection to the database. All parameters
         are optional.
 
         The dsn (data source name) can be a string in the format
-        user/password@connect_string or can simply be the connect string (and
-        all of the other parameters need to be specified as well. See the
-        documentation on connection strings for more information.
+        user/password@connect_string or can simply be the connect string (in
+        which case the user and password need to be specified separately). See
+        the documentation on connection strings for more information.
 
         If the mode is specified, it must be one of the connection
         authorization modes which are defined at the module level.
@@ -92,6 +92,9 @@ class Connection:
         expected to be a sequence of values which will be used to identify the
         database shard to connect to. The key values can be strings, numbers,
         bytes or dates.
+
+        The stmtcachesize parameter, if specified, is expected to be an integer
+        which specifies the initial value of Connection.stmtcachesize.
         """
         self._impl = None
         if pool is None:
@@ -113,7 +116,8 @@ class Connection:
         if thin:
             impl = thin_impl.ThinConnImpl(user, dsn)
             while True:
-                redirect_data = impl.connect(params)
+                redirect_data = impl.connect(params,
+                                             stmtcachesize=stmtcachesize)
                 if redirect_data is None:
                     break
                 params.parse_redirect_data(redirect_data)
@@ -124,7 +128,8 @@ class Connection:
                          cclass=cclass, purity=purity, newpassword=newpassword,
                          edition=edition, appcontext=appcontext, tag=tag,
                          matchanytag=matchanytag, shardingkey=shardingkey,
-                         supershardingkey=supershardingkey)
+                         supershardingkey=supershardingkey,
+                         stmtcachesize=stmtcachesize)
         self._impl = impl
         self._version = None
 
@@ -618,6 +623,64 @@ class Connection:
         """
         Return a new subscription object that receives notification for events
         that take place in the database that match the given parameters.
+
+        The namespace parameter specifies the namespace the subscription uses.
+        It can be one of SUBSCR_NAMESPACE_DBCHANGE or SUBSCR_NAMESPACE_AQ.
+
+        The protocol parameter specifies the protocol to use when notifications
+        are sent. Currently the only valid value is SUBSCR_PROTOCOL_CALLBACK.
+
+        The callback is expected to be a callable that accepts a single
+        parameter. A message object is passed to this callback whenever a
+        notification is received.
+
+        The timeout value specifies that the subscription expires after the
+        given time in seconds. The default value of 0 indicates that the
+        subscription never expires.
+
+        The operations parameter enables filtering of the messages that are
+        sent (insert, update, delete). The default value will send
+        notifications for all operations. This parameter is only used when the
+        namespace is set to SUBSCR_NAMESPACE_DBCHANGE.
+
+        The port parameter specifies the listening port for callback
+        notifications from the database server. If not specified, an unused
+        port will be selected by the Oracle Client libraries.
+
+        The qos parameter specifies quality of service options. It should be
+        one or more of the following flags, OR'ed together:
+        SUBSCR_QOS_RELIABLE,
+        SUBSCR_QOS_DEREG_NFY,
+        SUBSCR_QOS_ROWIDS,
+        SUBSCR_QOS_QUERY,
+        SUBSCR_QOS_BEST_EFFORT.
+
+        The ip_address parameter specifies the IP address (IPv4 or IPv6) in
+        standard string notation to bind for callback notifications from the
+        database server. If not specified, the client IP address will be
+        determined by the Oracle Client libraries.
+
+        The grouping_class parameter specifies what type of grouping of
+        notifications should take place. Currently, if set, this value can
+        only be set to the value SUBSCR_GROUPING_CLASS_TIME, which will group
+        notifications by the number of seconds specified in the grouping_value
+        parameter. The grouping_type parameter should be one of the values
+        SUBSCR_GROUPING_TYPE_SUMMARY (the default) or
+        SUBSCR_GROUPING_TYPE_LAST.
+
+        The name parameter is used to identify the subscription and is specific
+        to the selected namespace. If the namespace parameter is
+        SUBSCR_NAMESPACE_DBCHANGE then the name is optional and can be any
+        value. If the namespace parameter is SUBSCR_NAMESPACE_AQ, however, the
+        name must be in the format '<QUEUE_NAME>' for single consumer queues
+        and '<QUEUE_NAME>:<CONSUMER_NAME>' for multiple consumer queues, and
+        identifies the queue that will be monitored for messages. The queue
+        name may include the schema, if needed.
+
+        The client_initiated parameter is used to determine if client initiated
+        connections or server initiated connections (the default) will be
+        established. Client initiated connections are only available in Oracle
+        Client 19.4 and Oracle Database 19.4 and higher.
         """
         self._verify_connected()
         if ipAddress is not None:

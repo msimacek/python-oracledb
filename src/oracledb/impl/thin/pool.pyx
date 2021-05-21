@@ -54,7 +54,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
         """
         cdef ThinConnImpl conn_impl
         conn_impl = ThinConnImpl(self.username, self.dsn)
-        conn_impl.connect(self._params)
+        conn_impl.connect(self._params, self._stmt_cache_size)
         conn_impl._pool = self
         return conn_impl
 

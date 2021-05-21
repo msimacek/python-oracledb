@@ -83,23 +83,23 @@ class Pool:
         pool is accessed. The default value of 0 means that no idle connections
         are terminated.
 
-        The waitTimeout parameter is expected to be an integer, if specified,
+        The wait_timeout parameter is expected to be an integer, if specified,
         and sets the length of time (in milliseconds) that the caller should
         wait for a connection to become available in the pool before returning
         with an error. This value is only used if the getmode parameter is set
-        to the value cx_Oracle.POOL_GETMODE_TIMEDWAIT.
+        to the value POOL_GETMODE_TIMEDWAIT.
 
-        The maxLifetimeSession parameter is expected to be an integer, if
+        The max_lifetime_session parameter is expected to be an integer, if
         specified, and sets the maximum length of time (in seconds) a pooled
         connection may exist. Connections that are in use will not be closed.
         They become candidates for termination only when they are released back
-        to the pool and have existed for longer than maxLifetimeSession
+        to the pool and have existed for longer than max_lifetime_session
         seconds.  Note that termination only occurs when the pool is accessed.
         The default value is 0 which means that there is no maximum length of
         time that a pooled connection may exist.
 
-        The sessionCallback parameter is expected to be either a string or a
-        callable. If the sessionCallback parameter is a callable, it will be
+        The session_callback parameter is expected to be either a string or a
+        callable. If the session_callback parameter is a callable, it will be
         called when a newly created connection is returned from the pool, or
         when a tag is requested and that tag does not match the connection’s
         actual tag. The callable will be invoked with the connection and the
@@ -110,10 +110,26 @@ class Pool:
         libraries 12.2 or later. See the OCI documentation for more
         information.
 
-        The maxSessionsPerShard parameter is expected to be an integer, if
+        The max_sessions_per_shard parameter is expected to be an integer, if
         specified, and sets the maximum number of connections in the pool that
-        can be used for any given shard in a sharded database. This value is
-        ignored if the Oracle client library version is less than 18.3.
+        can be used for any given shard in a sharded database. This lets
+        connections in the pool be balanced across the shards. A value of zero
+        will not set any maximum number of sessions for each shard. This value
+        is ignored if the Oracle client library version is less than 18.3.
+
+        The soda_metadata_cache parameter is expected to be a boolean expresion
+        which indicates whether or not to enable the SODA metatata cache. This
+        significantly improves the performance of methods
+        SodaDatabase.createCollection() and SodaDatabase.openCollection() but
+        can become out of date as it does not track changes made externally. It
+        is also only available in Oracle Client 19.11 and higher. See Using the
+        SODA Metadata Cache.
+
+        The stmtcachesize parameter, if specified, is expected to be an integer
+        which specifies the initial value of stmtcachesize.
+
+        The ping_interval parameter, if specified, is expected to be an integer
+        which specifies the initial value of ping_interval.
         """
         self._impl = None
         if connectiontype is None:

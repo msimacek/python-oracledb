@@ -1,4 +1,4 @@
-This directory contains the test suite for oracledb.
+This directory contains the test suite for py-oracledb.
 
 1.  The schemas and SQL objects that are referenced in the test suite can be
     created by running the Python script [setup_test.py][1]. The script
@@ -46,8 +46,8 @@ This directory contains the test suite for oracledb.
 
         sqlplus system/systempassword@hostname/servicename @sql/drop_test.sql
 
-[1]: https://github.com/oracle/python-oracledb/blob/master/test/setup_test.py
-[2]: https://github.com/oracle/python-oracledb/blob/master/test/test_env.py
-[3]: https://github.com/oracle/python-oracledb/blob/master/test/sql/setup_test.sql
-[4]: https://github.com/oracle/python-oracledb/blob/master/test/drop_test.py
-[5]: https://github.com/oracle/python-oracledb/blob/master/test/sql/drop_test.sql
+[1]: https://github.com/oracle/python-oracledb/blob/main/test/setup_test.py
+[2]: https://github.com/oracle/python-oracledb/blob/main/test/test_env.py
+[3]: https://github.com/oracle/python-oracledb/blob/main/test/sql/setup_test.sql
+[4]: https://github.com/oracle/python-oracledb/blob/main/test/drop_test.py
+[5]: https://github.com/oracle/python-oracledb/blob/main/test/sql/drop_test.sql
