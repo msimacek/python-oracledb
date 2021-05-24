@@ -27,7 +27,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
         bint _shutdown
 
     def __init__(self, params, min, max, increment, homogeneous, getmode,
-                 wait_timeout):
+                 wait_timeout, stmtcachesize):
         self._params = params
         self.username = params.user
         self.dsn = params.get_dsn()
@@ -37,6 +37,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
         self.homogeneous = homogeneous
         self._getmode = getmode
         self._wait_timeout = wait_timeout
+        self._stmt_cache_size = stmtcachesize
         self._free_new_conn_impls = []
         self._free_used_conn_impls = []
         self._busy_conn_impls = []

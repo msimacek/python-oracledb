@@ -173,7 +173,8 @@ class Pool:
 
         if thin:
             impl = thin_impl.ThinPoolImpl(params, min, max, increment,
-                                          homogeneous, getmode, wait_timeout)
+                                          homogeneous, getmode, wait_timeout,
+                                          stmtcachesize)
         else:
             impl = thick_impl.ThickPoolImpl(params.user, params.get_dsn(), min,
                                             max, increment, homogeneous)
