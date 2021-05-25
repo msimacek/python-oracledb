@@ -474,5 +474,14 @@ class TestCase(test_env.BaseTestCase):
                           getmode=oracledb.POOL_GETMODE_NOWAIT,
                           session_callback=callback, sessionCallback=callback)
 
+    def test_2419_statement_cache_size(self):
+        "2419 - test to verify statement cache size is retained"
+        pool = test_env.get_pool(min=1, max=2, increment=1,
+                                 getmode=oracledb.POOL_GETMODE_WAIT,
+                                 stmtcachesize=25)
+        self.assertEqual(pool.stmtcachesize, 25, "stmtcachesize (25)")
+        pool.stmtcachesize = 35
+        self.assertEqual(pool.stmtcachesize, 35, "stmtcachesize (35)")
+
 if __name__ == "__main__":
     test_env.run_test_cases()
