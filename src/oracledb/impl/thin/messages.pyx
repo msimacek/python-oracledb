@@ -231,6 +231,7 @@ cdef class MessageWithData(Message):
         cdef:
             ThinCursorImpl cursor_impl = self.cursor_impl
             ThinVarImpl var_impl
+        self.processed_error = False
         if cursor_impl._statement._is_query:
             self.in_fetch = True
             if cursor_impl.fetch_vars is not None:
@@ -1117,6 +1118,7 @@ cdef class ConnectMessage(Message):
             self.first_packet = False
         else:
             buf._caps.protocol_version = buf.read_uint16()
+            buf._caps.protocol_options = buf.read_uint16()
 
     cdef int send(self, WriteBuffer buf) except -1:
         buf.start_request(TNS_PACKET_TYPE_CONNECT)

@@ -6,13 +6,14 @@
 1100 - Module for testing connections
 """
 
-import test_env
-
-import oracledb
 import random
 import string
 import threading
+import time
 import unittest
+
+import test_env
+import oracledb
 
 class TestCase(test_env.BaseTestCase):
     requires_connection = False
@@ -354,6 +355,29 @@ class TestCase(test_env.BaseTestCase):
                 t.start()
             for t in threads:
                 t.join()
+
+    def test_1127_cancel(self):
+        "1127 - test connection cancel"
+        conn = test_env.get_connection()
+        sleep_proc_name = "dbms_session.sleep" \
+                if int(conn.version.split(".")[0]) >= 18 \
+                else "dbms_lock.sleep"
+        def perform_cancel():
+            time.sleep(0.1)
+            conn.cancel()
+        thread = threading.Thread(target=perform_cancel)
+        thread.start()
+        try:
+            with conn.cursor() as cursor:
+                self.assertRaises(oracledb.OperationalError, cursor.callproc,
+                                sleep_proc_name, [2])
+        finally:
+            thread.join()
+        with conn.cursor() as cursor:
+            cursor.execute("select user from dual")
+            user, = cursor.fetchone()
+            self.assertEqual(user, test_env.get_main_user().upper())
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()

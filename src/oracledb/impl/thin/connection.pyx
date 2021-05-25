@@ -71,6 +71,9 @@ cdef class ThinConnImpl(BaseConnImpl):
             elif statement._cursor_id != 0:
                 self._add_cursor_to_close(statement)
 
+    def cancel(self):
+        self._protocol._break_external()
+
     def close(self, bint in_del=False):
         if self._pool is not None:
             self._pool._free_busy_connection(self)

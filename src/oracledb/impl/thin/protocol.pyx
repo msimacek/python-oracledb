@@ -7,11 +7,12 @@ cdef class Protocol:
     cdef:
         uint8_t _seq_num
         object _socket
-        object _caps
+        Capabilities _caps
         ReadBuffer _read_buf
         WriteBuffer _write_buf
         object _request_lock
         bint _txn_in_progress
+        bint _break_in_progress
 
     def __init__(self, sock):
         self._caps = Capabilities()
@@ -23,8 +24,25 @@ cdef class Protocol:
         self._read_buf = ReadBuffer(sock, TNS_SDU, self._caps)
         self._write_buf = WriteBuffer(sock, TNS_SDU, self._caps)
 
-    cdef int _break(self):
-        cdef WriteBuffer buf = self._write_buf
+    cdef int _break_external(self):
+        """
+        Method for sending a break to the server from an external request. A
+        separate write buffer is used in order to avoid a potential conflict
+        with any in progress writes.
+        """
+        cdef WriteBuffer buf
+        if not self._break_in_progress and self._request_lock.locked():
+            self._break_in_progress = True
+            if self._caps.protocol_options & TNS_CAN_RECV_ATTENTION:
+                self._socket.send(b"!", socket.MSG_OOB)
+            else:
+                buf = WriteBuffer(self._socket, TNS_SDU, self._caps)
+                self._break_internal(buf)
+
+    cdef int _break_internal(self, WriteBuffer buf):
+        """
+        Internal method for sending a break to the server.
+        """
         buf.start_request(TNS_PACKET_TYPE_MARKER)
         buf.write_uint8(1)
         buf.write_uint8(0)
@@ -139,9 +157,13 @@ cdef class Protocol:
         except:
             if self._write_buf._packet_sent \
                     and self._read_buf._socket is not None:
-                self._break()
-                self._reset()
+                self._break_internal(self._write_buf)
+                self._receive_packet(message)
             raise
+        if self._break_in_progress:
+            self._receive_packet(message)
+            message.process(self._read_buf)
+            self._break_in_progress = False
         self._txn_in_progress = message.call_status & TNS_TXN_IN_PROGRESS
         if message.error_occurred:
             error = errors._Error(message.error_info.message,
@@ -153,7 +175,7 @@ cdef class Protocol:
     cdef int _receive_packet(self, Message message) except -1:
         self._read_buf.receive_packet(&message.packet_type)
         if message.packet_type == TNS_PACKET_TYPE_MARKER:
-            self._reset()
+            self._reset(message)
             message.error_occurred = True
         elif message.packet_type == TNS_PACKET_TYPE_REFUSE:
             self._write_buf._packet_sent = False
@@ -172,10 +194,8 @@ cdef class Protocol:
             exc_type = get_exception_class(error_code_int)
             raise exc_type(error)
 
-    cdef int _reset(self):
-        cdef:
-            WriteBuffer buf = self._write_buf
-            uint8_t packet_type
+    cdef int _reset(self, Message message):
+        cdef WriteBuffer buf = self._write_buf
 
         # send marker packet indicating a reset is desired
         buf.start_request(TNS_PACKET_TYPE_MARKER)
@@ -186,12 +206,15 @@ cdef class Protocol:
 
         # read and discard all packets until a marker packet is received
         while True:
-            self._read_buf.receive_packet(&packet_type)
-            if packet_type == TNS_PACKET_TYPE_MARKER:
-                break
+            if message.packet_type == TNS_PACKET_TYPE_MARKER:
+                self._read_buf.skip_bytes(2)
+                if self._read_buf.read_uint8() == TNS_MARKER_TYPE_RESET:
+                    break
+            self._read_buf.receive_packet(&message.packet_type)
 
         # read error packet
-        self._read_buf.receive_packet(&packet_type)
+        self._read_buf.receive_packet(&message.packet_type)
+        self._break_in_progress = False
 
     cdef int _rollback(self) except -1:
         with self._request_lock:

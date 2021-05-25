@@ -5,6 +5,7 @@
 cdef class Capabilities:
     cdef:
         uint16_t protocol_version
+        uint16_t protocol_options
         uint8_t ttc_field_version
         bytearray compile_caps
         bytearray runtime_caps
