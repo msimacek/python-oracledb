@@ -16,7 +16,7 @@ class Cursor:
 
     def __del__(self):
         if self._impl is not None:
-            self._impl.close()
+            self._impl.close(in_del=True)
 
     def __enter__(self):
         self._verify_open()

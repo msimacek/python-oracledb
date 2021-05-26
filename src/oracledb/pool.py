@@ -190,6 +190,7 @@ class Pool:
                          stmtcachesize=stmtcachesize,
                          ping_interval=ping_interval)
         self._impl = impl
+        self.session_callback = session_callback
 
     def _verify_open(self):
         """
@@ -229,10 +230,12 @@ class Pool:
         bytes or dates.
         """
         self._verify_open()
-        conn_impl = self._impl.acquire(user, password, cclass, purity, tag,
-                                       matchanytag, shardingkey,
-                                       supershardingkey)
-        return self._connection_type._from_impl(conn_impl)
+        return self._connection_type(user=user, password=password, cclass=cclass,
+                                     purity=purity, tag=tag,
+                                     matchanytag=matchanytag,
+                                     shardingkey=shardingkey,
+                                     supershardingkey=supershardingkey,
+                                     pool=self)
 
     @property
     def busy(self):

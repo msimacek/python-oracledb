@@ -16,7 +16,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
     def __cinit__(self, conn_impl):
         self._conn_impl = conn_impl
 
-    cdef int _close(self) except -1:
+    cdef int _close(self, bint in_del) except -1:
         if self._statement is not None:
             self._conn_impl._return_statement(self._statement)
             self._statement = None

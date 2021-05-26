@@ -28,6 +28,44 @@ class TestCase(test_env.BaseTestCase):
             self.assertRaises(oracledb.DatabaseError, cursor.execute,
                             "select 1 / 0 from dual")
 
+    def __callable_session_callback(self, conn, requested_tag):
+        self.session_called = True
+
+        supported_formats = {
+            "SIMPLE" : "'YYYY-MM-DD HH24:MI'",
+            "FULL" : "'YYYY-MM-DD HH24:MI:SS'"
+        }
+
+        supported_time_zones = {
+            "UTC" : "'UTC'",
+            "MST" : "'-07:00'"
+        }
+
+        supported_keys = {
+            "NLS_DATE_FORMAT" : supported_formats,
+            "TIME_ZONE" : supported_time_zones
+        }
+        if requested_tag is not None:
+            state_parts = []
+            for directive in requested_tag.split(";"):
+                parts = directive.split("=")
+                if len(parts) != 2:
+                    raise ValueError("Tag must contain key=value pairs")
+                key, value = parts
+                value_dict = supported_keys.get(key)
+                if value_dict is None:
+                    raise ValueError("Tag only supports keys: %s" % \
+                            (", ".join(supported_keys)))
+                actual_value = value_dict.get(value)
+                if actual_value is None:
+                    raise ValueError("Key %s only supports values: %s" % \
+                            (key, ", ".join(value_dict)))
+                state_parts.append("%s = %s" % (key, actual_value))
+            sql = "alter session set %s" % " ".join(state_parts)
+            cursor = conn.cursor()
+            cursor.execute(sql)
+        conn.tag = requested_tag
+
     def __perform_reconfigure_test(self, parameter_name, parameter_value,
                                    min=3, max=30, increment=4, timeout=5,
                                    wait_timeout=5000, stmtcachesize=25,
@@ -85,7 +123,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(pool.busy, 0, "busy not 0 at start")
         connection_1 = pool.acquire()
         self.assertEqual(pool.busy, 1, "busy not 1 after acquire")
-        connection_2 = pool.acquire()
+        connection_2 = oracledb.connect(pool=pool)
         self.assertEqual(pool.busy, 2, "busy not 2 after acquire")
         self.assertEqual(pool.opened, 2, "opened differs")
         connection_3 = pool.acquire()
@@ -93,7 +131,7 @@ class TestCase(test_env.BaseTestCase):
         pool.release(connection_3)
         self.assertEqual(pool.busy, 2, "busy not 2 after release")
         pool.release(connection_1)
-        pool.release(connection_2)
+        connection_2.close()
         self.assertEqual(pool.busy, 0, "busy not 0 after release")
         pool.getmode = oracledb.POOL_GETMODE_NOWAIT
         self.assertEqual(pool.getmode, oracledb.POOL_GETMODE_NOWAIT)
@@ -482,6 +520,46 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(pool.stmtcachesize, 25, "stmtcachesize (25)")
         pool.stmtcachesize = 35
         self.assertEqual(pool.stmtcachesize, 35, "stmtcachesize (35)")
+
+    @unittest.skipIf(test_env.get_is_thin(),
+                     "thin driver doesn't support tagging yet")
+    def test_2420_callable_session_callbacks(self):
+        "2420 - test that session callbacks are being called correctly"
+        pool = test_env.get_pool(min=2, max=5, increment=1,
+                                 session_callback=self.__callable_session_callback)
+
+        # new connection with a tag should invoke the session callback
+        with pool.acquire(tag="NLS_DATE_FORMAT=SIMPLE") as conn:
+            cursor = conn.cursor()
+            cursor.execute("select to_char(2021-05-20) from dual")
+            result, = cursor.fetchone()
+            self.assertEqual(self.session_called, True)
+
+        # acquiring a connection with the same tag should not invoke the
+        # session callback
+        self.session_called = False
+        with pool.acquire(tag="NLS_DATE_FORMAT=SIMPLE") as conn:
+            cursor = conn.cursor()
+            cursor.execute("select to_char(2021-05-20) from dual")
+            result, = cursor.fetchone()
+            self.assertEqual(self.session_called, False)
+
+        # acquiring a connection with a new tag should invoke the session
+        # callback
+        self.session_called = False
+        with pool.acquire(tag="NLS_DATE_FORMAT=FULL;TIME_ZONE=UTC") as conn:
+            cursor = conn.cursor()
+            cursor.execute("select to_char(current_date) from dual")
+            result, = cursor.fetchone()
+            self.assertEqual(self.session_called, True)
+
+        # new connection with no tag should not invoke the session callback
+        self.session_called = False
+        with pool.acquire() as conn:
+            cursor = conn.cursor()
+            cursor.execute("select to_char(current_date) from dual")
+            result, = cursor.fetchone()
+            self.assertEqual(self.session_called, False)
 
 if __name__ == "__main__":
     test_env.run_test_cases()

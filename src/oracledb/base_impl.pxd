@@ -48,6 +48,7 @@ cdef class BaseConnImpl:
         public object inputtypehandler
         public object outputtypehandler
         public bint autocommit
+        public bint invoke_session_callback
 
 
 cdef class BasePoolImpl:
@@ -83,7 +84,7 @@ cdef class BaseCursorImpl:
     cdef int _bind_by_position(self, object cursor, object params,
                                uint32_t num_elements=*,
                                uint32_t pos=*) except -1
-    cdef int _close(self) except -1
+    cdef int _close(self, bint in_del) except -1
     cdef object _create_row(self)
     cdef BaseVarImpl _create_var_impl(self, object connection)
     cdef object _create_var_by_type(self, object connection, object value,

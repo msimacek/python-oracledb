@@ -380,7 +380,8 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3220_implicit_results(self):
         "3220 - test getimplicitresults() returns the correct data"
-        self.cursor.execute("""
+        cursor = self.connection.cursor()
+        cursor.execute("""
                 declare
                     c1 sys_refcursor;
                     c2 sys_refcursor;
@@ -401,7 +402,7 @@ class TestCase(test_env.BaseTestCase):
                     dbms_sql.return_result(c2);
 
                 end;""")
-        results = self.cursor.getimplicitresults()
+        results = cursor.getimplicitresults()
         self.assertEqual(len(results), 2)
         self.assertEqual([n for n, in results[0]], [3.75, 5, 6.25])
         self.assertEqual([n for n, in results[1]], [8.75, 10, 11.25, 12.5])

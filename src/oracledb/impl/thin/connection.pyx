@@ -68,7 +68,8 @@ cdef class ThinConnImpl(BaseConnImpl):
                 statement._in_use = False
                 self._statement_cache.move_end_end(statement._sql)
                 self._adjust_statement_cache()
-            elif statement._cursor_id != 0:
+            elif statement._cursor_id != 0 \
+                    and not statement._skip_closing_cursor:
                 self._add_cursor_to_close(statement)
 
     def cancel(self):

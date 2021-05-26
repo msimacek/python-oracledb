@@ -105,6 +105,8 @@ class Connection:
         else:
             pool._verify_open()
             pool_impl = pool._impl
+            if isinstance(pool_impl, thick_impl.ThickPoolImpl):
+                thin = False
         params = utils.ConnectParams(user=user, password=password, host=host,
                                      port=port, service_name=service_name,
                                      secure_transport=secure_transport,
@@ -114,35 +116,35 @@ class Connection:
         user = params.user
         dsn = params.get_dsn()
         if thin:
-            impl = thin_impl.ThinConnImpl(user, dsn)
-            while True:
-                redirect_data = impl.connect(params,
-                                             stmtcachesize=stmtcachesize)
-                if redirect_data is None:
-                    break
-                params.parse_redirect_data(redirect_data)
+            if pool is not None:
+                impl = pool_impl.acquire(user=user, password=password,
+                                         cclass=cclass, purity=purity,
+                                         tag=tag, matchanytag=matchanytag,
+                                         shardingkey=shardingkey,
+                                         supershardingkey=supershardingkey)
+            else:
+                impl = thin_impl.ThinConnImpl(user, dsn)
+                while True:
+                    redirect_data = impl.connect(params,
+                                                 stmtcachesize=stmtcachesize)
+                    if redirect_data is None:
+                        break
+                    params.parse_redirect_data(redirect_data)
         else:
             impl = thick_impl.ThickConnImpl(user, dsn)
             impl.connect(password=params.password, mode=mode, handle=handle,
-                         pool_impl=pool_impl, threaded=threaded, events=events,
-                         cclass=cclass, purity=purity, newpassword=newpassword,
-                         edition=edition, appcontext=appcontext, tag=tag,
+                         pool_impl=pool_impl, threaded=threaded,
+                         events=events, cclass=cclass, purity=purity,
+                         newpassword=newpassword, edition=edition,
+                         appcontext=appcontext, tag=tag,
                          matchanytag=matchanytag, shardingkey=shardingkey,
                          supershardingkey=supershardingkey,
                          stmtcachesize=stmtcachesize)
         self._impl = impl
         self._version = None
-
-    @classmethod
-    def _from_impl(cls, impl):
-        """
-        Internal method used by the pool to create a connection object given
-        its implementation.
-        """
-        conn = cls.__new__(cls)
-        conn._impl = impl
-        conn._version = None
-        return conn
+        if impl.invoke_session_callback:
+            pool.session_callback(self, tag)
+            impl.invoke_session_callback = False
 
     def __del__(self):
         if self._impl is not None:

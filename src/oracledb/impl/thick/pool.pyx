@@ -93,20 +93,6 @@ cdef class ThickPoolImpl(BasePoolImpl):
         name_bytes = pool_params.outPoolName[:pool_params.outPoolNameLength]
         self.name = name_bytes.decode()
 
-    def acquire(self, str user, str password, str cclass, uint32_t purity,
-                str tag, bint matchanytag, list shardingkey,
-                list supershardingkey):
-        """
-        Internal method for acquiring a connection from the pool.
-        """
-        cdef ThickConnImpl conn_impl
-        conn_impl = ThickConnImpl(user, None)
-        conn_impl.connect(pool_impl=self, password=password, cclass=cclass,
-                          purity=purity, tag=tag, matchanytag=matchanytag,
-                          shardingkey=shardingkey,
-                          supershardingkey=supershardingkey)
-        return conn_impl
-
     def close(self, bint force):
         """
         Internal method for closing the pool.

@@ -285,6 +285,16 @@ cdef class ThickConnImpl(BaseConnImpl):
         if status < 0:
             _raise_from_odpi()
 
+        # determine if session callback should be invoked; this takes place if
+        # the connection is newly created by the pool or if the requested tag
+        # does not match the actual tag
+        if (conn_params.outNewSession \
+                or conn_params.outTagLength != params.tag_len \
+                or (params.tag_len > 0 \
+                and conn_params.outTag[:conn_params.outTagLength] !=  \
+                params.tag_ptr[:conn_params.outTagLength])):
+            self.invoke_session_callback = True
+
         # set tag property, if applicable
         if conn_params.outTagLength > 0:
             self.tag = conn_params.outTag[:conn_params.outTagLength].decode()
