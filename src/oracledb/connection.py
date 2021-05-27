@@ -142,7 +142,9 @@ class Connection:
                          stmtcachesize=stmtcachesize)
         self._impl = impl
         self._version = None
-        if impl.invoke_session_callback:
+        if impl.invoke_session_callback and tag is not None \
+                and pool.session_callback is not None \
+                and callable(pool.session_callback):
             pool.session_callback(self, tag)
             impl.invoke_session_callback = False
 
