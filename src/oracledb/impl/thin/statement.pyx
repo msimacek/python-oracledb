@@ -45,7 +45,6 @@ cdef class Statement:
         bint _requires_full_execute
         bint _return_to_cache
         bint _in_use
-        bint _skip_closing_cursor
 
     cdef Statement copy(self):
         cdef:

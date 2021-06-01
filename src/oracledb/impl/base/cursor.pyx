@@ -50,7 +50,7 @@ cdef class BaseCursorImpl:
             else:
                 self.bind_vars.append(var)
 
-    cdef int _close(self, bint in_del) except -1:
+    cdef int _close(self) except -1:
         """
         Internal method for closing the cursor.
         """
@@ -332,13 +332,13 @@ cdef class BaseCursorImpl:
                 impl._preferred_num_type = NUM_TYPE_INT
         return Var._from_impl(impl, typ)
 
-    def close(self, in_del=False):
+    def close(self):
         """
         Closes the cursor and makes it unusable for further operations.
         """
         self.bind_vars = None
         self.fetch_vars = None
-        self._close(in_del)
+        self._close()
 
     def execute(self, cursor):
         """

@@ -495,5 +495,27 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(self.cursor.getarraydmlrowcounts(), [1, 2, 0, 0, 1])
         self.assertEqual(self.cursor.rowcount, 4)
 
+    def test_3225_implicit_results(self):
+        "3225 - test using implicit cursors to execute new statements"
+        cursor = self.connection.cursor()
+        cursor.execute("""
+                declare
+                    c1 sys_refcursor;
+                begin
+
+                    open c1 for
+                    select NumberCol
+                    from TestNumbers
+                    where IntCol between 3 and 5;
+
+                    dbms_sql.return_result(c1);
+                end;""")
+        results = cursor.getimplicitresults()
+        self.assertEqual(len(results), 1)
+        self.assertEqual([n for n, in results[0]], [3.75, 5, 6.25])
+        results[0].execute("select :1 from dual", (7,))
+        row, = results[0].fetchone()
+        self.assertEqual(row, 7)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

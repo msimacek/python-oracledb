@@ -16,9 +16,10 @@ cdef class ThinCursorImpl(BaseCursorImpl):
     def __cinit__(self, conn_impl):
         self._conn_impl = conn_impl
 
-    cdef int _close(self, bint in_del) except -1:
+    cdef int _close(self) except -1:
         if self._statement is not None:
-            self._conn_impl._return_statement(self._statement)
+            if not self._is_implicit_cursor:
+                self._conn_impl._return_statement(self._statement)
             self._statement = None
 
     cdef BaseVarImpl _create_var_impl(self, object connection):
@@ -33,7 +34,8 @@ cdef class ThinCursorImpl(BaseCursorImpl):
     cdef int _prepare(self, str sql, str tag=None) except -1:
         self.statement = sql
         if self._statement is not None:
-            self._conn_impl._return_statement(self._statement)
+            if not self._is_implicit_cursor:
+                self._conn_impl._return_statement(self._statement)
             self._statement = None
         self._statement = self._conn_impl._get_statement(sql)
         self.fetch_vars = self._statement._fetch_vars
