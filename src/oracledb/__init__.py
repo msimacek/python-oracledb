@@ -27,9 +27,11 @@ class Future:
 
 __future__ = Future()
 
-# aliases for classes
+# aliases for backwards compatibility
 ObjectType = DbObjectType
 Object = DbObject
+SessionPool = Pool
+version = __version__
 
 # aliases for database types (for backwards compatibility)
 BFILE = DB_TYPE_BFILE
@@ -50,5 +52,5 @@ NCLOB = DB_TYPE_NCLOB
 TIMESTAMP = DB_TYPE_TIMESTAMP
 
 # remove unnecessary symbols
-del version, exceptions, errors, connection, pool, constants
+del exceptions, errors, connection, pool, constants
 del constructors, base_impl, thick_impl, thin_impl, utils
