@@ -54,19 +54,21 @@ cdef class ThinConnImpl(BaseConnImpl):
             if statement is None:
                 statement = Statement()
                 statement._prepare(sql)
+                if len(self._statement_cache) < self._statement_cache_size:
+                    self._statement_cache[sql] = statement
+                    statement._return_to_cache = True
             elif statement._in_use:
                 statement = statement.copy()
             else:
                 self._statement_cache.move_to_end(sql)
             statement._in_use = True
-            self._statement_cache[sql] = statement
             return statement
 
     cdef int _return_statement(self, Statement statement) except -1:
         with self._statement_cache_lock:
             if statement._return_to_cache:
                 statement._in_use = False
-                self._statement_cache.move_end_end(statement._sql)
+                self._statement_cache.move_to_end(statement._sql)
                 self._adjust_statement_cache()
             elif statement._cursor_id != 0 \
                     and not statement._skip_closing_cursor:
