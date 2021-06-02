@@ -18,9 +18,9 @@ class Connection:
 
     def __init__(self, dsn=None, *, user=None, password=None, host=None,
                  port=None, service_name=None, thin=True,
-                 mode=constants.DEFAULT_AUTH, handle=0, pool=None,
+                 mode=constants.AUTH_MODE_DEFAULT, handle=0, pool=None,
                  threaded=False, events=False, cclass=None,
-                 purity=constants.ATTR_PURITY_DEFAULT, newpassword=None,
+                 purity=constants.PURITY_DEFAULT, newpassword=None,
                  edition=None, appcontext=[], tag=None, matchanytag=False,
                  shardingkey=[], supershardingkey=[], stmtcachesize=20,
                  secure_transport=False, config_dir=None):
