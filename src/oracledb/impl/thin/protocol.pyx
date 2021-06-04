@@ -66,7 +66,7 @@ cdef class Protocol:
             self._process_message(CommitMessage())
 
     cdef _connect(self, ThinConnImpl conn, bint secure_transport,
-                  str connect_string, str password):
+                  str connect_string, str password, uint32_t auth_mode):
         cdef:
             ConnectMessage connect_message
             object temp_sock, ssl_context
@@ -100,6 +100,7 @@ cdef class Protocol:
         # send authorization packet twice, the first time to get the session
         # key and the second time to return the response to the challenge
         auth_message = AuthMessage(conn, password)
+        auth_message._set_auth_mode(auth_mode)
         self._process_message(auth_message)
         self._process_message(auth_message)
 

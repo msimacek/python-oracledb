@@ -88,7 +88,7 @@ cdef class ThinConnImpl(BaseConnImpl):
     def commit(self):
         self._protocol._commit()
 
-    def connect(self, params, uint32_t stmtcachesize):
+    def connect(self, params, uint32_t stmtcachesize, uint32_t auth_mode):
         sock = socket.create_connection((params.host, params.port))
         if params.secure_transport:
             wallet_file_name = params.get_wallet_file_name()
@@ -99,7 +99,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         self._protocol = Protocol(sock)
         redirect_data = self._protocol._connect(self, params.secure_transport,
                                                 params.get_connect_data(),
-                                                params.password)
+                                                params.password, auth_mode)
         if redirect_data is None:
             self._statement_cache = collections.OrderedDict()
             self._statement_cache_size = stmtcachesize

@@ -126,7 +126,8 @@ class Connection:
                 impl = thin_impl.ThinConnImpl(user, dsn)
                 while True:
                     redirect_data = impl.connect(params,
-                                                 stmtcachesize=stmtcachesize)
+                                                 stmtcachesize=stmtcachesize,
+                                                 auth_mode=mode)
                     if redirect_data is None:
                         break
                     params.parse_redirect_data(redirect_data)

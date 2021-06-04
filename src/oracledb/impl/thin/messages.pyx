@@ -950,6 +950,7 @@ cdef class AuthMessage(Message):
         uint8_t user_bytes_len
         bytes user_bytes
         dict session_data
+        uint32_t auth_mode
 
     def __cinit__(self, conn_impl, password):
         self.function_code = TNS_FUNC_AUTH_PHASE_ONE
@@ -1037,6 +1038,23 @@ cdef class AuthMessage(Message):
                      (full_version_num >> 4) & 0xFF,
                      (full_version_num & 0x0F))
 
+    cdef int _set_auth_mode(self, uint32_t public_auth_mode) except -1:
+        self.auth_mode = TNS_AUTH_MODE_LOGON
+        if public_auth_mode & constants.AUTH_MODE_SYSDBA:
+            self.auth_mode |= TNS_AUTH_MODE_SYSDBA
+        if public_auth_mode & constants.AUTH_MODE_SYSOPER:
+            self.auth_mode |= TNS_AUTH_MODE_SYSOPER
+        if public_auth_mode & constants.AUTH_MODE_SYSASM:
+            self.auth_mode |= TNS_AUTH_MODE_SYSASM
+        if public_auth_mode & constants.AUTH_MODE_SYSBKP:
+            self.auth_mode |= TNS_AUTH_MODE_SYSBKP
+        if public_auth_mode & constants.AUTH_MODE_SYSDGD:
+            self.auth_mode |= TNS_AUTH_MODE_SYSDGD
+        if public_auth_mode & constants.AUTH_MODE_SYSKMT:
+            self.auth_mode |= TNS_AUTH_MODE_SYSKMT
+        if public_auth_mode & constants.AUTH_MODE_SYSRAC:
+            self.auth_mode |= TNS_AUTH_MODE_SYSRAC
+
     cdef int _write_key_value(self, WriteBuffer buf, str key, str value,
                               uint32_t flags=0) except -1:
         cdef:
@@ -1058,7 +1076,7 @@ cdef class AuthMessage(Message):
         buf.write_uint8(1)                  # pointer (authusr)
         buf.write_ub4(self.user_bytes_len)
         if self.function_code == TNS_FUNC_AUTH_PHASE_ONE:
-            buf.write_ub4(1)                # authentication mode
+            buf.write_ub4(self.auth_mode)   # authentication mode
             buf.write_uint8(1)              # pointer (authivl)
             buf.write_ub4(5)                # number of key/value pairs
             buf.write_uint8(0)              # pointer (authovl)
@@ -1070,8 +1088,9 @@ cdef class AuthMessage(Message):
             self._write_key_value(buf, "AUTH_PID", str(os.getpid()))
             self._write_key_value(buf, "AUTH_SID", getpass.getuser())
         else:
+            self.auth_mode |= TNS_AUTH_MODE_WITH_PASSWORD
             self._generate_auth_response()
-            buf.write_ub4(257)              # authentication mode
+            buf.write_ub4(self.auth_mode)   # authentication mode
             buf.write_uint8(1)              # pointer (authivl)
             buf.write_ub4(4)                # number of key/value pairs
             buf.write_uint8(1)              # pointer (authovl)
