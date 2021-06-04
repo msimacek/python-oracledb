@@ -195,7 +195,7 @@ cdef class Protocol:
             exc_type = get_exception_class(error_code_int)
             raise exc_type(error)
 
-    cdef int _reset(self, Message message):
+    cdef int _reset(self, Message message) except -1:
         cdef WriteBuffer buf = self._write_buf
 
         # send marker packet indicating a reset is desired
