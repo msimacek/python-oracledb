@@ -19,6 +19,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
         uint32_t _max_lifetime_session
         uint32_t _num_pending_requests
         uint32_t _wait_timeout
+        uint32_t _auth_mode
         object _create_exc
         object _create_thread
         object _create_thread_condition
@@ -41,6 +42,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
         self._free_new_conn_impls = []
         self._free_used_conn_impls = []
         self._busy_conn_impls = []
+        self._auth_mode = constants.AUTH_MODE_DEFAULT
         self._condition = threading.Condition()
         self._create_thread_condition = threading.Condition()
         self._create_thread = threading.Thread(target=self._create_conn_impls,
@@ -55,7 +57,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
         """
         cdef ThinConnImpl conn_impl
         conn_impl = ThinConnImpl(self.username, self.dsn)
-        conn_impl.connect(self._params, self._stmt_cache_size)
+        conn_impl.connect(self._params, self._stmt_cache_size, self._auth_mode)
         conn_impl._pool = self
         return conn_impl
 
