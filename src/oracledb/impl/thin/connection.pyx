@@ -99,7 +99,8 @@ cdef class ThinConnImpl(BaseConnImpl):
         self._protocol = Protocol(sock)
         redirect_data = self._protocol._connect(self, params.secure_transport,
                                                 params.get_connect_data(),
-                                                params.password, auth_mode)
+                                                params.password, auth_mode,
+                                                params.can_use_oob())
         if redirect_data is None:
             self._statement_cache = collections.OrderedDict()
             self._statement_cache_size = stmtcachesize

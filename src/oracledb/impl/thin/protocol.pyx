@@ -33,23 +33,20 @@ cdef class Protocol:
         cdef WriteBuffer buf
         if not self._break_in_progress and self._request_lock.locked():
             self._break_in_progress = True
-            if self._caps.protocol_options & TNS_CAN_RECV_ATTENTION:
+            if self._caps.can_use_oob:
+                if DEBUG_PACKETS:
+                    now = datetime.datetime.now()
+                    print(now.isoformat(sep=" ", timespec="milliseconds"),
+                        "Sending out of band break")
+                    print()
                 self._socket.send(b"!", socket.MSG_OOB)
             else:
                 buf = WriteBuffer(self._socket, TNS_SDU, self._caps)
-                self._break_internal(buf)
-
-    cdef int _break_internal(self, WriteBuffer buf):
-        """
-        Internal method for sending a break to the server.
-        """
-        buf.start_request(TNS_PACKET_TYPE_MARKER)
-        buf.write_uint8(1)
-        buf.write_uint8(0)
-        buf.write_uint8(TNS_MARKER_TYPE_BREAK)
-        buf.end_request()
+                self._send_marker(buf, TNS_MARKER_TYPE_INTERRUPT)
 
     cpdef int _close(self) except -1:
+        if self._read_buf._socket is None:
+            return 0
         with self._request_lock:
             if self._txn_in_progress:
                 self._process_message(RollbackMessage())
@@ -66,7 +63,8 @@ cdef class Protocol:
             self._process_message(CommitMessage())
 
     cdef _connect(self, ThinConnImpl conn, bint secure_transport,
-                  str connect_string, str password, uint32_t auth_mode):
+                  str connect_string, str password, uint32_t auth_mode,
+                  bint can_use_oob):
         cdef:
             ConnectMessage connect_message
             object temp_sock, ssl_context
@@ -76,6 +74,9 @@ cdef class Protocol:
         if password is None:
             errors._raise_from_string(exceptions.DatabaseError,
                                       "no password specified")
+
+        # store whether OOB processing is possible or not
+        self._caps.can_use_oob = can_use_oob
 
         # send connect message and process response; this requests the message
         # to be resent so the message is sent again; however, if a secure
@@ -158,10 +159,12 @@ cdef class Protocol:
         except:
             if self._write_buf._packet_sent \
                     and self._read_buf._socket is not None:
-                self._break_internal(self._write_buf)
+                self._send_marker(self._write_buf, TNS_MARKER_TYPE_BREAK)
                 self._receive_packet(message)
             raise
         if self._break_in_progress:
+            if self._caps.can_use_oob:
+                self._send_marker(self._write_buf, TNS_MARKER_TYPE_INTERRUPT)
             self._receive_packet(message)
             message.process(self._read_buf)
             self._break_in_progress = False
@@ -196,14 +199,9 @@ cdef class Protocol:
             raise exc_type(error)
 
     cdef int _reset(self, Message message) except -1:
-        cdef WriteBuffer buf = self._write_buf
 
-        # send marker packet indicating a reset is desired
-        buf.start_request(TNS_PACKET_TYPE_MARKER)
-        buf.write_uint8(1)
-        buf.write_uint8(0)
-        buf.write_uint8(TNS_MARKER_TYPE_RESET)
-        buf.end_request()
+        # send reset marker
+        self._send_marker(self._write_buf, TNS_MARKER_TYPE_RESET)
 
         # read and discard all packets until a marker packet is received
         while True:
@@ -220,3 +218,14 @@ cdef class Protocol:
     cdef int _rollback(self) except -1:
         with self._request_lock:
             self._process_message(RollbackMessage())
+
+    cdef int _send_marker(self, WriteBuffer buf, uint8_t marker_type):
+        """
+        Sends a marker of the specified type to the server.
+        Internal method for sending a break to the server.
+        """
+        buf.start_request(TNS_PACKET_TYPE_MARKER)
+        buf.write_uint8(1)
+        buf.write_uint8(0)
+        buf.write_uint8(marker_type)
+        buf.end_request()

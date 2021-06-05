@@ -57,6 +57,7 @@ cdef int32_t* OPERATIONAL_ERROR_CODES = [
         1089,       # immediate shutdown or close in progress
         1090,       # shutdown in progress - connection is not permitted
         1092,       # ORACLE instance terminated. Disconnection forced
+        3111,       # break received on communication channel
         3113,       # end-of-file on communication channel
         3114,       # not connected to ORACLE
         3122,       # attempt to close ORACLE-side window on user side

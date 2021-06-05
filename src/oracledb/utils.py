@@ -116,6 +116,19 @@ class ConnectParams:
         self.config_dir = config_dir
         self._dsn = None
 
+    def can_use_oob(self):
+        """
+        Return a boolean indicating if the platform supports out-of-band urgent
+        data and a configuration file hasn't disabled it.
+        """
+        can_use_oob = True
+        sqlnet_config = get_config_file(self.config_dir, "sqlnet.ora")
+        if sqlnet_config is not None:
+            disable_oob = sqlnet_config.entries.get("DISABLE_OOB")
+            if disable_oob is not None:
+                return disable_oob.lower() != "on"
+        return True
+
     def get_connect_data(self):
         """
         Return normalized connect data used for communicating with the server.

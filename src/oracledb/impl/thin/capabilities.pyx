@@ -5,14 +5,19 @@
 cdef class Capabilities:
     cdef:
         uint16_t protocol_version
-        uint16_t protocol_options
         uint8_t ttc_field_version
         bytearray compile_caps
         bytearray runtime_caps
+        bint can_use_oob
 
     def __init__(self):
         self._init_compile_caps()
         self._init_runtime_caps()
+
+    cdef void _adjust_for_protocol(self, uint16_t protocol_version,
+                                   uint16_t protocol_options):
+        self.protocol_version = protocol_version
+        self.can_use_oob = protocol_options & TNS_CAN_RECV_ATTENTION
 
     @cython.boundscheck(False)
     cdef void _adjust_for_server_compile_caps(self, bytearray server_caps):

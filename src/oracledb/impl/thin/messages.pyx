@@ -1137,14 +1137,17 @@ cdef class ConnectMessage(Message):
                         redirect_data[:redirect_data_length].decode()
             self.first_packet = False
         else:
-            buf._caps.protocol_version = buf.read_uint16()
-            buf._caps.protocol_options = buf.read_uint16()
+            buf._caps._adjust_for_protocol(buf.read_uint16(),
+                                           buf.read_uint16())
 
     cdef int send(self, WriteBuffer buf) except -1:
+        cdef uint16_t service_options = TNS_BASE_SERVICE_OPTIONS
+        if buf._caps.can_use_oob:
+            service_options |= TNS_CAN_RECV_ATTENTION
         buf.start_request(TNS_PACKET_TYPE_CONNECT)
         buf.write_uint16(TNS_VERSION_DESIRED)
         buf.write_uint16(TNS_VERSION_MINIMUM)
-        buf.write_uint16(TNS_SERVICE_OPTIONS)
+        buf.write_uint16(service_options)
         buf.write_uint16(TNS_SDU)
         buf.write_uint16(TNS_TDU)
         buf.write_uint16(TNS_PROTOCOL_CHARACTERISTICS)
