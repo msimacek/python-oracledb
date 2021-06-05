@@ -81,13 +81,13 @@ cdef class BaseSodaCollImpl:
         """
         raise NotImplementedError()
 
-    def insert_many(self, list documents, bint return_docs):
+    def insert_many(self, list documents, str hint, bint return_docs):
         """
         Internal method for inserting many documents into a collection at once.
         """
         raise NotImplementedError()
 
-    def insert_one(self, BaseSodaDocImpl doc, bint return_doc):
+    def insert_one(self, BaseSodaDocImpl doc, str hint, bint return_doc):
         """
         Internal method for inserting a single document into a collection.
         """
@@ -107,7 +107,7 @@ cdef class BaseSodaCollImpl:
         """
         raise NotImplementedError()
 
-    def save(self, BaseSodaDocImpl doc, bint return_doc):
+    def save(self, BaseSodaDocImpl doc, str hint, bint return_doc):
         """
         Internal method for saving a document into the collection.
         """

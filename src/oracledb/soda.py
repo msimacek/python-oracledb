@@ -188,17 +188,28 @@ class SodaCollection:
         document object.
         """
         doc_impls = [self._process_doc_arg(d) for d in docs]
-        self._impl.insert_many(doc_impls, return_docs=False)
+        self._impl.insert_many(doc_impls, hint=None, return_docs=False)
 
-    def insertManyAndGet(self, docs):
+    def insertManyAndGet(self, docs, hint=None):
         """
         Similarly to insertMany() this method inserts a list of documents into
         the collection at one time. The only difference is that it returns a
         list of SODA Document objects. Note that for performance reasons the
         returned documents do not contain the content.
+
+        The hint parameter, if specified, supplies a hint to the database when
+        processing the SODA operation. This is expected to be a string in the
+        same format as SQL hints but without any comment characters, for
+        example hint="MONITOR". While you could use this to pass any SQL hint,
+        the hints MONITOR (turn on monitoring) and NO_MONITOR (turn off
+        monitoring) are the most useful. Use of the hint parameter requires
+        Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
         """
         doc_impls = [self._process_doc_arg(d) for d in docs]
-        return_doc_impls = self._impl.insert_many(doc_impls, return_docs=True)
+        if hint is not None and not isinstance(hint, str):
+            raise TypeError("expecting a string")
+        return_doc_impls = self._impl.insert_many(doc_impls, hint,
+                                                  return_docs=True)
         return [SodaDocument._from_impl(i) for i in return_doc_impls]
 
     def insertOne(self, doc):
@@ -207,17 +218,28 @@ class SodaCollection:
         a dictionary or list or an existing SODA document object.
         """
         doc_impl = self._process_doc_arg(doc)
-        self._impl.insert_one(doc_impl, return_doc=False)
+        self._impl.insert_one(doc_impl, hint=None, return_doc=False)
 
-    def insertOneAndGet(self, doc):
+    def insertOneAndGet(self, doc, hint=None):
         """
         Similarly to insertOne() this method inserts a given document into the
         collection. The only difference is that it returns a SODA Document
         object. Note that for performance reasons the returned document does
         not contain the content.
+
+        The hint parameter, if specified, supplies a hint to the database when
+        processing the SODA operation. This is expected to be a string in the
+        same format as SQL hints but without any comment characters, for
+        example hint="MONITOR". While you could use this to pass any SQL hint,
+        the hints MONITOR (turn on monitoring) and NO_MONITOR (turn off
+        monitoring) are the most useful. Use of the hint parameter requires
+        Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
         """
         doc_impl = self._process_doc_arg(doc)
-        return_doc_impl = self._impl.insert_one(doc_impl, return_doc=True)
+        if hint is not None and not isinstance(hint, str):
+            raise TypeError("expecting a string")
+        return_doc_impl = self._impl.insert_one(doc_impl, hint,
+                                                return_doc=True)
         return SodaDocument._from_impl(return_doc_impl)
 
     @property
@@ -243,17 +265,27 @@ class SodaCollection:
         will be replaced with the input document.
         """
         doc_impl = self._process_doc_arg(doc)
-        self._impl.save(doc_impl, return_doc=False)
+        self._impl.save(doc_impl, hint=None, return_doc=False)
 
-    def saveAndGet(self, doc):
+    def saveAndGet(self, doc, hint=None):
         """
         Saves a document into the collection. This method is equivalent to
         insertOneAndGet() except that if client-assigned keys are used, and the
         document with the specified key already exists in the collection, it
         will be replaced with the input document.
+
+        The hint parameter, if specified, supplies a hint to the database when
+        processing the SODA operation. This is expected to be a string in the
+        same format as SQL hints but without any comment characters, for
+        example hint="MONITOR". While you could use this to pass any SQL hint,
+        the hints MONITOR (turn on monitoring) and NO_MONITOR (turn off
+        monitoring) are the most useful. Use of the hint parameter requires
+        Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
         """
         doc_impl = self._process_doc_arg(doc)
-        return_doc_impl = self._impl.save(doc_impl, return_doc=False)
+        if hint is not None and not isinstance(hint, str):
+            raise TypeError("expecting a string")
+        return_doc_impl = self._impl.save(doc_impl, hint, return_doc=False)
         return SodaDocument._from_impl(return_doc_impl)
 
     def truncate(self):
@@ -383,6 +415,7 @@ class SodaOperation:
         self._keys = None
         self._version = None
         self._filter = None
+        self._hint = None
         self._skip = None
         self._limit = None
         self._fetch_array_size = None
@@ -456,6 +489,24 @@ class SodaOperation:
         doc_impl = self._collection._impl.get_one(self)
         if doc_impl is not None:
             return SodaDocument._from_impl(doc_impl)
+
+    def hint(self, value):
+        """
+        Specifies a hint that will be provided to the SODA operation when it is
+        performed. This is expected to be a string in the same format as SQL
+        hints but without any comment characters. While you could use this to
+        pass any SQL hint, the hints MONITOR (turn on monitoring) and
+        NO_MONITOR (turn off monitoring) are the most useful. Use of this
+        method requires Oracle Client 21.3 or higher (or Oracle Client 19 from
+        19.11).
+
+        As a convenience, the SodaOperation object is returned so that further
+        criteria can be specified by chaining methods together.
+        """
+        if not isinstance(value, str):
+            raise TypeError("expecting a string")
+        self._hint = value
+        return self
 
     def key(self, value):
         """

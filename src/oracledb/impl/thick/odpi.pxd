@@ -367,6 +367,8 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
         uint32_t versionLength
         const char *filter
         uint32_t filterLength
+        const char *hint;
+        uint32_t hintLength;
         uint32_t skip
         uint32_t limit
         uint32_t fetchArraySize
@@ -907,11 +909,13 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
     int dpiSodaColl_getName(dpiSodaColl *coll, const char **value,
             uint32_t *valueLength) nogil
 
-    int dpiSodaColl_insertMany(dpiSodaColl *coll, uint32_t numDocs,
-            dpiSodaDoc **docs, uint32_t flags, dpiSodaDoc **insertedDocs) nogil
+    int dpiSodaColl_insertManyWithOptions(dpiSodaColl *coll, uint32_t numDocs,
+            dpiSodaDoc **docs, dpiSodaOperOptions *options, uint32_t flags,
+            dpiSodaDoc **insertedDocs) nogil
 
-    int dpiSodaColl_insertOne(dpiSodaColl *coll, dpiSodaDoc *doc,
-            uint32_t flags, dpiSodaDoc **insertedDoc) nogil
+    int dpiSodaColl_insertOneWithOptions(dpiSodaColl *coll, dpiSodaDoc *doc,
+            dpiSodaOperOptions *options, uint32_t flags,
+            dpiSodaDoc **insertedDoc) nogil
 
     int dpiSodaColl_release(dpiSodaColl *coll) nogil
 
@@ -923,8 +927,9 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
             const dpiSodaOperOptions *options, dpiSodaDoc *doc, uint32_t flags,
             bint *replaced, dpiSodaDoc **replacedDoc) nogil
 
-    int dpiSodaColl_save(dpiSodaColl *coll, dpiSodaDoc *doc,
-            uint32_t flags, dpiSodaDoc **savedDoc) nogil
+    int dpiSodaColl_saveWithOptions(dpiSodaColl *coll, dpiSodaDoc *doc,
+            dpiSodaOperOptions *options, uint32_t flags,
+            dpiSodaDoc **savedDoc) nogil
 
     int dpiSodaColl_truncate(dpiSodaColl *coll) nogil
 

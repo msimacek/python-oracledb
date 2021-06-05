@@ -146,6 +146,17 @@ cdef class ThickSodaCollImpl(BaseSodaCollImpl):
             _raise_from_odpi()
         self.name = name[:name_len].decode()
 
+    cdef int _process_options(self, dpiSodaOperOptions *options,
+                              const char *ptr, uint32_t length) except -1:
+        """
+        Internal method for populating the SODA operations structure with the
+        information provided by the user.
+        """
+        if dpiContext_initSodaOperOptions(driver_context, options) < 0:
+            _raise_from_odpi()
+        options.hint = ptr
+        options.hintLength = length
+
     def create_index(self, str spec):
         """
         Internal method for creating an index on a collection.
@@ -280,7 +291,7 @@ cdef class ThickSodaCollImpl(BaseSodaCollImpl):
         if doc_impl._handle != NULL:
             return doc_impl
 
-    def insert_many(self, list doc_impls, bint return_docs):
+    def insert_many(self, list doc_impls, str hint, bint return_docs):
         """
         Internal method for inserting many documents into a collection at once.
         """
@@ -291,6 +302,9 @@ cdef class ThickSodaCollImpl(BaseSodaCollImpl):
             list output_doc_impls
             dpiSodaDoc **handles
             ssize_t num_bytes
+            dpiSodaOperOptions options
+            dpiSodaOperOptions *options_ptr = NULL
+            StringBuffer hint_buf = StringBuffer()
             int status
         num_docs = <uint32_t> len(doc_impls)
         num_bytes = num_docs * sizeof(dpiSodaDoc *)
@@ -298,12 +312,17 @@ cdef class ThickSodaCollImpl(BaseSodaCollImpl):
         if return_docs:
             output_handles = <dpiSodaDoc**> _calloc(num_docs,
                                                     sizeof(dpiSodaDoc*))
+            if hint is not None:
+                hint_buf.set_value(hint)
+                options_ptr = &options
+                self._process_options(&options, hint_buf.ptr, hint_buf.length)
         for i, doc_impl in enumerate(doc_impls):
             handles[i] = doc_impl._handle
         self._db_impl._get_flags(&flags)
         with nogil:
-            status = dpiSodaColl_insertMany(self._handle, num_docs, handles,
-                                            flags, output_handles)
+            status = dpiSodaColl_insertManyWithOptions(self._handle, num_docs,
+                                                       handles, options_ptr,
+                                                       flags, output_handles)
         if status < 0:
             _raise_from_odpi()
         if return_docs:
@@ -314,7 +333,7 @@ cdef class ThickSodaCollImpl(BaseSodaCollImpl):
                 output_doc_impls.append(doc_impl)
             return output_doc_impls
 
-    def insert_one(self, ThickSodaDocImpl doc_impl, bint return_doc):
+    def insert_one(self, ThickSodaDocImpl doc_impl, str hint, bint return_doc):
         """
         Internal method for inserting a single document into a collection.
         """
@@ -322,14 +341,23 @@ cdef class ThickSodaCollImpl(BaseSodaCollImpl):
             dpiSodaDoc **output_handle = NULL
             ThickSodaDocImpl output_doc_impl
             uint32_t flags
+            dpiSodaOperOptions options
+            dpiSodaOperOptions *options_ptr = NULL
+            StringBuffer hint_buf = StringBuffer()
             int status
         if return_doc:
             output_doc_impl = ThickSodaDocImpl.__new__(ThickSodaDocImpl)
             output_handle = &output_doc_impl._handle
+            if hint is not None:
+               hint_buf.set_value(hint)
+               options_ptr = &options
+               self._process_options(&options, hint_buf.ptr, hint_buf.length)
         self._db_impl._get_flags(&flags)
         with nogil:
-            status = dpiSodaColl_insertOne(self._handle, doc_impl._handle,
-                                           flags, output_handle)
+            status = dpiSodaColl_insertOneWithOptions(self._handle,
+                                                      doc_impl._handle,
+                                                      options_ptr, flags,
+                                                      output_handle)
         if status < 0:
             _raise_from_odpi()
         if return_doc:
@@ -562,6 +590,8 @@ cdef class ThickSodaOpImpl:
                           &options.versionLength)
         if op._filter is not None:
             impl._add_buf(op._filter, &options.filter, &options.filterLength)
+        if op._hint is not None:
+            impl._add_buf(op._hint, &options.hint, &options.hintLength)
         if op._skip is not None:
             options.skip = op._skip
         if op._limit is not None:
