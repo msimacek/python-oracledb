@@ -211,8 +211,13 @@ cdef class Protocol:
                     break
             self._read_buf.receive_packet(&message.packet_type)
 
-        # read error packet
-        self._read_buf.receive_packet(&message.packet_type)
+        # read error packet; first skip as many marker packets as may be sent
+        # by the server; if the server doesn't handle out-of-band breaks
+        # properly, some quit immediately and others send multiple reset
+        # markers (this addresses both situations without resulting in strange
+        # errors)
+        while message.packet_type == TNS_PACKET_TYPE_MARKER:
+            self._read_buf.receive_packet(&message.packet_type)
         self._break_in_progress = False
 
     cdef int _rollback(self) except -1:
