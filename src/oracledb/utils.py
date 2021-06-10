@@ -121,7 +121,6 @@ class ConnectParams:
         Return a boolean indicating if the platform supports out-of-band urgent
         data and a configuration file hasn't disabled it.
         """
-        can_use_oob = True
         sqlnet_config = get_config_file(self.config_dir, "sqlnet.ora")
         if sqlnet_config is not None:
             disable_oob = sqlnet_config.entries.get("DISABLE_OOB")
