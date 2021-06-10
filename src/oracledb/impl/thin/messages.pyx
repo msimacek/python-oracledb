@@ -1154,7 +1154,7 @@ cdef class ConnectMessage(Message):
         buf.write_uint16(0)                 # line turnaround
         buf.write_uint16(1)                 # value of 1
         buf.write_uint16(self.connect_string_len)
-        buf.write_uint16(70)                # offset to connect data
+        buf.write_uint16(74)                # offset to connect data
         buf.write_uint32(0)                 # max receivable data
         buf.write_uint16(TNS_CONNECT_FLAGS)
         buf.write_uint64(0)                 # obsolete
@@ -1163,6 +1163,7 @@ cdef class ConnectMessage(Message):
         buf.write_uint32(TNS_SDU)           # SDU (large)
         buf.write_uint32(TNS_TDU)           # TDU (large)
         buf.write_uint32(0)                 # compression flags
+        buf.write_uint32(0)                 # unused
         buf.write_bytes(self.connect_string_bytes)
         buf.end_request()
 
