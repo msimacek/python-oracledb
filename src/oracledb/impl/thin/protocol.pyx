@@ -13,6 +13,7 @@ cdef class Protocol:
         object _request_lock
         bint _txn_in_progress
         bint _break_in_progress
+        bint _oob_check_in_progress
 
     def __init__(self, sock):
         self._caps = Capabilities()
@@ -69,6 +70,7 @@ cdef class Protocol:
             ConnectMessage connect_message
             object temp_sock, ssl_context
             AuthMessage auth_message
+            uint8_t packet_type
 
         # verify that a password has been specified first
         if password is None:
@@ -93,10 +95,22 @@ cdef class Protocol:
             self.__set_socket(ssl_context.wrap_socket(temp_sock))
         self._process_message(connect_message)
 
+        # if we can use OOB, send an urgent message now followed by a reset
+        # marker to see if the server understands it
+        if self._caps.can_use_oob \
+                and self._caps.protocol_version >= TNS_VERSION_MIN_OOB_CHECK:
+            self._oob_check_in_progress = True
+            self._socket.send(b"!", socket.MSG_OOB)
+            self._send_marker(self._write_buf, TNS_MARKER_TYPE_RESET)
+
         # send services, protocol and data types messages and process responses
         self._process_message(NetworkServicesMessage())
         self._process_message(ProtocolMessage())
         self._process_message(DataTypesMessage())
+
+        # OOB check has at this point received the control message so flag can
+        # be cleared
+        self._oob_check_in_progress = False
 
         # send authorization packet twice, the first time to get the session
         # key and the second time to return the response to the challenge
@@ -181,6 +195,10 @@ cdef class Protocol:
         if message.packet_type == TNS_PACKET_TYPE_MARKER:
             self._reset(message)
             message.error_occurred = True
+        elif message.packet_type == TNS_PACKET_TYPE_CONTROL:
+            if self._oob_check_in_progress:
+                self._caps.can_use_oob = False
+            self._read_buf.receive_packet(&message.packet_type)
         elif message.packet_type == TNS_PACKET_TYPE_REFUSE:
             self._write_buf._packet_sent = False
             self._read_buf.skip_bytes(3)

@@ -1141,9 +1141,12 @@ cdef class ConnectMessage(Message):
                                            buf.read_uint16())
 
     cdef int send(self, WriteBuffer buf) except -1:
-        cdef uint16_t service_options = TNS_BASE_SERVICE_OPTIONS
+        cdef:
+            uint16_t service_options = TNS_BASE_SERVICE_OPTIONS
+            uint32_t connect_flags_1 = 0, connect_flags_2 = 0
         if buf._caps.can_use_oob:
             service_options |= TNS_CAN_RECV_ATTENTION
+            connect_flags_2 |= TNS_CHECK_OOB
         buf.start_request(TNS_PACKET_TYPE_CONNECT)
         buf.write_uint16(TNS_VERSION_DESIRED)
         buf.write_uint16(TNS_VERSION_MINIMUM)
@@ -1162,8 +1165,8 @@ cdef class ConnectMessage(Message):
         buf.write_uint64(0)                 # obsolete
         buf.write_uint32(TNS_SDU)           # SDU (large)
         buf.write_uint32(TNS_TDU)           # TDU (large)
-        buf.write_uint32(0)                 # compression flags
-        buf.write_uint32(0)                 # unused
+        buf.write_uint32(connect_flags_1)
+        buf.write_uint32(connect_flags_2)
         buf.write_bytes(self.connect_string_bytes)
         buf.end_request()
 
