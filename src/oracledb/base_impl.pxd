@@ -104,8 +104,9 @@ cdef class BaseCursorImpl:
     cpdef create_var(self, object conn, object typ, uint32_t size=*,
                      uint32_t num_elements=*, object inconverter=*,
                      object outconverter=*, str encoding_errors=*,
-                     int16_t precision=*, int16_t scale=*, str name=*,
-                     bint nulls_allowed=*, bint is_array=*)
+                     bint bypass_decode=*, int16_t precision=*,
+                     int16_t scale=*, str name=*, bint nulls_allowed=*,
+                     bint is_array=*)
 
 
 cdef class BaseVarImpl:
@@ -118,6 +119,7 @@ cdef class BaseVarImpl:
         readonly object outconverter
         readonly uint32_t size
         readonly uint32_t buffer_size
+        readonly bint bypass_decode
         readonly bint is_array
         readonly bint nulls_allowed
         public uint32_t num_elements_in_array

@@ -212,7 +212,8 @@ cdef class ThickVarImpl(BaseVarImpl):
             else:
                 value = _convert_to_python(self._conn, self.dbtype,
                                            self._objtype, &data.value,
-                                           self._preferred_num_type)
+                                           self._preferred_num_type,
+                                           self.bypass_decode)
             if self.outconverter:
                 value = self.outconverter(value)
             return value

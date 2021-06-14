@@ -32,6 +32,12 @@ class TestCase(test_env.BaseTestCase):
             self.raw_data.append(data_tuple)
             self.data_by_key[i] = data_tuple
 
+    def __return_strings_as_bytes(self, cursor, name, default_type, size,
+                                  precision, scale):
+        if default_type == oracledb.DB_TYPE_VARCHAR:
+            return cursor.var(str, arraysize=cursor.arraysize,
+                              bypass_decode=True)
+
     def test_2500_array_with_increased_size(self):
         "2500 - test creating array var and then increasing the internal size"
         val = ["12345678901234567890"] * 3
@@ -441,6 +447,25 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(self.cursor.fetchall(), self.raw_data[4:8])
         self.cursor.execute(sql, start_value=8, end_value=10)
         self.assertEqual(self.cursor.fetchall(), self.raw_data[7:10])
+
+    def test_2533_bypass_decode(self):
+        "2533 - test bypass string decode"
+        self.cursor.execute("truncate table TestTempTable")
+        string_val = "I bought a cafetière on the Champs-Élysées"
+        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql, (1, string_val))
+            cursor.execute("select IntCol, StringCol from TestTempTable")
+            self.assertEqual(cursor.fetchone(), (1, string_val))
+        with self.connection.cursor() as cursor:
+            cursor.outputtypehandler = self.__return_strings_as_bytes
+            cursor.execute("select IntCol, StringCol from TestTempTable")
+            expected_value = (1, string_val.encode())
+            self.assertEqual(cursor.fetchone(), (1, string_val.encode()))
+        with self.connection.cursor() as cursor:
+            cursor.outputtypehandler = None
+            cursor.execute("select IntCol, StringCol from TestTempTable")
+            self.assertEqual(cursor.fetchone(), (1, string_val))
 
 if __name__ == "__main__":
     test_env.run_test_cases()

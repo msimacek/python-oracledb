@@ -654,8 +654,8 @@ class Cursor:
         pass
 
     def var(self, typ, size=0, arraysize=1, inconverter=None,
-            outconverter=None, typename=None, encoding_errors=None, *,
-            encodingErrors=None):
+            outconverter=None, typename=None, encoding_errors=None,
+            bypass_decode=False, *, encodingErrors=None):
         """
         Create a variable with the specified characteristics. This method was
         designed for use with PL/SQL in/out variables where the length or type
@@ -669,14 +669,14 @@ class Cursor:
         Connection.gettype() or one of the following Python types:
 
             Python Type	        Database Type
-            bool	            DB_TYPE_BOOLEAN
-            bytes	            DB_TYPE_RAW
-            datetime.date	    DB_TYPE_DATE
-            datetime.datetime	DB_TYPE_DATE
-            datetime.timedelta	DB_TYPE_INTERVAL_DS
-            decimal.Decimal	    DB_TYPE_NUMBER
-            float	            DB_TYPE_NUMBER
-            int             	DB_TYPE_NUMBER
+            bool                DB_TYPE_BOOLEAN
+            bytes               DB_TYPE_RAW
+            datetime.date       DB_TYPE_DATE
+            datetime.datetime   DB_TYPE_DATE
+            datetime.timedelta  DB_TYPE_INTERVAL_DS
+            decimal.Decimal     DB_TYPE_NUMBER
+            float               DB_TYPE_NUMBER
+            int                 DB_TYPE_NUMBER
             str                 DB_TYPE_VARCHAR
 
         The size parameter specifies the length of string and raw variables and
@@ -699,6 +699,12 @@ class Cursor:
         The encoding_errors parameter specifies what should happen when
         decoding byte strings fetched from the database into strings. It should
         be one of the values noted in the builtin decode function.
+
+        The bypass_decode parameter, if specified, should be passed as a
+        boolean value. Passing a True value causes values of database types
+        DB_TYPE_VARCHAR, DB_TYPE_CHAR, DB_TYPE_NVARCHAR, DB_TYPE_NCHAR and
+        DB_TYPE_LONG to be returned as bytes instead of str, meaning that
+        oracledb doesn't do any decoding.
         """
         self._verify_open()
         if typename is not None:
@@ -711,4 +717,4 @@ class Cursor:
             encoding_errors = encodingErrors
         return self._impl.create_var(self.connection, typ, size, arraysize,
                                      inconverter, outconverter,
-                                     encoding_errors)
+                                     encoding_errors, bypass_decode)

@@ -119,7 +119,8 @@ cdef class ThickCursorImpl(BaseCursorImpl):
                                       scale=scale, name=name,
                                       nulls_allowed=query_info.nullOk,
                                       inconverter=None, outconverter=None,
-                                      encoding_errors=None)
+                                      encoding_errors=None,
+                                      bypass_decode=False)
 
     cdef bint _is_plsql(self):
         return <bint> self._stmt_info.isPLSQL

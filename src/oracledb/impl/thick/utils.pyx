@@ -189,7 +189,8 @@ cdef int _convert_from_python(object value, DbType dbtype,
 cdef object _convert_to_python(object connection, DbType dbtype,
                                ThickDbObjectTypeImpl obj_type_impl,
                                dpiDataBuffer *dbvalue,
-                               int preferred_num_type=NUM_TYPE_FLOAT):
+                               int preferred_num_type=NUM_TYPE_FLOAT,
+                               bint bypass_decode=False):
     cdef:
         uint32_t oracle_type = dbtype.num
         ThickDbObjectImpl obj_impl
@@ -201,6 +202,8 @@ cdef object _convert_to_python(object connection, DbType dbtype,
         const char *rowid
         int32_t seconds
         str temp_str
+    if bypass_decode:
+        oracle_type = DPI_ORACLE_TYPE_RAW
     if oracle_type == DPI_ORACLE_TYPE_CHAR \
             or oracle_type == DPI_ORACLE_TYPE_NCHAR \
             or oracle_type == DPI_ORACLE_TYPE_VARCHAR \

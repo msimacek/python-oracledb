@@ -304,8 +304,9 @@ cdef class BaseCursorImpl:
     cpdef create_var(self, object conn, object typ, uint32_t size=0,
                      uint32_t num_elements=1, object inconverter=None,
                      object outconverter=None, str encoding_errors=None,
-                     int16_t precision=0, int16_t scale=0, str name=None,
-                     bint nulls_allowed=False, bint is_array=False):
+                     bint bypass_decode=False, int16_t precision=0,
+                     int16_t scale=0, str name=None, bint nulls_allowed=False,
+                     bint is_array=False):
         cdef BaseVarImpl impl
         impl = self._create_var_impl(conn)
         impl._set_type(typ)
@@ -320,6 +321,7 @@ cdef class BaseCursorImpl:
             impl.num_elements = num_elements
         impl.inconverter = inconverter
         impl.outconverter = outconverter
+        impl.bypass_decode = bypass_decode
         impl.is_array = is_array
         impl.values = [None] * impl.num_elements
         impl.precision = precision

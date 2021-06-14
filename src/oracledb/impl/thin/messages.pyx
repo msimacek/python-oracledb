@@ -230,17 +230,32 @@ cdef class MessageWithData(Message):
     cdef int _preprocess(self) except -1:
         cdef:
             ThinCursorImpl cursor_impl = self.cursor_impl
+            object type_handler, var
             ThinVarImpl var_impl
+            Statement statement
+            ssize_t i
         self.processed_error = False
-        if cursor_impl._statement._is_query:
+        statement = cursor_impl._statement
+        if statement._is_query:
             self.in_fetch = True
-            if cursor_impl.fetch_vars is not None:
-                self.row_var_impls = [v._impl for v in cursor_impl.fetch_vars]
             cursor_impl._more_rows_to_fetch = True
-            if self.in_fetch and not cursor_impl._requires_full_execute:
-                cursor_impl._fetch_array_size = cursor_impl.arraysize
             cursor_impl._buffer_rowcount = cursor_impl._buffer_index = 0
-            if self.row_var_impls is not None:
+            if not cursor_impl._requires_full_execute:
+                cursor_impl._fetch_array_size = cursor_impl.arraysize
+            if cursor_impl.fetch_vars is not None:
+                type_handler = cursor_impl.outputtypehandler \
+                        or cursor_impl._conn_impl.outputtypehandler
+                if type_handler is not statement._last_output_type_handler:
+                    for i, var in enumerate(cursor_impl.fetch_vars):
+                        var_impl = <ThinVarImpl> var._impl
+                        var = cursor_impl._get_fetch_var(self.cursor,
+                                                         self.conn,
+                                                         type_handler,
+                                                         var_impl._fetch_info,
+                                                         &self.requires_define)
+                        cursor_impl.fetch_vars[i] = var
+                    statement._last_output_type_handler = type_handler
+                self.row_var_impls = [v._impl for v in cursor_impl.fetch_vars]
                 for var_impl in self.row_var_impls:
                     if var_impl.num_elements < cursor_impl._fetch_array_size:
                         var_impl.num_elements = cursor_impl._fetch_array_size
@@ -263,6 +278,8 @@ cdef class MessageWithData(Message):
         else:
             ora_type_num = var_impl.dbtype._ora_type_num
             csfrm = var_impl.dbtype._csfrm
+        if var_impl.bypass_decode:
+            ora_type_num = TNS_DATA_TYPE_RAW
         num_bytes = buf.read_uint8()
         if num_bytes == 0:
             column_value = None
@@ -389,7 +406,7 @@ cdef class MessageWithData(Message):
                                     object cursor) except -1:
         cdef:
             ThinCursorImpl cursor_impl = <ThinCursorImpl> cursor._impl
-            uint32_t num_elements, num_bytes, num_columns, i
+            uint32_t num_bytes, num_columns, i
             object type_handler, var
             ThinVarImpl var_impl
             FetchInfo fetch_info
@@ -401,42 +418,10 @@ cdef class MessageWithData(Message):
         buf.skip_bytes(1)
         type_handler = cursor_impl.outputtypehandler \
                 or cursor_impl._conn_impl.outputtypehandler
-        num_elements = cursor_impl._fetch_array_size
         for i in range(num_columns):
-            var = None
             fetch_info = self._process_column_info(buf, cursor_impl)
-            if type_handler is not None:
-                var = type_handler(cursor, fetch_info._name,
-                                   fetch_info._dbtype, fetch_info._size,
-                                   fetch_info._precision, fetch_info._scale)
-                if var is not None:
-                    if not isinstance(var, Var):
-                        message = "Expecting cursor.var object from " \
-                                  "outputtypehandler method"
-                        errors._raise_from_string(TypeError, message)
-                    var_impl = <ThinVarImpl> var._impl
-                    if var_impl.dbtype is not fetch_info._dbtype:
-                        conversion_helper(var_impl, fetch_info,
-                                          &self.requires_define)
-            if var is None:
-                nulls_allowed = fetch_info._nulls_allowed
-                var = cursor_impl.create_var(self.conn, fetch_info._dbtype,
-                                             size=fetch_info._size,
-                                             scale=fetch_info._scale,
-                                             precision=fetch_info._precision,
-                                             num_elements=num_elements,
-                                             name=fetch_info._name,
-                                             nulls_allowed=nulls_allowed,
-                                             inconverter=None,
-                                             outconverter=None,
-                                             encoding_errors=None)
-            var_impl = <ThinVarImpl> var._impl
-            var_impl._fetch_info = fetch_info
-            if fetch_info._dbtype._ora_type_num == TNS_DATA_TYPE_NUMBER \
-                    and var_impl._preferred_num_type == NUM_TYPE_FLOAT:
-                if fetch_info._scale == 0 or (fetch_info._scale == -127 \
-                        and fetch_info._precision == 0):
-                    var_impl._preferred_num_type = NUM_TYPE_INT
+            var = cursor_impl._get_fetch_var(cursor, self.conn, type_handler,
+                                             fetch_info, &self.requires_define)
             cpython.Py_INCREF(var)
             cpython.PyList_SET_ITEM(cursor_impl.fetch_vars, i, var)
         num_bytes = buf.read_ub4()
@@ -450,6 +435,7 @@ cdef class MessageWithData(Message):
         if num_bytes > 0:
             buf.skip_bytes(num_bytes + 1)   # dcbqcky
         cursor_impl._statement._fetch_vars = cursor_impl.fetch_vars
+        cursor_impl._statement._last_output_type_handler = type_handler
 
     cdef int _process_implicit_result(self, ReadBuffer buf) except -1:
         cdef:
