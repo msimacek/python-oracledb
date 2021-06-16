@@ -553,13 +553,13 @@ class TestCase(test_env.BaseTestCase):
             result, = cursor.fetchone()
             self.assertEqual(self.session_called, True)
 
-        # new connection with no tag should not invoke the session callback
+        # new connection with no tag should invoke the session callback
         self.session_called = False
         with pool.acquire() as conn:
             cursor = conn.cursor()
             cursor.execute("select to_char(current_date) from dual")
             result, = cursor.fetchone()
-            self.assertEqual(self.session_called, False)
+            self.assertEqual(self.session_called, True)
 
 if __name__ == "__main__":
     test_env.run_test_cases()
