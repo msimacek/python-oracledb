@@ -23,7 +23,7 @@ class Connection:
                  purity=constants.PURITY_DEFAULT, newpassword=None,
                  edition=None, appcontext=[], tag=None, matchanytag=False,
                  shardingkey=[], supershardingkey=[], stmtcachesize=20,
-                 secure_transport=False, config_dir=None):
+                 secure_transport=False, config_dir=None, enable_drcp=False):
         """
         Constructor for creating a connection to the database. All parameters
         are optional.
@@ -110,7 +110,8 @@ class Connection:
         params = utils.ConnectParams(user=user, password=password, host=host,
                                      port=port, service_name=service_name,
                                      secure_transport=secure_transport,
-                                     config_dir=config_dir)
+                                     config_dir=config_dir,
+                                     enable_drcp=enable_drcp)
         if dsn is not None:
             params.parse_dsn(dsn, thin=thin)
         user = params.user

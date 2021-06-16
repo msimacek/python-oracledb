@@ -17,7 +17,7 @@ class Pool:
                  stmtcachesize=20, ping_interval=60, waitTimeout=0,
                  maxLifetimeSession=0, sessionCallback=None,
                  maxSessionsPerShard=0, secure_transport=False,
-                 config_dir=None):
+                 config_dir=None, enable_drcp=False):
         """
         Constructor for the pool. Connection pooling creates a pool of
         available connections to the database, allowing applications to acquire
@@ -142,7 +142,8 @@ class Pool:
         params = utils.ConnectParams(user=user, password=password, host=host,
                                      port=port, service_name=service_name,
                                      secure_transport=secure_transport,
-                                     config_dir=config_dir)
+                                     config_dir=config_dir,
+                                     enable_drcp=enable_drcp)
         if dsn is not None:
             params.parse_dsn(dsn, thin=thin)
 

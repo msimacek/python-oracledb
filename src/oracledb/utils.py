@@ -105,7 +105,8 @@ class ConnectParams:
     """
 
     def __init__(self, user=None, password=None, host=None, port=None,
-                 service_name=None, secure_transport=False, config_dir=None):
+                 service_name=None, secure_transport=False, config_dir=None,
+                 enable_drcp=False):
         self.user = user
         self.password = password
         self.host = host
@@ -115,6 +116,7 @@ class ConnectParams:
         if config_dir is None:
             config_dir = os.environ.get("TNS_ADMIN")
         self.config_dir = config_dir
+        self.enable_drcp = enable_drcp
         self._dsn = None
 
     def can_use_oob(self):
@@ -136,9 +138,11 @@ class ConnectParams:
         Return normalized connect data used for communicating with the server.
         """
         protocol = "TCPS" if self.secure_transport else "TCP"
+        server_type = "(SERVER=POOLED)" if self.enable_drcp else ""
         return f"(DESCRIPTION=(ADDRESS=(PROTOCOL={protocol})" + \
                f"(HOST={self.host})(PORT={self.port}))" + \
-               f"(CONNECT_DATA=(SERVICE_NAME={self.service_name})(CID=)))"
+               f"(CONNECT_DATA=(SERVICE_NAME={self.service_name})" + \
+               f"{server_type}(CID=)))"
 
     def get_dsn(self):
         """
@@ -146,6 +150,8 @@ class ConnectParams:
         """
         if self._dsn is None:
             self._dsn = f"{self.host}:{self.port}/{self.service_name}"
+            if self.enable_drcp:
+                self._dsn += ":POOLED"
         return self._dsn
 
     def get_wallet_file_name(self):
@@ -229,6 +235,10 @@ class ConnectParams:
         if pos >= 0:
             if self.service_name is None:
                 self.service_name = dsn[pos + 1:]
+                drcp_suffix = ":POOLED"
+                if self.service_name.upper().endswith(drcp_suffix):
+                    self.enable_drcp = True
+                    self.service_name = self.service_name[:-len(drcp_suffix)]
             remainder = dsn[:pos]
             pos = remainder.find(":")
             if pos >= 0:
