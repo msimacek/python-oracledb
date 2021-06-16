@@ -2,6 +2,9 @@
 # Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+from typing import Sequence, Type, Union
+from .base_impl import DbType
+
 class DbObject:
 
     def __getattr__(self, name):
@@ -26,7 +29,7 @@ class DbObject:
         obj._type = None
         return obj
 
-    def append(self, element):
+    def append(self, element: object) -> None:
         """
         Append an element to the collection object. If no elements exist in the
         collection, this creates an element at index 0; otherwise, it creates
@@ -35,7 +38,7 @@ class DbObject:
         """
         self._impl.append(element)
 
-    def asdict(self):
+    def asdict(self) -> dict:
         """
         Return a dictionary where the collection’s indexes are the keys and the
         elements are its values.
@@ -47,7 +50,7 @@ class DbObject:
             ix = self._impl.get_next_index(ix)
         return result
 
-    def aslist(self):
+    def aslist(self) -> list:
         """
         Return a list of each of the collection’s elements in index order.
         """
@@ -58,14 +61,14 @@ class DbObject:
             ix = self._impl.get_next_index(ix)
         return result
 
-    def copy(self):
+    def copy(self) -> Type["DbObject"]:
         """
         Create a copy of the object and return it.
         """
         copied_impl = self._impl.copy()
         return DbObject._from_impl(copied_impl)
 
-    def delete(self, index):
+    def delete(self, index: int) -> None:
         """
         Delete the element at the specified index of the collection. If the
         element does not exist or is otherwise invalid, an error is raised.
@@ -75,14 +78,14 @@ class DbObject:
         """
         self._impl.delete_by_index(index)
 
-    def exists(self, index):
+    def exists(self, index: int) -> bool:
         """
         Return True or False indicating if an element exists in the collection
         at the specified index.
         """
         return self._impl.exists_by_index(index)
 
-    def extend(self, seq):
+    def extend(self, seq: list) -> None:
         """
         Append all of the elements in the sequence to the collection. This is
         the equivalent of performing append() for each element found in the
@@ -91,28 +94,28 @@ class DbObject:
         for value in seq:
             self.append(value)
 
-    def first(self):
+    def first(self) -> int:
         """
         Return the index of the first element in the collection. If the
         collection is empty, None is returned.
         """
         return self._impl.get_first_index()
 
-    def getelement(self, index):
+    def getelement(self, index: int) -> object:
         """
         Return the element at the specified index of the collection. If no
         element exists at that index, an exception is raised.
         """
         return self._impl.get_element_by_index(index)
 
-    def last(self):
+    def last(self) -> int:
         """
         Return the index of the last element in the collection. If the
         collection is empty, None is returned.
         """
         return self._impl.get_last_index()
 
-    def next(self, index):
+    def next(self, index: int) -> int:
         """
         Return the index of the next element in the collection following the
         specified index. If there are no elements in the collection following
@@ -120,7 +123,7 @@ class DbObject:
         """
         return self._impl.get_next_index(index)
 
-    def prev(self, index):
+    def prev(self, index: int) -> int:
         """
         Return the index of the element in the collection preceding the
         specified index. If there are no elements in the collection preceding
@@ -128,27 +131,27 @@ class DbObject:
         """
         return self._impl.get_prev_index(index)
 
-    def setelement(self, index, value):
+    def setelement(self, index: int, value: object) -> None:
         """
         Set the value in the collection at the specified index to the given
         value.
         """
         self._impl.set_element_by_index(index, value)
 
-    def size(self):
+    def size(self) -> int:
         """
         Return the number of elements in the collection.
         """
         return self._impl.get_size()
 
-    def trim(self, num):
+    def trim(self, num: int) -> None:
         """
         Remove the specified number of elements from the end of the collection.
         """
         self._impl.trim(num)
 
     @property
-    def type(self):
+    def type(self) -> Type["DbObjectType"]:
         """
         Returns an ObjectType corresponding to the type of the object.
         """
@@ -170,14 +173,14 @@ class DbObjectAttr:
         return attr
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         This read-only attribute returns the name of the attribute.
         """
         return self._impl.name
 
     @property
-    def type(self):
+    def type(self) -> Union[Type["DbObjectType"], DbType]:
         """
         This read-only attribute returns the type of the attribute. This will
         be an Oracle Object Type if the variable binds Oracle objects;
@@ -213,7 +216,7 @@ class DbObjectType:
         return typ
 
     @property
-    def attributes(self):
+    def attributes(self) -> list:
         """
         This read-only attribute returns a list of the attributes that make up
         the object type.
@@ -224,7 +227,7 @@ class DbObjectType:
         return self._attributes
 
     @property
-    def iscollection(self):
+    def iscollection(self) -> bool:
         """
         This read-only attribute returns a boolean indicating if the object
         type refers to a collection or not.
@@ -232,14 +235,14 @@ class DbObjectType:
         return self._impl.is_collection
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         This read-only attribute returns the name of the type.
         """
         return self._impl.name
 
     @property
-    def element_type(self):
+    def element_type(self) -> Union[Type["DbObjectType"], DbType]:
         """
         This read-only attribute returns the type of elements found in
         collections of this type, if iscollection is True; otherwise, it
@@ -254,7 +257,7 @@ class DbObjectType:
                 self._element_type = self._impl.element_dbtype
         return self._element_type
 
-    def newobject(self, value=None):
+    def newobject(self, value: Sequence=None) -> DbObject:
         """
         Return a new Oracle object of the given type. This object can then be
         modified by setting its attributes and then bound to a cursor for
@@ -269,7 +272,7 @@ class DbObjectType:
         return obj
 
     @property
-    def schema(self):
+    def schema(self) -> str:
         """
         This read-only attribute returns the name of the schema that owns the
         type.

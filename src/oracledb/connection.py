@@ -2,6 +2,7 @@
 # Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+from typing import Callable, Type, Union
 from . import constants, errors, exceptions, utils
 from . import thick_impl, thin_impl
 from . import pool as pool_module
@@ -10,20 +11,38 @@ from .lob import LOB
 from .subscr import Subscription
 from .aq import Queue, MessageProperties
 from .soda import SodaDatabase
-from .dbobject import DbObjectType
-from .base_impl import DB_TYPE_BLOB, DB_TYPE_CLOB, DB_TYPE_NCLOB
+from .dbobject import DbObjectType, DbObject
+from .base_impl import DB_TYPE_BLOB, DB_TYPE_CLOB, DB_TYPE_NCLOB, DbType
 
 class Connection:
     _impl = None
 
-    def __init__(self, dsn=None, *, user=None, password=None, host=None,
-                 port=None, service_name=None, thin=True,
-                 mode=constants.AUTH_MODE_DEFAULT, handle=0, pool=None,
-                 threaded=False, events=False, cclass=None,
-                 purity=constants.PURITY_DEFAULT, newpassword=None,
-                 edition=None, appcontext=[], tag=None, matchanytag=False,
-                 shardingkey=[], supershardingkey=[], stmtcachesize=20,
-                 secure_transport=False, config_dir=None, enable_drcp=False):
+    def __init__(self,
+                 dsn: str=None, *,
+                 user: str=None,
+                 password: str=None,
+                 host: str=None,
+                 port: int=None,
+                 service_name: str=None,
+                 thin: bool=True,
+                 mode: int=constants.AUTH_MODE_DEFAULT,
+                 handle: int=0,
+                 pool: Type["pool_module.Pool"]=None,
+                 threaded: bool=False,
+                 events: bool=False,
+                 cclass: str=None,
+                 purity: int=constants.PURITY_DEFAULT,
+                 newpassword: str=None,
+                 edition: str=None,
+                 appcontext: list=[],
+                 tag: str=None,
+                 matchanytag: bool=False,
+                 shardingkey: list=[],
+                 supershardingkey: list=[],
+                 stmtcachesize: int=20,
+                 secure_transport: bool=False,
+                 config_dir: str=None,
+                 enable_drcp: bool=False) -> None:
         """
         Constructor for creating a connection to the database. All parameters
         are optional.
@@ -178,11 +197,11 @@ class Connection:
                                       "not connected")
 
     @property
-    def action(self):
+    def action(self) -> None:
         raise AttributeError("action is not readable")
 
     @action.setter
-    def action(self, value):
+    def action(self, value: str) -> None:
         """
         Specifies the action column in the v$session table. It is a string
         attribute and cannot be set to None -- use the empty string instead.
@@ -191,7 +210,7 @@ class Connection:
         self._impl.set_action(value)
 
     @property
-    def autocommit(self):
+    def autocommit(self) -> bool:
         """
         Specifies whether autocommit mode is on or off. When autocommit mode is
         on, all statements are committed as soon as they have completed
@@ -201,11 +220,12 @@ class Connection:
         return self._impl.autocommit
 
     @autocommit.setter
-    def autocommit(self, value):
+    def autocommit(self, value: bool) -> None:
         self._verify_connected()
         self._impl.autocommit = value
 
-    def begin(self, format_id=-1, transaction_id="", branch_id=""):
+    def begin(self, format_id: int=-1, transaction_id: str="",
+              branch_id: str="") -> None:
         """
         Explicitly begin a new transaction. Without parameters, this explicitly
         begins a local transaction; otherwise, this explicitly begins a
@@ -220,7 +240,7 @@ class Connection:
         self._impl.begin(format_id, transaction_id, branch_id)
 
     @property
-    def call_timeout(self):
+    def call_timeout(self) -> int:
         """
         Specifies the amount of time (in milliseconds) that a single round-trip
         to the database may take before a timeout will occur. A value of 0
@@ -230,30 +250,30 @@ class Connection:
         return self._impl.get_call_timeout()
 
     @call_timeout.setter
-    def call_timeout(self, value):
+    def call_timeout(self, value: int) -> None:
         self._verify_connected()
         self._impl.set_call_timeout(value)
 
     @property
-    def callTimeout(self):
+    def callTimeout(self) -> int:
         """
         Deprecated. Use property call_timeout instead.
         """
         return self.call_timeout
 
     @callTimeout.setter
-    def callTimeout(self, value):
+    def callTimeout(self, value: int) -> None:
         self._verify_connected()
         self._impl.set_call_timeout(value)
 
-    def cancel(self):
+    def cancel(self) -> None:
         """
         Break a long-running transaction.
         """
         self._verify_connected()
         self._impl.cancel()
 
-    def changepassword(self, old_password, new_password):
+    def changepassword(self, old_password: str, new_password: str) -> None:
         """
         Changes the password for the user to which the connection is connected.
         """
@@ -261,11 +281,11 @@ class Connection:
         self._impl.change_password(old_password, new_password)
 
     @property
-    def client_identifier(self):
+    def client_identifier(self) -> None:
         raise AttributeError("client_identifier is not readable")
 
     @client_identifier.setter
-    def client_identifier(self, value):
+    def client_identifier(self, value: str) -> None:
         """
         Specifies the client_identifier column in the v$session table.
         """
@@ -273,18 +293,18 @@ class Connection:
         self._impl.set_client_identifier(value)
 
     @property
-    def clientinfo(self):
+    def clientinfo(self) -> None:
         raise AttributeError("clientinfo is not readable")
 
     @clientinfo.setter
-    def clientinfo(self, value):
+    def clientinfo(self, value: str) -> None:
         """
         Specifies the client_info column in the v$session table.
         """
         self._verify_connected()
         self._impl.set_client_info(value)
 
-    def close(self):
+    def close(self) -> None:
         """
         Closes the connection and makes it unusable for further operations. An
         Error exception will be raised if any operation is attempted with this
@@ -294,14 +314,14 @@ class Connection:
         self._impl.close()
         self._impl = None
 
-    def commit(self):
+    def commit(self) -> None:
         """
         Commits any pending transactions to the database.
         """
         self._verify_connected()
         self._impl.commit()
 
-    def createlob(self, lob_type):
+    def createlob(self, lob_type: DbType) -> LOB:
         """
         Create and return a new temporary LOB of the specified type.
         """
@@ -314,7 +334,7 @@ class Connection:
         return LOB._from_impl(impl)
 
     @property
-    def current_schema(self):
+    def current_schema(self) -> str:
         """
         Specifies the current schema for the session. Setting this value is the
         same as executing the SQL statement "ALTER SESSION SET CURRENT_SCHEMA".
@@ -326,11 +346,11 @@ class Connection:
         return self._impl.get_current_schema()
 
     @current_schema.setter
-    def current_schema(self, value):
+    def current_schema(self, value: str) -> None:
         self._verify_connected()
         self._impl.set_current_schema(value)
 
-    def cursor(self, scrollable=False):
+    def cursor(self, scrollable: bool=False) -> Cursor:
         """
         Returns a cursor associated with the connection.
         """
@@ -338,11 +358,11 @@ class Connection:
         return Cursor(self, scrollable)
 
     @property
-    def dbop(self):
+    def dbop(self) -> None:
         raise AttributeError("dbop is not readable")
 
     @dbop.setter
-    def dbop(self, value):
+    def dbop(self, value: str) -> None:
         """
         Specifies the database operation that is to be monitored. This can be
         viewed in the DBOP_NAME column of the V$SQL_MONITOR table.
@@ -351,7 +371,7 @@ class Connection:
         self._impl.set_dbop(value)
 
     @property
-    def dsn(self):
+    def dsn(self) -> str:
         """
         Specifies the connection string (TNS entry) of the database to which a
         connection has been established.
@@ -360,7 +380,7 @@ class Connection:
         return self._impl.dsn
 
     @property
-    def edition(self):
+    def edition(self) -> str:
         """
         Specifies the session edition.
         """
@@ -368,7 +388,7 @@ class Connection:
         return self._impl.get_edition()
 
     @property
-    def encoding(self):
+    def encoding(self) -> str:
         """
         Specifies the IANA character set name of the character set in use. This
         is always the value "UTF-8".
@@ -376,7 +396,7 @@ class Connection:
         return "UTF-8"
 
     @property
-    def external_name(self):
+    def external_name(self) -> str:
         """
         Specifies the external name that is used by the connection when logging
         distributed transactions.
@@ -385,11 +405,11 @@ class Connection:
         return self._impl.get_external_name()
 
     @external_name.setter
-    def external_name(self, value):
+    def external_name(self, value: str) -> None:
         self._verify_connected()
         self._impl.set_external_name(value)
 
-    def getSodaDatabase(self):
+    def getSodaDatabase(self) -> SodaDatabase:
         """
         Return a SODA database object for performing all operations on Simple
         Oracle Document Access (SODA).
@@ -398,7 +418,7 @@ class Connection:
         db_impl = self._impl.create_soda_database_impl(self)
         return SodaDatabase._from_impl(self, db_impl)
 
-    def gettype(self, name):
+    def gettype(self, name: str) -> DbObjectType:
         """
         Return a type object given its name. This can then be used to create
         objects which can be bound to cursors created by this connection.
@@ -408,7 +428,7 @@ class Connection:
         return DbObjectType._from_impl(obj_type_impl)
 
     @property
-    def handle(self):
+    def handle(self) -> int:
         """
         Returns the OCI service context handle for the connection. It is
         primarily provided to facilitate testing the creation of a connection
@@ -420,7 +440,7 @@ class Connection:
         return self._impl.get_handle()
 
     @property
-    def inputtypehandler(self):
+    def inputtypehandler(self) -> Callable:
         """
         Specifies a method called for each value that is bound to a statement
         executed on any cursor associated with this connection. The method
@@ -433,12 +453,12 @@ class Connection:
         return self._impl.inputtypehandler
 
     @inputtypehandler.setter
-    def inputtypehandler(self, value):
+    def inputtypehandler(self, value: Callable) -> None:
         self._verify_connected()
         self._impl.inputtypehandler = value
 
     @property
-    def internal_name(self):
+    def internal_name(self) -> str:
         """
         Specifies the internal name that is used by the connection when logging
         distributed transactions.
@@ -447,12 +467,12 @@ class Connection:
         return self._impl.get_internal_name()
 
     @internal_name.setter
-    def internal_name(self, value):
+    def internal_name(self, value: str) -> None:
         self._verify_connected()
         self._impl.set_internal_name(value)
 
     @property
-    def ltxid(self):
+    def ltxid(self) -> bytes:
         """
         Returns the logical transaction id for the connection. It is used
         within Oracle Transaction Guard as a means of ensuring that
@@ -463,11 +483,11 @@ class Connection:
         return self._impl.get_ltxid()
 
     @property
-    def module(self):
+    def module(self) -> None:
         raise AttributeError("module is not readable")
 
     @module.setter
-    def module(self, value):
+    def module(self, value: str) -> None:
         """
         Specifies the module column in the v$session table. The maximum length
         for this string is 48 and if you exceed this length you will get
@@ -476,8 +496,10 @@ class Connection:
         self._verify_connected()
         self._impl.set_module(value)
 
-    def msgproperties(self, payload=None, correlation=None, delay=None,
-                      exceptionq=None, expiration=None, priority=None):
+    def msgproperties(self, payload: Union[bytes, DbObject]=None,
+                      correlation: str=None, delay: int=None,
+                      exceptionq: str=None, expiration: int=None,
+                      priority: int=None) -> MessageProperties:
         """
         Create and return a message properties object. If the parameters are
         not None, they act as a shortcut for setting each of the equivalently
@@ -500,7 +522,7 @@ class Connection:
         return props
 
     @property
-    def nencoding(self):
+    def nencoding(self) -> str:
         """
         Specifies the IANA character set name of the national character set in
         use. This is always the value "UTF-8".
@@ -508,7 +530,7 @@ class Connection:
         return "UTF-8"
 
     @property
-    def outputtypehandler(self):
+    def outputtypehandler(self) -> Callable:
         """
         Specifies a method called for each column that is going to be fetched
         from any cursor associated with this connection. The method signature
@@ -522,18 +544,18 @@ class Connection:
         return self._impl.outputtypehandler
 
     @outputtypehandler.setter
-    def outputtypehandler(self, value):
+    def outputtypehandler(self, value: Callable) -> None:
         self._verify_connected()
         self._impl.outputtypehandler = value
 
-    def ping(self):
+    def ping(self) -> None:
         """
         Pings the database to verify the connection is valid.
         """
         self._verify_connected()
         self._impl.ping()
 
-    def prepare(self):
+    def prepare(self) -> bool:
         """
         Prepare the distributed (global) transaction for commit. Return a
         boolean indicating if a transaction was actually prepared in order to
@@ -542,7 +564,8 @@ class Connection:
         self._verify_connected()
         return self._impl.prepare()
 
-    def queue(self, name, payload_type=None, *, payloadType=None):
+    def queue(self, name: str, payload_type: DbObjectType=None, *,
+              payloadType: DbObjectType=None) -> Queue:
         """
         Creates and returns a queue which is used to enqueue and dequeue
         messages in Advanced Queueing (AQ).
@@ -570,14 +593,14 @@ class Connection:
         impl.initialize(self._impl, name, payload_type_impl)
         return Queue._from_impl(self, impl)
 
-    def rollback(self):
+    def rollback(self) -> None:
         """
         Rolls back any pending transactions.
         """
         self._verify_connected()
         self._impl.rollback()
 
-    def shutdown(self, mode=0):
+    def shutdown(self, mode: int=0) -> None:
         """
         Shutdown the database. In order to do this the connection must be
         connected as SYSDBA or SYSOPER. Two calls must be made unless the mode
@@ -586,7 +609,8 @@ class Connection:
         self._verify_connected()
         self._impl.shutdown(mode)
 
-    def startup(self, force=False, restrict=False, pfile=None):
+    def startup(self, force: bool=False, restrict: bool=False,
+                pfile: str=None) -> None:
         """
         Startup the database. This is equivalent to the SQL*Plus command
         “startup nomount”. The connection must be connected as SYSDBA or
@@ -600,7 +624,7 @@ class Connection:
         self._impl.startup(force, restrict, pfile)
 
     @property
-    def stmtcachesize(self):
+    def stmtcachesize(self) -> int:
         """
         Specifies the size of the statement cache. This value can make a
         significant difference in performance (up to 100x) if you have a small
@@ -610,22 +634,30 @@ class Connection:
         return self._impl.get_stmt_cache_size()
 
     @stmtcachesize.setter
-    def stmtcachesize(self, value):
+    def stmtcachesize(self, value: int) -> None:
         self._verify_connected()
         self._impl.set_stmt_cache_size(value)
 
-    def subscribe(self, namespace=constants.SUBSCR_NAMESPACE_DBCHANGE,
-                  protocol=constants.SUBSCR_PROTOCOL_CALLBACK, callback=None,
-                  timeout=0, operations=constants.OPCODE_ALLOPS, port=0,
-                  qos=constants.SUBSCR_QOS_DEFAULT, ip_address=None,
-                  grouping_class=constants.SUBSCR_GROUPING_CLASS_NONE,
-                  grouping_value=0,
-                  grouping_type=constants.SUBSCR_GROUPING_TYPE_SUMMARY,
-                  name=None, client_initiated=False, *, ipAddress=None,
-                  groupingClass=constants.SUBSCR_GROUPING_CLASS_NONE,
-                  groupingValue=0,
-                  groupingType=constants.SUBSCR_GROUPING_TYPE_SUMMARY,
-                  clientInitiated=False):
+    def subscribe(self,
+                  namespace: int=constants.SUBSCR_NAMESPACE_DBCHANGE,
+                  protocol: int=constants.SUBSCR_PROTOCOL_CALLBACK,
+                  callback: Callable=None,
+                  timeout: int=0,
+                  operations: int=constants.OPCODE_ALLOPS,
+                  port: int=0,
+                  qos: int=constants.SUBSCR_QOS_DEFAULT,
+                  ip_address: str=None,
+                  grouping_class: int=constants.SUBSCR_GROUPING_CLASS_NONE,
+                  grouping_value: int=0,
+                  grouping_type: int=constants.SUBSCR_GROUPING_TYPE_SUMMARY,
+                  name: str=None,
+                  client_initiated: bool=False,
+                  *,
+                  ipAddress: str=None,
+                  groupingClass: int=constants.SUBSCR_GROUPING_CLASS_NONE,
+                  groupingValue: int=0,
+                  groupingType: int=constants.SUBSCR_GROUPING_TYPE_SUMMARY,
+                  clientInitiated: bool=False) -> Subscription:
         """
         Return a new subscription object that receives notification for events
         that take place in the database that match the given parameters.
@@ -728,7 +760,7 @@ class Connection:
         return subscr
 
     @property
-    def tag(self):
+    def tag(self) -> str:
         """
         This property initially contains the actual tag of the session that was
         acquired from a pool. If the connection was not acquired from a pool or
@@ -745,18 +777,18 @@ class Connection:
         return self._impl.tag
 
     @tag.setter
-    def tag(self, value):
+    def tag(self, value: str) -> None:
         self._verify_connected()
         self._impl.tag = value
 
     @property
-    def tnsentry(self):
+    def tnsentry(self) -> str:
         """
         Deprecated. Use dsn property instead.
         """
         return self.dsn
 
-    def unsubscribe(self, subscr):
+    def unsubscribe(self, subscr: Subscription) -> None:
         """
         Unsubscribe from events in the database that were originally subscribed
         to using subscribe(). The connection used to unsubscribe should be the
@@ -769,7 +801,7 @@ class Connection:
         subscr._impl.unsubscribe(self._impl)
 
     @property
-    def username(self):
+    def username(self) -> str:
         """
         Returns the name of the user which established the connection to the
         database.
@@ -778,7 +810,7 @@ class Connection:
         return self._impl.username
 
     @property
-    def version(self):
+    def version(self) -> str:
         """
         Returns the version of the database to which the connection has been
         established.

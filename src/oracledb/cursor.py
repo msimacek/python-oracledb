@@ -2,11 +2,17 @@
 # Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+from typing import Type, Union, Callable
 from . import errors, exceptions
+from . import connection as connection_module
+from .var import Var
+from .base_impl import DbType
+from .dbobject import DbObjectType
 
 class Cursor:
 
-    def __init__(self, connection, scrollable=False):
+    def __init__(self, connection: Type["connection_module.Connection"],
+                 scrollable: bool = False) -> None:
         self._impl = None
         self.connection = connection
         self.statement = None
@@ -38,7 +44,8 @@ class Cursor:
     def __repr__(self):
         return f"<oracledb.Cursor on {self.connection!r}>"
 
-    def _call(self, name, parameters, keyword_parameters, return_value=None):
+    def _call(self, name: str, parameters: Union[list, tuple],
+              keyword_parameters: dict, return_value: str=None) -> None:
         """
         Internal method used for generating the PL/SQL block used to call
         stored procedures.
@@ -73,7 +80,7 @@ class Cursor:
         statement = "".join(statement_parts)
         self.execute(statement, bind_values)
 
-    def _prepare(self, statement):
+    def _prepare(self, statement: str) -> None:
         """
         Internal method used for preparing a statement for execution.
         """
@@ -83,7 +90,7 @@ class Cursor:
         self._impl.prepare(statement)
         self.statement = statement
 
-    def _verify_fetch(self):
+    def _verify_fetch(self) -> None:
         """
         Verifies that fetching is possible from this cursor.
         """
@@ -91,7 +98,7 @@ class Cursor:
         if not self._impl.is_query(self):
             errors._raise_from_string(exceptions.InterfaceError, "not a query")
 
-    def _verify_open(self):
+    def _verify_open(self) -> None:
         """
         Verifies that the cursor is open and the associated connection is
         connected. If either condition is false an exception is raised.
@@ -101,7 +108,7 @@ class Cursor:
         self.connection._verify_connected()
 
     @property
-    def arraysize(self):
+    def arraysize(self) -> int:
         """
         Tunes the number of rows fetched and buffered by internal calls to the
         database when fetching rows from SELECT statements and REF CURSORS. The
@@ -119,11 +126,12 @@ class Cursor:
         return self._impl.arraysize
 
     @arraysize.setter
-    def arraysize(self, value):
+    def arraysize(self, value: int) -> None:
         self._verify_open()
         self._impl.arraysize = value
 
-    def arrayvar(self, typ, value, size=0):
+    def arrayvar(self, typ: Union[DbType, DbObjectType, type],
+                 value: Union[list, int], size: int=0) -> Type["Var"]:
         """
         Create an array variable associated with the cursor of the given type
         and size and return a variable object. The value is either an integer
@@ -153,7 +161,7 @@ class Cursor:
             var.setvalue(0, value)
         return var
 
-    def bindnames(self):
+    def bindnames(self) -> list:
         """
         Return the list of bind variable names bound to the statement. Note
         that a statement must have been prepared first.
@@ -165,7 +173,7 @@ class Cursor:
         return self._impl.get_bind_names()
 
     @property
-    def bindvars(self):
+    def bindvars(self) -> list:
         """
         Returns the bind variables used for the last execute. The value will be
         either a list or a dictionary depending on whether binding was done by
@@ -175,8 +183,10 @@ class Cursor:
         self._verify_open()
         return self._impl.bind_vars or []
 
-    def callfunc(self, name, return_type, parameters=None,
-                 keyword_parameters=None, *, keywordParameters=None):
+    def callfunc(self, name: str, return_type: object,
+                 parameters: Union[list, tuple]=None,
+                 keyword_parameters: dict=None, *,
+                 keywordParameters: dict=None) -> None:
         """
         Call a function with the given name. The return type is specified in
         the same notation as is required by setinputsizes(). The sequence of
@@ -194,8 +204,9 @@ class Cursor:
         self._call(name, parameters, keyword_parameters, var)
         return var.getvalue()
 
-    def callproc(self, name, parameters=None, keyword_parameters=None, *,
-                 keywordParameters=None):
+    def callproc(self, name: str, parameters: Union[list, tuple]=None,
+                 keyword_parameters: dict=None, *,
+                 keywordParameters: dict=None):
         """
         Call a procedure with the given name. The sequence of parameters must
         contain one entry for each parameter that the procedure expects. The
@@ -216,7 +227,7 @@ class Cursor:
             return []
         return [v.getvalue() for v in self._impl.bind_vars[:len(parameters)]]
 
-    def close(self):
+    def close(self) -> None:
         """
         Close the cursor now, rather than whenever __del__ is called. The
         cursor will be unusable from this point forward; an Error exception
@@ -227,7 +238,7 @@ class Cursor:
         self._impl = None
 
     @property
-    def description(self):
+    def description(self) -> tuple:
         """
         Returns a sequence of 7-item sequences. Each of these sequences
         contains information describing one result column: (name, type,
@@ -239,7 +250,9 @@ class Cursor:
         if self._impl.is_query(self):
             return self._impl.get_description()
 
-    def execute(self, statement, parameters=None, **keyword_parameters):
+    def execute(self, statement: Union[str, None],
+                parameters: Union[list, tuple, dict]=None,
+                **keyword_parameters: dict) -> Union[Type["Cursor"], None]:
         """
         Execute a statement against the database.
 
@@ -313,8 +326,9 @@ class Cursor:
         if self._impl.fetch_vars is not None:
             return self
 
-    def executemany(self, statement, parameters, batcherrors=False,
-                    arraydmlrowcounts=False):
+    def executemany(self, statement: Union[str, None],
+                    parameters: Union[list, int], batcherrors: bool=False,
+                    arraydmlrowcounts: bool=False) -> None:
         """
         Prepare a statement for execution against a database and then execute
         it against all parameter mappings or sequences found in the sequence
@@ -375,7 +389,7 @@ class Cursor:
         self._impl.executemany(self, num_execs, bool(batcherrors),
                                bool(arraydmlrowcounts))
 
-    def fetchall(self):
+    def fetchall(self) -> list:
         """
         Fetch all (remaining) rows of a query result, returning them as a list
         of tuples. An empty list is returned if no more rows are available.
@@ -396,7 +410,7 @@ class Cursor:
             result.append(row)
         return result
 
-    def fetchmany(self, size=None):
+    def fetchmany(self, size: int=None) -> list:
         """
         Fetch the next set of rows of a query result, returning a list of
         tuples. An empty list is returned if no more rows are available. Note
@@ -423,7 +437,7 @@ class Cursor:
             result.append(row)
         return result
 
-    def fetchone(self):
+    def fetchone(self) -> object:
         """
         Fetch the next row of a query result set, returning a single tuple or
         None when no more data is available.
@@ -435,7 +449,7 @@ class Cursor:
         return self._impl.fetch_next_row(self)
 
     @property
-    def fetchvars(self):
+    def fetchvars(self) -> list:
         """
         Specifies the list of variables created for the last query that was
         executed on the cursor. Care should be taken when referencing this
@@ -444,7 +458,7 @@ class Cursor:
         self._verify_open()
         return self._impl.fetch_vars
 
-    def getarraydmlrowcounts(self):
+    def getarraydmlrowcounts(self) -> list:
         """
         Return the DML row counts after a call to executemany() with
         arraydmlrowcounts enabled. This will return a list of integers
@@ -454,7 +468,7 @@ class Cursor:
         self._verify_open()
         return self._impl.get_array_dml_row_counts()
 
-    def getbatcherrors(self):
+    def getbatcherrors(self) -> list:
         """
         Return the exceptions that took place after a call to executemany()
         with batcherrors enabled. This will return a list of Error objects, one
@@ -464,7 +478,7 @@ class Cursor:
         self._verify_open()
         return self._impl.get_batch_errors()
 
-    def getimplicitresults(self):
+    def getimplicitresults(self) -> list:
         """
         Return a list of cursors which correspond to implicit results made
         available from a PL/SQL block or procedure without the use of OUT ref
@@ -479,7 +493,7 @@ class Cursor:
         return self._impl.get_implicit_results(self.connection)
 
     @property
-    def inputtypehandler(self):
+    def inputtypehandler(self) -> Callable:
         """
         Specifies a method called for each value that is bound to a statement
         executed on this cursor. The method signature is handler(cursor, value,
@@ -492,12 +506,12 @@ class Cursor:
         return self._impl.inputtypehandler
 
     @inputtypehandler.setter
-    def inputtypehandler(self, value):
+    def inputtypehandler(self, value: Callable) -> None:
         self._verify_open()
         self._impl.inputtypehandler = value
 
     @property
-    def lastrowid(self):
+    def lastrowid(self) -> str:
         """
         Returns the rowid of the last row modified by the cursor. If no row was
         modified by the last operation performed on the cursor, the value None
@@ -507,7 +521,7 @@ class Cursor:
         return self._impl.get_lastrowid()
 
     @property
-    def outputtypehandler(self):
+    def outputtypehandler(self) -> Callable:
         """
         Specifies a method called for each column that is going to be fetched
         from this cursor. The method signature is handler(cursor, name,
@@ -520,11 +534,11 @@ class Cursor:
         return self._impl.outputtypehandler
 
     @outputtypehandler.setter
-    def outputtypehandler(self, value):
+    def outputtypehandler(self, value: Callable) -> None:
         self._verify_open()
         self._impl.outputtypehandler = value
 
-    def parse(self, statement):
+    def parse(self, statement: str) -> None:
         """
         This can be used to parse a statement without actually executing it
         (this step is done automatically by Oracle when a statement is
@@ -535,7 +549,7 @@ class Cursor:
         self._impl.parse(self)
 
     @property
-    def prefetchrows(self):
+    def prefetchrows(self) -> int:
         """
         Used to tune the number of rows fetched when a SELECT statement is
         executed. This value can reduce the number of round-trips to the
@@ -547,11 +561,11 @@ class Cursor:
         return self._impl.prefetchrows
 
     @prefetchrows.setter
-    def prefetchrows(self, value):
+    def prefetchrows(self, value: int) -> None:
         self._verify_open()
         self._impl.prefetchrows = value
 
-    def prepare(self, statement, tag=None):
+    def prepare(self, statement: str, tag: str=None) -> None:
         """
         This can be used before a call to execute() to define the statement
         that will be executed. When this is done, the prepare phase will not be
@@ -564,7 +578,7 @@ class Cursor:
         self._prepare(statement)
 
     @property
-    def rowcount(self):
+    def rowcount(self) -> int:
         """
         This read-only attribute specifies the number of rows that have
         currently been fetched from the cursor (for select statements), that
@@ -576,7 +590,7 @@ class Cursor:
         return self._impl.rowcount
 
     @property
-    def rowfactory(self):
+    def rowfactory(self) -> Callable:
         """
         Specifies a method to call for each row that is retrieved from the
         database.  Ordinarily a tuple is returned for each row but if this
@@ -587,11 +601,11 @@ class Cursor:
         return self._impl.rowfactory
 
     @rowfactory.setter
-    def rowfactory(self, value):
+    def rowfactory(self, value: Callable):
         self._verify_open()
         self._impl.rowfactory = value
 
-    def scroll(self, value=0, mode="relative"):
+    def scroll(self, value: int=0, mode: str="relative") -> None:
         """
         Scroll the cursor in the result set to a new position according to the
         mode.
@@ -609,7 +623,7 @@ class Cursor:
         self._impl.scroll(value, mode)
 
     @property
-    def scrollable(self):
+    def scrollable(self) -> bool:
         """
         Specifies whether the cursor can be scrolled or not. By default,
         cursors are not scrollable, as the server resources and response times
@@ -621,11 +635,11 @@ class Cursor:
         return self._impl.scrollable
 
     @scrollable.setter
-    def scrollable(self, value):
+    def scrollable(self, value: bool) -> None:
         self._verify_open()
         self._impl.scrollable = value
 
-    def setinputsizes(self, *args, **kwargs):
+    def setinputsizes(self, *args: tuple, **kwargs: dict) -> Union[list, dict]:
         """
         This can be used before a call to execute(), callfunc() or callproc()
         to predefine memory areas for the operation’s parameters. Each
@@ -646,16 +660,24 @@ class Cursor:
             return self._impl.bind_vars
         return []
 
-    def setoutputsize(self, size, column=0):
+    def setoutputsize(self, size: int, column: int=0) -> None:
         """
         Sets a column buffer size for fetches of long columns but the driver
         does not require it so nothing is done here.
         """
         pass
 
-    def var(self, typ, size=0, arraysize=1, inconverter=None,
-            outconverter=None, typename=None, encoding_errors=None,
-            bypass_decode=False, *, encodingErrors=None):
+    def var(self,
+            typ: Union[DbType, DbObjectType, type],
+            size: int=0,
+            arraysize: int=1,
+            inconverter: Callable=None,
+            outconverter: Callable=None,
+            typename: str=None,
+            encoding_errors: str=None,
+            bypass_decode: bool=False,
+            *,
+            encodingErrors: str=None):
         """
         Create a variable with the specified characteristics. This method was
         designed for use with PL/SQL in/out variables where the length or type

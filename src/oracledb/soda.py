@@ -2,7 +2,10 @@
 # Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+from typing import Type, Union
 import json
+
+from . import connection
 
 class SodaDatabase:
 
@@ -27,7 +30,8 @@ class SodaDatabase:
             return content
         return json.dumps(content).encode()
 
-    def createCollection(self, name, metadata=None, mapMode=False):
+    def createCollection(self, name: str, metadata: Union[str, dict]=None,
+                         mapMode: bool=False) -> Type["SodaCollection"]:
         """
         Creates a SODA collection with the given name and returns a new SODA
         collection object. If you try to create a collection, and a collection
@@ -53,7 +57,8 @@ class SodaDatabase:
         collection_impl = self._impl.create_collection(name, metadata, mapMode)
         return SodaCollection._from_impl(self, collection_impl)
 
-    def createDocument(self, content, key=None, mediaType="application/json"):
+    def createDocument(self, content: object, key: str=None,
+                       mediaType: str="application/json") -> Type["SodaDocument"]:
         """
         Creates a SODA document usable for SODA write operations. You only need
         to use this method if your collection requires client-assigned keys or
@@ -80,7 +85,7 @@ class SodaDatabase:
         doc_impl = self._impl.create_document(content_bytes, key, mediaType)
         return SodaDocument._from_impl(doc_impl)
 
-    def getCollectionNames(self, startName=None, limit=0):
+    def getCollectionNames(self, startName: str=None, limit: int=0) -> list:
         """
         Returns a list of the names of collections in the database that match
         the criteria, in alphabetical order.
@@ -94,7 +99,7 @@ class SodaDatabase:
         """
         return self._impl.get_collection_names(startName, limit)
 
-    def openCollection(self, name):
+    def openCollection(self, name: str) -> Type["SodaCollection"]:
         """
         Opens an existing collection with the given name and returns a new SODA
         collection object. If a collection with that name does not exist, None
@@ -120,7 +125,7 @@ class SodaCollection:
         content_bytes = self._db._get_content_bytes(arg)
         return self._db._impl.create_document(content_bytes, None, None)
 
-    def createIndex(self, spec):
+    def createIndex(self, spec: Union[dict, str]) -> None:
         """
         Creates an index on a SODA collection. The spec is expected to be a
         dictionary or a JSON-encoded string.
@@ -134,7 +139,7 @@ class SodaCollection:
             raise TypeError("expecting a dictionary or string")
         self._impl.create_index(spec)
 
-    def drop(self):
+    def drop(self) -> bool:
         """
         Drops the collection from the database, if it exists. Note that if the
         collection was created with mapMode set to True the underlying table
@@ -145,7 +150,7 @@ class SodaCollection:
         """
         return self._impl.drop()
 
-    def dropIndex(self, name, force=False):
+    def dropIndex(self, name: str, force: bool=False) -> bool:
         """
         Drops the index with the specified name, if it exists.
 
@@ -159,7 +164,7 @@ class SodaCollection:
         """
         return self._impl.drop_index(name, force)
 
-    def find(self):
+    def find(self) -> Type["SodaOperation"]:
         """
         This method is used to begin an operation that will act upon documents
         in the collection. It creates and returns a SodaOperation object which
@@ -168,7 +173,7 @@ class SodaCollection:
         """
         return SodaOperation(self)
 
-    def getDataGuide(self):
+    def getDataGuide(self) -> Type["SodaDocument"]:
         """
         Returns a SODA document object containing property names, data types
         and lengths inferred from the JSON documents in the collection. It can
@@ -181,7 +186,7 @@ class SodaCollection:
         if doc_impl is not None:
             return SodaDocument._from_impl(doc_impl)
 
-    def insertMany(self, docs):
+    def insertMany(self, docs: list) -> None:
         """
         Inserts a list of documents into the collection at one time. Each of
         the input documents can be a dictionary or list or an existing SODA
@@ -190,7 +195,8 @@ class SodaCollection:
         doc_impls = [self._process_doc_arg(d) for d in docs]
         self._impl.insert_many(doc_impls, hint=None, return_docs=False)
 
-    def insertManyAndGet(self, docs, hint=None):
+    def insertManyAndGet(self, docs: list,
+                         hint: str=None) -> list:
         """
         Similarly to insertMany() this method inserts a list of documents into
         the collection at one time. The only difference is that it returns a
@@ -212,7 +218,7 @@ class SodaCollection:
                                                   return_docs=True)
         return [SodaDocument._from_impl(i) for i in return_doc_impls]
 
-    def insertOne(self, doc):
+    def insertOne(self, doc: object) -> None:
         """
         Inserts a given document into the collection. The input document can be
         a dictionary or list or an existing SODA document object.
@@ -220,7 +226,8 @@ class SodaCollection:
         doc_impl = self._process_doc_arg(doc)
         self._impl.insert_one(doc_impl, hint=None, return_doc=False)
 
-    def insertOneAndGet(self, doc, hint=None):
+    def insertOneAndGet(self, doc: object,
+                        hint: str=None) -> Type["SodaDocument"]:
         """
         Similarly to insertOne() this method inserts a given document into the
         collection. The only difference is that it returns a SODA Document
@@ -243,7 +250,7 @@ class SodaCollection:
         return SodaDocument._from_impl(return_doc_impl)
 
     @property
-    def metadata(self):
+    def metadata(self) -> dict:
         """
         This read-only attribute returns a dictionary containing the metadata
         that was used to create the collection.
@@ -251,13 +258,13 @@ class SodaCollection:
         return json.loads(self._impl.get_metadata())
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         This read-only attribute returns the name of the collection.
         """
         return self._impl.name
 
-    def save(self, doc):
+    def save(self, doc: object) -> None:
         """
         Saves a document into the collection. This method is equivalent to
         insertOne() except that if client-assigned keys are used, and the
@@ -267,7 +274,7 @@ class SodaCollection:
         doc_impl = self._process_doc_arg(doc)
         self._impl.save(doc_impl, hint=None, return_doc=False)
 
-    def saveAndGet(self, doc, hint=None):
+    def saveAndGet(self, doc: object, hint: str=None) -> Type["SodaDocument"]:
         """
         Saves a document into the collection. This method is equivalent to
         insertOneAndGet() except that if client-assigned keys are used, and the
@@ -288,7 +295,7 @@ class SodaCollection:
         return_doc_impl = self._impl.save(doc_impl, hint, return_doc=False)
         return SodaDocument._from_impl(return_doc_impl)
 
-    def truncate(self):
+    def truncate(self) -> None:
         """
         Removes all of the documents in the collection, similarly to what is
         done for rows in a table by the TRUNCATE TABLE statement.
@@ -305,7 +312,7 @@ class SodaDocument:
         return doc
 
     @property
-    def createdOn(self):
+    def createdOn(self) -> str:
         """
         This read-only attribute returns the creation time of the document in
         ISO 8601 format. Documents created by SodaDatabase.createDocument() or
@@ -314,7 +321,7 @@ class SodaDocument:
         """
         return self._impl.get_created_on()
 
-    def getContent(self):
+    def getContent(self) -> Union[dict, list]:
         """
         Returns the content of the document as a dictionary or list. This
         method assumes that the content is application/json and will raise an
@@ -323,7 +330,7 @@ class SodaDocument:
         """
         return json.loads(self.getContentAsString())
 
-    def getContentAsBytes(self):
+    def getContentAsBytes(self) -> bytes:
         """
         Returns the content of the document as a bytes object. If there is no
         content, however, None will be returned.
@@ -331,7 +338,7 @@ class SodaDocument:
         content_bytes, encoding = self._impl.get_content()
         return content_bytes
 
-    def getContentAsString(self):
+    def getContentAsString(self) -> str:
         """
         Returns the content of the document as a string. If the document
         encoding is not known, UTF-8 will be used. If there is no content,
@@ -341,7 +348,7 @@ class SodaDocument:
         return content_bytes.decode(encoding)
 
     @property
-    def key(self):
+    def key(self) -> str:
         """
         This read-only attribute returns the unique key assigned to this
         document. Documents created by SodaDatabase.createDocument() may not
@@ -350,7 +357,7 @@ class SodaDocument:
         return self._impl.get_key()
 
     @property
-    def lastModified(self):
+    def lastModified(self) -> str:
         """
         This read-only attribute returns the last modified time of the document
         in ISO 8601 format. Documents created by SodaDatabase.createDocument()
@@ -360,7 +367,7 @@ class SodaDocument:
         return self._impl.get_last_modified()
 
     @property
-    def mediaType(self):
+    def mediaType(self) -> str:
         """
         This read-only attribute returns the media type assigned to the
         document. By convention this is expected to be a MIME type but no
@@ -372,7 +379,7 @@ class SodaDocument:
         return self._impl.get_media_type()
 
     @property
-    def version(self):
+    def version(self) -> str:
         """
         This read-only attribute returns the version assigned to this document.
         Documents created by SodaDatabase.createDocument() or fetched from
@@ -398,7 +405,7 @@ class SodaDocCursor:
         cursor._impl = impl
         return cursor
 
-    def close(self):
+    def close(self) -> None:
         """
         Close the cursor now, rather than whenever __del__ is called. The
         cursor will be unusable from this point forward; an Error exception
@@ -409,7 +416,7 @@ class SodaDocCursor:
 
 class SodaOperation:
 
-    def __init__(self, collection):
+    def __init__(self, collection: SodaCollection) -> None:
         self._collection = collection
         self._key = None
         self._keys = None
@@ -420,7 +427,7 @@ class SodaOperation:
         self._limit = None
         self._fetch_array_size = None
 
-    def count(self):
+    def count(self) -> int:
         """
         Returns a count of the number of documents in the collection that match
         the criteria. If skip() or limit() were called on this object, an
@@ -428,7 +435,7 @@ class SodaOperation:
         """
         return self._collection._impl.get_count(self)
 
-    def fetchArraySize(self, value):
+    def fetchArraySize(self, value: int) -> Type["SodaOperation"]:
         """
         This is a tuning method to specify the number of documents that are
         internally fetched in batches by calls to getCursor() and
@@ -447,7 +454,7 @@ class SodaOperation:
             self._fetch_array_size = value
         return self
 
-    def filter(self, value):
+    def filter(self, value: Union[dict, str]) -> Type["SodaOperation"]:
         """
         Sets a filter specification for complex document queries and ordering
         of JSON documents. Filter specifications must be provided as a
@@ -466,7 +473,7 @@ class SodaOperation:
             raise TypeError("expecting string or dictionary")
         return self
 
-    def getCursor(self):
+    def getCursor(self) -> Type["SodaDocCursor"]:
         """
         Returns a SodaDocCursor object that can be used to iterate over the
         documents that match the criteria.
@@ -474,13 +481,13 @@ class SodaOperation:
         impl = self._collection._impl.get_cursor(self)
         return SodaDocCursor._from_impl(impl)
 
-    def getDocuments(self):
+    def getDocuments(self) -> list:
         """
         Returns a list of SodaDocument objects that match the criteria.
         """
         return [d for d in self.getCursor()]
 
-    def getOne(self):
+    def getOne(self) -> Union[Type["SodaDocument"], None]:
         """
         Returns a single SodaDocument object that matches the criteria. Note
         that if multiple documents match the criteria only the first one is
@@ -490,7 +497,7 @@ class SodaOperation:
         if doc_impl is not None:
             return SodaDocument._from_impl(doc_impl)
 
-    def hint(self, value):
+    def hint(self, value: str) -> Type["SodaOperation"]:
         """
         Specifies a hint that will be provided to the SODA operation when it is
         performed. This is expected to be a string in the same format as SQL
@@ -499,7 +506,7 @@ class SodaOperation:
         NO_MONITOR (turn off monitoring) are the most useful. Use of this
         method requires Oracle Client 21.3 or higher (or Oracle Client 19 from
         19.11).
-
+ 
         As a convenience, the SodaOperation object is returned so that further
         criteria can be specified by chaining methods together.
         """
@@ -508,7 +515,7 @@ class SodaOperation:
         self._hint = value
         return self
 
-    def key(self, value):
+    def key(self, value: str) -> Type["SodaOperation"]:
         """
         Specifies that the document with the specified key should be returned.
         This causes any previous calls made to this method and keys() to be
@@ -523,7 +530,7 @@ class SodaOperation:
         self._keys = None
         return self
 
-    def keys(self, value):
+    def keys(self, value: list) -> Type["SodaOperation"]:
         """
         Specifies that documents that match the keys found in the supplied
         sequence should be returned. This causes any previous calls made to
@@ -540,7 +547,7 @@ class SodaOperation:
         self._key = None
         return self
 
-    def limit(self, value):
+    def limit(self, value: int) -> Type["SodaOperation"]:
         """
         Specifies that only the specified number of documents should be
         returned. This method is only usable for read operations such as
@@ -555,14 +562,14 @@ class SodaOperation:
         self._limit = value
         return self
 
-    def remove(self):
+    def remove(self) -> int:
         """
         Removes all of the documents in the collection that match the criteria.
         The number of documents that have been removed is returned.
         """
         return self._collection._impl.remove(self)
 
-    def replaceOne(self, doc):
+    def replaceOne(self, doc: object) -> bool:
         """
         Replaces a single document in the collection with the specified
         document. The input document can be a dictionary or list or an existing
@@ -576,7 +583,7 @@ class SodaOperation:
         return self._collection._impl.replace_one(self, doc_impl,
                                                   return_doc=False)
 
-    def replaceOneAndGet(self, doc):
+    def replaceOneAndGet(self, doc: object) -> Type["SodaDocument"]:
         """
         Similarly to replaceOne(), this method replaces a single document in
         the collection with the specified document. The only difference is that
@@ -588,7 +595,7 @@ class SodaOperation:
                                                              return_doc=True)
         return SodaDocument._from_impl(return_doc_impl)
 
-    def skip(self, value):
+    def skip(self, value: int) -> Type["SodaOperation"]:
         """
         Specifies the number of documents that match the other criteria that
         will be skipped. This method is only usable for read operations such as
@@ -603,7 +610,7 @@ class SodaOperation:
         self._skip = value
         return self
 
-    def version(self, value):
+    def version(self, value: str) -> Type["SodaOperation"]:
         """
         Specifies that documents with the specified version should be returned.
         Typically this is used with key() to implement optimistic locking, so

@@ -2,6 +2,10 @@
 # Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+import datetime
+
+from . import connection as connection_module
+from typing import Type, Union
 from . import errors
 from .dbobject import DbObject, DbObjectType
 
@@ -17,7 +21,7 @@ class Queue:
         queue._impl = impl
         return queue
 
-    def _verify_message(self, message):
+    def _verify_message(self, message: Type["MessageProperties"]) -> None:
         """
         Internal method used for verifying a message.
         """
@@ -28,13 +32,13 @@ class Queue:
                                       "message has no payload")
 
     @property
-    def connection(self):
+    def connection(self) -> Type["connection_module.Connection"]:
         """
         Returns the connection on which the queue was created.
         """
         return self._connection
 
-    def deqmany(self, max_num_messages):
+    def deqmany(self, max_num_messages: int) -> list:
         """
         Dequeues up to the specified number of messages from the queue and
         returns a list of these messages.
@@ -42,13 +46,13 @@ class Queue:
         message_impls = self._impl.deq_many(max_num_messages)
         return [MessageProperties._from_impl(impl) for impl in message_impls]
 
-    def deqMany(self, max_num_messages):
+    def deqMany(self, max_num_messages: int) -> list:
         """
         Deprecated: use deqmany() instead.
         """
         return self.deqmany(max_num_messages)
 
-    def deqone(self):
+    def deqone(self) -> Union[Type["MessageProperties"], None]:
         """
         Dequeues at most one message from the queue and returns it. If no
         message is dequeued, None is returned.
@@ -57,14 +61,14 @@ class Queue:
         if message_impl is not None:
             return MessageProperties._from_impl(message_impl)
 
-    def deqOne(self):
+    def deqOne(self) -> Union[Type["MessageProperties"], None]:
         """
         Deprecated: use deqone() instead.
         """
         return self.deqone()
 
     @property
-    def deqoptions(self):
+    def deqoptions(self) -> Type["DeqOptions"]:
         """
         Returns the options that will be used when dequeuing messages from the
         queue.
@@ -72,13 +76,13 @@ class Queue:
         return self._deq_options
 
     @property
-    def deqOptions(self):
+    def deqOptions(self) -> Type["DeqOptions"]:
         """
         Deprecated: use deqoptions instead.
         """
         return self.deqoptions
 
-    def enqmany(self, messages):
+    def enqmany(self, messages: list) -> None:
         """
         Enqueues multiple messages into the queue. The messages parameter must
         be a sequence containing message property objects which have all had
@@ -95,13 +99,13 @@ class Queue:
         message_impls = [m._impl for m in messages]
         self._impl.enq_many(message_impls)
 
-    def enqMany(self, messages):
+    def enqMany(self, messages: list) -> None:
         """
         Deprecated: use enqmany() instead.
         """
         return self.enqmany(messages)
 
-    def enqone(self, message):
+    def enqone(self, message: Type["MessageProperties"]) -> None:
         """
         Enqueues a single message into the queue. The message must be a message
         property object which has had its payload attribute set to a value that
@@ -110,14 +114,14 @@ class Queue:
         self._verify_message(message)
         self._impl.enq_one(message._impl)
 
-    def enqOne(self, message):
+    def enqOne(self, message: Type["MessageProperties"]) -> None:
         """
         Deprecated: use enqone() instead.
         """
         return self.enqone(message)
 
     @property
-    def enqoptions(self):
+    def enqoptions(self) -> Type["EnqOptions"]:
         """
         Returns the options that will be used when enqueuing messages into the
         queue.
@@ -125,21 +129,21 @@ class Queue:
         return self._enq_options
 
     @property
-    def enqOptions(self):
+    def enqOptions(self) -> Type["EnqOptions"]:
         """
         Deprecated: use enqoptions() instead.
         """
         return self.enqoptions
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         Returns the name of the queue.
         """
         return self._impl.name
 
     @property
-    def payload_type(self):
+    def payload_type(self) -> Union[DbObjectType, None]:
         """
         Returns the object type for payloads that can be enqueued and dequeued.
         If using a raw queue, this returns the value None.
@@ -150,7 +154,7 @@ class Queue:
         return self._payload_type
 
     @property
-    def payloadType(self):
+    def payloadType(self) -> Union[DbObjectType, None]:
         """
         Deprecated: use payload_type instead.
         """
@@ -166,7 +170,7 @@ class DeqOptions:
         return options
 
     @property
-    def condition(self):
+    def condition(self) -> str:
         """
         Specifies a boolean expression similar to the where clause of a SQL
         query. The boolean expression can include conditions on message
@@ -176,11 +180,11 @@ class DeqOptions:
         return self._impl.get_condition()
 
     @condition.setter
-    def condition(self, value):
+    def condition(self, value: str) -> None:
         self._impl.set_condition(value)
 
     @property
-    def consumername(self):
+    def consumername(self) -> str:
         """
         Specifies the name of the consumer. Only messages matching the consumer
         name will be accessed. If the queue is not set up for multiple
@@ -190,11 +194,11 @@ class DeqOptions:
         return self._impl.get_consumer_name()
 
     @consumername.setter
-    def consumername(self, value):
+    def consumername(self, value: str) -> None:
         self._impl.set_consumer_name(value)
 
     @property
-    def correlation(self):
+    def correlation(self) -> str:
         """
         Specifies the correlation identifier of the message to be dequeued.
         Special pattern-matching characters, such as the percent sign (%) and
@@ -205,11 +209,11 @@ class DeqOptions:
         return self._impl.get_correlation()
 
     @correlation.setter
-    def correlation(self, value):
+    def correlation(self, value: str) -> None:
         self._impl.set_correlation(value)
 
     @property
-    def deliverymode(self):
+    def deliverymode(self) -> None:
         """
         Specifies what types of messages should be dequeued. It should be one
         of the values MSG_PERSISTENT (default), MSG_BUFFERED or
@@ -218,11 +222,11 @@ class DeqOptions:
         raise AttributeError("deliverymode can only be written")
 
     @deliverymode.setter
-    def deliverymode(self, value):
+    def deliverymode(self, value: int) -> None:
         self._impl.set_delivery_mode(value)
 
     @property
-    def mode(self):
+    def mode(self) -> int:
         """
         Specifies the locking behaviour associated with the dequeue operation.
         It should be one of the values DEQ_BROWSE, DEQ_LOCKED, DEQ_REMOVE
@@ -231,11 +235,11 @@ class DeqOptions:
         return self._impl.get_mode()
 
     @mode.setter
-    def mode(self, value):
+    def mode(self, value: int) -> None:
         self._impl.set_mode(value)
 
     @property
-    def msgid(self):
+    def msgid(self) -> bytes:
         """
         Specifies the identifier of the message to be dequeued. The default is
         to have no message identifier specified.
@@ -243,11 +247,11 @@ class DeqOptions:
         return self._impl.get_message_id()
 
     @msgid.setter
-    def msgid(self, value):
+    def msgid(self, value: bytes) -> None:
         self._impl.set_message_id(value)
 
     @property
-    def navigation(self):
+    def navigation(self) -> int:
         """
         Specifies the position of the message that is retrieved. It should be
         one of the values DEQ_FIRST_MSG, DEQ_NEXT_MSG (default), or
@@ -256,11 +260,11 @@ class DeqOptions:
         return self._impl.get_navigation()
 
     @navigation.setter
-    def navigation(self, value):
+    def navigation(self, value: int) -> None:
         self._impl.set_navigation(value)
 
     @property
-    def transformation(self):
+    def transformation(self) -> str:
         """
         Specifies the name of the transformation that must be applied after the
         message is dequeued from the database but before it is returned to the
@@ -270,11 +274,11 @@ class DeqOptions:
         return self._impl.get_transformation()
 
     @transformation.setter
-    def transformation(self, value):
+    def transformation(self, value: str) -> None:
         self._impl.set_transformation(value)
 
     @property
-    def visibility(self):
+    def visibility(self) -> int:
         """
         Specifies the transactional behavior of the dequeue request. It should
         be one of the values DEQ_ON_COMMIT (default) or DEQ_IMMEDIATE. This
@@ -284,11 +288,11 @@ class DeqOptions:
         return self._impl.get_visibility()
 
     @visibility.setter
-    def visibility(self, value):
+    def visibility(self, value: int) -> None:
         self._impl.set_visibility(value)
 
     @property
-    def wait(self):
+    def wait(self) -> int:
         """
         Specifies the time to wait, in seconds, for a message matching the
         search criteria to become available for dequeuing. One of the values
@@ -298,7 +302,7 @@ class DeqOptions:
         return self._impl.get_wait()
 
     @wait.setter
-    def wait(self, value):
+    def wait(self, value: int) -> None:
         self._impl.set_wait(value)
 
 
@@ -311,7 +315,7 @@ class EnqOptions:
         return options
 
     @property
-    def deliverymode(self):
+    def deliverymode(self) -> int:
         """
         Specifies what type of messages should be enqueued. It should be one of
         the values MSG_PERSISTENT (default) or MSG_BUFFERED.
@@ -319,11 +323,11 @@ class EnqOptions:
         raise AttributeError("deliverymode can only be written")
 
     @deliverymode.setter
-    def deliverymode(self, value):
+    def deliverymode(self, value: int) -> None:
         self._impl.set_delivery_mode(value)
 
     @property
-    def transformation(self):
+    def transformation(self) -> str:
         """
         Specifies the name of the transformation that must be applied before
         the message is enqueued into the database. The transformation must be
@@ -333,11 +337,11 @@ class EnqOptions:
         return self._impl.get_transformation()
 
     @transformation.setter
-    def transformation(self, value):
+    def transformation(self, value: str) -> None:
         self._impl.set_transformation(value)
 
     @property
-    def visibility(self):
+    def visibility(self) -> int:
         """
         Specifies the transactional behavior of the enqueue request. It should
         be one of the values ENQ_ON_COMMIT (default) or ENQ_IMMEDIATE. Note the
@@ -346,7 +350,7 @@ class EnqOptions:
         return self._impl.get_visibility()
 
     @visibility.setter
-    def visibility(self, value):
+    def visibility(self, value: int) -> None:
         self._impl.set_visibility(value)
 
 
@@ -359,7 +363,7 @@ class MessageProperties:
         return props
 
     @property
-    def attempts(self):
+    def attempts(self) -> int:
         """
         Specifies the number of attempts that have been made to dequeue the
         message.
@@ -367,18 +371,18 @@ class MessageProperties:
         return self._impl.get_num_attempts()
 
     @property
-    def correlation(self):
+    def correlation(self) -> str:
         """
         Specifies the correlation used when the message was enqueued.
         """
         return self._impl.get_correlation()
 
     @correlation.setter
-    def correlation(self, value):
+    def correlation(self, value: str) -> None:
         self._impl.set_correlation(value)
 
     @property
-    def delay(self):
+    def delay(self) -> int:
         """
         Specifies the number of seconds to delay an enqueued message. Any
         integer is acceptable but the constant MSG_NO_DELAY can also be used
@@ -387,11 +391,11 @@ class MessageProperties:
         return self._impl.get_delay()
 
     @delay.setter
-    def delay(self, value):
+    def delay(self, value: int) -> None:
         self._impl.set_delay(value)
 
     @property
-    def deliverymode(self):
+    def deliverymode(self) -> int:
         """
         Specifies the type of message that was dequeued. It will be one of the
         values MSG_PERSISTENT or MSG_BUFFERED.
@@ -399,14 +403,14 @@ class MessageProperties:
         return self._impl.get_delivery_mode()
 
     @property
-    def enqtime(self):
+    def enqtime(self) -> datetime.datetime:
         """
         Specifies the time that the message was enqueued.
         """
         return self._impl.get_enq_time()
 
     @property
-    def exceptionq(self):
+    def exceptionq(self) -> str:
         """
         Specifies the name of the queue to which the message is moved if it
         cannot be processed successfully. Messages are moved if the number of
@@ -418,11 +422,11 @@ class MessageProperties:
         return self._impl.get_exception_queue()
 
     @exceptionq.setter
-    def exceptionq(self, value):
+    def exceptionq(self, value: str) -> None:
         self._impl.set_exception_queue(value)
 
     @property
-    def expiration(self):
+    def expiration(self) -> int:
         """
         Specifies, in seconds, how long the message is available for dequeuing.
         This attribute is an offset from the delay attribute. Expiration
@@ -433,11 +437,11 @@ class MessageProperties:
         return self._impl.get_expiration()
 
     @expiration.setter
-    def expiration(self, value):
+    def expiration(self, value: int) -> None:
         self._impl.set_expiration(value)
 
     @property
-    def msgid(self):
+    def msgid(self) -> bytes:
         """
         Specifies the id of the message in the last queue that generated this
         message.
@@ -445,11 +449,11 @@ class MessageProperties:
         return self._impl.get_message_id()
 
     @msgid.setter
-    def msgid(self, value):
+    def msgid(self, value: bytes) -> None:
         self._impl.set_message_id(value)
 
     @property
-    def payload(self):
+    def payload(self) -> Union[bytes, DbObject]:
         """
         Specifies the payload that will be enqueued or the payload that was
         dequeued when using a queue. When enqueuing, the value is checked to
@@ -460,7 +464,7 @@ class MessageProperties:
         return self._impl.payload
 
     @payload.setter
-    def payload(self, value):
+    def payload(self, value: Union[bytes, DbObject]) -> None:
         if isinstance(value, DbObject):
             self._impl.set_payload_object(value._impl)
         else:
@@ -474,7 +478,7 @@ class MessageProperties:
         self._impl.payload = value
 
     @property
-    def priority(self):
+    def priority(self) -> int:
         """
         Specifies the priority of the message. A smaller number indicates a
         higher priority. The priority can be any integer, including negative
@@ -483,11 +487,11 @@ class MessageProperties:
         return self._impl.get_priority()
 
     @priority.setter
-    def priority(self, value):
+    def priority(self, value: int) -> None:
         self._impl.set_priority(value)
 
     @property
-    def state(self):
+    def state(self) -> int:
         """
         Specifies the state of the message at the time of the dequeue. It will
         be one of the values MSG_WAITING, MSG_READY, MSG_PROCESSED or

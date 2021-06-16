@@ -7,8 +7,9 @@ class _Error:
     Error class which is used for all errors that are raised by the driver.
     """
 
-    def __init__(self, message=None, context=None, isrecoverable=False,
-                 iswarning=False, code=0, offset=0):
+    def __init__(self, message: str=None, context: str=None,
+                 isrecoverable: bool=False, iswarning: bool=False,
+                 code: int=0, offset: int=0) -> None:
         self.message = message
         self.context = context
         self.isrecoverable = isrecoverable
@@ -20,7 +21,7 @@ class _Error:
         return self.message
 
 
-def _raise_from_string(exc_type, message):
+def _raise_from_string(exc_type: Exception, message: str) -> None:
     """
     Raises an exception from a given string. This ensures that an _Error object
     is created for all exceptions that are raised.

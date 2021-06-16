@@ -2,6 +2,9 @@
 # Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+from typing import Callable, Type, Union
+from . import connection
+
 class Subscription:
 
     def __repr__(self):
@@ -14,7 +17,7 @@ class Subscription:
         return subscr
 
     @property
-    def callback(self):
+    def callback(self) -> Callable:
         """
         Returns the callback that was registered when the subscription was
         created.
@@ -22,7 +25,7 @@ class Subscription:
         return self._impl.callback
 
     @property
-    def connection(self):
+    def connection(self) -> Type["connection.Connection"]:
         """
         Returns the connection that was used to register the subscription when
         it was created.
@@ -30,7 +33,7 @@ class Subscription:
         return self._impl.connection
 
     @property
-    def id(self):
+    def id(self) -> int:
         """
         Returns the value of REGID found in the database view
         USER_CHANGE_NOTIFICATION_REGS or the value of REG_ID found in the
@@ -40,7 +43,7 @@ class Subscription:
         return self._impl.id
 
     @property
-    def ip_address(self):
+    def ip_address(self) -> str:
         """
         Returns the IP address used for callback notifications from the
         database server. If not set during construction, this value is None.
@@ -48,21 +51,21 @@ class Subscription:
         return self._impl.ip_address
 
     @property
-    def ipAddress(self):
+    def ipAddress(self) -> str:
         """
         Deprecated. Use property ip_address instead.
         """
         return self.ip_address
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         Returns the name used to register the subscription when it was created.
         """
         return self._impl.name
 
     @property
-    def namespace(self):
+    def namespace(self) -> int:
         """
         Returns the namespace used to register the subscription when it was
         created.
@@ -70,7 +73,7 @@ class Subscription:
         return self._impl.namespace
 
     @property
-    def operations(self):
+    def operations(self) -> int:
         """
         Returns the operations that will send notifications for each table or
         query that is registered using this subscription.
@@ -78,7 +81,7 @@ class Subscription:
         return self._impl.operations
 
     @property
-    def port(self):
+    def port(self) -> int:
         """
         Returns the port used for callback notifications from the database
         server. If not set during construction, this value is zero.
@@ -86,7 +89,7 @@ class Subscription:
         return self._impl.port
 
     @property
-    def protocol(self):
+    def protocol(self) -> int:
         """
         Returns the protocol used to register the subscription when it was
         created.
@@ -94,14 +97,15 @@ class Subscription:
         return self._impl.protocol
 
     @property
-    def qos(self):
+    def qos(self) -> int:
         """
         Returns the quality of service flags used to register the subscription
         when it was created.
         """
         return self._impl.qos
 
-    def registerquery(self, statement, args=None):
+    def registerquery(self, statement: str,
+                      args: Union[list, dict]=None) -> int:
         """
         Register the query for subsequent notification when tables referenced
         by the query are changed. This behaves similarly to cursor.execute()
@@ -115,7 +119,7 @@ class Subscription:
         return self._impl.register_query(statement, args)
 
     @property
-    def timeout(self):
+    def timeout(self) -> int:
         """
         Returns the timeout (in seconds) that was specified when the
         subscription was created. A value of 0 indicates that there is no
@@ -126,7 +130,7 @@ class Subscription:
 
 class Message:
 
-    def __init__(self, subscription):
+    def __init__(self, subscription: Subscription) -> None:
         self._subscription = subscription
         self._consumer_name = None
         self._db_name = None
@@ -139,7 +143,7 @@ class Message:
 
 
     @property
-    def consumer_name(self):
+    def consumer_name(self) -> str:
         """
         Returns the name of the consumer which generated the notification. It
         will be populated if the subscription was created with the namespace
@@ -148,21 +152,21 @@ class Message:
         return self._consumer_name
 
     @property
-    def consumerName(self):
+    def consumerName(self) -> str:
         """
         Deprecated. Use property consumer_name instead.
         """
         return self.consumer_name
 
     @property
-    def dbname(self):
+    def dbname(self) -> str:
         """
         Returns the name of the database that generated the notification.
         """
         return self._db_name
 
     @property
-    def queries(self):
+    def queries(self) -> list:
         """
         Returns a list of message query objects that give information about
         query result sets changed for this notification. This attribute will be
@@ -172,7 +176,7 @@ class Message:
         return self._queries
 
     @property
-    def queue_name(self):
+    def queue_name(self) -> str:
         """
         Returns the name of the queue which generated the notification. It will
         only be populated if the subscription was created with the namespace
@@ -181,14 +185,14 @@ class Message:
         return self._queue_name
 
     @property
-    def queueName(self):
+    def queueName(self) -> str:
         """
         Deprecated. Use property queue_name instead.
         """
         return self.queue_name
 
     @property
-    def registered(self):
+    def registered(self) -> bool:
         """
         Returns whether the subscription which generated this notification is
         still registered with the database. The subscription is automatically
@@ -199,7 +203,7 @@ class Message:
         return self._registered
 
     @property
-    def subscription(self):
+    def subscription(self) -> Subscription:
         """
         Returns the subscription object for which this notification was
         generated.
@@ -207,7 +211,7 @@ class Message:
         return self._subscription
 
     @property
-    def tables(self):
+    def tables(self) -> list:
         """
         Returns a list of message table objects that give information about the
         tables changed for this notification. This attribute will be an empty
@@ -217,14 +221,14 @@ class Message:
         return self._tables
 
     @property
-    def txid(self):
+    def txid(self) -> bytes:
         """
         Returns the id of the transaction that generated the notification.
         """
         return self._txid
 
     @property
-    def type(self):
+    def type(self) -> str:
         """
         Returns the type of message that has been sent.
         """
@@ -233,13 +237,13 @@ class Message:
 
 class MessageQuery:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._id = 0
         self._operation = 0
         self._tables = []
 
     @property
-    def id(self):
+    def id(self) -> int:
         """
         Returns the query id of the query for which the result set changed. The
         value will match the value returned by Subscription.registerquery()
@@ -248,7 +252,7 @@ class MessageQuery:
         return self._id
 
     @property
-    def operation(self):
+    def operation(self) -> int:
         """
         Returns the operation that took place on the query result set that was
         changed. Valid values for this attribute are EVENT_DEREG and
@@ -257,7 +261,7 @@ class MessageQuery:
         return self._operation
 
     @property
-    def tables(self):
+    def tables(self) -> list:
         """
         Returns a list of message table objects that give information about the
         table changes that caused the query result set to change for this
@@ -273,14 +277,14 @@ class MessageRow:
         self._rowid = None
 
     @property
-    def operation(self):
+    def operation(self) -> int:
         """
         Returns the operation that took place on the row that was changed.
         """
         return self._operation
 
     @property
-    def rowid(self):
+    def rowid(self) -> str:
         """
         Returns the rowid of the row that was changed.
         """
@@ -289,27 +293,27 @@ class MessageRow:
 
 class MessageTable:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._name = None
         self._operation = 0
         self._rows = []
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         Returns the name of the table that was changed.
         """
         return self._name
 
     @property
-    def operation(self):
+    def operation(self) -> int:
         """
         Returns the operation that took place on the table that was changed.
         """
         return self._operation
 
     @property
-    def rows(self):
+    def rows(self) -> list:
         """
         Returns a list of message row objects that give information about the
         rows changed on the table. This value is only filled in if the qos

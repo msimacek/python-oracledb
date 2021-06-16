@@ -2,8 +2,10 @@
 # Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+from typing import Callable, Union, Type
 from . import errors
 from .dbobject import DbObjectType
+from .base_impl import DbType
 
 class Var:
 
@@ -25,7 +27,7 @@ class Var:
         return var
 
     @property
-    def actual_elements(self):
+    def actual_elements(self) -> int:
         """
         This read-only attribute returns the actual number of elements in the
         variable. This corresponds to the number of elements in a PL/SQL
@@ -38,14 +40,14 @@ class Var:
         return self._impl.num_elements
 
     @property
-    def actualElements(self):
+    def actualElements(self) -> int:
         """
         Deprecated. Use property actual_elements instead.
         """
         return self.actual_elements
 
     @property
-    def buffer_size(self):
+    def buffer_size(self) -> int:
         """
         This read-only attribute returns the size of the buffer allocated for
         each element in bytes.
@@ -53,13 +55,13 @@ class Var:
         return self._impl.buffer_size
 
     @property
-    def bufferSize(self):
+    def bufferSize(self) -> int:
         """
         Deprecated. Use property buffer_size intead().
         """
         return self.buffer_size
 
-    def getvalue(self, pos=0):
+    def getvalue(self, pos: int=0) -> object:
         """
         Return the value at the given position in the variable. For variables
         created using the method Cursor.arrayvar() the value returned will be a
@@ -75,7 +77,7 @@ class Var:
         return self._impl.values[pos]
 
     @property
-    def inconverter(self):
+    def inconverter(self) -> Callable:
         """
         This read-write attribute specifies the method used to convert data
         from Python to the Oracle database. The method signature is
@@ -86,7 +88,7 @@ class Var:
         return self._impl.inconverter
 
     @property
-    def num_elements(self):
+    def num_elements(self) -> int:
         """
         This read-only attribute returns the number of elements allocated in an
         array, or the number of scalar items that can be fetched into the
@@ -95,14 +97,14 @@ class Var:
         return self._impl.num_elements
 
     @property
-    def numElements(self):
+    def numElements(self) -> int:
         """
         Deprecated. Use property num_elements instead.
         """
         return self.num_elements
 
     @property
-    def outconverter(self):
+    def outconverter(self) -> Callable:
         """
         This read-write attribute specifies the method used to convert data
         from the Oracle database to Python. The method signature is
@@ -112,14 +114,14 @@ class Var:
         """
         return self._impl.outconverter
 
-    def setvalue(self, pos, value):
+    def setvalue(self, pos: int, value: object) -> None:
         """
         Set the value at the given position in the variable.
         """
         self._impl.set_value(pos, value)
 
     @property
-    def size(self):
+    def size(self) -> int:
         """
         This read-only attribute returns the size of the variable. For strings
         this value is the size in characters. For all others, this is same
@@ -128,7 +130,7 @@ class Var:
         return self._impl.size
 
     @property
-    def type(self):
+    def type(self) -> Union[DbType, DbObjectType]:
         """
         This read-only attribute returns the type of the variable. This will be
         an Oracle Object Type if the variable binds Oracle objects; otherwise,
@@ -137,7 +139,7 @@ class Var:
         return self._type
 
     @property
-    def values(self):
+    def values(self) -> list:
         """
         This read-only attribute returns a copy of the value of all actual
         positions in the variable as a list. This is the equivalent of calling

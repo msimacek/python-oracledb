@@ -2,22 +2,45 @@
 # Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+from typing import Callable, Type
 from . import constants, exceptions, utils, thick_impl, thin_impl
 from . import connection as connection_module
 
 class Pool:
 
-    def __init__(self, dsn=None, *, user=None, password=None, host=None,
-                 port=None, service_name=None, thin=True, min=1, max=2,
-                 increment=1, connectiontype=None, threaded=False,
-                 getmode=constants.POOL_GETMODE_WAIT, events=False,
-                 homogeneous=True, externalauth=False, edition=None, timeout=0,
-                 wait_timeout=0, max_lifetime_session=0, session_callback=None,
-                 max_sessions_per_shard=0, soda_metadata_cache=False,
-                 stmtcachesize=20, ping_interval=60, waitTimeout=0,
-                 maxLifetimeSession=0, sessionCallback=None,
-                 maxSessionsPerShard=0, secure_transport=False,
-                 config_dir=None, enable_drcp=False):
+    def __init__(self,
+                 dsn: str=None, *,
+                 user: str=None,
+                 password: str=None,
+                 host: str=None,
+                 port: int=None,
+                 service_name: str=None,
+                 thin: bool=True,
+                 min: int=1,
+                 max: int=2,
+                 increment: int=1,
+                 connectiontype: Type["connection_module.Connection"]=None,
+                 threaded: bool=False,
+                 getmode: int=constants.POOL_GETMODE_WAIT,
+                 events: bool=False,
+                 homogeneous: bool=True,
+                 externalauth: bool=False,
+                 edition: str=None,
+                 timeout: int=0,
+                 wait_timeout: int=0,
+                 max_lifetime_session: int=0,
+                 session_callback: Callable=None,
+                 max_sessions_per_shard: int=0,
+                 soda_metadata_cache: bool=False,
+                 stmtcachesize: int=20,
+                 ping_interval: int=60,
+                 secure_transport: bool=False,
+                 config_dir: str=None,
+                 enable_drcp: bool=False,
+                 waitTimeout: int=0,
+                 maxLifetimeSession: int=0,
+                 sessionCallback: Callable=None,
+                 maxSessionsPerShard: int=0) -> None:
         """
         Constructor for the pool. Connection pooling creates a pool of
         available connections to the database, allowing applications to acquire
@@ -200,9 +223,15 @@ class Pool:
         if self._impl is None:
             errors._raise_from_string(exceptions.InterfaceError, "not open")
 
-    def acquire(self, user=None, password=None, cclass=None,
-            purity=constants.PURITY_DEFAULT, tag=None, matchanytag=False,
-            shardingkey=None, supershardingkey=None):
+    def acquire(self,
+                user: str=None,
+                password: str=None,
+                cclass: str=None,
+                purity: int=constants.PURITY_DEFAULT,
+                tag: str=None,
+                matchanytag: bool=False,
+                shardingkey: list=None,
+                supershardingkey: list=None) -> Type["connection_module.Connection"]:
         """
         Acquire a connection from the pool and return it.
 
@@ -231,15 +260,15 @@ class Pool:
         bytes or dates.
         """
         self._verify_open()
-        return self._connection_type(user=user, password=password, cclass=cclass,
-                                     purity=purity, tag=tag,
+        return self._connection_type(user=user, password=password,
+                                     cclass=cclass, purity=purity, tag=tag,
                                      matchanytag=matchanytag,
                                      shardingkey=shardingkey,
                                      supershardingkey=supershardingkey,
                                      pool=self)
 
     @property
-    def busy(self):
+    def busy(self) -> int:
         """
         Returns the number of connections that have been acquired from the pool
         and have not yet been returned to the pool.
@@ -247,7 +276,7 @@ class Pool:
         self._verify_open()
         return self._impl.get_busy_count()
 
-    def close(self, force=False):
+    def close(self, force: bool=False) -> None:
         """
         Close the pool now, rather than when the last reference to it is
         released, which makes it unusable for further work.
@@ -259,7 +288,7 @@ class Pool:
         self._impl.close(force)
         self._impl = None
 
-    def drop(self, connection):
+    def drop(self, connection: Type["connection_module.Connection"]) -> None:
         """
         Drop the connection from the pool, which is useful if the connection is
         no longer usable (such as when the database session is killed).
@@ -274,7 +303,7 @@ class Pool:
         connection._impl = None
 
     @property
-    def dsn(self):
+    def dsn(self) -> str:
         """
         Returns the connection string (TNS entry) of the database to which
         connections in the pool have been established.
@@ -283,17 +312,17 @@ class Pool:
         return self._impl.dsn
 
     @property
-    def getmode(self):
+    def getmode(self) -> int:
         self._verify_open()
         return self._impl.get_getmode()
 
     @getmode.setter
-    def getmode(self, value):
+    def getmode(self, value: int) -> None:
         self._verify_open()
         self._impl.set_getmode(value)
 
     @property
-    def homogeneous(self):
+    def homogeneous(self) -> bool:
         """
         Returns a boolean indicating if the pool is homogeneous or not. If the
         pool is not homogeneous, different authentication can be used for each
@@ -303,7 +332,7 @@ class Pool:
         return self._impl.homogeneous
 
     @property
-    def increment(self):
+    def increment(self) -> int:
         """
         Returns the number of connections that will be created when additional
         connections need to be created to satisfy requests.
@@ -312,7 +341,7 @@ class Pool:
         return self._impl.increment
 
     @property
-    def max(self):
+    def max(self) -> int:
         """
         Returns the maximum number of connections that the pool can control.
         """
@@ -320,7 +349,7 @@ class Pool:
         return self._impl.max
 
     @property
-    def max_lifetime_session(self):
+    def max_lifetime_session(self) -> int:
         """
         Returns the maximum length of time (in seconds) that a pooled
         connection may exist. Connections that are in use will not be closed.
@@ -335,30 +364,31 @@ class Pool:
         return self._impl.get_max_lifetime_session()
 
     @max_lifetime_session.setter
-    def max_lifetime_session(self, value):
+    def max_lifetime_session(self, value: int) -> None:
         self._verify_open()
         self._impl.set_max_lifetime_session(value)
 
     @property
-    def max_sessions_per_shard(self):
+    def max_sessions_per_shard(self) -> int:
         """
-        Returns the number of sessions that can be created per shard in the pool.
-        Setting this attribute greater than zero specifies the maximum number of
-        sessions in the pool that can be used for any given shard in a sharded
-        database. This lets connections in the pool be balanced across the shards.
-        A value of zero will not set any maximum number of sessions for each shard.
-        This attribute is only available in Oracle Client 18.3 and higher.
+        Returns the number of sessions that can be created per shard in the
+        pool.  Setting this attribute greater than zero specifies the maximum
+        number of sessions in the pool that can be used for any given shard in
+        a sharded database. This lets connections in the pool be balanced
+        across the shards.  A value of zero will not set any maximum number of
+        sessions for each shard.  This attribute is only available in Oracle
+        Client 18.3 and higher.
         """
         self._verify_open()
         return self._impl.get_max_sessions_per_shard()
 
     @max_sessions_per_shard.setter
-    def max_sessions_per_shard(self, value):
+    def max_sessions_per_shard(self, value: int) -> None:
         self._verify_open()
         self._impl.set_max_sessions_per_shard(value)
 
     @property
-    def min(self):
+    def min(self) -> int:
         """
         Returns the minimum number of connections that the pool will control.
         These are created when the pool is first created.
@@ -367,7 +397,7 @@ class Pool:
         return self._impl.min
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         Returns the name assigned to the pool by Oracle. This attribute is only
         relevant for the thick portion of the driver.
@@ -376,7 +406,7 @@ class Pool:
         return self._impl.name
 
     @property
-    def opened(self):
+    def opened(self) -> int:
         """
         Returns the number of connections currently opened by the pool.
         """
@@ -384,7 +414,7 @@ class Pool:
         return self._impl.get_open_count()
 
     @property
-    def ping_interval(self):
+    def ping_interval(self) -> int:
         """
         Returns the pool ping interval in seconds. When a connection is
         acquired from the pool, a check is first made to see how long it
@@ -400,10 +430,11 @@ class Pool:
         return self._impl.get_ping_interval()
 
     @ping_interval.setter
-    def ping_interval(self, value):
+    def ping_interval(self, value: int) -> None:
         self._impl.set_ping_interval(value)
 
-    def release(self, connection, tag=None):
+    def release(self, connection: Type["connection_module.Connection"],
+                tag: str=None) -> None:
         """
         Release the connection back to the pool now, rather than whenever
         __del__ is called. The connection will be unusable from this point
@@ -434,10 +465,18 @@ class Pool:
             connection.tag = tag
         connection.close()
 
-    def reconfigure(self, min=None, max=None, increment=None, getmode=None,
-                    timeout=None, wait_timeout=None, max_lifetime_session=None,
-                    max_sessions_per_shard=None, soda_metadata_cache=None,
-                    stmtcachesize=None, ping_interval=None):
+    def reconfigure(self,
+                    min: int=None,
+                    max: int=None,
+                    increment: int=None,
+                    getmode: int=None,
+                    timeout: int=None,
+                    wait_timeout: int=None,
+                    max_lifetime_session: int=None,
+                    max_sessions_per_shard: int=None,
+                    soda_metadata_cache: bool=None,
+                    stmtcachesize: int=None,
+                    ping_interval: int=None) -> None:
         """
         Reconfigures various parameters of a connection pool. The pool size
         can be altered with reconfigure() by passing values for min, max
@@ -502,7 +541,7 @@ class Pool:
             self.ping_interval = ping_interval
 
     @property
-    def soda_metadata_cache(self):
+    def soda_metadata_cache(self) -> bool:
         """
         Specifies whether the SODA metadata cache is enabled or not. Enabling
         the cache significantly improves the performance of methods
@@ -515,7 +554,7 @@ class Pool:
         return self._impl.get_soda_metadata_cache()
 
     @soda_metadata_cache.setter
-    def soda_metadata_cache(self, value):
+    def soda_metadata_cache(self, value: bool) -> None:
         if not isinstance(value, bool):
             message = "soda_metadata_cache must be a boolean value."
             raise TypeError(message)
@@ -523,7 +562,7 @@ class Pool:
         self._impl.set_soda_metadata_cache(value)
 
     @property
-    def stmtcachesize(self):
+    def stmtcachesize(self) -> int:
         """
         Specifies the size of the statement cache that will be used as the
         starting point for any connections that are created by the pool. Once a
@@ -535,12 +574,12 @@ class Pool:
         return self._impl.get_stmt_cache_size()
 
     @stmtcachesize.setter
-    def stmtcachesize(self, value):
+    def stmtcachesize(self, value: int) -> None:
         self._verify_open()
         self._impl.set_stmt_cache_size(value)
 
     @property
-    def timeout(self):
+    def timeout(self) -> int:
         """
         Specifies the time (in seconds) after which idle connections will be
         terminated in order to maintain an optimum number of open connections.
@@ -551,19 +590,19 @@ class Pool:
         return self._impl.get_timeout()
 
     @timeout.setter
-    def timeout(self, value):
+    def timeout(self, value: int) -> None:
         self._verify_open()
         self._impl.set_timeout(value)
 
     @property
-    def tnsentry(self):
+    def tnsentry(self) -> str:
         """
         Deprecated. Use dsn instead.
         """
         return self.dsn
 
     @property
-    def username(self):
+    def username(self) -> str:
         """
         Returns the name of the user which was used to create the pool.
         """
@@ -571,7 +610,7 @@ class Pool:
         return self._impl.username
 
     @property
-    def wait_timeout(self):
+    def wait_timeout(self) -> int:
         """
         Specifies the time (in milliseconds) that the caller should wait for a
         connection to become available in the pool before returning with an
@@ -582,7 +621,7 @@ class Pool:
         return self._impl.get_wait_timeout()
 
     @wait_timeout.setter
-    def wait_timeout(self, value):
+    def wait_timeout(self, value: int) -> None:
         self._verify_open()
         self._impl.set_wait_timeout(value)
 
