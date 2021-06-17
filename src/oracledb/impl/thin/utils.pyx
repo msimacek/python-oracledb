@@ -4,12 +4,12 @@
 
 cdef bint DEBUG_PACKETS = ("PYO_DEBUG_PACKETS" in os.environ)
 
-def _print_packet(operation, view):
+def _print_packet(operation, socket_fileno, view):
     offset = 0
     hex_data = view.hex().upper()
     current_date = datetime.datetime.now().isoformat(sep=" ",
                                                      timespec="milliseconds")
-    print(current_date, operation)
+    print(current_date, f"[socket: {socket_fileno}]", operation)
     while hex_data:
         line_hex_data = hex_data[:16]
         hex_data = hex_data[16:]

@@ -317,7 +317,8 @@ cdef class ReadBuffer:
 
         # display packet if requested
         if DEBUG_PACKETS:
-            _print_packet("Receiving packet:", memoryview(self))
+            _print_packet("Receiving packet:", self._socket.fileno(),
+                          memoryview(self))
 
     cdef int skip_bytes(self, ssize_t num_bytes) except -1:
         self._get_raw(num_bytes)
@@ -730,7 +731,8 @@ cdef class WriteBuffer:
         self.write_uint16(0)
         self._actual_size = size
         if DEBUG_PACKETS:
-            _print_packet("Sending packet:", memoryview(self))
+            _print_packet("Sending packet:", self._socket.fileno(),
+                          memoryview(self))
         self._socket.send(memoryview(self))
         self._packet_sent = True
         self._actual_size = PACKET_HEADER_SIZE

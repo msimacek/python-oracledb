@@ -38,7 +38,8 @@ cdef class Protocol:
                 if DEBUG_PACKETS:
                     now = datetime.datetime.now()
                     print(now.isoformat(sep=" ", timespec="milliseconds"),
-                        "Sending out of band break")
+                          f"[socket: {self._socket.fileno()}]",
+                          "Sending out of band break")
                     print()
                 self._socket.send(b"!", socket.MSG_OOB)
             else:
