@@ -933,6 +933,8 @@ cdef class AuthMessage(Message):
         str encoded_password
         str password
         str session_key
+        str cclass
+        uint8_t purity
         uint8_t user_bytes_len
         bytes user_bytes
         dict session_data
@@ -1058,6 +1060,7 @@ cdef class AuthMessage(Message):
         buf.write_ub4(flags)
 
     cdef int _write_message(self, WriteBuffer buf) except -1:
+        cdef uint32_t num_pairs
         self._write_function_code(buf)
         buf.write_uint8(1)                  # pointer (authusr)
         buf.write_ub4(self.user_bytes_len)
@@ -1074,11 +1077,16 @@ cdef class AuthMessage(Message):
             self._write_key_value(buf, "AUTH_PID", str(os.getpid()))
             self._write_key_value(buf, "AUTH_SID", getpass.getuser())
         else:
+            num_pairs = 4
+            if self.cclass is not None:
+                num_pairs += 1
+            if self.purity != 0:
+                num_pairs += 1
             self.auth_mode |= TNS_AUTH_MODE_WITH_PASSWORD
             self._generate_auth_response()
             buf.write_ub4(self.auth_mode)   # authentication mode
             buf.write_uint8(1)              # pointer (authivl)
-            buf.write_ub4(4)                # number of key/value pairs
+            buf.write_ub4(num_pairs)        # number of key/value pairs
             buf.write_uint8(1)              # pointer (authovl)
             buf.write_uint8(1)              # pointer (authovln)
             buf.write_bytes(self.user_bytes)
@@ -1087,6 +1095,11 @@ cdef class AuthMessage(Message):
             self._write_key_value(buf, "SESSION_CLIENT_CHARSET", "873")
             self._write_key_value(buf, "SESSION_CLIENT_DRIVER_NAME",
                                   constants.DRIVER_NAME)
+            if self.cclass is not None:
+                self._write_key_value(buf, "AUTH_KPPL_CONN_CLASS", self.cclass)
+            if self.purity != 0:
+                self._write_key_value(buf, "AUTH_KPPL_PURITY",
+                                      str(self.purity), 1)
 
 
 @cython.final

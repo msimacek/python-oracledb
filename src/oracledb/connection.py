@@ -147,7 +147,8 @@ class Connection:
                 while True:
                     redirect_data = impl.connect(params,
                                                  stmtcachesize=stmtcachesize,
-                                                 auth_mode=mode)
+                                                 auth_mode=mode, cclass=cclass,
+                                                 purity=purity)
                     if redirect_data is None:
                         break
                     params.parse_redirect_data(redirect_data)
@@ -163,7 +164,7 @@ class Connection:
                          stmtcachesize=stmtcachesize)
         self._impl = impl
         self._version = None
-        if impl.invoke_session_callback \
+        if impl.invoke_session_callback and pool is not None \
                 and pool.session_callback is not None \
                 and callable(pool.session_callback):
             pool.session_callback(self, tag)
