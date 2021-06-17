@@ -52,7 +52,7 @@ class TestCase(test_env.BaseTestCase):
         connection = test_env.get_connection()
         self.__verify_args(connection)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support application context yet")
     def test_1101_app_context(self):
         "1101 - test use of application context"
@@ -70,7 +70,7 @@ class TestCase(test_env.BaseTestCase):
             actual_value, = cursor.fetchone()
             self.assertEqual(actual_value, value)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support application context yet")
     def test_1102_app_context_negative(self):
         "1102 - test invalid use of application context"
@@ -78,7 +78,6 @@ class TestCase(test_env.BaseTestCase):
                           user=test_env.get_main_user(),
                           password=test_env.get_main_password(),
                           dsn=test_env.get_connect_string(),
-                          thin=test_env.get_is_thin(),
                           appcontext=[('userenv', 'action')])
 
     def test_1103_attributes(self):
@@ -120,27 +119,24 @@ class TestCase(test_env.BaseTestCase):
 
     def test_1105_bad_connect_string(self):
         "1105 - connection to database with bad connect string"
-        thin = test_env.get_is_thin()
         self.assertRaises(oracledb.DatabaseError, oracledb.connect,
-                          test_env.get_main_user(), thin=thin)
+                          test_env.get_main_user())
         self.assertRaises(oracledb.DatabaseError, oracledb.connect,
                           test_env.get_main_user() + "@" + \
-                          test_env.get_connect_string(), thin=thin)
+                          test_env.get_connect_string())
         self.assertRaises(oracledb.DatabaseError, oracledb.connect,
                           test_env.get_main_user() + "@" + \
                           test_env.get_connect_string() + "/" + \
-                          test_env.get_main_password(), thin=thin)
+                          test_env.get_main_password())
 
     def test_1106_bad_password(self):
         "1106 - connection to database with bad password"
-        thin = test_env.get_is_thin()
         self.assertRaises(oracledb.DatabaseError, oracledb.connect,
                           test_env.get_connect_string(),
                           user=test_env.get_main_user(),
-                          password=test_env.get_main_password() + "X",
-                          thin=thin)
+                          password=test_env.get_main_password() + "X")
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support changing passwords yet")
     def test_1107_change_password(self):
         "1107 - test changing password"
@@ -153,11 +149,10 @@ class TestCase(test_env.BaseTestCase):
         connection.changepassword(test_env.get_main_password(), new_password)
         connection = oracledb.connect(test_env.get_connect_string(),
                                        user=test_env.get_main_user(),
-                                       password=new_password,
-                                       thin=test_env.get_is_thin())
+                                       password=new_password)
         connection.changepassword(new_password, test_env.get_main_password())
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support changing passwords yet")
     def test_1108_change_password_negative(self):
         "1108 - test changing password to an invalid value"
@@ -168,7 +163,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaises(oracledb.DatabaseError, connection.changepassword,
                 test_env.get_main_password(), new_password)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support changing passwords yet")
     def test_1109_parse_password(self):
         "1109 - test connecting with password containing / and @ symbols"
@@ -184,7 +179,7 @@ class TestCase(test_env.BaseTestCase):
         try:
             arg = "%s/%s@%s" % (test_env.get_main_user(), new_password,
                                 test_env.get_connect_string())
-            oracledb.connect(arg, thin=test_env.get_is_thin())
+            oracledb.connect(arg)
         finally:
             connection.changepassword(new_password,
                                       test_env.get_main_password())
@@ -195,7 +190,7 @@ class TestCase(test_env.BaseTestCase):
         connection.close()
         self.assertRaises(oracledb.InterfaceError, connection.rollback)
 
-    @unittest.skipIf(test_env.get_is_thin(), "not relevant for thin driver")
+    @unittest.skipIf(oracledb.defaults.thin, "not relevant for thin driver")
     def test_1113_connect_with_handle(self):
         "1113 - test creating a connection using a handle"
         connection = test_env.get_connection()
@@ -222,7 +217,7 @@ class TestCase(test_env.BaseTestCase):
         arg = "%s/%s@%s" % (test_env.get_main_user(),
                             test_env.get_main_password(),
                             test_env.get_connect_string())
-        connection = oracledb.connect(arg, thin=test_env.get_is_thin())
+        connection = oracledb.connect(arg)
         self.__verify_args(connection)
 
     def test_1116_version(self):
@@ -326,7 +321,7 @@ class TestCase(test_env.BaseTestCase):
         connection = test_env.get_connection()
         connection.ping()
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support two-phase commit yet")
     def test_1125_transaction_begin(self):
         "1125 - test begin, prepare, cancel transaction"

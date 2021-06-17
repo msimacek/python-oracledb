@@ -14,7 +14,7 @@ import unittest
 
 class TestCase(test_env.BaseTestCase):
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support scrollable cursors yet")
     def test_1200_create_scrollable_cursor(self):
         "1200 - test creating a scrollable cursor"
@@ -373,7 +373,7 @@ class TestCase(test_env.BaseTestCase):
                           self.cursor.execute, "select y from dual")
         self.assertRaises(oracledb.InterfaceError, self.cursor.fetchall)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support scrollable cursors yet")
     def test_1235_scroll_absolute_exception_after(self):
         "1235 - test scrolling absolute yields an exception (after result set)"
@@ -386,7 +386,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaises(oracledb.DatabaseError, cursor.scroll, 12,
                           "absolute")
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support scrollable cursors yet")
     def test_1236_scroll_absolute_in_buffer(self):
         "1236 - test scrolling absolute (when in buffers)"
@@ -404,7 +404,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(row[0], 1.25)
         self.assertEqual(cursor.rowcount, 1)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support scrollable cursors yet")
     def test_1237_scroll_absolute_not_in_buffer(self):
         "1237 - test scrolling absolute (when not in buffers)"
@@ -419,7 +419,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(row[0], 7.5)
         self.assertEqual(cursor.rowcount, 6)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support scrollable cursors yet")
     def test_1238_scroll_first_in_buffer(self):
         "1238 - test scrolling to first row in result set (in buffers)"
@@ -435,7 +435,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(row[0], 1.25)
         self.assertEqual(cursor.rowcount, 1)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support scrollable cursors yet")
     def test_1239_scroll_first_not_in_buffer(self):
         "1239 - test scrolling to first row in result set (not in buffers)"
@@ -452,7 +452,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(row[0], 1.25)
         self.assertEqual(cursor.rowcount, 1)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support scrollable cursors yet")
     def test_1240_scroll_last(self):
         "1240 - test scrolling to last row in result set"
@@ -467,7 +467,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(row[0], 12.5)
         self.assertEqual(cursor.rowcount, 10)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support scrollable cursors yet")
     def test_1241_scroll_relative_exception_after(self):
         "1241 - test scrolling relative yields an exception (after result set)"
@@ -479,7 +479,7 @@ class TestCase(test_env.BaseTestCase):
                 order by IntCol""")
         self.assertRaises(oracledb.DatabaseError, cursor.scroll, 15)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support scrollable cursors yet")
     def test_1242_scroll_relative_exception_before(self):
         "1242 - test scrolling relative yields exception (before result set)"
@@ -491,7 +491,7 @@ class TestCase(test_env.BaseTestCase):
                 order by IntCol""")
         self.assertRaises(oracledb.DatabaseError, cursor.scroll, -5)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support scrollable cursors yet")
     def test_1243_scroll_relative_in_buffer(self):
         "1243 - test scrolling relative (when in buffers)"
@@ -509,7 +509,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(row[0], 2.5)
         self.assertEqual(cursor.rowcount, 2)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support scrollable cursors yet")
     def test_1244_scroll_relative_not_in_buffer(self):
         "1244 - test scrolling relative (when not in buffers)"
@@ -528,7 +528,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(row[0], 3.75)
         self.assertEqual(cursor.rowcount, 3)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support scrollable cursors yet")
     def test_1245_scroll_no_rows(self):
         "1245 - test scrolling when there are no rows"
@@ -542,7 +542,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaises(oracledb.DatabaseError, cursor.scroll, 1,
                           mode="absolute")
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support scrollable cursors yet")
     def test_1246_scroll_differing_array_and_fetch_sizes(self):
         "1246 - test scrolling with differing array and fetch array sizes"
@@ -686,7 +686,7 @@ class TestCase(test_env.BaseTestCase):
         var.setvalue(0, value_to_set)
         self.assertEqual(var.getvalue(), value_to_set)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_1262_var_type_with_object_type(self):
         "1262 - test that an object type can be used as type in cursor.var()"
@@ -700,7 +700,7 @@ class TestCase(test_env.BaseTestCase):
         exp = "udt_Object(28, 'Bind obj out', null, null, null, null, null)"
         self.assertEqual(result, exp)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support XML type objects yet")
     def test_1263_fetch_xmltype(self):
         "1263 - test that fetching an XMLType returns a string"

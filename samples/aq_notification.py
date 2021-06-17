@@ -8,14 +8,15 @@
 # script is running, use another session to enqueue a few messages to the
 # "DEMO_BOOK_QUEUE" queue. This is most easily accomplished by running the
 # object_aq.py sample.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import time
 
 import oracledb
 import sample_env
+
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
 
 registered = True
 

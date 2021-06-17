@@ -18,7 +18,6 @@ def drop_tests(conn):
                             proxy_user=test_env.get_proxy_user())
 
 if __name__ == "__main__":
-    conn = oracledb.connect(test_env.get_admin_connect_string(),
-                            thin=test_env.get_is_thin())
+    conn = oracledb.connect(test_env.get_admin_connect_string())
     drop_tests(conn)
     print("Done.")

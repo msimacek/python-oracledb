@@ -15,8 +15,7 @@ import test_env
 import drop_test
 
 # connect as administrative user (usually SYSTEM or ADMIN)
-conn = oracledb.connect(test_env.get_admin_connect_string(),
-                        thin=test_env.get_is_thin())
+conn = oracledb.connect(test_env.get_admin_connect_string())
 
 # drop existing users and editions, if applicable
 drop_test.drop_tests(conn)

@@ -8,8 +8,6 @@
 #   See https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=ADJSN
 #
 #   For JSON with older databases see json_blob.py
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import json
@@ -18,9 +16,10 @@ import sys
 import oracledb
 import sample_env
 
-connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=False)
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
 
+connection = oracledb.connect(sample_env.get_main_connect_string())
 client_version = oracledb.clientversion()[0]
 db_version = int(connection.version.split(".")[0])
 

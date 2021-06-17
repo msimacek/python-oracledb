@@ -12,14 +12,15 @@
 #   This script differs from cqn.py in that it shows how a connection can be
 # acquired from a session pool and used to query the changes that have been
 # made.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import time
 
 import oracledb
 import sample_env
+
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
 
 registered = True
 
@@ -60,8 +61,7 @@ def callback(message):
 
 pool = oracledb.create_pool(user=sample_env.get_main_user(),
                             password=sample_env.get_main_password(),
-                            dsn=sample_env.get_connect_string(),
-                            thin=False, min=2, max=5,
+                            dsn=sample_env.get_connect_string(), min=2, max=5,
                             increment=1, events=True, threaded=True)
 with pool.acquire() as connection:
     qos = oracledb.SUBSCR_QOS_QUERY | oracledb.SUBSCR_QOS_ROWIDS

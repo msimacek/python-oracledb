@@ -10,15 +10,15 @@
 # has passed without a response from the database.
 #
 # This script requires Oracle Client 18.1 and higher.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import oracledb
 import sample_env
 
-connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=False)
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
+
+connection = oracledb.connect(sample_env.get_main_connect_string())
 connection.call_timeout = 2000
 print("Call timeout set at", connection.call_timeout, "milliseconds...")
 

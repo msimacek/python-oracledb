@@ -25,12 +25,14 @@ import threading
 import oracledb
 import sample_env
 
+# determine whether to use thin driver or not
+oracledb.defaults.thin = sample_env.get_is_thin()
+
 # Create a Connection Pool
 pool = oracledb.create_pool(user=sample_env.get_main_user(),
                             password=sample_env.get_main_password(),
                             dsn=sample_env.get_connect_string(),
-                            thin=sample_env.get_is_thin(), min=2, max=5,
-                            increment=1, threaded=True)
+                            min=2, max=5, increment=1, threaded=True)
 
 def the_long_query():
     with pool.acquire() as conn:

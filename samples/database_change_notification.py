@@ -13,14 +13,15 @@
 # feature that is available in Oracle 10g Release 2. Once this script is
 # running, use another session to insert, update or delete rows from the table
 # TestTempTable and you will see the notification of that change.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import time
 
 import oracledb
 import sample_env
+
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
 
 registered = True
 
@@ -46,7 +47,7 @@ def callback(message):
         print("=" * 60)
 
 connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=False, events=True)
+                              events=True)
 sub = connection.subscribe(callback=callback, timeout=1800,
                            qos=oracledb.SUBSCR_QOS_ROWIDS)
 print("Subscription:", sub)

@@ -9,15 +9,15 @@
 # procedure.
 #
 # This feature is only available in Oracle Database 12.1 and higher.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import oracledb
 import sample_env
 
-connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=False)
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
+
+connection = oracledb.connect(sample_env.get_main_connect_string())
 
 # create new empty object of the correct type
 # note the use of a PL/SQL type defined in a package

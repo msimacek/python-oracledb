@@ -180,7 +180,7 @@ class TestCase(test_env.BaseTestCase):
         ]
         self.assertEqual(str_var.values, expected_values)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_1607_insert_and_return_object(self):
         "1607 - test inserting an object with DML returning"

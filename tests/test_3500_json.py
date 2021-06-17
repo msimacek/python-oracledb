@@ -16,7 +16,7 @@ import unittest
                      "unsupported client")
 @unittest.skipUnless(test_env.get_server_version() >= (21, 0),
                      "unsupported server")
-@unittest.skipIf(test_env.get_is_thin(),
+@unittest.skipIf(oracledb.defaults.thin,
                  "thin driver doesn't support JSON yet")
 class TestCase(test_env.BaseTestCase):
 

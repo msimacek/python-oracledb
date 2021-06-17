@@ -15,9 +15,11 @@ import oracledb
 import sample_env
 import drop_samples
 
+# determine whether to use thin driver or not
+oracledb.defaults.thin = sample_env.get_is_thin()
+
 # connect as administrative user (usually SYSTEM or ADMIN)
-conn = oracledb.connect(sample_env.get_admin_connect_string(),
-                        thin=sample_env.get_is_thin())
+conn = oracledb.connect(sample_env.get_admin_connect_string())
 
 # drop existing users and editions, if applicable
 drop_samples.drop_samples(conn)

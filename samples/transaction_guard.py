@@ -29,8 +29,6 @@
 #         dbms_service.start_service('orcl-tg');
 #     end;
 #     /
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import sys
@@ -38,14 +36,16 @@ import sys
 import oracledb
 import sample_env
 
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
+
 # constants
 CONNECT_STRING = "localhost/orcl-tg"
 
 # create transaction and generate a recoverable error
 pool = oracledb.create_pool(user=sample_env.get_main_user(),
                             password=sample_env.get_main_password(),
-                            dsn=CONNECT_STRING,
-                            thin=False, min=1, max=9, increment=2)
+                            dsn=CONNECT_STRING, min=1, max=9, increment=2)
 connection = pool.acquire()
 cursor = connection.cursor()
 cursor.execute("""

@@ -17,6 +17,9 @@ import oracledb
 import datetime
 import sample_env
 
+# determine whether to use thin driver or not
+oracledb.defaults.thin = sample_env.get_is_thin()
+
 DATA = [
     (1, "String #1", datetime.datetime(2017, 4, 4)),
     (2, "String #2", datetime.datetime(2017, 4, 5)),
@@ -24,8 +27,7 @@ DATA = [
 ]
 
 # truncate table so sample can be rerun
-connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=sample_env.get_is_thin())
+connection = oracledb.connect(sample_env.get_main_connect_string())
 cursor = connection.cursor()
 print("Truncating table...")
 cursor.execute("truncate table TestUniversalRowids")

@@ -13,6 +13,9 @@ import collections
 import oracledb
 import sample_env
 
+# determine whether to use thin driver or not
+oracledb.defaults.thin = sample_env.get_is_thin()
+
 class Connection(oracledb.Connection):
 
     def cursor(self):
@@ -21,7 +24,7 @@ class Connection(oracledb.Connection):
 
 class Cursor(oracledb.Cursor):
 
-    def execute(self, statement, args = None):
+    def execute(self, statement, args=None):
         prepare_needed = (self.statement != statement)
         result = super().execute(statement, args or [])
         if prepare_needed:
@@ -33,8 +36,7 @@ class Cursor(oracledb.Cursor):
 
 
 # create new subclassed connection and cursor
-connection = Connection(sample_env.get_main_connect_string(), 
-                        thin=sample_env.get_is_thin())
+connection = Connection(sample_env.get_main_connect_string())
 cursor = connection.cursor()
 
 # the names are now available directly for each query executed

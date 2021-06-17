@@ -13,15 +13,16 @@
 # as variable input and output converters. These methods can be used to extend
 # oracledb in many ways. This script demonstrates the binding and querying of
 # SQL objects as Python objects.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import oracledb
 import datetime
 import sample_env
 
-con = oracledb.connect(sample_env.get_main_connect_string(), thin=False)
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
+
+con = oracledb.connect(sample_env.get_main_connect_string())
 obj_type = con.gettype("UDT_BUILDING")
 
 class Building:

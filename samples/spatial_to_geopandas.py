@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2018, 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2018, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -20,8 +20,6 @@
 #
 # This script requires GeoPandas and its dependencies (see
 # http://geopandas.org/install.html).
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 from shapely.wkb import loads
@@ -30,9 +28,11 @@ import geopandas as gpd
 import sample_env
 import oracledb
 
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
+
 # create Oracle connection and cursor objects
-connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=False)
+connection = oracledb.connect(sample_env.get_main_connect_string())
 cursor = connection.cursor()
 
 # enable autocommit to avoid the additional round trip to the database to

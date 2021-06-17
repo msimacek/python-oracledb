@@ -13,8 +13,6 @@
 # in Oracle# Database 11.2 and higher. See the Oracle documentation on the
 # subject for additional information. Adjust the contants at the top of the
 # script for your own database as needed.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import os
@@ -22,10 +20,13 @@ import os
 import oracledb
 import sample_env
 
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
+
 # connect to the editions user and create a procedure
 edition_connect_string = sample_env.get_edition_connect_string()
 edition_name = sample_env.get_edition_name()
-connection = oracledb.connect(edition_connect_string, thin=False)
+connection = oracledb.connect(edition_connect_string)
 print("Edition should be None, actual value is:", repr(connection.edition))
 cursor = connection.cursor()
 cursor.execute("""
@@ -58,7 +59,7 @@ print("Function should return 'Base Procedure', actually returns:",
       repr(result))
 
 # the edition can be set upon connection
-connection = oracledb.connect(edition_connect_string, thin=False,
+connection = oracledb.connect(edition_connect_string,
                               edition=edition_name.upper())
 cursor = connection.cursor()
 result = cursor.callfunc("TestEditions", str)
@@ -67,7 +68,7 @@ print("Function should return 'Edition 1 Procedure', actually returns:",
 
 # it can also be set via the environment variable ORA_EDITION
 os.environ["ORA_EDITION"] = edition_name.upper()
-connection = oracledb.connect(edition_connect_string, thin=False)
+connection = oracledb.connect(edition_connect_string)
 print("Edition should be", repr(edition_name.upper()),
       "actual value is:", repr(connection.edition))
 cursor = connection.cursor()

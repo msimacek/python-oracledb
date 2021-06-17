@@ -6,6 +6,7 @@ from typing import Callable, Type, Union
 from . import constants, errors, exceptions, utils
 from . import thick_impl, thin_impl
 from . import pool as pool_module
+from .defaults import defaults
 from .cursor import Cursor
 from .lob import LOB
 from .subscr import Subscription
@@ -24,12 +25,12 @@ class Connection:
                  host: str=None,
                  port: int=None,
                  service_name: str=None,
-                 thin: bool=True,
+                 thin: bool=None,
                  mode: int=constants.AUTH_MODE_DEFAULT,
                  handle: int=0,
                  pool: Type["pool_module.Pool"]=None,
-                 threaded: bool=False,
-                 events: bool=False,
+                 threaded: bool=None,
+                 events: bool=None,
                  cclass: str=None,
                  purity: int=constants.PURITY_DEFAULT,
                  newpassword: str=None,
@@ -39,7 +40,7 @@ class Connection:
                  matchanytag: bool=False,
                  shardingkey: list=[],
                  supershardingkey: list=[],
-                 stmtcachesize: int=20,
+                 stmtcachesize: int=None,
                  secure_transport: bool=False,
                  config_dir: str=None,
                  enable_drcp: bool=False) -> None:
@@ -116,6 +117,14 @@ class Connection:
         which specifies the initial value of Connection.stmtcachesize.
         """
         self._impl = None
+        if thin is None:
+            thin = defaults.thin
+        if stmtcachesize is None:
+            stmtcachesize = defaults.stmtcachesize
+        if threaded is None:
+            threaded = defaults.threaded
+        if events is None:
+            events = defaults.events
         if pool is None:
             pool_impl = None
         elif not isinstance(pool, pool_module.Pool):

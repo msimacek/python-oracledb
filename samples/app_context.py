@@ -12,12 +12,13 @@
 #   This script demonstrates the use of application context. Application
 # context is available within logon triggers and can be retrieved by using the
 # function sys_context().
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import oracledb
 import sample_env
+
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
 
 # define constants used throughout the script; adjust as desired
 APP_CTX_NAMESPACE = "CLIENTCONTEXT"
@@ -28,7 +29,7 @@ APP_CTX_ENTRIES = [
 ]
 
 connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=False, appcontext=APP_CTX_ENTRIES)
+                              appcontext=APP_CTX_ENTRIES)
 cursor = connection.cursor()
 for namespace, name, value in APP_CTX_ENTRIES:
     cursor.execute("select sys_context(:1, :2) from dual", (namespace, name))

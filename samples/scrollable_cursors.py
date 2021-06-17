@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -12,15 +12,15 @@
 #   This script demonstrates how to use scrollable cursors. These allow moving
 # forward and backward in the result set but incur additional overhead on the
 # server to retain this information.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import oracledb
 import sample_env
 
-connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=False)
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
+
+connection = oracledb.connect(sample_env.get_main_connect_string())
 
 # show all of the rows available in the table
 cursor = connection.cursor()

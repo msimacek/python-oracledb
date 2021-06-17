@@ -101,7 +101,7 @@ def get_client_version():
     name = "CLIENT_VERSION"
     value = PARAMETERS.get(name)
     if value is None:
-        if get_is_thin():
+        if oracledb.defaults.thin:
             value = (21, 1)
         else:
             value = oracledb.clientversion()[:2]
@@ -110,8 +110,7 @@ def get_client_version():
 
 def get_connection(**kwargs):
     return oracledb.connect(get_connect_string(), user=get_main_user(),
-                            password=get_main_password(), thin=get_is_thin(),
-                            **kwargs)
+                            password=get_main_password(), **kwargs)
 
 def get_connect_string():
     return get_value("CONNECT_STRING", "Connect String",
@@ -119,9 +118,6 @@ def get_connect_string():
 
 def get_driver_type():
     return get_value("DRIVER_TYPE", "Driver type (thin|thick)", "thin")
-
-def get_is_thin():
-    return get_driver_type() == "thin"
 
 def get_main_password():
     return get_value("MAIN_PASSWORD", "Password for %s" % get_main_user())
@@ -135,8 +131,7 @@ def get_pool(user=None, password=None, **kwargs):
     if password is None:
         password = get_main_password()
     return oracledb.create_pool(user=user, password=password,
-                                dsn=get_connect_string(), thin=get_is_thin(),
-                                **kwargs)
+                                dsn=get_connect_string(), **kwargs)
 
 def get_proxy_password():
     return get_value("PROXY_PASSWORD", "Password for %s" % get_proxy_user())
@@ -192,7 +187,7 @@ def run_test_cases():
     unittest.main(testRunner=unittest.TextTestRunner(verbosity=2))
 
 def skip_soda_tests():
-    if get_is_thin():
+    if oracledb.defaults.thin:
         return True
     client = get_client_version()
     if client < (18, 3):
@@ -208,8 +203,7 @@ class RoundTripInfo:
 
     def __init__(self, connection):
         self.prev_round_trips = 0
-        self.admin_conn = oracledb.connect(get_admin_connect_string(),
-                                           thin=get_is_thin())
+        self.admin_conn = oracledb.connect(get_admin_connect_string())
         with connection.cursor() as cursor:
             cursor.execute("select sys_context('userenv', 'sid') from dual")
             self.sid, = cursor.fetchone()
@@ -290,3 +284,6 @@ class BaseTestCase(unittest.TestCase):
             self.connection.close()
             del self.cursor
             del self.connection
+
+# set default for thin so it doesn't need to be passed everywhere
+oracledb.defaults.thin = get_driver_type() == "thin"

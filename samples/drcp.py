@@ -33,8 +33,10 @@
 import oracledb
 import sample_env
 
+# determine whether to use thin driver or not
+oracledb.defaults.thin = sample_env.get_is_thin()
+
 conn = oracledb.connect(sample_env.get_drcp_connect_string(),
-                        thin=sample_env.get_is_thin(),
                         cclass="PYCLASS", purity=oracledb.ATTR_PURITY_SELF)
 cursor = conn.cursor()
 print("Performing query using DRCP...")

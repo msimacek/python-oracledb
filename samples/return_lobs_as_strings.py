@@ -19,14 +19,16 @@
 import oracledb
 import sample_env
 
+# determine whether to use thin driver or not
+oracledb.defaults.thin = sample_env.get_is_thin()
+
 def output_type_handler(cursor, name, default_type, size, precision, scale):
     if default_type == oracledb.CLOB:
         return cursor.var(oracledb.LONG_STRING, arraysize=cursor.arraysize)
     if default_type == oracledb.BLOB:
         return cursor.var(oracledb.LONG_BINARY, arraysize=cursor.arraysize)
 
-connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=sample_env.get_is_thin())
+connection = oracledb.connect(sample_env.get_main_connect_string())
 connection.outputtypehandler = output_type_handler
 cursor = connection.cursor()
 

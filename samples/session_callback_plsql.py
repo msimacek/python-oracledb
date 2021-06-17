@@ -16,8 +16,6 @@
 # session_callback.py is when DRCP is used, as the callback is invoked on the
 # server and no round trip is required to set state.
 #
-# Currently, this script runs with the thick driver only.
-#
 # Also see session_callback.py
 #
 #------------------------------------------------------------------------------
@@ -25,12 +23,14 @@
 import oracledb
 import sample_env
 
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
+
 # create pool with session callback defined
 pool = oracledb.create_pool(user=sample_env.get_main_user(),
                             password=sample_env.get_main_password(),
                             dsn=sample_env.get_connect_string(),
-                            thin=False, min=2,
-                            max=5, increment=1, threaded=True,
+                            min=2, max=5, increment=1, threaded=True,
                             session_callback="pkg_SessionCallback.TheCallback")
 
 # truncate table logging calls to PL/SQL session callback

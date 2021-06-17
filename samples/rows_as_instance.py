@@ -17,6 +17,9 @@
 import oracledb
 import sample_env
 
+# determine whether to use thin driver or not
+oracledb.defaults.thin = sample_env.get_is_thin()
+
 class Test:
 
     def __init__(self, a, b, c):
@@ -24,8 +27,7 @@ class Test:
         self.b = b
         self.c = c
 
-connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=sample_env.get_is_thin())
+connection = oracledb.connect(sample_env.get_main_connect_string())
 cursor = connection.cursor()
 
 # change this to False if you want to create the table yourself using SQL*Plus

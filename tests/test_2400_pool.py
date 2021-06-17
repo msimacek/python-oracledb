@@ -146,7 +146,7 @@ class TestCase(test_env.BaseTestCase):
             pool.max_lifetime_session = 10
             self.assertEqual(pool.max_lifetime_session, 10)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support proxy users yet")
     def test_2401_proxy_auth(self):
         "2401 - test that proxy authentication is possible"
@@ -245,7 +245,7 @@ class TestCase(test_env.BaseTestCase):
         cursor.close()
         pool.release(connection)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support proxy users yet")
     def test_2407_heterogeneous(self):
         "2407 - test heterogeneous pool with user and password specified"
@@ -270,7 +270,7 @@ class TestCase(test_env.BaseTestCase):
                                  test_env.get_main_user())
         conn.close()
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support proxy users yet")
     def test_2408_heterogenous_without_user(self):
         "2408 - test heterogeneous pool without user and password specified"
@@ -292,7 +292,7 @@ class TestCase(test_env.BaseTestCase):
         self.__verify_connection(conn, test_env.get_proxy_user(),
                                  test_env.get_main_user())
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support proxy users yet")
     def test_2409_heterogeneous_wrong_password(self):
         "2409 - test heterogeneous pool with wrong password specified"
@@ -303,7 +303,7 @@ class TestCase(test_env.BaseTestCase):
                           test_env.get_proxy_user(),
                           "this is the wrong password")
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support tagging yet")
     def test_2410_tagging_session(self):
         "2410 - test tagging a session"
@@ -330,7 +330,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(conn.tag, tag_utc)
         conn.close()
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support session callbacks yet")
     def test_2411_plsql_session_callbacks(self):
         "2411 - test PL/SQL session callbacks"
@@ -374,7 +374,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(results, expected_results)
         conn.close()
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support tagging yet")
     def test_2412_tagging_invalid_key(self):
         "2412 - testTagging with Invalid key"
@@ -415,7 +415,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(pool.opened, 2, "opened (2)")
         pool.release(connection_3)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support pool reconfigure yet")
     def test_2415_reconfigure_pool(self):
         "2415 - test to ensure reconfigure() updates pool properties"
@@ -454,7 +454,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(pool.stmtcachesize, 30, "stmtcachesize (30)")
         self.assertEqual(pool.ping_interval, 30, "ping_interval (30)")
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support all the pool params yet")
     def test_2416_test_reconfigure_pool_with_missing_values(self):
         "2416 - test the reconfigure values are changed and rest unchanged"
@@ -470,7 +470,7 @@ class TestCase(test_env.BaseTestCase):
         self.__perform_reconfigure_test("getmode",
                                         oracledb.POOL_GETMODE_NOWAIT)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support all the pool params yet")
     def test_2417_setting_each_pool_param(self):
         "2417 - test to see if specified parameters are set during creation"
@@ -493,7 +493,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(pool.stmtcachesize, 25, "stmtcachesize (25)")
         self.assertEqual(pool.ping_interval, 25, "ping_interval (25)")
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support all the pool params yet")
     def test_2418_deprecations(self):
         "2418 - test to verify deprecations"
@@ -521,7 +521,7 @@ class TestCase(test_env.BaseTestCase):
         pool.stmtcachesize = 35
         self.assertEqual(pool.stmtcachesize, 35, "stmtcachesize (35)")
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support tagging yet")
     def test_2420_callable_session_callbacks(self):
         "2420 - test that session callbacks are being called correctly"

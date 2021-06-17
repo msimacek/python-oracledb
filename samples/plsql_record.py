@@ -8,8 +8,6 @@
 # Demonstrate how to bind (in and out) a PL/SQL record.
 #
 # This feature is only available in Oracle Database 12.1 and higher.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import datetime
@@ -17,8 +15,10 @@ import datetime
 import oracledb
 import sample_env
 
-connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=False)
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
+
+connection = oracledb.connect(sample_env.get_main_connect_string())
 
 # create new object of the correct type
 # note the use of a PL/SQL record defined in a package

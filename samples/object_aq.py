@@ -12,14 +12,15 @@
 #   This script demonstrates how to use advanced queuing with objects using
 # oracledb. It makes use of a simple type and queue created in the sample
 # setup.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import decimal
 
 import oracledb
 import sample_env
+
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
 
 BOOK_TYPE_NAME = "UDT_BOOK"
 QUEUE_NAME = "DEMO_BOOK_QUEUE"
@@ -31,8 +32,7 @@ BOOK_DATA = [
 ]
 
 # connect to database
-connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=False)
+connection = oracledb.connect(sample_env.get_main_connect_string())
 cursor = connection.cursor()
 
 # create queue

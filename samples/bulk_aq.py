@@ -12,8 +12,6 @@
 #   This script demonstrates how to use bulk enqueuing and dequeuing of
 # messages with advanced queuing using oracledb. It makes use of a RAW queue
 # created in the sample setup.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import oracledb
@@ -35,9 +33,11 @@ PAYLOAD_DATA = [
     "The twelfth and final message"
 ]
 
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
+
 # connect to database 
-connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=False)
+connection = oracledb.connect(sample_env.get_main_connect_string())
 cursor = connection.cursor()
 
 # create queue

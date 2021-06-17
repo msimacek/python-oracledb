@@ -21,6 +21,9 @@
 import oracledb
 import sample_env
 
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
+
 # define a dictionary of NLS_DATE_FORMAT formats supported by this sample
 SUPPORTED_FORMATS = {
     "SIMPLE" : "'YYYY-MM-DD HH24:MI'",
@@ -78,8 +81,7 @@ def init_session(conn, requested_tag):
 # create pool with session callback defined
 pool = oracledb.create_pool(user=sample_env.get_main_user(),
                             password=sample_env.get_main_password(),
-                            dsn=sample_env.get_connect_string(),
-                            thin=sample_env.get_is_thin(),min=2, max=5,
+                            dsn=sample_env.get_connect_string(), min=2, max=5,
                             increment=1, threaded=True,
                             session_callback=init_session)
 

@@ -9,15 +9,15 @@
 # Oracle Client must be at 18.5 or higher.
 # Oracle Database must be at 18.1 or higher.
 # The user must have been granted the SODA_APP privilege.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import oracledb
 import sample_env
 
-connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=False)
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
+
+connection = oracledb.connect(sample_env.get_main_connect_string())
 
 # the general recommendation for simple SODA usage is to enable autocommit
 connection.autocommit = True

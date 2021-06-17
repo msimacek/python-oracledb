@@ -48,7 +48,7 @@ class TestCase(test_env.BaseTestCase):
         count, = self.cursor.fetchone()
         self.assertEqual(count, len(rows))
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3202_bind_plsql_boolean_collection_in(self):
         "3202 - test binding a boolean collection (in)"
@@ -60,7 +60,7 @@ class TestCase(test_env.BaseTestCase):
                                       (obj,))
         self.assertEqual(result, 5)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3203_bind_plsql_boolean_collection_out(self):
         "3203 - test binding a boolean collection (out)"
@@ -69,7 +69,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.callproc("pkg_TestBooleans.TestOutArrays", (6, obj))
         self.assertEqual(obj.aslist(), [True, False, True, False, True, False])
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3204_bind_plql_date_collection_in(self):
         "3204 - test binding a PL/SQL date collection (in)"
@@ -83,7 +83,7 @@ class TestCase(test_env.BaseTestCase):
                                       (2, datetime.datetime(2016, 2, 1), obj))
         self.assertEqual(result, 24.75)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3205_bind_plqsl_date_collection_in_out(self):
         "3205 - test binding a PL/SQL date collection (in/out)"
@@ -102,7 +102,7 @@ class TestCase(test_env.BaseTestCase):
         ]
         self.assertEqual(obj.aslist(), expected_values)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3206_bind_plsql_date_collection_out(self):
         "3206 - test binding a PL/SQL date collection (out)"
@@ -116,7 +116,7 @@ class TestCase(test_env.BaseTestCase):
         ]
         self.assertEqual(obj.aslist(), expected_values)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3207_bind_plsql_number_collection_in(self):
         "3207 - test binding a PL/SQL number collection (in)"
@@ -129,7 +129,7 @@ class TestCase(test_env.BaseTestCase):
                                       (5, obj))
         self.assertEqual(result, 155)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3208_bind_plsql_number_collection_in_out(self):
         "3208 - test binding a PL/SQL number collection (in/out)"
@@ -141,7 +141,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.callproc("pkg_TestNumberArrays.TestInOutArrays", (4, obj))
         self.assertEqual(obj.aslist(), [50, 80, 30, 20])
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3209_bind_plsql_number_collection_out(self):
         "3209 - test binding a PL/SQL number collection (out)"
@@ -151,7 +151,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.callproc("pkg_TestNumberArrays.TestOutArrays", (3, obj))
         self.assertEqual(obj.aslist(), [100, 200, 300])
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3210_bind_plsql_record_array(self):
         "3210 - test binding an array of PL/SQL records (in)"
@@ -184,7 +184,7 @@ class TestCase(test_env.BaseTestCase):
                          "to_timestamp('2017-01-03 00:00:00', " \
                          "'YYYY-MM-DD HH24:MI:SS'), false, 10, 4)")
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3211_bind_plsql_record_in(self):
         "3211 - test binding a PL/SQL record (in)"
@@ -205,7 +205,7 @@ class TestCase(test_env.BaseTestCase):
                          "to_timestamp('2016-02-12 14:25:36', " \
                          "'YYYY-MM-DD HH24:MI:SS'), false, 21, 5)")
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3212_bind_plsql_record_out(self):
         "3212 - test binding a PL/SQL record (out)"
@@ -228,7 +228,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(obj.PLSINTEGERVALUE, 45)
         self.assertEqual(obj.BINARYINTEGERVALUE, 10)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3213_bind_plsql_string_collection_in(self):
         "3213 - test binding a PL/SQL string collection (in)"
@@ -242,7 +242,7 @@ class TestCase(test_env.BaseTestCase):
                                       (5, obj))
         self.assertEqual(result, 45)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3214_bind_plsql_string_collection_in_out(self):
         "3214 - test binding a PL/SQL string collection (in/out)"
@@ -260,7 +260,7 @@ class TestCase(test_env.BaseTestCase):
         ]
         self.assertEqual(obj.aslist(), expected_values)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3215_bind_plsql_string_collection_out(self):
         "3215 - test binding a PL/SQL string collection (out)"
@@ -276,7 +276,7 @@ class TestCase(test_env.BaseTestCase):
         ]
         self.assertEqual(obj.aslist(), expected_values)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support database objects yet")
     def test_3216_bind_plsql_string_collection_out_with_holes(self):
         "3216 - test binding a PL/SQL string collection (out with holes)"

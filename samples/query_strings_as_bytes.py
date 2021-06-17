@@ -15,6 +15,9 @@
 import oracledb
 import sample_env
 
+# determine whether to use thin driver or not
+oracledb.defaults.thin = sample_env.get_is_thin()
+
 STRING_VAL = 'I bought a cafetière on the Champs-Élysées'
 
 def return_strings_as_bytes(cursor, name, default_type, size, precision,
@@ -22,8 +25,7 @@ def return_strings_as_bytes(cursor, name, default_type, size, precision,
     if default_type == oracledb.DB_TYPE_VARCHAR:
         return cursor.var(str, arraysize=cursor.arraysize, bypass_decode=True)
 
-with oracledb.connect(sample_env.get_main_connect_string(), \
-                      thin=sample_env.get_is_thin()) as conn:
+with oracledb.connect(sample_env.get_main_connect_string()) as conn:
 
     # truncate table and populate with our data of choice
     with conn.cursor() as cursor:

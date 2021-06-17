@@ -168,7 +168,7 @@ class TestCase(test_env.BaseTestCase):
         "3616 outtypehandler conversion from interval to varchar"
         in_val = datetime.timedelta(days=-1, seconds=86314,
                                     microseconds=431152)
-        if test_env.get_is_thin():
+        if oracledb.defaults.thin:
             out_val = str(in_val)
         else:
             out_val = "-000000001 23:58:34.431152000"
@@ -179,7 +179,7 @@ class TestCase(test_env.BaseTestCase):
         "3617 outtypehandler conversion from interval to char"
         in_val = datetime.timedelta(days=-1, seconds=86314,
                                     microseconds=431152)
-        if test_env.get_is_thin():
+        if oracledb.defaults.thin:
             out_val = str(in_val)
         else:
             out_val = "-000000001 23:58:34.431152000"
@@ -190,7 +190,7 @@ class TestCase(test_env.BaseTestCase):
         "3618 outtypehandler conversion from interval to long"
         in_val = datetime.timedelta(days=-1, seconds=86314,
                                     microseconds=431152)
-        if test_env.get_is_thin():
+        if oracledb.defaults.thin:
             out_val = str(in_val)
         else:
             out_val = "-000000001 23:58:34.431152000"

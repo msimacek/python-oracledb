@@ -12,14 +12,15 @@
 #   This script demonstrates shutting down a database using Python. The
 # connection used assumes that the environment variable ORACLE_SID has been
 # set.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import oracledb
 
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
+
 # need to connect as SYSDBA or SYSOPER
-connection = oracledb.connect(thin=False, mode=oracledb.SYSDBA)
+connection = oracledb.connect(mode=oracledb.SYSDBA)
 
 # first shutdown() call must specify the mode, if DBSHUTDOWN_ABORT is used,
 # there is no need for any of the other steps

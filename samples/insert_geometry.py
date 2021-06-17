@@ -11,16 +11,16 @@
 # insert_geometry.py
 #   This script demonstrates the ability to create Oracle objects (this example
 # uses SDO_GEOMETRY) and insert them into a table.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import oracledb
 import sample_env
 
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
+
 # create and populate Oracle objects
-connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=False)
+connection = oracledb.connect(sample_env.get_main_connect_string())
 type_obj = connection.gettype("MDSYS.SDO_GEOMETRY")
 element_info_type_obj = connection.gettype("MDSYS.SDO_ELEM_INFO_ARRAY")
 ordinate_type_obj = connection.gettype("MDSYS.SDO_ORDINATE_ARRAY")

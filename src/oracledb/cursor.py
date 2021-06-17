@@ -5,6 +5,7 @@
 from typing import Type, Union, Callable
 from . import errors, exceptions
 from . import connection as connection_module
+from .defaults import defaults
 from .var import Var
 from .base_impl import DbType
 from .dbobject import DbObjectType
@@ -19,6 +20,7 @@ class Cursor:
         self._set_input_sizes = False
         self._impl = connection._impl.create_cursor_impl()
         self._impl.scrollable = scrollable
+        self._impl.arraysize = defaults.arraysize
 
     def __del__(self):
         if self._impl is not None:

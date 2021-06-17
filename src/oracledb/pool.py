@@ -5,6 +5,7 @@
 from typing import Callable, Type
 from . import constants, exceptions, utils, thick_impl, thin_impl
 from . import connection as connection_module
+from .defaults import defaults
 
 class Pool:
 
@@ -15,14 +16,14 @@ class Pool:
                  host: str=None,
                  port: int=None,
                  service_name: str=None,
-                 thin: bool=True,
+                 thin: bool=None,
                  min: int=1,
                  max: int=2,
                  increment: int=1,
                  connectiontype: Type["connection_module.Connection"]=None,
-                 threaded: bool=False,
+                 threaded: bool=None,
                  getmode: int=constants.POOL_GETMODE_WAIT,
-                 events: bool=False,
+                 events: bool=None,
                  homogeneous: bool=True,
                  externalauth: bool=False,
                  edition: str=None,
@@ -32,8 +33,8 @@ class Pool:
                  session_callback: Callable=None,
                  max_sessions_per_shard: int=0,
                  soda_metadata_cache: bool=False,
-                 stmtcachesize: int=20,
-                 ping_interval: int=60,
+                 stmtcachesize: int=None,
+                 ping_interval: int=None,
                  secure_transport: bool=False,
                  config_dir: str=None,
                  enable_drcp: bool=False,
@@ -155,6 +156,16 @@ class Pool:
         which specifies the initial value of ping_interval.
         """
         self._impl = None
+        if thin is None:
+            thin = defaults.thin
+        if stmtcachesize is None:
+            stmtcachesize = defaults.stmtcachesize
+        if threaded is None:
+            threaded = defaults.threaded
+        if events is None:
+            events = defaults.events
+        if ping_interval is None:
+            ping_interval = defaults.ping_interval
         if connectiontype is None:
             connectiontype = connection_module.Connection
         elif not issubclass(connectiontype, connection_module.Connection):

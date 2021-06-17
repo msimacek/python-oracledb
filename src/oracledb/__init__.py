@@ -5,6 +5,7 @@
 from .version import __version__
 from .exceptions import *
 from .errors import _Error
+from .defaults import defaults
 from .connection import connect, Connection
 from .cursor import Cursor
 from .pool import create_pool, Pool

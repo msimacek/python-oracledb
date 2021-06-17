@@ -11,12 +11,13 @@
 # raw_aq.py
 #   This script demonstrates how to use advanced queuing with RAW data using
 # oracledb. It makes use of a RAW queue created in the sample setup.
-#
-# Currently, this script runs with the thick driver only.
 #------------------------------------------------------------------------------
 
 import oracledb
 import sample_env
+
+# this script only supports the thick driver currently
+oracledb.defaults.thin = False
 
 QUEUE_NAME = "DEMO_RAW_QUEUE"
 PAYLOAD_DATA = [
@@ -27,8 +28,7 @@ PAYLOAD_DATA = [
 ]
 
 # connect to database
-connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=False)
+connection = oracledb.connect(sample_env.get_main_connect_string())
 cursor = connection.cursor()
 
 # create queue

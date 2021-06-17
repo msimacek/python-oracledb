@@ -407,7 +407,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaises(oracledb.NotSupportedError, var.setvalue, 0,
                 "ABDHRYTHFJGKDKKDH")
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support XML type objects yet")
     def test_2530_short_xml_as_string(self):
         "2530 - test fetching XMLType object as a string"
@@ -419,7 +419,7 @@ class TestCase(test_env.BaseTestCase):
         expected_value = "<string>String 1</string>"
         self.assertEqual(actual_value, expected_value)
 
-    @unittest.skipIf(test_env.get_is_thin(),
+    @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support XML type objects yet")
     def test_2531_long_xml_as_string(self):
         "2531 - test inserting and fetching an XMLType object (1K) as a string"
