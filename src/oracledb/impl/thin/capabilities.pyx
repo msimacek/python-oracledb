@@ -52,6 +52,7 @@ cdef class Capabilities:
         self.compile_caps[TNS_CCAP_UB2_DTY] = 1
         self.compile_caps[TNS_CCAP_TTC3] = TNS_CCAP_IMPLICIT_RESULTS | \
                 TNS_CCAP_BIG_CHUNK_CLR | TNS_CCAP_KEEP_OUT_ORDER
+        self.compile_caps[TNS_CCAP_TTC2] = TNS_CCAP_ZLNP
         self.compile_caps[TNS_CCAP_OCI2] = TNS_CCAP_DRCP
 
     @cython.boundscheck(False)

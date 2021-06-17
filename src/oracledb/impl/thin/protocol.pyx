@@ -46,17 +46,30 @@ cdef class Protocol:
                 buf = WriteBuffer(self._socket, TNS_SDU, self._caps)
                 self._send_marker(buf, TNS_MARKER_TYPE_INTERRUPT)
 
-    cpdef int _close(self) except -1:
+    cpdef int _close(self, bint drcp_enabled) except -1:
+        cdef WriteBuffer buf = self._write_buf
         if self._read_buf._socket is None:
             return 0
         with self._request_lock:
             if self._txn_in_progress:
                 self._process_message(RollbackMessage())
-            self._process_message(LogoffMessage())
+            if not drcp_enabled:
+                self._process_message(LogoffMessage())
+
+            # if using DRCP, send session release
+            if drcp_enabled:
+                buf.start_request(TNS_PACKET_TYPE_DATA)
+                buf.write_uint8(TNS_MSG_TYPE_ONEWAY_FN)
+                buf.write_uint8(TNS_FUNC_SESSION_RELEASE)
+                buf.write_uint8(0)          # seq number
+                buf.write_uint8(0)          # pointer (tag name)
+                buf.write_uint8(0)          # tag name length
+                buf.write_ub4(0)            # mode
+                buf.end_request()
 
             # send final close
-            self._write_buf.start_request(TNS_PACKET_TYPE_DATA, 0x0040)
-            self._write_buf.end_request()
+            buf.start_request(TNS_PACKET_TYPE_DATA, 0x0040)
+            buf.end_request()
             self._socket.shutdown(socket.SHUT_RDWR)
             self._socket.close()
 

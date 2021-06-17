@@ -31,6 +31,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         str _external_name
         array.array _cursors_to_close
         ssize_t _num_cursors_to_close
+        bint _drcp_enabled
 
     cdef int _add_cursor_to_close(self, Statement stmt) except -1:
         if self._num_cursors_to_close == TNS_MAX_CURSORS_TO_CLOSE:
@@ -81,7 +82,7 @@ cdef class ThinConnImpl(BaseConnImpl):
             self._pool._free_busy_connection(self)
         else:
             try:
-                self._protocol._close()
+                self._protocol._close(self._drcp_enabled)
             except ssl.SSLError:
                 pass
 
@@ -107,6 +108,7 @@ cdef class ThinConnImpl(BaseConnImpl):
             self._statement_cache_lock = threading.Lock()
             self._cursors_to_close = array.array('I')
             array.resize(self._cursors_to_close, TNS_MAX_CURSORS_TO_CLOSE)
+            self._drcp_enabled = params.enable_drcp
         return redirect_data
 
     def create_cursor_impl(self):
