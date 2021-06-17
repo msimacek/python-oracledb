@@ -212,3 +212,15 @@ cdef class BaseConnImpl:
         Internal method for setting the size of the statement cache.
         """
         raise NotImplementedError()
+
+    def shutdown(self, uint32_t mode):
+        """
+        Internal method for shutting down the database
+        """
+        raise NotImplementedError()
+
+    def startup(self, bint force, bint restrict, str pfile):
+        """
+        Internal method for starting up the database
+        """
+        raise NotImplementedError()

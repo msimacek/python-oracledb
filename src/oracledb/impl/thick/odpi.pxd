@@ -89,6 +89,11 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
     uint32_t DPI_SODA_FLAGS_CREATE_COLL_MAP
     uint32_t DPI_SODA_FLAGS_INDEX_DROP_FORCE
 
+    # database startup modes
+    uint32_t DPI_MODE_STARTUP_DEFAULT
+    uint32_t DPI_MODE_STARTUP_FORCE
+    uint32_t DPI_MODE_STARTUP_RESTRICT
+
     # subscription constants
     uint32_t DPI_SUBSCR_QOS_QUERY
     uint32_t DPI_EVENT_OBJCHANGE
@@ -550,6 +555,11 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
     int dpiConn_setStmtCacheSize(dpiConn *conn, uint32_t cacheSize) nogil
 
     int dpiConn_setCallTimeout(dpiConn *conn, uint32_t value) nogil
+
+    int dpiConn_shutdownDatabase(dpiConn *conn, uint32_t mode) nogil
+
+    int dpiConn_startupDatabaseWithPfile(dpiConn *conn, const char *pfile,
+            uint32_t pfileLength, uint32_t mode) nogil
 
     int dpiConn_subscribe(dpiConn *conn, dpiSubscrCreateParams *params,
             dpiSubscr **subscr) nogil

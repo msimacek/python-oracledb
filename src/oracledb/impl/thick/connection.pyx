@@ -497,3 +497,32 @@ cdef class ThickConnImpl(BaseConnImpl):
     def set_stmt_cache_size(self, uint32_t value):
         if dpiConn_setStmtCacheSize(self._handle, value) < 0:
             _raise_from_odpi()
+
+    def shutdown(self, uint32_t mode):
+        cdef int status
+        with nogil:
+            status = dpiConn_shutdownDatabase(self._handle, mode)
+        if status < 0:
+            _raise_from_odpi()
+
+    def startup(self, bint force, bint restrict, str pfile):
+        cdef:
+            uint32_t mode, pfile_length = 0
+            const char *pfile_ptr = NULL
+            bytes temp
+            int status
+
+        mode = DPI_MODE_STARTUP_DEFAULT
+        if force:
+            mode |= DPI_MODE_STARTUP_FORCE
+        if restrict:
+            mode |= DPI_MODE_STARTUP_RESTRICT
+        if pfile is not None:
+            temp = pfile.encode()
+            pfile_ptr = temp
+            pfile_length = len(pfile_ptr)
+        with nogil:
+            status = dpiConn_startupDatabaseWithPfile(self._handle, pfile_ptr,
+                                                      pfile_length, mode)
+        if status < 0:
+            _raise_from_odpi()
