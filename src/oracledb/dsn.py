@@ -1,0 +1,26 @@
+#------------------------------------------------------------------------------
+# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+#------------------------------------------------------------------------------
+
+def makedsn(host: str, port: int, sid: str=None, service_name: str=None,
+            region:str=None, sharding_key: str=None,
+            super_sharding_key: str=None):
+    """
+    Return a string suitable for use as the dsn parameter for connect(). This
+    string is identical to the strings that are defined in the tnsnames.ora
+    file.
+    """
+    connect_data_parts = []
+    if sid is not None:
+        connect_data_parts.append(f"(SID={sid})")
+    if service_name is not None:
+        connect_data_parts.append(f"(SERVICE_NAME={service_name})")
+    if region is not None:
+        connect_data_parts.append(f"(REGION={region})")
+    if sharding_key is not None:
+        connect_data_parts.append(f"(SHARDING_KEY={sharding_key})")
+    if super_sharding_key is not None:
+        connect_data_parts.append(f"(SUPER_SHARDING_KEY={super_sharding_key})")
+    connect_data = "".join(connect_data_parts)
+    return f"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={host})" \
+           f"(PORT={port}))(CONNECT_DATA={connect_data}))"

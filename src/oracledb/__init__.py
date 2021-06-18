@@ -13,6 +13,7 @@ from .lob import LOB
 from .dbobject import DbObject, DbObjectType
 from .constants import *
 from .constructors import *
+from .dsn import makedsn
 
 from .base_impl import *
 from .thick_impl import clientversion, init_oracle_client
