@@ -13,7 +13,6 @@ cdef class Protocol:
         object _request_lock
         bint _txn_in_progress
         bint _break_in_progress
-        bint _oob_check_in_progress
 
     def __init__(self, sock):
         self._caps = Capabilities()
@@ -113,7 +112,6 @@ cdef class Protocol:
         # marker to see if the server understands it
         if self._caps.can_use_oob \
                 and self._caps.protocol_version >= TNS_VERSION_MIN_OOB_CHECK:
-            self._oob_check_in_progress = True
             self._socket.send(b"!", socket.MSG_OOB)
             self._send_marker(self._write_buf, TNS_MARKER_TYPE_RESET)
 
@@ -121,10 +119,6 @@ cdef class Protocol:
         self._process_message(NetworkServicesMessage())
         self._process_message(ProtocolMessage())
         self._process_message(DataTypesMessage())
-
-        # OOB check has at this point received the control message so flag can
-        # be cleared
-        self._oob_check_in_progress = False
 
         # send authorization packet twice, the first time to get the session
         # key and the second time to return the response to the challenge
@@ -207,12 +201,14 @@ cdef class Protocol:
             raise exc_type(error)
 
     cdef int _receive_packet(self, Message message) except -1:
+        cdef uint16_t control_type
         self._read_buf.receive_packet(&message.packet_type)
         if message.packet_type == TNS_PACKET_TYPE_MARKER:
             self._reset(message)
             message.error_occurred = True
         elif message.packet_type == TNS_PACKET_TYPE_CONTROL:
-            if self._oob_check_in_progress:
+            control_type = self._read_buf.read_uint16()
+            if control_type == TNS_CONTROL_TYPE_RESET_OOB:
                 self._caps.can_use_oob = False
             self._read_buf.receive_packet(&message.packet_type)
         elif message.packet_type == TNS_PACKET_TYPE_REFUSE:
