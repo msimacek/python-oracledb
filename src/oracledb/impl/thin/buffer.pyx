@@ -702,19 +702,7 @@ cdef class WriteBuffer:
     def __releasebuffer__(self, Py_buffer *buf):
         self._view_count -= 1
 
-    cdef inline int _ensure_available(self, ssize_t additional_size) except -1:
-        """
-        Ensure that the specified number of bytes are available in the packet.
-        If not, send the current packet and begin a new packet.
-        """
-        cdef ssize_t new_size = self._actual_size + additional_size
-        if self._view_count > 0:
-            raise BufferError('Buffer is used in a memoryview!')
-        if new_size > self._max_size:
-            self._send_packet()
-            self.write_uint16(0)            # data flags for next packet
-
-    cdef int _send_packet(self) except -1:
+    cdef int _send_packet(self, bint final_packet) except -1:
         """
         Write the packet header and then send the packet. Once sent, reset the
         pointers back to an empty packet.
@@ -736,6 +724,8 @@ cdef class WriteBuffer:
         self._socket.send(memoryview(self))
         self._packet_sent = True
         self._actual_size = PACKET_HEADER_SIZE
+        if not final_packet:
+            self.write_uint16(0)            # add data flags for next packet
 
     cdef inline ssize_t bytes_left(self):
         """
@@ -750,7 +740,7 @@ cdef class WriteBuffer:
         any packet remaining, if necessary.
         """
         if self._actual_size > PACKET_HEADER_SIZE:
-            self._send_packet()
+            self._send_packet(final_packet=True)
 
     cdef inline ssize_t max_payload_bytes(self):
         """
@@ -1055,9 +1045,18 @@ cdef class WriteBuffer:
             self.write_uint8(102)
 
     cdef int write_raw(self, const char_type *data, ssize_t length) except -1:
-        self._ensure_available(length)
-        memcpy(self._data + self._actual_size, <void*> data, <size_t> length)
-        self._actual_size += length
+        cdef ssize_t bytes_to_write
+        while True:
+            bytes_to_write = min(self._max_size - self._actual_size, length)
+            if bytes_to_write > 0:
+                memcpy(self._data + self._actual_size, <void*> data,
+                       bytes_to_write)
+                self._actual_size += bytes_to_write
+            if bytes_to_write == length:
+                break
+            self._send_packet(final_packet=False)
+            length -= bytes_to_write
+            data += bytes_to_write
 
     cdef int write_seq_num(self) except -1:
         self._seq_num += 1
@@ -1069,25 +1068,29 @@ cdef class WriteBuffer:
         self.write_bytes(value.encode())
 
     cdef int write_uint8(self, uint8_t value) except -1:
-        self._ensure_available(1)
+        if self._actual_size + 1 > self._max_size:
+            self._send_packet(final_packet=False)
         self._data[self._actual_size] = value
         self._actual_size += 1
 
     cdef int write_uint16(self, uint16_t value,
                           int byte_order=BYTE_ORDER_MSB) except -1:
-        self._ensure_available(2)
+        if self._actual_size + 2 > self._max_size:
+            self._send_packet(final_packet=False)
         pack_uint16(&self._data[self._actual_size], value, byte_order)
         self._actual_size += 2
 
     cdef int write_uint32(self, uint32_t value,
                           int byte_order=BYTE_ORDER_MSB) except -1:
-        self._ensure_available(4)
+        if self._actual_size + 4 > self._max_size:
+            self._send_packet(final_packet=False)
         pack_uint32(&self._data[self._actual_size], value, byte_order)
         self._actual_size += 4
 
     cdef int write_uint64(self, uint64_t value,
                           byte_order=BYTE_ORDER_MSB) except -1:
-        self._ensure_available(8)
+        if self._actual_size + 8 > self._max_size:
+            self._send_packet(final_packet=False)
         pack_uint64(&self._data[self._actual_size], value, byte_order)
         self._actual_size += 8
 
