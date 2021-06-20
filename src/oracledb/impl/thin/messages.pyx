@@ -646,8 +646,6 @@ cdef class MessageWithData(Message):
             uint8_t ora_type_num, flag
             ThinVarImpl var_impl
             object var
-
-        # write parameter header information
         for var in bind_vars:
             var_impl = <ThinVarImpl> var._impl
             ora_type_num = var_impl.dbtype._ora_type_num
@@ -656,8 +654,10 @@ cdef class MessageWithData(Message):
                 flag |= TNS_BIND_ARRAY
             buf.write_uint8(ora_type_num)
             buf.write_uint8(flag)
-            buf.write_uint8(var_impl.precision)
-            buf.write_uint8(var_impl.scale)
+            # precision and scale are always written as zero as the server
+            # expects that and complains if any other value is sent!
+            buf.write_uint8(0)
+            buf.write_uint8(0)
             if ora_type_num == TNS_DATA_TYPE_LONG \
                     or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
                 buf.write_ub4(TNS_MAX_LONG_LENGTH)
