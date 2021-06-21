@@ -6,7 +6,7 @@
 # setup_test.py
 #
 # Creates users and populates their schemas with the tables and packages
-# necessary for the oracledb test suite.
+# necessary for the test suite.
 #------------------------------------------------------------------------------
 
 import oracledb

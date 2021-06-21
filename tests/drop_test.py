@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # drop_test.py
 #
-# Drops the database objects used by the oracledb test suite.
+# Drops the database objects used by the test suite.
 #------------------------------------------------------------------------------
 
 import oracledb
