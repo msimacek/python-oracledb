@@ -184,7 +184,7 @@ cdef class Protocol:
             if self._write_buf._packet_sent \
                     and self._read_buf._socket is not None:
                 self._send_marker(self._write_buf, TNS_MARKER_TYPE_BREAK)
-                self._receive_packet(message)
+                self._reset(message)
             raise
         if self._break_in_progress:
             if self._caps.can_use_oob:
