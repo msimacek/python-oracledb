@@ -122,7 +122,7 @@ OPCODE_INSERT = 0x02
 OPCODE_UPDATE = 0x04
 
 # basic configuration constants
-DRIVER_NAME = "oracledb : " + VERSION
+DRIVER_NAME = "python-oracledb : " + VERSION
 INSTALLATION_URL = "https://oracledb.readthedocs.io/en/" \
         "latest/user_guide/installation.html"
 ENCODING = "UTF-8"
