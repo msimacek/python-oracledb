@@ -4,7 +4,7 @@
 
 #------------------------------------------------------------------------------
 # ref_cursor.py
-#   Demonstrates the use of REF cursors with oracledb.
+#   Demonstrates the use of REF cursors.
 #------------------------------------------------------------------------------
 
 import oracledb

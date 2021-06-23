@@ -10,7 +10,7 @@
 #   instead, see json_direct.py
 #
 #   Documentation:
-#   oracledb:        https://oracledb.readthedocs.io/en/latest/user_guide/json_data_type.html
+#   py-oracledb:     https://oracledb.readthedocs.io/en/latest/user_guide/json_data_type.html
 #   Oracle Database: https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=ADJSN
 #------------------------------------------------------------------------------
 

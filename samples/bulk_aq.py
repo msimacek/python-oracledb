@@ -10,8 +10,8 @@
 #------------------------------------------------------------------------------
 # bulk_aq.py
 #   This script demonstrates how to use bulk enqueuing and dequeuing of
-# messages with advanced queuing using oracledb. It makes use of a RAW queue
-# created in the sample setup.
+# messages with advanced queuing. It makes use of a RAW queue created in the
+# sample setup.
 #------------------------------------------------------------------------------
 
 import oracledb

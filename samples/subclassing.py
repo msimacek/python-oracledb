@@ -5,9 +5,9 @@
 #------------------------------------------------------------------------------
 # subclassing.py
 #
-#   Demonstrate how to subclass oracledb connections and cursors in order to
-# add additional functionality (like logging) or create specialized interfaces
-# for paticular applications.
+#   Demonstrate how to subclass connections and cursors in order to add
+# additional functionality (like logging) or create specialized interfaces for
+# paticular applications.
 #------------------------------------------------------------------------------
 
 import oracledb

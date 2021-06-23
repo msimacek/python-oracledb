@@ -9,8 +9,8 @@
 
 #------------------------------------------------------------------------------
 # multi_consumer_aq.py
-#   This script demonstrates how to use multi-consumer advanced queuing using
-# py-oracledb. It makes use of a RAW queue created in the sample setup.
+#   This script demonstrates how to use multi-consumer advanced queuing. It
+# makes use of a RAW queue created in the sample setup.
 #------------------------------------------------------------------------------
 
 import oracledb

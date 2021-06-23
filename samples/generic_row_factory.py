@@ -10,6 +10,7 @@
 #------------------------------------------------------------------------------
 
 import collections
+
 import oracledb
 import sample_env
 

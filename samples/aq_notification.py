@@ -31,7 +31,7 @@ def process_messages(message):
     print("Consumer name:", message.consumer_name)
 
 connection = oracledb.connect(sample_env.get_main_connect_string(),
-                              thin=False, events=True)
+                              events=True)
 sub = connection.subscribe(namespace=oracledb.SUBSCR_NAMESPACE_AQ,
                            name="DEMO_BOOK_QUEUE", callback=process_messages,
                            timeout=300)

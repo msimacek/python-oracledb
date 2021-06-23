@@ -4,17 +4,16 @@
 
 #------------------------------------------------------------------------------
 # connection_pool.py
-#   This script demonstrates the use of connection pooling in oracledb. Pools
-# can significantly reduce connection times for long running applications that
+#   This script demonstrates the use of connection pooling. Pools can
+# significantly reduce connection times for long running applications that
 # repeatedly open and close connections. Internal features help protect against
 # dead connections, and also aid use of Oracle Database features such as FAN
 # and Application Continuity.
 # The script uses threading to show multiple users of the pool. One thread
 # performs a database sleep while another performs a query. A more typical
 # application might be a web service that handles requests from multiple users.
-# Applications that use connections concurrently in multiple threads should set
-# the 'threaded' parameter to True. Note only one operation (such as an execute
-# or fetch) can take place at a time on each connection.
+# Note only one operation (such as an execute or fetch) can take place at a time
+# on each connection.
 #
 # Also see session_callback.py.
 #
@@ -31,8 +30,8 @@ oracledb.defaults.thin = sample_env.get_is_thin()
 # Create a Connection Pool
 pool = oracledb.create_pool(user=sample_env.get_main_user(),
                             password=sample_env.get_main_password(),
-                            dsn=sample_env.get_connect_string(),
-                            min=2, max=5, increment=1, threaded=True)
+                            dsn=sample_env.get_connect_string(), min=2, max=5,
+                            increment=1)
 
 def the_long_query():
     with pool.acquire() as conn:

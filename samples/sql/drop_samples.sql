@@ -26,4 +26,3 @@ set feedback on
 @@drop_samples_exec.sql
 
 exit
-

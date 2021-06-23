@@ -9,8 +9,8 @@
 
 #------------------------------------------------------------------------------
 # raw_aq.py
-#   This script demonstrates how to use advanced queuing with RAW data using
-# oracledb. It makes use of a RAW queue created in the sample setup.
+#   This script demonstrates how to use advanced queuing with RAW data. It
+# makes use of a RAW queue created in the sample setup.
 #------------------------------------------------------------------------------
 
 import oracledb

@@ -13,8 +13,9 @@
 # used to identify rows in index organized tables.
 #------------------------------------------------------------------------------
 
-import oracledb
 import datetime
+
+import oracledb
 import sample_env
 
 # determine whether to use thin driver or not

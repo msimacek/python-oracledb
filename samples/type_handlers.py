@@ -11,12 +11,13 @@
 # type_handlers.py
 #   This script demonstrates the use of input and output type handlers as well
 # as variable input and output converters. These methods can be used to extend
-# oracledb in many ways. This script demonstrates the binding and querying of
+# py-oracledb in many ways. This script demonstrates the binding and querying of
 # SQL objects as Python objects.
 #------------------------------------------------------------------------------
 
-import oracledb
 import datetime
+
+import oracledb
 import sample_env
 
 # this script only supports the thick driver currently

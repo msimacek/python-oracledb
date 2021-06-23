@@ -3,9 +3,9 @@
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# Sets the environment used by most py-oracledb samples. Production
-# applications should consider using External Authentication to
-# avoid hard coded credentials.
+# Sets the environment used by the sample scripts. Production applications
+# should consider using External Authentication to avoid hard coded
+# credentials.
 #
 # You can set values in environment variables to bypass the sample requesting
 # the information it requires.
@@ -25,8 +25,8 @@
 # Net Service Name from a tnsnames.ora file or external naming service,
 # or it can be the name of a local Oracle database instance.
 #
-# If py-oracledb is using Instant Client, then an Easy Connect string is
-# generally appropriate. The syntax is:
+# If using Instant Client, then an Easy Connect string is generally
+# appropriate. The syntax is:
 #
 #   [//]host_name[:port][/service_name][:server_type][/instance_name]
 #
@@ -87,13 +87,15 @@ def get_edition_user():
     return get_value("EDITION_USER", "Edition User Name", DEFAULT_EDITION_USER)
 
 def get_edition_password():
-    return get_value("EDITION_PASSWORD", "Password for %s" % get_edition_user())
+    return get_value("EDITION_PASSWORD",
+                     "Password for %s" % get_edition_user())
 
 def get_edition_name():
     return get_value("EDITION_NAME", "Edition Name", DEFAULT_EDITION_NAME)
 
 def get_connect_string():
-    return get_value("CONNECT_STRING", "Connect String", DEFAULT_CONNECT_STRING)
+    return get_value("CONNECT_STRING", "Connect String",
+                     DEFAULT_CONNECT_STRING)
 
 def get_main_connect_string(password=None):
     if password is None:

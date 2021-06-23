@@ -26,7 +26,7 @@
 # established.
 #
 # DRCP has most benefit when used in conjunction with a local connection pool,
-# see the oracledb documentation.
+# see the py-oracledb documentation.
 #
 #------------------------------------------------------------------------------
 

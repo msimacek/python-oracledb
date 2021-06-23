@@ -9,9 +9,8 @@
 
 #------------------------------------------------------------------------------
 # object_aq.py
-#   This script demonstrates how to use advanced queuing with objects using
-# oracledb. It makes use of a simple type and queue created in the sample
-# setup.
+#   This script demonstrates how to use advanced queuing with objects. It makes
+# use of a simple type and queue created in the sample setup.
 #------------------------------------------------------------------------------
 
 import decimal
@@ -37,7 +36,7 @@ cursor = connection.cursor()
 
 # create queue
 books_type = connection.gettype(BOOK_TYPE_NAME)
-queue = connection.queue(QUEUE_NAME, books_type)
+queue = connection.queue(QUEUE_NAME, payload_type=books_type)
 queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
 queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
 

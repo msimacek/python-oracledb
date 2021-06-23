@@ -31,4 +31,3 @@ set feedback on
 @@setup_samples_exec.sql
 
 exit
-

@@ -19,8 +19,8 @@ oracledb.defaults.thin = False
 
 pool = oracledb.create_pool(user=sample_env.get_main_user(),
                             password=sample_env.get_main_password(),
-                            dsn=sample_env.get_connect_string(),
-                            min=1, max=5, increment=1)
+                            dsn=sample_env.get_connect_string(), min=1, max=5,
+                            increment=1)
 
 def connect_and_display(sharding_key):
     print("Connecting with sharding key:", sharding_key)

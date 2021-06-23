@@ -12,8 +12,9 @@
 # represented exactly by floating point numbers.
 #------------------------------------------------------------------------------
 
-import oracledb
 import decimal
+
+import oracledb
 import sample_env
 
 # determine whether to use thin driver or not

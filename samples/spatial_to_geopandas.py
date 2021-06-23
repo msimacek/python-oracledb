@@ -25,8 +25,8 @@
 from shapely.wkb import loads
 import geopandas as gpd
 
-import sample_env
 import oracledb
+import sample_env
 
 # this script only supports the thick driver currently
 oracledb.defaults.thin = False

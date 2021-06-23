@@ -13,8 +13,6 @@
 # returned at once.
 #------------------------------------------------------------------------------
 
-import datetime
-
 import oracledb
 import sample_env
 
