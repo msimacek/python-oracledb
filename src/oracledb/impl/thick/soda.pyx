@@ -407,6 +407,36 @@ cdef class ThickSodaCollImpl(BaseSodaCollImpl):
         if return_doc:
             return output_doc_impl
 
+    def save(self, ThickSodaDocImpl doc_impl, str hint, bint return_doc):
+        """
+        Internal method for saving a document into the collection.
+        """
+        cdef:
+            dpiSodaDoc **output_handle = NULL
+            ThickSodaDocImpl output_doc_impl
+            uint32_t flags
+            dpiSodaOperOptions options
+            dpiSodaOperOptions *options_ptr = NULL
+            StringBuffer hint_buf = StringBuffer()
+            int status
+        if return_doc:
+            output_doc_impl = ThickSodaDocImpl.__new__(ThickSodaDocImpl)
+            output_handle = &output_doc_impl._handle
+            if hint is not None:
+               hint_buf.set_value(hint)
+               options_ptr = &options
+               self._process_options(&options, hint_buf.ptr, hint_buf.length)
+        self._db_impl._get_flags(&flags)
+        with nogil:
+            status = dpiSodaColl_saveWithOptions(self._handle,
+                                                 doc_impl._handle,
+                                                 options_ptr, flags, 
+                                                 output_handle)
+        if status < 0:
+            _raise_from_odpi()
+        if return_doc:
+            return output_doc_impl
+
     def truncate(self):
         """
         Internal method for truncating the collection (removing all documents
