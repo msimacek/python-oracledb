@@ -6,11 +6,11 @@
 3300 - Module for testing Simple Oracle Document Access (SODA) Database
 """
 
-import test_env
-
-import oracledb
 import json
 import unittest
+
+import oracledb
+import test_env
 
 @unittest.skipIf(test_env.skip_soda_tests(),
                  "unsupported client/server combination")

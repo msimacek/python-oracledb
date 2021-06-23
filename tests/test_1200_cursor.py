@@ -1,16 +1,16 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021 Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 """
 1200 - Module for testing cursors
 """
 
-import test_env
-import oracledb
 import decimal
-import datetime
 import unittest
+
+import oracledb
+import test_env
 
 class TestCase(test_env.BaseTestCase):
 

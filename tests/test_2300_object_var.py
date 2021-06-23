@@ -6,12 +6,12 @@
 2300 - Module for testing object variables
 """
 
-import test_env
-
-import oracledb
 import datetime
 import decimal
 import unittest
+
+import oracledb
+import test_env
 
 @unittest.skipIf(oracledb.defaults.thin,
                  "thin driver doesn't support database objects yet")

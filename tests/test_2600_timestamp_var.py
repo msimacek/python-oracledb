@@ -6,10 +6,10 @@
 2600 - Module for testing timestamp variables
 """
 
-import test_env
+import time
 
 import oracledb
-import time
+import test_env
 
 class TestCase(test_env.BaseTestCase):
 

@@ -1,16 +1,16 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 """
 3000 - Module for testing subscriptions
 """
 
-import test_env
-
-import oracledb
 import threading
 import unittest
+
+import oracledb
+import test_env
 
 class SubscriptionData(object):
 

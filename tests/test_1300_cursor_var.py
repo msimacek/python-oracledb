@@ -1,15 +1,15 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021 Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 """
 1300 - Module for testing cursor variables
 """
 
-import test_env
+import sys
 
 import oracledb
-import sys
+import test_env
 
 class TestCase(test_env.BaseTestCase):
 

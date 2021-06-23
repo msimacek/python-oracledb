@@ -403,7 +403,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(pool.opened, 1, "opened (4)")
 
     def test_2414_create_new_pure_connection(self):
-        "2414 - test to ensure pure connections and being created correctly"
+        "2414 - test to ensure pure connections are being created correctly"
         pool = test_env.get_pool(min=1, max=2, increment=1,
                                  getmode=oracledb.POOL_GETMODE_WAIT)
         connection_1 = pool.acquire()
@@ -548,6 +548,17 @@ class TestCase(test_env.BaseTestCase):
         # callback
         self.session_called = False
         with pool.acquire(tag="NLS_DATE_FORMAT=FULL;TIME_ZONE=UTC") as conn:
+            cursor = conn.cursor()
+            cursor.execute("select to_char(current_date) from dual")
+            result, = cursor.fetchone()
+            self.assertEqual(self.session_called, True)
+
+        # acquiring a connection with a new tag and specifying that a
+        # connection with any tag can be acquired should invoke the session
+        # callback
+        self.session_called = False
+        with pool.acquire(tag="NLS_DATE_FORMAT=FULL;TIME_ZONE=MST", \
+                          matchanytag=True) as conn:
             cursor = conn.cursor()
             cursor.execute("select to_char(current_date) from dual")
             result, = cursor.fetchone()

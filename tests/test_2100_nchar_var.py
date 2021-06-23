@@ -6,9 +6,8 @@
 2100 - Module for testing NCHAR variables
 """
 
-import test_env
-
 import oracledb
+import test_env
 
 class TestCase(test_env.BaseTestCase):
 

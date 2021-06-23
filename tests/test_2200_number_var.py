@@ -6,11 +6,11 @@
 2200 - Module for testing number variables
 """
 
-import test_env
-
-import oracledb
 import decimal
 import sys
+
+import oracledb
+import test_env
 
 class TestCase(test_env.BaseTestCase):
 

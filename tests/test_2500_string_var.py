@@ -1,18 +1,18 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021 Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 """
 2500 - Module for testing string variables
 """
 
-import test_env
+import datetime
+import random
+import string
+import unittest
 
 import oracledb
-import datetime
-import string
-import random
-import unittest
+import test_env
 
 class TestCase(test_env.BaseTestCase):
 

@@ -6,10 +6,10 @@
 1800 - Module for testing interval variables
 """
 
-import test_env
+import datetime
 
 import oracledb
-import datetime
+import test_env
 
 class TestCase(test_env.BaseTestCase):
 

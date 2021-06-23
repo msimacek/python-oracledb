@@ -6,11 +6,11 @@
 1000 - Module for testing top-level module methods
 """
 
-import test_env
-
-import oracledb
 import datetime
 import time
+
+import oracledb
+import test_env
 
 class TestCase(test_env.BaseTestCase):
     requires_connection = False

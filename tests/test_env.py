@@ -40,12 +40,12 @@
 # user for on premises databases is SYSTEM.
 #------------------------------------------------------------------------------
 
-import oracledb
-
 import getpass
 import os
 import sys
 import unittest
+
+import oracledb
 
 # default values
 DEFAULT_MAIN_USER = "pythontest"

@@ -1,16 +1,16 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 """
 3200 - Module for testing features introduced in 12.1
 """
 
-import test_env
-
-import oracledb
 import datetime
 import unittest
+
+import oracledb
+import test_env
 
 @unittest.skipUnless(test_env.get_client_version() >= (12, 1),
                      "unsupported client")
@@ -380,13 +380,11 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3220_implicit_results(self):
         "3220 - test getimplicitresults() returns the correct data"
-        cursor = self.connection.cursor()
-        cursor.execute("""
+        self.cursor.execute("""
                 declare
                     c1 sys_refcursor;
                     c2 sys_refcursor;
                 begin
-
                     open c1 for
                     select NumberCol
                     from TestNumbers
@@ -400,9 +398,8 @@ class TestCase(test_env.BaseTestCase):
                     where IntCol between 7 and 10;
 
                     dbms_sql.return_result(c2);
-
                 end;""")
-        results = cursor.getimplicitresults()
+        results = self.cursor.getimplicitresults()
         self.assertEqual(len(results), 2)
         self.assertEqual([n for n, in results[0]], [3.75, 5, 6.25])
         self.assertEqual([n for n, in results[1]], [8.75, 10, 11.25, 12.5])
@@ -502,7 +499,6 @@ class TestCase(test_env.BaseTestCase):
                 declare
                     c1 sys_refcursor;
                 begin
-
                     open c1 for
                     select NumberCol
                     from TestNumbers

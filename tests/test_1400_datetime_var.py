@@ -6,11 +6,11 @@
 1400 - Module for testing date/time variables
 """
 
-import test_env
-
-import oracledb
 import datetime
 import time
+
+import oracledb
+import test_env
 
 class TestCase(test_env.BaseTestCase):
 

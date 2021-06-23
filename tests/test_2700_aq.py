@@ -6,12 +6,12 @@
 2700 - Module for testing AQ
 """
 
-import test_env
-
-import oracledb
 import decimal
 import threading
 import unittest
+
+import oracledb
+import test_env
 
 @unittest.skipIf(oracledb.defaults.thin, "thin driver doesn't support AQ yet")
 class TestCase(test_env.BaseTestCase):
@@ -28,7 +28,7 @@ class TestCase(test_env.BaseTestCase):
         queue = self.connection.queue(self.book_queue_name, books_type)
         queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
         queue.deqoptions.deliverymode = oracledb.MSG_PERSISTENT_OR_BUFFERED
-        queue.deqoptions.visibility = oracledb.ENQ_IMMEDIATE
+        queue.deqoptions.visibility = oracledb.DEQ_IMMEDIATE
         while queue.deqone():
             pass
 
@@ -120,8 +120,7 @@ class TestCase(test_env.BaseTestCase):
         "2704 - test waiting for dequeue"
         self.__clear_books_queue()
         results = []
-        thread = threading.Thread(target=self.__deq_in_thread,
-                                  args=(results,))
+        thread = threading.Thread(target=self.__deq_in_thread, args=(results,))
         thread.start()
         books_type = self.connection.gettype(self.book_type_name)
         queue = self.connection.queue(self.book_queue_name, books_type)

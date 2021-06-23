@@ -6,12 +6,12 @@
 2800 - Module for testing AQ Bulk enqueue/dequeue
 """
 
-import test_env
-
-import oracledb
 import decimal
 import threading
 import unittest
+
+import oracledb
+import test_env
 
 RAW_QUEUE_NAME = "TEST_RAW_QUEUE"
 RAW_PAYLOAD_DATA = [

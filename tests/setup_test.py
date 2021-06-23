@@ -9,10 +9,9 @@
 # necessary for the test suite.
 #------------------------------------------------------------------------------
 
-import oracledb
-
-import test_env
 import drop_test
+import oracledb
+import test_env
 
 # connect as administrative user (usually SYSTEM or ADMIN)
 conn = oracledb.connect(test_env.get_admin_connect_string())

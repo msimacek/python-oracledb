@@ -1,14 +1,13 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 """
 1900 - Module for testing LOB (CLOB and BLOB) variables
 """
 
-import test_env
-
 import oracledb
+import test_env
 
 class TestCase(test_env.BaseTestCase):
 
@@ -271,7 +270,7 @@ class TestCase(test_env.BaseTestCase):
         temp_lobs = self.__get_temp_lobs(sid)
         self.assertEqual(temp_lobs, 0)
 
-    def test_1919_AssignStringBeyondArraySize(self):
+    def test_1919_assign_string_beyond_array_size(self):
         "1919 - test assign string to NCLOB beyond array size"
         nclobVar = self.cursor.var(oracledb.DB_TYPE_NCLOB)
         self.assertRaises(IndexError, nclobVar.setvalue, 1, "test char")

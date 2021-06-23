@@ -6,10 +6,10 @@
 2000 - Module for testing long and long raw variables
 """
 
-import test_env
+import unittest
 
 import oracledb
-import unittest
+import test_env
 
 class TestCase(test_env.BaseTestCase):
 
@@ -78,8 +78,8 @@ class TestCase(test_env.BaseTestCase):
         "2003 - test cursor description is accurate for longs"
         self.cursor.execute("select * from TestLongs")
         expected_value = [
-            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, 0),
-            ('LONGCOL', oracledb.DB_TYPE_LONG, None, None, None, None, 0)
+            ('INTCOL', oracledb.DB_TYPE_NUMBER, 10, None, 9, 0, False),
+            ('LONGCOL', oracledb.DB_TYPE_LONG, None, None, None, None, False)
         ]
         self.assertEqual(self.cursor.description, expected_value)
 

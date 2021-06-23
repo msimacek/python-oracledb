@@ -6,10 +6,10 @@
 1600 - Module for testing DML returning clauses
 """
 
-import test_env
+import unittest
 
 import oracledb
-import unittest
+import test_env
 
 class TestCase(test_env.BaseTestCase):
 

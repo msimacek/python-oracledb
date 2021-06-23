@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 """
@@ -12,8 +12,8 @@ import threading
 import time
 import unittest
 
-import test_env
 import oracledb
+import test_env
 
 class TestCase(test_env.BaseTestCase):
     requires_connection = False
@@ -132,9 +132,9 @@ class TestCase(test_env.BaseTestCase):
     def test_1106_bad_password(self):
         "1106 - connection to database with bad password"
         self.assertRaises(oracledb.DatabaseError, oracledb.connect,
-                          test_env.get_connect_string(),
                           user=test_env.get_main_user(),
-                          password=test_env.get_main_password() + "X")
+                          password=test_env.get_main_password() + "X",
+                          dsn=test_env.get_connect_string())
 
     @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support changing passwords yet")
@@ -147,9 +147,9 @@ class TestCase(test_env.BaseTestCase):
         new_password = "".join(sys_random.choice(string.ascii_letters) \
                        for i in range(20))
         connection.changepassword(test_env.get_main_password(), new_password)
-        connection = oracledb.connect(test_env.get_connect_string(),
-                                       user=test_env.get_main_user(),
-                                       password=new_password)
+        connection = oracledb.connect(dsn=test_env.get_connect_string(),
+                                      user=test_env.get_main_user(),
+                                      password=new_password)
         connection.changepassword(new_password, test_env.get_main_password())
 
     @unittest.skipIf(oracledb.defaults.thin,
@@ -200,7 +200,7 @@ class TestCase(test_env.BaseTestCase):
         cursor.execute("""
                 insert into TestTempTable (IntCol, StringCol)
                 values (:val, null)""", val=int_value)
-        connection2 = oracledb.connect(handle=connection.handle, thin=False)
+        connection2 = oracledb.connect(handle=connection.handle)
         cursor = connection2.cursor()
         cursor.execute("select IntCol from TestTempTable")
         fetched_int_value, = cursor.fetchone()
@@ -208,9 +208,14 @@ class TestCase(test_env.BaseTestCase):
         cursor.close()
         self.assertRaises(oracledb.DatabaseError, connection2.close)
         connection.close()
-        cursor = connection2.cursor()
-        self.assertRaises(oracledb.DatabaseError, cursor.execute,
-                "select count(*) from TestTempTable")
+
+    def test_1114_make_dsn(self):
+        "1114 - test making a data source name from host, port and sid"
+        format_string = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)" + \
+                        "(HOST=%s)(PORT=%d))(CONNECT_DATA=(SID=%s)))"
+        args = ("hostname", 1521, "TEST")
+        result = oracledb.makedsn(*args)
+        self.assertEqual(result, format_string % args)
 
     def test_1115_single_arg(self):
         "1115 - connection to database with user, password, DSN together"
@@ -341,8 +346,106 @@ class TestCase(test_env.BaseTestCase):
         count, = cursor.fetchone()
         self.assertEqual(count, 0)
 
-    def test_1126_threading_single_connection(self):
-        "1126 - single connection to database with multiple threads"
+    @unittest.skipIf(oracledb.defaults.thin,
+                     "thin driver doesn't support two-phase commit yet")
+    def test_1126_multiple_transactions(self):
+        "1126 - test multiple transactions on the same connection"
+        connection = test_env.get_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("truncate table TestTempTable")
+
+        id_ = random.randint(0, 2 ** 128)
+        xid = (0x1234, "%032x" % id_, "%032x" % 9)
+        connection.begin(*xid)
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                    insert into TestTempTable (IntCol, StringCol)
+                    values (1, 'tesName')""")
+            self.assertEqual(connection.prepare(), True)
+            connection.commit()
+
+        for begin_trans in (True, False):
+            val = 3
+            if begin_trans:
+                connection.begin()
+                val = 2
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                        insert into TestTempTable (IntCol, StringCol)
+                        values (:int_val, 'tesName')""", int_val=val)
+                connection.commit()
+
+        expected_rows = [(1, "tesName"), (2, "tesName"), (3, "tesName")]
+        with connection.cursor() as cursor:
+            cursor.execute("select IntCol, StringCol from TestTempTable")
+            self.assertEqual(cursor.fetchall(), expected_rows)
+
+    @unittest.skipIf(oracledb.defaults.thin,
+                     "thin driver doesn't support two-phase commit yet")
+    def test_1127_multiple_global_transactions(self):
+        "1127 - test multiple global transactions on the same connection"
+        connection = test_env.get_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("truncate table TestTempTable")
+
+        id_ = random.randint(0, 2 ** 128)
+        xid = (0x1234, "%032x" % id_, "%032x" % 9)
+        connection.begin(*xid)
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                    insert into TestTempTable (IntCol, StringCol)
+                    values (1, 'tesName')""")
+            self.assertEqual(connection.prepare(), True)
+            connection.commit()
+
+        for begin_trans in (True, False):
+            val = 3
+            if begin_trans:
+                connection.begin()
+                val = 2
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                        insert into TestTempTable (IntCol, StringCol)
+                        values (:int_val, 'tesName')""", int_val=val)
+                connection.commit()
+
+        id2_ = random.randint(0, 2 ** 128)
+        xid2 = (0x1234, "%032x" % id2_, "%032x" % 9)
+        connection.begin(*xid2)
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                    insert into TestTempTable (IntCol, StringCol)
+                    values (4, 'tesName')""")
+            self.assertEqual(connection.prepare(), True)
+            connection.commit()
+
+        expected_rows = [(1, "tesName"), (2, "tesName"), (3, "tesName"),
+                         (4, "tesName")]
+
+        with connection.cursor() as cursor:
+            cursor.execute("select IntCol, StringCol from TestTempTable")
+            self.assertEqual(cursor.fetchall(), expected_rows)
+
+    @unittest.skipIf(oracledb.defaults.thin,
+                     "thin driver doesn't support two-phase commit yet")
+    def test_1128_exception_creating_global_txn_after_local_txn(self):
+        "1128 - test creating global txn after a local txn"
+        connection = test_env.get_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("truncate table TestTempTable")
+
+        val = 2
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                    insert into TestTempTable (IntCol, StringCol)
+                    values (:int_val, 'tesName')""", int_val=val)
+
+        id_ = random.randint(0, 2 ** 128)
+        xid = (0x1234, "%032x" % id_, "%032x" % 9)
+        self.assertRaises(oracledb.DatabaseError, connection.begin, *xid)
+
+    def test_1129_threading_single_connection(self):
+        "1129 - single connection to database with multiple threads"
         with test_env.get_connection(threaded=True) as connection:
             threads = [threading.Thread(target=self.__verify_fetched_data,
                                         args=(connection,)) for i in range(3)]
@@ -351,8 +454,8 @@ class TestCase(test_env.BaseTestCase):
             for t in threads:
                 t.join()
 
-    def test_1127_cancel(self):
-        "1127 - test connection cancel"
+    def test_1130_cancel(self):
+        "1130 - test connection cancel"
         conn = test_env.get_connection()
         sleep_proc_name = "dbms_session.sleep" \
                 if int(conn.version.split(".")[0]) >= 18 \
@@ -372,7 +475,6 @@ class TestCase(test_env.BaseTestCase):
             cursor.execute("select user from dual")
             user, = cursor.fetchone()
             self.assertEqual(user, test_env.get_main_user().upper())
-
 
 if __name__ == "__main__":
     test_env.run_test_cases()

@@ -7,9 +7,9 @@
 """
 
 import unittest
-import test_env
 
 import oracledb
+import test_env
 
 @unittest.skipUnless(test_env.get_client_version() >= (12, 1),
                      "unsupported client")
