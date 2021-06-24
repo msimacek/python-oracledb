@@ -147,6 +147,7 @@ cdef class ReadBuffer:
     cdef:
         ssize_t _max_packet_size, _max_size, _size, _offset, _bytes_to_process
         ChunkedBytesBuffer _chunked_bytes_buf
+        const char_type _split_data[255]
         ssize_t _packet_start_offset
         const char_type *_data
         bytearray _data_obj
@@ -196,7 +197,7 @@ cdef class ReadBuffer:
         buffer is used.
         """
         cdef:
-            ssize_t num_bytes_left, num_bytes_split
+            ssize_t num_bytes_left, num_bytes_split, max_split_data
             const char_type *source_ptr
             uint8_t packet_type
             char_type *dest_ptr
@@ -219,31 +220,38 @@ cdef class ReadBuffer:
             self._offset += num_bytes
             return source_ptr
 
-        # the bytes required are split across multiple packets so a chunked
-        # read is started -- unless one was already started (such as takes
-        # place when a "long" string is read)
-        if not in_chunked_read:
-            self._chunked_bytes_buf.start_chunked_read()
-
-        # get a chunk to accommodate the number of bytes left in the current
-        # packet and copy the remainder of the packet into that chunk
-        dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_left)
+        # the requested bytes are split across multiple packets; if a chunked
+        # read is in progress, a chunk is acquired that will accommodate the
+        # remainder of the bytes in the current packet; otherwise, the split
+        # buffer will be used instead (after first checking to see if there is
+        # sufficient room available within it)
+        if in_chunked_read:
+            dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_left)
+        else:
+            max_split_data = sizeof(self._split_data)
+            if max_split_data < num_bytes:
+                message = f"split buffer of length {max_split_data} " \
+                          f"insufficient to hold {num_bytes} bytes"
+                errors._raise_from_string(exceptions.InternalError, message)
+            dest_ptr = <char_type*> self._split_data
         memcpy(dest_ptr, source_ptr, num_bytes_left)
 
         # acquire a new packet and copy the split bytes into the chunked buffer
+        # or split buffer, as appropriate
         self.receive_packet(&packet_type)
         self.skip_bytes(2)                  # skip data flags
         source_ptr = &self._data[self._offset]
         num_bytes_split = num_bytes - num_bytes_left
-        dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_split)
+        if in_chunked_read:
+            dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_split)
+        else:
+            dest_ptr = <char_type*> &self._split_data[num_bytes_left]
         memcpy(dest_ptr, source_ptr, num_bytes_split)
         self._offset += num_bytes_split
 
-        # if not previously in a chunked read, end the chunked read that was
-        # started earlier in this method
-        if not in_chunked_read:
-            return self._chunked_bytes_buf.end_chunked_read()
-        return source_ptr
+        # return the split buffer unconditionally; if performing a chunked read
+        # the return value is ignored anyway
+        return self._split_data
 
     cdef inline ssize_t bytes_left(self):
         return self._size - self._offset
@@ -321,7 +329,16 @@ cdef class ReadBuffer:
                           memoryview(self))
 
     cdef int skip_bytes(self, ssize_t num_bytes) except -1:
-        self._get_raw(num_bytes)
+        """
+        Skip the specified number of bytes. In order to avoid copying data, the
+        number of bytes left in the packet is determined and only that amount
+        is requested.
+        """
+        cdef ssize_t num_bytes_this_time
+        while num_bytes > 0:
+            num_bytes_this_time = min(num_bytes, self._size - self._offset)
+            self._get_raw(num_bytes_this_time)
+            num_bytes -= num_bytes_this_time
 
     cdef void unread_bytes(self, ssize_t num_bytes):
         self._offset -= num_bytes
@@ -357,7 +374,6 @@ cdef class ReadBuffer:
         low_bits = b4 << 24 | b5 << 16 | b6 << 8 | b7
         all_bits = high_bits << 32 | (low_bits & 0xffffffff)
         double_ptr = <double*> &all_bits
-        ptr = <uint8_t*> double_ptr
         return double_ptr[0]
 
     cdef object read_binary_float(self):
@@ -379,7 +395,6 @@ cdef class ReadBuffer:
             b3 = ~b3
         all_bits = (b0 << 24) | (b1 << 16) | (b2 << 8) | b3
         float_ptr = <float*> &all_bits
-        ptr = <uint8_t*> float_ptr
         return float_ptr[0]
 
     cdef uint8_t read_uint8(self) except *:
@@ -431,7 +446,7 @@ cdef class ReadBuffer:
     cdef object read_interval_ds(self, uint8_t num_bytes):
         cdef:
             int32_t days, hours, minutes, second, total_seconds, fseconds
-            const uint8_t *ptr = <uint8_t*> self._get_raw(num_bytes)
+            const char_type *ptr = self._get_raw(num_bytes)
         days = unpack_uint32(ptr, BYTE_ORDER_MSB) - TNS_DURATION_MID
         fseconds = unpack_uint32(&ptr[7], BYTE_ORDER_MSB) - TNS_DURATION_MID
         hours = ptr[4] - TNS_DURATION_OFFSET
@@ -483,14 +498,15 @@ cdef class ReadBuffer:
 
     cdef object read_oracle_number(self, uint8_t num_bytes,
                                    int preferred_num_type):
-        cdef uint8_t num_digits, byte, digit
-        cdef bint is_positive, is_integer
-        cdef int16_t decimal_point_index
-        cdef const char_type *ptr
-        cdef char_type buf[NUMBER_AS_TEXT_CHARS]
-        cdef uint8_t digits[NUMBER_MAX_DIGITS]
-        cdef int8_t exponent
-        cdef str text
+        cdef:
+            char_type buf[NUMBER_AS_TEXT_CHARS]
+            uint8_t digits[NUMBER_MAX_DIGITS]
+            uint8_t num_digits, byte, digit
+            bint is_positive, is_integer
+            int16_t decimal_point_index
+            const char_type *ptr
+            int8_t exponent
+            str text
 
         # the first byte is the exponent; positive numbers have the highest
         # order bit set, whereas negative numbers have the highest order bit
