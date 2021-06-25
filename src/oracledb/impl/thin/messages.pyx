@@ -24,13 +24,14 @@ cdef class Message:
         uint16_t end_to_end_seq_num
         uint8_t packet_type
         bint error_occurred
+        bint flush_out_binds
 
     def __cinit__(self):
         self.message_type = TNS_MSG_TYPE_FUNCTION
         self.error_info = _OracleErrorInfo()
 
     cdef bint _has_more_data(self, ReadBuffer buf):
-        return buf.bytes_left() > 0
+        return buf.bytes_left() > 0 and not self.flush_out_binds
 
     cdef int _preprocess(self) except -1:
         pass
@@ -144,6 +145,7 @@ cdef class Message:
         self._write_function_code(buf)
 
     cdef int process(self, ReadBuffer buf) except -1:
+        self.flush_out_binds = False
         self._preprocess()
         buf.skip_bytes(2)                   # skip data flags
         while self._has_more_data(buf):
@@ -193,7 +195,7 @@ cdef class MessageWithData(Message):
         return cursor
 
     cdef bint _has_more_data(self, ReadBuffer buf):
-        return not self.processed_error
+        return not self.processed_error and not self.flush_out_binds
 
     cdef int _write_bind_params(self, WriteBuffer buf, list params) except -1:
         cdef:
@@ -483,6 +485,8 @@ cdef class MessageWithData(Message):
             self._process_row_header(buf)
         elif message_type == TNS_MSG_TYPE_ROW_DATA:
             self._process_row_data(buf)
+        elif message_type == TNS_MSG_TYPE_FLUSH_OUT_BINDS:
+            self.flush_out_binds = True
         elif message_type == TNS_MSG_TYPE_DESCRIBE_INFO:
             buf.skip_bytes(buf.read_uint8())
             self._process_describe_info(buf, self.cursor)

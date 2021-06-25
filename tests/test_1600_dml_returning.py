@@ -272,5 +272,23 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute(None, [4, int_var])
         self.assertEqual(int_var.getvalue(), [])
 
+    def test_1612_insert_with_dml_returning_and_error(self):
+        "1612 - test DML returning when an error occurs"
+        self.cursor.execute("truncate table TestTempTable")
+        int_val = 7
+        str_val = "A" * 401
+        int_var = self.cursor.var(oracledb.NUMBER)
+        str_var = self.cursor.var(str)
+        parameters = dict(int_val=int_val, str_val=str_val, int_var=int_var,
+                          str_var=str_var)
+        with self.assertRaises(oracledb.DatabaseError) as error:
+            self.cursor.execute("""
+                    insert into TestTempTable (IntCol, StringCol)
+                    values (:int_val, :str_val)
+                    returning IntCol, StringCol into :int_var, :str_var""",
+                    parameters)
+        error_obj, = error.exception.args
+        self.assertEqual(error_obj.code, 12899)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
