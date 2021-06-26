@@ -952,6 +952,13 @@ cdef class AuthMessage(Message):
         self.user_bytes = conn_impl.username.encode()
         self.user_bytes_len = <uint8_t> len(self.user_bytes)
 
+    def _decrypt_cbc(self, key, encrypted_text):
+        iv = bytes(16)
+        algo = algorithms.AES(key)
+        cipher = Cipher(algo, modes.CBC(iv))
+        decryptor = cipher.decryptor()
+        return decryptor.update(encrypted_text)
+
     def _encrypt_cbc(self, key, plain_text):
         block_size = 16
         iv = bytes(block_size)
@@ -964,24 +971,21 @@ cdef class AuthMessage(Message):
         return encryptor.update(plain_text) + encryptor.finalize()
 
     cdef int _generate_auth_response(self) except -1:
+        cdef bytes password_bytes = self.password.encode()
 
         # create password hash
         verifier_data = bytes.fromhex(self.session_data['AUTH_VFR_DATA'])
-        h = hashlib.sha1(self.password.encode())
+        h = hashlib.sha1(password_bytes)
         h.update(verifier_data)
-        password_hash = h.digest() + b"\x00\x00\x00\x00"
+        password_hash = h.digest() + bytes(4)
 
         # encrypt client session key
         client_key = secrets.token_bytes(48)
         encoded_client_key = self._encrypt_cbc(password_hash, client_key)
 
-        # decode server key
+        # decrypt server key
         encoded_server_key = bytes.fromhex(self.session_data['AUTH_SESSKEY'])
-        iv = bytes(16)
-        algo = algorithms.AES(password_hash)
-        cipher = Cipher(algo, modes.CBC(iv))
-        decryptor = cipher.decryptor()
-        server_key = decryptor.update(encoded_server_key)
+        server_key = self._decrypt_cbc(password_hash, encoded_server_key)
 
         # create combo key used for encrypting password
         b = bytearray(24)
@@ -993,9 +997,9 @@ cdef class AuthMessage(Message):
 
         # encrypt password
         salt = secrets.token_bytes(16)
-        password_with_salt = salt + self.password.encode()
-        encoded_password = self._encrypt_cbc(combo_key, password_with_salt)
-        self.encoded_password = encoded_password.hex().upper()
+        password_with_salt = salt + password_bytes
+        encrypted_password = self._encrypt_cbc(combo_key, password_with_salt)
+        self.encoded_password = encrypted_password.hex().upper()
         self.session_key = encoded_client_key.hex().upper()[:96]
 
     cdef int _process_return_parameters(self, ReadBuffer buf) except -1:
