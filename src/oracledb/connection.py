@@ -495,6 +495,13 @@ class Connection:
         return self._impl.get_ltxid()
 
     @property
+    def maxBytesPerCharacter(self) -> int:
+        """
+        Deprecated. Use the constant value 4 instead.
+        """
+        return 4
+
+    @property
     def module(self) -> None:
         raise AttributeError("module is not readable")
 
