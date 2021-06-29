@@ -113,14 +113,9 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         else:
             typ = dbtype
         scale = type_info.scale + type_info.fsPrecision
-        return cursor_impl.create_var(cursor.connection, typ, size=size,
-                                      num_elements=self._fetch_array_size,
-                                      precision=type_info.precision,
-                                      scale=scale, name=name,
-                                      nulls_allowed=query_info.nullOk,
-                                      inconverter=None, outconverter=None,
-                                      encoding_errors=None,
-                                      bypass_decode=False)
+        return self._create_default_fetch_var(cursor.connection, typ, name,
+                                              size, type_info.precision, scale,
+                                              query_info.nullOk)
 
     cdef bint _is_plsql(self):
         return <bint> self._stmt_info.isPLSQL

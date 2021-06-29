@@ -13,7 +13,7 @@
 # performance of this technique is significantly better than fetching the LOBs
 # and then reading the contents of the LOBs as it avoids round-trips to the
 # database. Be aware, however, that this method requires contiguous memory so
-# is not usable for very large LOBs.
+# is not suitable for very large LOBs.
 #------------------------------------------------------------------------------
 
 import oracledb
@@ -22,14 +22,10 @@ import sample_env
 # determine whether to use thin driver or not
 oracledb.defaults.thin = sample_env.get_is_thin()
 
-def output_type_handler(cursor, name, default_type, size, precision, scale):
-    if default_type == oracledb.CLOB:
-        return cursor.var(oracledb.LONG_STRING, arraysize=cursor.arraysize)
-    if default_type == oracledb.BLOB:
-        return cursor.var(oracledb.LONG_BINARY, arraysize=cursor.arraysize)
+# indicate that LOBS should not be fetched
+oracledb.defaults.fetch_lobs = False
 
 connection = oracledb.connect(sample_env.get_main_connect_string())
-connection.outputtypehandler = output_type_handler
 cursor = connection.cursor()
 
 # add some data to the tables

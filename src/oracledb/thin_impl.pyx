@@ -40,6 +40,7 @@ import weakref
 cydatetime.import_datetime()
 
 from . import constants, errors, exceptions
+from .defaults import defaults
 
 from .base_impl cimport get_exception_class, NUM_TYPE_FLOAT
 from .base_impl cimport NUM_TYPE_INT, NUM_TYPE_DECIMAL, NUM_TYPE_STR

@@ -49,26 +49,17 @@ cdef class ThinCursorImpl(BaseCursorImpl):
                     message = "Expecting cursor.var object from " \
                               "outputtypehandler method"
                     errors._raise_from_string(TypeError, message)
-                var_impl = <ThinVarImpl> var._impl
-                if var_impl.dbtype is not fetch_info._dbtype:
-                    conversion_helper(var_impl, fetch_info, requires_define)
         if var is None:
-            var = self.create_var(conn, fetch_info._dbtype,
-                                  size=fetch_info._size,
-                                  scale=fetch_info._scale,
-                                  precision=fetch_info._precision,
-                                  num_elements=self._fetch_array_size,
-                                  name=fetch_info._name,
-                                  nulls_allowed=fetch_info._nulls_allowed,
-                                  inconverter=None, outconverter=None,
-                                  encoding_errors=None, bypass_decode=False)
+            var = self._create_default_fetch_var(conn, fetch_info._dbtype,
+                                                 fetch_info._name,
+                                                 fetch_info._size,
+                                                 fetch_info._precision,
+                                                 fetch_info._scale,
+                                                 fetch_info._nulls_allowed)
         var_impl = <ThinVarImpl> var._impl
         var_impl._fetch_info = fetch_info
-        if fetch_info._dbtype._ora_type_num == TNS_DATA_TYPE_NUMBER \
-                and var_impl._preferred_num_type == NUM_TYPE_FLOAT:
-            if fetch_info._scale == 0 or (fetch_info._scale == -127 \
-                    and fetch_info._precision == 0):
-                var_impl._preferred_num_type = NUM_TYPE_INT
+        if var_impl.dbtype is not fetch_info._dbtype:
+            conversion_helper(var_impl, fetch_info, requires_define)
         return var
 
     cdef bint _is_plsql(self):

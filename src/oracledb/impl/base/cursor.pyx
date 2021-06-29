@@ -56,6 +56,30 @@ cdef class BaseCursorImpl:
         """
         raise NotImplementedError()
 
+    cdef object _create_default_fetch_var(self, object conn, object typ,
+                                          str name, uint32_t size,
+                                          int16_t precision, int16_t scale,
+                                          bint nulls_allowed):
+        """
+        Creates a default variable given fetch information. The defaults for
+        fetching LOBs and decimals are also consulted and adjustments made as
+        needed.
+        """
+        if defaults.fetch_decimals and typ is DB_TYPE_NUMBER:
+            typ = decimal.Decimal
+        elif not defaults.fetch_lobs:
+            if typ is DB_TYPE_BLOB:
+                typ = DB_TYPE_LONG_RAW
+            elif typ is DB_TYPE_CLOB or typ is DB_TYPE_NCLOB:
+                typ = DB_TYPE_LONG
+        return self.create_var(conn, typ, name=name, size=size,
+                               precision=precision, scale=scale,
+                               nulls_allowed=nulls_allowed,
+                               num_elements=self._fetch_array_size,
+                               inconverter=None, outconverter=None,
+                               encoding_errors=None, bypass_decode=False,
+                               is_array=False)
+
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef object _create_row(self):
@@ -301,6 +325,14 @@ cdef class BaseCursorImpl:
         else:
             self._bind_by_position(cursor, parameters)
 
+    def close(self):
+        """
+        Closes the cursor and makes it unusable for further operations.
+        """
+        self.bind_vars = None
+        self.fetch_vars = None
+        self._close()
+
     cpdef create_var(self, object conn, object typ, uint32_t size=0,
                      uint32_t num_elements=1, object inconverter=None,
                      object outconverter=None, str encoding_errors=None,
@@ -333,14 +365,6 @@ cdef class BaseCursorImpl:
             if scale == 0 or (scale == -127 and precision == 0):
                 impl._preferred_num_type = NUM_TYPE_INT
         return Var._from_impl(impl, typ)
-
-    def close(self):
-        """
-        Closes the cursor and makes it unusable for further operations.
-        """
-        self.bind_vars = None
-        self.fetch_vars = None
-        self._close()
 
     def execute(self, cursor):
         """

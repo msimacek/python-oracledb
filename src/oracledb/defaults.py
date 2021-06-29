@@ -17,5 +17,7 @@ class Defaults:
         self.events = False
         self.ping_interval = 60
         self.config_dir = os.environ.get("TNS_ADMIN")
+        self.fetch_lobs = True
+        self.fetch_decimals = False
 
 defaults = Defaults()

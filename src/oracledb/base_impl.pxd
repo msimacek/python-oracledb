@@ -86,6 +86,10 @@ cdef class BaseCursorImpl:
                                uint32_t num_elements=*,
                                uint32_t pos=*) except -1
     cdef int _close(self) except -1
+    cdef object _create_default_fetch_var(self, object conn, object typ,
+                                          str name, uint32_t size,
+                                          int16_t precision, int16_t scale,
+                                          bint nulls_allowed)
     cdef object _create_row(self)
     cdef BaseVarImpl _create_var_impl(self, object connection)
     cdef object _create_var_by_type(self, object connection, object value,
