@@ -125,6 +125,8 @@ class Connection:
             threaded = defaults.threaded
         if events is None:
             events = defaults.events
+        if config_dir is None:
+            config_dir = defaults.config_dir
         if pool is None:
             pool_impl = None
         elif not isinstance(pool, pool_module.Pool):

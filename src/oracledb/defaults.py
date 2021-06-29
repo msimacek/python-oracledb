@@ -2,6 +2,8 @@
 # Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+import os
+
 class Defaults:
     """
     Identifies the default values used by the driver.
@@ -14,5 +16,6 @@ class Defaults:
         self.threaded = False
         self.events = False
         self.ping_interval = 60
+        self.config_dir = os.environ.get("TNS_ADMIN")
 
 defaults = Defaults()

@@ -23,6 +23,7 @@ from .subscr import Message, MessageQuery, MessageRow, MessageTable
 from .lob import LOB
 from .dbobject import DbObject, DbObjectType
 from .var import Var
+from .defaults import defaults
 
 from .base_impl cimport get_exception_class
 from .base_impl cimport BaseConnImpl, BaseCursorImpl, BaseVarImpl, DbType

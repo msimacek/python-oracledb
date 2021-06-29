@@ -370,7 +370,7 @@ def clientversion():
 
 
 def init_oracle_client(lib_dir=None, config_dir=None, error_url=None,
-        driver_name=None):
+                       driver_name=None):
     """
     Initialize the Oracle Client library. This method is available externally
     in order to be called with parameters that control how the Oracle Client
@@ -388,6 +388,8 @@ def init_oracle_client(lib_dir=None, config_dir=None, error_url=None,
     memset(&params, 0, sizeof(dpiContextCreateParams))
     encoding_bytes = constants.ENCODING.encode()
     params.defaultEncoding = encoding_bytes
+    if config_dir is None:
+        config_dir = defaults.config_dir
     if lib_dir is not None:
         lib_dir_bytes = lib_dir.encode()
         params.oracleClientLibDir = lib_dir_bytes

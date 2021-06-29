@@ -113,8 +113,6 @@ class ConnectParams:
         self.port = port
         self.service_name = service_name
         self.secure_transport = secure_transport
-        if config_dir is None:
-            config_dir = os.environ.get("TNS_ADMIN")
         self.config_dir = config_dir
         self.enable_drcp = enable_drcp
         self._dsn = None

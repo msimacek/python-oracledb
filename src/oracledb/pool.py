@@ -164,6 +164,8 @@ class Pool:
             threaded = defaults.threaded
         if events is None:
             events = defaults.events
+        if config_dir is None:
+            config_dir = defaults.config_dir
         if ping_interval is None:
             ping_interval = defaults.ping_interval
         if connectiontype is None:
