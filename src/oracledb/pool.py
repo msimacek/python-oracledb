@@ -592,6 +592,15 @@ class Pool:
         self._impl.set_stmt_cache_size(value)
 
     @property
+    def thin(self) -> bool:
+        """
+        Returns a boolean indicating if the pool was created with the thin
+        driver (True) or thick driver (False).
+        """
+        self._verify_open()
+        return isinstance(self._impl, thin_impl.ThinPoolImpl)
+
+    @property
     def timeout(self) -> int:
         """
         Specifies the time (in seconds) after which idle connections will be

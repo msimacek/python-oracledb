@@ -801,6 +801,15 @@ class Connection:
         self._impl.tag = value
 
     @property
+    def thin(self) -> bool:
+        """
+        Returns a boolean indicating if the connection was established with the
+        thin driver (True) or thick driver (False).
+        """
+        self._verify_connected()
+        return isinstance(self._impl, thin_impl.ThinConnImpl)
+
+    @property
     def tnsentry(self) -> str:
         """
         Deprecated. Use dsn property instead.
