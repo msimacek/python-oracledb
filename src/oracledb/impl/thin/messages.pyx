@@ -1225,44 +1225,40 @@ cdef class ExecuteMessage(MessageWithData):
             list params = stmt._bind_info_list
 
         # determine the options to use for the execute
+        options = 0
+        if not self.requires_define and not self.parse_only \
+                and params is not None:
+            num_params = <uint32_t> len(params)
         if self.requires_define:
-            options = TNS_EXEC_OPTION_FETCH
             options |= TNS_EXEC_OPTION_DEFINE
-            num_iters = self.cursor_impl.prefetchrows
-        elif self.cursor_impl._requires_full_execute:
-            options = TNS_EXEC_OPTION_FETCH
-            options |= TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
-            num_iters = self.cursor_impl._fetch_array_size
-        elif self.parse_only:
-            options = TNS_EXEC_OPTION_PARSE
-            if not stmt._is_plsql:
-                options |= TNS_EXEC_OPTION_NOT_PLSQL
-            if stmt._is_query:
-                options |= TNS_EXEC_OPTION_DESCRIBE
-        else:
-            if params:
-                num_params = <uint32_t> len(params)
-            options = TNS_EXEC_OPTION_EXECUTE | \
-                TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
+        elif not self.parse_only and stmt._sql is not None:
             dml_options = TNS_EXEC_OPTION_IMPLICIT_RESULTSET
-            if stmt._cursor_id == 0:
-                options |= TNS_EXEC_OPTION_PARSE
-            if not stmt._is_plsql:
-                options |= TNS_EXEC_OPTION_NOT_PLSQL
-            elif num_params > 0:
-                options |= TNS_EXEC_OPTION_PLSQL_BIND
-            if stmt._is_query:
+            options |= TNS_EXEC_OPTION_EXECUTE
+        if stmt._cursor_id == 0:
+            options |= TNS_EXEC_OPTION_PARSE
+        if stmt._is_query:
+            if self.parse_only:
+                options |= TNS_EXEC_OPTION_DESCRIBE
+            else:
                 if self.cursor_impl.prefetchrows > 0:
                     options |= TNS_EXEC_OPTION_FETCH
-                num_iters = self.cursor_impl.prefetchrows
-            if num_params > 0:
-                options |= TNS_EXEC_OPTION_BIND
-            if self.batcherrors:
-                options |= TNS_EXEC_OPTION_BATCH_ERRORS
-            if self.arraydmlrowcounts:
-                dml_options = TNS_EXEC_OPTION_DML_ROWCOUNTS
-            if self.conn_impl.autocommit:
-                options |= TNS_EXEC_OPTION_COMMIT
+                    options |= TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
+                if stmt._cursor_id == 0 or self.requires_define:
+                    num_iters = self.cursor_impl.prefetchrows
+                else:
+                    num_iters = self.cursor_impl._fetch_array_size
+        if not stmt._is_plsql:
+            options |= TNS_EXEC_OPTION_NOT_PLSQL
+        elif num_params > 0:
+            options |= TNS_EXEC_OPTION_PLSQL_BIND
+        if num_params > 0:
+            options |= TNS_EXEC_OPTION_BIND
+        if self.batcherrors:
+            options |= TNS_EXEC_OPTION_BATCH_ERRORS
+        if self.arraydmlrowcounts:
+            dml_options = TNS_EXEC_OPTION_DML_ROWCOUNTS
+        if self.conn_impl.autocommit:
+            options |= TNS_EXEC_OPTION_COMMIT
 
         # write piggybacks, if needed
         self._write_piggybacks(buf)
