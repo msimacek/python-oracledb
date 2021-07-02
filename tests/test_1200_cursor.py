@@ -1049,5 +1049,14 @@ class TestCase(test_env.BaseTestCase):
                           "func_Test", oracledb.NUMBER, [], kwargs,
                           keywordParameters=kwargs)
 
+    def test_1288_refcursor_execute_different_sql(self):
+        "1288 - test executing different SQL after getting a REF cursor"
+        with self.connection.cursor() as cursor:
+            refcursor = self.connection.cursor()
+            cursor.callproc("myrefcursorproc", [refcursor])
+            var = cursor.var(int)
+            refcursor.execute("begin :1 := 15; end;", [var])
+            self.assertEqual(var.getvalue(), 15)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
