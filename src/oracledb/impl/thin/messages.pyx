@@ -640,6 +640,23 @@ cdef class MessageWithData(Message):
             num_bytes = buf.read_ub4()      # skip replay context
             if num_bytes > 0:
                 buf.skip_bytes(num_bytes)
+        elif opcode == TNS_SERVER_PIGGYBACK_SESS_RET:
+            buf.read_ub2()
+            buf.skip_bytes(1)
+            num_elements = buf.read_ub2()
+            if num_elements > 0:
+                buf.skip_bytes(1)
+                for i in range(num_elements):
+                    num_bytes = buf.read_ub2()
+                    if num_bytes > 0:       # skip key
+                        buf.skip_bytes(num_bytes + 1)
+                    num_bytes = buf.read_ub2()
+                    if num_bytes > 0:       # skip value
+                        buf.skip_bytes(num_bytes + 1)
+                    buf.read_ub2()          # skip flags
+            buf.read_ub4()                  # session flags
+            buf.read_ub4()                  # session id
+            buf.read_ub2()                  # serial number
         else:
             msg = f"Unhandled server side piggyback opcode: {opcode}"
             raise Exception(msg)
