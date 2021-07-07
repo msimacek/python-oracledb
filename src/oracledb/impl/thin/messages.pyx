@@ -1580,7 +1580,7 @@ cdef class ProtocolMessage(Message):
         buf.write_uint8(TNS_MSG_TYPE_PROTOCOL)
         buf.write_uint8(6)                  # protocol version (8.1 and higher)
         buf.write_uint8(0)                  # "array" terminator
-        buf.write_bytes(b'py-oracledb\x00') # unique name for driver
+        buf.write_bytes(b'python-oracledb\x00') # unique name for driver
 
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:

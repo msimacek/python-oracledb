@@ -19,5 +19,6 @@ class Defaults:
         self.config_dir = os.environ.get("TNS_ADMIN")
         self.fetch_lobs = True
         self.fetch_decimals = False
+        self.prefetchrows = 2
 
 defaults = Defaults()

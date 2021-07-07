@@ -21,6 +21,7 @@ class Cursor:
         self._impl = connection._impl.create_cursor_impl()
         self._impl.scrollable = scrollable
         self._impl.arraysize = defaults.arraysize
+        self._impl.prefetchrows = defaults.prefetchrows
 
     def __del__(self):
         if self._impl is not None:

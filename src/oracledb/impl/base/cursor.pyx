@@ -4,10 +4,6 @@
 
 cdef class BaseCursorImpl:
 
-    def __cinit__(self, conn_impl):
-        self.arraysize = 100
-        self.prefetchrows = 2
-
     cdef int _bind_by_name(self, object cursor, dict params,
                            uint32_t num_elements=1, uint32_t pos=0) except -1:
         """
