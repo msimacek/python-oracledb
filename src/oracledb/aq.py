@@ -6,7 +6,7 @@ import datetime
 
 from . import connection as connection_module
 from typing import Type, Union
-from . import errors
+from . import errors, exceptions
 from .dbobject import DbObject, DbObjectType
 
 class Queue:
