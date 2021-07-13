@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------
 
 from typing import Callable, Type
-from . import constants, exceptions, utils, thick_impl, thin_impl
+from . import constants, errors, exceptions, utils, thick_impl, thin_impl
 from . import connection as connection_module
 from .defaults import defaults
 

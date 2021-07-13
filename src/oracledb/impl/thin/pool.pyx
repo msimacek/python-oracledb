@@ -53,7 +53,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
         """
         Create a single connection using the pool's information. This
         connection may be placed in the pool or may be returned directly (such
-        as when the pool is full and POOL_GETMODE_FORCEWAIT is being used).
+        as when the pool is full and POOL_GETMODE_FORCEGET is being used).
         """
         cdef ThinConnImpl conn_impl
         conn_impl = ThinConnImpl(self.username, self.dsn)

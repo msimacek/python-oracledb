@@ -78,7 +78,7 @@ class LOB:
                 amount = 1
         return self._impl.read(offset, amount)
 
-    def setfilename(sefl, dir_alias: str, name: str) -> None:
+    def setfilename(self, dir_alias: str, name: str) -> None:
         """
         Set the directory alias and name of a BFILE type LOB.
         """

@@ -597,7 +597,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_1250_set_input_sizes_empty_list(self):
         "1250 - test setting input sizes with an empty list"
-        empty_list = {}
+        empty_list = []
         self.cursor.prepare("select 239 from dual")
         self.cursor.setinputsizes(*empty_list)
         self.cursor.execute(None, empty_list)
