@@ -117,20 +117,6 @@ class ConnectParams:
         self.enable_drcp = enable_drcp
         self._dsn = None
 
-    def can_use_oob(self):
-        """
-        Return a boolean indicating if the platform supports out-of-band urgent
-        data (all platforms besides Windows) and a configuration file hasn't
-        disabled it.  """
-        if sys.platform == "win32":
-            return False
-        sqlnet_config = get_config_file(self.config_dir, "sqlnet.ora")
-        if sqlnet_config is not None:
-            disable_oob = sqlnet_config.entries.get("DISABLE_OOB")
-            if disable_oob is not None:
-                return disable_oob.lower() != "on"
-        return True
-
     def get_connect_data(self):
         """
         Return normalized connect data used for communicating with the server.
@@ -282,6 +268,21 @@ class ConnectParams:
                 return
         message = f"unable to find TNS entry name {name}"
         raise exceptions.DatabaseError(message)
+
+    def supports_oob(self):
+        """
+        Return a boolean indicating if the platform supports out-of-band urgent
+        data (all platforms besides Windows) and a configuration file hasn't
+        disabled it.
+        """
+        if sys.platform == "win32":
+            return False
+        sqlnet_config = get_config_file(self.config_dir, "sqlnet.ora")
+        if sqlnet_config is not None:
+            disable_oob = sqlnet_config.entries.get("DISABLE_OOB")
+            if disable_oob is not None:
+                return disable_oob.lower() != "on"
+        return True
 
 
 def parse_structured_data(node, data):

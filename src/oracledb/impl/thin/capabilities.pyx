@@ -8,7 +8,8 @@ cdef class Capabilities:
         uint8_t ttc_field_version
         bytearray compile_caps
         bytearray runtime_caps
-        bint can_use_oob
+        bint supports_oob
+        bint supports_12c_logon
 
     def __init__(self):
         self._init_compile_caps()
@@ -17,13 +18,16 @@ cdef class Capabilities:
     cdef void _adjust_for_protocol(self, uint16_t protocol_version,
                                    uint16_t protocol_options):
         self.protocol_version = protocol_version
-        self.can_use_oob = protocol_options & TNS_CAN_RECV_ATTENTION
+        self.supports_oob = protocol_options & TNS_CAN_RECV_ATTENTION
+        self.supports_12c_logon = True
 
     @cython.boundscheck(False)
     cdef void _adjust_for_server_compile_caps(self, bytearray server_caps):
         if server_caps[TNS_CCAP_FIELD_VERSION] < self.ttc_field_version:
             self.ttc_field_version = server_caps[TNS_CCAP_FIELD_VERSION]
             self.compile_caps[TNS_CCAP_FIELD_VERSION] = self.ttc_field_version
+        if not server_caps[TNS_CCAP_LOGON_TYPES] & TNS_CCAP_O7LOGON:
+            self.supports_12c_logon = False
 
     @cython.boundscheck(False)
     cdef void _adjust_for_server_runtime_caps(self, bytearray server_caps):
@@ -35,7 +39,8 @@ cdef class Capabilities:
         self.compile_caps = bytearray(TNS_CCAP_MAX)
         self.compile_caps[TNS_CCAP_SQL_VERSION] = TNS_CCAP_SQL_VERSION_MAX
         self.compile_caps[TNS_CCAP_LOGON_TYPES] = \
-                TNS_CCAP_O5LOGON | TNS_CCAP_O5LOGON_NP
+                TNS_CCAP_O5LOGON | TNS_CCAP_O5LOGON_NP | \
+                TNS_CCAP_O7LOGON | TNS_CCAP_O8LOGON_LONG_IDENTIFIER
         self.compile_caps[TNS_CCAP_FIELD_VERSION] = self.ttc_field_version
         self.compile_caps[TNS_CCAP_SERVER_DEFINE_CONV] = 1
         self.compile_caps[TNS_CCAP_TTC1] = \

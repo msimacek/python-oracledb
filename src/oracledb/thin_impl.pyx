@@ -21,6 +21,8 @@ from libc.stdint cimport UINT8_MAX, UINT16_MAX, UINT32_MAX, UINT64_MAX
 from cpython cimport array
 
 from cryptography.hazmat.primitives.ciphers import algorithms, modes, Cipher
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf import pbkdf2
 
 import array
 import collections

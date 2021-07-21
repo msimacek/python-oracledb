@@ -102,7 +102,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         redirect_data = self._protocol._connect(self, params.secure_transport,
                                                 params.get_connect_data(),
                                                 params.password, auth_mode,
-                                                params.can_use_oob(), cclass,
+                                                params.supports_oob(), cclass,
                                                 purity)
         if redirect_data is None:
             self._statement_cache = collections.OrderedDict()

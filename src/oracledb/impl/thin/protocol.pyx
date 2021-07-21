@@ -33,7 +33,7 @@ cdef class Protocol:
         cdef WriteBuffer buf
         if not self._break_in_progress and self._request_lock.locked():
             self._break_in_progress = True
-            if self._caps.can_use_oob:
+            if self._caps.supports_oob:
                 if DEBUG_PACKETS:
                     now = datetime.datetime.now()
                     print(now.isoformat(sep=" ", timespec="milliseconds"),
@@ -78,7 +78,7 @@ cdef class Protocol:
 
     cdef _connect(self, ThinConnImpl conn, bint secure_transport,
                   str connect_string, str password, uint32_t auth_mode,
-                  bint can_use_oob, str cclass, uint8_t purity):
+                  bint supports_oob, str cclass, uint8_t purity):
         cdef:
             ConnectMessage connect_message
             object temp_sock, ssl_context
@@ -91,7 +91,7 @@ cdef class Protocol:
                                       "no password specified")
 
         # store whether OOB processing is possible or not
-        self._caps.can_use_oob = can_use_oob
+        self._caps.supports_oob = supports_oob
 
         # send connect message and process response; this requests the message
         # to be resent so the message is sent again; however, if a secure
@@ -117,7 +117,7 @@ cdef class Protocol:
 
         # if we can use OOB, send an urgent message now followed by a reset
         # marker to see if the server understands it
-        if self._caps.can_use_oob \
+        if self._caps.supports_oob \
                 and self._caps.protocol_version >= TNS_VERSION_MIN_OOB_CHECK:
             self._socket.send(b"!", socket.MSG_OOB)
             self._send_marker(self._write_buf, TNS_MARKER_TYPE_RESET)
@@ -200,7 +200,7 @@ cdef class Protocol:
             self._reset(message)
             message.process(self._read_buf)
         if self._break_in_progress:
-            if self._caps.can_use_oob:
+            if self._caps.supports_oob:
                 self._send_marker(self._write_buf, TNS_MARKER_TYPE_INTERRUPT)
             self._receive_packet(message)
             message.process(self._read_buf)
@@ -222,7 +222,7 @@ cdef class Protocol:
         elif message.packet_type == TNS_PACKET_TYPE_CONTROL:
             control_type = self._read_buf.read_uint16()
             if control_type == TNS_CONTROL_TYPE_RESET_OOB:
-                self._caps.can_use_oob = False
+                self._caps.supports_oob = False
             self._read_buf.receive_packet(&message.packet_type)
         elif message.packet_type == TNS_PACKET_TYPE_REFUSE:
             self._write_buf._packet_sent = False
