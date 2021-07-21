@@ -223,7 +223,7 @@ cdef class ThickConnImpl(BaseConnImpl):
             params.cclass_ptr = params.cclass
             params.cclass_len = <uint32_t> len(params.cclass)
         if newpassword is not None:
-            params.new_password = newpassword.decode()
+            params.new_password = newpassword.encode()
             params.new_password_ptr = params.new_password
             params.new_password_len = <uint32_t> len(params.new_password)
         if edition is not None:
