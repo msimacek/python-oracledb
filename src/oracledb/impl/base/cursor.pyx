@@ -362,17 +362,13 @@ cdef class BaseCursorImpl:
                 impl._preferred_num_type = NUM_TYPE_INT
         return Var._from_impl(impl, typ)
 
+    @utils.CheckImpls("executing a statement")
     def execute(self, cursor):
-        """
-        Internal method used for executing a statement.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("executing a statement in batch")
     def executemany(self, cursor, num_execs, batcherrors, arraydmlrowcounts):
-        """
-        Internal method used for executing a statement many times.
-        """
-        raise NotImplementedError()
+        pass
 
     def fetch_next_row(self, cursor):
         """
@@ -383,23 +379,17 @@ cdef class BaseCursorImpl:
         if self._buffer_rowcount > 0:
             return self._create_row()
 
+    @utils.CheckImpls("getting a list of array DML row counts")
     def get_array_dml_row_counts(self):
-        """
-        Internal method used for returning the list of array DML row counts.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting a list of batch errors")
     def get_batch_errors(self):
-        """
-        Internal method used for returning a list with batch errors.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting a list of bind variable names")
     def get_bind_names(self):
-        """
-        Internal method used for getting bind names.
-        """
-        raise NotImplementedError()
+        pass
 
     def get_description(self):
         """
@@ -407,31 +397,21 @@ cdef class BaseCursorImpl:
         """
         return [v._impl.get_description() for v in self.fetch_vars]
 
+    @utils.CheckImpls("getting implicit results from PL/SQL")
     def get_implicit_results(self, connection):
-        """
-        Internal method to return a list of cursors corresponding to the
-        implicit results made available from a PL/SQL block or procedure.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the rowid of the row last modified")
     def get_lastrowid(self):
-        """
-        Internal method for returning the last rowid associated with a cursor.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("determining if the cursor last executed a query")
     def is_query(self, cursor):
-        """
-        Internal method for determining if the cursor last executed a query.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("parsing a statement without executing it")
     def parse(self, cursor):
-        """
-        Parse the statement without executing it. This also retrieves
-        describe information for queries.
-        """
-        raise NotImplementedError()
+        pass
 
     def prepare(self, statement):
         """

@@ -4,77 +4,50 @@
 
 cdef class BaseLobImpl:
 
+    @utils.CheckImpls("closing a LOB")
     def close(self):
-        """
-        Internal method for closing a LOB that was opened earlier.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("checking if a BFILE exists")
     def file_exists(self):
-        """
-        Internal method for returning whether the file referenced by a BFILE
-        exists.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the chunk size of a LOB")
     def get_chunk_size(self):
-        """
-        Internal method for returning the chunk size of the LOB.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the file name and directory alias of a BFILE")
     def get_file_name(self):
-        """
-        Internal method for returning a 2-tuple constaining the directory alias
-        and file name of a BFILE type LOB.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting whether a LOB is open or not")
     def get_is_open(self):
-        """
-        Internal method for returning whether the LOB is open or not.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the maximum amount that can be read from a LOB")
     def get_max_amount(self):
-        """
-        Internal method for returning the maximum amount that can be read.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the size of a LOB")
     def get_size(self):
-        """
-        Internal method for returning the size of a LOB.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("opening a LOB")
     def open(self):
-        """
-        Internal method for opening a LOB.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("reading data from a LOB")
     def read(self, uint64_t offset, uint64_t amount):
-        """
-        Internal method for reading a portion (or all) of the data in the LOB.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the file name an directory alias of a BFILE")
     def set_file_name(self, str dir_alias, str name):
-        """
-        Internal method for setting the directory alias and file name
-        associated with a BFILE LOB.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("trimming a LOB")
     def trim(self, uint64_t new_size):
-        """
-        Internal method for trimming the data in the LOB to the new size
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("writing data to a LOB")
     def write(self, object value, uint64_t offset):
-        """
-        Internal method for writing data to the LOB object.
-        """
-        raise NotImplementedError()
+        pass

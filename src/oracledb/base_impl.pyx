@@ -24,7 +24,7 @@ import sys
 
 cydatetime.import_datetime()
 
-from . import constants, errors, exceptions
+from . import constants, errors, exceptions, utils
 from .cursor import Cursor
 from .lob import LOB
 from .dbobject import DbObject, DbObjectType

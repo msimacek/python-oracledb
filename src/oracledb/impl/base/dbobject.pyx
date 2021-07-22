@@ -4,97 +4,61 @@
 
 cdef class BaseDbObjectImpl:
 
+    @utils.CheckImpls("appending a value to a collection")
     def append(self, object value):
-        """
-        Internal method for appending a value to a collection object.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("creating a copy of an object")
     def copy(self):
-        """
-        Internal method for creating a copy of an object.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("deleting an element in a collection")
     def delete_by_index(self, int32_t index):
-        """
-        Internal method for deleting an entry from a collection that is indexed
-        by integers.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("determining if an entry exists in a collection")
     def exists_by_index(self, int32_t index):
-        """
-        Internal method for determining if an entry exists in a collection that
-        is indexed by integers.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting an attribute value")
     def get_attr_value(self, BaseDbObjectAttrImpl attr):
-        """
-        Internal method for getting an attribute value.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting an element of a collection")
     def get_element_by_index(self, int32_t index):
-        """
-        Internal method for getting an entry from a collection that is indexed
-        by integers.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the first index of a collection")
     def get_first_index(self):
-        """
-        Internal method for getting the first index from a collection that is
-        indexed by integers.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the last index of a collection")
     def get_last_index(self):
-        """
-        Internal method for getting the last index from a collection that is
-        indexed by integers.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the next index of a collection")
     def get_next_index(self, int32_t index):
-        """
-        Internal method for getting the next index from a collection that is
-        indexed by integers.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the previous index of a collection")
     def get_prev_index(self, int32_t index):
-        """
-        Internal method for getting the next index from a collection that is
-        indexed by integers.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the size of a collection")
     def get_size(self):
-        """
-        Internal method for getting the size of a collection.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting an attribute value")
     def set_attr_value(self, BaseDbObjectAttrImpl attr, object value):
-        """
-        Internal method for setting an attribute value.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting an element of a collection")
     def set_element_by_index(self, int32_t index, object value):
-        """
-        Internal method for setting an entry in a collection that is indexed by
-        integers.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("trimming elements from a collection")
     def trim(self, int32_t num_to_trim):
-        """
-        Internal method for trimming a number of entries from a collection.
-        """
-        raise NotImplementedError()
+        pass
 
 
 cdef class BaseDbObjectAttrImpl:
@@ -110,8 +74,6 @@ cdef class BaseDbObjectTypeImpl:
                     and other.name == self.name
         return NotImplemented
 
+    @utils.CheckImpls("creating a new object")
     def create_new_object(self):
-        """
-        Internal method for creating a new object.
-        """
-        raise NotImplementedError()
+        pass

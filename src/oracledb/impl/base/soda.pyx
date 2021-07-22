@@ -4,172 +4,115 @@
 
 cdef class BaseSodaDbImpl:
 
+    @utils.CheckImpls("creating a SODA collection")
     def create_collection(self, str name, str metadata, bint map_mode):
-        """
-        Internal method for creating a collection.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("creating a SODA document")
     def create_document(self, bytes content, str key, str media_type):
-        """
-        Internal method for creating a document.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting a list of SODA collection names")
     def get_collection_names(self, str start_name, uint32_t limit):
-        """
-        Internal method for getting the list of collection names.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("opening a SODA collection")
     def open_collection(self, str name):
-        """
-        Internal method for opening a collection.
-        """
-        raise NotImplementedError()
+        pass
 
 
 cdef class BaseSodaCollImpl:
 
+    @utils.CheckImpls("creating an index on a SODA collection")
     def create_index(self, str spec):
-        """
-        Internal method for creating an index on a collection.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("dropping a SODA collection")
     def drop(self):
-        """
-        Internal method for dropping a collection.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("dropping an index on a SODA collection")
     def drop_index(self, str name, bint force):
-        """
-        Internal method for dropping an index on a collection.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the count of documents in a SODA collection")
     def get_count(self, object op):
-        """
-        Internal method for getting the count of documents matching the
-        criteria.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting a cursor for documents in a SODA collection")
     def get_cursor(self, object op):
-        """
-        Internal method for getting a cursor which will return the documents
-        matching the criteria.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the data guide for a SODA collection")
     def get_data_guide(self):
-        """
-        Internal method for getting the data guide for a collection.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the metadata of a SODA collection")
     def get_metadata(self):
-        """
-        Internal method for getting the metadata for a collection.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting a document from a SODA collection")
     def get_one(self, object op):
-        """
-        Internal method for getting a document matching the criteria.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("inserting multiple documents into a SODA collection")
     def insert_many(self, list documents, str hint, bint return_docs):
-        """
-        Internal method for inserting many documents into a collection at once.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("inserting a single document into a SODA collection")
     def insert_one(self, BaseSodaDocImpl doc, str hint, bint return_doc):
-        """
-        Internal method for inserting a single document into a collection.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("removing documents from a SODA collection")
     def remove(self, object op):
-        """
-        Internal method for removing all of the documents matching the
-        criteria.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("replacing a document in a SODA collection")
     def replace_one(self, BaseSodaDocImpl doc_impl, bint return_doc):
-        """
-        Internal method for replacing the document matching the criteria with
-        the supplied coument.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("saving a document in a SODA collection")
     def save(self, BaseSodaDocImpl doc, str hint, bint return_doc):
-        """
-        Internal method for saving a document into the collection.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("truncating a SODA collection")
     def truncate(self):
-        """
-        Internal method for truncating the collection (removing all documents
-        from it).
-        """
-        raise NotImplementedError()
+        pass
 
 
 cdef class BaseSodaDocImpl:
 
+    @utils.CheckImpls("getting the content of a SODA document")
     def get_content(self):
-        """
-        Internal method for returning the content of the document.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the created on date of a SODA document")
     def get_created_on(self):
-        """
-        Internal method for getting the date the document was created.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the key of a SODA document")
     def get_key(self):
-        """
-        Internal method for getting the key of the document.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the last modified date of a SODA document")
     def get_last_modified(self):
-        """
-        Internal method for getting the date the document was last modified.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the media type of a SODA document")
     def get_media_type(self):
-        """
-        Internal method for getting the media type of the document.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the version of a SODA document")
     def get_version(self):
-        """
-        Internal method for getting the version of the document.
-        """
-        raise NotImplementedError()
+        pass
 
 
 cdef class BaseSodaDocCursorImpl:
 
+    @utils.CheckImpls("closing a SODA document cursor")
     def close(self):
-        """
-        Internal method for closing the cursor.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the next document from a SODA document cursor")
     def get_next_doc(self):
-        """
-        Internal method for getting the next document from the cursor.
-        """
-        raise NotImplementedError()
+        pass

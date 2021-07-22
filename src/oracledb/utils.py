@@ -319,3 +319,26 @@ def parse_structured_data(node, data):
             data = data[end_pos + 1:]
     setattr(node, name, value)
     return node
+
+
+class CheckImpls:
+    """
+    Decorator class which is used on the base implementation method and checks
+    to see which implementation is currently being used (and therefore has no
+    support for the method). An exception is raised letting the user know which
+    implementation does support the method. Currently there are only two
+    implementations (thick and thin) so the assumption is made that the
+    implementation not currently running does support the method.
+    """
+
+    def __init__(self, feature):
+        self.feature = feature
+
+    def __call__(self, f):
+        feature = self.feature
+        def wrapped_f(self, *args, **kwargs):
+            class_name = type(self).__name__
+            impl_name = "thin" if class_name.startswith("Thick") else "thick"
+            message = f"{feature} is only supported by the {impl_name} driver"
+            raise NotImplementedError(message)
+        return wrapped_f

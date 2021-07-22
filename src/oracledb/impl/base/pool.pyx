@@ -12,137 +12,92 @@ cdef class BasePoolImpl:
         self.increment = increment
         self.homogeneous = homogeneous
 
+    @utils.CheckImpls("acquiring a connection from a pool")
     def acquire(self, str user, str password, str cclass, uint32_t purity,
                 str tag, bint matchanytag, list shardingkey,
                 list supershardingkey):
-        """
-        Internal method for acquiring a connection from the pool.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("closing a pool")
     def close(self, bint force):
-        """
-        Internal method for closing the pool.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("dropping a connection from a pool")
     def drop(self, conn_impl):
-        """
-        Internal method for dropping a connection from the pool.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the number of busy connections in a pool")
     def get_busy_count(self):
-        """
-        Internal method for getting the number of busy connections in the pool.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the 'get' mode of a pool")
     def get_getmode(self):
-        """
-        Internal method for getting the method by which connections are
-        acquired from the pool.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the maximum lifetime of a connection in a pool")
     def get_max_lifetime_session(self):
-        """
-        Internal method for getting the maximum lifetime of each session.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the maximum sessions per shard in a pool")
     def get_max_sessions_per_shard(self):
-        """
-        Internal method for getting the maximum sessions per shard in the pool.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the number of connections open in a pool")
     def get_open_count(self):
-        """
-        Internal method for getting the number of connections in the pool.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the ping interval of a pool")
     def get_ping_interval(self):
-        """
-        Internal method for getting the value of the pool-ping-interval.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting whether the SODA metadata cache is enabled")
     def get_soda_metadata_cache(self):
-        """
-        Internal method for getting the value of soda metadata cache.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the size of the statement cache in a pool")
     def get_stmt_cache_size(self):
-        """
-        Internal method for getting the size of the statement cache.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the timeout for idle connections in a pool")
     def get_timeout(self):
-        """
-        Internal method for getting the timeout for idle sessions.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the wait timeout for a pool")
     def get_wait_timeout(self):
-        """
-        Internal method for getting the wait timeout for acquiring sessions.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("reconfiguring a pool")
     def reconfigure(self, uint32_t min, uint32_t max, uint32_t increment):
-        """
-        Internal method for reconfiguring the size of the pool.
-        """
+        pass
 
+    @utils.CheckImpls("setting the 'get' mode of a pool")
     def set_getmode(self, uint8_t value):
-        """
-        Internal method for setting the method by which connections are
-        acquired from the pool.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the maximum lifetime of a connection a pool")
     def set_max_lifetime_session(self, uint32_t value):
-        """
-        Internal method for setting the maximum lifetime of each session.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the maximum sessions per shard")
     def set_max_sessions_per_shard(self, uint32_t value):
-        """
-        Internal method for setting the maximum sessions per shard in the pool.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the ping interval")
     def set_ping_interval(self, int value):
-        """
-        Internal method for setting the value of the pool-ping-interval.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting whether the SODA metadata cache is enabled")
     def set_soda_metadata_cache(self, bint value):
-        """
-        Internal method for enabling or disabling soda metadata cache.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the size of the statement cache in a pool")
     def set_stmt_cache_size(self, uint32_t value):
-        """
-        Internal method for setting the size of the statement cache.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the timeout for idle connections in a pool")
     def set_timeout(self, uint32_t value):
-        """
-        Internal method for setting the timeout for idle sessions.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the wait timeout for a pool")
     def set_wait_timeout(self, uint32_t value):
-        """
-        Internal method for setting the wait timeout for acquiring sessions.
-        """
-        raise NotImplementedError()
+        pass

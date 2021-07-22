@@ -4,23 +4,17 @@
 
 cdef class BaseSubscrImpl:
 
+    @utils.CheckImpls("registering a query on a subscription")
     def register_query(self, str sql, object args):
-        """
-        Internal method for registering a query.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("creating a subscription")
     def subscribe(self, object subscr, BaseConnImpl conn_impl):
-        """
-        Internal method for creating the subscription.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("destroying a subscription")
     def unsubscribe(self, BaseConnImpl conn_impl):
-        """
-        Internal method for destroying the subscription.
-        """
-        raise NotImplementedError()
+        pass
 
 
 cdef class Message:

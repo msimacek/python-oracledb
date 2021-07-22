@@ -8,219 +8,147 @@ cdef class BaseConnImpl:
         self.username = user
         self.dsn = dsn
 
+    @utils.CheckImpls("beginning a distributed transaction")
     def begin(self, format_id, transaction_id, branch_id):
-        """
-        Internal method for beginning a distributed transaction.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("aborting a currently executing statement")
     def cancel(self):
-        """
-        Issues an immediate (asynchronous) abort of any currently executing
-        statement.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("changing a password")
     def change_password(self, old_password, new_password):
-        """
-        Changes the password for the user to which the connection is connected.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("closing a connection")
     def close(self, in_del=False):
-        """
-        Internal method used to close the connection to the database.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("committing a transaction")
     def commit(self):
-        """
-        Commits any outstanding connection.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("creating a cursor")
     def create_cursor_impl(self):
-        """
-        Internal method for creating a cursor implementation.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("creating a queue")
     def create_queue_impl(self):
-        """
-        Internal method for creating a queue.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("creating a SODA database object")
     def create_soda_database_impl(self, conn):
-        """
-        Internal method for returning a SODA database for the connection.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("creating a subscription")
     def create_subscr_impl(self, object conn, object callback,
                            uint32_t namespace, str name, uint32_t protocol,
                            str ip_address, uint32_t port, uint32_t timeout,
                            uint32_t operations, uint32_t qos,
                            uint8_t grouping_class, uint32_t grouping_value,
                            uint8_t grouping_type, bint client_initiated):
-        """
-        Internal method for creating a subscription implementation.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("creating a temporary LOB")
     def create_temp_lob_impl(self, DbType dbtype):
-        """
-        Internal method for creating a LOB implementation.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the call timeout")
     def get_call_timeout(self):
-        """
-        Internal method for returning the call timeout.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the current schema")
     def get_current_schema(self):
-        """
-        Internal method for returning the current schema.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the edition")
     def get_edition(self):
-        """
-        Internal method for returning the edition.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the external name")
     def get_external_name(self):
-        """
-        Internal method for returning the external name.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the OCI service context handle")
     def get_handle(self):
-        """
-        Internal method for getting the OCI service context handle.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the internal name")
     def get_internal_name(self):
-        """
-        Internal method for returning the internal name.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the logical transaction id")
     def get_ltxid(self):
-        """
-        Internal method for returning the logical transaction id.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the statement cache size")
     def get_stmt_cache_size(self):
-        """
-        Internal method for returning the size of the statement cache.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting an object type")
     def get_type(self, object conn, str name):
-        """
-        Internal method for returning an object type given its name.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("getting the database version")
     def get_version(self):
-        """
-        Return the version associated with the connection.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("pinging the database")
     def ping(self):
-        """
-        Pings the database to verify the connection is valid.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("preparing a global transaction for commit")
     def prepare(self):
-        """
-        Prepares the distributed transaction for commit. Returns a boolean
-        indicating if a commit is in fact needed.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("rolling back a transaction")
     def rollback(self):
-        """
-        Rolls back any outstanding connection.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the action")
     def set_action(self, value):
-        """
-        Internal method for setting the action.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the call timeout")
     def set_call_timeout(self, value):
-        """
-        Internal method for setting the call timeout.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the client identifier")
     def set_client_identifier(self, value):
-        """
-        Internal method for setting the client identifier.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the client info")
     def set_client_info(self, value):
-        """
-        Internal method for setting the client info.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the current schema")
     def set_current_schema(self, value):
-        """
-        Internal method for setting the current schema.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the database operation")
     def set_dbop(self, value):
-        """
-        Internal method for setting the database operation.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the external name")
     def set_external_name(self, value):
-        """
-        Internal method for setting the external name.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the internal name")
     def set_internal_name(self, value):
-        """
-        Internal method for setting the internal name.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the module")
     def set_module(self, value):
-        """
-        Internal method for setting the module.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("setting the statement cache size")
     def set_stmt_cache_size(self, value):
-        """
-        Internal method for setting the size of the statement cache.
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("shutting down the database")
     def shutdown(self, uint32_t mode):
-        """
-        Internal method for shutting down the database
-        """
-        raise NotImplementedError()
+        pass
 
+    @utils.CheckImpls("starting up the database")
     def startup(self, bint force, bint restrict, str pfile):
-        """
-        Internal method for starting up the database
-        """
-        raise NotImplementedError()
+        pass
