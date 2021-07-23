@@ -36,7 +36,7 @@ cdef class BaseVarImpl:
             self.dbtype = DB_TYPE_OBJECT
             self._objtype = typ._impl
         elif not isinstance(typ, type):
-            errors._raise_from_string(TypeError, "expecting type")
+            errors._raise_err(errors.ERR_EXPECTING_TYPE)
         elif typ is int:
             self.dbtype = DB_TYPE_NUMBER
             self._preferred_num_type = NUM_TYPE_INT
@@ -59,8 +59,7 @@ cdef class BaseVarImpl:
         elif typ is datetime.timedelta:
             self.dbtype = DB_TYPE_INTERVAL_DS
         else:
-            errors._raise_from_string(exceptions.NotSupportedError,
-                                      f"Python type {typ} not supported")
+            errors._raise_err(errors.ERR_PYTHON_TYPE_NOT_SUPPORTED, typ=typ)
 
     cdef int _set_single_value(self, uint32_t pos, object value) except -1:
         """
@@ -136,16 +135,16 @@ cdef class BaseVarImpl:
                         lob.write(value)
                     value = lob
             elif dbtype is DB_TYPE_ROWID:
-                msg = "Rowid variables cannot be set directly"
-                errors._raise_from_string(exceptions.NotSupportedError, msg)
+                errors._raise_err(errors.ERR_SET_ROWID_DIRECTLY)
             elif dbtype is DB_TYPE_OBJECT:
                 if not isinstance(value, DbObject):
                     raise TypeError("expecting DbObject")
                 if value._impl.type != self._objtype:
-                    msg = f"found object of type {value.type.schema}." \
-                          f"{value.type.name} when expecting object of type " \
-                          f"{self._objtype.schema}.{self._objtype.name}"
-                    errors._raise_from_string(exceptions.DatabaseError, msg)
+                    errors._raise_err(errors.ERR_WRONG_OBJECT_TYPE,
+                                      actual_schema=value.type.schema,
+                                      actual_name=value.type.name,
+                                      expected_schema=self._objtype.schema,
+                                      expected_name=self._objtype.name)
             elif dbtype is DB_TYPE_CURSOR:
                 if not isinstance(value, Cursor):
                     raise TypeError("expecting cursor")
@@ -196,8 +195,7 @@ cdef class BaseVarImpl:
             uint32_t i
         if self.is_array:
             if pos > 0:
-                errors._raise_from_string(exceptions.NotSupportedError,
-                                          "arrays of arrays not supported")
+                errors._raise_err(errors.ERR_ARRAYS_OF_ARRAYS)
             if not isinstance(value, list):
                 raise TypeError("expecting list")
             elif len(value) > self.num_elements:

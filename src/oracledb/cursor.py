@@ -57,10 +57,10 @@ class Cursor:
         # verify parameters
         if parameters is not None \
                 and not isinstance(parameters, (list, tuple)):
-            raise TypeError("arguments must be a list or tuple")
+            errors._raise_err(errors.ERR_ARGS_MUST_BE_LIST_OR_TUPLE)
         if keyword_parameters is not None \
                 and not isinstance(keyword_parameters, dict):
-            raise TypeError("keyword arguments must be a dict")
+            errors._raise_err(errors.ERR_KEYWORD_ARGS_MUST_BE_DICT)
         self._verify_open()
 
         # build and execute statement
@@ -99,7 +99,7 @@ class Cursor:
         """
         self._verify_open()
         if not self._impl.is_query(self):
-            errors._raise_from_string(exceptions.InterfaceError, "not a query")
+            errors._raise_err(errors.ERR_NOT_A_QUERY)
 
     def _verify_open(self) -> None:
         """
@@ -107,7 +107,7 @@ class Cursor:
         connected. If either condition is false an exception is raised.
         """
         if self._impl is None:
-            errors._raise_from_string(exceptions.InterfaceError, "not open")
+            errors._raise_err(errors.ERR_NOT_OPEN)
         self.connection._verify_connected()
 
     @property
@@ -171,8 +171,7 @@ class Cursor:
         """
         self._verify_open()
         if self.statement is None:
-            message = "statement must be prepared first"
-            errors._raise_from_string(exceptions.ProgrammingError, message)
+            errors._raise_err(errors.ERR_NO_STATEMENT_PREPARED)
         return self._impl.get_bind_names()
 
     @property
@@ -200,9 +199,9 @@ class Cursor:
         var = self.var(return_type)
         if keywordParameters is not None:
             if keyword_parameters is not None:
-                message = "keywordParameters and keyword_parameters cannot " \
-                          "both be specified"
-                raise exceptions.ProgrammingError(message)
+                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                                  deprecated_name="keywordParameters",
+                                  new_name="keyword_parameters")
             keyword_parameters = keywordParameters
         self._call(name, parameters, keyword_parameters, var)
         return var.getvalue()
@@ -221,9 +220,9 @@ class Cursor:
         """
         if keywordParameters is not None:
             if keyword_parameters is not None:
-                message = "keywordParameters and keyword_parameters cannot " \
-                          "both be specified"
-                raise exceptions.ProgrammingError(message)
+                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                                  deprecated_name="keywordParameters",
+                                  new_name="keyword_parameters")
             keyword_parameters = keywordParameters
         self._call(name, parameters, keyword_parameters)
         if parameters is None:
@@ -294,17 +293,14 @@ class Cursor:
 
         # verify parameters
         if statement is None and self.statement is None:
-            message = "no statement specified and no prior statement prepared"
-            errors._raise_from_string(exceptions.ProgrammingError, message)
+            errors._raise_err(errors.ERR_NO_STATEMENT)
         if keyword_parameters:
             if parameters:
-                errors._raise_from_string(exceptions.InterfaceError,
-                        "expecting arguments or keyword arguments, not both")
+                errors._raise_err(errors.ERR_ARGS_AND_KEYWORD_ARGS)
             parameters = keyword_parameters
         elif parameters is not None \
                 and not isinstance(parameters, (list, tuple, dict)):
-            errors._raise_from_string(exceptions.InterfaceError,
-                    "expecting a dictionary, list or tuple, or keyword args")
+            errors._raise_err(errors.ERR_WRONG_EXECUTE_PARAMETERS_TYPE)
         self._verify_open()
         bind_vars = self._impl.bind_vars
         prepare_needed = statement and statement != self.statement
@@ -314,8 +310,7 @@ class Cursor:
                     and not isinstance(parameters, dict) \
                     or isinstance(bind_vars, list) \
                     and isinstance(parameters, dict):
-                message = "positional and named binds cannot be intermixed"
-                errors._raise_from_string(exceptions.ProgrammingError, message)
+                errors._raise_err(errors.ERR_MIXED_POSITIONAL_AND_NAMED_BINDS)
 
         # prepare statement, if necessary
         if prepare_needed:
@@ -369,13 +364,9 @@ class Cursor:
         """
         # verify parameters
         if statement is None and self.statement is None:
-            message = "no statement specified and no prior statement prepared"
-            errors._raise_from_string(exceptions.ProgrammingError, message)
+            errors._raise_err(errors.ERR_NO_STATEMENT)
         if not isinstance(parameters, (list, int)):
-            message = "parameters should be a list of sequences or " \
-                      "dictionaries, or an integer specifying the number of " \
-                      "times to execute the statement"
-            errors._raise_from_string(TypeError, message)
+            errors._raise_err(errors.ERR_WRONG_EXECUTEMANY_PARAMETERS_TYPE)
 
         # prepare statement, if necessary
         self._verify_open()
@@ -654,8 +645,7 @@ class Cursor:
         that no space should be reserved for that position.
         """
         if args and kwargs:
-            message = "expecting arguments or keyword arguments, not both"
-            errors._raise_from_string(exceptions.InterfaceError, message)
+            errors._raise_err(errors.ERR_ARGS_AND_KEYWORD_ARGS)
         elif args or kwargs:
             self._verify_open()
             self._impl.setinputsizes(self, args, kwargs)

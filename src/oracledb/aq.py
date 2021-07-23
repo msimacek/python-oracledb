@@ -28,8 +28,7 @@ class Queue:
         if not isinstance(message, MessageProperties):
             raise TypeError("expecting MessageProperties object")
         if message.payload is None:
-            errors._raise_from_string(exceptions.ProgrammingError,
-                                      "message has no payload")
+            errors._raise_err(errors.ERR_MESSAGE_HAS_NO_PAYLOAD)
 
     @property
     def connection(self) -> Type["connection_module.Connection"]:

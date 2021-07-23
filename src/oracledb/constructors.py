@@ -31,8 +31,7 @@ def Time(hour: int, minute: int, second: int) -> None:
     Oracle doesn't support time only values, an exception is raised when this
     method is called.
     """
-    errors._raise_from_string(exceptions.NotSupportedError,
-                              "Oracle does not support time only variables")
+    errors._raise_err(errors.ERR_TIME_NOT_SUPPORTED)
 
 
 def Timestamp(year: int, month: int, day: int, hour: int=0, minute: int=0,
@@ -61,8 +60,7 @@ def TimeFromTicks(ticks: float) -> None:
     doesn't support time only values, an exception is raised when this method
     is called.
     """
-    errors._raise_from_string(exceptions.NotSupportedError,
-                              "Oracle does not support time only variables")
+    errors._raise_err(errors.ERR_TIME_NOT_SUPPORTED)
 
 
 def TimestampFromTicks(ticks: float) -> datetime.datetime:

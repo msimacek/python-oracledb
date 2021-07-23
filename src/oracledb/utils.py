@@ -5,7 +5,7 @@
 import os
 import sys
 
-from . import exceptions
+from . import errors, exceptions
 
 class ConfigFileCache:
     """
@@ -338,7 +338,7 @@ class CheckImpls:
         feature = self.feature
         def wrapped_f(self, *args, **kwargs):
             class_name = type(self).__name__
-            impl_name = "thin" if class_name.startswith("Thick") else "thick"
-            message = f"{feature} is only supported by the {impl_name} driver"
-            raise NotImplementedError(message)
+            driver_type = "thin" if class_name.startswith("Thick") else "thick"
+            errors._raise_err(errors.ERR_FEATURE_NOT_SUPPORTED,
+                              feature=feature, driver_type=driver_type)
         return wrapped_f

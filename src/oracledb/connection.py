@@ -205,8 +205,7 @@ class Connection:
         not, an exception is raised.
         """
         if self._impl is None:
-            errors._raise_from_string(exceptions.InterfaceError,
-                                      "not connected")
+            errors._raise_err(errors.ERR_NOT_CONNECTED)
 
     @property
     def action(self) -> None:

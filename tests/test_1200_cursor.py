@@ -66,7 +66,7 @@ class TestCase(test_env.BaseTestCase):
         "1206 - test executing a statement with both a dict and keyword args"
         simple_var = self.cursor.var(oracledb.NUMBER)
         dict_arg = dict(value=simple_var)
-        self.assertRaises(oracledb.InterfaceError, self.cursor.execute,
+        self.assertRaises(oracledb.ProgrammingError, self.cursor.execute,
                           "begin :value := 15; end;", dict_arg,
                           value=simple_var)
 
@@ -127,18 +127,18 @@ class TestCase(test_env.BaseTestCase):
     def test_1215_callfunc_negative(self):
         "1215 - test executing a stored function with wrong parameters"
         func_name = "func_Test"
-        self.assertRaises(TypeError, self.cursor.callfunc, oracledb.NUMBER,
-                          func_name, ("hi", 5))
+        self.assertRaises(oracledb.ProgrammingError, self.cursor.callfunc,
+                          oracledb.NUMBER, func_name, ("hi", 5))
         self.assertRaises(oracledb.DatabaseError, self.cursor.callfunc,
                           func_name, oracledb.NUMBER, ("hi", 5, 7))
-        self.assertRaises(TypeError, self.cursor.callfunc, func_name,
-                          oracledb.NUMBER, "hi", 7)
+        self.assertRaises(oracledb.ProgrammingError, self.cursor.callfunc,
+                          func_name, oracledb.NUMBER, "hi", 7)
         self.assertRaises(oracledb.DatabaseError, self.cursor.callfunc,
                           func_name, oracledb.NUMBER, [5, "hi"])
         self.assertRaises(oracledb.DatabaseError, self.cursor.callfunc,
                           func_name, oracledb.NUMBER)
-        self.assertRaises(TypeError, self.cursor.callfunc, func_name,
-                          oracledb.NUMBER, 5)
+        self.assertRaises(oracledb.ProgrammingError, self.cursor.callfunc,
+                          func_name, oracledb.NUMBER, 5)
 
     def test_1216_executemany_by_name(self):
         "1216 - test executing a statement multiple times (named args)"
@@ -255,8 +255,8 @@ class TestCase(test_env.BaseTestCase):
     def test_1225_executemany_with_invalid_parameters(self):
         "1225 - test calling executemany() with invalid parameters"
         sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
-        self.assertRaises(TypeError, self.cursor.executemany, sql,
-                          "These are not valid parameters")
+        self.assertRaises(oracledb.ProgrammingError, self.cursor.executemany,
+                          sql, "These are not valid parameters")
 
     def test_1226_executemany_no_parameters(self):
         "1226 - test calling executemany() without any bind parameters"
@@ -577,9 +577,10 @@ class TestCase(test_env.BaseTestCase):
     def test_1247_set_input_sizes_negative(self):
         "1247 - test cursor.setinputsizes() with invalid parameters"
         val = decimal.Decimal(5)
-        self.assertRaises(oracledb.InterfaceError,
+        self.assertRaises(oracledb.ProgrammingError,
                           self.cursor.setinputsizes, val, x=val)
-        self.assertRaises(TypeError, self.cursor.setinputsizes, val)
+        self.assertRaises(oracledb.ProgrammingError, self.cursor.setinputsizes,
+                          val)
 
     def test_1248_set_input_sizes_no_parameters(self):
         "1248 - test setting input sizes without any parameters"
@@ -635,11 +636,12 @@ class TestCase(test_env.BaseTestCase):
 
     def test_1256_var_negative(self):
         "1256 - test cursor.var() with invalid parameters"
-        self.assertRaises(TypeError, self.cursor.var, 5)
+        self.assertRaises(oracledb.ProgrammingError, self.cursor.var, 5)
 
     def test_1257_arrayvar_negative(self):
         "1257 - test cursor.arrayvar() with invalid parameters"
-        self.assertRaises(TypeError, self.cursor.arrayvar, 5, 1)
+        self.assertRaises(oracledb.ProgrammingError, self.cursor.arrayvar, 5,
+                          1)
 
     def test_1258_boolean_without_plsql(self):
         "1258 - test binding boolean data without the use of PL/SQL"

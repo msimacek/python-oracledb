@@ -234,7 +234,7 @@ class Pool:
         Verifies that the pool is open and able to perform its work.
         """
         if self._impl is None:
-            errors._raise_from_string(exceptions.InterfaceError, "not open")
+            errors._raise_err(errors.ERR_NOT_OPEN)
 
     def acquire(self,
                 user: str=None,

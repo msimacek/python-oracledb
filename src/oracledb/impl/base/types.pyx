@@ -52,8 +52,7 @@ cdef class DbType:
             return db_type_by_num[num]
         except KeyError:
             pass
-        msg = f"Oracle type {num} not supported"
-        errors._raise_from_string(exceptions.NotSupportedError, msg)
+        errors._raise_err(errors.ERR_ORACLE_TYPE_NOT_SUPPORTED, num=num)
 
     @staticmethod
     cdef DbType _from_ora_type_and_csfrm(uint8_t ora_type_num, uint8_t csfrm):
@@ -62,8 +61,8 @@ cdef class DbType:
             return db_type_by_ora_type_num[ora_type_key]
         except KeyError:
             pass
-        msg = f"Oracle type {ora_type_num} not supported"
-        errors._raise_from_string(exceptions.NotSupportedError, msg)
+        errors._raise_err(errors.ERR_ORACLE_TYPE_NOT_SUPPORTED,
+                          num=ora_type_num)
 
 
 # database types

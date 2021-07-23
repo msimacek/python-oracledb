@@ -118,8 +118,7 @@ cdef class BaseCursorImpl:
             return value
         elif isinstance(value, list):
             if len(value) != 2:
-                message = "expecting a list of two elements [type, numelems]"
-                errors._raise_from_string(exceptions.ProgrammingError, message)
+                errors._raise_err(errors.ERR_WRONG_ARRAY_DEFINITION)
             return self.create_var(connection, typ=value[0],
                                    num_elements=value[1], is_array=True)
         elif isinstance(value, int):
@@ -172,10 +171,8 @@ cdef class BaseCursorImpl:
             if typ is None:
                 typ = temp_typ
             elif temp_typ is not typ:
-                message = f"element {element} is not the same type as " \
-                           "previous elements"
-                errors._raise_from_string(exceptions.NotSupportedError,
-                                          message)
+                errors._raise_err(errors.ERR_MIXED_ELEMENT_TYPES,
+                                  element=element)
             if temp_size > size:
                 size = temp_size
         return self.create_var(cursor.connection, typ, size=size,
@@ -256,9 +253,8 @@ cdef class BaseCursorImpl:
         elif isinstance(value, Cursor):
             return DB_TYPE_CURSOR
         else:
-            type_name = type(value).__name__
-            message = f"Python value of type {type_name} not supported"
-            errors._raise_from_string(exceptions.NotSupportedError, message)
+            errors._raise_err(errors.ERR_PYTHON_VALUE_NOT_SUPPORTED,
+                              type_name=type(value).__name__)
 
     cdef bint _is_plsql(self):
         """
@@ -433,8 +429,7 @@ cdef class BaseCursorImpl:
         elif mode == "last":
             int_mode = FETCH_MODE_LAST
         else:
-            message = "mode must be one of relative, absolute, first or last"
-            errors._raise_from_string(exceptions.InterfaceError, message)
+            errors._raise_err(errors.ERR_WRONG_SCROLL_MODE)
         self._scroll(value, int_mode)
 
     def setinputsizes(self, cursor, args, kwargs):
