@@ -66,9 +66,10 @@ class TestCase(test_env.BaseTestCase):
         "1206 - test executing a statement with both a dict and keyword args"
         simple_var = self.cursor.var(oracledb.NUMBER)
         dict_arg = dict(value=simple_var)
-        self.assertRaises(oracledb.ProgrammingError, self.cursor.execute,
-                          "begin :value := 15; end;", dict_arg,
-                          value=simple_var)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2005:",
+                               self.cursor.execute,
+                               "begin :value := 15; end;", dict_arg,
+                               value=simple_var)
 
     def test_1207_execute_and_modify_array_size(self):
         "1207 - test executing a statement and then changing the array size"
