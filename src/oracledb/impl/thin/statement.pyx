@@ -72,7 +72,7 @@ cdef class Statement:
         copied_statement._return_to_cache = False
         return copied_statement
 
-    cdef _determine_statement_type(self, str sql):
+    cdef _determine_statement_type(self, str sql, str dml_pattern):
         tokens = sql.strip()[:10].split()
         if tokens:
             sql_keyword = tokens[0]
@@ -84,7 +84,7 @@ cdef class Statement:
                 self._is_dml = True
             elif sql_keyword in ("CREATE", "ALTER", "DROP"):
                 self._is_ddl = True
-        if not self._is_plsql and "RETURNING" in sql:
+        if not self._is_plsql and re.search(dml_pattern, sql) is not None:
             self._is_returning = True
 
     cdef _prepare(self, str sql):
@@ -107,7 +107,8 @@ cdef class Statement:
 
         # determine statement type
         sql = sql.upper()
-        self._determine_statement_type(sql)
+        dml_pattern = r"RETURNING [\s\S]+ INTO .*?$|\;"
+        self._determine_statement_type(sql, dml_pattern)
 
         # bind variables can only be found in queries, DML and PL/SQL
         if self._is_query or self._is_dml or self._is_plsql:
@@ -117,7 +118,7 @@ cdef class Statement:
 
         # find all bind variables used in DML returning
         if self._is_returning:
-            return_str = re.findall(r"RETURNING.*?$|\;", sql)[0]
+            return_str = re.findall(dml_pattern, sql)[0]
             return_bind_names = re.findall(r"(?<=\:)[A-Z]?[A-Z0-9_]+",
                                            return_str)
 
