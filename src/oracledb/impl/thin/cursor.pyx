@@ -58,7 +58,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
                                                  fetch_info._nulls_allowed)
         var_impl = <ThinVarImpl> var._impl
         var_impl._fetch_info = fetch_info
-        if var_impl.dbtype is not fetch_info._dbtype:
+        if var_impl.dbtype._ora_type_num != fetch_info._dbtype._ora_type_num:
             conversion_helper(var_impl, fetch_info, requires_define)
         return var
 

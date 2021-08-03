@@ -450,5 +450,25 @@ class TestCase(test_env.BaseTestCase):
         "3666 outtypehandler from permanant NCLOBs to LONG"
         self.__test_type_handler_nclob(oracledb.DB_TYPE_LONG)
 
+    def test_3667_NVARCHAR_to_VARCHAR(self):
+        "3667 outtypehandler from nvarchar to varchar"
+        self.__test_type_handler(oracledb.DB_TYPE_NVARCHAR,
+                                 oracledb.DB_TYPE_VARCHAR, "31.5", "31.5")
+
+    def test_3668_VARCHAR_to_NVARCHAR(self):
+        "3668 outtypehandler from varchar to nvarchar"
+        self.__test_type_handler(oracledb.DB_TYPE_VARCHAR,
+                                 oracledb.DB_TYPE_NVARCHAR, "31.5", "31.5")
+
+    def test_3669_NCHAR_to_CHAR(self):
+        "3669 outtypehandler from nchar to char"
+        self.__test_type_handler(oracledb.DB_TYPE_NCHAR,
+                                 oracledb.DB_TYPE_CHAR, "31.5", "31.5")
+
+    def test_3670_CHAR_to_NCHAR(self):
+        "3670 outtypehandler from char to nchar"
+        self.__test_type_handler(oracledb.DB_TYPE_CHAR,
+                                 oracledb.DB_TYPE_NCHAR, "31.5", "31.5")
+
 if __name__ == "__main__":
     test_env.run_test_cases()
