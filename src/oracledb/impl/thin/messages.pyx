@@ -953,6 +953,8 @@ cdef class AuthMessage(Message):
         ThinConnImpl conn_impl
         str encoded_password
         str password
+        str newpassword
+        str encoded_newpassword
         str session_key
         str speedy_key
         str cclass
@@ -962,11 +964,12 @@ cdef class AuthMessage(Message):
         dict session_data
         uint32_t auth_mode
 
-    def __cinit__(self, conn_impl, password):
+    def __cinit__(self, conn_impl, password, newpassword=None):
         self.function_code = TNS_FUNC_AUTH_PHASE_ONE
         self.conn_impl = conn_impl
         self.session_data = {}
         self.password = password
+        self.newpassword = newpassword
         self.user_bytes = conn_impl.username.encode()
         self.user_bytes_len = <uint8_t> len(self.user_bytes)
 
@@ -1070,6 +1073,12 @@ cdef class AuthMessage(Message):
         encrypted_password = self._encrypt_cbc(session_key, password_with_salt)
         self.encoded_password = encrypted_password.hex().upper()
 
+        if self.newpassword is not None:
+            newpassword_with_salt = salt + self.newpassword.encode()
+            encrypted_newpassword = self._encrypt_cbc(session_key,
+                                                    newpassword_with_salt)
+            self.encoded_newpassword = encrypted_newpassword.hex().upper()
+
     cdef int _process_return_parameters(self, ReadBuffer buf) except -1:
         cdef:
             uint32_t num_bytes, full_version_num
@@ -1103,7 +1112,8 @@ cdef class AuthMessage(Message):
                      (full_version_num & 0x0F))
 
     cdef int _set_auth_mode(self, uint32_t public_auth_mode) except -1:
-        self.auth_mode = TNS_AUTH_MODE_LOGON
+        if self.newpassword is None:
+            self.auth_mode = TNS_AUTH_MODE_LOGON
         if public_auth_mode & constants.AUTH_MODE_SYSDBA:
             self.auth_mode |= TNS_AUTH_MODE_SYSDBA
         if public_auth_mode & constants.AUTH_MODE_SYSOPER:
@@ -1156,6 +1166,9 @@ cdef class AuthMessage(Message):
             self._write_key_value(buf, "AUTH_SID", getpass.getuser())
         else:
             num_pairs = 2
+            if self.newpassword is not None:
+                num_pairs += 1
+                self.auth_mode |= TNS_AUTH_MODE_CHANGE_PASSWORD
             if self.cclass is not None:
                 num_pairs += 1
             if self.purity != 0:
@@ -1176,6 +1189,9 @@ cdef class AuthMessage(Message):
             buf.write_bytes(self.user_bytes)
             self._write_key_value(buf, "AUTH_SESSKEY", self.session_key, 1)
             self._write_key_value(buf, "AUTH_PASSWORD", self.encoded_password)
+            if self.newpassword is not None:
+                self._write_key_value(buf, "AUTH_NEWPASSWORD",
+                                      self.encoded_newpassword)
             if buf._caps.supports_12c_logon:
                 self._write_key_value(buf, "AUTH_PBKDF2_SPEEDY_KEY",
                                       self.speedy_key)

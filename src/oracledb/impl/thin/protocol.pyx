@@ -76,9 +76,17 @@ cdef class Protocol:
         with self._request_lock:
             self._process_message(CommitMessage())
 
+    cdef _change_password(self, ThinConnImpl conn, str old_password,
+                          str new_password):
+        cdef AuthMessage auth_message
+        auth_message = AuthMessage(conn, old_password, new_password)
+        self._process_message(auth_message)
+        self._process_message(auth_message)
+
     cdef _connect(self, ThinConnImpl conn, bint secure_transport,
-                  str connect_string, str password, uint32_t auth_mode,
-                  bint supports_oob, str cclass, uint8_t purity):
+                  str connect_string, str password, str newpassword,
+                  uint32_t auth_mode, bint supports_oob, str cclass,
+                  uint8_t purity):
         cdef:
             ConnectMessage connect_message
             object temp_sock, ssl_context
@@ -129,7 +137,7 @@ cdef class Protocol:
 
         # send authorization packet twice, the first time to get the session
         # key and the second time to return the response to the challenge
-        auth_message = AuthMessage(conn, password)
+        auth_message = AuthMessage(conn, password, newpassword)
         auth_message._set_auth_mode(auth_mode)
         auth_message.cclass = cclass
         auth_message.purity = purity

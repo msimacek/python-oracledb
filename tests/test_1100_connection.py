@@ -136,8 +136,6 @@ class TestCase(test_env.BaseTestCase):
                           password=test_env.get_main_password() + "X",
                           dsn=test_env.get_connect_string())
 
-    @unittest.skipIf(oracledb.defaults.thin,
-                     "thin driver doesn't support changing passwords yet")
     def test_1107_change_password(self):
         "1107 - test changing password"
         connection = test_env.get_connection()
@@ -152,8 +150,6 @@ class TestCase(test_env.BaseTestCase):
                                       password=new_password)
         connection.changepassword(new_password, test_env.get_main_password())
 
-    @unittest.skipIf(oracledb.defaults.thin,
-                     "thin driver doesn't support changing passwords yet")
     def test_1108_change_password_negative(self):
         "1108 - test changing password to an invalid value"
         connection = test_env.get_connection()
@@ -163,8 +159,6 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaises(oracledb.DatabaseError, connection.changepassword,
                 test_env.get_main_password(), new_password)
 
-    @unittest.skipIf(oracledb.defaults.thin,
-                     "thin driver doesn't support changing passwords yet")
     def test_1109_parse_password(self):
         "1109 - test connecting with password containing / and @ symbols"
         connection = test_env.get_connection()
@@ -475,6 +469,23 @@ class TestCase(test_env.BaseTestCase):
             cursor.execute("select user from dual")
             user, = cursor.fetchone()
             self.assertEqual(user, test_env.get_main_user().upper())
+
+    def test_1131_change_password_during_connect(self):
+        "1131 - test changing password during connect"
+        connection = test_env.get_connection()
+        if self.is_on_oracle_cloud(connection):
+            self.skipTest("passwords on Oracle Cloud are strictly controlled")
+        sys_random = random.SystemRandom()
+        new_password = "".join(sys_random.choice(string.ascii_letters) \
+                       for i in range(20))
+        connection = oracledb.connect(dsn=test_env.get_connect_string(),
+                                      user=test_env.get_main_user(),
+                                      password=test_env.get_main_password(),
+                                      newpassword=new_password)
+        connection = oracledb.connect(dsn=test_env.get_connect_string(),
+                                      user=test_env.get_main_user(),
+                                      password=new_password)
+        connection.changepassword(new_password, test_env.get_main_password())
 
 if __name__ == "__main__":
     test_env.run_test_cases()

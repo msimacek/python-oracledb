@@ -77,6 +77,9 @@ cdef class ThinConnImpl(BaseConnImpl):
     def cancel(self):
         self._protocol._break_external()
 
+    def change_password(self, str old_password, str new_password):
+        self._protocol._change_password(self, old_password, new_password)
+
     def close(self, bint in_del=False):
         if self._pool is not None:
             self._pool._free_busy_connection(self)
@@ -90,7 +93,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         self._protocol._commit()
 
     def connect(self, params, uint32_t stmtcachesize, uint32_t auth_mode,
-                str cclass=None, uint8_t purity=0):
+                str newpassword=None, str cclass=None, uint8_t purity=0):
         sock = socket.create_connection((params.host, params.port))
         if params.secure_transport:
             wallet_file_name = params.get_wallet_file_name()
@@ -101,9 +104,9 @@ cdef class ThinConnImpl(BaseConnImpl):
         self._protocol = Protocol(sock)
         redirect_data = self._protocol._connect(self, params.secure_transport,
                                                 params.get_connect_data(),
-                                                params.password, auth_mode,
-                                                params.supports_oob(), cclass,
-                                                purity)
+                                                params.password, newpassword,
+                                                auth_mode, params.supports_oob(),
+                                                cclass, purity)
         if redirect_data is None:
             self._statement_cache = collections.OrderedDict()
             self._statement_cache_size = stmtcachesize

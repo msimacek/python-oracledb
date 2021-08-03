@@ -158,6 +158,7 @@ class Connection:
                 while True:
                     redirect_data = impl.connect(params,
                                                  stmtcachesize=stmtcachesize,
+                                                 newpassword=newpassword,
                                                  auth_mode=mode, cclass=cclass,
                                                  purity=purity)
                     if redirect_data is None:
