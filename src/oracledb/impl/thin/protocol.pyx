@@ -16,13 +16,10 @@ cdef class Protocol:
 
     def __init__(self, sock):
         self._caps = Capabilities()
-        self.__set_socket(sock)
-        self._request_lock = threading.Lock()
-
-    cdef int __set_socket(self, sock):
         self._socket = sock
         self._read_buf = ReadBuffer(sock, TNS_SDU, self._caps)
         self._write_buf = WriteBuffer(sock, TNS_SDU, self._caps)
+        self._request_lock = threading.Lock()
 
     cdef int _break_external(self):
         """
@@ -110,10 +107,6 @@ cdef class Protocol:
         self._process_message(connect_message)
         if connect_message.redirect_data is not None:
             return connect_message.redirect_data
-        if secure_transport:
-            ssl_context = self._socket.context
-            temp_sock = socket.socket(fileno=self._socket.detach())
-            self.__set_socket(ssl_context.wrap_socket(temp_sock))
         self._process_message(connect_message)
 
         # check if the protocol version supported by the database is high

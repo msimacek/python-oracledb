@@ -96,17 +96,15 @@ cdef class ThinConnImpl(BaseConnImpl):
                 str newpassword=None, str cclass=None, uint8_t purity=0):
         sock = socket.create_connection((params.host, params.port))
         if params.secure_transport:
-            wallet_file_name = params.get_wallet_file_name()
-            ssl_context = ssl.create_default_context(cafile=wallet_file_name)
-            ssl_context.load_cert_chain(certfile=wallet_file_name)
-            ssl_context.check_hostname = False
-            sock = ssl_context.wrap_socket(sock)
+            ssl_context = ssl.create_default_context()
+            sock = ssl_context.wrap_socket(sock, server_hostname=params.host)
         self._protocol = Protocol(sock)
         redirect_data = self._protocol._connect(self, params.secure_transport,
                                                 params.get_connect_data(),
                                                 params.password, newpassword,
-                                                auth_mode, params.supports_oob(),
-                                                cclass, purity)
+                                                auth_mode,
+                                                params.supports_oob(), cclass,
+                                                purity)
         if redirect_data is None:
             self._statement_cache = collections.OrderedDict()
             self._statement_cache_size = stmtcachesize
