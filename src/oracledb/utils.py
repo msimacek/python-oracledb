@@ -214,6 +214,13 @@ class ConnectParams:
             self.parse_connect_data(dsn)
             return
 
+        # strip the protocol, if present
+        pos = dsn.find("://")
+        if pos > 0:
+            protocol = dsn[:pos]
+            dsn = dsn[pos + 3:]
+            self.secure_transport = protocol.lower() == "tcps"
+
         # otherwise, see if the connect string is in the form host:port/service
         pos = dsn.find("/")
         if pos >= 0:
