@@ -1475,7 +1475,7 @@ cdef class ReExecuteMessage(MessageWithData):
             num_iters = self.cursor.prefetchrows
         else:
             if self.cursor.connection.autocommit:
-                exec_flags_2 |= TNS_EXEC_OPTION_COMMIT
+                exec_flags_2 |= TNS_EXEC_OPTION_COMMIT_REEXECUTE
             num_iters = self.num_execs
 
         self._write_piggybacks(buf)
