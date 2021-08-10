@@ -487,5 +487,27 @@ class TestCase(test_env.BaseTestCase):
                                       password=new_password)
         connection.changepassword(new_password, test_env.get_main_password())
 
+    def test_1132_autocommit_during_reexecute(self):
+        "1132 - test use of autocommit during reexecute"
+        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        data_to_insert = [
+            (1, "Test String #1"),
+            (2, "Test String #2")
+        ]
+        connection = test_env.get_connection()
+        cursor = connection.cursor()
+        other_connection = test_env.get_connection()
+        other_cursor = other_connection.cursor()
+        cursor.execute("truncate table TestTempTable")
+        cursor.execute(sql, data_to_insert[0])
+        other_cursor.execute("select IntCol, StringCol from TestTempTable")
+        rows = other_cursor.fetchall()
+        self.assertEqual(rows, [])
+        connection.autocommit = True
+        cursor.execute(sql, data_to_insert[1])
+        other_cursor.execute("select IntCol, StringCol from TestTempTable")
+        rows = other_cursor.fetchall()
+        self.assertEqual(rows, data_to_insert)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
