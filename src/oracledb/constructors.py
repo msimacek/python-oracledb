@@ -5,24 +5,11 @@
 import datetime
 
 from . import errors
-from . import exceptions
-from typing import Type
 
-def Binary(value: object) -> bytes:
-    """
-    Constructor mandated by the database API for creating a binary value. This
-    is merely a wrapper over the bytes class and that should be used instead.
-    """
-    return bytes(value)
-
-
-def Date(year: int, month: int, day: int) -> datetime.date:
-    """
-    Constructor mandated by the database API for creating a date value. This is
-    merely a wrapper over the datetime.date class and that should be used
-    instead.
-    """
-    return datetime.date(year, month, day)
+# synonyms for the types mandated by the database API
+Binary = bytes
+Date = datetime.date
+Timestamp = datetime.datetime
 
 
 def Time(hour: int, minute: int, second: int) -> None:
@@ -32,16 +19,6 @@ def Time(hour: int, minute: int, second: int) -> None:
     method is called.
     """
     errors._raise_err(errors.ERR_TIME_NOT_SUPPORTED)
-
-
-def Timestamp(year: int, month: int, day: int, hour: int=0, minute: int=0,
-              second: int=0, fsecond: int=0) -> datetime.datetime:
-    """
-    Constructor mandated by the database API for creating a timestamp value.
-    This is merely a wrapper over the datetime.datetime class and that should
-    be used instead.
-    """
-    return datetime.datetime(year, month, day, hour, minute, second, fsecond)
 
 
 def DateFromTicks(ticks: float) -> datetime.date:
