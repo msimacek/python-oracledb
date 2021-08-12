@@ -86,7 +86,7 @@ cdef class BaseConnImpl:
         pass
 
     @utils.CheckImpls("getting an object type")
-    def get_type(self, object conn, str name):
+    def get_type(self, str name):
         pass
 
     @utils.CheckImpls("getting the database version")

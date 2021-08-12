@@ -186,7 +186,7 @@ cdef int _convert_from_python(object value, DbType dbtype,
                                   f"database type {dbtype} not supported")
 
 
-cdef object _convert_to_python(object connection, DbType dbtype,
+cdef object _convert_to_python(ThickConnImpl conn_impl, DbType dbtype,
                                ThickDbObjectTypeImpl obj_type_impl,
                                dpiDataBuffer *dbvalue,
                                int preferred_num_type=NUM_TYPE_FLOAT,
@@ -250,8 +250,7 @@ cdef object _convert_to_python(object connection, DbType dbtype,
             or oracle_type == DPI_ORACLE_TYPE_BLOB \
             or oracle_type == DPI_ORACLE_TYPE_NCLOB \
             or oracle_type == DPI_ORACLE_TYPE_BFILE:
-        lob_impl = ThickLobImpl._create(connection._impl, dbtype,
-                                        dbvalue.asLOB)
+        lob_impl = ThickLobImpl._create(conn_impl, dbtype, dbvalue.asLOB)
         return LOB._from_impl(lob_impl)
     elif oracle_type == DPI_ORACLE_TYPE_OBJECT:
         obj_impl = ThickDbObjectImpl.__new__(ThickDbObjectImpl)

@@ -22,15 +22,14 @@ cdef class ThinCursorImpl(BaseCursorImpl):
                 self._conn_impl._return_statement(self._statement)
             self._statement = None
 
-    cdef BaseVarImpl _create_var_impl(self, object connection):
-        return ThinVarImpl.__new__(ThinVarImpl, connection)
+    cdef BaseVarImpl _create_var_impl(self):
+        return ThinVarImpl.__new__(ThinVarImpl)
 
     cdef int _fetch_rows(self, object cursor) except -1:
         self._conn_impl._protocol._fetch(cursor)
 
-    cdef object _get_fetch_var(self, object cursor, object conn,
-                               object type_handler, FetchInfo fetch_info,
-                               bint *requires_define):
+    cdef object _get_fetch_var(self, object cursor, object type_handler,
+                               FetchInfo fetch_info, bint *requires_define):
         """
         Return the variable to use for fetching data. The type handler is run,
         if specified. If no type handler is specified or the type handler is
@@ -50,7 +49,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
                               "outputtypehandler method"
                     errors._raise_from_string(TypeError, message)
         if var is None:
-            var = self._create_default_fetch_var(conn, fetch_info._dbtype,
+            var = self._create_default_fetch_var(fetch_info._dbtype,
                                                  fetch_info._name,
                                                  fetch_info._size,
                                                  fetch_info._precision,
@@ -74,21 +73,21 @@ cdef class ThinCursorImpl(BaseCursorImpl):
         self._statement = self._conn_impl._get_statement(sql)
         self.fetch_vars = self._statement._fetch_vars
 
-    cdef int _preprocess_execute(self) except -1:
+    cdef int _preprocess_execute(self, object conn) except -1:
         cdef BindInfo bind_info
         if self.bind_vars is not None:
-            self._perform_binds()
+            self._perform_binds(conn)
         for bind_info in self._statement._bind_info_list:
             if bind_info._bind_var is None:
                 message = f"Bind value for: {bind_info._bind_name} missing."
                 errors._raise_from_string(exceptions.DatabaseError, message)
 
     def execute(self, cursor):
-        self._preprocess_execute()
+        self._preprocess_execute(cursor.connection)
         self._conn_impl._protocol._execute(cursor)
 
     def executemany(self, cursor, num_execs, batcherrors, arraydmlrowcounts):
-        self._preprocess_execute()
+        self._preprocess_execute(cursor.connection)
         self._conn_impl._protocol._execute(cursor, num_execs,
                                            arraydmlrowcounts, batcherrors)
 

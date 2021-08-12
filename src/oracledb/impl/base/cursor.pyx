@@ -52,7 +52,7 @@ cdef class BaseCursorImpl:
         """
         raise NotImplementedError()
 
-    cdef object _create_default_fetch_var(self, object conn, object typ,
+    cdef object _create_default_fetch_var(self, object typ,
                                           str name, uint32_t size,
                                           int16_t precision, int16_t scale,
                                           bint nulls_allowed):
@@ -68,9 +68,8 @@ cdef class BaseCursorImpl:
                 typ = DB_TYPE_LONG_RAW
             elif typ is DB_TYPE_CLOB or typ is DB_TYPE_NCLOB:
                 typ = DB_TYPE_LONG
-        return self.create_var(conn, typ, name=name, size=size,
-                               precision=precision, scale=scale,
-                               nulls_allowed=nulls_allowed,
+        return self.create_var(typ, name=name, size=size, precision=precision,
+                               scale=scale, nulls_allowed=nulls_allowed,
                                num_elements=self._fetch_array_size,
                                inconverter=None, outconverter=None,
                                encoding_errors=None, bypass_decode=False,
@@ -100,13 +99,13 @@ cdef class BaseCursorImpl:
         self.rowcount += 1
         return row
 
-    cdef BaseVarImpl _create_var_impl(self, object connection):
+    cdef BaseVarImpl _create_var_impl(self):
         """
         Internal method for creating a variable.
         """
         raise NotImplementedError()
 
-    cdef object _create_var_by_type(self, object connection, object value,
+    cdef object _create_var_by_type(self, object value,
                                     uint32_t num_elements=1):
         """
         Internal method for creating a variable that can contain the specified
@@ -119,12 +118,12 @@ cdef class BaseCursorImpl:
         elif isinstance(value, list):
             if len(value) != 2:
                 errors._raise_err(errors.ERR_WRONG_ARRAY_DEFINITION)
-            return self.create_var(connection, typ=value[0],
-                                   num_elements=value[1], is_array=True)
+            return self.create_var(typ=value[0], num_elements=value[1],
+                                   is_array=True)
         elif isinstance(value, int):
-            return self.create_var(connection, DB_TYPE_VARCHAR, size=value,
+            return self.create_var(DB_TYPE_VARCHAR, size=value,
                                    num_elements=num_elements)
-        return self.create_var(connection, value, num_elements=num_elements)
+        return self.create_var(value, num_elements=num_elements)
 
     cdef object _create_var_by_value(self, object cursor, object value,
                                      uint32_t num_elements):
@@ -155,8 +154,7 @@ cdef class BaseCursorImpl:
         # handle scalar values
         if not isinstance(value, list):
             typ = self._get_type_and_size(value, &size, self._is_plsql())
-            return self.create_var(cursor.connection, typ, size=size,
-                                   num_elements=num_elements)
+            return self.create_var(typ, size=size, num_elements=num_elements)
 
         # handle arrays
         if len(value) > num_elements:
@@ -175,8 +173,8 @@ cdef class BaseCursorImpl:
                                   element=element)
             if temp_size > size:
                 size = temp_size
-        return self.create_var(cursor.connection, typ, size=size,
-                               num_elements=num_elements, is_array=True)
+        return self.create_var(typ, size=size, num_elements=num_elements,
+                               is_array=True)
 
     cdef int _fetch_rows(self, object cursor) except -1:
         """
@@ -199,7 +197,7 @@ cdef class BaseCursorImpl:
                 var = orig_var
                 var_impl = orig_var_impl
             else:
-                var_impl = self._create_var_impl(orig_var_impl._conn)
+                var_impl = self._create_var_impl()
                 var_impl.num_elements = num_elements
                 var_impl.dbtype = orig_var_impl.dbtype
                 var_impl._objtype = orig_var_impl._objtype
@@ -263,7 +261,7 @@ cdef class BaseCursorImpl:
         """
         raise NotImplementedError()
 
-    cdef int _perform_binds(self, uint32_t num_execs=1) except -1:
+    cdef int _perform_binds(self, object conn, uint32_t num_execs=1) except -1:
         """
         Perform all binds on the cursor.
         """
@@ -275,11 +273,11 @@ cdef class BaseCursorImpl:
         if isinstance(self.bind_vars, dict):
             for key, var in self.bind_vars.items():
                 var_impl = <BaseVarImpl> var._impl
-                var_impl._bind(self, num_execs, key)
+                var_impl._bind(conn, self, num_execs, key)
         else:
             for pos, var in enumerate(self.bind_vars):
                 var_impl = <BaseVarImpl> var._impl
-                var_impl._bind(self, num_execs, None, pos + 1)
+                var_impl._bind(conn, self, num_execs, None, pos + 1)
 
     cdef int _prepare(self, str statement, str tag=None) except -1:
         """
@@ -287,7 +285,8 @@ cdef class BaseCursorImpl:
         """
         raise NotImplementedError()
 
-    cdef int _scroll(self, int32_t offset, uint32_t mode) except -1:
+    cdef int _scroll(self, object conn, int32_t offset,
+                     uint32_t mode) except -1:
         """
         Internal method for scrolling a scrollable cursor.
         """
@@ -325,14 +324,14 @@ cdef class BaseCursorImpl:
         self.fetch_vars = None
         self._close()
 
-    cpdef create_var(self, object conn, object typ, uint32_t size=0,
+    cpdef create_var(self, object typ, uint32_t size=0,
                      uint32_t num_elements=1, object inconverter=None,
                      object outconverter=None, str encoding_errors=None,
                      bint bypass_decode=False, int16_t precision=0,
                      int16_t scale=0, str name=None, bint nulls_allowed=False,
                      bint is_array=False):
         cdef BaseVarImpl impl
-        impl = self._create_var_impl(conn)
+        impl = self._create_var_impl()
         impl._set_type(typ)
         if impl.dbtype.default_size > 0:
             impl.size = size or impl.dbtype.default_size
@@ -415,7 +414,7 @@ cdef class BaseCursorImpl:
         """
         self._prepare(statement)
 
-    def scroll(self, value, mode):
+    def scroll(self, conn, value, mode):
         """
         Scrolls a scrollable cursor.
         """
@@ -430,13 +429,12 @@ cdef class BaseCursorImpl:
             int_mode = FETCH_MODE_LAST
         else:
             errors._raise_err(errors.ERR_WRONG_SCROLL_MODE)
-        self._scroll(value, int_mode)
+        self._scroll(conn, value, int_mode)
 
     def setinputsizes(self, cursor, args, kwargs):
-        conn = cursor.connection
         if kwargs:
             self.bind_vars = {}
             for key, value in kwargs.items():
-                self.bind_vars[key] = self._create_var_by_type(conn, value)
+                self.bind_vars[key] = self._create_var_by_type(value)
         else:
-            self.bind_vars = [self._create_var_by_type(conn, v) for v in args]
+            self.bind_vars = [self._create_var_by_type(v) for v in args]

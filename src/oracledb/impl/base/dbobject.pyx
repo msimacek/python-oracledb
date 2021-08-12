@@ -69,7 +69,7 @@ cdef class BaseDbObjectTypeImpl:
 
     def __eq__(self, other):
         if isinstance(other, BaseDbObjectTypeImpl):
-            return other._conn is self._conn \
+            return other._conn_impl is self._conn_impl \
                     and other.schema == self.schema \
                     and other.name == self.name
         return NotImplemented

@@ -11,27 +11,23 @@ cdef class ThickVarImpl(BaseVarImpl):
     cdef:
         dpiVar *_handle
         dpiData *_data
-        ThickConnImpl _conn_impl
         uint32_t _native_type_num
         bint _get_returned_data
         uint32_t _last_size
-
-    def __cinit__(self, conn):
-        self._conn = conn
-        self._conn_impl = <ThickConnImpl> conn._impl
 
     def __dealloc__(self):
         if self._handle != NULL:
             dpiVar_release(self._handle)
 
-    cdef int _bind(self, BaseCursorImpl cursor_impl, uint32_t num_execs,
-                   str name=None, uint32_t pos=0) except -1:
+    cdef int _bind(self, object conn, BaseCursorImpl cursor_impl,
+                   uint32_t num_execs, str name=None,
+                   uint32_t pos=0) except -1:
         cdef:
-            ThickCursorImpl thick_cursor_impl = cursor_impl
+            ThickCursorImpl thick_cursor_impl = <ThickCursorImpl> cursor_impl
             uint32_t name_length, i
             const char *name_ptr
             bytes name_bytes
-        self._check_handle()
+        self._check_handle(thick_cursor_impl._conn_impl)
         if self._is_value_set:
             self._transform_from_python(num_execs)
         if name is not None:
@@ -49,7 +45,7 @@ cdef class ThickVarImpl(BaseVarImpl):
             self._get_returned_data = True
         self._is_value_set = False
 
-    cdef int _check_handle(self) except -1:
+    cdef int _check_handle(self, ThickConnImpl conn_impl) except -1:
         """
         Check to see if a handle needs to be created. This will be true if:
             - a handle has never been created before
@@ -63,7 +59,7 @@ cdef class ThickVarImpl(BaseVarImpl):
             object cursor
             uint32_t i
         if self._handle == NULL or self._last_size < self.size:
-            return self._create_handle()
+            return self._create_handle(conn_impl)
         if self._native_type_num == DPI_NATIVE_TYPE_STMT:
             for i in range(self.num_elements):
                 cursor = self.values[i]
@@ -73,9 +69,9 @@ cdef class ThickVarImpl(BaseVarImpl):
                         continue
                 data = &self._data[i]
                 if dpiStmt_getInfo(data.value.asStmt, &stmt_info) < 0:
-                    return self._create_handle()
+                    return self._create_handle(conn_impl)
 
-    cdef int _create_handle(self) except -1:
+    cdef int _create_handle(self, ThickConnImpl conn_impl) except -1:
         cdef:
             dpiObjectType *obj_type_handle = NULL
             ThickDbObjectTypeImpl obj_type_impl
@@ -86,21 +82,21 @@ cdef class ThickVarImpl(BaseVarImpl):
             obj_type_impl = <ThickDbObjectTypeImpl> self._objtype
             obj_type_handle = obj_type_impl._handle
         self._native_type_num = _get_native_type_num(self.dbtype)
-        if dpiConn_newVar(self._conn_impl._handle, self.dbtype.num,
+        if dpiConn_newVar(conn_impl._handle, self.dbtype.num,
                           self._native_type_num, self.num_elements, self.size,
                           0, self.is_array, obj_type_handle, &self._handle,
                           &self._data) < 0:
             _raise_from_odpi()
         self._last_size = self.size
 
-    cdef object _get_cursor_value(self, dpiDataBuffer *dbvalue, uint32_t pos,
-                                  bint in_fetch):
+    cdef object _get_cursor_value(self, object conn, dpiDataBuffer *dbvalue,
+                                  uint32_t pos, bint in_fetch):
         cdef:
             ThickCursorImpl cursor_impl
             object cursor
         cursor = self.values[pos]
         if cursor is None or in_fetch:
-            cursor = self._conn.cursor()
+            cursor = conn.cursor()
         cursor_impl = <ThickCursorImpl> cursor._impl
         if cursor_impl._handle != dbvalue.asStmt:
             if cursor_impl._handle != NULL:
@@ -144,6 +140,7 @@ cdef class ThickVarImpl(BaseVarImpl):
             dpiDataBuffer *dbvalue
             dpiBytes *as_bytes
             StringBuffer buf
+            bint needs_set
             dpiData *data
         data = &self._data[pos]
         data.isNull = (value is None)
@@ -151,14 +148,17 @@ cdef class ThickVarImpl(BaseVarImpl):
             if self._native_type_num == DPI_NATIVE_TYPE_STMT:
                 self._set_cursor_value(value, pos)
             else:
-                if self._native_type_num == DPI_NATIVE_TYPE_BYTES:
+                needs_set = self._native_type_num == DPI_NATIVE_TYPE_BYTES \
+                        or (self._native_type_num == DPI_NATIVE_TYPE_LOB and \
+                                not isinstance(value, LOB))
+                if needs_set:
                     dbvalue = &temp_dbvalue
                 else:
                     dbvalue = &data.value
                 buf = StringBuffer()
                 _convert_from_python(value, self.dbtype, self._objtype,
                                      dbvalue, buf, self, pos)
-                if self._native_type_num == DPI_NATIVE_TYPE_BYTES:
+                if needs_set:
                     as_bytes = &dbvalue.asBytes
                     if dpiVar_setFromBytes(self._handle, pos, as_bytes.ptr,
                                            as_bytes.length) < 0:
@@ -181,7 +181,8 @@ cdef class ThickVarImpl(BaseVarImpl):
         for i in range(num_elements):
             self._transform_element_from_python(i, self.values[i])
 
-    cdef object _transform_array_to_python(self, uint32_t num_elements,
+    cdef object _transform_array_to_python(self, object conn,
+                                           uint32_t num_elements,
                                            dpiData *data):
         """
         Transforms an array from ODPI-C to a Python list.
@@ -192,12 +193,13 @@ cdef class ThickVarImpl(BaseVarImpl):
             uint32_t i
         return_value = cpython.PyList_New(num_elements)
         for i in range(num_elements):
-            element_value = self._transform_element_to_python(i, data)
+            element_value = self._transform_element_to_python(conn, i, data)
             cpython.Py_INCREF(element_value)
             cpython.PyList_SET_ITEM(return_value, i, element_value)
         return return_value
 
-    cdef object _transform_element_to_python(self, uint32_t pos,
+    cdef object _transform_element_to_python(self, object conn,
+                                             uint32_t pos,
                                              dpiData *data,
                                              bint in_fetch=False):
         """
@@ -208,9 +210,10 @@ cdef class ThickVarImpl(BaseVarImpl):
         data = &data[pos]
         if not data.isNull:
             if self._native_type_num == DPI_NATIVE_TYPE_STMT:
-                value = self._get_cursor_value(&data.value, pos, in_fetch)
+                value = self._get_cursor_value(conn, &data.value, pos,
+                                               in_fetch)
             else:
-                value = _convert_to_python(self._conn, self.dbtype,
+                value = _convert_to_python(conn._impl, self.dbtype,
                                            self._objtype, &data.value,
                                            self._preferred_num_type,
                                            self.bypass_decode)
@@ -218,7 +221,8 @@ cdef class ThickVarImpl(BaseVarImpl):
                 value = self.outconverter(value)
             return value
 
-    cdef int _transform_to_python(self, uint32_t num_elements,
+    cdef int _transform_to_python(self, object conn,
+                                  uint32_t num_elements,
                                   bint in_fetch=False,
                                   uint32_t offset=0) except -1:
         """
@@ -241,9 +245,10 @@ cdef class ThickVarImpl(BaseVarImpl):
                                           &num_returned_rows,
                                           &returned_data) < 0:
                     _raise_from_odpi()
-                value = self._transform_array_to_python(num_returned_rows,
+                value = self._transform_array_to_python(conn,
+                                                        num_returned_rows,
                                                         returned_data)
             else:
-                value = self._transform_element_to_python(i + offset,
+                value = self._transform_element_to_python(conn, i + offset,
                                                           self._data, in_fetch)
             self.values[i] = value

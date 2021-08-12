@@ -251,7 +251,6 @@ cdef class MessageWithData(Message):
                     for i, var in enumerate(cursor_impl.fetch_vars):
                         var_impl = <ThinVarImpl> var._impl
                         var = cursor_impl._get_fetch_var(self.cursor,
-                                                         self.conn,
                                                          type_handler,
                                                          var_impl._fetch_info,
                                                          &self.requires_define)
@@ -422,8 +421,8 @@ cdef class MessageWithData(Message):
                 or cursor_impl._conn_impl.outputtypehandler
         for i in range(num_columns):
             fetch_info = self._process_column_info(buf, cursor_impl)
-            var = cursor_impl._get_fetch_var(cursor, self.conn, type_handler,
-                                             fetch_info, &self.requires_define)
+            var = cursor_impl._get_fetch_var(cursor, type_handler, fetch_info,
+                                             &self.requires_define)
             cpython.Py_INCREF(var)
             cpython.PyList_SET_ITEM(cursor_impl.fetch_vars, i, var)
         num_bytes = buf.read_ub4()

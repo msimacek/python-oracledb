@@ -20,31 +20,38 @@ cdef class FetchInfo:
 
 cdef class ThinVarImpl(BaseVarImpl):
     cdef:
-        ThinConnImpl _conn_impl
         object _conv_func
         FetchInfo _fetch_info
 
-    def __cinit__(self, conn):
-        self._conn = conn
-        self._conn_impl = <ThinConnImpl> conn._impl
-
-    cdef int _bind(self, BaseCursorImpl cursor_impl, uint32_t num_execs,
-                   str name=None, uint32_t pos=0) except -1:
+    cdef int _bind(self, object conn, BaseCursorImpl cursor_impl,
+                   uint32_t num_execs, str name=None,
+                   uint32_t pos=0) except -1:
         cdef:
             ThinCursorImpl thin_cursor_impl = <ThinCursorImpl> cursor_impl
+            object var_list, bind_info_dict, var, value, lob
             Statement stmt = thin_cursor_impl._statement
             uint32_t idx, num_binds, num_vars
-            object var_list, bind_info_dict
             list bind_info_list
             BindInfo bind_info
             str upper_name
-            object var
 
         bind_info_dict = stmt._bind_info_dict
         bind_info_list = stmt._bind_info_list
         var_list = thin_cursor_impl.bind_vars
 
-        # Bind by name
+        # for variables containing LOBs, create temporary LOBs, if needed
+        if self.dbtype._ora_type_num == TNS_DATA_TYPE_CLOB \
+                or self.dbtype._ora_type_num == TNS_DATA_TYPE_BLOB:
+            idx = 0
+            for value in self.values:
+                if value is not None and not isinstance(value, LOB):
+                    lob = conn.createlob(self.dbtype)
+                    if value:
+                        lob.write(value)
+                    self.values[idx] = lob
+                idx += 1
+
+        # bind by name
         if name is not None:
             upper_name = name.upper()
             if upper_name not in bind_info_dict:
@@ -54,7 +61,7 @@ cdef class ThinVarImpl(BaseVarImpl):
             for bind_info in bind_info_dict[upper_name]:
                 stmt._set_var(bind_info, var, thin_cursor_impl)
 
-        # Bind by position
+        # bind by position
         else:
             num_binds = len(bind_info_list)
             num_vars = len(var_list)

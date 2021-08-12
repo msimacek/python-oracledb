@@ -436,7 +436,7 @@ class Connection:
         objects which can be bound to cursors created by this connection.
         """
         self._verify_connected()
-        obj_type_impl = self._impl.get_type(self, name)
+        obj_type_impl = self._impl.get_type(name)
         return DbObjectType._from_impl(obj_type_impl)
 
     @property

@@ -158,8 +158,8 @@ class Cursor:
             num_elements = value
         else:
             raise TypeError("expecting integer or list of values")
-        var = self._impl.create_var(self.connection, typ, size=size,
-                                    num_elements=num_elements, is_array=True)
+        var = self._impl.create_var(typ, size=size, num_elements=num_elements,
+                                    is_array=True)
         if isinstance(value, list):
             var.setvalue(0, value)
         return var
@@ -614,7 +614,7 @@ class Cursor:
         scroll operation would position the cursor outside of the result set.
         """
         self._verify_open()
-        self._impl.scroll(value, mode)
+        self._impl.scroll(self.connection, value, mode)
 
     @property
     def scrollable(self) -> bool:
@@ -730,6 +730,6 @@ class Cursor:
                           "be specified"
                 raise exceptions.ProgrammingError(message)
             encoding_errors = encodingErrors
-        return self._impl.create_var(self.connection, typ, size, arraysize,
-                                     inconverter, outconverter,
-                                     encoding_errors, bypass_decode)
+        return self._impl.create_var(typ, size, arraysize, inconverter,
+                                     outconverter, encoding_errors,
+                                     bypass_decode)

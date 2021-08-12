@@ -86,13 +86,12 @@ cdef class BaseCursorImpl:
                                uint32_t num_elements=*,
                                uint32_t pos=*) except -1
     cdef int _close(self) except -1
-    cdef object _create_default_fetch_var(self, object conn, object typ,
-                                          str name, uint32_t size,
-                                          int16_t precision, int16_t scale,
-                                          bint nulls_allowed)
+    cdef object _create_default_fetch_var(self, object typ, str name,
+                                          uint32_t size, int16_t precision,
+                                          int16_t scale, bint nulls_allowed)
     cdef object _create_row(self)
-    cdef BaseVarImpl _create_var_impl(self, object connection)
-    cdef object _create_var_by_type(self, object connection, object value,
+    cdef BaseVarImpl _create_var_impl(self)
+    cdef object _create_var_by_type(self, object value,
                                     uint32_t num_elements=?)
     cdef object _create_var_by_value(self, object cursor, object value,
                                      uint32_t num_elements)
@@ -102,10 +101,11 @@ cdef class BaseCursorImpl:
     cdef object _get_type_and_size(self, object value, uint32_t *size, bint
                                    is_plsql=*)
     cdef bint _is_plsql(self)
-    cdef int _perform_binds(self, uint32_t num_execs=*) except -1
+    cdef int _perform_binds(self, object conn, uint32_t num_execs=*) except -1
     cdef int _prepare(self, str statement, str tag=*) except -1
-    cdef int _scroll(self, int32_t offset, uint32_t mode) except -1
-    cpdef create_var(self, object conn, object typ, uint32_t size=*,
+    cdef int _scroll(self, object conn, int32_t offset,
+                     uint32_t mode) except -1
+    cpdef create_var(self, object typ, uint32_t size=*,
                      uint32_t num_elements=*, object inconverter=*,
                      object outconverter=*, str encoding_errors=*,
                      bint bypass_decode=*, int16_t precision=*,
@@ -129,13 +129,12 @@ cdef class BaseVarImpl:
         public uint32_t num_elements_in_array
         readonly DbType dbtype
         readonly list values
-        object _conn
         BaseDbObjectTypeImpl _objtype
         int _preferred_num_type
         bint _is_value_set
 
-    cdef int _bind(self, BaseCursorImpl cursor, uint32_t num_execs, str name=*,
-                   uint32_t pos=*) except -1
+    cdef int _bind(self, object conn, BaseCursorImpl cursor,
+                   uint32_t num_execs, str name=*, uint32_t pos=*) except -1
     cdef int _resize(self, uint32_t new_size) except -1
     cdef int _set_type(self, object typ) except -1
     cdef int _set_single_value(self, uint32_t pos, object value) except -1
@@ -156,7 +155,7 @@ cdef class BaseDbObjectTypeImpl:
         readonly dict attrs_by_name
         readonly DbType element_dbtype
         readonly BaseDbObjectTypeImpl element_objtype
-        readonly object _conn
+        readonly BaseConnImpl _conn_impl
 
 
 cdef class BaseDbObjectAttrImpl:

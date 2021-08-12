@@ -4,8 +4,9 @@
 
 cdef class BaseVarImpl:
 
-    cdef int _bind(self, BaseCursorImpl cursor, uint32_t num_execs,
-                   str name=None, uint32_t pos=0) except -1:
+    cdef int _bind(self, object conn, BaseCursorImpl cursor,
+                   uint32_t num_execs, str name=None,
+                   uint32_t pos=0) except -1:
         """
         Binds a variable to the cursor.
         """
@@ -125,15 +126,15 @@ cdef class BaseVarImpl:
                     if value.type is not dbtype:
                         message = f"LOB must be of type {dbtype}"
                         raise TypeError(message)
+                elif not isinstance(value, (bytes, str)):
+                    raise TypeError("expecting LOB, string or bytes")
                 else:
                     lob = self.values[pos]
-                    if lob is None:
-                        lob = self._conn.createlob(dbtype)
-                    else:
+                    if lob is not None and isinstance(lob, LOB):
                         lob.trim()
-                    if value:
-                        lob.write(value)
-                    value = lob
+                        if value:
+                            lob.write(value)
+                        value = lob
             elif dbtype is DB_TYPE_ROWID:
                 errors._raise_err(errors.ERR_SET_ROWID_DIRECTLY)
             elif dbtype is DB_TYPE_OBJECT:

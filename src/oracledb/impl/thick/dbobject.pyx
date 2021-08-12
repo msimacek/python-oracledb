@@ -93,8 +93,8 @@ cdef class ThickDbObjectImpl(BaseDbObjectImpl):
         if data.isNull:
             return None
         type_impl = self.type
-        return _convert_to_python(type_impl._conn, attr.dbtype, attr.objtype,
-                                  &data.value)
+        return _convert_to_python(type_impl._conn_impl, attr.dbtype,
+                                  attr.objtype, &data.value)
 
     def get_element_by_index(self, int32_t index):
         """
@@ -117,7 +117,7 @@ cdef class ThickDbObjectImpl(BaseDbObjectImpl):
             _raise_from_odpi()
         if data.isNull:
             return None
-        return _convert_to_python(objtype._conn, objtype.element_dbtype,
+        return _convert_to_python(objtype._conn_impl, objtype.element_dbtype,
                                   objtype.element_objtype, &data.value)
 
     def get_first_index(self):
@@ -240,7 +240,7 @@ cdef class ThickDbObjectAttrImpl(BaseDbObjectAttrImpl):
             dpiObjectAttr_release(self._handle)
 
     @staticmethod
-    cdef ThickDbObjectAttrImpl _from_handle(object conn,
+    cdef ThickDbObjectAttrImpl _from_handle(ThickConnImpl conn_impl,
                                             dpiObjectAttr *handle):
         """
         Create a new DbObjectAttr implementation object given an ODPI-C handle.
@@ -257,7 +257,8 @@ cdef class ThickDbObjectAttrImpl(BaseDbObjectAttrImpl):
         impl.dbtype = DbType._from_num(info.typeInfo.oracleTypeNum)
         if info.typeInfo.objectType:
             typ_handle = info.typeInfo.objectType
-            impl.objtype = ThickDbObjectTypeImpl._from_handle(conn, typ_handle)
+            impl.objtype = ThickDbObjectTypeImpl._from_handle(conn_impl,
+                                                              typ_handle)
         impl._native_type_num = _get_native_type_num(impl.dbtype)
         return impl
 
@@ -272,7 +273,7 @@ cdef class ThickDbObjectTypeImpl(BaseDbObjectTypeImpl):
             dpiObjectType_release(self._handle)
 
     @staticmethod
-    cdef ThickDbObjectTypeImpl _from_handle(object conn,
+    cdef ThickDbObjectTypeImpl _from_handle(ThickConnImpl conn_impl,
                                             dpiObjectType *handle):
         """
         Create a new DbObjectType implementation object given an ODPI-C handle.
@@ -289,7 +290,7 @@ cdef class ThickDbObjectTypeImpl(BaseDbObjectTypeImpl):
         impl = ThickDbObjectTypeImpl.__new__(ThickDbObjectTypeImpl)
         if dpiObjectType_addRef(handle) < 0:
             _raise_from_odpi()
-        impl._conn = conn
+        impl._conn_impl = conn_impl
         impl._handle = handle
         if dpiObjectType_getInfo(impl._handle, &info) < 0:
             _raise_from_odpi()
@@ -301,7 +302,7 @@ cdef class ThickDbObjectTypeImpl(BaseDbObjectTypeImpl):
             impl.element_dbtype = dbtype
             if info.elementTypeInfo.objectType != NULL:
                 handle = info.elementTypeInfo.objectType
-                temp = ThickDbObjectTypeImpl._from_handle(conn, handle)
+                temp = ThickDbObjectTypeImpl._from_handle(conn_impl, handle)
                 impl.element_objtype = temp
             impl._element_native_type_num = \
                     _get_native_type_num(impl.element_dbtype)
@@ -314,7 +315,7 @@ cdef class ThickDbObjectTypeImpl(BaseDbObjectTypeImpl):
                                            attributes) < 0:
                 _raise_from_odpi()
             for i in range(info.numAttributes):
-                attr_impl = ThickDbObjectAttrImpl._from_handle(conn,
+                attr_impl = ThickDbObjectAttrImpl._from_handle(conn_impl,
                                                                attributes[i])
                 impl.attrs[i] = attr_impl
                 impl.attrs_by_name[attr_impl.name] = attr_impl

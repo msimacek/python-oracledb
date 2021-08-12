@@ -34,11 +34,11 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             dpiStmt_release(self._handle)
             self._handle = NULL
 
-    cdef BaseVarImpl _create_var_impl(self, object connection):
+    cdef BaseVarImpl _create_var_impl(self):
         """
         Internal method for creating a variable.
         """
-        return ThickVarImpl.__new__(ThickVarImpl, connection)
+        return ThickVarImpl.__new__(ThickVarImpl)
 
     cdef int _fetch_rows(self, object cursor) except -1:
         """
@@ -48,7 +48,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             uint32_t temp_buffer_row_index, num_rows_in_buffer
             bint more_rows_to_fetch
             ThickVarImpl var_impl
-            object var
+            object var, conn
             int status
         with nogil:
             status = dpiStmt_fetchRows(self._handle,
@@ -58,9 +58,11 @@ cdef class ThickCursorImpl(BaseCursorImpl):
                                        &more_rows_to_fetch)
         if status < 0:
             _raise_from_odpi()
+        conn = cursor.connection
         for var in self.fetch_vars:
             var_impl = <ThickVarImpl> var._impl
-            var_impl._transform_to_python(num_rows_in_buffer, in_fetch=True,
+            var_impl._transform_to_python(conn, num_rows_in_buffer,
+                                          in_fetch=True,
                                           offset=temp_buffer_row_index)
         self._buffer_index = 0
         self._buffer_rowcount = num_rows_in_buffer
@@ -78,6 +80,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             ThickDbObjectTypeImpl typ_impl
             ThickCursorImpl cursor_impl
             dpiDataTypeInfo *type_info
+            ThickConnImpl conn_impl
             dpiQueryInfo query_info
             BaseVarImpl var_impl
             DbType dbtype
@@ -105,16 +108,17 @@ cdef class ThickCursorImpl(BaseCursorImpl):
                 message = "expecting variable from output type handler"
                 errors._raise_from_error(TypeError, message)
         type_info = &query_info.typeInfo
-        cursor_impl = <ThickCursorImpl> cursor._impl
         if type_info.objectType != NULL:
-            typ_impl = ThickDbObjectTypeImpl._from_handle(cursor.connection,
+            cursor_impl = <ThickCursorImpl> cursor._impl
+            conn_impl = cursor_impl._conn_impl
+            typ_impl = ThickDbObjectTypeImpl._from_handle(conn_impl,
                                                           type_info.objectType)
             typ = DbObjectType._from_impl(typ_impl)
         else:
             typ = dbtype
         scale = type_info.scale + type_info.fsPrecision
-        return self._create_default_fetch_var(cursor.connection, typ, name,
-                                              size, type_info.precision, scale,
+        return self._create_default_fetch_var(typ, name, size,
+                                              type_info.precision, scale,
                                               query_info.nullOk)
 
     cdef bint _is_plsql(self):
@@ -127,6 +131,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         that the statement executed was in fact a query.
         """
         cdef:
+            ThickCursorImpl cursor_impl = <ThickCursorImpl> cursor._impl
             ThickVarImpl var_impl
             uint32_t i, size
             object var
@@ -149,7 +154,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         for i in range(num_query_cols):
             var = self._get_define_var(cursor, i + 1)
             var_impl = <ThickVarImpl> var._impl
-            var_impl._create_handle()
+            var_impl._create_handle(cursor_impl._conn_impl)
             if dpiStmt_define(self._handle, i + 1, var_impl._handle) < 0:
                 _raise_from_odpi()
             cpython.Py_INCREF(var)
@@ -195,7 +200,8 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         if status < 0:
             _raise_from_odpi()
 
-    cdef int _scroll(self, int32_t offset, uint32_t mode) except -1:
+    cdef int _scroll(self, object conn, int32_t offset,
+                     uint32_t mode) except -1:
         cdef:
             uint32_t temp_buffer_row_index = 0, num_rows_in_buffer = 0
             bint more_rows_to_fetch = False
@@ -217,25 +223,27 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             _raise_from_odpi()
         for var in self.fetch_vars:
             var_impl = <ThickVarImpl> var._impl
-            var_impl._transform_to_python(num_rows_in_buffer, in_fetch=True,
+            var_impl._transform_to_python(conn, num_rows_in_buffer,
+                                          in_fetch=True,
                                           offset=temp_buffer_row_index)
         self._buffer_index = 0
         self._buffer_rowcount = num_rows_in_buffer
         self._more_rows_to_fetch = more_rows_to_fetch
         self.rowcount -= num_rows_in_buffer
 
-    cdef int _transform_binds(self, uint32_t num_execs=1) except -1:
+    cdef int _transform_binds(self, object conn,
+                              uint32_t num_execs=1) except -1:
         cdef:
             ThickVarImpl var_impl
             object var
         if isinstance(self.bind_vars, dict):
             for var in self.bind_vars.values():
                 var_impl = <ThickVarImpl> var._impl
-                var_impl._transform_to_python(num_execs)
+                var_impl._transform_to_python(conn, num_execs)
         elif isinstance(self.bind_vars, list):
             for var in self.bind_vars:
                 var_impl = <ThickVarImpl> var._impl
-                var_impl._transform_to_python(num_execs)
+                var_impl._transform_to_python(conn, num_execs)
 
     def execute(self, cursor):
         """
@@ -246,7 +254,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             uint64_t rowcount
             int status
         if self.bind_vars is not None:
-            self._perform_binds()
+            self._perform_binds(cursor.connection)
         if self._conn_impl.autocommit:
             mode = DPI_MODE_EXEC_COMMIT_ON_SUCCESS
         else:
@@ -261,7 +269,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         if num_query_cols > 0:
             self._perform_define(cursor, num_query_cols)
         elif self._stmt_info.isReturning or self._stmt_info.isPLSQL:
-            self._transform_binds()
+            self._transform_binds(cursor.connection)
 
     def executemany(self, cursor, num_execs, batcherrors, arraydmlrowcounts):
         """
@@ -283,7 +291,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             mode |= DPI_MODE_EXEC_BATCH_ERRORS
 
         if self.bind_vars is not None:
-            self._perform_binds(num_execs_int)
+            self._perform_binds(cursor.connection, num_execs_int)
 
         if num_execs_int > 0:
             with nogil:
@@ -295,7 +303,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             if status < 0:
                 _raise_from_info(&error_info)
             if self._stmt_info.isReturning or self._stmt_info.isPLSQL:
-                self._transform_binds(num_execs_int)
+                self._transform_binds(cursor.connection, num_execs_int)
 
     def get_array_dml_row_counts(self):
         """
