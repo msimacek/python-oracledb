@@ -129,5 +129,35 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaises(oracledb.NotSupportedError, other_cursor.execute,
                           sql, (building_one.building_id, building_one))
 
+    def test_3805(self):
+        "3805 - output type handler with outconvert and null values"
+        self.cursor.execute("truncate table TestTempTable")
+        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        data_to_insert = [
+            (1, "String 1"),
+            (2, None),
+            (3, "String 2")
+        ]
+        self.cursor.executemany(sql, data_to_insert)
+        self.connection.commit()
+        def converter(value):
+            return "CONVERTED"
+        def output_type_handler(cursor, name, default_type, size, precision,
+                                scale):
+            if default_type is oracledb.DB_TYPE_VARCHAR:
+                return cursor.var(str, outconverter=converter,
+                                  arraysize=cursor.arraysize)
+        self.cursor.outputtypehandler = output_type_handler
+        self.cursor.execute("""
+                select IntCol, StringCol
+                from TestTempTable
+                order by IntCol""")
+        expected_data = [
+            (1, "CONVERTED"),
+            (2, None),
+            (3, "CONVERTED")
+        ]
+        self.assertEqual(self.cursor.fetchall(), expected_data)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

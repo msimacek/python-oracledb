@@ -283,7 +283,7 @@ cdef class MessageWithData(Message):
             ora_type_num = TNS_DATA_TYPE_RAW
         num_bytes = buf.read_uint8()
         if num_bytes == 0:
-            column_value = None
+            return None
         elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
                 or ora_type_num == TNS_DATA_TYPE_CHAR \
                 or ora_type_num == TNS_DATA_TYPE_LONG:
