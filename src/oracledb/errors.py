@@ -69,6 +69,8 @@ ERR_WRONG_ARRAY_DEFINITION = 2011
 ERR_ARGS_MUST_BE_LIST_OR_TUPLE = 2012
 ERR_KEYWORD_ARGS_MUST_BE_DICT = 2013
 ERR_DUPLICATED_PARAMETER = 2014
+ERR_EXPECTING_VAR = 2015
+ERR_INCORRECT_VAR_ARRAYSIZE = 2016
 
 # error numbers that result in NotSupportedError
 ERR_TIME_NOT_SUPPORTED = 3000
@@ -95,8 +97,13 @@ ERR_MESSAGE_FORMATS = {
     ERR_DUPLICATED_PARAMETER: \
             "{deprecated_name} and {new_name} cannot both be specified",
     ERR_EXPECTING_TYPE: "expecting type",
+    ERR_EXPECTING_VAR: "output type handler should return None or the value " \
+                       "returned by a call to cursor.var()",
     ERR_FEATURE_NOT_SUPPORTED: \
             "{feature} is only supported by the {driver_type} driver",
+    ERR_INCORRECT_VAR_ARRAYSIZE: "variable array size of {var_arraysize} is " \
+                                 "too small (should be at least " \
+                                 "{required_arraysize})",
     ERR_KEYWORD_ARGS_MUST_BE_DICT: "keyword arguments must be a dict",
     ERR_MESSAGE_HAS_NO_PAYLOAD: "message has no payload",
     ERR_MIXED_ELEMENT_TYPES: \

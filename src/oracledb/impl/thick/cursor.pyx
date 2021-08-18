@@ -103,10 +103,8 @@ cdef class ThickCursorImpl(BaseCursorImpl):
                                   query_info.typeInfo.precision,
                                   query_info.typeInfo.scale)
             if result is not None:
-                if isinstance(result, Var):
-                    return result
-                message = "expecting variable from output type handler"
-                errors._raise_from_error(TypeError, message)
+                self._verify_var(result)
+                return result
         type_info = &query_info.typeInfo
         if type_info.objectType != NULL:
             cursor_impl = <ThickCursorImpl> cursor._impl

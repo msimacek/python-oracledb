@@ -44,10 +44,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
                                fetch_info._dbtype, fetch_info._size,
                                fetch_info._precision, fetch_info._scale)
             if var is not None:
-                if not isinstance(var, Var):
-                    message = "Expecting cursor.var object from " \
-                              "outputtypehandler method"
-                    errors._raise_from_string(TypeError, message)
+                self._verify_var(var)
         if var is None:
             var = self._create_default_fetch_var(fetch_info._dbtype,
                                                  fetch_info._name,

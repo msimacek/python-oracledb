@@ -292,6 +292,18 @@ cdef class BaseCursorImpl:
         """
         raise NotImplementedError()
 
+    cdef int _verify_var(self, object var) except -1:
+        """
+        Internal method used for verifying if an outputtypehandler returns a
+        valid var object.
+        """
+        if not isinstance(var, Var):
+            errors._raise_err(errors.ERR_EXPECTING_VAR)
+        if self.arraysize > var.num_elements:
+            errors._raise_err(errors.ERR_INCORRECT_VAR_ARRAYSIZE,
+                              var_arraysize=var.num_elements,
+                              required_arraysize=self.arraysize)
+
     def bind_many(self, cursor, parameters):
         """
         Internal method used for binding multiple rows of data.

@@ -470,5 +470,26 @@ class TestCase(test_env.BaseTestCase):
         self.__test_type_handler(oracledb.DB_TYPE_CHAR,
                                  oracledb.DB_TYPE_NCHAR, "31.5", "31.5")
 
+    def test_3671_incorrect_arraysize(self):
+        "3671 execute raises an error if an incorrect arraysize is used"
+        def type_handler(cursor, name, default_type, size,
+                         precision, scale):
+            return cursor.var(str)
+        cursor = self.connection.cursor()
+        cursor.arraysize = 100
+        cursor.outputtypehandler = type_handler
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2016:",
+                               cursor.execute, "select :1 from dual", [5])
+
+    def test_3672_incorrect_outputtypehandler_return_type(self):
+        "3672  execute raises an error if a var is not returned"
+        def type_handler(cursor, name, default_type, size,
+                    precision, scale):
+            return "incorrect_return"
+        cursor = self.connection.cursor()
+        cursor.outputtypehandler = type_handler
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2015:",
+                               cursor.execute, "select :1 from dual", [5])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

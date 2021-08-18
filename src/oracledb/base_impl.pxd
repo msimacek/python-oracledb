@@ -105,6 +105,7 @@ cdef class BaseCursorImpl:
     cdef int _prepare(self, str statement, str tag=*) except -1
     cdef int _scroll(self, object conn, int32_t offset,
                      uint32_t mode) except -1
+    cdef int _verify_var(self, object var) except -1
     cpdef create_var(self, object typ, uint32_t size=*,
                      uint32_t num_elements=*, object inconverter=*,
                      object outconverter=*, str encoding_errors=*,
