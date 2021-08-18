@@ -316,8 +316,10 @@ cdef class BaseCursorImpl:
             params_row = parameters[i]
             if isinstance(params_row, dict):
                 self._bind_by_name(cursor, params_row, num_rows, i)
-            else:
+            elif isinstance(params_row, (list, tuple)):
                 self._bind_by_position(cursor, params_row, num_rows, i)
+            else:
+                errors._raise_err(errors.ERR_WRONG_EXECUTEMANY_PARAMETERS_TYPE)
 
     def bind_one(self, cursor, parameters):
         """

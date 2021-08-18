@@ -1061,5 +1061,11 @@ class TestCase(test_env.BaseTestCase):
             refcursor.execute("begin :1 := 15; end;", [var])
             self.assertEqual(var.getvalue(), 15)
 
+    def test_1289_executemany_with_incorrect_params(self):
+        "1289 - test executemany with incorrect parameters"
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2004:",
+                               self.cursor.executemany, "select :1 from dual",
+                               [1])
+
 if __name__ == "__main__":
     test_env.run_test_cases()
