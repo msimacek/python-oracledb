@@ -118,12 +118,76 @@ cdef class Message:
             self.end_to_end_seq_num = buf.read_ub2()
         elif message_type == TNS_MSG_TYPE_PARAMETER:
             self._process_return_parameters(buf)
+        elif message_type == TNS_MSG_TYPE_SERVER_SIDE_PIGGYBACK:
+            self._process_server_side_piggyback(buf)
         else:
             msg = f"protocol error: unknown message type: {message_type}"
             errors._raise_from_string(exceptions.InternalError, msg)
 
     cdef int _process_return_parameters(self, ReadBuffer buf) except -1:
         raise NotImplementedError()
+
+    cdef int _process_server_side_piggyback(self, ReadBuffer buf) except -1:
+        cdef:
+            uint32_t num_bytes, num_elements, i
+            uint8_t opcode
+        opcode = buf.read_uint8()
+        if opcode == TNS_SERVER_PIGGYBACK_LTXID:
+            num_bytes = buf.read_ub4()
+            if num_bytes > 0:
+                buf.skip_bytes(num_bytes)
+        elif opcode == TNS_SERVER_PIGGYBACK_QUERY_CACHE_INVALIDATION \
+                or opcode == TNS_SERVER_PIGGYBACK_TRACE_EVENT:
+            pass
+        elif opcode == TNS_SERVER_PIGGYBACK_OS_PID_MTS:
+            num_bytes = buf.read_ub2()
+            buf.skip_bytes(num_bytes + 1)
+        elif opcode == TNS_SERVER_PIGGYBACK_SYNC:
+            buf.read_ub2()                  # skip number of DTYs
+            buf.read_uint8()                # skip length of DTYs
+            num_elements = buf.read_ub4()
+            buf.skip_bytes(1)               # skip length
+            for i in range(num_elements):
+                num_bytes = buf.read_ub2()
+                if num_bytes > 0:           # skip key
+                    buf.skip_bytes(num_bytes + 1)
+                num_bytes = buf.read_ub2()
+                if num_bytes > 0:           # skip value
+                    buf.skip_bytes(num_bytes + 1)
+                buf.read_ub2()              # skip flags
+            buf.read_ub4()                  # skip overall flags
+        elif opcode == TNS_SERVER_PIGGYBACK_EXT_SYNC:
+            buf.read_ub2()                  # skip number of DTYs
+            buf.read_uint8()                # skip length of DTYs
+        elif opcode == TNS_SERVER_PIGGYBACK_AC_REPLAY_CONTEXT:
+            buf.read_ub2()                  # skip number of DTYs
+            buf.read_uint8()                # skip length of DTYs
+            buf.read_ub4()                  # skip flags
+            buf.read_ub4()                  # skip error code
+            buf.read_uint8()                # skip queue
+            num_bytes = buf.read_ub4()      # skip replay context
+            if num_bytes > 0:
+                buf.skip_bytes(num_bytes)
+        elif opcode == TNS_SERVER_PIGGYBACK_SESS_RET:
+            buf.read_ub2()
+            buf.skip_bytes(1)
+            num_elements = buf.read_ub2()
+            if num_elements > 0:
+                buf.skip_bytes(1)
+                for i in range(num_elements):
+                    num_bytes = buf.read_ub2()
+                    if num_bytes > 0:       # skip key
+                        buf.skip_bytes(num_bytes + 1)
+                    num_bytes = buf.read_ub2()
+                    if num_bytes > 0:       # skip value
+                        buf.skip_bytes(num_bytes + 1)
+                    buf.read_ub2()          # skip flags
+            buf.read_ub4()                  # session flags
+            buf.read_ub4()                  # session id
+            buf.read_ub2()                  # serial number
+        else:
+            msg = f"Unhandled server side piggyback opcode: {opcode}"
+            raise Exception(msg)
 
     cdef int _process_warning_info(self, ReadBuffer buf) except -1:
         cdef:
@@ -513,8 +577,6 @@ cdef class MessageWithData(Message):
             buf.skip_bytes(num_bytes)
         elif message_type == TNS_MSG_TYPE_IO_VECTOR:
             self._process_io_vector(buf)
-        elif message_type == TNS_MSG_TYPE_SERVER_SIDE_PIGGYBACK:
-            self._process_server_side_piggyback(buf)
         elif message_type == TNS_MSG_TYPE_IMPLICIT_RESULTSET:
             self._process_implicit_result(buf)
         else:
@@ -597,68 +659,6 @@ cdef class MessageWithData(Message):
         num_bytes = buf.read_ub4()
         if num_bytes > 0:
             buf.skip_bytes(num_bytes + 1)   # rxhrid
-
-    cdef int _process_server_side_piggyback(self, ReadBuffer buf) except -1:
-        cdef:
-            uint32_t num_bytes, num_elements, i
-            uint8_t opcode
-        opcode = buf.read_uint8()
-        if opcode == TNS_SERVER_PIGGYBACK_LTXID:
-            num_bytes = buf.read_ub4()
-            if num_bytes > 0:
-                buf.skip_bytes(num_bytes)
-        elif opcode == TNS_SERVER_PIGGYBACK_QUERY_CACHE_INVALIDATION \
-                or opcode == TNS_SERVER_PIGGYBACK_TRACE_EVENT:
-            pass
-        elif opcode == TNS_SERVER_PIGGYBACK_OS_PID_MTS:
-            num_bytes = buf.read_ub2()
-            buf.skip_bytes(num_bytes + 1)
-        elif opcode == TNS_SERVER_PIGGYBACK_SYNC:
-            buf.read_ub2()                  # skip number of DTYs
-            buf.read_uint8()                # skip length of DTYs
-            num_elements = buf.read_ub4()
-            buf.skip_bytes(1)               # skip length
-            for i in range(num_elements):
-                num_bytes = buf.read_ub2()
-                if num_bytes > 0:           # skip key
-                    buf.skip_bytes(num_bytes + 1)
-                num_bytes = buf.read_ub2()
-                if num_bytes > 0:           # skip value
-                    buf.skip_bytes(num_bytes + 1)
-                buf.read_ub2()              # skip flags
-            buf.read_ub4()                  # skip overall flags
-        elif opcode == TNS_SERVER_PIGGYBACK_EXT_SYNC:
-            buf.read_ub2()                  # skip number of DTYs
-            buf.read_uint8()                # skip length of DTYs
-        elif opcode == TNS_SERVER_PIGGYBACK_AC_REPLAY_CONTEXT:
-            buf.read_ub2()                  # skip number of DTYs
-            buf.read_uint8()                # skip length of DTYs
-            buf.read_ub4()                  # skip flags
-            buf.read_ub4()                  # skip error code
-            buf.read_uint8()                # skip queue
-            num_bytes = buf.read_ub4()      # skip replay context
-            if num_bytes > 0:
-                buf.skip_bytes(num_bytes)
-        elif opcode == TNS_SERVER_PIGGYBACK_SESS_RET:
-            buf.read_ub2()
-            buf.skip_bytes(1)
-            num_elements = buf.read_ub2()
-            if num_elements > 0:
-                buf.skip_bytes(1)
-                for i in range(num_elements):
-                    num_bytes = buf.read_ub2()
-                    if num_bytes > 0:       # skip key
-                        buf.skip_bytes(num_bytes + 1)
-                    num_bytes = buf.read_ub2()
-                    if num_bytes > 0:       # skip value
-                        buf.skip_bytes(num_bytes + 1)
-                    buf.read_ub2()          # skip flags
-            buf.read_ub4()                  # session flags
-            buf.read_ub4()                  # session id
-            buf.read_ub2()                  # serial number
-        else:
-            msg = f"Unhandled server side piggyback opcode: {opcode}"
-            raise Exception(msg)
 
     cdef int _write_column_metadata(self, WriteBuffer buf,
                                     list bind_vars) except -1:
