@@ -1067,5 +1067,19 @@ class TestCase(test_env.BaseTestCase):
                                self.cursor.executemany, "select :1 from dual",
                                [1])
 
+    def test_1290_executemany_with_mixed_binds_pos_first(self):
+        "1290 - test executemany with mixed binds (pos first)"
+        rows = [["test"], {"value": 1}]
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2006:",
+                               self.cursor.executemany, "select :1 from dual",
+                               rows)
+
+    def test_1291_executemany_with_mixed_binds_name_first(self):
+        "1291 - test executemany with mixed binds (name first)"
+        rows = [{"value": 1}, ["test"]]
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2006:",
+                               self.cursor.executemany, "select :value from dual",
+                               rows)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

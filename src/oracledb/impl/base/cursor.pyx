@@ -311,13 +311,20 @@ cdef class BaseCursorImpl:
         cdef:
             object params_row, value
             ssize_t i, num_rows
+            bint has_pos_bind=False, has_name_bind=False
         num_rows = len(parameters)
         for i in range(num_rows):
             params_row = parameters[i]
             if isinstance(params_row, dict):
+                if has_pos_bind:
+                    errors._raise_err(errors.ERR_MIXED_POSITIONAL_AND_NAMED_BINDS)
                 self._bind_by_name(cursor, params_row, num_rows, i)
+                has_name_bind = True
             elif isinstance(params_row, (list, tuple)):
+                if has_name_bind:
+                    errors._raise_err(errors.ERR_MIXED_POSITIONAL_AND_NAMED_BINDS)
                 self._bind_by_position(cursor, params_row, num_rows, i)
+                has_pos_bind = True
             else:
                 errors._raise_err(errors.ERR_WRONG_EXECUTEMANY_PARAMETERS_TYPE)
 
