@@ -28,7 +28,6 @@ def _raise_err(error_num: int, **args):
     if message_format is None:
         message_format = "missing error {error_num}"
         args = dict(error_num=error_num)
-        exc_type = exceptions.InternalError
         error_num = ERR_MISSING_ERROR
     exc_type = ERR_EXCEPTION_TYPES[error_num // 1000]
     message = message_format.format(**args)
