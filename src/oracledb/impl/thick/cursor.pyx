@@ -387,8 +387,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             dpiStmt *child_stmt
             list result = []
         if self._handle == NULL:
-            errors._raise_from_string(exceptions.InterfaceError,
-                                      "no statement executed")
+            errors._raise_err(errors.ERR_NO_STATEMENT_EXECUTED)
         while True:
             if dpiStmt_getImplicitResult(self._handle, &child_stmt) < 0:
                 _raise_from_odpi()

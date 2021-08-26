@@ -409,7 +409,8 @@ class TestCase(test_env.BaseTestCase):
         wrong_obj_type = self.connection.gettype("UDT_OBJECTARRAY")
         wrong_obj = wrong_obj_type.newobject()
         var = self.cursor.var(oracledb.DB_TYPE_OBJECT, typename="UDT_OBJECT")
-        self.assertRaises(oracledb.DatabaseError, var.setvalue, 0, wrong_obj)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2008:",
+                               var.setvalue, 0, wrong_obj)
 
     def test_2314_string_format(self):
         "2314 - test object string format"

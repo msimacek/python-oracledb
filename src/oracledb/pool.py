@@ -185,27 +185,27 @@ class Pool:
 
         if waitTimeout != 0:
             if wait_timeout != 0:
-                message = "waitTimeout and wait_timeout cannot both be " \
-                          "specified"
-                raise exceptions.ProgrammingError(message)
+                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                                  deprecated_name="waitTimeout",
+                                  new_name="wait_timeout")
             wait_timeout = waitTimeout
         if maxLifetimeSession != 0:
             if max_lifetime_session != 0:
-                message = "maxLifetimeSession and max_lifetime_session " \
-                          "cannot both be specified"
-                raise exceptions.ProgrammingError(message)
+                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                                  deprecated_name="maxLifetimeSession",
+                                  new_name="max_lifetime_session")
             max_lifetime_session = maxLifetimeSession
         if sessionCallback is not None:
             if session_callback is not None:
-                message = "sessionCallback and session_callback cannot both " \
-                          "be specified"
-                raise exceptions.ProgrammingError(message)
+                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                                  deprecated_name="sessionCallback",
+                                  new_name="session_callback")
             session_callback = sessionCallback
         if maxSessionsPerShard != 0:
             if max_sessions_per_shard != 0:
-                message = "maxSessionsPerShard and max_sessions_per_shard " \
-                          "cannot both be specified"
-                raise exceptions.ProgrammingError(message)
+                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                                  deprecated_name="maxSessionsPerShard",
+                                  new_name="max_sessions_per_shard")
             max_sessions_per_shard = maxSessionsPerShard
 
         if thin:

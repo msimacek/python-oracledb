@@ -498,19 +498,20 @@ class TestCase(test_env.BaseTestCase):
     def test_2418_deprecations(self):
         "2418 - test to verify deprecations"
         callback = "pkg_SessionCallback.TheCallback"
-        self.assertRaises(oracledb.ProgrammingError, test_env.get_pool,
-                          min=1, max=2, increment=1, wait_timeout=10,
-                          waitTimeout=10)
-        self.assertRaises(oracledb.ProgrammingError, test_env.get_pool,
-                          min=1, max=2, increment=1, max_lifetime_session=20,
-                          maxLifetimeSession=20)
-        self.assertRaises(oracledb.ProgrammingError, test_env.get_pool,
-                          min=1, max=2, increment=1, max_sessions_per_shard=1,
-                          maxSessionsPerShard=1)
-        self.assertRaises(oracledb.ProgrammingError, test_env.get_pool,
-                          min=2, max=8, increment=3,
-                          getmode=oracledb.POOL_GETMODE_NOWAIT,
-                          session_callback=callback, sessionCallback=callback)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
+                               test_env.get_pool, min=1, max=2, increment=1,
+                               wait_timeout=10, waitTimeout=10)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
+                               test_env.get_pool, min=1, max=2, increment=1,
+                               max_lifetime_session=20, maxLifetimeSession=20)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
+                               test_env.get_pool, min=1, max=2, increment=1,
+                               max_sessions_per_shard=1, maxSessionsPerShard=1)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
+                               test_env.get_pool, min=2, max=8, increment=3,
+                               getmode=oracledb.POOL_GETMODE_NOWAIT,
+                               session_callback=callback,
+                               sessionCallback=callback)
 
     def test_2419_statement_cache_size(self):
         "2419 - test to verify statement cache size is retained"

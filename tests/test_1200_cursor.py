@@ -34,8 +34,8 @@ class TestCase(test_env.BaseTestCase):
 
     def test_1202_execute_no_statement_with_args(self):
         "1202 - test executing a None statement with bind variables"
-        self.assertRaises(oracledb.ProgrammingError, self.cursor.execute, None,
-                          x=5)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2001:",
+                               self.cursor.execute, None, x=5)
 
     def test_1203_execute_empty_keyword_args(self):
         "1203 - test executing a statement with args and empty keyword args"
@@ -128,18 +128,21 @@ class TestCase(test_env.BaseTestCase):
     def test_1215_callfunc_negative(self):
         "1215 - test executing a stored function with wrong parameters"
         func_name = "func_Test"
-        self.assertRaises(oracledb.ProgrammingError, self.cursor.callfunc,
-                          oracledb.NUMBER, func_name, ("hi", 5))
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2007:",
+                               self.cursor.callfunc, oracledb.NUMBER,
+                               func_name, ("hi", 5))
         self.assertRaises(oracledb.DatabaseError, self.cursor.callfunc,
                           func_name, oracledb.NUMBER, ("hi", 5, 7))
-        self.assertRaises(oracledb.ProgrammingError, self.cursor.callfunc,
-                          func_name, oracledb.NUMBER, "hi", 7)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2012:",
+                               self.cursor.callfunc, func_name,
+                               oracledb.NUMBER, "hi", 7)
         self.assertRaises(oracledb.DatabaseError, self.cursor.callfunc,
                           func_name, oracledb.NUMBER, [5, "hi"])
         self.assertRaises(oracledb.DatabaseError, self.cursor.callfunc,
                           func_name, oracledb.NUMBER)
-        self.assertRaises(oracledb.ProgrammingError, self.cursor.callfunc,
-                          func_name, oracledb.NUMBER, 5)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2012:",
+                               self.cursor.callfunc, func_name,
+                               oracledb.NUMBER, 5)
 
     def test_1216_executemany_by_name(self):
         "1216 - test executing a statement multiple times (named args)"
@@ -256,8 +259,9 @@ class TestCase(test_env.BaseTestCase):
     def test_1225_executemany_with_invalid_parameters(self):
         "1225 - test calling executemany() with invalid parameters"
         sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
-        self.assertRaises(oracledb.ProgrammingError, self.cursor.executemany,
-                          sql, "These are not valid parameters")
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2004:",
+                               self.cursor.executemany, sql,
+                               "These are not valid parameters")
 
     def test_1226_executemany_no_parameters(self):
         "1226 - test calling executemany() without any bind parameters"
@@ -319,8 +323,8 @@ class TestCase(test_env.BaseTestCase):
     def test_1229_exception_on_close(self):
         "1229 - confirm an exception is raised after closing a cursor"
         self.cursor.close()
-        self.assertRaises(oracledb.InterfaceError, self.cursor.execute,
-                          "select 1 from dual")
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1002:",
+                               self.cursor.execute, "select 1 from dual")
 
     def test_1230_iterators(self):
         "1230 - test iterators"
@@ -343,11 +347,13 @@ class TestCase(test_env.BaseTestCase):
         test_iter = iter(self.cursor)
         value, = next(test_iter)
         self.cursor.execute("insert into TestTempTable (IntCol) values (1)")
-        self.assertRaises(oracledb.InterfaceError, next, test_iter)
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1003:", next,
+                               test_iter)
 
     def test_1232_bind_names(self):
         "1232 - test that bindnames() works correctly."
-        self.assertRaises(oracledb.ProgrammingError, self.cursor.bindnames)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2002:",
+                               self.cursor.bindnames)
         self.cursor.prepare("begin null; end;")
         self.assertEqual(self.cursor.bindnames(), [])
         self.cursor.prepare("begin :retval := :inval + 5; end;")
@@ -372,7 +378,8 @@ class TestCase(test_env.BaseTestCase):
         "1234 - test that subsequent fetches fail after bad execute"
         self.assertRaises(oracledb.DatabaseError,
                           self.cursor.execute, "select y from dual")
-        self.assertRaises(oracledb.InterfaceError, self.cursor.fetchall)
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1003:",
+                               self.cursor.fetchall)
 
     @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support scrollable cursors yet")
@@ -578,10 +585,10 @@ class TestCase(test_env.BaseTestCase):
     def test_1247_set_input_sizes_negative(self):
         "1247 - test cursor.setinputsizes() with invalid parameters"
         val = decimal.Decimal(5)
-        self.assertRaises(oracledb.ProgrammingError,
-                          self.cursor.setinputsizes, val, x=val)
-        self.assertRaises(oracledb.ProgrammingError, self.cursor.setinputsizes,
-                          val)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2005:",
+                               self.cursor.setinputsizes, val, x=val)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2007:",
+                               self.cursor.setinputsizes, val)
 
     def test_1248_set_input_sizes_no_parameters(self):
         "1248 - test setting input sizes without any parameters"
@@ -637,12 +644,13 @@ class TestCase(test_env.BaseTestCase):
 
     def test_1256_var_negative(self):
         "1256 - test cursor.var() with invalid parameters"
-        self.assertRaises(oracledb.ProgrammingError, self.cursor.var, 5)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2007:",
+                               self.cursor.var, 5)
 
     def test_1257_arrayvar_negative(self):
         "1257 - test cursor.arrayvar() with invalid parameters"
-        self.assertRaises(oracledb.ProgrammingError, self.cursor.arrayvar, 5,
-                          1)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2007:",
+                               self.cursor.arrayvar, 5, 1)
 
     def test_1258_boolean_without_plsql(self):
         "1258 - test binding boolean data without the use of PL/SQL"
@@ -664,7 +672,8 @@ class TestCase(test_env.BaseTestCase):
             cursor.execute("select count(*) from TestTempTable")
             count, = cursor.fetchone()
             self.assertEqual(count, 0)
-        self.assertRaises(oracledb.InterfaceError, self.cursor.close)
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1002:",
+                               self.cursor.close)
 
     def test_1260_query_row_count(self):
         "1260 - test that rowcount attribute is reset to zero on query execute"
@@ -1034,23 +1043,24 @@ class TestCase(test_env.BaseTestCase):
     def test_1286_encodingErrors_deprecation(self):
         "1286 - test to verify encodingErrors is deprecated"
         errors = 'strict'
-        self.assertRaises(oracledb.ProgrammingError, self.cursor.var,
-                          oracledb.NUMBER, encoding_errors=errors,
-                          encodingErrors=errors)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
+                               self.cursor.var, oracledb.NUMBER,
+                               encoding_errors=errors, encodingErrors=errors)
 
     def test_1287_keywordParameters_deprecation(self):
         "1287 - test to verify keywordParameters is deprecated"
         out_value = self.cursor.var(oracledb.NUMBER)
         kwargs = dict(a_OutValue=out_value)
-        self.assertRaises(oracledb.ProgrammingError, self.cursor.callproc,
-                          "proc_Test", ("hi", 5), kwargs,
-                          keywordParameters=kwargs)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
+                               self.cursor.callproc, "proc_Test", ("hi", 5),
+                               kwargs, keywordParameters=kwargs)
         extra_amount = self.cursor.var(oracledb.NUMBER)
         extra_amount.setvalue(0, 5)
         kwargs = dict(a_ExtraAmount=extra_amount, a_String="hi")
-        self.assertRaises(oracledb.ProgrammingError, self.cursor.callfunc,
-                          "func_Test", oracledb.NUMBER, [], kwargs,
-                          keywordParameters=kwargs)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
+                               self.cursor.callfunc, "func_Test",
+                               oracledb.NUMBER, [], kwargs,
+                               keywordParameters=kwargs)
 
     def test_1288_refcursor_execute_different_sql(self):
         "1288 - test executing different SQL after getting a REF cursor"
@@ -1078,8 +1088,65 @@ class TestCase(test_env.BaseTestCase):
         "1291 - test executemany with mixed binds (name first)"
         rows = [{"value": 1}, ["test"]]
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2006:",
-                               self.cursor.executemany, "select :value from dual",
-                               rows)
+                               self.cursor.executemany,
+                               "select :value from dual", rows)
+
+    def test_1292_unsupported_arrays_of_arrays(self):
+        "1292 - test arrays of arrays not supported"
+        simple_var = self.cursor.arrayvar(oracledb.NUMBER, 3)
+        self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3005:",
+                               simple_var.setvalue, 1, [1, 2, 3])
+
+    def test_1293_execute_with_invalid_parameters(self):
+        "1293 - test calling execute() with invalid parameters"
+        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2003:",
+                               self.cursor.execute, sql,
+                               "These are not valid parameters")
+
+    @unittest.skipIf(oracledb.defaults.thin,
+                     "thin driver doesn't support scrollable cursors yet")
+    def test_1294_scroll_with_invalid_mode(self):
+        "1294 - test calling scroll() with invalid mode"
+        cursor = self.connection.cursor(scrollable=True)
+        cursor.arraysize = self.cursor.arraysize
+        cursor.execute("""
+                select NumberCol
+                from TestNumbers
+                order by IntCol""")
+        cursor.fetchmany()
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2009:",
+                               cursor.scroll, mode="middle")
+
+    def test_1295_keyword_args_with_invalid_type(self):
+        "1295 - test error for keyword args with invalid type"
+        kwargs = [5]
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2013:",
+                               self.cursor.callproc, "proc_Test", [], kwargs)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2013:",
+                               self.cursor.callfunc, "func_Test",
+                               oracledb.NUMBER, [], kwargs)
+
+    def test_1296_set_input_sizes_with_invalid_list_parameters(self):
+        "1296 - test cursor.setinputsizes() with invalid list parameters"
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2011:",
+                               self.cursor.setinputsizes, [int, 2, 10])
+
+    def test_1297_execute_with_mixed_binds(self):
+        "1297 - test calling execute() with mixed binds"
+        self.cursor.execute("truncate table TestTempTable")
+        self.cursor.setinputsizes(None, None, str)
+        data = dict(val1=1, val2="Test String 1")
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2006:",
+                               self.cursor.execute, """
+                               insert into TestTempTable (IntCol, StringCol)
+                               values (:1, :2)
+                               returning StringCol into :out_var""", data)
+
+    def test_1298_unsupported_python_type(self):
+        "1298 - test unsupported python type on cursor"
+        self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3003:",
+                               self.cursor.var, list)
 
 if __name__ == "__main__":
     test_env.run_test_cases()

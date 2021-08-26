@@ -132,5 +132,13 @@ class TestCase(test_env.BaseTestCase):
         messages = other_queue.deqmany(5)
         self.assertEqual(len(messages), 0)
 
+    def test_2805_messages_with_no_payload(self):
+        "2805 - test error for messages with no payload"
+        queue = self.__get_and_clear_raw_queue()
+        messages = [self.connection.msgproperties() \
+                    for d in RAW_PAYLOAD_DATA]
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2000:",
+                               queue.enqmany, messages)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

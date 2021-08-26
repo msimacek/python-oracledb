@@ -404,8 +404,8 @@ class TestCase(test_env.BaseTestCase):
     def test_2529_set_rowid_to_string(self):
         "2529 - test assigning a string to rowid"
         var = self.cursor.var(oracledb.ROWID)
-        self.assertRaises(oracledb.NotSupportedError, var.setvalue, 0,
-                "ABDHRYTHFJGKDKKDH")
+        self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3004:",
+                               var.setvalue, 0, "ABDHRYTHFJGKDKKDH")
 
     @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support XML type objects yet")

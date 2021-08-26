@@ -406,8 +406,8 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3221_implicit_results_no_statement(self):
         "3221 - test getimplicitresults() without executing a statement"
-        self.assertRaises(oracledb.InterfaceError,
-                          self.cursor.getimplicitresults)
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1004:",
+                               self.cursor.getimplicitresults)
 
     def test_3222_insert_with_batch_error(self):
         "3222 - test executing insert with multiple distinct batch errors"
@@ -445,8 +445,9 @@ class TestCase(test_env.BaseTestCase):
         ]
         sql = "insert into TestArrayDML (IntCol, StringCol, IntCol2) " \
                 "values (:1, :2, :3)"
-        self.assertRaises(oracledb.IntegrityError, self.cursor.executemany,
-                          sql, rows, batcherrors=False)
+        self.assertRaisesRegex(oracledb.IntegrityError, "^ORA-00001:",
+                               self.cursor.executemany, sql, rows,
+                               batcherrors=False)
 
     def test_3224_update_with_batch_error(self):
         "3224 - test executing in succession with batch error"

@@ -37,9 +37,10 @@ class TestCase(test_env.BaseTestCase):
 
     def test_1003_unsupported_functions(self):
         "1003 - test unsupported time functions"
-        self.assertRaises(oracledb.NotSupportedError, oracledb.Time, 12, 0, 0)
-        self.assertRaises(oracledb.NotSupportedError, oracledb.TimeFromTicks,
-                          100)
+        self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3000:",
+                               oracledb.Time, 12, 0, 0)
+        self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3000:",
+                               oracledb.TimeFromTicks, 100)
 
 if __name__ == "__main__":
     test_env.run_test_cases()

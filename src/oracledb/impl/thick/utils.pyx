@@ -60,8 +60,8 @@ cdef object _convert_from_json_node(dpiJsonNode *node):
         for i in range(array.numElements):
             list_value[i] = _convert_from_json_node(&array.elements[i])
         return list_value
-    message = f"Oracle type {node.oracleTypeNum} not supported"
-    errors._raise_from_string(exceptions.NotSupportedError, message)
+    errors._raise_err(errors.ERR_ORACLE_TYPE_NOT_SUPPORTED,
+                      num=node.oracleTypeNum)
 
 cdef int _convert_from_python(object value, DbType dbtype,
                               ThickDbObjectTypeImpl obj_type_impl,

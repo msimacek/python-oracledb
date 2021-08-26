@@ -124,17 +124,22 @@ class TestCase(test_env.BaseTestCase):
     def test_3001_deprecations(self):
         "3001 - test to verify deprecations"
         connection = test_env.get_connection(threaded=True, events=True)
-        self.assertRaises(oracledb.ProgrammingError, connection.subscribe,
-                          ip_address='www.oracle.in',
-                          ipAddress='www.oracle.in')
-        self.assertRaises(oracledb.ProgrammingError, connection.subscribe,
-                          grouping_class=1, groupingClass=1)
-        self.assertRaises(oracledb.ProgrammingError, connection.subscribe,
-                          grouping_value=3, groupingValue=3)
-        self.assertRaises(oracledb.ProgrammingError, connection.subscribe,
-                          grouping_type=2, groupingType=2)
-        self.assertRaises(oracledb.ProgrammingError, connection.subscribe,
-                          client_initiated=True, clientInitiated=True)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
+                               connection.subscribe,
+                               ip_address='www.oracle.in',
+                               ipAddress='www.oracle.in')
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
+                               connection.subscribe, grouping_class=1,
+                               groupingClass=1)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
+                               connection.subscribe, grouping_value=3,
+                               groupingValue=3)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
+                               connection.subscribe, grouping_type=2,
+                               groupingType=2)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
+                               connection.subscribe, client_initiated=True,
+                               clientInitiated=True)
 
 if __name__ == "__main__":
     test_env.run_test_cases()

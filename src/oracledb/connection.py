@@ -600,9 +600,9 @@ class Connection:
         payload_type_impl = None
         if payloadType is not None:
             if payload_type is not None:
-                message = "payloadType and payload_type cannot both be " \
-                          "specified"
-                raise exceptions.ProgrammingError(message)
+                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                                  deprecated_name="payloadType",
+                                  new_name="payload_type")
             payload_type = payloadType
         if payload_type is not None:
             if not isinstance(payload_type, DbObjectType):
@@ -742,32 +742,33 @@ class Connection:
         self._verify_connected()
         if ipAddress is not None:
             if ip_address is not None:
-                message = "ipAddress and ip_address cannot both be specified"
-                raise exceptions.ProgrammingError(message)
+                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                                  deprecated_name="ipAddress",
+                                  new_name="ip_address")
             ip_address = ipAddress
         if groupingClass != constants.SUBSCR_GROUPING_CLASS_NONE:
             if grouping_class != constants.SUBSCR_GROUPING_CLASS_NONE:
-                message = "groupingClass and grouping_class cannot both be " \
-                          "specified"
-                raise exceptions.ProgrammingError(message)
+                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                                  deprecated_name="groupingClass",
+                                  new_name="grouping_class")
             grouping_class = groupingClass
         if groupingValue != 0:
             if grouping_value != 0:
-                message = "groupingValue and grouping_value cannot both be " \
-                          "specified"
-                raise exceptions.ProgrammingError(message)
+                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                                  deprecated_name="groupingValue",
+                                  new_name="grouping_value")
             grouping_value = groupingValue
         if groupingType != constants.SUBSCR_GROUPING_TYPE_SUMMARY:
             if grouping_type != constants.SUBSCR_GROUPING_TYPE_SUMMARY:
-                message = "groupingType and grouping_type cannot both be " \
-                          "specified"
-                raise exceptions.ProgrammingError(message)
+                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                                  deprecated_name="groupingType",
+                                  new_name="grouping_type")
             grouping_type = groupingType
         if clientInitiated:
             if client_initiated:
-                message = "clientInitiated and client_initiated cannot " \
-                          "both be specified"
-                raise exceptions.ProgrammingError(message)
+                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                                  deprecated_name="clientInitiated",
+                                  new_name="client_initiated")
             client_initiated = clientInitiated
         impl = self._impl.create_subscr_impl(self, callback, namespace, name,
                                              protocol, ip_address, port,

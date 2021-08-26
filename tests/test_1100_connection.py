@@ -182,7 +182,8 @@ class TestCase(test_env.BaseTestCase):
         "1112 - confirm an exception is raised after closing a connection"
         connection = test_env.get_connection()
         connection.close()
-        self.assertRaises(oracledb.InterfaceError, connection.rollback)
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1001:",
+                               connection.rollback)
 
     @unittest.skipIf(oracledb.defaults.thin, "not relevant for thin driver")
     def test_1113_connect_with_handle(self):
@@ -278,7 +279,8 @@ class TestCase(test_env.BaseTestCase):
             cursor.execute("insert into TestTempTable (IntCol) values (1)")
             connection.commit()
             cursor.execute("insert into TestTempTable (IntCol) values (2)")
-        self.assertRaises(oracledb.InterfaceError, connection.ping)
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1001:",
+                               connection.ping)
         connection = test_env.get_connection()
         cursor = connection.cursor()
         cursor.execute("select count(*) from TestTempTable")
@@ -312,8 +314,8 @@ class TestCase(test_env.BaseTestCase):
         if test_env.get_client_version() >= (12, 1):
             attr_names.append("ltxid")
         for name in attr_names:
-            self.assertRaises(oracledb.InterfaceError, getattr, connection,
-                    name)
+            self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1001:",
+                                   getattr, connection, name)
 
     def test_1124_ping(self):
         "1124 - test connection ping"

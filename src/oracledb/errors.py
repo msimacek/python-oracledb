@@ -52,6 +52,7 @@ ERR_MISSING_ERROR = 1000
 ERR_NOT_CONNECTED = 1001
 ERR_NOT_OPEN = 1002
 ERR_NOT_A_QUERY = 1003
+ERR_NO_STATEMENT_EXECUTED = 1004
 
 # error numbers that result in ProgrammingError
 ERR_MESSAGE_HAS_NO_PAYLOAD = 2000
@@ -111,6 +112,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_MIXED_POSITIONAL_AND_NAMED_BINDS: \
             "positional and named binds cannot be intermixed",
     ERR_NO_STATEMENT: "no statement specified and no prior statement prepared",
+    ERR_NO_STATEMENT_EXECUTED: "no statement executed",
     ERR_NO_STATEMENT_PREPARED: "statement must be prepared first",
     ERR_NOT_A_QUERY: "not a query",
     ERR_NOT_CONNECTED: "not connected",

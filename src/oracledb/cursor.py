@@ -726,9 +726,9 @@ class Cursor:
             typ = self.connection.gettype(typename)
         if encodingErrors is not None:
             if encoding_errors is not None:
-                message = "encodingErrors and encoding_errors cannot both " \
-                          "be specified"
-                raise exceptions.ProgrammingError(message)
+                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                                  deprecated_name="encodingErrors",
+                                  new_name="encoding_errors")
             encoding_errors = encodingErrors
         return self._impl.create_var(typ, size, arraysize, inconverter,
                                      outconverter, encoding_errors,

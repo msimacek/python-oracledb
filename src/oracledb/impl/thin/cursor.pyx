@@ -105,8 +105,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
 
     def get_implicit_results(self, connection):
         if self._implicit_resultsets is None:
-            errors._raise_from_string(exceptions.InterfaceError,
-                                      "no statement executed")
+            errors._raise_err(errors.ERR_NO_STATEMENT_EXECUTED)
         return self._implicit_resultsets
 
     def get_lastrowid(self):

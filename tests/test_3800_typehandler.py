@@ -58,8 +58,9 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("truncate table TestTempTable")
         sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
         building = Building(1, "The First Building", 5)
-        self.assertRaises(oracledb.NotSupportedError, self.cursor.execute, sql,
-                          (building.building_id, building))
+        self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3002:",
+                               self.cursor.execute, sql,
+                               (building.building_id, building))
 
     def test_3801(self):
         "3801 - not callable input type handler"
@@ -96,8 +97,9 @@ class TestCase(test_env.BaseTestCase):
         cursor_one.execute("select IntCol, StringCol from TestTempTable")
         self.assertEqual(cursor_one.fetchall(),
                          [(building_one.building_id, building_one.to_json())])
-        self.assertRaises(oracledb.NotSupportedError, cursor_two.execute,
-                          sql, (building_two.building_id, building_two))
+        self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3002:",
+                               cursor_two.execute, sql,
+                               (building_two.building_id, building_two))
         cursor_two.outputtypehandler = self.output_type_handler
         cursor_two.execute("select IntCol, StringCol from TestTempTable")
         self.assertEqual(cursor_two.fetchall(),
@@ -126,8 +128,9 @@ class TestCase(test_env.BaseTestCase):
         cursor_two.execute("select IntCol, StringCol from TestTempTable")
         self.assertEqual(cursor_two.fetchall(), expected_data)
         other_cursor = self.connection.cursor()
-        self.assertRaises(oracledb.NotSupportedError, other_cursor.execute,
-                          sql, (building_one.building_id, building_one))
+        self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3002:",
+                               other_cursor.execute, sql,
+                               (building_one.building_id, building_one))
 
     def test_3805(self):
         "3805 - output type handler with outconvert and null values"

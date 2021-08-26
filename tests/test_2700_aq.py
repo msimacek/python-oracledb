@@ -354,9 +354,17 @@ class TestCase(test_env.BaseTestCase):
         "2716 - test to verify payloadType is deprecated"
         self.__clear_books_queue()
         books_type = self.connection.gettype(self.book_type_name)
-        self.assertRaises(oracledb.ProgrammingError, self.connection.queue,
-                          self.book_queue_name, books_type,
-                          payloadType=books_type)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
+                               self.connection.queue, self.book_queue_name,
+                               books_type, payloadType=books_type)
+
+    def test_2717_message_with_no_payload(self):
+        "2717 - test error for message with no payload"
+        books_type = self.connection.gettype(self.book_type_name)
+        queue = self.connection.queue(self.book_queue_name, books_type)
+        props = self.connection.msgproperties()
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2000:",
+                               queue.enqone, props)
 
 if __name__ == "__main__":
     test_env.run_test_cases()

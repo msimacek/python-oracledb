@@ -169,5 +169,13 @@ class TestCase(test_env.BaseTestCase):
         ]
         self.__bind_scalar_as_json(data)
 
+    def test_3508_unsupported_python_type(self):
+        "3508 - test unsupported python type with JSON"
+        self.cursor.execute("truncate table TestJson")
+        self.cursor.setinputsizes(None, oracledb.DB_TYPE_JSON)
+        insert_sql = "insert into TestJson values (:1, :2)"
+        self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3003:",
+                               self.cursor.execute, insert_sql, [1, list])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

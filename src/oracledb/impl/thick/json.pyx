@@ -135,8 +135,8 @@ cdef class JsonBuffer:
             interval.seconds = seconds % 60
             interval.fseconds = cydatetime.timedelta_microseconds(value) * 1000
         else:
-            message = f"Python type {type(value)} not supported"
-            errors._raise_from_string(exceptions.NotSupportedError, message)
+            errors._raise_err(errors.ERR_PYTHON_TYPE_NOT_SUPPORTED,
+                              typ=type(value))
 
     cdef int from_object(self, object value) except -1:
         self._top_node.value = &self._top_node_buf
