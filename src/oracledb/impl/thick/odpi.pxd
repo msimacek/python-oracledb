@@ -69,6 +69,7 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
     uint32_t DPI_ORACLE_TYPE_TIMESTAMP_TZ
     uint32_t DPI_ORACLE_TYPE_TIMESTAMP_LTZ
     uint32_t DPI_ORACLE_TYPE_INTERVAL_DS
+    uint32_t DPI_ORACLE_TYPE_INTERVAL_YM
     uint32_t DPI_ORACLE_TYPE_CLOB
     uint32_t DPI_ORACLE_TYPE_NCLOB
     uint32_t DPI_ORACLE_TYPE_BLOB

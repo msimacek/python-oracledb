@@ -402,8 +402,8 @@ cdef class MessageWithData(Message):
                                            temp_bytes)
             column_value = LOB._from_impl(lob_impl)
         else:
-            msg = f"unhandled data type {var_impl.dbtype}"
-            raise Exception(msg)
+            errors._raise_err(errors.ERR_DB_TYPE_NOT_SUPPORTED,
+                              name=var_impl.dbtype.name)
         if not self.in_fetch:
             actual_num_bytes = buf.read_ub4()
             if actual_num_bytes != 0 and column_value is not None:

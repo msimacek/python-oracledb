@@ -80,6 +80,7 @@ ERR_PYTHON_TYPE_NOT_SUPPORTED = 3003
 ERR_SET_ROWID_DIRECTLY = 3004
 ERR_ARRAYS_OF_ARRAYS = 3005
 ERR_ORACLE_TYPE_NOT_SUPPORTED = 3006
+ERR_DB_TYPE_NOT_SUPPORTED = 3007
 
 # error message exception types (multiples of 1000)
 ERR_EXCEPTION_TYPES = {
@@ -94,6 +95,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_ARGS_AND_KEYWORD_ARGS: \
             "expecting arguments or keyword arguments, not both",
     ERR_ARRAYS_OF_ARRAYS: "arrays of arrays are not supported",
+    ERR_DB_TYPE_NOT_SUPPORTED: "Database type {name} not supported",
     ERR_DUPLICATED_PARAMETER: \
             "{deprecated_name} and {new_name} cannot both be specified",
     ERR_EXPECTING_TYPE: "expecting type",

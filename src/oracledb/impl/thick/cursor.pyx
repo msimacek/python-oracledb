@@ -91,6 +91,9 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         if dpiStmt_getQueryInfo(self._handle, pos, &query_info) < 0:
             _raise_from_odpi()
         dbtype = DbType._from_num(query_info.typeInfo.oracleTypeNum)
+        if dbtype.num == DPI_ORACLE_TYPE_INTERVAL_YM:
+            errors._raise_err(errors.ERR_DB_TYPE_NOT_SUPPORTED,
+                              name=dbtype.name)
         if query_info.typeInfo.sizeInChars > 0:
             size = query_info.typeInfo.sizeInChars
         else:
