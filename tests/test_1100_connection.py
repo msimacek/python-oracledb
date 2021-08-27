@@ -453,9 +453,7 @@ class TestCase(test_env.BaseTestCase):
     def test_1130_cancel(self):
         "1130 - test connection cancel"
         conn = test_env.get_connection()
-        sleep_proc_name = "dbms_session.sleep" \
-                if int(conn.version.split(".")[0]) >= 18 \
-                else "dbms_lock.sleep"
+        sleep_proc_name = test_env.get_sleep_proc_name()
         def perform_cancel():
             time.sleep(0.1)
             conn.cancel()
