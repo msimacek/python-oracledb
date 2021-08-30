@@ -514,5 +514,19 @@ class TestCase(test_env.BaseTestCase):
         row, = results[0].fetchone()
         self.assertEqual(row, 7)
 
+    def test_3226_batch_error_no_errors(self):
+        "3226 - test batcherrors mode without any errors produced"
+        self.cursor.execute("truncate table TestArrayDML")
+        rows = [
+            (1, "First", 100),
+            (2, "Second", 200),
+            (3, "Third", 300)
+        ]
+        sql = """
+                insert into TestArrayDML (IntCol, StringCol, IntCol2)
+                values (:1, :2, :3)"""
+        self.cursor.executemany(sql, rows, batcherrors=True)
+        self.assertEqual(self.cursor.getbatcherrors(), [])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

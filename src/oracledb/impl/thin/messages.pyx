@@ -563,6 +563,8 @@ cdef class MessageWithData(Message):
             else:
                 cursor_impl._lastrowid = None
             cursor_impl._batcherrors = self.error_info.batcherrors
+            if self.batcherrors and cursor_impl._batcherrors is None:
+                cursor_impl._batcherrors = []
             if self.error_info.num == TNS_ERR_NO_DATA_FOUND:
                 self.error_info.num = 0
                 cursor_impl._more_rows_to_fetch = False
