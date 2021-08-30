@@ -121,5 +121,40 @@ class TestCase(test_env.BaseTestCase):
         rows = ref_cursor.fetchall()
         self.assertEqual(rows, expected_value)
 
+    def test_1306_refcursor_prefetchrows(self):
+        "1306 - test prefetch rows and arraysize using a refcursor"
+        self.setup_round_trip_checker()
+
+        # simple DDL only requires a single round trip
+        with self.connection.cursor() as cursor:
+            cursor.execute("truncate table TestTempTable")
+            self.assertRoundTrips(1)
+
+        # array execution only requires a single round trip
+        num_rows = 590
+        with self.connection.cursor() as cursor:
+            sql = "insert into TestTempTable (IntCol) values (:1)"
+            data = [(n + 1,) for n in range(num_rows)]
+            cursor.executemany(sql, data)
+            self.assertRoundTrips(1)
+
+        # create refcursor and execute stored procedure
+        with self.connection.cursor() as cursor:
+            refcursor = self.connection.cursor()
+            refcursor.prefetchrows = 150
+            refcursor.arraysize = 50
+            cursor.callproc("myrefcursorproc", [refcursor])
+            refcursor.fetchall()
+            self.assertRoundTrips(4)
+
+    def test_1307_refcursor_execute_different_sql(self):
+        "1307 - test executing different SQL after getting a REF cursor"
+        with self.connection.cursor() as cursor:
+            refcursor = self.connection.cursor()
+            cursor.callproc("myrefcursorproc", [refcursor])
+            var = cursor.var(int)
+            refcursor.execute("begin :1 := 15; end;", [var])
+            self.assertEqual(var.getvalue(), 15)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

@@ -1,0 +1,405 @@
+#------------------------------------------------------------------------------
+# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+#------------------------------------------------------------------------------
+
+"""
+4300 - Module for testing other cursor methods and attributes.
+"""
+
+import decimal
+import unittest
+
+import oracledb
+import test_env
+
+class TestCase(test_env.BaseTestCase):
+
+    def test_4300_prepare(self):
+        "4300 - test preparing a statement and executing it multiple times"
+        self.assertEqual(self.cursor.statement, None)
+        statement = "begin :value := :value + 5; end;"
+        self.cursor.prepare(statement)
+        var = self.cursor.var(oracledb.NUMBER)
+        self.assertEqual(self.cursor.statement, statement)
+        var.setvalue(0, 2)
+        self.cursor.execute(None, value = var)
+        self.assertEqual(var.getvalue(), 7)
+        self.cursor.execute(None, value = var)
+        self.assertEqual(var.getvalue(), 12)
+        self.cursor.execute("begin :value2 := 3; end;", value2 = var)
+        self.assertEqual(var.getvalue(), 3)
+
+    def test_4301_exception_on_close(self):
+        "4301 - confirm an exception is raised after closing a cursor"
+        self.cursor.close()
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1002:",
+                               self.cursor.execute, "select 1 from dual")
+
+    def test_4302_iterators(self):
+        "4302 - test iterators"
+        self.cursor.execute("""
+                select IntCol
+                from TestNumbers
+                where IntCol between 1 and 3
+                order by IntCol""")
+        rows = [v for v, in self.cursor]
+        self.assertEqual(rows, [1, 2, 3])
+
+    def test_4303_iterators_interrupted(self):
+        "4303 - test iterators (with intermediate execute)"
+        self.cursor.execute("truncate table TestTempTable")
+        self.cursor.execute("""
+                select IntCol
+                from TestNumbers
+                where IntCol between 1 and 3
+                order by IntCol""")
+        test_iter = iter(self.cursor)
+        value, = next(test_iter)
+        self.cursor.execute("insert into TestTempTable (IntCol) values (1)")
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1003:", next,
+                               test_iter)
+
+    def test_4304_bind_names(self):
+        "4304 - test that bindnames() works correctly."
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2002:",
+                               self.cursor.bindnames)
+        self.cursor.prepare("begin null; end;")
+        self.assertEqual(self.cursor.bindnames(), [])
+        self.cursor.prepare("begin :retval := :inval + 5; end;")
+        self.assertEqual(self.cursor.bindnames(), ["RETVAL", "INVAL"])
+        self.cursor.prepare("begin :retval := :a * :a + :b * :b; end;")
+        self.assertEqual(self.cursor.bindnames(), ["RETVAL", "A", "B"])
+        self.cursor.prepare("begin :a := :b + :c + :d + :e + :f + :g + " + \
+                            ":h + :i + :j + :k + :l; end;")
+        names = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
+        self.assertEqual(self.cursor.bindnames(), names)
+        self.cursor.prepare("select :a * :a + :b * :b from dual")
+        self.assertEqual(self.cursor.bindnames(), ["A", "B"])
+
+    def test_4305_set_input_sizes_negative(self):
+        "4305 - test cursor.setinputsizes() with invalid parameters"
+        val = decimal.Decimal(5)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2005:",
+                               self.cursor.setinputsizes, val, x=val)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2007:",
+                               self.cursor.setinputsizes, val)
+
+    def test_4306_set_input_sizes_no_parameters(self):
+        "4306 - test setting input sizes without any parameters"
+        self.cursor.setinputsizes()
+        self.cursor.execute("select :val from dual", val="Test Value")
+        self.assertEqual(self.cursor.fetchall(), [("Test Value",)])
+
+    def test_4307_set_input_sizes_empty_dict(self):
+        "4307 - test setting input sizes with an empty dictionary"
+        empty_dict = {}
+        self.cursor.prepare("select 236 from dual")
+        self.cursor.setinputsizes(**empty_dict)
+        self.cursor.execute(None, empty_dict)
+        self.assertEqual(self.cursor.fetchall(), [(236,)])
+
+    def test_4308_set_input_sizes_empty_list(self):
+        "4308 - test setting input sizes with an empty list"
+        empty_list = []
+        self.cursor.prepare("select 239 from dual")
+        self.cursor.setinputsizes(*empty_list)
+        self.cursor.execute(None, empty_list)
+        self.assertEqual(self.cursor.fetchall(), [(239,)])
+
+    def test_4309_set_input_sizes_by_position(self):
+        "4309 - test setting input sizes with positional args"
+        var = self.cursor.var(oracledb.STRING, 100)
+        self.cursor.setinputsizes(None, 5, None, 10, None, oracledb.NUMBER)
+        self.cursor.execute("""
+                begin
+                  :1 := :2 || to_char(:3) || :4 || to_char(:5) || to_char(:6);
+                end;""", [var, 'test_', 5, '_second_', 3, 7])
+        self.assertEqual(var.getvalue(), "test_5_second_37")
+
+    def test_4310_string_format(self):
+        "4310 - test string format of cursor"
+        format_string = "<oracledb.Cursor on <oracledb.Connection to %s@%s>>"
+        expected_value = format_string % \
+                (test_env.get_main_user(), test_env.get_connect_string())
+        self.assertEqual(str(self.cursor), expected_value)
+
+    def test_4311_parse_query(self):
+        "4311 - test parsing query statements"
+        sql = "select LongIntCol from TestNumbers where IntCol = :val"
+        self.cursor.parse(sql)
+        self.assertEqual(self.cursor.statement, sql)
+        self.assertEqual(self.cursor.description,
+                         [('LONGINTCOL', oracledb.DB_TYPE_NUMBER, 17, None,
+                           16, 0, 0)])
+
+    def test_4312_set_output_size(self):
+        "4312 - test cursor.setoutputsize() does not fail (but does nothing)"
+        self.cursor.setoutputsize(100, 2)
+
+    def test_4313_var_negative(self):
+        "4313 - test cursor.var() with invalid parameters"
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2007:",
+                               self.cursor.var, 5)
+
+    def test_4314_arrayvar_negative(self):
+        "4314 - test cursor.arrayvar() with invalid parameters"
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2007:",
+                               self.cursor.arrayvar, 5, 1)
+
+    def test_4315_boolean_without_plsql(self):
+        "4315 - test binding boolean data without the use of PL/SQL"
+        self.cursor.execute("truncate table TestTempTable")
+        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        self.cursor.execute(sql, (False, "Value should be 0"))
+        self.cursor.execute(sql, (True, "Value should be 1"))
+        self.cursor.execute("""
+                select IntCol, StringCol
+                from TestTempTable
+                order by IntCol""")
+        expected_value = [(0, "Value should be 0"), (1, "Value should be 1")]
+        self.assertEqual(self.cursor.fetchall(), expected_value)
+
+    def test_4316_as_context_manager(self):
+        "4316 - test using a cursor as a context manager"
+        with self.cursor as cursor:
+            cursor.execute("truncate table TestTempTable")
+            cursor.execute("select count(*) from TestTempTable")
+            count, = cursor.fetchone()
+            self.assertEqual(count, 0)
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1002:",
+                               self.cursor.close)
+
+    def test_4317_query_row_count(self):
+        "4317 - test that rowcount attribute is reset to zero on query execute"
+        sql = "select * from dual where 1 = :s"
+        self.cursor.execute(sql, [0])
+        self.cursor.fetchone()
+        self.assertEqual(self.cursor.rowcount, 0)
+        self.cursor.execute(sql, [1])
+        self.cursor.fetchone()
+        self.assertEqual(self.cursor.rowcount, 1)
+        self.cursor.execute(sql, [1])
+        self.cursor.fetchone()
+        self.assertEqual(self.cursor.rowcount, 1)
+        self.cursor.execute(sql, [0])
+        self.cursor.fetchone()
+        self.assertEqual(self.cursor.rowcount, 0)
+
+    def test_4318_var_type_name_none(self):
+        "4318 - test that the typename attribute can be passed a value of None"
+        value_to_set = 5
+        var = self.cursor.var(int, typename=None)
+        var.setvalue(0, value_to_set)
+        self.assertEqual(var.getvalue(), value_to_set)
+
+    @unittest.skipIf(oracledb.defaults.thin,
+                     "thin driver doesn't support database objects yet")
+    def test_4319_var_type_with_object_type(self):
+        "4319 - test that an object type can be used as type in cursor.var()"
+        obj_type = self.connection.gettype("UDT_OBJECT")
+        var = self.cursor.var(obj_type)
+        self.cursor.callproc("pkg_TestBindObject.BindObjectOut",
+                             (28, "Bind obj out", var))
+        obj = var.getvalue()
+        result = self.cursor.callfunc("pkg_TestBindObject.GetStringRep", str,
+                                      (obj,))
+        exp = "udt_Object(28, 'Bind obj out', null, null, null, null, null)"
+        self.assertEqual(result, exp)
+
+    @unittest.skipIf(oracledb.defaults.thin,
+                     "thin driver doesn't support XML type objects yet")
+    def test_4320_fetch_xmltype(self):
+        "4320 - test that fetching an XMLType returns a string"
+        int_val = 5
+        label = "IntCol"
+        expected_result = "<%s>%s</%s>" % (label, int_val, label)
+        self.cursor.execute("""
+                select XMLElement("%s", IntCol)
+                from TestStrings
+                where IntCol = :int_val""" % label,
+                int_val=int_val)
+        result, = self.cursor.fetchone()
+        self.assertEqual(result, expected_result)
+
+    def test_4321_lastrowid(self):
+        "4321 - test last rowid"
+
+        # no statement executed: no rowid
+        self.assertEqual(None, self.cursor.lastrowid)
+
+        # DDL statement executed: no rowid
+        self.cursor.execute("truncate table TestTempTable")
+        self.assertEqual(None, self.cursor.lastrowid)
+
+        # statement prepared: no rowid
+        self.cursor.prepare("insert into TestTempTable (IntCol) values (:1)")
+        self.assertEqual(None, self.cursor.lastrowid)
+
+        # multiple rows inserted: rowid of last row inserted
+        rows = [(n,) for n in range(225)]
+        self.cursor.executemany(None, rows)
+        rowid = self.cursor.lastrowid
+        self.cursor.execute("""
+                select rowid
+                from TestTempTable
+                where IntCol = :1""", rows[-1])
+        self.assertEqual(rowid, self.cursor.fetchone()[0])
+
+        # statement executed but no rows updated: no rowid
+        self.cursor.execute("delete from TestTempTable where 1 = 0")
+        self.assertEqual(None, self.cursor.lastrowid)
+
+        # stetement executed with one row updated: rowid of updated row
+        self.cursor.execute("""
+                update TestTempTable set
+                    StringCol = 'Modified'
+                where IntCol = :1""", rows[-2])
+        rowid = self.cursor.lastrowid
+        self.cursor.execute("""
+                select rowid
+                from TestTempTable
+                where IntCol = :1""", rows[-2])
+        self.assertEqual(rowid, self.cursor.fetchone()[0])
+
+        # statement executed with many rows updated: rowid of last updated row
+        self.cursor.execute("""
+                update TestTempTable set
+                    StringCol = 'Row ' || to_char(IntCol)
+                where IntCol = :1""", rows[-3])
+        rowid = self.cursor.lastrowid
+        self.cursor.execute("""
+                select StringCol
+                from TestTempTable
+                where rowid = :1""", [rowid])
+        self.assertEqual("Row %s" % rows[-3], self.cursor.fetchone()[0])
+
+    def test_4322_prefetchrows(self):
+        "4322 - test prefetch rows"
+        self.setup_round_trip_checker()
+
+        # perform simple query and verify only one round trip is needed
+        with self.connection.cursor() as cursor:
+            cursor.execute("select sysdate from dual").fetchall()
+            self.assertRoundTrips(1)
+
+        # set prefetchrows to 1 and verify that two round trips are now needed
+        with self.connection.cursor() as cursor:
+            cursor.prefetchrows = 1
+            cursor.execute("select sysdate from dual").fetchall()
+            self.assertRoundTrips(2)
+
+        # simple DDL only requires a single round trip
+        with self.connection.cursor() as cursor:
+            cursor.execute("truncate table TestTempTable")
+            self.assertRoundTrips(1)
+
+        # array execution only requires a single round trip
+        num_rows = 590
+        with self.connection.cursor() as cursor:
+            sql = "insert into TestTempTable (IntCol) values (:1)"
+            data = [(n + 1,) for n in range(num_rows)]
+            cursor.executemany(sql, data)
+            self.assertRoundTrips(1)
+
+        # setting prefetch and array size to 1 requires a round-trip for each
+        # row
+        with self.connection.cursor() as cursor:
+            cursor.prefetchrows = 1
+            cursor.arraysize = 1
+            cursor.execute("select IntCol from TestTempTable").fetchall()
+            self.assertRoundTrips(num_rows + 1)
+
+        # setting prefetch and array size to 300 requires 2 round-trips
+        with self.connection.cursor() as cursor:
+            cursor.prefetchrows = 300
+            cursor.arraysize = 300
+            cursor.execute("select IntCol from TestTempTable").fetchall()
+            self.assertRoundTrips(2)
+
+    def test_4323_existing_cursor_prefetchrows(self):
+        "4323 - test prefetch rows using existing cursor"
+        self.setup_round_trip_checker()
+
+        # Set prefetch rows on an existing cursor
+        num_rows = 590
+        with self.connection.cursor() as cursor:
+            cursor.execute("truncate table TestTempTable")
+            sql = "insert into TestTempTable (IntCol) values (:1)"
+            data = [(n + 1,) for n in range(num_rows)]
+            cursor.executemany(sql, data)
+            cursor.prefetchrows = 300
+            cursor.arraysize = 300
+            cursor.execute("select IntCol from TestTempTable").fetchall()
+            self.assertRoundTrips(4)
+
+    def test_4324_bind_names_with_single_line_comments(self):
+        "4324 - test bindnames() with single line comments"
+        self.cursor.prepare("""--begin :value2 := :a + :b + :c +:a +3; end;
+                            begin :value2 := :a + :c +3; end;
+                            """)
+        self.assertEqual(self.cursor.bindnames(), ["VALUE2", "A", "C"])
+
+    def test_4325_bind_names_with_multi_line_comments(self):
+        "4325 - test bindnames() with multi line comments"
+        self.cursor.prepare("""/*--select * from :a where :a = 1
+                            select * from table_names where :a = 1*/
+                            select * from :table_name where :value = 1
+                            """)
+        self.assertEqual(self.cursor.bindnames(), ["TABLE_NAME", "VALUE"])
+    
+    def test_4326_bind_names_with_strings(self):
+        "4326 - test bindnames() with strings in the statement"
+        statement = """
+                    begin
+                    :value := to_date('20021231 12:31:00',
+                    'YYYYMMDD HH24:MI:SS');
+                    end;"""
+        self.cursor.prepare(statement)
+        self.assertEqual(self.cursor.bindnames(), ["VALUE"])
+
+    def test_4327_parse_plsql(self):
+        "4327 - test parsing plsql statements"
+        sql = "begin :value := 5; end;"
+        self.cursor.parse(sql)
+        self.assertEqual(self.cursor.statement, sql)
+        self.assertEqual(self.cursor.description, None)
+
+    def test_4328_parse_ddl(self):
+        "4328 - test parsing ddl statements"
+        sql = "truncate table TestTempTable"
+        self.cursor.parse(sql)
+        self.assertEqual(self.cursor.statement, sql)
+        self.assertEqual(self.cursor.description, None)
+
+    def test_4329_parse_dml(self):
+        "4329 - test parsing dml statements"
+        sql = "insert into TestTempTable (IntCol) values (1)"
+        self.cursor.parse(sql)
+        self.assertEqual(self.cursor.statement, sql)
+        self.assertEqual(self.cursor.description, None)
+
+    def test_4330_encodingErrors_deprecation(self):
+        "4330 - test to verify encodingErrors is deprecated"
+        errors = 'strict'
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
+                               self.cursor.var, oracledb.NUMBER,
+                               encoding_errors=errors, encodingErrors=errors)
+
+    def test_4331_unsupported_arrays_of_arrays(self):
+        "4331 - test arrays of arrays not supported"
+        simple_var = self.cursor.arrayvar(oracledb.NUMBER, 3)
+        self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3005:",
+                               simple_var.setvalue, 1, [1, 2, 3])
+
+    def test_4332_set_input_sizes_with_invalid_list_parameters(self):
+        "4332 - test cursor.setinputsizes() with invalid list parameters"
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2011:",
+                               self.cursor.setinputsizes, [int, 2, 10])
+
+    def test_4333_unsupported_python_type(self):
+        "4333 - test unsupported python type on cursor"
+        self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3003:",
+                               self.cursor.var, list)
+
+if __name__ == "__main__":
+    test_env.run_test_cases()
