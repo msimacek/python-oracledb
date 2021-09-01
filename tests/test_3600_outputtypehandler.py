@@ -26,6 +26,7 @@ class TestCase(test_env.BaseTestCase):
         var.setvalue(0, in_value)
         self.cursor.execute("select :1 from dual", [var])
         fetched_value, = self.cursor.fetchone()
+        self.assertEqual(type(fetched_value), type(expected_out_value))
         self.assertEqual(fetched_value, expected_out_value)
 
     def __test_type_handler_blob(self, output_type):
@@ -153,11 +154,15 @@ class TestCase(test_env.BaseTestCase):
         "3613 outtypehandler conversion from number to varchar"
         self.__test_type_handler(oracledb.DB_TYPE_NUMBER,
                                  oracledb.DB_TYPE_VARCHAR, 31.5, "31.5")
+        self.__test_type_handler(oracledb.DB_TYPE_NUMBER,
+                                 oracledb.DB_TYPE_VARCHAR, 0, "0")
 
     def test_3614_NUMBER_to_CHAR(self):
         "3614 outtypehandler conversion from number to char"
         self.__test_type_handler(oracledb.DB_TYPE_NUMBER,
                                  oracledb.DB_TYPE_CHAR, 31.5, "31.5")
+        self.__test_type_handler(oracledb.DB_TYPE_NUMBER,
+                                 oracledb.DB_TYPE_CHAR, 0, "0")
 
     def test_3615_NUMBER_to_LONG(self):
         "3615 outtypehandler conversion from number to long"
@@ -490,6 +495,13 @@ class TestCase(test_env.BaseTestCase):
         cursor.outputtypehandler = type_handler
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2015:",
                                cursor.execute, "select :1 from dual", [5])
+
+    def test_3673_NUMBER_to_DECIMAL(self):
+        "3614 outtypehandler conversion from number to decimal.Decimal"
+        self.__test_type_handler(oracledb.DB_TYPE_NUMBER, decimal.Decimal,
+                                 31.5, decimal.Decimal("31.5"))
+        self.__test_type_handler(oracledb.DB_TYPE_NUMBER, decimal.Decimal, 0,
+                                 decimal.Decimal("0"))
 
 if __name__ == "__main__":
     test_env.run_test_cases()

@@ -189,6 +189,16 @@ cdef class ReadBuffer:
             value = value >> 6
         return offset + size
 
+    cdef inline object _convert_number(self, int preferred_num_type,
+                                       bint is_integer, str text):
+        if preferred_num_type == NUM_TYPE_INT and is_integer:
+            return int(text)
+        elif preferred_num_type == NUM_TYPE_DECIMAL:
+            return decimal.Decimal(text)
+        elif preferred_num_type == NUM_TYPE_STR:
+            return text
+        return float(text)
+
     cdef const char_type* _get_raw(self, ssize_t num_bytes,
                                    bint in_chunked_read=False) except NULL:
         """
@@ -521,9 +531,8 @@ cdef class ReadBuffer:
         # a mantissa length of 0 implies a value of 0 (if positive) or a value
         # of -1e126 (if negative)
         if num_bytes == 1:
-            if is_positive:
-                return 0
-            return -1e126
+            text = "0" if is_positive else "-1e126"
+            return self._convert_number(preferred_num_type, is_positive, text)
 
         # check for the trailing 102 byte for negative numbers and, if present,
         # reduce the number of mantissa digits
@@ -602,13 +611,7 @@ cdef class ReadBuffer:
         # convert result to an integer or a decimal number
         text = cpython.PyBytes_FromStringAndSize(<char*> buf,
                                                  num_bytes).decode()
-        if preferred_num_type == NUM_TYPE_INT and is_integer:
-            return int(text)
-        elif preferred_num_type == NUM_TYPE_DECIMAL:
-            return decimal.Decimal(text)
-        elif preferred_num_type == NUM_TYPE_STR:
-            return text
-        return float(text)
+        return self._convert_number(preferred_num_type, is_integer, text)
 
     cdef object read_rowid(self):
         cdef:
