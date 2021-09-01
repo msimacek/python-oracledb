@@ -33,7 +33,7 @@ cdef class ThinVarImpl(BaseVarImpl):
             uint32_t idx, num_binds, num_vars
             list bind_info_list
             BindInfo bind_info
-            str upper_name
+            str normalized_name
 
         bind_info_dict = stmt._bind_info_dict
         bind_info_list = stmt._bind_info_list
@@ -53,12 +53,14 @@ cdef class ThinVarImpl(BaseVarImpl):
 
         # bind by name
         if name is not None:
-            upper_name = name.upper()
-            if upper_name not in bind_info_dict:
-                message = f"Invalid named bind: {name}."
+            normalized_name = name.upper()
+            if normalized_name.startswith(":"):
+                normalized_name = normalized_name[1:]
+            if normalized_name not in bind_info_dict:
+                message = f"Invalid named bind: {name}"
                 errors._raise_from_string(exceptions.DatabaseError, message)
             var = var_list[name]
-            for bind_info in bind_info_dict[upper_name]:
+            for bind_info in bind_info_dict[normalized_name]:
                 stmt._set_var(bind_info, var, thin_cursor_impl)
 
         # bind by position

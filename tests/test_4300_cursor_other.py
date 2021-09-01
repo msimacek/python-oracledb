@@ -401,5 +401,13 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3003:",
                                self.cursor.var, list)
 
+    def test_4334_bind_by_name_with_leading_colon(self):
+        "4334 - test binding by name with leading colon"
+        sql = "select :arg1 from dual"
+        params = {":arg1" : 5}
+        self.cursor.execute(sql, params)
+        result, = self.cursor.fetchone()
+        self.assertEqual(result, params[":arg1"])
+
 if __name__ == "__main__":
     test_env.run_test_cases()
