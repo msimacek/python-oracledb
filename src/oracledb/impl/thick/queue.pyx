@@ -467,8 +467,7 @@ cdef class ThickMsgPropsImpl(BaseMsgPropsImpl):
         cdef:
             uint32_t value_length
             const char *value
-        if dpiMsgProps_getOriginalMsgId(self._handle, &value,
-                                        &value_length) < 0:
+        if dpiMsgProps_getMsgId(self._handle, &value, &value_length) < 0:
             _raise_from_odpi()
         if value != NULL:
             return value[:value_length]
@@ -521,15 +520,6 @@ cdef class ThickMsgPropsImpl(BaseMsgPropsImpl):
         Internal method for setting the message expiration.
         """
         if dpiMsgProps_setExpiration(self._handle, value) < 0:
-            _raise_from_odpi()
-
-    def set_message_id(self, bytes value):
-        """
-        Internal method for setting the original message id.
-        """
-        cdef StringBuffer buf = StringBuffer()
-        buf.set_value(value)
-        if dpiMsgProps_setOriginalMsgId(self._handle, buf.ptr, buf.length) < 0:
             _raise_from_odpi()
 
     def set_payload_bytes(self, bytes value):

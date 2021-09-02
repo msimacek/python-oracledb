@@ -442,14 +442,11 @@ class MessageProperties:
     @property
     def msgid(self) -> bytes:
         """
-        Specifies the id of the message in the last queue that generated this
-        message.
+        Specifies the id of the message in the last queue that enqueued or
+        dequeued this message. If the message has never been dequeued or
+        enqueued, the value will be `None`.
         """
         return self._impl.get_message_id()
-
-    @msgid.setter
-    def msgid(self, value: bytes) -> None:
-        self._impl.set_message_id(value)
 
     @property
     def payload(self) -> Union[bytes, DbObject]:

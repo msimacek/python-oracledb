@@ -186,10 +186,6 @@ cdef class BaseMsgPropsImpl:
     def set_expiration(self, int32_t value):
         pass
 
-    @utils.CheckImpls("setting the message id")
-    def set_message_id(self, bytes value):
-        pass
-
     @utils.CheckImpls("setting the payload from bytes")
     def set_payload_bytes(self, bytes value):
         pass
