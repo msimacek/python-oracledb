@@ -100,7 +100,7 @@ cdef class ThinConnImpl(BaseConnImpl):
             sock = ssl_context.wrap_socket(sock, server_hostname=params.host)
         self._protocol = Protocol(sock)
         redirect_data = self._protocol._connect(self, params.secure_transport,
-                                                params.get_connect_data(),
+                                                _get_connect_data(params),
                                                 params.password, newpassword,
                                                 auth_mode,
                                                 params.supports_oob(), cclass,

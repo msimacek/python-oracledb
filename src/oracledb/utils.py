@@ -117,17 +117,6 @@ class ConnectParams:
         self.enable_drcp = enable_drcp
         self._dsn = None
 
-    def get_connect_data(self):
-        """
-        Return normalized connect data used for communicating with the server.
-        """
-        protocol = "TCPS" if self.secure_transport else "TCP"
-        server_type = "(SERVER=POOLED)" if self.enable_drcp else ""
-        return f"(DESCRIPTION=(ADDRESS=(PROTOCOL={protocol})" + \
-               f"(HOST={self.host})(PORT={self.port}))" + \
-               f"(CONNECT_DATA=(SERVICE_NAME={self.service_name})" + \
-               f"{server_type}(CID=)))"
-
     def get_dsn(self):
         """
         Return a normalized DSN for use by the caller.

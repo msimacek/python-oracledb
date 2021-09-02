@@ -4,7 +4,47 @@
 
 cdef bint DEBUG_PACKETS = ("PYO_DEBUG_PACKETS" in os.environ)
 
+class ConnectConstants:
+
+    def __init__(self):
+        self.program_name = sys.executable
+        self.machine_name = socket.gethostname()
+        self.pid = str(os.getpid())
+        self.user_name = getpass.getuser()
+        self.terminal_name = "unknown"
+        self.sanitized_program_name = self._sanitize(self.program_name)
+        self.sanitized_machine_name = self._sanitize(self.machine_name)
+        self.sanitized_user_name = self._sanitize(self.user_name)
+
+    def _sanitize(self, value):
+        """
+        Sanitize the value by replacing all the "(", ")" and "=" characters
+        with "?". These are invalid characters within connect data.
+        """
+        return value.replace("(", "?").replace(")", "?").replace("=", "?")
+
+_connect_constants = ConnectConstants()
+
+def _get_connect_data(params):
+    """
+    Return the connect data required by the listener in order to connect.
+    """
+    constants = _connect_constants
+    protocol = "TCPS" if params.secure_transport else "TCP"
+    server_type = "(SERVER=POOLED)" if params.enable_drcp else ""
+    cid = f"(PROGRAM={constants.sanitized_program_name})" + \
+          f"(HOST={constants.sanitized_machine_name})" + \
+          f"(USER={constants.sanitized_user_name})"
+    return f"(DESCRIPTION=(ADDRESS=(PROTOCOL={protocol})" + \
+           f"(HOST={params.host})(PORT={params.port}))" + \
+           f"(CONNECT_DATA=(SERVICE_NAME={params.service_name})" + \
+           f"{server_type}(CID={cid})))"
+
+
 def _print_packet(operation, socket_fileno, view):
+    """
+    Print the packet content in a format suitable for debugging.
+    """
     offset = 0
     hex_data = view.hex().upper()
     current_date = datetime.datetime.now().isoformat(sep=" ",

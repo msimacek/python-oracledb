@@ -1160,11 +1160,15 @@ cdef class AuthMessage(Message):
             buf.write_uint8(0)              # pointer (authovl)
             buf.write_uint8(1)              # pointer (authovln)
             buf.write_bytes(self.user_bytes)
-            self._write_key_value(buf, "AUTH_TERMINAL", "unknown")
-            self._write_key_value(buf, "AUTH_PROGRAM_NM", sys.executable)
-            self._write_key_value(buf, "AUTH_MACHINE", socket.gethostname())
-            self._write_key_value(buf, "AUTH_PID", str(os.getpid()))
-            self._write_key_value(buf, "AUTH_SID", getpass.getuser())
+            self._write_key_value(buf, "AUTH_TERMINAL",
+                                  _connect_constants.terminal_name)
+            self._write_key_value(buf, "AUTH_PROGRAM_NM",
+                                  _connect_constants.program_name)
+            self._write_key_value(buf, "AUTH_MACHINE",
+                                  _connect_constants.machine_name)
+            self._write_key_value(buf, "AUTH_PID", _connect_constants.pid)
+            self._write_key_value(buf, "AUTH_SID",
+                                  _connect_constants.user_name)
         else:
             num_pairs = 2
             if self.newpassword is not None:
