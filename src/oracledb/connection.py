@@ -2,6 +2,8 @@
 # Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+import collections
+
 from typing import Callable, Type, Union
 from . import constants, errors, exceptions, utils
 from . import thick_impl, thin_impl
@@ -14,6 +16,11 @@ from .aq import Queue, MessageProperties
 from .soda import SodaDatabase
 from .dbobject import DbObjectType, DbObject
 from .base_impl import DB_TYPE_BLOB, DB_TYPE_CLOB, DB_TYPE_NCLOB, DbType
+
+# named tuple used for representing global transactions
+Xid = collections.namedtuple("Xid",
+                             ["format_id", "global_transaction_id",
+                              "branch_qualifier"])
 
 class Connection:
     _impl = None
@@ -208,6 +215,14 @@ class Connection:
         if self._impl is None:
             errors._raise_err(errors.ERR_NOT_CONNECTED)
 
+    def _verify_xid(self, xid):
+        """
+        Verifies that the supplied xid is of the correct type.
+        """
+        if not isinstance(xid, Xid):
+            message = "expecting transaction id created with xid()"
+            raise TypeError(message)
+
     @property
     def action(self) -> None:
         raise AttributeError("action is not readable")
@@ -239,17 +254,10 @@ class Connection:
     def begin(self, format_id: int=-1, transaction_id: str="",
               branch_id: str="") -> None:
         """
-        Explicitly begin a new transaction. Without parameters, this explicitly
-        begins a local transaction; otherwise, this explicitly begins a
-        distributed (global) transaction with the given parameters. See the
-        Oracle documentation for more details.
-
-        Note that in order to make use of global (distributed) transactions,
-        the internal_name and external_name attributes must be set to
-        appropriate values.
+        Deprecated. Use tpc_begin() instead.
         """
-        self._verify_connected()
-        self._impl.begin(format_id, transaction_id, branch_id)
+        if format_id != -1:
+            self.tpc_begin(self.xid(format_id, transaction_id, branch_id))
 
     @property
     def call_timeout(self) -> int:
@@ -390,6 +398,20 @@ class Connection:
         """
         self._verify_connected()
         return self._impl.dsn
+
+    @property
+    def econtext_id(self) -> None:
+        raise AttributeError("econtext_id is not readable")
+
+    @econtext_id.setter
+    def econtext_id(self, value: str) -> None:
+        """
+        Specifies the execution context id. This value can be found as ecid in
+        the v$session table and econtext_id in the auditing tables. The maximum
+        length is 64 bytes.
+        """
+        self._verify_connected()
+        self._impl.set_econtext_id(value)
 
     @property
     def edition(self) -> str:
@@ -576,12 +598,9 @@ class Connection:
 
     def prepare(self) -> bool:
         """
-        Prepare the distributed (global) transaction for commit. Return a
-        boolean indicating if a transaction was actually prepared in order to
-        avoid the error ORA-24756 (transaction does not exist).
+        Deprecated. Use tpc_prepare() instead.
         """
-        self._verify_connected()
-        return self._impl.prepare()
+        return self.tpc_prepare()
 
     def queue(self, name: str, payload_type: DbObjectType=None, *,
               payloadType: DbObjectType=None) -> Queue:
@@ -817,6 +836,106 @@ class Connection:
         """
         return self.dsn
 
+    def tpc_begin(self,
+                  xid: Xid,
+                  flags: int=constants.TPC_BEGIN_NEW) -> None:
+        """
+        Begins a TPC (two-phase commit) transaction with the given transaction
+        id. This method should be called outside of a transaction (i.e. nothing
+        may have executed since the last commit() or rollback() was performed).
+        """
+        self._verify_connected()
+        self._verify_xid(xid)
+        self._impl.tpc_begin(xid, flags)
+
+    def tpc_commit(self,
+                   xid: Xid=None,
+                   one_phase: bool=False) -> None:
+        """
+        Prepare the global transaction for commit. Return a boolean indicating
+        if a transaction was actually prepared in order to avoid the error
+        ORA-24756 (transaction does not exist).
+
+        When called with no arguments, commits a transaction previously
+        prepared with tpc_prepare(). If tpc_prepare() is not called, a single
+        phase commit is performed. A transaction manager may choose to do this
+        if only a single resource is participating in the global transaction.
+
+        When called with a transaction id, the database commits the given
+        transaction. This form should be called outside of a transaction and is
+        intended for use in recovery.
+        """
+        self._verify_connected()
+        if xid is not None:
+            self._verify_xid(xid)
+        self._impl.tpc_commit(xid, one_phase)
+
+    def tpc_end(self,
+                xid: Xid=None,
+                flags: int=constants.TPC_END_NORMAL) -> None:
+        """
+        Ends (detaches from) a TPC (two-phase commit) transaction.
+        """
+        self._verify_connected()
+        if xid is not None:
+            self._verify_xid(xid)
+        self._impl.tpc_end(xid, flags)
+
+    def tpc_forget(self, xid: Xid) -> None:
+        """
+        Forgets a TPC (two-phase commit) transaction.
+        """
+        self._verify_connected()
+        self._verify_xid(xid)
+        self._impl.tpc_forget(xid)
+
+    def tpc_prepare(self, xid: Xid=None) -> bool:
+        """
+        Prepares a global transaction for commit. After calling this function,
+        no further activity should take place on this connection until either
+        tpc_commit() or tpc_rollback() have been called.
+
+        A boolean is returned indicating whether a commit is needed or not. If
+        a commit is performed when one is not needed the error ORA-24756:
+        transaction does not exist is raised.
+        """
+        self._verify_connected()
+        if xid is not None:
+            self._verify_xid(xid)
+        return self._impl.tpc_prepare(xid)
+
+    def tpc_recover(self) -> list:
+        """
+        Returns a list of pending transaction ids suitable for use with
+        tpc_commit() or tpc_rollback().
+
+        This function requires select privilege on the view
+        DBA_PENDING_TRANSACTIONS.
+        """
+        with self.cursor() as cursor:
+            cursor.rowfactory = Xid
+            cursor.execute("""
+                    select
+                        formatid,
+                        globalid,
+                        branchid
+                    from dba_pending_transactions""")
+            return cursor.fetchall()
+
+    def tpc_rollback(self, xid: Xid=None) -> None:
+        """
+        When called with no arguments, rolls back the transaction previously
+        started with tpc_begin().
+
+        When called with a transaction id, the database rolls back the given
+        transaction. This form should be called outside of a transaction and is
+        intended for use in recovery.
+        """
+        self._verify_connected()
+        if xid is not None:
+            self._verify_xid(xid)
+        self._impl.tpc_rollback(xid)
+
     def unsubscribe(self, subscr: Subscription) -> None:
         """
         Unsubscribe from events in the database that were originally subscribed
@@ -848,6 +967,22 @@ class Connection:
             self._verify_connected()
             self._version = self._impl.get_version()
         return self._version
+
+    def xid(self,
+            format_id: int,
+            global_transaction_id: Union[bytes, str],
+            branch_qualifier: Union[bytes, str]) -> Xid:
+        """
+        Returns a global transaction identifier that can be used with the TPC
+        (two-phase commit) functions.
+
+        The format_id parameter should be a non-negative 32-bit integer. The
+        global_transaction_id and branch_qualifier parameters should be bytes
+        (or a string which will be UTF-8 encoded to bytes) of no more than 64
+        bytes.
+        """
+        return Xid(format_id, global_transaction_id, branch_qualifier)
+
 
 # alias required by the DB API
 connect = Connection

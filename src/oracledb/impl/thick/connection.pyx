@@ -82,6 +82,32 @@ cdef class ConnectionParams:
             self._process_context_str(value, &entry.value, &entry.valueLength)
 
 
+@cython.freelist(8)
+cdef class ThickXid:
+    cdef:
+        StringBuffer global_transaction_id_buf
+        StringBuffer branch_qualifier_buf
+        dpiXid* xid_ptr
+        dpiXid xid_buf
+
+    def __init__(self, xid):
+        if xid is not None:
+            self.global_transaction_id_buf = StringBuffer()
+            self.global_transaction_id_buf.set_value(xid.global_transaction_id)
+            self.branch_qualifier_buf = StringBuffer()
+            self.branch_qualifier_buf.set_value(xid.branch_qualifier)
+            self.xid_buf.formatId = xid.format_id
+            self.xid_buf.globalTransactionId = \
+                    self.global_transaction_id_buf.ptr
+            self.xid_buf.globalTransactionIdLength = \
+                    self.global_transaction_id_buf.length
+            self.xid_buf.branchQualifier = \
+                    self.branch_qualifier_buf.ptr
+            self.xid_buf.branchQualifierLength = \
+                    self.branch_qualifier_buf.length
+            self.xid_ptr = &self.xid_buf
+
+
 cdef class ThickConnImpl(BaseConnImpl):
     cdef:
         dpiConn *_handle
@@ -102,27 +128,6 @@ cdef class ThickConnImpl(BaseConnImpl):
         value_ptr = value_bytes
         value_length = len(value_bytes)
         if func(self._handle, value_ptr, value_length) < 0:
-            _raise_from_odpi()
-
-    def begin(self, long format_id, str transaction_id, str branch_id):
-        cdef:
-            bytes transaction_id_bytes, branch_id_bytes
-            uint32_t transaction_id_len, branch_id_len
-            const char *transaction_id_ptr
-            const char *branch_id_ptr
-            int status
-        transaction_id_bytes = transaction_id.encode()
-        transaction_id_ptr = transaction_id_bytes
-        transaction_id_len = <uint32_t> len(transaction_id_bytes)
-        branch_id_bytes = branch_id.encode()
-        branch_id_ptr = branch_id_bytes
-        branch_id_len = <uint32_t> len(branch_id_bytes)
-        with nogil:
-            status = dpiConn_beginDistribTrans(self._handle, format_id,
-                                               transaction_id_ptr,
-                                               transaction_id_len,
-                                               branch_id_ptr, branch_id_len)
-        if status < 0:
             _raise_from_odpi()
 
     def cancel(self):
@@ -468,22 +473,15 @@ cdef class ThickConnImpl(BaseConnImpl):
         if status < 0:
             _raise_from_odpi()
 
-    def prepare(self):
-        cdef:
-            bint commit_needed
-            int status
-        with nogil:
-            status = dpiConn_prepareDistribTrans(self._handle, &commit_needed)
-        if status < 0:
-            _raise_from_odpi()
-        return commit_needed
-
     def rollback(self):
         cdef int status
         with nogil:
             status = dpiConn_rollback(self._handle)
         if status < 0:
             _raise_from_odpi()
+
+    def set_econtext_id(self, value):
+        self._set_text_attr(dpiConn_setEcontextId, value)
 
     def set_external_name(self, str value):
         self._set_text_attr(dpiConn_setExternalName, value)
@@ -524,5 +522,63 @@ cdef class ThickConnImpl(BaseConnImpl):
         with nogil:
             status = dpiConn_startupDatabaseWithPfile(self._handle, pfile_ptr,
                                                       pfile_length, mode)
+        if status < 0:
+            _raise_from_odpi()
+
+    def tpc_begin(self, xid, uint32_t flags):
+        cdef:
+            ThickXid thick_xid = ThickXid(xid)
+            int status
+        with nogil:
+            status = dpiConn_tpcBegin(self._handle, thick_xid.xid_ptr, flags)
+        if status < 0:
+            _raise_from_odpi()
+
+    def tpc_commit(self, xid, bint one_phase):
+        cdef:
+            ThickXid thick_xid = ThickXid(xid)
+            int status
+        with nogil:
+            status = dpiConn_tpcCommit(self._handle, thick_xid.xid_ptr,
+                                       one_phase)
+        if status < 0:
+            _raise_from_odpi()
+
+    def tpc_end(self, xid, uint32_t flags):
+        cdef:
+            ThickXid thick_xid = ThickXid(xid)
+            int status
+        with nogil:
+            status = dpiConn_tpcEnd(self._handle, thick_xid.xid_ptr, flags)
+        if status < 0:
+            _raise_from_odpi()
+
+    def tpc_forget(self, xid):
+        cdef:
+            ThickXid thick_xid = ThickXid(xid)
+            int status
+        with nogil:
+            status = dpiConn_tpcForget(self._handle, thick_xid.xid_ptr)
+        if status < 0:
+            _raise_from_odpi()
+
+    def tpc_prepare(self, xid):
+        cdef:
+            ThickXid thick_xid = ThickXid(xid)
+            bint commit_needed
+            int status
+        with nogil:
+            status = dpiConn_tpcPrepare(self._handle, thick_xid.xid_ptr,
+                                        &commit_needed)
+        if status < 0:
+            _raise_from_odpi()
+        return commit_needed
+
+    def tpc_rollback(self, xid):
+        cdef:
+            ThickXid thick_xid = ThickXid(xid)
+            int status
+        with nogil:
+            status = dpiConn_tpcRollback(self._handle, thick_xid.xid_ptr)
         if status < 0:
             _raise_from_odpi()

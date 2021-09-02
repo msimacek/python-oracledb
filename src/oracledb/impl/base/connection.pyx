@@ -8,10 +8,6 @@ cdef class BaseConnImpl:
         self.username = user
         self.dsn = dsn
 
-    @utils.CheckImpls("beginning a distributed transaction")
-    def begin(self, format_id, transaction_id, branch_id):
-        pass
-
     @utils.CheckImpls("aborting a currently executing statement")
     def cancel(self):
         pass
@@ -97,10 +93,6 @@ cdef class BaseConnImpl:
     def ping(self):
         pass
 
-    @utils.CheckImpls("preparing a global transaction for commit")
-    def prepare(self):
-        pass
-
     @utils.CheckImpls("rolling back a transaction")
     def rollback(self):
         pass
@@ -129,6 +121,10 @@ cdef class BaseConnImpl:
     def set_dbop(self, value):
         pass
 
+    @utils.CheckImpls("setting the execution context id")
+    def set_econtext_id(self, value):
+        pass
+
     @utils.CheckImpls("setting the external name")
     def set_external_name(self, value):
         pass
@@ -151,4 +147,28 @@ cdef class BaseConnImpl:
 
     @utils.CheckImpls("starting up the database")
     def startup(self, bint force, bint restrict, str pfile):
+        pass
+
+    @utils.CheckImpls("starting a TPC (two-phase commit) transaction")
+    def tpc_begin(self, xid, uint32_t flags):
+        pass
+
+    @utils.CheckImpls("committing a TPC (two-phase commit) transaction")
+    def tpc_commit(self, xid, bint one_phase):
+        pass
+
+    @utils.CheckImpls("ending a TPC (two-phase commit) transaction")
+    def tpc_end(self, xid, uint32_t flags):
+        pass
+
+    @utils.CheckImpls("forgetting a TPC (two-phase commit) transaction")
+    def tpc_forget(self, xid):
+        pass
+
+    @utils.CheckImpls("preparing a TPC (two-phase commit) transaction")
+    def tpc_prepare(self, xid):
+        pass
+
+    @utils.CheckImpls("rolling back a TPC (two-phase commit) transaction")
+    def tpc_rollback(self, xid):
         pass

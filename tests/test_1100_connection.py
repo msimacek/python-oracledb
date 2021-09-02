@@ -99,6 +99,11 @@ class TestCase(test_env.BaseTestCase):
         sql = "select sys_context('userenv', 'client_identifier') from dual"
         self.__verify_attributes(connection, "client_identifier",
                                  "oracledb_cid", sql)
+        if not oracledb.defaults.thin:
+            sql = "select ecid from v$session " \
+                  "where sid = sys_context('userenv', 'sid')"
+            self.__verify_attributes(connection, "econtext_id",
+                                     "oracledb_ecid", sql)
 
     def test_1104_autocommit(self):
         "1104 - test use of autocommit"

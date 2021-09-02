@@ -451,11 +451,14 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
         int portUpdateNum
         uint32_t fullVersionNum
 
-    # functions
-    int dpiConn_beginDistribTrans(dpiConn *conn, long formatId,
-            const char *transactionId, uint32_t transactionIdLength,
-            const char *branchId, uint32_t branchIdLength) nogil
+    ctypedef struct dpiXid:
+        long formatId
+        const char *globalTransactionId
+        uint32_t globalTransactionIdLength
+        const char *branchQualifier
+        uint32_t branchQualifierLength
 
+    # functions
     int dpiConn_breakExecution(dpiConn *conn) nogil
 
     int dpiConn_changePassword(dpiConn *conn, const char *userName,
@@ -519,8 +522,6 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
 
     int dpiConn_ping(dpiConn *conn) nogil
 
-    int dpiConn_prepareDistribTrans(dpiConn *conn, bint *commitNeeded) nogil
-
     int dpiConn_prepareStmt(dpiConn *conn, int scrollable, const char *sql,
             uint32_t sqlLength, const char *tag, uint32_t tagLength,
             dpiStmt **stmt) nogil
@@ -544,6 +545,9 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
     int dpiConn_setDbOp(dpiConn *conn, const char *value,
             uint32_t valueLength) nogil
 
+    int dpiConn_setEcontextId(dpiConn *conn, const char *value,
+            uint32_t valueLength) nogil
+
     int dpiConn_setExternalName(dpiConn *conn, const char *value,
             uint32_t valueLength) nogil
 
@@ -564,6 +568,19 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
 
     int dpiConn_subscribe(dpiConn *conn, dpiSubscrCreateParams *params,
             dpiSubscr **subscr) nogil
+
+    int dpiConn_tpcBegin(dpiConn *conn, dpiXid *xid, uint32_t flags) nogil
+
+    int dpiConn_tpcCommit(dpiConn *conn, dpiXid *xid, bint onePhase) nogil
+
+    int dpiConn_tpcEnd(dpiConn *conn, dpiXid *xid, uint32_t flags) nogil
+
+    int dpiConn_tpcForget(dpiConn *conn, dpiXid *xid) nogil
+
+    int dpiConn_tpcPrepare(dpiConn *conn, dpiXid *xid,
+            bint *commitNeeded) nogil
+
+    int dpiConn_tpcRollback(dpiConn *conn, dpiXid *xid) nogil
 
     int dpiConn_unsubscribe(dpiConn *conn, dpiSubscr *subscr) nogil
 
