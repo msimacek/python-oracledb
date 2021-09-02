@@ -16,7 +16,7 @@ import test_env
 class TestCase(test_env.BaseTestCase):
 
     def test_4400_tpc_with_rolback(self):
-        "3900 - test begin, prepare, roll back global transaction"
+        "4400 - test begin, prepare, roll back global transaction"
         self.cursor.execute("truncate table TestTempTable")
         xid = self.connection.xid(3900, "txn3900", "branchId")
         self.connection.tpc_begin(xid)
@@ -32,7 +32,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(count, 0)
 
     def test_4401_tpc_with_commit(self):
-        "3901 - test begin, prepare, commit global transaction"
+        "4401 - test begin, prepare, commit global transaction"
         self.cursor.execute("truncate table TestTempTable")
         xid = self.connection.xid(3901, "txn3901", "branchId")
         self.connection.tpc_begin(xid)
@@ -45,7 +45,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(self.cursor.fetchall(), [(1, 'tesName')])
 
     def test_4402_tpc_multiple_transactions(self):
-        "3902 - test multiple global transactions on the same connection"
+        "4402 - test multiple global transactions on the same connection"
         self.cursor.execute("truncate table TestTempTable")
         xid1 = self.connection.xid(3902, "txn3902", "branch1")
         xid2 = self.connection.xid(3902, "txn3902", "branch2")
