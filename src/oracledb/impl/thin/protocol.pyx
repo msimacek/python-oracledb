@@ -98,16 +98,17 @@ cdef class Protocol:
         # store whether OOB processing is possible or not
         self._caps.supports_oob = supports_oob
 
-        # send connect message and process response; this requests the message
-        # to be resent so the message is sent again; however, if a secure
-        # transport is being used, a new socket needs to be created in order
-        # for the TLS negotiation to be repeated (since the socket is handed
-        # over to a different process)
+        # send connect message and process response; this may request the
+        # message to be resent multiple times; if a redirect packet is
+        # detected, however, the process terminates and is restarted using the
+        # supplied redirect data
         connect_message = ConnectMessage(connect_string)
-        self._process_message(connect_message)
-        if connect_message.redirect_data is not None:
-            return connect_message.redirect_data
-        self._process_message(connect_message)
+        while True:
+            self._process_message(connect_message)
+            if connect_message.redirect_data is not None:
+                return connect_message.redirect_data
+            if connect_message.packet_type == TNS_PACKET_TYPE_ACCEPT:
+                break
 
         # check if the protocol version supported by the database is high
         # enough; if not, reject the connection immediately
