@@ -13,6 +13,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
         list _free_new_conn_impls
         list _free_used_conn_impls
         list _busy_conn_impls
+        list _conn_impls_to_close
         uint8_t _getmode
         uint32_t _stmt_cache_size
         uint32_t _timeout
@@ -20,12 +21,12 @@ cdef class ThinPoolImpl(BasePoolImpl):
         uint32_t _num_pending_requests
         uint32_t _wait_timeout
         uint32_t _auth_mode
-        object _create_exc
-        object _create_thread
-        object _create_thread_condition
+        object _bg_exc
+        object _bg_thread
+        object _bg_thread_condition
         object _condition
         object _params
-        bint _shutdown
+        bint _open
 
     def __init__(self, params, min, max, increment, homogeneous, getmode,
                  wait_timeout, stmtcachesize):
@@ -42,12 +43,14 @@ cdef class ThinPoolImpl(BasePoolImpl):
         self._free_new_conn_impls = []
         self._free_used_conn_impls = []
         self._busy_conn_impls = []
+        self._conn_impls_to_close = []
         self._auth_mode = constants.AUTH_MODE_DEFAULT
         self._condition = threading.Condition()
-        self._create_thread_condition = threading.Condition()
-        self._create_thread = threading.Thread(target=self._create_conn_impls,
-                                               daemon=True)
-        self._create_thread.start()
+        self._bg_thread_condition = threading.Condition()
+        self._bg_thread = threading.Thread(target=self._bg_thread_func,
+                                           daemon=True)
+        self._bg_thread.start()
+        self._open = True
 
     cdef ThinConnImpl _create_conn_impl(self):
         """
@@ -61,38 +64,62 @@ cdef class ThinPoolImpl(BasePoolImpl):
         conn_impl._pool = self
         return conn_impl
 
-    def _create_conn_impls(self):
+    def _bg_thread_func(self):
         """
         Method which runs in a dedicated thread and is used to create
-        connections when needed. This happens initially when the pool is
-        created (pool.min connections are created) and when no free connections
-        are available (pool.increment up to a maximum of pool.max connections
-        are created).
+        connections and close them when needed. When first started, it creates
+        pool.min connections. After that, it creates pool.increment connections
+        up to the value of pool.max when needed and destroys connections when
+        needed. The thread terminates automatically when the pool is closed.
         """
         cdef:
             uint32_t open_count, num_conns = 0, i
             ThinConnImpl connection
-            bint wait, shutdown
+            bint wait = False
 
         # create the initial set of connections requested
         self._create_conn_impls_helper(self.min)
 
-        # wait for requests to create additional connections and then create
-        # them; continue creating connections (self.increment at a time) up
-        # until the maximum number of connections exists in the pool
+        # wait for requests to create additional connections or destroy
+        # connections
         while True:
+
+            # determine whether to wait for work to do; a wait is forced if
+            # a background exception has taken place -- unless the pool has
+            # been closed, in which case no wait takes place
             with self._condition:
-                wait = self._num_pending_requests == 0 \
-                        or self._create_exc is not None
+                wait = self._open and \
+                        (self._bg_exc is not None or \
+                                (self._num_pending_requests == 0 \
+                                 and len(self._conn_impls_to_close) == 0))
             if wait:
-                with self._create_thread_condition:
-                    self._create_thread_condition.wait()
-            if self._shutdown:
-                break
+                with self._bg_thread_condition:
+                    self._bg_thread_condition.wait()
+
+            # perform work of creating/destroying connections
             with self._condition:
                 open_count = self.get_open_count()
                 num_conns = min(self.increment, self.max - open_count)
-            self._create_conn_impls_helper(num_conns)
+            if self._open:
+                self._create_conn_impls_helper(num_conns)
+            self._close_conn_impls_helper()
+            if not self._open:
+                break
+
+    cdef int _close_conn_impls_helper(self) except -1:
+        """
+        Helper method which closes the connections requested by the pool to be
+        closed. When the pool is closed, exceptions are ignored.
+        """
+        cdef ThinConnImpl conn_impl
+        while self._conn_impls_to_close:
+            conn_impl = self._conn_impls_to_close.pop()
+            try:
+                conn_impl._force_close()
+            except Exception as e:
+                if self._open:
+                    self._bg_exc = e
+                    break
 
     cdef int _create_conn_impls_helper(self, uint32_t num_conns) except -1:
         """
@@ -102,22 +129,22 @@ cdef class ThinPoolImpl(BasePoolImpl):
         will return this exception.
         """
         cdef:
-            ThinConnImpl conn
+            ThinConnImpl conn_impl
             object exc
             uint32_t i
         for i in range(num_conns):
-            conn = None
+            conn_impl = None
             try:
-                conn = self._create_conn_impl()
+                conn_impl = self._create_conn_impl()
             except Exception as e:
                 exc = e
             with self._condition:
-                if conn is not None:
-                    self._free_new_conn_impls.append(conn)
+                if conn_impl is not None:
+                    self._free_new_conn_impls.append(conn_impl)
                 else:
-                    self._create_exc = exc
+                    self._bg_exc = exc
                 self._condition.notify()
-                if conn is None:
+                if conn_impl is None:
                     break
 
     cdef int _free_busy_connection(self, ThinConnImpl connection) except -1:
@@ -135,15 +162,15 @@ cdef class ThinPoolImpl(BasePoolImpl):
         creation thread is notified to create additional connections.
         """
         cdef uint32_t open_count
-        if self._create_exc is not None or self._free_new_conn_impls:
+        if self._bg_exc is not None or self._free_new_conn_impls:
             return True
         open_count = self.get_open_count()
         if self._free_used_conn_impls:
             if purity != constants.PURITY_NEW or open_count == self.max:
                 return True
         if open_count < self.max:
-            with self._create_thread_condition:
-                self._create_thread_condition.notify()
+            with self._bg_thread_condition:
+                self._bg_thread_condition.notify()
             return False
         return self._getmode == constants.POOL_GETMODE_FORCEGET
 
@@ -158,6 +185,10 @@ cdef class ThinPoolImpl(BasePoolImpl):
             object wait_timeout
             object predicate
             object exc
+
+        # if pool is closed, raise an exception
+        if not self._open:
+            errors._raise_err(errors.ERR_NOT_OPEN)
 
         # session tagging has not been implemented yet
         if tag is not None:
@@ -189,9 +220,9 @@ cdef class ThinPoolImpl(BasePoolImpl):
             # if an exception was raised while creating a connection, raise it
             # now (and clear it so subsequent attempts will try to create a
             # connection again)
-            if self._create_exc is not None:
-                exc = self._create_exc
-                self._create_exc = None
+            if self._bg_exc is not None:
+                exc = self._bg_exc
+                self._bg_exc = None
                 raise exc
 
             # if a free new connection is available, it can be used without any
@@ -221,6 +252,39 @@ cdef class ThinPoolImpl(BasePoolImpl):
 
             self._num_pending_requests -= 1
             return conn_impl
+
+    def close(self, bint force):
+        """
+        Internal method for closing the pool.
+        """
+        cdef:
+            list connections_to_close
+            ThinConnImpl conn_impl
+            uint32_t busy_count
+
+        with self._condition:
+
+            # if force parameter is not True and busy connections exist in the
+            # pool, raise an exception
+            if not force:
+                busy_count = self.get_busy_count()
+                if busy_count > 0:
+                    errors._raise_err(errors.ERR_POOL_HAS_BUSY_CONNECTIONS,
+                                      count=busy_count)
+
+            # close all connections in the pool; this is done by simply adding
+            # to the list of connections that require closing and then waking
+            # up the background thread to perform the work
+            self._open = False
+            for lst in (self._free_used_conn_impls,
+                        self._free_new_conn_impls,
+                        self._busy_conn_impls):
+                self._conn_impls_to_close.extend(lst)
+                for conn_impl in lst:
+                    conn_impl._pool = None
+                lst.clear()
+            with self._bg_thread_condition:
+                self._bg_thread_condition.notify()
 
     def drop(self, ThinConnImpl conn_impl):
         """

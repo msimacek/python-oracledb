@@ -36,6 +36,10 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
     uint32_t DPI_MODE_CONN_CLOSE_DROP
     uint32_t DPI_MODE_CONN_CLOSE_RETAG
 
+    # pool close modes
+    uint32_t DPI_MODE_POOL_CLOSE_DEFAULT
+    uint32_t DPI_MODE_POOL_CLOSE_FORCE
+
     # native types
     uint32_t DPI_NATIVE_TYPE_INT64
     uint32_t DPI_NATIVE_TYPE_FLOAT

@@ -52,6 +52,7 @@ ERR_NOT_CONNECTED = 1001
 ERR_NOT_OPEN = 1002
 ERR_NOT_A_QUERY = 1003
 ERR_NO_STATEMENT_EXECUTED = 1004
+ERR_POOL_HAS_BUSY_CONNECTIONS = 1005
 
 # error numbers that result in ProgrammingError
 ERR_MESSAGE_HAS_NO_PAYLOAD = 2000
@@ -119,6 +120,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_NOT_CONNECTED: "not connected",
     ERR_NOT_OPEN: "not open",
     ERR_ORACLE_TYPE_NOT_SUPPORTED: "Oracle type {num} not supported",
+    ERR_POOL_HAS_BUSY_CONNECTIONS: "pool cannot be destroyed because it has " \
+            "{count} busy connection(s)",
     ERR_PYTHON_TYPE_NOT_SUPPORTED: "Python type {typ} not supported",
     ERR_PYTHON_VALUE_NOT_SUPPORTED: \
             "Python value of type {type_name} not supported",

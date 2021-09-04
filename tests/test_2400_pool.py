@@ -71,7 +71,7 @@ class TestCase(test_env.BaseTestCase):
                                    wait_timeout=5000, stmtcachesize=25,
                                    max_lifetime_session=1000,
                                    max_sessions_per_shard=3, ping_interval=30,
-                                   getmode=oracledb.SPOOL_ATTRVAL_WAIT):
+                                   getmode=oracledb.POOL_GETMODE_WAIT):
         creation_args = dict(min=min, max=max, increment=increment,
                              timeout=timeout, wait_timeout=wait_timeout,
                              stmtcachesize=stmtcachesize,
@@ -572,6 +572,35 @@ class TestCase(test_env.BaseTestCase):
             cursor.execute("select to_char(current_date) from dual")
             result, = cursor.fetchone()
             self.assertEqual(self.session_called, True)
+
+    def test_2421_pool_close_normal_no_connections(self):
+        "2421 - test closing a pool normally with no connections checked out"
+        pool = test_env.get_pool(min=1, max=8, increment=1,
+                                 getmode=oracledb.POOL_GETMODE_WAIT)
+        pool.close()
+
+    def test_2422_pool_close_normal_with_connections(self):
+        "2422 - test closing a pool normally with connections checked out"
+        pool = test_env.get_pool(min=1, max=8, increment=1,
+                                 getmode=oracledb.POOL_GETMODE_WAIT)
+        conn = pool.acquire()
+        self.assertRaisesRegex(oracledb.InterfaceError,
+                               "^DPY-1005:|^ORA-24422:", pool.close)
+
+    def test_2423_pool_close_force(self):
+        "2423 - test closing a pool forcibly"
+        pool = test_env.get_pool(min=1, max=8, increment=1,
+                                 getmode=oracledb.POOL_GETMODE_WAIT)
+        conn = pool.acquire()
+        pool.close(force=True)
+
+    def test_2424_exception_on_acquire_after_pool_closed(self):
+        "2424 - using the pool after it is closed raises an exception"
+        pool = test_env.get_pool(min=1, max=8, increment=1,
+                                 getmode=oracledb.POOL_GETMODE_WAIT)
+        pool.close()
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1002:",
+                               pool.acquire)
 
 if __name__ == "__main__":
     test_env.run_test_cases()

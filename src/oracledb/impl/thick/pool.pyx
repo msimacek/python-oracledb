@@ -97,7 +97,15 @@ cdef class ThickPoolImpl(BasePoolImpl):
         """
         Internal method for closing the pool.
         """
-        raise NotImplementedError()
+        cdef:
+            uint32_t close_mode
+            int status
+        close_mode = DPI_MODE_POOL_CLOSE_FORCE if force \
+                     else DPI_MODE_POOL_CLOSE_DEFAULT
+        with nogil:
+            status = dpiPool_close(self._handle, close_mode);
+        if status < 0:
+            _raise_from_odpi()
 
     def drop(self, ThickConnImpl conn_impl):
         """

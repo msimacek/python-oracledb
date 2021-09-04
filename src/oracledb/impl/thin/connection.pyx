@@ -48,6 +48,21 @@ cdef class ThinConnImpl(BaseConnImpl):
             elif stmt._cursor_id != 0:
                 self._add_cursor_to_close(stmt)
 
+    cdef int _force_close(self):
+        if DEBUG_PACKETS:
+            now = datetime.datetime.now()
+            print(now.isoformat(sep=" ", timespec="milliseconds"),
+                  f"[socket: {self._protocol._socket.fileno()}]",
+                  "force closing connection")
+            print()
+        self._pool = None
+        sock = self._protocol._socket
+        self._protocol._socket = None
+        self._protocol._read_buf._socket = None
+        self._protocol._write_buf._socket = None
+        sock.shutdown(socket.SHUT_RDWR)
+        sock.close()
+
     cdef Statement _get_statement(self, str sql):
         cdef Statement statement
         with self._statement_cache_lock:

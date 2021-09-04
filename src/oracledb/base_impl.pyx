@@ -41,6 +41,11 @@ cdef int32_t* INTEGRITY_ERROR_CODES = [
         0
 ]
 
+cdef int32_t* INTERFACE_ERROR_CODES = [
+        24422,
+        0
+]
+
 cdef int32_t* OPERATIONAL_ERROR_CODES = [
         22,         # invalid session ID; access denied
         378,        # buffer pools cannot be created as specified
@@ -87,6 +92,8 @@ cdef object get_exception_class(int32_t code):
         return exceptions.IntegrityError
     if is_code_in_array(code, OPERATIONAL_ERROR_CODES):
         return exceptions.OperationalError
+    if is_code_in_array(code, INTERFACE_ERROR_CODES):
+        return exceptions.InterfaceError
     return exceptions.DatabaseError
 
 
