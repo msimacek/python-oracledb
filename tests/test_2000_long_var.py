@@ -97,8 +97,9 @@ class TestCase(test_env.BaseTestCase):
     def test_2005_array_size_too_large(self):
         "2005 - test array size too large generates an exception"
         self.cursor.arraysize = 268435456
-        self.assertRaises(oracledb.DatabaseError, self.cursor.execute,
-                          "select * from TestLongRaws")
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPI-1015:",
+                               self.cursor.execute,
+                               "select * from TestLongRaws")
 
 if __name__ == "__main__":
     test_env.run_test_cases()

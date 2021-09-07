@@ -409,9 +409,9 @@ cdef class MessageWithData(Message):
             if actual_num_bytes != 0 and column_value is not None:
                 unit_type = "bytes" if isinstance(column_value, bytes) \
                             else "characters"
-                message = f"column truncated to {len(column_value)} " \
-                          f"{unit_type} (actual is {actual_num_bytes})"
-                errors._raise_from_string(exceptions.DatabaseError, message)
+                errors._raise_err(errors.ERR_COLUMN_TRUNCATED,
+                                  col_value_len=len(column_value),
+                                  unit=unit_type, actual_len=actual_num_bytes)
         if var_impl._conv_func is not None:
             column_value = var_impl._conv_func(column_value)
         if var_impl.outconverter is not None:
@@ -763,8 +763,8 @@ cdef class MessageWithData(Message):
             buf.write_uint8(num_bytes)
             buf.write_bytes(lob_impl._locator)
         else:
-            errors._raise_from_string(exceptions.NotSupportedError,
-                                      f"unsupported type {var_impl.dbtype}")
+            errors._raise_err(errors.ERR_DB_TYPE_NOT_SUPPORTED,
+                              name=var_impl.dbtype.name)
 
     cdef int _write_bind_params_row(self, WriteBuffer buf, list params,
                                     uint32_t pos) except -1:

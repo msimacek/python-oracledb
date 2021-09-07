@@ -92,8 +92,7 @@ cdef class Protocol:
 
         # verify that a password has been specified first
         if password is None:
-            errors._raise_from_string(exceptions.DatabaseError,
-                                      "no password specified")
+            errors._raise_err(errors.ERR_NO_PASSWORD)
 
         # store whether OOB processing is possible or not
         self._caps.supports_oob = supports_oob

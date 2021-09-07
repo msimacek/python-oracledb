@@ -56,7 +56,8 @@ class TestCase(test_env.BaseTestCase):
         str_var = self.cursor.var(str, 2)
         parameters = dict(int_val=int_val, str_val=str_val, int_var=int_var,
                           str_var=str_var)
-        self.assertRaises(oracledb.DatabaseError, self.cursor.execute, """
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4002:|^DPI-1037:",
+                self.cursor.execute, """
                 insert into TestTempTable (IntCol, StringCol)
                 values (:int_val, :str_val)
                 returning IntCol, StringCol into :int_var, :str_var""",
@@ -279,16 +280,14 @@ class TestCase(test_env.BaseTestCase):
         str_val = "A" * 401
         int_var = self.cursor.var(oracledb.NUMBER)
         str_var = self.cursor.var(str)
+        sql = """
+                insert into TestTempTable (IntCol, StringCol)
+                values (:int_val, :str_val)
+                returning IntCol, StringCol into :int_var, :str_var"""
         parameters = dict(int_val=int_val, str_val=str_val, int_var=int_var,
                           str_var=str_var)
-        with self.assertRaises(oracledb.DatabaseError) as error:
-            self.cursor.execute("""
-                    insert into TestTempTable (IntCol, StringCol)
-                    values (:int_val, :str_val)
-                    returning IntCol, StringCol into :int_var, :str_var""",
-                    parameters)
-        error_obj, = error.exception.args
-        self.assertEqual(error_obj.code, 12899)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-12899:",
+                               self.cursor.execute, sql, parameters)
 
 if __name__ == "__main__":
     test_env.run_test_cases()

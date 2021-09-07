@@ -83,11 +83,19 @@ ERR_ARRAYS_OF_ARRAYS = 3005
 ERR_ORACLE_TYPE_NOT_SUPPORTED = 3006
 ERR_DB_TYPE_NOT_SUPPORTED = 3007
 
+# error numbers that result in DatabaseError
+ERR_TNS_ENTRY_NOT_FOUND = 4000
+ERR_NO_PASSWORD = 4001
+ERR_COLUMN_TRUNCATED = 4002
+ERR_ORACLE_NUMBER_NO_REPR = 4003
+ERR_INVALID_NUMBER = 4004
+
 # error message exception types (multiples of 1000)
 ERR_EXCEPTION_TYPES = {
     1: exceptions.InterfaceError,
     2: exceptions.ProgrammingError,
-    3: exceptions.NotSupportedError
+    3: exceptions.NotSupportedError,
+    4: exceptions.DatabaseError
 }
 
 # error message formats
@@ -96,6 +104,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_ARGS_AND_KEYWORD_ARGS: \
             "expecting arguments or keyword arguments, not both",
     ERR_ARRAYS_OF_ARRAYS: "arrays of arrays are not supported",
+    ERR_COLUMN_TRUNCATED: "column truncated to {col_value_len} {unit} " \
+            "(actual is {actual_len})",
     ERR_DB_TYPE_NOT_SUPPORTED: "Database type {name} not supported",
     ERR_DUPLICATED_PARAMETER: \
             "{deprecated_name} and {new_name} cannot both be specified",
@@ -107,18 +117,22 @@ ERR_MESSAGE_FORMATS = {
     ERR_INCORRECT_VAR_ARRAYSIZE: "variable array size of {var_arraysize} is " \
                                  "too small (should be at least " \
                                  "{required_arraysize})",
+    ERR_INVALID_NUMBER: "invalid number",
     ERR_KEYWORD_ARGS_MUST_BE_DICT: "keyword arguments must be a dict",
     ERR_MESSAGE_HAS_NO_PAYLOAD: "message has no payload",
     ERR_MIXED_ELEMENT_TYPES: \
             "element {element} is not the same type as previous elements",
     ERR_MIXED_POSITIONAL_AND_NAMED_BINDS: \
             "positional and named binds cannot be intermixed",
+    ERR_NO_PASSWORD: "no password specified",
     ERR_NO_STATEMENT: "no statement specified and no prior statement prepared",
     ERR_NO_STATEMENT_EXECUTED: "no statement executed",
     ERR_NO_STATEMENT_PREPARED: "statement must be prepared first",
     ERR_NOT_A_QUERY: "not a query",
     ERR_NOT_CONNECTED: "not connected",
     ERR_NOT_OPEN: "not open",
+    ERR_ORACLE_NUMBER_NO_REPR: "value cannot be represented as an Oracle " \
+                               "number",
     ERR_ORACLE_TYPE_NOT_SUPPORTED: "Oracle type {num} not supported",
     ERR_POOL_HAS_BUSY_CONNECTIONS: "pool cannot be destroyed because it has " \
             "{count} busy connection(s)",
@@ -127,6 +141,7 @@ ERR_MESSAGE_FORMATS = {
             "Python value of type {type_name} not supported",
     ERR_SET_ROWID_DIRECTLY: "rowid variables cannot be set directly",
     ERR_TIME_NOT_SUPPORTED: "Oracle does not support time only variables",
+    ERR_TNS_ENTRY_NOT_FOUND: "unable to find TNS entry name {val}",
     ERR_WRONG_ARRAY_DEFINITION: \
             "expecting a list of two elements [type, numelems]",
     ERR_WRONG_EXECUTE_PARAMETERS_TYPE: \

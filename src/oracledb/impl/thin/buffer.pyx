@@ -944,8 +944,7 @@ cdef class WriteBuffer:
             if ptr[pos] == b'.' or ptr[pos] == b'e' or ptr[pos] == b'E':
                 break
             if ptr[pos] < b'0' or ptr[pos] > b'9':
-                message = "invalid number"
-                errors._raise_from_string(exceptions.DatabaseError, message)
+                errors._raise_err(errors.ERR_INVALID_NUMBER)
             digit = ptr[pos] - <uint8_t> b'0'
             pos += 1
             if digit == 0 and num_digits == 0:
@@ -1005,8 +1004,7 @@ cdef class WriteBuffer:
         # digits also cannot exceed the maximum precision of Oracle numbers
         if num_digits > NUMBER_MAX_DIGITS or decimal_point_index > 126 \
                 or decimal_point_index < -129:
-            msg = "value cannot be represented as an Oracle number"
-            errors._raise_from_string(exceptions.DatabaseError, msg)
+            errors._raise_err(errors.ERR_ORACLE_NUMBER_NO_REPR)
 
         # if the exponent is odd, prepend a zero
         if decimal_point_index % 2 == 1:

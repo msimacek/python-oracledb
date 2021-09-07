@@ -182,8 +182,7 @@ cdef int _convert_from_python(object value, DbType dbtype,
         if dpiJson_setValue(dbvalue.asJson, &json_buf._top_node) < 0:
             _raise_from_odpi()
     else:
-        errors._raise_from_string(exceptions.NotSupportedError,
-                                  f"database type {dbtype} not supported")
+        errors._raise_err(errors.ERR_DB_TYPE_NOT_SUPPORTED, name=dbtype.name)
 
 
 cdef object _convert_to_python(ThickConnImpl conn_impl, DbType dbtype,
@@ -270,9 +269,7 @@ cdef object _convert_to_python(ThickConnImpl conn_impl, DbType dbtype,
                             &json_node) < 0:
             _raise_from_odpi()
         return _convert_from_json_node(json_node)
-    errors._raise_from_string(exceptions.NotSupportedError,
-                              f"database type {dbtype} not supported")
-
+    errors._raise_err(errors.ERR_DB_TYPE_NOT_SUPPORTED, name=dbtype.name)
 
 cdef uint32_t _get_native_type_num(DbType dbtype):
     cdef uint32_t oracle_type_num = dbtype.num

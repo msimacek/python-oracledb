@@ -518,7 +518,7 @@ class Pool:
           the pool has been reconfigured and a connection is available.
 
         * With mode POOL_GETMODE_NOWAIT, if the number of busy connections is
-          less than the pool size, ``acquire()`` will return a new connection
+          less than the pool size, acquire() will return a new connection
           after pool reconfiguration is complete.
 
         Closing connections with pool.release() or connection.close() will

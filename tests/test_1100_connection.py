@@ -124,22 +124,23 @@ class TestCase(test_env.BaseTestCase):
 
     def test_1105_bad_connect_string(self):
         "1105 - connection to database with bad connect string"
-        self.assertRaises(oracledb.DatabaseError, oracledb.connect,
-                          test_env.get_main_user())
-        self.assertRaises(oracledb.DatabaseError, oracledb.connect,
-                          test_env.get_main_user() + "@" + \
-                          test_env.get_connect_string())
-        self.assertRaises(oracledb.DatabaseError, oracledb.connect,
-                          test_env.get_main_user() + "@" + \
-                          test_env.get_connect_string() + "/" + \
-                          test_env.get_main_password())
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4000:|^ORA-12154:",
+                               oracledb.connect, test_env.get_main_user())
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4001:|^ORA-01005:",
+                               oracledb.connect, test_env.get_main_user() + \
+                               "@" + test_env.get_connect_string())
+        self.assertRaisesRegex(oracledb.DatabaseError,
+                               "^DPY-4001:|^ORA-12154:|^ORA-12521:",
+                               oracledb.connect, test_env.get_main_user() + \
+                               "@" + test_env.get_connect_string() + "/" + \
+                               test_env.get_main_password())
 
     def test_1106_bad_password(self):
         "1106 - connection to database with bad password"
-        self.assertRaises(oracledb.DatabaseError, oracledb.connect,
-                          user=test_env.get_main_user(),
-                          password=test_env.get_main_password() + "X",
-                          dsn=test_env.get_connect_string())
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-01017:",
+                               oracledb.connect, user=test_env.get_main_user(),
+                               password=test_env.get_main_password() + "X",
+                               dsn=test_env.get_connect_string())
 
     def test_1107_change_password(self):
         "1107 - test changing password"
@@ -161,8 +162,10 @@ class TestCase(test_env.BaseTestCase):
         if self.is_on_oracle_cloud(connection):
             self.skipTest("passwords on Oracle Cloud are strictly controlled")
         new_password = "1" * 150
-        self.assertRaises(oracledb.DatabaseError, connection.changepassword,
-                test_env.get_main_password(), new_password)
+        self.assertRaisesRegex(oracledb.DatabaseError,
+                               "^ORA-03120:|^ORA-00988:",
+                               connection.changepassword,
+                               test_env.get_main_password(), new_password)
 
     def test_1109_parse_password(self):
         "1109 - test connecting with password containing / and @ symbols"
@@ -206,7 +209,8 @@ class TestCase(test_env.BaseTestCase):
         fetched_int_value, = cursor.fetchone()
         self.assertEqual(fetched_int_value, int_value)
         cursor.close()
-        self.assertRaises(oracledb.DatabaseError, connection2.close)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPI-1034:",
+                               connection2.close)
         connection.close()
 
     def test_1114_make_dsn(self):
@@ -443,7 +447,8 @@ class TestCase(test_env.BaseTestCase):
 
         id_ = random.randint(0, 2 ** 128)
         xid = (0x1234, "%032x" % id_, "%032x" % 9)
-        self.assertRaises(oracledb.DatabaseError, connection.begin, *xid)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-24776:",
+                               connection.begin, *xid)
 
     def test_1129_threading_single_connection(self):
         "1129 - single connection to database with multiple threads"
@@ -556,8 +561,9 @@ class TestCase(test_env.BaseTestCase):
         conn = test_env.get_connection()
         conn.call_timeout = 500   # milliseconds
         self.assertEqual(conn.call_timeout, 500)
-        self.assertRaises(oracledb.DatabaseError, conn.cursor().callproc,
-                          test_env.get_sleep_proc_name(), [2])
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPI-1080:|^DPI-1067:",
+                               conn.cursor().callproc,
+                               test_env.get_sleep_proc_name(), [2])
 
 if __name__ == "__main__":
     test_env.run_test_cases()

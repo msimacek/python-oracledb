@@ -243,6 +243,7 @@ class ConnectParams:
         pos = redirect_data.find('\x00')
         if pos < 0:
             message = f"invalid redirect data: {redirect_data}"
+            raise ConfigParseError(message)
         adjusted_data = redirect_data[pos + 1:]
         node = parse_structured_data(ConfigNode(), redirect_data[:pos])
         address_node = node.description.address
@@ -262,8 +263,7 @@ class ConnectParams:
             if connect_data is not None:
                 self.parse_connect_data(connect_data)
                 return
-        message = f"unable to find TNS entry name {name}"
-        raise exceptions.DatabaseError(message)
+        errors._raise_err(errors.ERR_TNS_ENTRY_NOT_FOUND, val=name)
 
     def supports_oob(self):
         """

@@ -344,8 +344,8 @@ class TestCase(test_env.BaseTestCase):
                      float("NaN"), decimal.Decimal("1e126"),
                      decimal.Decimal("-1e126"), decimal.Decimal("inf"),
                      decimal.Decimal("-inf"), decimal.Decimal("NaN")]
-        no_rep_err = "value cannot be represented as an Oracle number"
-        invalid_err = "invalid number"
+        no_rep_err = "^DPY-4003:|^DPI-1044:"
+        invalid_err = "^DPY-4004:|^DPI-1043:"
         expected_errors = [no_rep_err, no_rep_err, invalid_err, invalid_err,
                            invalid_err, no_rep_err, no_rep_err, invalid_err,
                            invalid_err, invalid_err]
