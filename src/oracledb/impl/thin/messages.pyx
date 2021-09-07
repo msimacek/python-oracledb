@@ -1270,6 +1270,9 @@ cdef class ConnectMessage(Message):
         buf.write_uint32(TNS_TDU)           # TDU (large)
         buf.write_uint32(connect_flags_1)
         buf.write_uint32(connect_flags_2)
+        if self.connect_string_len > TNS_MAX_CONNECT_DATA:
+            buf.end_request()
+            buf.start_request(TNS_PACKET_TYPE_DATA)
         buf.write_bytes(self.connect_string_bytes)
         buf.end_request()
 
