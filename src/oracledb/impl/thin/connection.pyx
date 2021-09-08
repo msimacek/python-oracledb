@@ -48,7 +48,7 @@ cdef class ThinConnImpl(BaseConnImpl):
             elif stmt._cursor_id != 0:
                 self._add_cursor_to_close(stmt)
 
-    cdef int _force_close(self):
+    cdef int _force_close(self) except -1:
         if DEBUG_PACKETS:
             now = datetime.datetime.now()
             print(now.isoformat(sep=" ", timespec="milliseconds"),
