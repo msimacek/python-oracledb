@@ -148,10 +148,16 @@ cdef class ThinPoolImpl(BasePoolImpl):
                     break
 
     cdef int _free_busy_connection(self, ThinConnImpl connection) except -1:
-        connection.rollback()
+        if not connection._protocol._session_needs_to_be_closed:
+            connection.rollback()
         with self._condition:
+            if connection._protocol._session_needs_to_be_closed:
+                self._conn_impls_to_close.append(connection)
+                with self._bg_thread_condition:
+                    self._bg_thread_condition.notify()
+            else:
+                self._free_used_conn_impls.append(connection)
             self._busy_conn_impls.remove(connection)
-            self._free_used_conn_impls.append(connection)
             self._condition.notify()
 
     def _has_room(self, purity):

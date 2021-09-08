@@ -82,6 +82,7 @@ ERR_SET_ROWID_DIRECTLY = 3004
 ERR_ARRAYS_OF_ARRAYS = 3005
 ERR_ORACLE_TYPE_NOT_SUPPORTED = 3006
 ERR_DB_TYPE_NOT_SUPPORTED = 3007
+ERR_UNSUPPORTED_INBAND_NOTIFICATION = 3008
 
 # error numbers that result in DatabaseError
 ERR_TNS_ENTRY_NOT_FOUND = 4000
@@ -142,6 +143,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_SET_ROWID_DIRECTLY: "rowid variables cannot be set directly",
     ERR_TIME_NOT_SUPPORTED: "Oracle does not support time only variables",
     ERR_TNS_ENTRY_NOT_FOUND: "unable to find TNS entry name {val}",
+    ERR_UNSUPPORTED_INBAND_NOTIFICATION: \
+            "unsupported in-band notification with error number {err_num}",
     ERR_WRONG_ARRAY_DEFINITION: \
             "expecting a list of two elements [type, numelems]",
     ERR_WRONG_EXECUTE_PARAMETERS_TYPE: \

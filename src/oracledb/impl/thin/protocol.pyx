@@ -13,6 +13,7 @@ cdef class Protocol:
         object _request_lock
         bint _txn_in_progress
         bint _break_in_progress
+        bint _session_needs_to_be_closed
 
     def __init__(self, sock):
         self._caps = Capabilities()
@@ -215,7 +216,8 @@ cdef class Protocol:
             raise exc_type(error)
 
     cdef int _receive_packet(self, Message message) except -1:
-        cdef uint16_t control_type
+        cdef:
+            uint16_t control_type, error_num
         self._read_buf.receive_packet(&message.packet_type)
         if message.packet_type == TNS_PACKET_TYPE_MARKER:
             self._reset(message)
@@ -224,6 +226,15 @@ cdef class Protocol:
             control_type = self._read_buf.read_uint16()
             if control_type == TNS_CONTROL_TYPE_RESET_OOB:
                 self._caps.supports_oob = False
+            if control_type == TNS_CONTROL_TYPE_INBAND_NOTIFICATION:
+                self._read_buf.skip_bytes(6) # skip flags
+                error_num = self._read_buf.read_uint16()
+                if error_num == TNS_ERR_SESSION_SHUTDOWN \
+                        or error_num == TNS_ERR_INBAND_MESSAGE:
+                    self._session_needs_to_be_closed = True
+                else:
+                    errors._raise_err(errors.ERR_UNSUPPORTED_INBAND_NOTIFICATION,
+                                      error_num)
             self._read_buf.receive_packet(&message.packet_type)
         elif message.packet_type == TNS_PACKET_TYPE_REFUSE:
             self._write_buf._packet_sent = False
