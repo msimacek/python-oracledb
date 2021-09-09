@@ -584,8 +584,8 @@ class TestCase(test_env.BaseTestCase):
         pool = test_env.get_pool(min=1, max=8, increment=1,
                                  getmode=oracledb.POOL_GETMODE_WAIT)
         conn = pool.acquire()
-        self.assertRaisesRegex(oracledb.InterfaceError,
-                               "^DPY-1005:|^ORA-24422:", pool.close)
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1005:",
+                               pool.close)
 
     def test_2423_pool_close_force(self):
         "2423 - test closing a pool forcibly"

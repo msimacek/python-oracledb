@@ -266,17 +266,13 @@ cdef class ThinPoolImpl(BasePoolImpl):
         cdef:
             list connections_to_close
             ThinConnImpl conn_impl
-            uint32_t busy_count
 
         with self._condition:
 
             # if force parameter is not True and busy connections exist in the
             # pool, raise an exception
-            if not force:
-                busy_count = self.get_busy_count()
-                if busy_count > 0:
-                    errors._raise_err(errors.ERR_POOL_HAS_BUSY_CONNECTIONS,
-                                      count=busy_count)
+            if not force and self.get_busy_count() > 0:
+                errors._raise_err(errors.ERR_POOL_HAS_BUSY_CONNECTIONS)
 
             # close all connections in the pool; this is done by simply adding
             # to the list of connections that require closing and then waking

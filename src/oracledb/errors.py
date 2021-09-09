@@ -109,7 +109,8 @@ ERR_INVALID_NUMBER = 4004
 
 # Oracle error number cross reference
 ERR_ORACLE_ERROR_XREF = {
-    1005: ERR_NO_PASSWORD
+    1005: ERR_NO_PASSWORD,
+    24422: ERR_POOL_HAS_BUSY_CONNECTIONS,
 }
 
 # error message exception types (multiples of 1000)
@@ -156,8 +157,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_ORACLE_NUMBER_NO_REPR: "value cannot be represented as an Oracle " \
                                "number",
     ERR_ORACLE_TYPE_NOT_SUPPORTED: "Oracle type {num} not supported",
-    ERR_POOL_HAS_BUSY_CONNECTIONS: "pool cannot be destroyed because it has " \
-            "{count} busy connection(s)",
+    ERR_POOL_HAS_BUSY_CONNECTIONS: \
+            "pool cannot be destroyed because it has busy connections",
     ERR_PYTHON_TYPE_NOT_SUPPORTED: "Python type {typ} not supported",
     ERR_PYTHON_VALUE_NOT_SUPPORTED: \
             "Python value of type {type_name} not supported",
