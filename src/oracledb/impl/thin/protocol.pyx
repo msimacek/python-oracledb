@@ -184,6 +184,21 @@ cdef class Protocol:
         with self._request_lock:
             self._process_message(PingMessage())
 
+    cdef int _process_control_packet(self, ReadBuffer buf) except -1:
+        cdef uint16_t control_type, error_num
+        control_type = buf.read_uint16()
+        if control_type == TNS_CONTROL_TYPE_RESET_OOB:
+            self._caps.supports_oob = False
+        elif control_type == TNS_CONTROL_TYPE_INBAND_NOTIFICATION:
+            buf.skip_bytes(6)           # skip flags
+            error_num = buf.read_uint16()
+            if error_num == TNS_ERR_SESSION_SHUTDOWN \
+                    or error_num == TNS_ERR_INBAND_MESSAGE:
+                self._session_needs_to_be_closed = True
+            else:
+                errors._raise_err(errors.ERR_UNSUPPORTED_INBAND_NOTIFICATION,
+                                  error_num)
+
     cdef int _process_message(self, Message message) except -1:
         try:
             message.send(self._write_buf)
@@ -216,25 +231,12 @@ cdef class Protocol:
             raise exc_type(error)
 
     cdef int _receive_packet(self, Message message) except -1:
-        cdef:
-            uint16_t control_type, error_num
         self._read_buf.receive_packet(&message.packet_type)
         if message.packet_type == TNS_PACKET_TYPE_MARKER:
             self._reset(message)
             message.error_occurred = True
         elif message.packet_type == TNS_PACKET_TYPE_CONTROL:
-            control_type = self._read_buf.read_uint16()
-            if control_type == TNS_CONTROL_TYPE_RESET_OOB:
-                self._caps.supports_oob = False
-            if control_type == TNS_CONTROL_TYPE_INBAND_NOTIFICATION:
-                self._read_buf.skip_bytes(6) # skip flags
-                error_num = self._read_buf.read_uint16()
-                if error_num == TNS_ERR_SESSION_SHUTDOWN \
-                        or error_num == TNS_ERR_INBAND_MESSAGE:
-                    self._session_needs_to_be_closed = True
-                else:
-                    errors._raise_err(errors.ERR_UNSUPPORTED_INBAND_NOTIFICATION,
-                                      error_num)
+            self._process_control_packet(self._read_buf)
             self._read_buf.receive_packet(&message.packet_type)
         elif message.packet_type == TNS_PACKET_TYPE_REFUSE:
             self._write_buf._packet_sent = False
