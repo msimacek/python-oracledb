@@ -18,8 +18,13 @@ class _Error:
         self.iswarning = iswarning
         self.code = code
         self.offset = offset
-        if code != 0:
-            driver_error_num = ERR_ORACLE_ERROR_XREF.get(code)
+        if code != 0 or (message is not None and message.startswith("DPI-")):
+            if code != 0:
+                driver_error_num = ERR_ORACLE_ERROR_XREF.get(code)
+            else:
+                pos = message.find(":")
+                error_num = int(message[4:pos])
+                driver_error_num = ERR_DPI_ERROR_XREF.get(error_num)
             if driver_error_num is not None:
                 driver_error = _get_error_text(driver_error_num)
                 self.message = f"{driver_error}\n{self.message}"
@@ -111,6 +116,12 @@ ERR_INVALID_NUMBER = 4004
 ERR_ORACLE_ERROR_XREF = {
     1005: ERR_NO_PASSWORD,
     24422: ERR_POOL_HAS_BUSY_CONNECTIONS,
+}
+
+# ODPI-C error number cross reference
+ERR_DPI_ERROR_XREF = {
+    1043: ERR_INVALID_NUMBER,
+    1044: ERR_ORACLE_NUMBER_NO_REPR,
 }
 
 # error message exception types (multiples of 1000)
