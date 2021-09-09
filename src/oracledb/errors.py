@@ -18,21 +18,37 @@ class _Error:
         self.iswarning = iswarning
         self.code = code
         self.offset = offset
+        if code != 0:
+            driver_error_num = ERR_ORACLE_ERROR_XREF.get(code)
+            if driver_error_num is not None:
+                driver_error = _get_error_text(driver_error_num)
+                self.message = f"{driver_error}\n{self.message}"
 
     def __str__(self):
         return self.message
 
 
-def _raise_err(error_num: int, **args):
+def _get_error_text(error_num: int, **args):
+    """
+    Return the error text for the driver specific error number.
+    """
     message_format = ERR_MESSAGE_FORMATS.get(error_num)
     if message_format is None:
         message_format = "missing error {error_num}"
         args = dict(error_num=error_num)
         error_num = ERR_MISSING_ERROR
-    exc_type = ERR_EXCEPTION_TYPES[error_num // 1000]
     message = message_format.format(**args)
-    full_message = f"{ERR_PREFIX}-{error_num:04}: {message}"
-    raise exc_type(_Error(full_message)) from None
+    return f"{ERR_PREFIX}-{error_num:04}: {message}"
+
+
+def _raise_err(error_num: int, **args):
+    """
+    Raises a driver specific exception from the specified error number and
+    supplied arguments.
+    """
+    message = _get_error_text(error_num, **args)
+    exc_type = ERR_EXCEPTION_TYPES[error_num // 1000]
+    raise exc_type(_Error(message)) from None
 
 
 def _raise_from_string(exc_type: Exception, message: str) -> None:
@@ -90,6 +106,11 @@ ERR_NO_PASSWORD = 4001
 ERR_COLUMN_TRUNCATED = 4002
 ERR_ORACLE_NUMBER_NO_REPR = 4003
 ERR_INVALID_NUMBER = 4004
+
+# Oracle error number cross reference
+ERR_ORACLE_ERROR_XREF = {
+    1005: ERR_NO_PASSWORD
+}
 
 # error message exception types (multiples of 1000)
 ERR_EXCEPTION_TYPES = {

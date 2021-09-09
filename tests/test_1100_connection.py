@@ -126,7 +126,7 @@ class TestCase(test_env.BaseTestCase):
         "1105 - connection to database with bad connect string"
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4000:|^ORA-12154:",
                                oracledb.connect, test_env.get_main_user())
-        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4001:|^ORA-01005:",
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4001:",
                                oracledb.connect, test_env.get_main_user() + \
                                "@" + test_env.get_connect_string())
         self.assertRaisesRegex(oracledb.DatabaseError,
