@@ -76,8 +76,8 @@ cdef class ThinCursorImpl(BaseCursorImpl):
             self._perform_binds(conn)
         for bind_info in self._statement._bind_info_list:
             if bind_info._bind_var is None:
-                message = f"Bind value for: {bind_info._bind_name} missing."
-                errors._raise_from_string(exceptions.DatabaseError, message)
+                errors._raise_err(errors.ERR_MISSING_BIND_VALUE,
+                                  name=bind_info._bind_name)
 
     def execute(self, cursor):
         self._preprocess_execute(cursor.connection)
@@ -93,8 +93,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
 
     def get_array_dml_row_counts(self):
         if self._dmlrowcounts is None:
-            errors._raise_from_string(exceptions.DatabaseError,
-                                      "Array DML row counts not available")
+            errors._raise_err(errors.ERR_ARRAY_DML_ROW_COUNTS_NOT_ENABLED)
         return self._dmlrowcounts
 
     def get_batch_errors(self):

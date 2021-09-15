@@ -121,8 +121,8 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("truncate table TestTempTable")
         rows = [{"value": n} for n in (1, 2, 3, 2, 5)]
         statement = "insert into TestTempTable (IntCol) values (:value)"
-        self.assertRaises(oracledb.DatabaseError, self.cursor.executemany,
-                          statement, rows)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-00001:",
+                               self.cursor.executemany, statement, rows)
         self.assertEqual(self.cursor.rowcount, 3)
 
     def test_4009_executemany_with_invalid_parameters(self):

@@ -111,6 +111,6 @@ cdef int conversion_helper(ThinVarImpl output_var, FetchInfo fetch_info,
         else:
             output_var._conv_func = value
     except:
-        message = f"Cannot convert from type {fetch_info._dbtype.name} " \
-                  f"to {output_var.dbtype.name}"
-        errors._raise_from_string(exceptions.DatabaseError, message)
+        errors._raise_err(errors.ERR_INCONSISTENT_DATATYPES,
+                          input_type=fetch_info._dbtype.name,
+                          output_type=output_var.dbtype.name)

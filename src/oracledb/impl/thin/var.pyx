@@ -57,8 +57,7 @@ cdef class ThinVarImpl(BaseVarImpl):
             if normalized_name.startswith(":"):
                 normalized_name = normalized_name[1:]
             if normalized_name not in bind_info_dict:
-                message = f"Invalid named bind: {name}"
-                errors._raise_from_string(exceptions.DatabaseError, message)
+                errors._raise_err(errors.ERR_INVALID_BIND_NAME, name=name)
             var = var_list[name]
             for bind_info in bind_info_dict[normalized_name]:
                 stmt._set_var(bind_info, var, thin_cursor_impl)
@@ -68,9 +67,8 @@ cdef class ThinVarImpl(BaseVarImpl):
             num_binds = len(bind_info_list)
             num_vars = len(var_list)
             if len(bind_info_list) != len(var_list):
-                message = f"{num_binds} positional bind(s) required but " \
-                          f"only {num_vars} positional bind(s) provided."
-                errors._raise_from_string(exceptions.DatabaseError, message)
+                errors._raise_err(errors.ERR_WRONG_NUMBER_OF_POSITIONAL_BINDS,
+                                  expected_num=num_binds, actual_num=num_vars)
             idx = pos - 1
             bind_info = bind_info_list[idx]
             stmt._set_var(bind_info, var_list[idx], thin_cursor_impl)

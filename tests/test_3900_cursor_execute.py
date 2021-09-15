@@ -63,23 +63,24 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3907_bad_execute(self):
         "3907 - test that subsequent executes succeed after bad execute"
-        self.assertRaises(oracledb.DatabaseError,
-                          self.cursor.execute,
-                          "begin raise_application_error(-20000, 'this); end;")
+        sql = "begin raise_application_error(-20000, 'this); end;"
+        self.assertRaisesRegex(oracledb.DatabaseError,
+                               "^ORA-06550:|^ORA-01756:", self.cursor.execute,
+                               sql)
         self.cursor.execute("begin null; end;")
 
     def test_3908_fetch_after_bad_execute(self):
         "3908 - test that subsequent fetches fail after bad execute"
-        self.assertRaises(oracledb.DatabaseError,
-                          self.cursor.execute, "select y from dual")
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-00904:",
+                               self.cursor.execute, "select y from dual")
         self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1003:",
                                self.cursor.fetchall)
 
     def test_3909_execute_bind_names_with_incorrect_bind(self):
         "3909 - test executing a statement with an incorrect named bind"
         statement = "select * from TestStrings where IntCol = :value"
-        self.assertRaises(oracledb.DatabaseError, self.cursor.execute,
-                          statement, value2=3)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4008:|^ORA-01036:",
+                               self.cursor.execute, statement, value2=3)
 
     def test_3910_execute_with_named_binds(self):
         "3910 - test executing a statement with named binds"
@@ -92,8 +93,8 @@ class TestCase(test_env.BaseTestCase):
         "3911 - test executing a statement with an incorrect positional bind"
         statement = "select * from TestNumbers where IntCol = :value " + \
                     "and LongIntCol = :value2"
-        self.assertRaises(oracledb.DatabaseError, self.cursor.execute,
-                          statement, [3])
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4009:|^ORA-01008:",
+                               self.cursor.execute, statement, [3])
 
     def test_3912_execute_with_positional_binds(self):
         "3912 - test executing a statement with positional binds"
@@ -143,12 +144,13 @@ class TestCase(test_env.BaseTestCase):
         statement = "begin :value := :value2 + 5; end;"
         var = self.cursor.var(oracledb.NUMBER)
         var.setvalue(0, 5)
-        self.assertRaises(oracledb.DatabaseError, self.cursor.execute,
-                          statement)
-        self.assertRaises(oracledb.DatabaseError, self.cursor.execute,
-                          statement, value=var)
-        self.assertRaises(oracledb.DatabaseError, self.cursor.execute,
-                          statement, value=var, value2=var, value3=var)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4010:|^ORA-01008:",
+                               self.cursor.execute, statement)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4010:|^ORA-01008:",
+                               self.cursor.execute, statement, value=var)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4008:|^ORA-01036:",
+                               self.cursor.execute, statement, value=var,
+                               value2=var, value3=var)
 
     def test_3917_change_in_size_on_successive_bind(self):
         "3917 - change in size on subsequent binds does not use optimised path"

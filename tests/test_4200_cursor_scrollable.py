@@ -34,8 +34,8 @@ class TestCase(test_env.BaseTestCase):
                 select NumberCol
                 from TestNumbers
                 order by IntCol""")
-        self.assertRaises(oracledb.DatabaseError, cursor.scroll, 12,
-                          "absolute")
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPI-1027:",
+                               cursor.scroll, 12, "absolute")
 
     def test_4202_scroll_absolute_in_buffer(self):
         "4202 - test scrolling absolute (when in buffers)"
@@ -116,7 +116,8 @@ class TestCase(test_env.BaseTestCase):
                 select NumberCol
                 from TestNumbers
                 order by IntCol""")
-        self.assertRaises(oracledb.DatabaseError, cursor.scroll, 15)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPI-1027:",
+                               cursor.scroll, 15)
 
     def test_4208_scroll_relative_exception_before(self):
         "4208 - test scrolling relative yields exception (before result set)"
@@ -126,7 +127,8 @@ class TestCase(test_env.BaseTestCase):
                 select NumberCol
                 from TestNumbers
                 order by IntCol""")
-        self.assertRaises(oracledb.DatabaseError, cursor.scroll, -5)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPI-1027:",
+                               cursor.scroll, -5)
 
     def test_4209_scroll_relative_in_buffer(self):
         "4209 - test scrolling relative (when in buffers)"
@@ -170,8 +172,8 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(cursor.fetchall(), [])
         cursor.scroll(mode="first")
         self.assertEqual(cursor.fetchall(), [])
-        self.assertRaises(oracledb.DatabaseError, cursor.scroll, 1,
-                          mode="absolute")
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPI-1027:",
+                               cursor.scroll, 1, mode="absolute")
 
     def test_4212_scroll_differing_array_and_fetch_sizes(self):
         "4212 - test scrolling with differing array and fetch array sizes"

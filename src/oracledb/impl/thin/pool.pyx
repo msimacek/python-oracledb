@@ -219,9 +219,8 @@ cdef class ThinPoolImpl(BasePoolImpl):
             predicate = lambda: self._has_room(purity)
             self._num_pending_requests += 1
             if not self._condition.wait_for(predicate, wait_timeout):
-                message = "No connection available in pool"
                 self._num_pending_requests -= 1
-                errors._raise_from_string(exceptions.DatabaseError, message)
+                errors._raise_err(errors.ERR_POOL_NO_CONNECTION_AVAILABLE)
 
             # if an exception was raised while creating a connection, raise it
             # now (and clear it so subsequent attempts will try to create a

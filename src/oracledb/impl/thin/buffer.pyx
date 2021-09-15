@@ -305,8 +305,7 @@ cdef class ReadBuffer:
                 self._socket.shutdown(socket.SHUT_RDWR)
                 self._socket.close()
                 self._socket = None
-                errors._raise_from_string(exceptions.DatabaseError,
-                                          "server closed connection")
+                errors._raise_err(errors.ERR_SERVER_CLOSED_CONNECTION)
             self._bytes_to_process += bytes_read
 
         # determine the packet length and ensure that all of the bytes for the
@@ -927,11 +926,9 @@ cdef class WriteBuffer:
         # zero length string cannot be converted
         num_bytes_length = len(num_bytes)
         if num_bytes_length == 0:
-            errors._raise_from_string(exceptions.DatabaseError,
-                                      "invalid number (zero length string)")
+            errors._raise_err(errors.ERR_NUMBER_STRING_OF_ZERO_LENGTH)
         elif num_bytes_length > NUMBER_AS_TEXT_CHARS:
-            errors._raise_from_string(exceptions.DatabaseError,
-                                      "invalid number (too long)")
+            errors._raise_err(errors.ERR_NUMBER_STRING_TOO_LONG)
 
         # check to see if number is negative (first character is '-')
         ptr = num_bytes
@@ -979,12 +976,10 @@ cdef class WriteBuffer:
             exponent_pos = pos
             while pos < num_bytes_length:
                 if ptr[pos] < b'0' or ptr[pos] > b'9':
-                    msg = "invalid number (exponent invalid)"
-                    errors._raise_from_string(exceptions.DatabaseError, msg)
+                    errors._raise_err(errors.ERR_NUMBER_WITH_INVALID_EXPONENT)
                 pos += 1
             if exponent_pos == pos:
-                errors._raise_from_string(exceptions.DatabaseError,
-                                          "invalid number (exponent empty)")
+                errors._raise_err(errors.ERR_NUMBER_WITH_EMPTY_EXPONENT)
             exponent = <int16_t> int(ptr[exponent_pos:pos])
             if exponent_is_negative:
                 exponent = -exponent
@@ -993,8 +988,7 @@ cdef class WriteBuffer:
         # if there is anything left in the string, that indicates an invalid
         # number as well
         if pos < num_bytes_length:
-            msg = "invalid number (content after number)"
-            errors._raise_from_string(exceptions.DatabaseError, msg)
+            errors._raise_err(errors.ERR_CONTENT_INVALID_AFTER_NUMBER)
 
         # skip trailing zeros
         while num_digits > 0 and digits[num_digits - 1] == 0:

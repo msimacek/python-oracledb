@@ -371,9 +371,10 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3650_NUMBER_TO_DATE(self):
         "3650 outtypehandler conversion from number to date is invalid"
-        self.assertRaises(oracledb.DatabaseError, self.__test_type_handler,
-                          oracledb.DB_TYPE_NUMBER, oracledb.DB_TYPE_DATE, 3,
-                          3)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4007:|^ORA-00932:",
+                               self.__test_type_handler,
+                               oracledb.DB_TYPE_NUMBER, oracledb.DB_TYPE_DATE,
+                               3, 3)
 
     def test_3651_CLOB_TO_CHAR(self):
         "3651 outtypehandler from CLOB to CHAR"

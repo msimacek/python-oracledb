@@ -146,8 +146,7 @@ cdef class Statement:
         if var_impl.dbtype._ora_type_num == TNS_DATA_TYPE_CURSOR:
             for value in var_impl.values:
                 if value is not None and value._impl is cursor_impl:
-                    errors._raise_from_string(exceptions.DatabaseError,
-                                              "binding to self not supported")
+                    errors._raise_err(errors.ERR_SELF_BIND_NOT_SUPPORTED)
             self._requires_full_execute = True
         if var_impl.dbtype._ora_type_num != bind_info.ora_type_num \
                 or var_impl.size > bind_info.size \

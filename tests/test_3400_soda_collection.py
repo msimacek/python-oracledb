@@ -27,7 +27,8 @@ class TestCase(test_env.BaseTestCase):
         soda_db = self.connection.getSodaDatabase()
         coll = soda_db.createCollection("InvalidJSON")
         doc = soda_db.createDocument(invalid_json)
-        self.assertRaises(oracledb.DatabaseError, coll.insertOne, doc)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40780:",
+                               coll.insertOne, doc)
         coll.drop()
 
     def test_3401_insert_documents(self):
@@ -167,7 +168,8 @@ class TestCase(test_env.BaseTestCase):
         self.connection.commit()
         coll.dropIndex(index_name)
         coll.createIndex(index_spec)
-        self.assertRaises(oracledb.DatabaseError, coll.createIndex, index_spec)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40733:",
+                               coll.createIndex, index_spec)
         self.assertEqual(coll.dropIndex(index_name), True)
         self.assertEqual(coll.dropIndex(index_name), False)
         coll.drop()

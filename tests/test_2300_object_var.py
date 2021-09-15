@@ -354,8 +354,9 @@ class TestCase(test_env.BaseTestCase):
 
     def test_2308_invalid_type_object(self):
         "2308 - test trying to find an object type that does not exist"
-        self.assertRaises(oracledb.DatabaseError, self.connection.gettype,
-                          "A TYPE THAT DOES NOT EXIST")
+        self.assertRaisesRegex(oracledb.DatabaseError, "^OCI-22303",
+                               self.connection.gettype,
+                               "A TYPE THAT DOES NOT EXIST")
 
     def test_2309_appending_wrong_object_type(self):
         "2309 - test appending an object of the wrong type to a collection"
@@ -363,8 +364,8 @@ class TestCase(test_env.BaseTestCase):
         collection_obj = collection_obj_type.newobject()
         array_obj_type = self.connection.gettype("UDT_ARRAY")
         array_obj = array_obj_type.newobject()
-        self.assertRaises(oracledb.DatabaseError, collection_obj.append,
-                          array_obj)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPI-1056:",
+                               collection_obj.append, array_obj)
 
     def test_2310_referencing_sub_obj(self):
         "2310 - test that referencing a sub object affects the parent object"
@@ -401,8 +402,8 @@ class TestCase(test_env.BaseTestCase):
         obj = obj_type.newobject()
         wrong_obj_type = self.connection.gettype("UDT_OBJECTARRAY")
         wrong_obj = wrong_obj_type.newobject()
-        self.assertRaises(oracledb.DatabaseError, setattr, obj,
-                          "SUBOBJECTVALUE", wrong_obj)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPI-1056:", setattr,
+                               obj, "SUBOBJECTVALUE", wrong_obj)
 
     def test_2313_setting_var_wrong_object_type(self):
         "2313 - test setting value of object variable to wrong object type"

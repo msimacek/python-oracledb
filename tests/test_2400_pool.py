@@ -25,8 +25,8 @@ class TestCase(test_env.BaseTestCase):
     def __connect_and_generate_error(self):
         with self.pool.acquire() as connection:
             cursor = connection.cursor()
-            self.assertRaises(oracledb.DatabaseError, cursor.execute,
-                            "select 1 / 0 from dual")
+            self.assertRaisesRegex(oracledb.DatabaseError,"^ORA-01476:",
+                                   cursor.execute, "select 1 / 0 from dual")
 
     def __callable_session_callback(self, conn, requested_tag):
         self.session_called = True
@@ -154,8 +154,8 @@ class TestCase(test_env.BaseTestCase):
                                  getmode=oracledb.POOL_GETMODE_WAIT)
         self.assertEqual(pool.homogeneous, True,
                          "homogeneous should be True by default")
-        self.assertRaises(oracledb.DatabaseError, pool.acquire,
-                          user="missing_proxyuser")
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPI-1012:",
+                               pool.acquire, user="missing_proxyuser")
         pool = test_env.get_pool(min=2, max=8, increment=3,
                                  getmode=oracledb.POOL_GETMODE_WAIT,
                                  homogeneous=False)
@@ -299,9 +299,9 @@ class TestCase(test_env.BaseTestCase):
         pool = test_env.get_pool(min=2, max=8, increment=3,
                                  getmode=oracledb.POOL_GETMODE_WAIT,
                                  homogeneous=False)
-        self.assertRaises(oracledb.DatabaseError, pool.acquire,
-                          test_env.get_proxy_user(),
-                          "this is the wrong password")
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-01017:",
+                               pool.acquire, test_env.get_proxy_user(),
+                               "this is the wrong password")
 
     @unittest.skipIf(oracledb.defaults.thin,
                      "thin driver doesn't support tagging yet")
@@ -382,8 +382,8 @@ class TestCase(test_env.BaseTestCase):
         conn = pool.acquire()
         self.assertRaises(TypeError, pool.release, conn, tag=12345)
         if test_env.get_client_version() >= (12, 2):
-            self.assertRaises(oracledb.DatabaseError, pool.release, conn,
-                              tag="INVALID_TAG")
+            self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-24488:",
+                                   pool.release, conn, tag="INVALID_TAG")
 
     def test_2413_close_and_drop_connection_from_pool(self):
         "2413 - test dropping/closing a connection from the pool"
@@ -600,6 +600,16 @@ class TestCase(test_env.BaseTestCase):
                                  getmode=oracledb.POOL_GETMODE_WAIT)
         pool.close()
         self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1002:",
+                               pool.acquire)
+
+    def test_2425_pool_with_no_connections(self):
+        "2425 - using the pool beyond max limit raises an error"
+        pool = test_env.get_pool(min=1, max=2, increment=1,
+                                 getmode=oracledb.POOL_GETMODE_WAIT)
+        connection_1 = pool.acquire()
+        connection_2 = pool.acquire()
+        pool.getmode = oracledb.POOL_GETMODE_NOWAIT
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4005:",
                                pool.acquire)
 
 if __name__ == "__main__":

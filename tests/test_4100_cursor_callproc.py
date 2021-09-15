@@ -42,8 +42,9 @@ class TestCase(test_env.BaseTestCase):
         "4103 - test executing a stored procedure, repeated keyword arg"
         kwargs = dict(a_InValue="hi",
                       a_OutValue=self.cursor.var(oracledb.NUMBER))
-        self.assertRaises(oracledb.DatabaseError, self.cursor.callproc,
-                          "proc_Test", ("hi", 5), kwargs)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-06550:",
+                               self.cursor.callproc, "proc_Test", ("hi", 5),
+                               kwargs)
 
     def test_4104_callproc_no_args(self):
         "4104 - test executing a stored procedure without any arguments"
@@ -66,15 +67,18 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2007:",
                                self.cursor.callfunc, oracledb.NUMBER,
                                func_name, ("hi", 5))
-        self.assertRaises(oracledb.DatabaseError, self.cursor.callfunc,
-                          func_name, oracledb.NUMBER, ("hi", 5, 7))
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-06550:",
+                               self.cursor.callfunc, func_name,
+                               oracledb.NUMBER, ("hi", 5, 7))
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2012:",
                                self.cursor.callfunc, func_name,
                                oracledb.NUMBER, "hi", 7)
-        self.assertRaises(oracledb.DatabaseError, self.cursor.callfunc,
-                          func_name, oracledb.NUMBER, [5, "hi"])
-        self.assertRaises(oracledb.DatabaseError, self.cursor.callfunc,
-                          func_name, oracledb.NUMBER)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-06502:",
+                               self.cursor.callfunc, func_name,
+                               oracledb.NUMBER, [5, "hi"])
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-06550:",
+                               self.cursor.callfunc, func_name,
+                               oracledb.NUMBER)
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2012:",
                                self.cursor.callfunc, func_name,
                                oracledb.NUMBER, 5)

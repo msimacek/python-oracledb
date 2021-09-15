@@ -22,12 +22,12 @@ class TestCase(test_env.BaseTestCase):
         rows = [(1, "First"), (2, "Second")]
         sql = "insert into TestArrayDML (IntCol,StringCol) values (:1,:2)"
         self.cursor.executemany(sql, rows, arraydmlrowcounts=False)
-        self.assertRaises(oracledb.DatabaseError,
-                          self.cursor.getarraydmlrowcounts)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4006:",
+                               self.cursor.getarraydmlrowcounts)
         rows = [(3, "Third"), (4, "Fourth")]
         self.cursor.executemany(sql, rows)
-        self.assertRaises(oracledb.DatabaseError,
-                          self.cursor.getarraydmlrowcounts)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4006:",
+                               self.cursor.getarraydmlrowcounts)
 
     def test_3201_array_dml_row_counts_on(self):
         "3201 - test executing with arraydmlrowcounts mode enabled"
@@ -325,8 +325,9 @@ class TestCase(test_env.BaseTestCase):
             (4, "Fourth")
         ]
         sql = "insert into TestArrayDML (IntCol,StringCol) values (:1,:2)"
-        self.assertRaises(oracledb.DatabaseError, self.cursor.executemany,
-                          sql, rows, arraydmlrowcounts=True)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-00001:",
+                               self.cursor.executemany, sql, rows,
+                               arraydmlrowcounts=True)
         self.assertEqual(self.cursor.getarraydmlrowcounts(), [1, 1])
 
     def test_3218_executing_delete(self):

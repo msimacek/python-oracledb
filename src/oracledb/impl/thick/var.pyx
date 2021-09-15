@@ -30,6 +30,10 @@ cdef class ThickVarImpl(BaseVarImpl):
         self._check_handle(thick_cursor_impl._conn_impl)
         if self._is_value_set:
             self._transform_from_python(num_execs)
+        if self._native_type_num == DPI_NATIVE_TYPE_STMT:
+            for value in self.values:
+                if value is not None and value._impl is thick_cursor_impl:
+                    errors._raise_err(errors.ERR_SELF_BIND_NOT_SUPPORTED)
         if name is not None:
             name_bytes = name.encode()
             name_ptr = name_bytes

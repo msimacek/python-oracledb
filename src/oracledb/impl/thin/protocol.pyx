@@ -113,9 +113,7 @@ cdef class Protocol:
         # check if the protocol version supported by the database is high
         # enough; if not, reject the connection immediately
         if self._caps.protocol_version < TNS_VERSION_MIN_ACCEPTED:
-            message = "connections to this server version are not supported " \
-                      "with the thin driver"
-            errors._raise_from_string(exceptions.NotSupportedError, message)
+            errors._raise_err(errors.ERR_SERVER_VERSION_NOT_SUPPORTED)
 
         # if we can use OOB, send an urgent message now followed by a reset
         # marker to see if the server understands it

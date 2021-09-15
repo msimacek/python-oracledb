@@ -101,8 +101,8 @@ class TestCase(test_env.BaseTestCase):
         soda_db = self.connection.getSodaDatabase()
         self.assertRaises(TypeError, soda_db.createCollection)
         self.assertRaises(TypeError, soda_db.createCollection, 1)
-        self.assertRaises(oracledb.DatabaseError, soda_db.createCollection,
-                          None)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40658:",
+                               soda_db.createCollection, None)
         self.assertRaises(TypeError, soda_db.getCollectionNames, 1)
 
 if __name__ == "__main__":

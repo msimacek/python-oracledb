@@ -52,8 +52,8 @@ class TestCase(test_env.BaseTestCase):
                     open :pcursor for
                         select 1 from dual;
                 end;"""
-        self.assertRaises(oracledb.DatabaseError, cursor.execute, sql,
-                          pcursor=cursor)
+        self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3009:",
+                               cursor.execute, sql, pcursor=cursor)
 
     def test_1303_execute_after_close(self):
         "1303 - test returning a ref cursor after closing it"

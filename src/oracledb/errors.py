@@ -93,6 +93,7 @@ ERR_KEYWORD_ARGS_MUST_BE_DICT = 2013
 ERR_DUPLICATED_PARAMETER = 2014
 ERR_EXPECTING_VAR = 2015
 ERR_INCORRECT_VAR_ARRAYSIZE = 2016
+ERR_LIBRARY_ALREADY_INITIALIZED = 2017
 
 # error numbers that result in NotSupportedError
 ERR_TIME_NOT_SUPPORTED = 3000
@@ -104,6 +105,8 @@ ERR_ARRAYS_OF_ARRAYS = 3005
 ERR_ORACLE_TYPE_NOT_SUPPORTED = 3006
 ERR_DB_TYPE_NOT_SUPPORTED = 3007
 ERR_UNSUPPORTED_INBAND_NOTIFICATION = 3008
+ERR_SELF_BIND_NOT_SUPPORTED = 3009
+ERR_SERVER_VERSION_NOT_SUPPORTED = 3010
 
 # error numbers that result in DatabaseError
 ERR_TNS_ENTRY_NOT_FOUND = 4000
@@ -111,11 +114,26 @@ ERR_NO_PASSWORD = 4001
 ERR_COLUMN_TRUNCATED = 4002
 ERR_ORACLE_NUMBER_NO_REPR = 4003
 ERR_INVALID_NUMBER = 4004
+ERR_POOL_NO_CONNECTION_AVAILABLE = 4005
+ERR_ARRAY_DML_ROW_COUNTS_NOT_ENABLED = 4006
+ERR_INCONSISTENT_DATATYPES = 4007
+ERR_INVALID_BIND_NAME = 4008
+ERR_WRONG_NUMBER_OF_POSITIONAL_BINDS = 4009
+ERR_MISSING_BIND_VALUE = 4010
+ERR_SERVER_CLOSED_CONNECTION = 4011
+ERR_NUMBER_WITH_INVALID_EXPONENT = 4012
+ERR_NUMBER_STRING_OF_ZERO_LENGTH = 4013
+ERR_NUMBER_STRING_TOO_LONG = 4014
+ERR_NUMBER_WITH_EMPTY_EXPONENT = 4015
+ERR_CONTENT_INVALID_AFTER_NUMBER = 4016
 
 # Oracle error number cross reference
 ERR_ORACLE_ERROR_XREF = {
     1005: ERR_NO_PASSWORD,
     24422: ERR_POOL_HAS_BUSY_CONNECTIONS,
+    24349: ERR_ARRAY_DML_ROW_COUNTS_NOT_ENABLED,
+    24459: ERR_POOL_NO_CONNECTION_AVAILABLE,
+    24496: ERR_POOL_NO_CONNECTION_AVAILABLE,
 }
 
 # ODPI-C error number cross reference
@@ -137,9 +155,12 @@ ERR_MESSAGE_FORMATS = {
     ERR_ARGS_MUST_BE_LIST_OR_TUPLE: "arguments must be a list or tuple",
     ERR_ARGS_AND_KEYWORD_ARGS: \
             "expecting arguments or keyword arguments, not both",
+    ERR_ARRAY_DML_ROW_COUNTS_NOT_ENABLED: \
+            "array DML row counts is not enabled",
     ERR_ARRAYS_OF_ARRAYS: "arrays of arrays are not supported",
     ERR_COLUMN_TRUNCATED: "column truncated to {col_value_len} {unit} " \
             "(actual is {actual_len})",
+    ERR_CONTENT_INVALID_AFTER_NUMBER: "invalid number (content after number)",
     ERR_DB_TYPE_NOT_SUPPORTED: "Database type {name} not supported",
     ERR_DUPLICATED_PARAMETER: \
             "{deprecated_name} and {new_name} cannot both be specified",
@@ -148,12 +169,18 @@ ERR_MESSAGE_FORMATS = {
                        "returned by a call to cursor.var()",
     ERR_FEATURE_NOT_SUPPORTED: \
             "{feature} is only supported by the {driver_type} driver",
+    ERR_INCONSISTENT_DATATYPES: \
+            "cannot convert from type {input_type} to {output_type}",
     ERR_INCORRECT_VAR_ARRAYSIZE: "variable array size of {var_arraysize} is " \
                                  "too small (should be at least " \
                                  "{required_arraysize})",
+    ERR_INVALID_BIND_NAME: "invalid named bind: {name}",
     ERR_INVALID_NUMBER: "invalid number",
     ERR_KEYWORD_ARGS_MUST_BE_DICT: "keyword arguments must be a dict",
+    ERR_LIBRARY_ALREADY_INITIALIZED: \
+            "Oracle Client library has already been initialized",
     ERR_MESSAGE_HAS_NO_PAYLOAD: "message has no payload",
+    ERR_MISSING_BIND_VALUE: "bind value for: {name} missing",
     ERR_MIXED_ELEMENT_TYPES: \
             "element {element} is not the same type as previous elements",
     ERR_MIXED_POSITIONAL_AND_NAMED_BINDS: \
@@ -165,14 +192,26 @@ ERR_MESSAGE_FORMATS = {
     ERR_NOT_A_QUERY: "not a query",
     ERR_NOT_CONNECTED: "not connected",
     ERR_NOT_OPEN: "not open",
+    ERR_NUMBER_STRING_OF_ZERO_LENGTH: "invalid number (zero length string)",
+    ERR_NUMBER_STRING_TOO_LONG: "invalid number (too long)",
+    ERR_NUMBER_WITH_EMPTY_EXPONENT: "invalid number (exponent empty)",
+    ERR_NUMBER_WITH_INVALID_EXPONENT: "invalid number (exponent invalid)",
     ERR_ORACLE_NUMBER_NO_REPR: "value cannot be represented as an Oracle " \
                                "number",
     ERR_ORACLE_TYPE_NOT_SUPPORTED: "Oracle type {num} not supported",
     ERR_POOL_HAS_BUSY_CONNECTIONS: \
             "pool cannot be destroyed because it has busy connections",
+    ERR_POOL_NO_CONNECTION_AVAILABLE: \
+            "timed out waiting for pool to have free connections available " \
+            "or create new connections",
     ERR_PYTHON_TYPE_NOT_SUPPORTED: "Python type {typ} not supported",
     ERR_PYTHON_VALUE_NOT_SUPPORTED: \
             "Python value of type {type_name} not supported",
+    ERR_SELF_BIND_NOT_SUPPORTED: "binding to self not supported",
+    ERR_SERVER_CLOSED_CONNECTION: "server closed connection",
+    ERR_SERVER_VERSION_NOT_SUPPORTED: \
+            "connections to this server version are not supported with " \
+            "the thin driver",
     ERR_SET_ROWID_DIRECTLY: "rowid variables cannot be set directly",
     ERR_TIME_NOT_SUPPORTED: "Oracle does not support time only variables",
     ERR_TNS_ENTRY_NOT_FOUND: "unable to find TNS entry name {val}",
@@ -186,6 +225,9 @@ ERR_MESSAGE_FORMATS = {
             "parameters should be a list of sequences or " \
             "dictionaries, or an integer specifying the number of " \
             "times to execute the statement",
+    ERR_WRONG_NUMBER_OF_POSITIONAL_BINDS: \
+            "{expected_num} positional bind(s) required but only " \
+            "{actual_num} positional bind(s) provided.",
     ERR_WRONG_OBJECT_TYPE: \
             "found object of type {actual_schema}.{actual_name} " \
             "when expecting object of type {expected_schema}.{expected_name}",
