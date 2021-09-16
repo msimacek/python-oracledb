@@ -107,6 +107,8 @@ cdef class ThickCursorImpl(BaseCursorImpl):
                                   query_info.typeInfo.scale)
             if result is not None:
                 self._verify_var(result)
+                var_impl = <BaseVarImpl> result._impl
+                var_impl.name = name
                 return result
         type_info = &query_info.typeInfo
         if type_info.objectType != NULL:

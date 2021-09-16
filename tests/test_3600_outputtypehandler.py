@@ -498,11 +498,24 @@ class TestCase(test_env.BaseTestCase):
                                cursor.execute, "select :1 from dual", [5])
 
     def test_3673_NUMBER_to_DECIMAL(self):
-        "3614 outtypehandler conversion from number to decimal.Decimal"
+        "3673 outtypehandler conversion from number to decimal.Decimal"
         self.__test_type_handler(oracledb.DB_TYPE_NUMBER, decimal.Decimal,
                                  31.5, decimal.Decimal("31.5"))
         self.__test_type_handler(oracledb.DB_TYPE_NUMBER, decimal.Decimal, 0,
                                  decimal.Decimal("0"))
+
+    def test_3674_cursor_description_unchanged(self):
+        "3674 - use of output type handler does not affect variable name"
+        def type_handler(cursor, name, default_type, size,
+                         precision, scale):
+            return cursor.var(str, arraysize=cursor.arraysize)
+        with self.connection.cursor() as cursor:
+            cursor.execute("select user from dual")
+            name_before = cursor.description[0][0]
+        with self.connection.cursor() as cursor:
+            cursor.outputtypehandler = type_handler
+            cursor.execute("select user from dual")
+            self.assertEqual(cursor.description[0][0], name_before)
 
 if __name__ == "__main__":
     test_env.run_test_cases()
