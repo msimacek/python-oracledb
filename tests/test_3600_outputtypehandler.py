@@ -18,8 +18,7 @@ class TestCase(test_env.BaseTestCase):
 
     def __test_type_handler(self, input_type, output_type, in_value,
                             expected_out_value):
-        def type_handler(cursor, name, default_type, size,
-                            precision, scale):
+        def type_handler(cursor, name, default_type, size, precision, scale):
             return cursor.var(output_type, arraysize=cursor.arraysize)
         self.cursor.outputtypehandler = type_handler
         var = self.cursor.var(input_type)
@@ -30,8 +29,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(fetched_value, expected_out_value)
 
     def __test_type_handler_blob(self, output_type):
-        def type_handler(cursor, name, default_type, size,
-                            precision, scale):
+        def type_handler(cursor, name, default_type, size, precision, scale):
             if default_type == oracledb.DB_TYPE_BLOB:
                 return cursor.var(output_type, arraysize=cursor.arraysize)
         self.cursor.outputtypehandler = type_handler
@@ -44,8 +42,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(self.cursor.fetchone(), (in_value, 1, in_value))
 
     def __test_type_handler_clob(self, output_type):
-        def type_handler(cursor, name, default_type, size,
-                            precision, scale):
+        def type_handler(cursor, name, default_type, size, precision, scale):
             if default_type == oracledb.DB_TYPE_CLOB:
                 return cursor.var(output_type, arraysize=cursor.arraysize)
         self.cursor.outputtypehandler = type_handler
@@ -58,8 +55,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(self.cursor.fetchone(), (in_value, 1, in_value))
 
     def __test_type_handler_nclob(self, output_type):
-        def type_handler(cursor, name, default_type, size,
-                            precision, scale):
+        def type_handler(cursor, name, default_type, size, precision, scale):
             if default_type == oracledb.DB_TYPE_NCLOB:
                 return cursor.var(output_type, arraysize=cursor.arraysize)
         self.cursor.outputtypehandler = type_handler
@@ -80,97 +76,97 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute(stmt)
 
     def test_3600_VARCHAR_to_NUMBER(self):
-        "3600 - outtypehandler conversion from varchar to number"
+        "3600 - output type handler conversion from varchar to number"
         self.__test_type_handler(oracledb.DB_TYPE_VARCHAR,
                                  oracledb.DB_TYPE_NUMBER, "31.5", 31.5)
 
     def test_3601_CHAR_to_NUMBER(self):
-        "3601 - outtypehandler conversion from char to number"
+        "3601 - output type handler conversion from char to number"
         self.__test_type_handler(oracledb.DB_TYPE_CHAR,
                                  oracledb.DB_TYPE_NUMBER, "31.5", 31.5)
 
     def test_3602_LONG_to_NUMBER(self):
-        "3602 - outtypehandler conversion from long to number"
+        "3602 - output type handler conversion from long to number"
         self.__test_type_handler(oracledb.DB_TYPE_LONG,
                                  oracledb.DB_TYPE_NUMBER, "31.5", 31.5)
 
     def test_3603_BINT_to_NUMBER(self):
-        "3603 -test outtypehandler conversion from bint to number"
+        "3603 - test output type handler conversion from integer to number"
         self.__test_type_handler(oracledb.DB_TYPE_BINARY_INTEGER,
                                  oracledb.DB_TYPE_NUMBER, 31, 31)
 
     def test_3604_VARCHAR_to_BINT(self):
-        "3604 outtypehandler conversion from varchar to bint"
+        "3604 - output type handler conversion from varchar to integer"
         self.__test_type_handler(oracledb.DB_TYPE_VARCHAR,
                                  oracledb.DB_TYPE_BINARY_INTEGER, "31.5", 31)
 
     def test_3605_CHAR_to_BINT(self):
-        "3605 outtypehandler conversion from char to bint"
+        "3605 - output type handler conversion from char to integer"
         self.__test_type_handler(oracledb.DB_TYPE_CHAR,
                                  oracledb.DB_TYPE_BINARY_INTEGER, "31.5", 31)
 
     def test_3606_LONG_to_BINT(self):
-        "3606 outtypehandler conversion from long to bint"
+        "3606 - output type handler conversion from long to integer"
         self.__test_type_handler(oracledb.DB_TYPE_LONG,
                                  oracledb.DB_TYPE_BINARY_INTEGER, "31.5", 31)
 
     def test_3607_NUMBER_to_BINT(self):
-        "3607 outtypehandler conversion from number to bint"
+        "3607 - output type handler conversion from number to integer"
         self.__test_type_handler(oracledb.DB_TYPE_NUMBER,
                                  oracledb.DB_TYPE_BINARY_INTEGER, 31.5, 31)
 
     def test_3608_BINARY_DOUBLE_to_BINT(self):
-        "3608 outtypehandler conversion from binary double to bint"
+        "3608 - output type handler conversion from double to integer"
         self.__test_type_handler(oracledb.DB_TYPE_BINARY_DOUBLE,
                                  oracledb.DB_TYPE_BINARY_INTEGER, 31.5, 31)
 
     def test_3609_BINARY_FLOAT_to_BINT(self):
-        "3609 outtypehandler conversion from varchar to bint"
+        "3609 - output type handler conversion from varchar to integer"
         self.__test_type_handler(oracledb.DB_TYPE_BINARY_FLOAT,
                                  oracledb.DB_TYPE_BINARY_INTEGER, 31.5, 31)
 
     def test_3610_DATE_to_VARCHAR(self):
-        "3610 outtypehandler conversion from date to varchar"
+        "3610 - output type handler conversion from date to varchar"
         in_val = datetime.date(2021, 2, 1)
         out_val = "2021-02-01 00:00:00"
         self.__test_type_handler(oracledb.DB_TYPE_DATE,
                                  oracledb.DB_TYPE_VARCHAR, in_val, out_val)
 
     def test_3611_DATE_to_CHAR(self):
-        "3611 outtypehandler conversion from date to char"
+        "3611 - output type handler conversion from date to char"
         in_val = datetime.date(2021, 2, 1)
         out_val = "2021-02-01 00:00:00"
         self.__test_type_handler(oracledb.DB_TYPE_DATE,
                                  oracledb.DB_TYPE_CHAR, in_val, out_val)
 
     def test_3612_DATE_to_LONG(self):
-        "3612 outtypehandler conversion from date to long"
+        "3612 - output type handler conversion from date to long"
         in_val = datetime.date(2021, 2, 1)
         out_val = "2021-02-01 00:00:00"
         self.__test_type_handler(oracledb.DB_TYPE_DATE,
                                  oracledb.DB_TYPE_LONG, in_val , out_val)
 
     def test_3613_NUMBER_to_VARCHAR(self):
-        "3613 outtypehandler conversion from number to varchar"
+        "3613 - output type handler conversion from number to varchar"
         self.__test_type_handler(oracledb.DB_TYPE_NUMBER,
                                  oracledb.DB_TYPE_VARCHAR, 31.5, "31.5")
         self.__test_type_handler(oracledb.DB_TYPE_NUMBER,
                                  oracledb.DB_TYPE_VARCHAR, 0, "0")
 
     def test_3614_NUMBER_to_CHAR(self):
-        "3614 outtypehandler conversion from number to char"
+        "3614 - output type handler conversion from number to char"
         self.__test_type_handler(oracledb.DB_TYPE_NUMBER,
                                  oracledb.DB_TYPE_CHAR, 31.5, "31.5")
         self.__test_type_handler(oracledb.DB_TYPE_NUMBER,
                                  oracledb.DB_TYPE_CHAR, 0, "0")
 
     def test_3615_NUMBER_to_LONG(self):
-        "3615 outtypehandler conversion from number to long"
+        "3615 - output type handler conversion from number to long"
         self.__test_type_handler(oracledb.DB_TYPE_NUMBER,
                                  oracledb.DB_TYPE_LONG, 31.5, "31.5")
 
     def test_3616_INTERVAL_to_VARCHAR(self):
-        "3616 outtypehandler conversion from interval to varchar"
+        "3616 - output type handler conversion from interval to varchar"
         in_val = datetime.timedelta(days=-1, seconds=86314,
                                     microseconds=431152)
         if oracledb.defaults.thin:
@@ -181,7 +177,7 @@ class TestCase(test_env.BaseTestCase):
                                  oracledb.DB_TYPE_VARCHAR, in_val, out_val)
 
     def test_3617_INTERVAL_to_CHAR(self):
-        "3617 outtypehandler conversion from interval to char"
+        "3617 - output type handler conversion from interval to char"
         in_val = datetime.timedelta(days=-1, seconds=86314,
                                     microseconds=431152)
         if oracledb.defaults.thin:
@@ -192,7 +188,7 @@ class TestCase(test_env.BaseTestCase):
                                  oracledb.DB_TYPE_CHAR, in_val, out_val)
 
     def test_3618_INTERVAL_to_LONG(self):
-        "3618 outtypehandler conversion from interval to long"
+        "3618 - output type handler conversion from interval to long"
         in_val = datetime.timedelta(days=-1, seconds=86314,
                                     microseconds=431152)
         if oracledb.defaults.thin:
@@ -203,281 +199,281 @@ class TestCase(test_env.BaseTestCase):
                                  oracledb.DB_TYPE_LONG, in_val, out_val)
 
     def test_3619_TIMESTAMP_to_VARCHAR(self):
-        "3619 outtypehandler conversion from timestamp to varchar"
+        "3619 - output type handler conversion from timestamp to varchar"
         in_val = datetime.datetime(2002, 12, 17, 1, 2, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP,
                                  oracledb.DB_TYPE_VARCHAR, in_val, str(in_val))
 
     def test_3620_TIMESTAMP_to_CHAR(self):
-        "3620 outtypehandler conversion from timestamp to char"
+        "3620 - output type handler conversion from timestamp to char"
         in_val = datetime.datetime(2002, 12, 17, 1, 2, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP,
                                  oracledb.DB_TYPE_CHAR, in_val, str(in_val))
 
     def test_3621_TIMESTAMP_to_LONG(self):
-        "3621 outtypehandler conversion from timestamp to long"
+        "3621 - output type handler conversion from timestamp to long"
         in_val = datetime.datetime(2002, 12, 17, 1, 2, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP,
                                  oracledb.DB_TYPE_LONG, in_val, str(in_val))
 
     def test_3622_TIMESTAMP_TZ_to_VARCHAR(self):
-        "3622 outtypehandler conversion from timestamptz to varchar"
+        "3622 - output type handler conversion from timestamptz to varchar"
         in_val = datetime.datetime(2002, 12, 17, 1, 2, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP_TZ,
                                  oracledb.DB_TYPE_VARCHAR, in_val, str(in_val))
 
     def test_3623_TIMESTAMP_TZ_to_CHAR(self):
-        "3623 outtypehandler conversion from timestamptz to char"
+        "3623 - output type handler conversion from timestamptz to char"
         in_val = datetime.datetime(2002, 12, 17, 1, 2, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP_TZ,
                                  oracledb.DB_TYPE_CHAR, in_val, str(in_val))
 
     def test_3624_TIMESTAMP_TZ_to_LONG(self):
-        "3624 outtypehandler conversion from timestamptz to long"
+        "3624 - output type handler conversion from timestamptz to long"
         in_val = datetime.datetime(2002, 12, 17, 1, 2, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP_TZ,
                                  oracledb.DB_TYPE_LONG, in_val, str(in_val))
 
     def test_3625_TIMESTAMP_LTZ_to_VARCHAR(self):
-        "3625 outtypehandler conversion from timestampltz to varchar"
+        "3625 - output type handler conversion from timestampltz to varchar"
         in_val = datetime.datetime(2002, 12, 17, 1, 2, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP_LTZ,
                                  oracledb.DB_TYPE_VARCHAR, in_val, str(in_val))
 
     def test_3626_TIMESTAMP_LTZ_to_CHAR(self):
-        "3626 outtypehandler conversion from timestamp_ltz to char"
+        "3626 - output type handler conversion from timestamp_ltz to char"
         in_val = datetime.datetime(2002, 12, 17, 1, 2, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP_LTZ,
                                  oracledb.DB_TYPE_CHAR, in_val, str(in_val))
 
     def test_3627_TIMESTAMP_LTZ_to_LONG(self):
-        "3627 outtypehandler conversion from timestamp_LTZ to long"
+        "3627 - output type handler conversion from timestamp_LTZ to long"
         in_val = datetime.datetime(2002, 12, 17, 1, 2, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP_LTZ,
                                  oracledb.DB_TYPE_LONG, in_val, str(in_val))
 
     def test_3628_BINT_to_VARCHAR(self):
-        "3628 outtypehandler conversion from bint to varchar"
+        "3628 - output type handler conversion from integer to varchar"
         self.__test_type_handler(oracledb.DB_TYPE_BINARY_INTEGER,
                                  oracledb.DB_TYPE_VARCHAR, 31, "31")
 
     def test_3629_BINT_to_CHAR(self):
-        "3629 outtypehandler conversion from bint to char"
+        "3629 - output type handler conversion from integer to char"
         self.__test_type_handler(oracledb.DB_TYPE_BINARY_INTEGER,
                                  oracledb.DB_TYPE_CHAR, 31, "31")
 
     def test_3630_BINT_to_LONG(self):
-        "3630 outtypehandler conversion from bint to long"
+        "3630 - output type handler conversion from integer to long"
         self.__test_type_handler(oracledb.DB_TYPE_BINARY_INTEGER,
                                  oracledb.DB_TYPE_LONG, 31, "31")
 
     def test_3631_NUMBER_to_BINARY_DOUBLE(self):
-        "3631 outtypehandler conversion from number to binary double"
+        "3631 - output type handler conversion from number to double"
         self.__test_type_handler(oracledb.DB_TYPE_NUMBER,
                                  oracledb.DB_TYPE_BINARY_DOUBLE, 31.5, 31.5)
 
     def test_3632_BINARY_FLOAT_to_BINARY_DOUBLE(self):
-        "3632 outtypehandler conversion from binary float to binary double"
+        "3632 - output type handler conversion from float to double"
         self.__test_type_handler(oracledb.DB_TYPE_BINARY_FLOAT,
                                  oracledb.DB_TYPE_BINARY_DOUBLE, 31.5, 31.5)
 
     def test_3633_VARCHAR_to_BINARY_DOUBLE(self):
-        "3633 outtypehandler conversion from varchar to binary double"
+        "3633 - output type handler conversion from varchar to double"
         self.__test_type_handler(oracledb.DB_TYPE_VARCHAR,
                                  oracledb.DB_TYPE_BINARY_DOUBLE, "31.5", 31.5)
 
     def test_3634_CHAR_to_BINARY_DOUBLE(self):
-        "3634 outtypehandler conversion from char to binary double"
+        "3634 - output type handler conversion from char to double"
         self.__test_type_handler(oracledb.DB_TYPE_CHAR,
                                  oracledb.DB_TYPE_BINARY_DOUBLE, "31.5", 31.5)
 
     def test_3635_LONG_to_BINARY_DOUBLE(self):
-        "3635 outtypehandler conversion from long to binary double"
+        "3635 - output type handler conversion from long to double"
         self.__test_type_handler(oracledb.DB_TYPE_LONG,
                                  oracledb.DB_TYPE_BINARY_DOUBLE, "31.5", 31.5)
 
     def test_3636_NUMBER_to_BINARY_FLOAT(self):
-        "3636 outtypehandler conversion from number to binary float"
+        "3636 - output type handler conversion from number to binary float"
         self.__test_type_handler(oracledb.DB_TYPE_NUMBER,
                                  oracledb.DB_TYPE_BINARY_FLOAT, 31.5, 31.5)
 
     def test_3637_BINARY_DOUBLE_to_BINARY_FLOAT(self):
-        "3637 outtypehandler conversion from binary double to binary float"
+        "3637 - output type handler conversion from double to float"
         self.__test_type_handler(oracledb.DB_TYPE_BINARY_DOUBLE,
                                  oracledb.DB_TYPE_BINARY_FLOAT, 31.5, 31.5)
 
     def test_3638_VARCHAR_to_BINARY_FLOAT(self):
-        "3638 outtypehandler conversion from varchar to binary float"
+        "3638 - output type handler conversion from varchar to binary float"
         self.__test_type_handler(oracledb.DB_TYPE_VARCHAR,
                                  oracledb.DB_TYPE_BINARY_FLOAT, "31.5", 31.5)
 
     def test_3639_CHAR_to_BINARY_FLOAT(self):
-        "3639 outtypehandler conversion from char to binary float"
+        "3639 - output type handler conversion from char to binary float"
         self.__test_type_handler(oracledb.DB_TYPE_CHAR,
                                  oracledb.DB_TYPE_BINARY_FLOAT, "31.5", 31.5)
 
     def test_3640_LONG_to_BINARY_FLOAT(self):
-        "3640 outtypehandler conversion from varchar to binary float"
+        "3640 - output type handler conversion from varchar to binary float"
         self.__test_type_handler(oracledb.DB_TYPE_LONG,
                                  oracledb.DB_TYPE_BINARY_FLOAT, "31.5", 31.5)
 
     def test_3641_VARCHAR_to_CHAR(self):
-        "3641 outtypehandler from varchar to char"
+        "3641 - output type handler from varchar to char"
         self.__test_type_handler(oracledb.DB_TYPE_VARCHAR,
                                  oracledb.DB_TYPE_CHAR, "31.5", "31.5")
 
     def test_3642_VARCHAR_to_LONG(self):
-        "3642 outtypehandler from varchar to long"
+        "3642 - output type handler from varchar to long"
         self.__test_type_handler(oracledb.DB_TYPE_VARCHAR,
                                  oracledb.DB_TYPE_LONG, "31.5", "31.5")
 
     def test_3643_LONG_to_VARCHAR(self):
-        "3643 outtypehandler from long to varchar"
+        "3643 - output type handler from long to varchar"
         self.__test_type_handler(oracledb.DB_TYPE_LONG,
                                  oracledb.DB_TYPE_VARCHAR, "31.5", "31.5")
 
     def test_3644_LONG_to_CHAR(self):
-        "3644 outtypehandler from long to varhcar"
+        "3644 - output type handler from long to varhcar"
         self.__test_type_handler(oracledb.DB_TYPE_LONG,
                                  oracledb.DB_TYPE_CHAR, "31.5", "31.5")
 
     def test_3645_CHAR_to_VARCHAR(self):
-        "3645 outtypehandler from char to varchar"
+        "3645 - output type handler from char to varchar"
         self.__test_type_handler(oracledb.DB_TYPE_CHAR,
                                  oracledb.DB_TYPE_VARCHAR, "31.5", "31.5")
 
     def test_3646_CHAR_to_LONG(self):
-        "3646 outtypehandler from char to long"
+        "3646 - output type handler from char to long"
         self.__test_type_handler(oracledb.DB_TYPE_CHAR,
                                  oracledb.DB_TYPE_LONG, "31.5", "31.5")
 
     def test_3647_TIMESTAMP_to_TIMESTAMP_TZ(self):
-        "3647 outtypehandler from timestamp to timestamptz"
+        "3647 - output type handler from timestamp to timestamptz"
         val = datetime.datetime(2002, 12, 17, 0, 0, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP,
                                  oracledb.DB_TYPE_TIMESTAMP_LTZ, val, val)
 
     def test_3648_TIMESTAMP_to_TIMESTAMP_LTZ(self):
-        "3648 outtypehandler from timestamp to timestampltz"
+        "3648 - output type handler from timestamp to timestampltz"
         val = datetime.datetime(2002, 12, 17, 0, 0, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP,
                                  oracledb.DB_TYPE_TIMESTAMP_LTZ, val, val)
 
     def test_3649_TIMESTAMP_TZ_to_TIMESTAMP(self):
-        "3649 outtypehandler from timestamptz to timestamp"
+        "3649 - output type handler from timestamptz to timestamp"
         val = datetime.datetime(2002, 12, 17, 0, 0, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP_TZ,
                                  oracledb.DB_TYPE_TIMESTAMP, val, val)
 
     def test_3650_NUMBER_TO_DATE(self):
-        "3650 outtypehandler conversion from number to date is invalid"
+        "3650 - output type handler conversion from number to date is invalid"
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4007:|^ORA-00932:",
                                self.__test_type_handler,
                                oracledb.DB_TYPE_NUMBER, oracledb.DB_TYPE_DATE,
                                3, 3)
 
     def test_3651_CLOB_TO_CHAR(self):
-        "3651 outtypehandler from CLOB to CHAR"
+        "3651 - output type handler from CLOB to CHAR"
         val = "Some Clob String"
         self.__test_type_handler(oracledb.DB_TYPE_CLOB,
                                  oracledb.DB_TYPE_CHAR, val, val)
 
     def test_3652_CLOB_TO_VARCHAR(self):
-        "3652 outtypehandler from CLOB to VARCHAR"
+        "3652 - output type handler from CLOB to VARCHAR"
         val = "Some Clob String"
         self.__test_type_handler(oracledb.DB_TYPE_CLOB,
                                  oracledb.DB_TYPE_VARCHAR, val, val)
 
     def test_3653_CLOB_TO_LONG(self):
-        "3653 outtypehandler from CLOB to LONG"
+        "3653 - output type handler from CLOB to LONG"
         val = "Some Clob String"
         self.__test_type_handler(oracledb.DB_TYPE_CLOB,
                                  oracledb.DB_TYPE_LONG, val, val)
 
     def test_3654_BLOB_TO_RAW(self):
-        "3654 outtypehandler from BLOB to RAW"
+        "3654 - output type handler from BLOB to RAW"
         val = b"Some binary data"
         self.__test_type_handler(oracledb.DB_TYPE_BLOB,
                                  oracledb.DB_TYPE_RAW, val, val)
 
     def test_3655_BLOB_TO_LONG_RAW(self):
-        "3655 outtypehandler from BLOB to LONGRAW"
+        "3655 - output type handler from BLOB to LONGRAW"
         val = b"Some binary data"
         self.__test_type_handler(oracledb.DB_TYPE_BLOB,
                                  oracledb.DB_TYPE_LONG_RAW, val, val)
 
     def test_3656_BLOB_TO_LONG_RAW(self):
-        "3656 outtypehandler from permanant BLOBs to LONG_RAW"
+        "3656 - output type handler from permanant BLOBs to LONG_RAW"
         self.__test_type_handler_blob(oracledb.DB_TYPE_LONG_RAW)
 
     def test_3657_BLOB_TO_RAW(self):
-        "3657 outtypehandler from permanant BLOBs to RAW"
+        "3657 - output type handler from permanant BLOBs to RAW"
         self.__test_type_handler_blob(oracledb.DB_TYPE_RAW)
 
     def test_3658_CLOB_TO_VARCHAR(self):
-        "3658 outtypehandler from permanant CLOBs to VARCHAR"
+        "3658 - output type handler from permanant CLOBs to VARCHAR"
         self.__test_type_handler_clob(oracledb.DB_TYPE_VARCHAR)
 
     def test_3659_CLOB_TO_CHAR(self):
-        "3659 outtypehandler from permanant CLOBs to CHAR"
+        "3659 - output type handler from permanant CLOBs to CHAR"
         self.__test_type_handler_clob(oracledb.DB_TYPE_CHAR)
 
     def test_3660_CLOB_TO_LONG(self):
-        "3660 outtypehandler from permanant CLOBs to LONG"
+        "3660 - output type handler from permanant CLOBs to LONG"
         self.__test_type_handler_clob(oracledb.DB_TYPE_LONG)
 
     def test_3661_NCLOB_TO_CHAR(self):
-        "3661 outtypehandler from NCLOB to CHAR"
+        "3661 - output type handler from NCLOB to CHAR"
         val = "Some nclob data"
         self.__test_type_handler(oracledb.DB_TYPE_NCLOB,
                                  oracledb.DB_TYPE_CHAR, val, val)
 
     def test_3662_NCLOB_TO_VARCHAR(self):
-        "3662 outtypehandler from NCLOB to VARCHAR"
+        "3662 - output type handler from NCLOB to VARCHAR"
         val = "Some nclob data"
         self.__test_type_handler(oracledb.DB_TYPE_NCLOB,
                                  oracledb.DB_TYPE_VARCHAR, val, val)
 
     def test_3663_NCLOB_TO_LONG(self):
-        "3663 outtypehandler from NCLOB to LONG"
+        "3663 - output type handler from NCLOB to LONG"
         val = "Some nclob data"
         self.__test_type_handler(oracledb.DB_TYPE_NCLOB,
                                  oracledb.DB_TYPE_LONG, val, val)
 
     def test_3664_NCLOB_TO_VARCHAR(self):
-        "3664 outtypehandler from permanant NCLOBs to VARCHAR"
+        "3664 - output type handler from permanant NCLOBs to VARCHAR"
         self.__test_type_handler_nclob(oracledb.DB_TYPE_VARCHAR)
 
     def test_3665_NCLOB_TO_CHAR(self):
-        "3665 outtypehandler from permanant NCLOBs to CHAR"
+        "3665 - output type handler from permanant NCLOBs to CHAR"
         self.__test_type_handler_nclob(oracledb.DB_TYPE_CHAR)
 
     def test_3666_NCLOB_TO_LONG(self):
-        "3666 outtypehandler from permanant NCLOBs to LONG"
+        "3666 - output type handler from permanant NCLOBs to LONG"
         self.__test_type_handler_nclob(oracledb.DB_TYPE_LONG)
 
     def test_3667_NVARCHAR_to_VARCHAR(self):
-        "3667 outtypehandler from nvarchar to varchar"
+        "3667 - output type handler from nvarchar to varchar"
         self.__test_type_handler(oracledb.DB_TYPE_NVARCHAR,
                                  oracledb.DB_TYPE_VARCHAR, "31.5", "31.5")
 
     def test_3668_VARCHAR_to_NVARCHAR(self):
-        "3668 outtypehandler from varchar to nvarchar"
+        "3668 - output type handler from varchar to nvarchar"
         self.__test_type_handler(oracledb.DB_TYPE_VARCHAR,
                                  oracledb.DB_TYPE_NVARCHAR, "31.5", "31.5")
 
     def test_3669_NCHAR_to_CHAR(self):
-        "3669 outtypehandler from nchar to char"
+        "3669 - output type handler from nchar to char"
         self.__test_type_handler(oracledb.DB_TYPE_NCHAR,
                                  oracledb.DB_TYPE_CHAR, "31.5", "31.5")
 
     def test_3670_CHAR_to_NCHAR(self):
-        "3670 outtypehandler from char to nchar"
+        "3670 - output type handler from char to nchar"
         self.__test_type_handler(oracledb.DB_TYPE_CHAR,
                                  oracledb.DB_TYPE_NCHAR, "31.5", "31.5")
 
     def test_3671_incorrect_arraysize(self):
-        "3671 execute raises an error if an incorrect arraysize is used"
+        "3671 - execute raises an error if an incorrect arraysize is used"
         def type_handler(cursor, name, default_type, size,
                          precision, scale):
             return cursor.var(str)
@@ -488,7 +484,7 @@ class TestCase(test_env.BaseTestCase):
                                cursor.execute, "select :1 from dual", [5])
 
     def test_3672_incorrect_outputtypehandler_return_type(self):
-        "3672  execute raises an error if a var is not returned"
+        "3672 - execute raises an error if a var is not returned"
         def type_handler(cursor, name, default_type, size,
                     precision, scale):
             return "incorrect_return"
@@ -498,7 +494,7 @@ class TestCase(test_env.BaseTestCase):
                                cursor.execute, "select :1 from dual", [5])
 
     def test_3673_NUMBER_to_DECIMAL(self):
-        "3673 outtypehandler conversion from number to decimal.Decimal"
+        "3673 - output type handler conversion from number to decimal.Decimal"
         self.__test_type_handler(oracledb.DB_TYPE_NUMBER, decimal.Decimal,
                                  31.5, decimal.Decimal("31.5"))
         self.__test_type_handler(oracledb.DB_TYPE_NUMBER, decimal.Decimal, 0,
