@@ -121,8 +121,8 @@ cdef class Message:
         elif message_type == TNS_MSG_TYPE_SERVER_SIDE_PIGGYBACK:
             self._process_server_side_piggyback(buf)
         else:
-            msg = f"protocol error: unknown message type: {message_type}"
-            errors._raise_from_string(exceptions.InternalError, msg)
+            errors._raise_err(errors.ERR_MESSAGE_TYPE_UNKNOWN,
+                              message_type=message_type)
 
     cdef int _process_return_parameters(self, ReadBuffer buf) except -1:
         raise NotImplementedError()

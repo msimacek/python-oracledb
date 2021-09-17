@@ -143,12 +143,10 @@ class ConnectParams:
                 except AttributeError:
                     pass
         if wallet_dir is None:
-            message = "unable to determine wallet directory"
-            raise exceptions.DatabaseError(message)
+            errors._raise_err(errors.ERR_NO_WALLET_DIRECTORY)
         file_name = os.path.join(wallet_dir, "wallet.pem")
         if not os.path.exists(file_name):
-            message = f"wallet file missing: {file_name}"
-            raise exceptions.DatabaseError(message)
+            errors._raise_err(errors.ERR_MISSING_WALLET_FILE, name=file_name)
         return file_name
 
     def parse_connect_data(self, connect_data):

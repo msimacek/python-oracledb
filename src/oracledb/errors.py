@@ -126,6 +126,12 @@ ERR_NUMBER_STRING_OF_ZERO_LENGTH = 4013
 ERR_NUMBER_STRING_TOO_LONG = 4014
 ERR_NUMBER_WITH_EMPTY_EXPONENT = 4015
 ERR_CONTENT_INVALID_AFTER_NUMBER = 4016
+ERR_NO_WALLET_DIRECTORY = 4017
+ERR_MISSING_WALLET_FILE = 4018
+
+# error numbers that result in InternalError
+ERR_MESSAGE_TYPE_UNKNOWN = 5000
+ERR_BUFFER_LENGTH_INSUFFICIENT = 5001
 
 # Oracle error number cross reference
 ERR_ORACLE_ERROR_XREF = {
@@ -147,7 +153,8 @@ ERR_EXCEPTION_TYPES = {
     1: exceptions.InterfaceError,
     2: exceptions.ProgrammingError,
     3: exceptions.NotSupportedError,
-    4: exceptions.DatabaseError
+    4: exceptions.DatabaseError,
+    5: exceptions.InternalError
 }
 
 # error message formats
@@ -158,6 +165,9 @@ ERR_MESSAGE_FORMATS = {
     ERR_ARRAY_DML_ROW_COUNTS_NOT_ENABLED: \
             "array DML row counts is not enabled",
     ERR_ARRAYS_OF_ARRAYS: "arrays of arrays are not supported",
+    ERR_BUFFER_LENGTH_INSUFFICIENT: \
+            "split buffer of length {actual_buffer_len} insufficient to " \
+            "hold {required_buffer_len} bytes",
     ERR_COLUMN_TRUNCATED: "column truncated to {col_value_len} {unit} " \
             "(actual is {actual_len})",
     ERR_CONTENT_INVALID_AFTER_NUMBER: "invalid number (content after number)",
@@ -180,7 +190,10 @@ ERR_MESSAGE_FORMATS = {
     ERR_LIBRARY_ALREADY_INITIALIZED: \
             "Oracle Client library has already been initialized",
     ERR_MESSAGE_HAS_NO_PAYLOAD: "message has no payload",
+    ERR_MESSAGE_TYPE_UNKNOWN: \
+            "protocol error: unknown message type: {message_type}",
     ERR_MISSING_BIND_VALUE: "bind value for: {name} missing",
+    ERR_MISSING_WALLET_FILE: "wallet file missing: {name}",
     ERR_MIXED_ELEMENT_TYPES: \
             "element {element} is not the same type as previous elements",
     ERR_MIXED_POSITIONAL_AND_NAMED_BINDS: \
@@ -190,6 +203,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_NO_STATEMENT_EXECUTED: "no statement executed",
     ERR_NO_STATEMENT_PREPARED: "statement must be prepared first",
     ERR_NOT_A_QUERY: "not a query",
+    ERR_NO_WALLET_DIRECTORY: "unable to determine wallet directory",
     ERR_NOT_CONNECTED: "not connected",
     ERR_NOT_OPEN: "not open",
     ERR_NUMBER_STRING_OF_ZERO_LENGTH: "invalid number (zero length string)",

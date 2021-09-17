@@ -240,9 +240,9 @@ cdef class ReadBuffer:
         else:
             max_split_data = sizeof(self._split_data)
             if max_split_data < num_bytes:
-                message = f"split buffer of length {max_split_data} " \
-                          f"insufficient to hold {num_bytes} bytes"
-                errors._raise_from_string(exceptions.InternalError, message)
+                errors._raise_err(errors.ERR_BUFFER_LENGTH_INSUFFICIENT,
+                                  actual_buffer_len=max_split_data,
+                                  required_buffer_len=num_bytes)
             dest_ptr = <char_type*> self._split_data
         memcpy(dest_ptr, source_ptr, num_bytes_left)
 
