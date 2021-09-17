@@ -263,7 +263,6 @@ cdef class ThinPoolImpl(BasePoolImpl):
         Internal method for closing the pool.
         """
         cdef:
-            list connections_to_close
             ThinConnImpl conn_impl
 
         with self._condition:
