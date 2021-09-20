@@ -409,5 +409,19 @@ class TestCase(test_env.BaseTestCase):
         result, = self.cursor.fetchone()
         self.assertEqual(result, params[":arg1"])
 
+    def test_4335_bind_out_mixed_null_not_null(self):
+        "4335 - test binding mixed null and not null values in a PL/SQL block"
+        sql = """
+                begin
+                    :1 := null;
+                    :2 := 'Value 1';
+                    :3 := null;
+                    :4 := 'Value 2';
+                end;"""
+        out_vars = [self.cursor.var(str) for i in range(4)]
+        self.cursor.execute(sql, out_vars)
+        values = [var.getvalue() for var in out_vars]
+        self.assertEqual(values, [None, 'Value 1', None, 'Value 2'])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

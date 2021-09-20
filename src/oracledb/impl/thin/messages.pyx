@@ -347,7 +347,7 @@ cdef class MessageWithData(Message):
             ora_type_num = TNS_DATA_TYPE_RAW
         num_bytes = buf.read_uint8()
         if num_bytes == 0:
-            return None
+            colun_value = None
         elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
                 or ora_type_num == TNS_DATA_TYPE_CHAR \
                 or ora_type_num == TNS_DATA_TYPE_LONG:
@@ -412,10 +412,11 @@ cdef class MessageWithData(Message):
                 errors._raise_err(errors.ERR_COLUMN_TRUNCATED,
                                   col_value_len=len(column_value),
                                   unit=unit_type, actual_len=actual_num_bytes)
-        if var_impl._conv_func is not None:
-            column_value = var_impl._conv_func(column_value)
-        if var_impl.outconverter is not None:
-            column_value = var_impl.outconverter(column_value)
+        if column_value is not None:
+            if var_impl._conv_func is not None:
+                column_value = var_impl._conv_func(column_value)
+            if var_impl.outconverter is not None:
+                column_value = var_impl.outconverter(column_value)
         return column_value
 
     cdef FetchInfo _process_column_info(self, ReadBuffer buf,
