@@ -246,18 +246,25 @@ cdef class ReadBuffer:
             dest_ptr = <char_type*> self._split_data
         memcpy(dest_ptr, source_ptr, num_bytes_left)
 
-        # acquire a new packet and copy the split bytes into the chunked buffer
-        # or split buffer, as appropriate
-        self.receive_packet(&packet_type)
-        self.skip_bytes(2)                  # skip data flags
-        source_ptr = &self._data[self._offset]
-        num_bytes_split = num_bytes - num_bytes_left
-        if in_chunked_read:
-            dest_ptr = self._chunked_bytes_buf.get_chunk_ptr(num_bytes_split)
-        else:
-            dest_ptr = <char_type*> &self._split_data[num_bytes_left]
-        memcpy(dest_ptr, source_ptr, num_bytes_split)
-        self._offset += num_bytes_split
+        # acquire packets until the requested number of bytes is satisfied
+        num_bytes -= num_bytes_left
+        while num_bytes > 0:
+
+            # acquire new packet
+            self.receive_packet(&packet_type)
+            self.skip_bytes(2)                  # skip data flags
+
+            # copy data into the chunked buffer or split buffer, as appropriate
+            source_ptr = &self._data[self._offset]
+            num_bytes_split = min(num_bytes, self._size - self._offset)
+            if in_chunked_read:
+                dest_ptr = \
+                        self._chunked_bytes_buf.get_chunk_ptr(num_bytes_split)
+            else:
+                dest_ptr = <char_type*> &self._split_data[num_bytes_left]
+            memcpy(dest_ptr, source_ptr, num_bytes_split)
+            self._offset += num_bytes_split
+            num_bytes -= num_bytes_split
 
         # return the split buffer unconditionally; if performing a chunked read
         # the return value is ignored anyway
