@@ -520,7 +520,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(rows, data_to_insert)
 
     def test_1133_current_schema(self):
-        "1133 - test current_schame is set properly"
+        "1133 - test current_schema is set properly"
         conn = test_env.get_connection()
         self.assertEqual(conn.current_schema, None)
 
