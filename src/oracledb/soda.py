@@ -506,7 +506,7 @@ class SodaOperation:
         NO_MONITOR (turn off monitoring) are the most useful. Use of this
         method requires Oracle Client 21.3 or higher (or Oracle Client 19 from
         19.11).
- 
+
         As a convenience, the SodaOperation object is returned so that further
         criteria can be specified by chaining methods together.
         """

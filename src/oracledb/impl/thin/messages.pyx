@@ -1393,7 +1393,7 @@ cdef class ExecuteMessage(MessageWithData):
         buf.write_uint8(0)                  # pointer (al8kvl)
         if self.requires_define:
             buf.write_uint8(1)              # pointer (al8doac)
-            buf.write_ub4(len(self.cursor_impl.fetch_vars)) 
+            buf.write_ub4(len(self.cursor_impl.fetch_vars))
                                             # number of defines
         else:
             buf.write_uint8(0)

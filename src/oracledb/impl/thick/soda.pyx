@@ -430,7 +430,7 @@ cdef class ThickSodaCollImpl(BaseSodaCollImpl):
         with nogil:
             status = dpiSodaColl_saveWithOptions(self._handle,
                                                  doc_impl._handle,
-                                                 options_ptr, flags, 
+                                                 options_ptr, flags,
                                                  output_handle)
         if status < 0:
             _raise_from_odpi()

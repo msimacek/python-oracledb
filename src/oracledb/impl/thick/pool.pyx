@@ -182,7 +182,7 @@ cdef class ThickPoolImpl(BasePoolImpl):
         cdef bint value
         if dpiPool_getSodaMetadataCache(self._handle, &value) < 0:
             _raise_from_odpi
-        return value 
+        return value
 
     def get_stmt_cache_size(self):
         """
