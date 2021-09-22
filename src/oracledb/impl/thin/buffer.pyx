@@ -309,7 +309,10 @@ cdef class ReadBuffer:
         # if no bytes were read this means the server closed the connection
         if self._bytes_to_process < PACKET_HEADER_SIZE:
             if bytes_read == 0:
-                self._socket.shutdown(socket.SHUT_RDWR)
+                try:
+                    self._socket.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
                 self._socket.close()
                 self._socket = None
                 errors._raise_err(errors.ERR_SERVER_CLOSED_CONNECTION)
