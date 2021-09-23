@@ -126,8 +126,6 @@ ERR_NUMBER_STRING_OF_ZERO_LENGTH = 4013
 ERR_NUMBER_STRING_TOO_LONG = 4014
 ERR_NUMBER_WITH_EMPTY_EXPONENT = 4015
 ERR_CONTENT_INVALID_AFTER_NUMBER = 4016
-ERR_NO_WALLET_DIRECTORY = 4017
-ERR_MISSING_WALLET_FILE = 4018
 
 # error numbers that result in InternalError
 ERR_MESSAGE_TYPE_UNKNOWN = 5000
@@ -194,7 +192,6 @@ ERR_MESSAGE_FORMATS = {
     ERR_MESSAGE_TYPE_UNKNOWN: \
             "protocol error: unknown message type: {message_type}",
     ERR_MISSING_BIND_VALUE: "bind value for: {name} missing",
-    ERR_MISSING_WALLET_FILE: "wallet file missing: {name}",
     ERR_MIXED_ELEMENT_TYPES: \
             "element {element} is not the same type as previous elements",
     ERR_MIXED_POSITIONAL_AND_NAMED_BINDS: \
@@ -204,7 +201,6 @@ ERR_MESSAGE_FORMATS = {
     ERR_NO_STATEMENT_EXECUTED: "no statement executed",
     ERR_NO_STATEMENT_PREPARED: "statement must be prepared first",
     ERR_NOT_A_QUERY: "not a query",
-    ERR_NO_WALLET_DIRECTORY: "unable to determine wallet directory",
     ERR_NOT_CONNECTED: "not connected",
     ERR_NOT_OPEN: "not open",
     ERR_NUMBER_STRING_OF_ZERO_LENGTH: "invalid number (zero length string)",

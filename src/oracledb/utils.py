@@ -127,28 +127,6 @@ class ConnectParams:
                 self._dsn += ":POOLED"
         return self._dsn
 
-    def get_wallet_file_name(self):
-        """
-        Return the name of the file containing the wallet used for TLS
-        authentication.
-        """
-        sqlnet_config = get_config_file(self.config_dir, "sqlnet.ora")
-        wallet_dir = self.config_dir
-        if sqlnet_config is not None:
-            location = sqlnet_config.entries.get("WALLET_LOCATION")
-            if location is not None:
-                top_node = parse_structured_data(ConfigNode(), location)
-                try:
-                    wallet_dir = top_node.source.method_data.directory
-                except AttributeError:
-                    pass
-        if wallet_dir is None:
-            errors._raise_err(errors.ERR_NO_WALLET_DIRECTORY)
-        file_name = os.path.join(wallet_dir, "wallet.pem")
-        if not os.path.exists(file_name):
-            errors._raise_err(errors.ERR_MISSING_WALLET_FILE, name=file_name)
-        return file_name
-
     def parse_connect_data(self, connect_data):
         """
         Parse connect data. This will either be in a string form or in an
