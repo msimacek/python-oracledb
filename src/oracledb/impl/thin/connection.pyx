@@ -32,6 +32,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         array.array _cursors_to_close
         ssize_t _num_cursors_to_close
         bint _drcp_enabled
+        double _time_in_pool
 
     cdef int _add_cursor_to_close(self, Statement stmt) except -1:
         if self._num_cursors_to_close == TNS_MAX_CURSORS_TO_CLOSE:

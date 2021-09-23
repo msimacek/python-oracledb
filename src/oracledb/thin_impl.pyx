@@ -37,6 +37,7 @@ import secrets
 import ssl
 import sys
 import threading
+import time
 import weakref
 
 cydatetime.import_datetime()
