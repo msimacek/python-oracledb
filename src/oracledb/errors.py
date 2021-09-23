@@ -120,7 +120,7 @@ ERR_INCONSISTENT_DATATYPES = 4007
 ERR_INVALID_BIND_NAME = 4008
 ERR_WRONG_NUMBER_OF_POSITIONAL_BINDS = 4009
 ERR_MISSING_BIND_VALUE = 4010
-ERR_SERVER_CLOSED_CONNECTION = 4011
+ERR_CONNECTION_CLOSED = 4011
 ERR_NUMBER_WITH_INVALID_EXPONENT = 4012
 ERR_NUMBER_STRING_OF_ZERO_LENGTH = 4013
 ERR_NUMBER_STRING_TOO_LONG = 4014
@@ -144,6 +144,7 @@ ERR_ORACLE_ERROR_XREF = {
 
 # ODPI-C error number cross reference
 ERR_DPI_ERROR_XREF = {
+    1010: ERR_CONNECTION_CLOSED,
     1043: ERR_INVALID_NUMBER,
     1044: ERR_ORACLE_NUMBER_NO_REPR,
 }
@@ -222,7 +223,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_PYTHON_VALUE_NOT_SUPPORTED: \
             "Python value of type {type_name} not supported",
     ERR_SELF_BIND_NOT_SUPPORTED: "binding to self not supported",
-    ERR_SERVER_CLOSED_CONNECTION: "server closed connection",
+    ERR_CONNECTION_CLOSED: "connection to database has been closed",
     ERR_SERVER_VERSION_NOT_SUPPORTED: \
             "connections to this server version are not supported with " \
             "the thin driver",
