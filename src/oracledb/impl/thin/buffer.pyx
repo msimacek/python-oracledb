@@ -199,6 +199,19 @@ cdef class ReadBuffer:
             return text
         return float(text)
 
+    cdef inline int _get_data_from_socket(self, object obj,
+                                          ssize_t bytes_requested,
+                                          ssize_t *bytes_read) except -1:
+        """
+        Simple inline function that performs a socket read while verifying that
+        the server has not reset the connection. If it has, the dead connection
+        error is returned instead.
+        """
+        try:
+            bytes_read[0] = self._socket.recv_into(obj, bytes_requested)
+        except ConnectionResetError as e:
+            errors._raise_err(errors.ERR_CONNECTION_CLOSED, str(e))
+
     cdef const char_type* _get_raw(self, ssize_t num_bytes,
                                    bint in_chunked_read=False) except NULL:
         """
@@ -291,8 +304,8 @@ cdef class ReadBuffer:
         if self._bytes_to_process == 0:
             self._packet_start_offset = 0
             self._offset = 0
-            bytes_read = self._socket.recv_into(self._data_obj,
-                                                self._max_packet_size)
+            self._get_data_from_socket(self._data_obj, self._max_packet_size,
+                                       &bytes_read)
 
         # otherwise, set the offset to the end of the previous packet and
         # ensure that there are at least enough bytes available to cover the
@@ -303,8 +316,8 @@ cdef class ReadBuffer:
             if self._bytes_to_process < PACKET_HEADER_SIZE:
                 offset = self._size + self._bytes_to_process
                 bytes_to_read = PACKET_HEADER_SIZE - self._bytes_to_process
-                bytes_read = self._socket.recv_into(view[offset:],
-                                                    bytes_to_read)
+                self._get_data_from_socket(view[offset:], bytes_to_read,
+                                           &bytes_read)
 
         # if no bytes were read this means the server closed the connection
         if self._bytes_to_process < PACKET_HEADER_SIZE:
@@ -332,8 +345,9 @@ cdef class ReadBuffer:
         while self._bytes_to_process < packet_size:
             offset = self._packet_start_offset + self._bytes_to_process
             bytes_to_read = packet_size - self._bytes_to_process
-            self._bytes_to_process += \
-                    self._socket.recv_into(view[offset:], bytes_to_read)
+            self._get_data_from_socket(view[offset:], bytes_to_read,
+                                       &bytes_read)
+            self._bytes_to_process += bytes_read
 
         # process remainder of packet header and set size to the new packet
         self._size = self._packet_start_offset + packet_size
@@ -750,7 +764,10 @@ cdef class WriteBuffer:
         if DEBUG_PACKETS:
             _print_packet("Sending packet:", self._socket.fileno(),
                           memoryview(self))
-        self._socket.send(memoryview(self))
+        try:
+            self._socket.send(memoryview(self))
+        except OSError as e:
+            errors._raise_err(errors.ERR_CONNECTION_CLOSED, str(e))
         self._packet_sent = True
         self._actual_size = PACKET_HEADER_SIZE
         if not final_packet:

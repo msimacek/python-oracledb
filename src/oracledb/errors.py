@@ -46,12 +46,14 @@ def _get_error_text(error_num: int, **args):
     return f"{ERR_PREFIX}-{error_num:04}: {message}"
 
 
-def _raise_err(error_num: int, **args):
+def _raise_err(error_num: int, context_error_message: str=None, **args):
     """
     Raises a driver specific exception from the specified error number and
     supplied arguments.
     """
     message = _get_error_text(error_num, **args)
+    if context_error_message is not None:
+        message = f"{message}\n{context_error_message}"
     exc_type = ERR_EXCEPTION_TYPES[error_num // 1000]
     raise exc_type(_Error(message)) from None
 
