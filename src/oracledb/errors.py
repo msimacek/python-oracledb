@@ -133,6 +133,10 @@ ERR_CONTENT_INVALID_AFTER_NUMBER = 4016
 ERR_MESSAGE_TYPE_UNKNOWN = 5000
 ERR_BUFFER_LENGTH_INSUFFICIENT = 5001
 
+# error numbers that result in OperationalError
+ERR_LISTENER_REFUSED_CONNECTION = 6000
+ERR_INVALID_SERVICE_NAME = 6001
+
 # Oracle error number cross reference
 ERR_ORACLE_ERROR_XREF = {
     1005: ERR_NO_PASSWORD,
@@ -155,7 +159,8 @@ ERR_EXCEPTION_TYPES = {
     2: exceptions.ProgrammingError,
     3: exceptions.NotSupportedError,
     4: exceptions.DatabaseError,
-    5: exceptions.InternalError
+    5: exceptions.InternalError,
+    6: exceptions.OperationalError
 }
 
 # error message formats
@@ -187,9 +192,13 @@ ERR_MESSAGE_FORMATS = {
                                  "{required_arraysize})",
     ERR_INVALID_BIND_NAME: "invalid named bind: {name}",
     ERR_INVALID_NUMBER: "invalid number",
+    ERR_INVALID_SERVICE_NAME: \
+            "listener doesn't recognize service name",
     ERR_KEYWORD_ARGS_MUST_BE_DICT: "keyword arguments must be a dict",
     ERR_LIBRARY_ALREADY_INITIALIZED: \
             "Oracle Client library has already been initialized",
+    ERR_LISTENER_REFUSED_CONNECTION: \
+            "listener refused connection with error {error_code}",
     ERR_MESSAGE_HAS_NO_PAYLOAD: "message has no payload",
     ERR_MESSAGE_TYPE_UNKNOWN: \
             "protocol error: unknown message type: {message_type}",

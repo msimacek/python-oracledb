@@ -248,10 +248,11 @@ cdef class Protocol:
                 if end_pos > 0:
                     error_code = response[pos + 5:end_pos]
                     error_code_int = int(error_code)
-            error_msg = f"server refused connection with error {error_code}"
-            error = errors._Error(message=error_msg, code=error_code_int)
-            exc_type = get_exception_class(error_code_int)
-            raise exc_type(error)
+            if error_code_int == TNS_ERR_INVALID_SERVICE_NAME:
+                errors._raise_err(errors.ERR_INVALID_SERVICE_NAME,
+                                  f"see ORA-{error_code}")
+            errors._raise_err(errors.ERR_LISTENER_REFUSED_CONNECTION,
+                              error_code=error_code)
 
     cdef int _reset(self, Message message) except -1:
 
