@@ -289,5 +289,18 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-12899:",
                                self.cursor.execute, sql, parameters)
 
+    def test_1613_insert_with_dml_returning_no_input_vars(self):
+        "1613 - test DML returning with no input variables, multiple iters"
+        self.cursor.execute("truncate table TestTempTable")
+        sql = """
+                insert into TestTempTable (IntCol)
+                values ((select count(*) + 1 from TestTempTable))
+                returning IntCol into :1"""
+        var = self.cursor.var(int)
+        self.cursor.execute(sql, [var])
+        self.assertEqual(var.getvalue(), [1])
+        self.cursor.execute(sql, [var])
+        self.assertEqual(var.getvalue(), [2])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

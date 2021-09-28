@@ -1473,7 +1473,8 @@ cdef class ReExecuteMessage(MessageWithData):
                                   for bind_info in stmt._bind_info_list \
                                   if bind_info.bind_dir != TNS_BIND_DIR_INPUT]
             params = [bind_info for bind_info in stmt._bind_info_list \
-                      if bind_info.bind_dir != TNS_BIND_DIR_OUTPUT]
+                      if bind_info.bind_dir != TNS_BIND_DIR_OUTPUT \
+                      and not bind_info._is_return_bind]
         if self.function_code == TNS_FUNC_REEXECUTE_AND_FETCH:
             exec_flags_1 |= TNS_EXEC_OPTION_EXECUTE | \
                             TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
