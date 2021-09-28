@@ -276,6 +276,11 @@ cdef class ThinPoolImpl(BasePoolImpl):
         while True:
             requires_ping = False
             conn_impl = self._get_connection_helper(wait_timeout, purity)
+            if conn_impl._protocol._session_needs_to_be_closed:
+                self._conn_impls_to_close.append(conn_impl)
+                with self._bg_thread_condition:
+                    self._bg_thread_condition.notify()
+                continue
             if self._ping_interval == 0:
                 requires_ping = True
             elif self._ping_interval > 0 and conn_impl._time_in_pool > 0:

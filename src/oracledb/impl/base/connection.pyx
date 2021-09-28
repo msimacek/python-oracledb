@@ -16,6 +16,10 @@ cdef class BaseConnImpl:
     def change_password(self, old_password, new_password):
         pass
 
+    @utils.CheckImpls("checking if the connection is healthy")
+    def get_is_healthy(self):
+        pass
+
     @utils.CheckImpls("closing a connection")
     def close(self, in_del=False):
         pass

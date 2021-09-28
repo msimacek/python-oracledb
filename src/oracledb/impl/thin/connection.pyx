@@ -96,6 +96,9 @@ cdef class ThinConnImpl(BaseConnImpl):
     def change_password(self, str old_password, str new_password):
         self._protocol._change_password(self, old_password, new_password)
 
+    def get_is_healthy(self):
+        return not self._protocol._session_needs_to_be_closed
+
     def close(self, bint in_del=False):
         if self._pool is not None:
             self._pool._free_busy_connection(self)

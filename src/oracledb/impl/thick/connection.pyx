@@ -164,6 +164,12 @@ cdef class ThickConnImpl(BaseConnImpl):
         if status < 0:
             _raise_from_odpi()
 
+    def get_is_healthy(self):
+        cdef bint is_healthy
+        if dpiConn_getIsHealthy(self._handle, &is_healthy) < 0:
+            _raise_from_odpi()
+        return is_healthy
+
     def close(self, bint in_del=False):
         cdef:
             uint32_t mode = DPI_MODE_CONN_CLOSE_DEFAULT

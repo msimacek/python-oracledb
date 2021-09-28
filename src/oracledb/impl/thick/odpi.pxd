@@ -496,6 +496,8 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
     int dpiConn_getInternalName(dpiConn *conn, const char **value,
             uint32_t *valueLength) nogil
 
+    int dpiConn_getIsHealthy(dpiConn *conn, bint *isHealthy) nogil
+
     int dpiConn_getLTXID(dpiConn *conn, const char **value,
             uint32_t *valueLength) nogil
 

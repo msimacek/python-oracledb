@@ -505,6 +505,19 @@ class Connection:
         self._verify_connected()
         self._impl.set_internal_name(value)
 
+    def is_healthy(self) -> bool:
+        """
+        Returns a boolean indicating the health status of a connection.
+        Performs a local check to determine if a connection is usable.
+        Connections may become unusable in several cases, such as if the
+        network socket is broken, if an Oracle error indicates the connection
+        is unusable, after receiving an in-band notification from the
+        database, or after the connection receives a FAN planned down
+        notification. This function is best used before starting a new
+        database request on an existing connection.
+        """
+        return self._impl.get_is_healthy()
+
     @property
     def ltxid(self) -> bytes:
         """
