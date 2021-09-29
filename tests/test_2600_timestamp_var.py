@@ -143,5 +143,15 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(self.cursor.fetchone(), self.data_by_key[4])
         self.assertEqual(self.cursor.fetchone(), None)
 
+    def test_2610_bind_timestamp_with_zero_fseconds(self):
+        "2610 - test binding a timestamp with zero fractional seconds"
+        self.cursor.setinputsizes(value=oracledb.DB_TYPE_TIMESTAMP)
+        self.cursor.execute("""
+                select *
+                from TestTimestamps
+                where trunc(TimestampCol) = :value""",
+                value=oracledb.Timestamp(2002, 12, 14))
+        self.assertEqual(self.cursor.fetchall(), [self.data_by_key[5]])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

@@ -923,7 +923,6 @@ cdef class WriteBuffer:
             unsigned int year
             char_type buf[13]
             uint32_t fsecond
-        self.write_uint8(length)
         year = cydatetime.datetime_year(value)
         buf[0] = <uint8_t> ((year // 100) + 100)
         buf[1] = <uint8_t> ((year % 100) + 100)
@@ -934,9 +933,13 @@ cdef class WriteBuffer:
         buf[6] = <uint8_t> cydatetime.datetime_second(value) + 1
         if length > 7:
             fsecond = <uint32_t> cydatetime.datetime_microsecond(value) * 1000
-            pack_uint32(&buf[7], fsecond, BYTE_ORDER_MSB)
+            if fsecond == 0:
+                length = 7
+            else:
+                pack_uint32(&buf[7], fsecond, BYTE_ORDER_MSB)
         if length > 11:
             pack_uint16(&buf[11], 0, BYTE_ORDER_MSB)
+        self.write_uint8(length)
         self.write_raw(buf, length)
 
     cdef int write_oracle_number(self, bytes num_bytes) except -1:
