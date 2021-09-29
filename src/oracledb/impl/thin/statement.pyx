@@ -97,11 +97,11 @@ cdef class Statement:
     cdef _get_bind_names(self, str sql):
         cdef:
             list bind_names = [], return_bind_names = []
-            str name, return_str
+            str name, return_str, dml_pattern
             BindInfo bind_info
 
         # Strip single/multiline comments and strings from the sql statement
-        sql = re.sub(r"/\\*[\S\n ]+\\*/", "", sql)
+        sql = re.sub(r"/\*[\S\n ]+\*/", "", sql)
         sql = re.sub(r"\--.*(\n|$)", "", sql)
         sql = re.sub(r"'(.*?)+'", "", sql)
 

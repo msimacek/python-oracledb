@@ -346,7 +346,7 @@ class TestCase(test_env.BaseTestCase):
                             select * from :table_name where :value = 1
                             """)
         self.assertEqual(self.cursor.bindnames(), ["TABLE_NAME", "VALUE"])
-    
+
     def test_4326_bind_names_with_strings(self):
         "4326 - test bindnames() with strings in the statement"
         statement = """
@@ -422,6 +422,13 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute(sql, out_vars)
         values = [var.getvalue() for var in out_vars]
         self.assertEqual(values, [None, 'Value 1', None, 'Value 2'])
+
+    def test_4336_bind_names_with_division_operators(self):
+        "4336 - test bindnames() with multiple division operators"
+        self.cursor.prepare("""
+                select :a / :b, :c / :d
+                from dual""")
+        self.assertEqual(self.cursor.bindnames(), ["A", "B", "C", "D"])
 
 if __name__ == "__main__":
     test_env.run_test_cases()
