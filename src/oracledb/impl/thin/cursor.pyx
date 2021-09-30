@@ -62,15 +62,6 @@ cdef class ThinCursorImpl(BaseCursorImpl):
     cdef bint _is_plsql(self):
         return self._statement._is_plsql
 
-    cdef int _prepare(self, str sql, str tag=None) except -1:
-        self.statement = sql
-        if self._statement is not None:
-            if not self._is_implicit_cursor:
-                self._conn_impl._return_statement(self._statement)
-            self._statement = None
-        self._statement = self._conn_impl._get_statement(sql)
-        self.fetch_vars = self._statement._fetch_vars
-
     cdef int _preprocess_execute(self, object conn) except -1:
         cdef BindInfo bind_info
         if self.bind_vars is not None:
@@ -116,3 +107,12 @@ cdef class ThinCursorImpl(BaseCursorImpl):
 
     def parse(self, cursor):
         self._conn_impl._protocol._parse(cursor)
+
+    def prepare(self, str sql, str tag, bint cache_statement):
+        self.statement = sql
+        if self._statement is not None:
+            if not self._is_implicit_cursor:
+                self._conn_impl._return_statement(self._statement)
+            self._statement = None
+        self._statement = self._conn_impl._get_statement(sql, cache_statement)
+        self.fetch_vars = self._statement._fetch_vars

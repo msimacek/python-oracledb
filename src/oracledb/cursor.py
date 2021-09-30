@@ -83,14 +83,15 @@ class Cursor:
         statement = "".join(statement_parts)
         self.execute(statement, bind_values)
 
-    def _prepare(self, statement: str) -> None:
+    def _prepare(self, statement: str, tag: str=None,
+                 cache_statement: bool=True) -> None:
         """
         Internal method used for preparing a statement for execution.
         """
         self._impl.fetch_vars = None
         if not self._set_input_sizes:
             self._impl.bind_vars = None
-        self._impl.prepare(statement)
+        self._impl.prepare(statement, tag, cache_statement)
         self.statement = statement
 
     def _verify_fetch(self) -> None:
@@ -559,17 +560,21 @@ class Cursor:
         self._verify_open()
         self._impl.prefetchrows = value
 
-    def prepare(self, statement: str, tag: str=None) -> None:
+    def prepare(self, statement: str, tag: str=None,
+                cache_statement: bool=True) -> None:
         """
         This can be used before a call to execute() to define the statement
         that will be executed. When this is done, the prepare phase will not be
         performed when the call to execute() is made with None or the same
-        string object as the statement. If specified the statement will be
-        returned to the statement cache with the given tag. See the Oracle
-        documentation for more information about the statement cache.
+        string object as the statement. If the tag parameter is specified and
+        the cache_statement parameter is True, the statement will be returned
+        to the statement cache with the given tag. If the cache_statement
+        parameter is False, the statement will be removed from the statement
+        cache (if it was found there) or will simply not be cached. See the
+        Oracle documentation for more information about the statement cache.
         """
         self._verify_open()
-        self._prepare(statement)
+        self._prepare(statement, tag, cache_statement)
 
     @property
     def rowcount(self) -> int:

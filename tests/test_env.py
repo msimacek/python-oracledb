@@ -204,34 +204,48 @@ def skip_soda_tests():
         return True
     return False
 
-class RoundTripInfo:
+class SystemStatInfo:
+    stat_name = None
 
     def __init__(self, connection):
-        self.prev_round_trips = 0
+        self.prev_value = 0
         self.admin_conn = oracledb.connect(get_admin_connect_string())
         with connection.cursor() as cursor:
             cursor.execute("select sys_context('userenv', 'sid') from dual")
             self.sid, = cursor.fetchone()
-        self.get_round_trips()
+        self.get_value()
 
-    def get_round_trips(self):
+    def get_value(self):
         with self.admin_conn.cursor() as cursor:
             cursor.execute("""
                     select ss.value
                     from v$sesstat ss, v$statname sn
                     where ss.sid = :sid
                       and ss.statistic# = sn.statistic#
-                      and sn.name like '%roundtrip%client%'""", sid=self.sid)
-            current_round_trips, = cursor.fetchone()
-            diff_round_trips = current_round_trips - self.prev_round_trips
-            self.prev_round_trips = current_round_trips
-            return diff_round_trips
+                      and sn.name = :stat_name""",
+                    sid=self.sid, stat_name=self.stat_name)
+            current_value, = cursor.fetchone()
+            diff_value = current_value - self.prev_value
+            self.prev_value = current_value
+            return diff_value
+
+
+class RoundTripInfo(SystemStatInfo):
+    stat_name = "SQL*Net roundtrips to/from client"
+
+
+class ParseCountInfo(SystemStatInfo):
+    stat_name = "parse count (total)"
+
 
 class BaseTestCase(unittest.TestCase):
     requires_connection = True
 
+    def assertParseCount(self, n):
+        self.assertEqual(self.parse_count_info.get_value(), n)
+
     def assertRoundTrips(self, n):
-        self.assertEqual(self.round_trip_info.get_round_trips(), n)
+        self.assertEqual(self.round_trip_info.get_value(), n)
 
     def get_db_object_as_plain_object(self, obj):
         if obj.type.iscollection:
@@ -280,6 +294,9 @@ class BaseTestCase(unittest.TestCase):
         if self.requires_connection:
             self.connection = get_connection()
             self.cursor = self.connection.cursor()
+
+    def setup_parse_count_checker(self):
+        self.parse_count_info = ParseCountInfo(self.connection)
 
     def setup_round_trip_checker(self):
         self.round_trip_info = RoundTripInfo(self.connection)

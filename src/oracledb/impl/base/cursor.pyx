@@ -280,12 +280,6 @@ cdef class BaseCursorImpl:
                 var_impl = <BaseVarImpl> var._impl
                 var_impl._bind(conn, self, num_execs, None, pos + 1)
 
-    cdef int _prepare(self, str statement, str tag=None) except -1:
-        """
-        Internal method used for preparing a statement for execution.
-        """
-        raise NotImplementedError()
-
     cdef int _scroll(self, object conn, int32_t offset,
                      uint32_t mode) except -1:
         """
@@ -430,11 +424,9 @@ cdef class BaseCursorImpl:
     def parse(self, cursor):
         pass
 
-    def prepare(self, statement):
-        """
-        Prepares a statement.
-        """
-        self._prepare(statement)
+    @utils.CheckImpls("preparing a statement")
+    def prepare(self, str statement, str tag, bint cache_statement):
+        pass
 
     def scroll(self, conn, value, mode):
         """

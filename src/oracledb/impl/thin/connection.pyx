@@ -64,18 +64,23 @@ cdef class ThinConnImpl(BaseConnImpl):
         sock.shutdown(socket.SHUT_RDWR)
         sock.close()
 
-    cdef Statement _get_statement(self, str sql):
+    cdef Statement _get_statement(self, str sql, bint cache_statement):
         cdef Statement statement
         with self._statement_cache_lock:
             statement = self._statement_cache.get(sql)
             if statement is None:
                 statement = Statement()
                 statement._prepare(sql)
-                if len(self._statement_cache) < self._statement_cache_size:
+                if len(self._statement_cache) < self._statement_cache_size \
+                        and cache_statement:
                     self._statement_cache[sql] = statement
                     statement._return_to_cache = True
-            elif statement._in_use:
-                statement = statement.copy()
+            elif statement._in_use or not cache_statement:
+                if not cache_statement:
+                    del self._statement_cache[sql]
+                    statement._return_to_cache = False
+                if statement._in_use:
+                    statement = statement.copy()
             else:
                 self._statement_cache.move_to_end(sql)
             statement._in_use = True

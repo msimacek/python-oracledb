@@ -102,7 +102,6 @@ cdef class BaseCursorImpl:
                                    is_plsql=*)
     cdef bint _is_plsql(self)
     cdef int _perform_binds(self, object conn, uint32_t num_execs=*) except -1
-    cdef int _prepare(self, str statement, str tag=*) except -1
     cdef int _scroll(self, object conn, int32_t offset,
                      uint32_t mode) except -1
     cdef int _verify_var(self, object var) except -1

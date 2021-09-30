@@ -430,5 +430,25 @@ class TestCase(test_env.BaseTestCase):
                 from dual""")
         self.assertEqual(self.cursor.bindnames(), ["A", "B", "C", "D"])
 
+    def test_4337_exclude_from_stmt_cache(self):
+        "4337 - test excluding statement from statement cache"
+        num_iters = 10
+        sql = "select user from dual"
+        self.setup_parse_count_checker()
+
+        # with statement cache enabled, only one parse should take place
+        for i in range(num_iters):
+            with self.connection.cursor() as cursor:
+                cursor.execute(sql)
+        self.assertParseCount(1)
+
+        # with statement cache disabled for the statement, parse count should
+        # be the same as the number of iterations
+        for i in range(num_iters):
+            with self.connection.cursor() as cursor:
+                cursor.prepare(sql, cache_statement=False)
+                cursor.execute(None)
+        self.assertParseCount(num_iters - 1)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

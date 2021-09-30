@@ -163,46 +163,6 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             cpython.Py_INCREF(var)
             cpython.PyList_SET_ITEM(self.fetch_vars, i, var)
 
-    cdef int _prepare(self, str statement, str tag=None) except -1:
-        """
-        Internal method used for preparing statements for execution.
-        """
-        cdef:
-            uint32_t statement_bytes_length, tag_bytes_length = 0
-            ThickConnImpl conn_impl = self._conn_impl
-            bytes statement_bytes, tag_bytes
-            const char *tag_ptr = NULL
-            const char *statement_ptr
-            int status
-        self.statement = statement
-        statement_bytes = statement.encode()
-        statement_ptr = <const char*> statement_bytes
-        statement_bytes_length = <uint32_t> len(statement_bytes)
-        if tag is not None:
-            self._tag = tag
-            tag_bytes = tag.encode()
-            tag_bytes_length = <uint32_t> len(tag_bytes)
-            tag_ptr = <const char*> tag_bytes
-        with nogil:
-            if self._handle != NULL:
-                dpiStmt_release(self._handle)
-                self._handle = NULL
-            status = dpiConn_prepareStmt(conn_impl._handle, self.scrollable,
-                                         statement_ptr, statement_bytes_length,
-                                         tag_ptr, tag_bytes_length,
-                                         &self._handle)
-            if status == DPI_SUCCESS:
-                status = dpiStmt_getInfo(self._handle, &self._stmt_info)
-            if status == DPI_SUCCESS and self._stmt_info.isQuery:
-                status = dpiStmt_setFetchArraySize(self._handle,
-                                                   self.arraysize)
-                if status == DPI_SUCCESS \
-                        and self.prefetchrows != DPI_DEFAULT_PREFETCH_ROWS:
-                    status = dpiStmt_setPrefetchRows(self._handle,
-                                                     self.prefetchrows)
-        if status < 0:
-            _raise_from_odpi()
-
     cdef int _scroll(self, object conn, int32_t offset,
                      uint32_t mode) except -1:
         cdef:
@@ -454,3 +414,45 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             _raise_from_odpi()
         if num_query_cols > 0:
             self._perform_define(cursor, num_query_cols)
+
+    def prepare(self, str statement, str tag, bint cache_statement):
+        """
+        Internal method used for preparing statements for execution.
+        """
+        cdef:
+            uint32_t statement_bytes_length, tag_bytes_length = 0
+            ThickConnImpl conn_impl = self._conn_impl
+            bytes statement_bytes, tag_bytes
+            const char *tag_ptr = NULL
+            const char *statement_ptr
+            int status
+        self.statement = statement
+        statement_bytes = statement.encode()
+        statement_ptr = <const char*> statement_bytes
+        statement_bytes_length = <uint32_t> len(statement_bytes)
+        if tag is not None:
+            self._tag = tag
+            tag_bytes = tag.encode()
+            tag_bytes_length = <uint32_t> len(tag_bytes)
+            tag_ptr = <const char*> tag_bytes
+        with nogil:
+            if self._handle != NULL:
+                dpiStmt_release(self._handle)
+                self._handle = NULL
+            status = dpiConn_prepareStmt(conn_impl._handle, self.scrollable,
+                                         statement_ptr, statement_bytes_length,
+                                         tag_ptr, tag_bytes_length,
+                                         &self._handle)
+            if status == DPI_SUCCESS and not cache_statement:
+                status = dpiStmt_deleteFromCache(self._handle)
+            if status == DPI_SUCCESS:
+                status = dpiStmt_getInfo(self._handle, &self._stmt_info)
+            if status == DPI_SUCCESS and self._stmt_info.isQuery:
+                status = dpiStmt_setFetchArraySize(self._handle,
+                                                   self.arraysize)
+                if status == DPI_SUCCESS \
+                        and self.prefetchrows != DPI_DEFAULT_PREFETCH_ROWS:
+                    status = dpiStmt_setPrefetchRows(self._handle,
+                                                     self.prefetchrows)
+        if status < 0:
+            _raise_from_odpi()

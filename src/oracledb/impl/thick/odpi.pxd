@@ -1026,6 +1026,8 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
 
     int dpiStmt_define(dpiStmt *stmt, uint32_t pos, dpiVar *var) nogil
 
+    int dpiStmt_deleteFromCache(dpiStmt *stmt) nogil
+
     int dpiStmt_execute(dpiStmt *stmt, uint32_t mode,
             uint32_t *numQueryColumns) nogil
 
