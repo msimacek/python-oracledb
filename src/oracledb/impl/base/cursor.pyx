@@ -227,6 +227,7 @@ cdef class BaseCursorImpl:
         DbType constants.
         """
         if value is None:
+            size[0] = 1
             return None
         elif isinstance(value, bool):
             if is_plsql:
