@@ -450,5 +450,11 @@ class TestCase(test_env.BaseTestCase):
                 cursor.execute(None)
         self.assertParseCount(num_iters - 1)
 
+    def test_4338_bind_names_with_opening_parentheses(self):
+        "4338 - test bindnames() with opening parentheses in statement"
+        sql = "(select :a from dual) union (select :b from dual)"
+        self.cursor.prepare(sql)
+        self.assertEqual(self.cursor.bindnames(), ["A", "B"])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

@@ -73,7 +73,7 @@ cdef class Statement:
         return copied_statement
 
     cdef _determine_statement_type(self, str sql, str dml_pattern):
-        tokens = sql.strip()[:10].split()
+        tokens = sql.strip().lstrip("(")[:10].split()
         if tokens:
             sql_keyword = tokens[0]
             if sql_keyword in ("DECLARE", "BEGIN", "CALL"):
