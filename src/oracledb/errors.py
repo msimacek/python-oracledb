@@ -109,6 +109,7 @@ ERR_DB_TYPE_NOT_SUPPORTED = 3007
 ERR_UNSUPPORTED_INBAND_NOTIFICATION = 3008
 ERR_SELF_BIND_NOT_SUPPORTED = 3009
 ERR_SERVER_VERSION_NOT_SUPPORTED = 3010
+ERR_SERVER_LOGON_TYPE_NOT_SUPPORTED = 3011
 
 # error numbers that result in DatabaseError
 ERR_TNS_ENTRY_NOT_FOUND = 4000
@@ -231,6 +232,7 @@ ERR_MESSAGE_FORMATS = {
             "Python value of type {type_name} not supported",
     ERR_SELF_BIND_NOT_SUPPORTED: "binding to self not supported",
     ERR_CONNECTION_CLOSED: "connection to database has been closed",
+    ERR_SERVER_LOGON_TYPE_NOT_SUPPORTED: "server logon version not supported",
     ERR_SERVER_VERSION_NOT_SUPPORTED: \
             "connections to this server version are not supported with " \
             "the thin driver",

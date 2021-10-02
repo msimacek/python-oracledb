@@ -9,7 +9,6 @@ cdef class Capabilities:
         bytearray compile_caps
         bytearray runtime_caps
         bint supports_oob
-        bint supports_12c_logon
 
     def __init__(self):
         self._init_compile_caps()
@@ -19,15 +18,12 @@ cdef class Capabilities:
                                    uint16_t protocol_options):
         self.protocol_version = protocol_version
         self.supports_oob = protocol_options & TNS_CAN_RECV_ATTENTION
-        self.supports_12c_logon = True
 
     @cython.boundscheck(False)
     cdef void _adjust_for_server_compile_caps(self, bytearray server_caps):
         if server_caps[TNS_CCAP_FIELD_VERSION] < self.ttc_field_version:
             self.ttc_field_version = server_caps[TNS_CCAP_FIELD_VERSION]
             self.compile_caps[TNS_CCAP_FIELD_VERSION] = self.ttc_field_version
-        if not server_caps[TNS_CCAP_LOGON_TYPES] & TNS_CCAP_O7LOGON:
-            self.supports_12c_logon = False
 
     @cython.boundscheck(False)
     cdef void _adjust_for_server_runtime_caps(self, bytearray server_caps):

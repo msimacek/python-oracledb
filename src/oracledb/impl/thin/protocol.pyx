@@ -11,6 +11,7 @@ cdef class Protocol:
         ReadBuffer _read_buf
         WriteBuffer _write_buf
         object _request_lock
+        bint _in_connect
         bint _txn_in_progress
         bint _break_in_progress
         bint _session_needs_to_be_closed
@@ -91,6 +92,11 @@ cdef class Protocol:
             AuthMessage auth_message
             uint8_t packet_type
 
+        # mark protocol to indicate that connect is in progress; this prevents
+        # the normal break/reset mechanism from firing, which is unnecessary
+        # since the connection is going to be immediately closed anyway!
+        self._in_connect = True
+
         # verify that a password has been specified first
         if password is None:
             errors._raise_err(errors.ERR_NO_PASSWORD)
@@ -135,6 +141,10 @@ cdef class Protocol:
         auth_message.purity = purity
         self._process_message(auth_message)
         self._process_message(auth_message)
+
+        # mark protocol to indicate that connect is no longer in progress; this
+        # allows the normal break/reset mechanism to fire
+        self._in_connect = False
 
     cdef int _execute(self, object cursor, uint32_t num_execs=1,
                       bint arraydmlrowcounts=False,
@@ -203,7 +213,8 @@ cdef class Protocol:
             self._receive_packet(message)
             message.process(self._read_buf)
         except:
-            if self._write_buf._packet_sent \
+            if not self._in_connect \
+                    and self._write_buf._packet_sent \
                     and self._read_buf._socket is not None:
                 self._send_marker(self._write_buf, TNS_MARKER_TYPE_BREAK)
                 self._reset(message)

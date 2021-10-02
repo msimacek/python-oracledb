@@ -993,41 +993,7 @@ cdef class AuthMessage(Message):
             plain_text += (bytes([n]) * n)
         return encryptor.update(plain_text) + encryptor.finalize()
 
-    cdef int _generate_11g_verifier(self, bytes password_bytes) except -1:
-        """
-        Generate the verifier used by an 11g database.
-        """
-
-        # create password hash
-        verifier_data = bytes.fromhex(self.session_data['AUTH_VFR_DATA'])
-        h = hashlib.sha1(password_bytes)
-        h.update(verifier_data)
-        password_hash = h.digest() + bytes(4)
-
-        # encrypt client session key
-        client_key = secrets.token_bytes(48)
-        encoded_client_key = self._encrypt_cbc(password_hash, client_key)
-
-        # decrypt server key
-        encoded_server_key = bytes.fromhex(self.session_data['AUTH_SESSKEY'])
-        server_key = self._decrypt_cbc(password_hash, encoded_server_key)
-
-        # create combo key used for encrypting password
-        b = bytearray(24)
-        for i in range(16, 40):
-            b[i - 16] = server_key[i] ^ client_key[i]
-        part1 = hashlib.md5(b[:16]).digest()
-        part2 = hashlib.md5(b[16:]).digest()
-        combo_key = (part1 + part2)[:24]
-
-        # encrypt password
-        salt = secrets.token_bytes(16)
-        password_with_salt = salt + password_bytes
-        encrypted_password = self._encrypt_cbc(combo_key, password_with_salt)
-        self.encoded_password = encrypted_password.hex().upper()
-        self.session_key = encoded_client_key.hex().upper()[:96]
-
-    cdef int _generate_12c_verifier(self, bytes password_bytes) except -1:
+    cdef int _generate_verifier(self, bytes password_bytes) except -1:
         """
         Generate the verifier used by a 12c database.
         """
@@ -1171,7 +1137,7 @@ cdef class AuthMessage(Message):
             self._write_key_value(buf, "AUTH_SID",
                                   _connect_constants.user_name)
         else:
-            num_pairs = 2
+            num_pairs = 5
             if self.newpassword is not None:
                 num_pairs += 1
                 self.auth_mode |= TNS_AUTH_MODE_CHANGE_PASSWORD
@@ -1181,12 +1147,7 @@ cdef class AuthMessage(Message):
                 num_pairs += 1
             self.auth_mode |= TNS_AUTH_MODE_WITH_PASSWORD
             password_bytes = self.password.encode()
-            if buf._caps.supports_12c_logon:
-                self._generate_12c_verifier(password_bytes)
-                num_pairs += 3
-            else:
-                self._generate_11g_verifier(password_bytes)
-                num_pairs += 2
+            self._generate_verifier(password_bytes)
             buf.write_ub4(self.auth_mode)   # authentication mode
             buf.write_uint8(1)              # pointer (authivl)
             buf.write_ub4(num_pairs)        # number of key/value pairs
@@ -1198,9 +1159,8 @@ cdef class AuthMessage(Message):
             if self.newpassword is not None:
                 self._write_key_value(buf, "AUTH_NEWPASSWORD",
                                       self.encoded_newpassword)
-            if buf._caps.supports_12c_logon:
-                self._write_key_value(buf, "AUTH_PBKDF2_SPEEDY_KEY",
-                                      self.speedy_key)
+            self._write_key_value(buf, "AUTH_PBKDF2_SPEEDY_KEY",
+                                  self.speedy_key)
             self._write_key_value(buf, "SESSION_CLIENT_CHARSET", "873")
             self._write_key_value(buf, "SESSION_CLIENT_DRIVER_NAME",
                                   constants.FULL_DRIVER_NAME)
@@ -1686,6 +1646,8 @@ cdef class ProtocolMessage(Message):
             buf.skip_bytes(fdo_length)
             server_compile_caps = bytearray(buf.read_bytes(buf.read_uint8()))
             server_runtime_caps = bytearray(buf.read_bytes(buf.read_uint8()))
+            if not server_compile_caps[TNS_CCAP_LOGON_TYPES] & TNS_CCAP_O7LOGON:
+                errors._raise_err(errors.ERR_SERVER_LOGON_TYPE_NOT_SUPPORTED)
             buf._caps._adjust_for_server_compile_caps(server_compile_caps)
             buf._caps._adjust_for_server_runtime_caps(server_runtime_caps)
         else:
