@@ -356,13 +356,9 @@ cdef class MessageWithData(Message):
                 column_value = temp_bytes.decode()
             else:
                 column_value = temp_bytes.decode(TNS_ENCODING_UTF16)
-            if ora_type_num == TNS_DATA_TYPE_LONG:
-                buf.skip_bytes(2)
         elif ora_type_num == TNS_DATA_TYPE_RAW \
                 or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
             column_value = buf.read_bytes(num_bytes)
-            if ora_type_num == TNS_DATA_TYPE_LONG_RAW:
-                buf.skip_bytes(2)
         elif ora_type_num == TNS_DATA_TYPE_NUMBER:
             column_value = buf.read_oracle_number(num_bytes,
                                                   var_impl._preferred_num_type)
@@ -412,6 +408,10 @@ cdef class MessageWithData(Message):
                 errors._raise_err(errors.ERR_COLUMN_TRUNCATED,
                                   col_value_len=len(column_value),
                                   unit=unit_type, actual_len=actual_num_bytes)
+        if ora_type_num == TNS_DATA_TYPE_LONG \
+                or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
+            buf.read_ub4()                  # null indicator
+            buf.read_ub4()                  # return code
         if column_value is not None:
             if var_impl._conv_func is not None:
                 column_value = var_impl._conv_func(column_value)
