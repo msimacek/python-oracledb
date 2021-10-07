@@ -27,20 +27,22 @@ cdef class ThinPoolImpl(BasePoolImpl):
         object _bg_thread_condition
         object _condition
         object _params
+        str _password
         bint _open
 
-    def __init__(self, params, min, max, increment, homogeneous, getmode,
-                 wait_timeout, stmtcachesize, ping_interval):
+    def __init__(self, params, dsn, user, password, min, max, increment,
+                 homogeneous, getmode, wait_timeout, ping_interval):
         self._params = params
-        self.username = params.user
-        self.dsn = params.get_dsn()
+        self.username = user
+        self.dsn = dsn
         self.min = min
         self.max = max
         self.increment = increment
         self.homogeneous = homogeneous
+        self._password = password
         self._getmode = getmode
         self._wait_timeout = wait_timeout
-        self._stmt_cache_size = stmtcachesize
+        self._stmt_cache_size = params.stmtcachesize
         self._ping_interval = ping_interval
         self._free_new_conn_impls = []
         self._free_used_conn_impls = []
@@ -62,7 +64,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
         """
         cdef ThinConnImpl conn_impl
         conn_impl = ThinConnImpl(self.username, self.dsn)
-        conn_impl.connect(self._params, self._stmt_cache_size, self._auth_mode)
+        conn_impl.connect(self._params, self._password)
         conn_impl._pool = self
         return conn_impl
 
@@ -242,9 +244,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
             return False
         return self._getmode == constants.POOL_GETMODE_FORCEGET
 
-    def acquire(self, str user, str password, str cclass, uint32_t purity,
-                str tag, bint matchanytag, list shardingkey,
-                list supershardingkey):
+    def acquire(self, str user, str password, object params):
         """
         Internal method for acquiring a connection from the pool.
         """
@@ -258,7 +258,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
             errors._raise_err(errors.ERR_NOT_OPEN)
 
         # session tagging has not been implemented yet
-        if tag is not None:
+        if params.tag is not None:
             raise NotImplementedError("Tagging has not been implemented yet")
 
         # determine wait timeout to use
@@ -275,7 +275,8 @@ cdef class ThinPoolImpl(BasePoolImpl):
         # has been idle for a time greater than the value of ping interval
         while True:
             requires_ping = False
-            conn_impl = self._get_connection_helper(wait_timeout, purity)
+            conn_impl = self._get_connection_helper(wait_timeout,
+                                                    params.purity)
             if conn_impl._protocol._session_needs_to_be_closed:
                 self._conn_impls_to_close.append(conn_impl)
                 with self._bg_thread_condition:

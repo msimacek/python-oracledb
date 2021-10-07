@@ -82,10 +82,8 @@ cdef class Protocol:
         self._process_message(auth_message)
         self._process_message(auth_message)
 
-    cdef _connect(self, ThinConnImpl conn, bint secure_transport,
-                  str connect_string, str password, str newpassword,
-                  uint32_t auth_mode, bint supports_oob, str cclass,
-                  uint8_t purity):
+    cdef _connect(self, ThinConnImpl conn, object params, str connect_string,
+                  str password, str newpassword):
         cdef:
             ConnectMessage connect_message
             object temp_sock, ssl_context
@@ -102,7 +100,7 @@ cdef class Protocol:
             errors._raise_err(errors.ERR_NO_PASSWORD)
 
         # store whether OOB processing is possible or not
-        self._caps.supports_oob = supports_oob
+        self._caps.supports_oob = params._supports_oob()
 
         # send connect message and process response; this may request the
         # message to be resent multiple times; if a redirect packet is
@@ -136,9 +134,9 @@ cdef class Protocol:
         # send authorization packet twice, the first time to get the session
         # key and the second time to return the response to the challenge
         auth_message = AuthMessage(conn, password, newpassword)
-        auth_message._set_auth_mode(auth_mode)
-        auth_message.cclass = cclass
-        auth_message.purity = purity
+        auth_message._set_auth_mode(params.mode)
+        auth_message.cclass = params.cclass
+        auth_message.purity = params.purity
         self._process_message(auth_message)
         self._process_message(auth_message)
 

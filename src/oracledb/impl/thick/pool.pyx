@@ -15,10 +15,9 @@ cdef class ThickPoolImpl(BasePoolImpl):
         if self._handle != NULL:
             dpiPool_release(self._handle)
 
-    def _create(self, password, threaded, getmode, events, externalauth,
-                edition, timeout, wait_timeout, max_lifetime_session,
-                session_callback, max_sessions_per_shard, soda_metadata_cache,
-                stmtcachesize, ping_interval):
+    def _create(self, params, password, getmode, externalauth, timeout,
+                wait_timeout, max_lifetime_session, session_callback,
+                max_sessions_per_shard, soda_metadata_cache, ping_interval):
         cdef:
             bytes edition_bytes, user_bytes, password_bytes, dsn_bytes
             uint32_t password_len = 0, user_len = 0, dsn_len = 0
@@ -38,12 +37,11 @@ cdef class ThickPoolImpl(BasePoolImpl):
         if dpiContext_initCommonCreateParams(driver_context,
                                              &common_params) < 0:
             _raise_from_odpi()
-        if threaded:
-            common_params.createMode |= DPI_MODE_CREATE_THREADED
-        if events:
+        common_params.createMode |= DPI_MODE_CREATE_THREADED
+        if params.events:
             common_params.createMode |= DPI_MODE_CREATE_EVENTS
-        if edition:
-            edition_bytes = edition.encode()
+        if params.edition:
+            edition_bytes = params.edition.encode()
             common_params.edition = edition_bytes
             common_params.editionLength = <uint32_t> len(edition_bytes)
 
@@ -65,7 +63,7 @@ cdef class ThickPoolImpl(BasePoolImpl):
         pool_params.maxSessionsPerShard = max_sessions_per_shard
         pool_params.maxLifetimeSession = max_lifetime_session
         pool_params.pingInterval = ping_interval
-        common_params.stmtCacheSize = stmtcachesize
+        common_params.stmtCacheSize = params.stmtcachesize
         common_params.sodaMetadataCache = <bint> soda_metadata_cache
 
         # prepare user, password and DSN for use

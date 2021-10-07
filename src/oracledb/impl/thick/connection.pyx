@@ -199,12 +199,8 @@ cdef class ThickConnImpl(BaseConnImpl):
         if status < 0:
             _raise_from_odpi()
 
-    def connect(self, str password=None, uint32_t mode=0, uint64_t handle=0,
-                ThickPoolImpl pool_impl=None, bint threaded=False, bint
-                events=False, str cclass=None, uint32_t purity=0,
-                str newpassword=None, str edition=None, list appcontext=None,
-                str tag=None, bint matchanytag=False, list shardingkey=None,
-                list supershardingkey=None, uint32_t stmtcachesize=0):
+    def connect(self, object user_params, uint64_t handle,
+                ThickPoolImpl pool_impl, str password, str newpassword):
         cdef:
             dpiCommonCreateParams common_params
             dpiConnCreateParams conn_params
@@ -229,34 +225,34 @@ cdef class ThickConnImpl(BaseConnImpl):
             params.dsn = self.dsn.encode()
             params.dsn_ptr = params.dsn
             params.dsn_len = <uint32_t> len(params.dsn)
-        if cclass is not None:
-            params.cclass = cclass.encode()
+        if user_params.cclass is not None:
+            params.cclass = user_params.cclass.encode()
             params.cclass_ptr = params.cclass
             params.cclass_len = <uint32_t> len(params.cclass)
         if newpassword is not None:
             params.new_password = newpassword.encode()
             params.new_password_ptr = params.new_password
             params.new_password_len = <uint32_t> len(params.new_password)
-        if edition is not None:
-            params.edition = edition.encode()
+        if user_params.edition is not None:
+            params.edition = user_params.edition.encode()
             params.edition_ptr = params.edition
             params.edition_len = <uint32_t> len(params.edition)
-        if tag is not None:
-            params.tag = tag.encode()
+        if user_params.tag is not None:
+            params.tag = user_params.tag.encode()
             params.tag_ptr = params.tag
             params.tag_len = <uint32_t> len(params.tag)
-        if appcontext:
-            params.process_appcontext(appcontext)
+        if user_params.appcontext:
+            params.process_appcontext(user_params.appcontext)
 
         # set up common creation parameters
         if dpiContext_initCommonCreateParams(driver_context,
                                              &common_params) < 0:
             _raise_from_odpi()
-        if threaded:
+        if user_params.threaded:
             common_params.createMode |= DPI_MODE_CREATE_THREADED
-        if events:
+        if user_params.events:
             common_params.createMode |= DPI_MODE_CREATE_EVENTS
-        if edition is not None:
+        if user_params.edition is not None:
             common_params.edition = params.edition_ptr
             common_params.editionLength = params.edition_len
 
@@ -265,16 +261,16 @@ cdef class ThickConnImpl(BaseConnImpl):
             _raise_from_odpi()
         if params.username_len == 0 and params.password_len == 0:
             conn_params.externalAuth = 1
-        if cclass is not None:
+        if user_params.cclass is not None:
             conn_params.connectionClass = params.cclass_ptr
             conn_params.connectionClassLength = params.cclass_len
         if newpassword is not None:
             conn_params.newPassword = params.new_password_ptr
             conn_params.newPasswordLength = params.new_password_len
-        if appcontext:
+        if user_params.appcontext:
             conn_params.appContext = params.app_context
             conn_params.numAppContext = params.num_app_context
-        if tag is not None:
+        if user_params.tag is not None:
             conn_params.tag = params.tag_ptr
             conn_params.tagLength = params.tag_len
         if handle:
@@ -282,10 +278,10 @@ cdef class ThickConnImpl(BaseConnImpl):
             self._is_external = True
         if pool_impl is not None:
             conn_params.pool = pool_impl._handle
-        common_params.stmtCacheSize = stmtcachesize
-        conn_params.authMode = mode
-        conn_params.matchAnyTag = matchanytag
-        conn_params.purity = purity
+        common_params.stmtCacheSize = user_params.stmtcachesize
+        conn_params.authMode = user_params.mode
+        conn_params.matchAnyTag = user_params.matchanytag
+        conn_params.purity = user_params.purity
 
         # perform connection
         with nogil:

@@ -9,6 +9,7 @@ from . import constants, errors, exceptions, utils
 from . import thick_impl, thin_impl
 from . import pool as pool_module
 from .defaults import defaults
+from .connect_params import ConnectParams
 from .cursor import Cursor
 from .lob import LOB
 from .subscr import Subscription
@@ -29,28 +30,11 @@ class Connection:
                  dsn: str=None, *,
                  user: str=None,
                  password: str=None,
-                 host: str=None,
-                 port: int=None,
-                 service_name: str=None,
-                 thin: bool=None,
-                 mode: int=constants.AUTH_MODE_DEFAULT,
                  handle: int=0,
                  pool: Type["pool_module.Pool"]=None,
-                 threaded: bool=None,
-                 events: bool=None,
-                 cclass: str=None,
-                 purity: int=constants.PURITY_DEFAULT,
                  newpassword: str=None,
-                 edition: str=None,
-                 appcontext: list=[],
-                 tag: str=None,
-                 matchanytag: bool=False,
-                 shardingkey: list=[],
-                 supershardingkey: list=[],
-                 stmtcachesize: int=None,
-                 secure_transport: bool=False,
-                 config_dir: str=None,
-                 enable_drcp: bool=False) -> None:
+                 params: ConnectParams=None,
+                 **kwargs) -> None:
         """
         Constructor for creating a connection to the database. All parameters
         are optional.
@@ -60,80 +44,34 @@ class Connection:
         which case the user and password need to be specified separately). See
         the documentation on connection strings for more information.
 
-        If the mode is specified, it must be one of the connection
-        authorization modes which are defined at the module level.
-
-        If the handle is specified, it must be of type OCISvcCtx* and is only
-        of use when embedding Python in an application (like PowerBuilder)
-        which has already made the connection. The connection thus created
-        should never be used after the source handle has been closed or
-        destroyed. This parameter is only useful when creating a thick
-        connection.
+        If the handle is specified, it must be an integer representing a
+        pointer to type OCISvcCtx* and is only of use when embedding Python in
+        an application (like PowerBuilder) which has already made the
+        connection.  The connection thus created should never be used after the
+        source handle has been closed or destroyed. This parameter is only
+        useful when creating a thick connection.
 
         The pool parameter is expected to be a pool object and the use of this
         parameter is the equivalent of calling acquire() on the pool.
         Parameters not accepted by that method are ignored.
 
-        The threaded parameter is expected to be a boolean expression which
-        indicates whether or not Oracle should wrap accesses to connections
-        with a mutex. Doing so in single threaded applications imposes a
-        performance penalty of about 10-15% which is why the default is False.
+        The newpassword parameter is expected to be a string and sets the
+        password for the logon during the connection process.
 
-        The events parameter is expected to be a boolean expression which
-        indicates whether or not to initialize Oracle in events mode. This is
-        required for continuous query notification and high availability event
-        notifications.
+        The params parameter is expected to be of type ConnectParams and
+        contains connection parameters that will be used when establishing the
+        connection. See the documentation on ConnectParams for more
+        information. Note that this object can have its contents changed
+        internally. Use a copy if this is unacceptable.
 
-        The cclass parameter is expected to be a string and defines the
-        connection class for database resident connection pooling (DRCP).
-
-        The purity parameter is expected to be one of PURITY_DEFAULT,
-        PURITY_NEW, or PURITY_ANY.
-
-        The newpassword parameter is expected to be a string if specified and
-        sets the password for the logon during the connection process.
-
-        The edition parameter is expected to be a string if specified and sets
-        the edition to use for the session. It is only relevant if both the
-        client and the database are at least Oracle Database 11.2. If this
-        parameter is used with the cclass parameter the exception "DPI-1058:
-        edition not supported with connection class" will be raised.
-
-        The appcontext parameter is expected to be a list of 3-tuples, if
-        specified, and sets the application context for the connection.
-        Application context is available in the database by using the
-        sys_context() PL/SQL method and can be used within a logon trigger as
-        well as any other PL/SQL procedures. Each entry in the list is expected
-        to contain three strings: the namespace, the name and the value.
-
-        The tag parameter, if specified, is expected to be a string and will
-        limit the sessions that can be returned from a session pool unless the
-        matchanytag parameter is set to True. In that case sessions with the
-        specified tag will be preferred over others, but if no such sessions
-        are available a session with a different tag may be returned instead.
-        In any case, untagged sessions will always be returned if no sessions
-        with the specified tag are available. Sessions are tagged when they are
-        released back to the pool.
-
-        The shardingkey and supershardingkey parameters, if specified, are
-        expected to be a sequence of values which will be used to identify the
-        database shard to connect to. The key values can be strings, numbers,
-        bytes or dates.
-
-        The stmtcachesize parameter, if specified, is expected to be an integer
-        which specifies the initial value of Connection.stmtcachesize.
+        Any additional keyword parmeters will modify the params paramter, if
+        specified, or will create a new one using those parameters as the
+        constructor arguments.
         """
         self._impl = None
-        if thin is None:
-            thin = defaults.thin
-        if stmtcachesize is None:
-            stmtcachesize = defaults.stmtcachesize
-        if threaded is None:
-            threaded = defaults.threaded
-        if events is None:
-            events = defaults.events
-        if config_dir is None:
-            config_dir = defaults.config_dir
+        method = utils.process_connect_params
+        dsn, user, password, params = method(dsn, user, password, params,
+                                             kwargs)
         if pool is None:
             pool_impl = None
         elif not isinstance(pool, pool_module.Pool):
@@ -143,50 +81,27 @@ class Connection:
             pool._verify_open()
             pool_impl = pool._impl
             if isinstance(pool_impl, thick_impl.ThickPoolImpl):
-                thin = False
-        params = utils.ConnectParams(user=user, password=password, host=host,
-                                     port=port, service_name=service_name,
-                                     secure_transport=secure_transport,
-                                     config_dir=config_dir,
-                                     enable_drcp=enable_drcp)
-        if dsn is not None:
-            params.parse_dsn(dsn, thin=thin)
-        user = params.user
-        dsn = params.get_dsn()
-        if thin:
+                params.thin = False
+        if params.thin:
             if pool is not None:
-                impl = pool_impl.acquire(user=user, password=password,
-                                         cclass=cclass, purity=purity,
-                                         tag=tag, matchanytag=matchanytag,
-                                         shardingkey=shardingkey,
-                                         supershardingkey=supershardingkey)
+                impl = pool_impl.acquire(user, password, params)
             else:
                 impl = thin_impl.ThinConnImpl(user, dsn)
                 while True:
-                    redirect_data = impl.connect(params,
-                                                 stmtcachesize=stmtcachesize,
-                                                 newpassword=newpassword,
-                                                 auth_mode=mode, cclass=cclass,
-                                                 purity=purity)
+                    redirect_data = impl.connect(params, password, newpassword)
                     if redirect_data is None:
                         break
+                    params = params.copy()
                     params.parse_redirect_data(redirect_data)
         else:
             impl = thick_impl.ThickConnImpl(user, dsn)
-            impl.connect(password=params.password, mode=mode, handle=handle,
-                         pool_impl=pool_impl, threaded=threaded,
-                         events=events, cclass=cclass, purity=purity,
-                         newpassword=newpassword, edition=edition,
-                         appcontext=appcontext, tag=tag,
-                         matchanytag=matchanytag, shardingkey=shardingkey,
-                         supershardingkey=supershardingkey,
-                         stmtcachesize=stmtcachesize)
+            impl.connect(params, handle, pool_impl, password, newpassword)
         self._impl = impl
         self._version = None
         if impl.invoke_session_callback and pool is not None \
                 and pool.session_callback is not None \
                 and callable(pool.session_callback):
-            pool.session_callback(self, tag)
+            pool.session_callback(self, params.tag)
             impl.invoke_session_callback = False
 
     def __del__(self):

@@ -129,6 +129,11 @@ ERR_NUMBER_STRING_OF_ZERO_LENGTH = 4013
 ERR_NUMBER_STRING_TOO_LONG = 4014
 ERR_NUMBER_WITH_EMPTY_EXPONENT = 4015
 ERR_CONTENT_INVALID_AFTER_NUMBER = 4016
+ERR_INVALID_NAME_VALUE_PAIR_DATA = 4017
+ERR_INVALID_CONNECT_DATA = 4018
+ERR_INVALID_REDIRECT_DATA = 4019
+ERR_INVALID_TNS_ALIAS_DEFINITION = 4020
+ERR_INVALID_PROTOCOL = 4021
 
 # error numbers that result in InternalError
 ERR_MESSAGE_TYPE_UNKNOWN = 5000
@@ -137,6 +142,7 @@ ERR_BUFFER_LENGTH_INSUFFICIENT = 5001
 # error numbers that result in OperationalError
 ERR_LISTENER_REFUSED_CONNECTION = 6000
 ERR_INVALID_SERVICE_NAME = 6001
+ERR_INVALID_SERVER_CERT_DN = 6002
 
 # Oracle error number cross reference
 ERR_ORACLE_ERROR_XREF = {
@@ -192,7 +198,16 @@ ERR_MESSAGE_FORMATS = {
                                  "too small (should be at least " \
                                  "{required_arraysize})",
     ERR_INVALID_BIND_NAME: "invalid named bind: {name}",
+    ERR_INVALID_CONNECT_DATA: "invalid connect data: {data}",
+    ERR_INVALID_NAME_VALUE_PAIR_DATA: "invalid name-value pair data: {data}",
     ERR_INVALID_NUMBER: "invalid number",
+    ERR_INVALID_PROTOCOL: "invalid protocol: {protocol}",
+    ERR_INVALID_REDIRECT_DATA: "invalid redirect data: {data}",
+    ERR_INVALID_SERVER_CERT_DN: \
+            "the distinguished name (DN) on the server certificate does not " \
+            "match the expected value",
+    ERR_INVALID_TNS_ALIAS_DEFINITION: \
+            "invalid tnsnames.ora definition starting with {line}",
     ERR_INVALID_SERVICE_NAME: \
             "listener doesn't recognize service name",
     ERR_KEYWORD_ARGS_MUST_BE_DICT: "keyword arguments must be a dict",
@@ -238,7 +253,7 @@ ERR_MESSAGE_FORMATS = {
             "the thin driver",
     ERR_SET_ROWID_DIRECTLY: "rowid variables cannot be set directly",
     ERR_TIME_NOT_SUPPORTED: "Oracle does not support time only variables",
-    ERR_TNS_ENTRY_NOT_FOUND: "unable to find TNS entry name {val}",
+    ERR_TNS_ENTRY_NOT_FOUND: "unable to find {name} in tnsnames.ora",
     ERR_UNSUPPORTED_INBAND_NOTIFICATION: \
             "unsupported in-band notification with error number {err_num}",
     ERR_WRONG_ARRAY_DEFINITION: \

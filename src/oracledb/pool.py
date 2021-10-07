@@ -5,6 +5,7 @@
 from typing import Callable, Type
 from . import constants, errors, exceptions, utils, thick_impl, thin_impl
 from . import connection as connection_module
+from .connect_params import ConnectParams
 from .defaults import defaults
 
 class Pool:
@@ -13,35 +14,30 @@ class Pool:
                  dsn: str=None, *,
                  user: str=None,
                  password: str=None,
-                 host: str=None,
-                 port: int=None,
-                 service_name: str=None,
-                 thin: bool=None,
+                 params: ConnectParams=None,
                  min: int=1,
                  max: int=2,
                  increment: int=1,
                  connectiontype: Type["connection_module.Connection"]=None,
-                 threaded: bool=None,
                  getmode: int=constants.POOL_GETMODE_WAIT,
-                 events: bool=None,
                  homogeneous: bool=True,
                  externalauth: bool=False,
-                 edition: str=None,
                  timeout: int=0,
                  wait_timeout: int=0,
                  max_lifetime_session: int=0,
                  session_callback: Callable=None,
                  max_sessions_per_shard: int=0,
                  soda_metadata_cache: bool=False,
-                 stmtcachesize: int=None,
                  ping_interval: int=None,
-                 secure_transport: bool=False,
-                 config_dir: str=None,
-                 enable_drcp: bool=False,
+
+                 # deprecated parameters
                  waitTimeout: int=0,
                  maxLifetimeSession: int=0,
                  sessionCallback: Callable=None,
-                 maxSessionsPerShard: int=0) -> None:
+                 maxSessionsPerShard: int=0,
+
+                 # additional parameters as keyword parameters
+                 **kwargs) -> None:
         """
         Constructor for the pool. Connection pooling creates a pool of
         available connections to the database, allowing applications to acquire
@@ -49,7 +45,7 @@ class Pool:
         connections are requested in rapid succession and used for a short
         period of time, for example in a web server.
 
-        The user, password and dsn parameters are the same as for connect().
+        The dsn, user and password parameters are the same as for connect().
 
         The min, max and increment parameters control pool growth behavior. A
         fixed pool size where min equals max is recommended to help prevent
@@ -69,18 +65,8 @@ class Pool:
         will create connection objects of that type, rather than the base type
         defined at the module level.
 
-        The threaded parameter is expected to be a boolean expression which
-        indicates whether Oracle should wrap accesses to connections with a
-        mutex. Doing so in single threaded applications imposes a performance
-        penalty of about 10-15% which is why the default is False.
-
         The getmode parameter indicates whether or not future acquire() calls
         will wait for available connections.
-
-        The events parameter is expected to be a boolean expression which
-        indicates whether or not to initialize Oracle in events mode. This is
-        required for continuous query notification and high availability event
-        notifications.
 
         The homogeneous parameter is expected to be a boolean expression which
         indicates whether or not to create a homogeneous pool. A homogeneous
@@ -95,11 +81,6 @@ class Pool:
         is authenticating the user to the database. This includes the use of
         operating system authentication and Oracle wallets. See Connecting
         Using External Authentication.
-
-        The edition parameter is expected to be a string, if specified, and
-        sets the edition to use for the connections in the pool. It is only
-        relevant if both the client and the server are at least Oracle Database
-        11.2. See Edition-Based Redefinition (EBR).
 
         The timeout parameter is expected to be an integer, if specified, and
         sets the length of time (in seconds) after which idle connections in
@@ -149,23 +130,10 @@ class Pool:
         is also only available in Oracle Client 19.11 and higher. See Using the
         SODA Metadata Cache.
 
-        The stmtcachesize parameter, if specified, is expected to be an integer
-        which specifies the initial value of stmtcachesize.
-
         The ping_interval parameter, if specified, is expected to be an integer
         which specifies the initial value of ping_interval.
         """
         self._impl = None
-        if thin is None:
-            thin = defaults.thin
-        if stmtcachesize is None:
-            stmtcachesize = defaults.stmtcachesize
-        if threaded is None:
-            threaded = defaults.threaded
-        if events is None:
-            events = defaults.events
-        if config_dir is None:
-            config_dir = defaults.config_dir
         if ping_interval is None:
             ping_interval = defaults.ping_interval
         if connectiontype is None:
@@ -175,14 +143,9 @@ class Pool:
                       "oracledb.Connection"
             raise TypeError(message)
         self._connection_type = connectiontype
-        params = utils.ConnectParams(user=user, password=password, host=host,
-                                     port=port, service_name=service_name,
-                                     secure_transport=secure_transport,
-                                     config_dir=config_dir,
-                                     enable_drcp=enable_drcp)
-        if dsn is not None:
-            params.parse_dsn(dsn, thin=thin)
-
+        method = utils.process_connect_params
+        dsn, user, password, params = method(dsn, user, password, params,
+                                             kwargs)
         if waitTimeout != 0:
             if wait_timeout != 0:
                 errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
@@ -208,24 +171,17 @@ class Pool:
                                   new_name="max_sessions_per_shard")
             max_sessions_per_shard = maxSessionsPerShard
 
-        if thin:
-            impl = thin_impl.ThinPoolImpl(params, min, max, increment,
-                                          homogeneous, getmode, wait_timeout,
-                                          stmtcachesize, ping_interval)
+        if params.thin:
+            impl = thin_impl.ThinPoolImpl(params, dsn, user, password, min,
+                                          max, increment, homogeneous, getmode,
+                                          wait_timeout, ping_interval)
         else:
-            impl = thick_impl.ThickPoolImpl(params.user, params.get_dsn(), min,
-                                            max, increment, homogeneous)
-            impl._create(password=params.password, threaded=threaded,
-                         getmode=getmode, events=events,
-                         externalauth=externalauth,
-                         edition=edition, timeout=timeout,
-                         wait_timeout=wait_timeout,
-                         max_lifetime_session=max_lifetime_session,
-                         session_callback=session_callback,
-                         max_sessions_per_shard=max_sessions_per_shard,
-                         soda_metadata_cache=soda_metadata_cache,
-                         stmtcachesize=stmtcachesize,
-                         ping_interval=ping_interval)
+            impl = thick_impl.ThickPoolImpl(user, dsn, min, max, increment,
+                                            homogeneous)
+            impl._create(params, password, getmode, externalauth, timeout,
+                         wait_timeout, max_lifetime_session, session_callback,
+                         max_sessions_per_shard, soda_metadata_cache,
+                         ping_interval)
         self._impl = impl
         self.session_callback = session_callback
 

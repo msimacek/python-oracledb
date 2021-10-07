@@ -20,5 +20,7 @@ class Defaults:
         self.fetch_lobs = True
         self.fetch_decimals = False
         self.prefetchrows = 2
+        self.disable_oob = False
+        self.ssl_server_dn_match = False
 
 defaults = Defaults()
