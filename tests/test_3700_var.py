@@ -359,5 +359,20 @@ class TestCase(test_env.BaseTestCase):
         self._test_positive_set_and_get(oracledb.DB_TYPE_CURSOR, None, None)
         self._test_negative_set_and_get(oracledb.DB_TYPE_CURSOR, 5)
 
+    def test_3724_fetch_null_column(self):
+        "3724 - test fetching columns containing all null values"
+        self.cursor.execute("""
+                select
+                    null,
+                    to_char(null),
+                    to_number(null),
+                    to_date(null),
+                    to_timestamp(null),
+                    to_clob(null),
+                    to_blob(null)
+                from dual""")
+        results = self.cursor.fetchall()
+        self.assertEqual(results, [(None, None, None, None, None, None, None)])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

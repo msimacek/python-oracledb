@@ -330,22 +330,28 @@ cdef class MessageWithData(Message):
                                      ThinVarImpl var_impl, uint32_t pos):
         cdef:
             uint8_t num_bytes, ora_type_num, csfrm
+            uint32_t actual_num_bytes, buffer_size
             ThinCursorImpl cursor_impl
             object column_value = None
-            uint32_t actual_num_bytes
             ThinLobImpl lob_impl
-            bytes temp_bytes
             FetchInfo fetch_info
+            bytes temp_bytes
         fetch_info = var_impl._fetch_info
         if fetch_info is not None:
             ora_type_num = fetch_info._dbtype._ora_type_num
             csfrm =  fetch_info._dbtype._csfrm
+            buffer_size = fetch_info._buffer_size
         else:
             ora_type_num = var_impl.dbtype._ora_type_num
             csfrm = var_impl.dbtype._csfrm
+            buffer_size = var_impl.buffer_size
         if var_impl.bypass_decode:
             ora_type_num = TNS_DATA_TYPE_RAW
-        num_bytes = buf.read_uint8()
+        if buffer_size == 0 and ora_type_num != TNS_DATA_TYPE_LONG \
+                and ora_type_num != TNS_DATA_TYPE_LONG_RAW:
+            num_bytes = 0                   # column is null by describe
+        else:
+            num_bytes = buf.read_uint8()
         if num_bytes == 0:
             column_value = None
         elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
