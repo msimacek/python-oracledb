@@ -45,7 +45,9 @@ class ConnectParams:
                  stmtcachesize: int=None,
                  disable_oob: bool=None,
                  ssl_server_dn_match: bool=None,
-                 ssl_server_cert_dn: str=None) -> None:
+                 ssl_server_cert_dn: str=None,
+                 retry_count: int=0,
+                 retry_delay: int=0) -> None:
         """
         Constructor for connection parameters. All parameters are optional.
 
@@ -130,6 +132,12 @@ class ConnectParams:
         ssl_server_cert_dn: the distinguished name (DN) which should be matched
         with the server. This value is ignored if the ssl_server_dn_match
         parameter is not set to the value True.
+
+        retry_count: the number of times that a connection attempt should be
+        made before the attempt is terminated.
+
+        retry_delay: the number of seconds to wait before making a new
+        connection attempt.
         """
         self.host = host
         self.port = port
@@ -160,6 +168,8 @@ class ConnectParams:
                 if ssl_server_dn_match is not None \
                 else defaults.ssl_server_dn_match
         self.ssl_server_cert_dn = ssl_server_cert_dn
+        self.retry_count = retry_count
+        self.retry_delay = retry_delay
 
     def _get_tnsnames_file(self):
         """
@@ -191,7 +201,10 @@ class ConnectParams:
         """
         node = parse_name_value_pairs(connect_string)
         try:
-            address_node = node.description.address
+            description_node = node.description
+            self.retry_count = int(getattr(description_node, "retry_count", 0))
+            self.retry_delay = int(getattr(description_node, "retry_delay", 0))
+            address_node = description_node.address
             connect_data_node = node.description.connect_data
             self.host = address_node.host
             self.port = int(address_node.port)

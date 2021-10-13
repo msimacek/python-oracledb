@@ -129,7 +129,15 @@ cdef class ThinConnImpl(BaseConnImpl):
         self._protocol._commit()
 
     def connect(self, params, str password, str newpassword=None):
-        sock = socket.create_connection((params.host, params.port))
+        cdef unsigned long num_attempts = params.retry_count + 1
+        for i in range(num_attempts):
+            try:
+                sock = socket.create_connection((params.host, params.port))
+                break
+            except socket.gaierror:
+                if i == num_attempts - 1:
+                    raise
+            time.sleep(params.retry_delay)
         if params.secure_transport:
             ssl_context = ssl.create_default_context()
             sock = ssl_context.wrap_socket(sock, server_hostname=params.host)
