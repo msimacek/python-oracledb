@@ -138,15 +138,16 @@ cdef class ThinConnImpl(BaseConnImpl):
                 if i == num_attempts - 1:
                     raise
             time.sleep(params.retry_delay)
-        if params.keepalive_idle_time > 0:
+        if params.enable_keepalive or params.keepalive_idle_time > 0:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            if hasattr(socket, "TCP_KEEPIDLE") \
-                    and hasattr(socket, "TCP_KEEPINTVL") \
-                    and hasattr(socket, "TCP_KEEPCNT"):
-                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE,
-                                params.keepalive_idle_time * 60)
-                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 6)
-                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)
+        if params.keepalive_idle_time > 0 \
+                and hasattr(socket, "TCP_KEEPIDLE") \
+                and hasattr(socket, "TCP_KEEPINTVL") \
+                and hasattr(socket, "TCP_KEEPCNT"):
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE,
+                            params.keepalive_idle_time * 60)
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 6)
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)
         if params.secure_transport:
             ssl_context = ssl.create_default_context()
             sock = ssl_context.wrap_socket(sock, server_hostname=params.host)

@@ -48,6 +48,7 @@ class ConnectParams:
                  ssl_server_cert_dn: str=None,
                  retry_count: int=0,
                  retry_delay: int=0,
+                 enable_keepalive: bool=False,
                  keepalive_idle_time: int=0) -> None:
         """
         Constructor for connection parameters. All parameters are optional.
@@ -140,9 +141,13 @@ class ConnectParams:
         retry_delay: the number of seconds to wait before making a new
         connection attempt.
 
-        keepalive_idle_time: a value greater than zero enables the sending of
-        keepalive probes. If the platform supports it, this parameter specifies
-        the number of minutes between the sending of these probes.
+        enable_keepalive: a boolean indicating if keepalive probes should be
+        sent. If the keepalive_idle_time parameter is not set the OS default
+        configuration will be used.
+
+        keepalive_idle_time: an integer indicating the number of minutes
+        between the sending of keepalive probes. If this parameter is set to a
+        value greater than zero it enables keepalive.
         """
         self.host = host
         self.port = port
@@ -175,6 +180,7 @@ class ConnectParams:
         self.ssl_server_cert_dn = ssl_server_cert_dn
         self.retry_count = retry_count
         self.retry_delay = retry_delay
+        self.enable_keepalive = enable_keepalive
         self.keepalive_idle_time = keepalive_idle_time
 
     def _get_tnsnames_file(self):
@@ -210,7 +216,7 @@ class ConnectParams:
             description_node = node.description
             temp_val = getattr(description_node, "enable", None)
             if temp_val is not None and temp_val.lower() == "broken":
-                self.keepalive_idle_time = 1
+                self.enable_keepalive = True
             temp_val = getattr(description_node, "expire_time", None)
             if temp_val is not None:
                 self.keepalive_idle_time = int(temp_val)

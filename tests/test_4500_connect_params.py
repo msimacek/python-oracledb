@@ -108,7 +108,7 @@ class TestCase(test_env.BaseTestCase):
             "(CONNECT_DATA=(SERVICE_NAME=my_service_name10)))"
         params = oracledb.ConnectParams()
         params.parse_connect_string(nvpair_data)
-        self.assertEqual(params.keepalive_idle_time, 1)
+        self.assertEqual(params.enable_keepalive, True)
 
     def test_4510_keepalive_tuned(self):
         "4510 - name/value pair tuned keepalive setting"
