@@ -74,11 +74,20 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(params.secure_transport, True)
 
     def test_4506_ezconnect_with_invalid_protocol(self):
-        "4505 - test EZConnect with invalid protocol"
+        "4506 - test EZConnect with invalid protocol"
         params = oracledb.ConnectParams()
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4021:",
                                params.parse_connect_string,
                                "invalid_proto://my_host7/my_service_name7")
+
+    def test_4507_exception_on_ipc_protocol(self):
+        "4507 - confirm an exception is raised if using ipc protocol"
+        nvpair_data = \
+            "(DESCRIPTION=(ADDRESS=(PROTOCOL=ipc)(KEY=my_view8))" \
+            "(CONNECT_DATA=(SERVICE_NAME=my_service_name8)))"
+        params = oracledb.ConnectParams()
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4021:",
+                               params.parse_connect_string, nvpair_data)
 
 if __name__ == "__main__":
     test_env.run_test_cases()

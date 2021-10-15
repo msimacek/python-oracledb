@@ -206,10 +206,10 @@ class ConnectParams:
             self.retry_delay = int(getattr(description_node, "retry_delay", 0))
             address_node = description_node.address
             connect_data_node = node.description.connect_data
+            self._set_protocol(address_node.protocol)
             self.host = address_node.host
             self.port = int(address_node.port)
             self.service_name = connect_data_node.service_name
-            protocol = address_node.protocol
             security_node = getattr(node.description, "security", None)
             if security_node is not None:
                 self.ssl_server_cert_dn = getattr(security_node,
@@ -217,7 +217,6 @@ class ConnectParams:
         except AttributeError:
             errors._raise_err(errors.ERR_INVALID_CONNECT_DATA,
                               data=connect_string)
-        self._set_protocol(protocol)
 
     def _parse_ezconnect_string(self, connect_string):
         """
