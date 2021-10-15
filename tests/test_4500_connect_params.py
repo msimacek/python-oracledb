@@ -89,5 +89,36 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4021:",
                                params.parse_connect_string, nvpair_data)
 
+    def test_4508_retry_count_and_delay(self):
+        "4508 - name/value pair with retry count and retry delay"
+        nvpair_data = \
+            "(DESCRIPTION=(RETRY_COUNT=6)(RETRY_DELAY=5)" \
+            "(ADDRESS=(PROTOCOL=TCP)(HOST=my_host9)(PORT=1593))" \
+            "(CONNECT_DATA=(SERVICE_NAME=my_service_name9)))"
+        params = oracledb.ConnectParams()
+        params.parse_connect_string(nvpair_data)
+        self.assertEqual(params.retry_count, 6)
+        self.assertEqual(params.retry_delay, 5)
+
+    def test_4509_keepalive_basic(self):
+        "4509 - name/value pair with basic keepalive setting"
+        nvpair_data = \
+            "(DESCRIPTION=(ENABLE=BROKEN)" \
+            "(ADDRESS=(PROTOCOL=TCP)(HOST=my_host10)(PORT=1594))" \
+            "(CONNECT_DATA=(SERVICE_NAME=my_service_name10)))"
+        params = oracledb.ConnectParams()
+        params.parse_connect_string(nvpair_data)
+        self.assertEqual(params.keepalive_idle_time, 1)
+
+    def test_4510_keepalive_tuned(self):
+        "4510 - name/value pair tuned keepalive setting"
+        nvpair_data = \
+            "(DESCRIPTION=(EXPIRE_TIME=12)" \
+            "(ADDRESS=(PROTOCOL=TCP)(HOST=my_host11)(PORT=1594))" \
+            "(CONNECT_DATA=(SERVICE_NAME=my_service_name11)))"
+        params = oracledb.ConnectParams()
+        params.parse_connect_string(nvpair_data)
+        self.assertEqual(params.keepalive_idle_time, 12)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

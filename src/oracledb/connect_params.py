@@ -47,7 +47,8 @@ class ConnectParams:
                  ssl_server_dn_match: bool=None,
                  ssl_server_cert_dn: str=None,
                  retry_count: int=0,
-                 retry_delay: int=0) -> None:
+                 retry_delay: int=0,
+                 keepalive_idle_time: int=0) -> None:
         """
         Constructor for connection parameters. All parameters are optional.
 
@@ -138,6 +139,10 @@ class ConnectParams:
 
         retry_delay: the number of seconds to wait before making a new
         connection attempt.
+
+        keepalive_idle_time: a value greater than zero enables the sending of
+        keepalive probes. If the platform supports it, this parameter specifies
+        the number of minutes between the sending of these probes.
         """
         self.host = host
         self.port = port
@@ -170,6 +175,7 @@ class ConnectParams:
         self.ssl_server_cert_dn = ssl_server_cert_dn
         self.retry_count = retry_count
         self.retry_delay = retry_delay
+        self.keepalive_idle_time = keepalive_idle_time
 
     def _get_tnsnames_file(self):
         """
@@ -202,13 +208,23 @@ class ConnectParams:
         node = parse_name_value_pairs(connect_string)
         try:
             description_node = node.description
-            self.retry_count = int(getattr(description_node, "retry_count", 0))
-            self.retry_delay = int(getattr(description_node, "retry_delay", 0))
+            temp_val = getattr(description_node, "enable", None)
+            if temp_val is not None and temp_val.lower() == "broken":
+                self.keepalive_idle_time = 1
+            temp_val = getattr(description_node, "expire_time", None)
+            if temp_val is not None:
+                self.keepalive_idle_time = int(temp_val)
+            temp_val = getattr(description_node, "retry_count", None)
+            if temp_val is not None:
+                self.retry_count = int(temp_val)
+            temp_val = getattr(description_node, "retry_delay", None)
+            if temp_val is not None:
+                self.retry_delay = int(temp_val)
             address_node = description_node.address
-            connect_data_node = node.description.connect_data
             self._set_protocol(address_node.protocol)
             self.host = address_node.host
             self.port = int(address_node.port)
+            connect_data_node = node.description.connect_data
             self.service_name = connect_data_node.service_name
             security_node = getattr(node.description, "security", None)
             if security_node is not None:
