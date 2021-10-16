@@ -232,6 +232,18 @@ class ConnectParams:
             self.port = int(address_node.port)
             connect_data_node = node.description.connect_data
             self.service_name = connect_data_node.service_name
+            temp_val = getattr(connect_data_node, "pool_connection_class",
+                               None)
+            if temp_val is not None:
+                self.cclass = temp_val
+            temp_val = getattr(connect_data_node, "pool_purity", None)
+            if temp_val is not None:
+                temp_val = temp_val.lower()
+                if temp_val not in ("new", "self"):
+                    errors._raise_err(errors.ERR_INVALID_POOL_PURITY,
+                                      purity=temp_val)
+                self.purity = constants.PURITY_NEW if temp_val == "new" \
+                        else constants.PURITY_ANY
             security_node = getattr(node.description, "security", None)
             if security_node is not None:
                 self.ssl_server_cert_dn = getattr(security_node,

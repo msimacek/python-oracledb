@@ -120,5 +120,29 @@ class TestCase(test_env.BaseTestCase):
         params.parse_connect_string(nvpair_data)
         self.assertEqual(params.keepalive_idle_time, 12)
 
+    def test_4511_pool_parameters(self):
+        "4511 - name/value pair with pool parameters"
+        nvpair_data = \
+            "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=my_host12)(PORT=694))" \
+            "(CONNECT_DATA=(SERVICE_NAME=my_service_name12)" \
+            "(POOL_CONNECTION_CLASS=cclass_12)(POOL_PURITY=SELF)))"
+        params = oracledb.ConnectParams()
+        params.parse_connect_string(nvpair_data)
+        self.assertEqual(params.cclass, "cclass_12")
+        self.assertEqual(params.purity, oracledb.PURITY_ANY)
+        nvpair_data = nvpair_data.replace("SELF", "NEW")
+        params.parse_connect_string(nvpair_data)
+        self.assertEqual(params.purity, oracledb.PURITY_NEW)
+
+    def test_4512_invalid_pool_purity(self):
+        "4512 - name/value pair with invalid pool purity"
+        nvpair_data = \
+            "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=my_host13)(PORT=695))" \
+            "(CONNECT_DATA=(SERVICE_NAME=my_service_name13)" \
+            "(POOL_CONNECTION_CLASS=cclass_13)(POOL_PURITY=INVALID)))"
+        params = oracledb.ConnectParams()
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4022:",
+                               params.parse_connect_string, nvpair_data)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

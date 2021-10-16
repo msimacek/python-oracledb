@@ -134,6 +134,7 @@ ERR_INVALID_CONNECT_DATA = 4018
 ERR_INVALID_REDIRECT_DATA = 4019
 ERR_INVALID_TNS_ALIAS_DEFINITION = 4020
 ERR_INVALID_PROTOCOL = 4021
+ERR_INVALID_POOL_PURITY = 4022
 
 # error numbers that result in InternalError
 ERR_MESSAGE_TYPE_UNKNOWN = 5000
@@ -201,6 +202,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_INVALID_CONNECT_DATA: "invalid connect data: {data}",
     ERR_INVALID_NAME_VALUE_PAIR_DATA: "invalid name-value pair data: {data}",
     ERR_INVALID_NUMBER: "invalid number",
+    ERR_INVALID_POOL_PURITY: "invalid pool purity: {purity}",
     ERR_INVALID_PROTOCOL: "invalid protocol: {protocol}",
     ERR_INVALID_REDIRECT_DATA: "invalid redirect data: {data}",
     ERR_INVALID_SERVER_CERT_DN: \
