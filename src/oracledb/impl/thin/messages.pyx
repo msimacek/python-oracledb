@@ -1039,7 +1039,7 @@ cdef class AuthMessage(Message):
         # generate speedy key
         salt = secrets.token_bytes(16)
         speedy_key = self._encrypt_cbc(session_key, salt + password_key)
-        self.speedy_key = speedy_key.hex().upper()[:80]
+        self.speedy_key = speedy_key[:80].hex().upper()
 
         # encrypt password
         salt = secrets.token_bytes(16)
