@@ -981,24 +981,6 @@ cdef class AuthMessage(Message):
         self.user_bytes = conn_impl.username.encode()
         self.user_bytes_len = <uint8_t> len(self.user_bytes)
 
-    def _decrypt_cbc(self, key, encrypted_text):
-        iv = bytes(16)
-        algo = algorithms.AES(key)
-        cipher = Cipher(algo, modes.CBC(iv))
-        decryptor = cipher.decryptor()
-        return decryptor.update(encrypted_text)
-
-    def _encrypt_cbc(self, key, plain_text):
-        block_size = 16
-        iv = bytes(block_size)
-        algo = algorithms.AES(key)
-        cipher = Cipher(algo, modes.CBC(iv))
-        encryptor = cipher.encryptor()
-        n = block_size - len(plain_text) % block_size
-        if n:
-            plain_text += (bytes([n]) * n)
-        return encryptor.update(plain_text) + encryptor.finalize()
-
     cdef int _generate_verifier(self, bytes password_bytes) except -1:
         """
         Generate the verifier used by a 12c database.
@@ -1007,10 +989,8 @@ cdef class AuthMessage(Message):
         # create password hash
         verifier_data = bytes.fromhex(self.session_data['AUTH_VFR_DATA'])
         iterations = int(self.session_data['AUTH_PBKDF2_VGEN_COUNT'])
-        kdf = pbkdf2.PBKDF2HMAC(algorithm=hashes.SHA512(),
-                                salt=verifier_data + b'AUTH_PBKDF2_SPEEDY_KEY',
-                                length=64, iterations=iterations)
-        password_key = kdf.derive(password_bytes)
+        salt = verifier_data + b'AUTH_PBKDF2_SPEEDY_KEY'
+        password_key = get_derived_key(password_bytes, salt, 64, iterations)
         h = hashlib.new("sha512")
         h.update(password_key)
         h.update(verifier_data)
@@ -1018,39 +998,35 @@ cdef class AuthMessage(Message):
 
         # decrypt first half of session key
         encoded_server_key = bytes.fromhex(self.session_data['AUTH_SESSKEY'])
-        session_key_part_a = self._decrypt_cbc(password_hash,
-                                               encoded_server_key)
+        session_key_part_a = decrypt_cbc(password_hash, encoded_server_key)
 
         # generate second half of session key
         session_key_part_b = secrets.token_bytes(32)
-        encoded_client_key = self._encrypt_cbc(password_hash,
-                                               session_key_part_b)
+        encoded_client_key = encrypt_cbc(password_hash, session_key_part_b)
         self.session_key = encoded_client_key.hex().upper()[:64]
 
         # generate session key
         mixing_salt = bytes.fromhex(self.session_data['AUTH_PBKDF2_CSK_SALT'])
         iterations = int(self.session_data['AUTH_PBKDF2_SDER_COUNT'])
-        kdf = pbkdf2.PBKDF2HMAC(algorithm=hashes.SHA512(),
-                                salt=mixing_salt, length=32,
-                                iterations=iterations)
         combo_key = session_key_part_b + session_key_part_a
-        session_key = kdf.derive(combo_key.hex().upper().encode())
+        session_key = get_derived_key(combo_key.hex().upper().encode(),
+                                      mixing_salt, 32, iterations)
 
         # generate speedy key
         salt = secrets.token_bytes(16)
-        speedy_key = self._encrypt_cbc(session_key, salt + password_key)
+        speedy_key = encrypt_cbc(session_key, salt + password_key)
         self.speedy_key = speedy_key[:80].hex().upper()
 
         # encrypt password
         salt = secrets.token_bytes(16)
         password_with_salt = salt + password_bytes
-        encrypted_password = self._encrypt_cbc(session_key, password_with_salt)
+        encrypted_password = encrypt_cbc(session_key, password_with_salt)
         self.encoded_password = encrypted_password.hex().upper()
 
         if self.newpassword is not None:
             newpassword_with_salt = salt + self.newpassword.encode()
-            encrypted_newpassword = self._encrypt_cbc(session_key,
-                                                    newpassword_with_salt)
+            encrypted_newpassword = encrypt_cbc(session_key,
+                                                newpassword_with_salt)
             self.encoded_newpassword = encrypted_newpassword.hex().upper()
 
     cdef int _process_return_parameters(self, ReadBuffer buf) except -1:

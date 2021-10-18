@@ -20,11 +20,6 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 from libc.stdint cimport UINT8_MAX, UINT16_MAX, UINT32_MAX, UINT64_MAX
 from cpython cimport array
 
-from cryptography import x509
-from cryptography.hazmat.primitives.ciphers import algorithms, modes, Cipher
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf import pbkdf2
-
 import array
 import collections
 import datetime
@@ -56,6 +51,7 @@ from .var import Var
 
 include "impl/thin/constants.pxi"
 include "impl/thin/utils.pyx"
+include "impl/thin/crypto.pyx"
 include "impl/thin/capabilities.pyx"
 include "impl/thin/buffer.pyx"
 include "impl/thin/network_services.pyx"
