@@ -57,7 +57,11 @@ def get_ssl_socket(sock, params):
     the user.
     """
     ssl_context = ssl.create_default_context()
-    sock = ssl_context.wrap_socket(sock, server_hostname=params.host)
+    if params.ssl_server_dn_match and params.ssl_server_cert_dn is None:
+        sock = ssl_context.wrap_socket(sock, server_hostname=params.host)
+    else:
+        ssl_context.check_hostname = False
+        sock = ssl_context.wrap_socket(sock)
     if params.ssl_server_dn_match and params.ssl_server_cert_dn is not None:
         server_dn = get_server_dn(sock)
         if server_dn != params.ssl_server_cert_dn:
