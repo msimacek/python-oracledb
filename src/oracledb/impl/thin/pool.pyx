@@ -27,7 +27,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
         object _bg_thread_condition
         object _condition
         object _params
-        str _password
+        bytes _password
         bint _open
 
     def __init__(self, params, dsn, user, password, min, max, increment,
@@ -39,7 +39,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
         self.max = max
         self.increment = increment
         self.homogeneous = homogeneous
-        self._password = password
+        self._password = zlib.compress(password.encode())
         self._getmode = getmode
         self._wait_timeout = wait_timeout
         self._stmt_cache_size = params.stmtcachesize
@@ -64,7 +64,8 @@ cdef class ThinPoolImpl(BasePoolImpl):
         """
         cdef ThinConnImpl conn_impl
         conn_impl = ThinConnImpl(self.username, self.dsn)
-        conn_impl.connect(self._params, self._password)
+        password = zlib.decompress(self._password).decode()
+        conn_impl.connect(self._params, password)
         conn_impl._pool = self
         return conn_impl
 

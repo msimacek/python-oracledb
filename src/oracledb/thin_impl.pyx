@@ -34,7 +34,7 @@ import ssl
 import sys
 import threading
 import time
-import weakref
+import zlib
 
 cydatetime.import_datetime()
 

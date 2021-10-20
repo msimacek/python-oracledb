@@ -95,10 +95,6 @@ cdef class Protocol:
         # since the connection is going to be immediately closed anyway!
         self._in_connect = True
 
-        # verify that a password has been specified first
-        if password is None:
-            errors._raise_err(errors.ERR_NO_PASSWORD)
-
         # store whether OOB processing is possible or not
         self._caps.supports_oob = params._supports_oob()
 

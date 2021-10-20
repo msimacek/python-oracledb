@@ -86,6 +86,8 @@ class Connection:
             if pool is not None:
                 impl = pool_impl.acquire(user, password, params)
             else:
+                if password is None:
+                    errors._raise_err(errors.ERR_NO_PASSWORD)
                 impl = thin_impl.ThinConnImpl(user, dsn)
                 while True:
                     redirect_data = impl.connect(params, password, newpassword)

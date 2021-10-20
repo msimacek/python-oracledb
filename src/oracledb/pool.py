@@ -172,6 +172,8 @@ class Pool:
             max_sessions_per_shard = maxSessionsPerShard
 
         if params.thin:
+            if password is None:
+                errors._raise_err(errors.ERR_NO_PASSWORD)
             impl = thin_impl.ThinPoolImpl(params, dsn, user, password, min,
                                           max, increment, homogeneous, getmode,
                                           wait_timeout, ping_interval)
