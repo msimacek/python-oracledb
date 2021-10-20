@@ -167,6 +167,12 @@ create table &main_user..TestXML (
 )
 /
 
+create table &main_user..TestTempXML (
+    IntCol                              number(9) not null,
+    XMLCol                              xmltype not null
+)
+/
+
 create table &main_user..TestLongs (
     IntCol                              number(9) not null,
     LongCol                             long
