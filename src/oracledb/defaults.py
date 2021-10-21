@@ -22,5 +22,6 @@ class Defaults:
         self.prefetchrows = 2
         self.disable_oob = False
         self.ssl_server_dn_match = True
+        self.tcp_connect_timeout = 60.0
 
 defaults = Defaults()

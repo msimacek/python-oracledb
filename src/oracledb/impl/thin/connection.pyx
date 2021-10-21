@@ -132,7 +132,8 @@ cdef class ThinConnImpl(BaseConnImpl):
         cdef unsigned long num_attempts = params.retry_count + 1
         for i in range(num_attempts):
             try:
-                sock = socket.create_connection((params.host, params.port))
+                sock = socket.create_connection((params.host, params.port),
+                                                params.tcp_connect_timeout)
                 break
             except socket.gaierror:
                 if i == num_attempts - 1:

@@ -49,7 +49,8 @@ class ConnectParams:
                  retry_count: int=0,
                  retry_delay: int=0,
                  enable_keepalive: bool=False,
-                 keepalive_idle_time: int=0) -> None:
+                 keepalive_idle_time: int=0,
+                 tcp_connect_timeout: float=None) -> None:
         """
         Constructor for connection parameters. All parameters are optional.
 
@@ -148,6 +149,9 @@ class ConnectParams:
         keepalive_idle_time: an integer indicating the number of minutes
         between the sending of keepalive probes. If this parameter is set to a
         value greater than zero it enables keepalive.
+
+        tcp_connect_timeout: a float indicating the maximum number of seconds
+        to wait for establishing a connection to the database host.
         """
         self.host = host
         self.port = port
@@ -182,6 +186,9 @@ class ConnectParams:
         self.retry_delay = retry_delay
         self.enable_keepalive = enable_keepalive
         self.keepalive_idle_time = keepalive_idle_time
+        self.tcp_connect_timeout = tcp_connect_timeout \
+                if tcp_connect_timeout is not None \
+                else defaults.tcp_connect_timeout
 
     def _get_tnsnames_file(self):
         """
