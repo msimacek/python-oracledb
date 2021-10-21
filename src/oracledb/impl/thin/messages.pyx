@@ -969,8 +969,10 @@ cdef class AuthMessage(Message):
         uint8_t purity
         uint8_t user_bytes_len
         bytes user_bytes
+        object password_key
         dict session_data
         uint32_t auth_mode
+        uint32_t verifier_type
 
     def __cinit__(self, conn_impl, password, newpassword=None):
         self.function_code = TNS_FUNC_AUTH_PHASE_ONE
@@ -981,20 +983,29 @@ cdef class AuthMessage(Message):
         self.user_bytes = conn_impl.username.encode()
         self.user_bytes_len = <uint8_t> len(self.user_bytes)
 
-    cdef int _generate_verifier(self, bytes password_bytes) except -1:
+    cdef int _generate_verifier(self, bytes password_bytes,
+                                bint verifier_11g) except -1:
         """
-        Generate the verifier used by a 12c database.
+        Generate the multi-round verifier.
         """
 
         # create password hash
         verifier_data = bytes.fromhex(self.session_data['AUTH_VFR_DATA'])
-        iterations = int(self.session_data['AUTH_PBKDF2_VGEN_COUNT'])
-        salt = verifier_data + b'AUTH_PBKDF2_SPEEDY_KEY'
-        password_key = get_derived_key(password_bytes, salt, 64, iterations)
-        h = hashlib.new("sha512")
-        h.update(password_key)
-        h.update(verifier_data)
-        password_hash = h.digest()[:32]
+        if verifier_11g:
+            keylen = 24
+            h = hashlib.sha1(password_bytes)
+            h.update(verifier_data)
+            password_hash = h.digest() + bytes(4)
+        else:
+            keylen = 32
+            iterations = int(self.session_data['AUTH_PBKDF2_VGEN_COUNT'])
+            salt = verifier_data + b'AUTH_PBKDF2_SPEEDY_KEY'
+            password_key = get_derived_key(password_bytes, salt, 64,
+                                           iterations)
+            h = hashlib.new("sha512")
+            h.update(password_key)
+            h.update(verifier_data)
+            password_hash = h.digest()[:32]
 
         # decrypt first half of session key
         encoded_server_key = bytes.fromhex(self.session_data['AUTH_SESSKEY'])
@@ -1005,17 +1016,18 @@ cdef class AuthMessage(Message):
         encoded_client_key = encrypt_cbc(password_hash, session_key_part_b)
         self.session_key = encoded_client_key.hex().upper()[:64]
 
-        # generate session key
+        # create session key from combo key
         mixing_salt = bytes.fromhex(self.session_data['AUTH_PBKDF2_CSK_SALT'])
         iterations = int(self.session_data['AUTH_PBKDF2_SDER_COUNT'])
-        combo_key = session_key_part_b + session_key_part_a
+        combo_key = session_key_part_b[:keylen] + session_key_part_a[:keylen]
         session_key = get_derived_key(combo_key.hex().upper().encode(),
-                                      mixing_salt, 32, iterations)
+                                      mixing_salt, keylen, iterations)
 
-        # generate speedy key
-        salt = secrets.token_bytes(16)
-        speedy_key = encrypt_cbc(session_key, salt + password_key)
-        self.speedy_key = speedy_key[:80].hex().upper()
+        # generate speedy key for 12c verifiers
+        if not verifier_11g:
+            salt = secrets.token_bytes(16)
+            speedy_key = encrypt_cbc(session_key, salt + password_key)
+            self.speedy_key = speedy_key[:80].hex().upper()
 
         # encrypt password
         salt = secrets.token_bytes(16)
@@ -1023,6 +1035,7 @@ cdef class AuthMessage(Message):
         encrypted_password = encrypt_cbc(session_key, password_with_salt)
         self.encoded_password = encrypted_password.hex().upper()
 
+        # encrypt new password
         if self.newpassword is not None:
             newpassword_with_salt = salt + self.newpassword.encode()
             encrypted_newpassword = encrypt_cbc(session_key,
@@ -1044,7 +1057,10 @@ cdef class AuthMessage(Message):
                 value = buf.read_str(buf.read_uint8())
             else:
                 value = ""
-            buf.read_ub4()                  # skip flags
+            if key == "AUTH_VFR_DATA":
+                self.verifier_type = buf.read_ub4()
+            else:
+                buf.read_ub4()                  # skip flags
             self.session_data[key] = value
         if self.function_code == TNS_FUNC_AUTH_PHASE_ONE:
             self.function_code = TNS_FUNC_AUTH_PHASE_TWO
@@ -1097,6 +1113,7 @@ cdef class AuthMessage(Message):
 
     cdef int _write_message(self, WriteBuffer buf) except -1:
         cdef:
+            bint verifier_11g = False
             bytes password_bytes
             uint32_t num_pairs
         self._write_function_code(buf)
@@ -1119,7 +1136,7 @@ cdef class AuthMessage(Message):
             self._write_key_value(buf, "AUTH_SID",
                                   _connect_constants.user_name)
         else:
-            num_pairs = 5
+            num_pairs = 4
             if self.newpassword is not None:
                 num_pairs += 1
                 self.auth_mode |= TNS_AUTH_MODE_CHANGE_PASSWORD
@@ -1129,7 +1146,12 @@ cdef class AuthMessage(Message):
                 num_pairs += 1
             self.auth_mode |= TNS_AUTH_MODE_WITH_PASSWORD
             password_bytes = self.password.encode()
-            self._generate_verifier(password_bytes)
+            if self.verifier_type == TNS_VERIFIER_TYPE_SHA1 \
+                    or self.verifier_type == TNS_VERIFIER_TYPE_SSHA1:
+                verifier_11g = True
+            else:
+                num_pairs += 1
+            self._generate_verifier(password_bytes, verifier_11g)
             buf.write_ub4(self.auth_mode)   # authentication mode
             buf.write_uint8(1)              # pointer (authivl)
             buf.write_ub4(num_pairs)        # number of key/value pairs
@@ -1141,8 +1163,9 @@ cdef class AuthMessage(Message):
             if self.newpassword is not None:
                 self._write_key_value(buf, "AUTH_NEWPASSWORD",
                                       self.encoded_newpassword)
-            self._write_key_value(buf, "AUTH_PBKDF2_SPEEDY_KEY",
-                                  self.speedy_key)
+            if not verifier_11g:
+                self._write_key_value(buf, "AUTH_PBKDF2_SPEEDY_KEY",
+                                      self.speedy_key)
             self._write_key_value(buf, "SESSION_CLIENT_CHARSET", "873")
             self._write_key_value(buf, "SESSION_CLIENT_DRIVER_NAME",
                                   constants.FULL_DRIVER_NAME)
