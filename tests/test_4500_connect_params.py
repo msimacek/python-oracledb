@@ -148,8 +148,8 @@ class TestCase(test_env.BaseTestCase):
         "4513 - connect descriptor with transport connect timeout values"
         connect_string = \
             "(DESCRIPTION=(TRANSPORT_CONNECT_TIMEOUT=500 ms)" \
-            "(ADDRESS=(PROTOCOL=TCP)(HOST=my_host13)(PORT=695))" \
-            "(CONNECT_DATA=(SERVICE_NAME=my_service_name13)))"
+            "(ADDRESS=(PROTOCOL=TCP)(HOST=my_host14)(PORT=695))" \
+            "(CONNECT_DATA=(SERVICE_NAME=my_service_name14)))"
         params = oracledb.ConnectParams()
         params.parse_connect_string(connect_string)
         self.assertEqual(params.tcp_connect_timeout, 0.5)
@@ -162,6 +162,28 @@ class TestCase(test_env.BaseTestCase):
         connect_string = connect_string.replace("5 min", "34")
         params.parse_connect_string(connect_string)
         self.assertEqual(params.tcp_connect_timeout, 34)
+
+    def test_4514_ezconnect_without_service_name(self):
+        "4514 - test EZConnect string parsing with no service name specified"
+        params = oracledb.ConnectParams()
+        params.parse_connect_string("my_host15:1578")
+        self.assertEqual(params.host, "my_host15")
+        self.assertEqual(params.port, 1578)
+        self.assertEqual(params.service_name, "")
+
+    def test_4515_ezconnect_without_port_and_service_name(self):
+        "4515 - test EZConnect string parsing with no port and service name"
+        params = oracledb.ConnectParams()
+        self.assertRaisesRegex(oracledb.DatabaseError, "DPY-4000",
+                               params.parse_connect_string, "my_host16")
+
+    def test_4516_ezconnect_with_port_missing(self):
+        "4516 - test EZConnect string parsing with port value missing"
+        params = oracledb.ConnectParams()
+        params.parse_connect_string("my_host17:/my_service_name17")
+        self.assertEqual(params.host, "my_host17")
+        self.assertEqual(params.port, 1521)
+        self.assertEqual(params.service_name, "my_service_name17")
 
 if __name__ == "__main__":
     test_env.run_test_cases()

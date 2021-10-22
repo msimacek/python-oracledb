@@ -284,27 +284,29 @@ class ConnectParams:
         parsed.
         """
         protocol = None
-        pos = connect_string.find("://")
-        if pos > 0:
-            protocol = connect_string[:pos]
+        protocol_pos = connect_string.find("://")
+        if protocol_pos > 0:
+            protocol = connect_string[:protocol_pos]
             self._set_protocol(protocol)
-            connect_string = connect_string[pos + 3:]
-        pos = connect_string.find("/")
-        if pos < 0:
-            if protocol is None:
-                return False
+            connect_string = connect_string[protocol_pos + 3:]
+        slash_pos = connect_string.find("/")
+        if slash_pos < 0:
+            self.service_name = ""
         else:
-            self.service_name = connect_string[pos + 1:]
+            self.service_name = connect_string[slash_pos + 1:]
             drcp_suffix = ":POOLED"
             if self.service_name.upper().endswith(drcp_suffix):
                 self.enable_drcp = True
                 self.service_name = self.service_name[:-len(drcp_suffix)]
-            connect_string = connect_string[:pos]
-        pos = connect_string.find(":")
-        if pos >= 0:
-            self.port = int(connect_string[pos + 1:])
-            connect_string = connect_string[:pos]
+            connect_string = connect_string[:slash_pos]
+        colon_pos = connect_string.find(":")
+        if colon_pos >= 0:
+            port = connect_string[colon_pos + 1:]
+            self.port = 1521 if not(port) else int(port)
+            connect_string = connect_string[:colon_pos]
         elif self.port is None:
+            if slash_pos < 0:
+                return False
             self.port = 1521
         self.host = connect_string
         return True
