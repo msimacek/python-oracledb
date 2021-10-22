@@ -214,6 +214,20 @@ class ConnectParams:
         self._tnsnames_files[self.config_dir] = tnsnames_file
         return tnsnames_file
 
+    def _parse_time_value(self, value):
+        """
+        Parse a value that contains time with an optional unit of ms
+        (milliseconds), sec (seconds) or min (minutes).
+        """
+        value = value.lower()
+        if value.endswith("sec"):
+            return float(value[:-3].strip())
+        elif value.endswith("ms"):
+            return float(value[:-2].strip()) / 1000
+        elif value.endswith("min"):
+            return float(value[:-3].strip()) * 60
+        return float(value.strip())
+
     def _parse_connect_data(self, connect_string):
         """
         Internal method used for parsing connect data (name-value pairs).
@@ -233,6 +247,10 @@ class ConnectParams:
             temp_val = getattr(description_node, "retry_delay", None)
             if temp_val is not None:
                 self.retry_delay = int(temp_val)
+            temp_val = getattr(description_node, "transport_connect_timeout",
+                               None)
+            if temp_val is not None:
+                self.tcp_connect_timeout = self._parse_time_value(temp_val)
             address_node = description_node.address
             self._set_protocol(address_node.protocol)
             self.host = address_node.host
