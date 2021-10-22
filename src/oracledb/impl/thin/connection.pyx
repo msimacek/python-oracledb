@@ -86,18 +86,6 @@ cdef class ThinConnImpl(BaseConnImpl):
             statement._in_use = True
             return statement
 
-    cdef int _match_server_cert_dn(self, object sock,
-            str expected_dn) except -1:
-        """
-        Matches the server's certificate distinguished name (DN) with the
-        specified value.
-        """
-        cert_data = sock.getpeercert(binary_form=True)
-        cert = x509.load_der_x509_certificate(cert_data)
-        server_dn = cert.subject.rfc4514_string()
-        if server_dn != expected_dn:
-            errors._raise_err(errors.ERR_INVALID_SERVER_CERT_DN)
-
     cdef int _return_statement(self, Statement statement) except -1:
         with self._statement_cache_lock:
             if statement._return_to_cache:
@@ -150,11 +138,7 @@ cdef class ThinConnImpl(BaseConnImpl):
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 6)
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)
         if params.secure_transport:
-            ssl_context = ssl.create_default_context()
-            sock = ssl_context.wrap_socket(sock, server_hostname=params.host)
-            if params.ssl_server_dn_match \
-                    and params.ssl_server_cert_dn is not None:
-                self._match_server_cert_dn(sock, params.ssl_server_cert_dn)
+            sock = get_ssl_socket(sock, params)
         self._protocol = Protocol(sock)
         redirect_data = self._protocol._connect(self, params,
                                                 _get_connect_data(params),
