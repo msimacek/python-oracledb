@@ -27,6 +27,7 @@ class ConnectParams:
                  host: str=None,
                  port: int=None,
                  service_name: str=None,
+                 sid: str=None,
                  thin: bool=None,
                  threaded: bool=None,
                  events: bool=None,
@@ -60,6 +61,8 @@ class ConnectParams:
         port: the port number on which the listener is listening
 
         service_name: the service name of the database
+
+        sid: the SID of the database (service_name should be used instead)
 
         thin: boolean specifying whether a thin connection should be created
         (default: oracledb.defaults.thin)
@@ -156,6 +159,7 @@ class ConnectParams:
         self.host = host
         self.port = port
         self.service_name = service_name
+        self.sid = sid
         self.thin = thin if thin is not None else defaults.thin
         self.threaded = threaded if threaded is not None \
                 else defaults.threaded
@@ -256,7 +260,9 @@ class ConnectParams:
             self.host = address_node.host
             self.port = int(address_node.port)
             connect_data_node = node.description.connect_data
-            self.service_name = connect_data_node.service_name
+            self.service_name = getattr(connect_data_node, "service_name",
+                                        None)
+            self.sid = getattr(connect_data_node, "sid", None)
             temp_val = getattr(connect_data_node, "pool_connection_class",
                                None)
             if temp_val is not None:

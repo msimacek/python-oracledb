@@ -144,6 +144,7 @@ ERR_BUFFER_LENGTH_INSUFFICIENT = 5001
 ERR_LISTENER_REFUSED_CONNECTION = 6000
 ERR_INVALID_SERVICE_NAME = 6001
 ERR_INVALID_SERVER_CERT_DN = 6002
+ERR_INVALID_SID = 6003
 
 # Oracle error number cross reference
 ERR_ORACLE_ERROR_XREF = {
@@ -211,8 +212,8 @@ ERR_MESSAGE_FORMATS = {
             "match the expected value",
     ERR_INVALID_TNS_ALIAS_DEFINITION: \
             "invalid tnsnames.ora definition starting with {line}",
-    ERR_INVALID_SERVICE_NAME: \
-            "listener doesn't recognize service name",
+    ERR_INVALID_SERVICE_NAME: "listener doesn't recognize service name",
+    ERR_INVALID_SID: "listener doesn't recognize sid",
     ERR_KEYWORD_ARGS_MUST_BE_DICT: "keyword arguments must be a dict",
     ERR_LIBRARY_ALREADY_INITIALIZED: \
             "Oracle Client library has already been initialized",

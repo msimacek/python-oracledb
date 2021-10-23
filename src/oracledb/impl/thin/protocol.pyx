@@ -256,6 +256,9 @@ cdef class Protocol:
             if error_code_int == TNS_ERR_INVALID_SERVICE_NAME:
                 errors._raise_err(errors.ERR_INVALID_SERVICE_NAME,
                                   f"see ORA-{error_code}")
+            elif error_code_int == TNS_ERR_INVALID_SID:
+                errors._raise_err(errors.ERR_INVALID_SID,
+                                  f"see ORA-{error_code}")
             errors._raise_err(errors.ERR_LISTENER_REFUSED_CONNECTION,
                               error_code=error_code)
 

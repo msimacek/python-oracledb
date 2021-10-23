@@ -32,13 +32,15 @@ def _get_connect_data(params):
     constants = _connect_constants
     protocol = "TCPS" if params.secure_transport else "TCP"
     server_type = "(SERVER=POOLED)" if params.enable_drcp else ""
+    identity = f"(SERVICE_NAME={params.service_name})" \
+            if params.service_name is not None or params.sid is None \
+            else f"(SID={params.sid})"
     cid = f"(PROGRAM={constants.sanitized_program_name})" + \
           f"(HOST={constants.sanitized_machine_name})" + \
           f"(USER={constants.sanitized_user_name})"
     return f"(DESCRIPTION=(ADDRESS=(PROTOCOL={protocol})" + \
            f"(HOST={params.host})(PORT={params.port}))" + \
-           f"(CONNECT_DATA=(SERVICE_NAME={params.service_name})" + \
-           f"{server_type}(CID={cid})))"
+           f"(CONNECT_DATA={identity}{server_type}(CID={cid})))"
 
 
 def _print_packet(operation, socket_fileno, view):
