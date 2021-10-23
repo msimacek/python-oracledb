@@ -185,5 +185,15 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(params.port, 1521)
         self.assertEqual(params.service_name, "my_service_name17")
 
+    def test_4517_invalid_number_in_connect_string(self):
+        "4517 - test connect descriptor with invalid number"
+        params = oracledb.ConnectParams()
+        connect_string = \
+            "(DESCRIPTION=(RETRY_COUNT=wrong)(RETRY_DELAY=5)" \
+            "(ADDRESS=(PROTOCOL=TCP)(HOST=my_host9)(PORT=1593))" \
+            "(CONNECT_DATA=(SERVICE_NAME=my_service_name9)))"
+        self.assertRaisesRegex(oracledb.DatabaseError, "DPY-4018",
+                               params.parse_connect_string, connect_string)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

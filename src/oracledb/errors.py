@@ -129,8 +129,8 @@ ERR_NUMBER_STRING_OF_ZERO_LENGTH = 4013
 ERR_NUMBER_STRING_TOO_LONG = 4014
 ERR_NUMBER_WITH_EMPTY_EXPONENT = 4015
 ERR_CONTENT_INVALID_AFTER_NUMBER = 4016
-ERR_INVALID_NAME_VALUE_PAIR_DATA = 4017
-ERR_INVALID_CONNECT_DATA = 4018
+ERR_INVALID_CONNECT_DESCRIPTOR = 4017
+ERR_CANNOT_PARSE_CONNECT_DESCRIPTOR = 4018
 ERR_INVALID_REDIRECT_DATA = 4019
 ERR_INVALID_TNS_ALIAS_DEFINITION = 4020
 ERR_INVALID_PROTOCOL = 4021
@@ -182,6 +182,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_BUFFER_LENGTH_INSUFFICIENT: \
             "split buffer of length {actual_buffer_len} insufficient to " \
             "hold {required_buffer_len} bytes",
+    ERR_CANNOT_PARSE_CONNECT_DESCRIPTOR: \
+            "cannot parse connect descriptor: {data}",
     ERR_COLUMN_TRUNCATED: "column truncated to {col_value_len} {unit} " \
             "(actual is {actual_len})",
     ERR_CONTENT_INVALID_AFTER_NUMBER: "invalid number (content after number)",
@@ -199,8 +201,7 @@ ERR_MESSAGE_FORMATS = {
                                  "too small (should be at least " \
                                  "{required_arraysize})",
     ERR_INVALID_BIND_NAME: "invalid named bind: {name}",
-    ERR_INVALID_CONNECT_DATA: "invalid connect data: {data}",
-    ERR_INVALID_NAME_VALUE_PAIR_DATA: "invalid name-value pair data: {data}",
+    ERR_INVALID_CONNECT_DESCRIPTOR: "invalid connect descriptor: {data}",
     ERR_INVALID_NUMBER: "invalid number",
     ERR_INVALID_POOL_PURITY: "invalid pool purity: {purity}",
     ERR_INVALID_PROTOCOL: "invalid protocol: {protocol}",

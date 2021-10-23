@@ -228,11 +228,11 @@ class ConnectParams:
             return float(value[:-3].strip()) * 60
         return float(value.strip())
 
-    def _parse_connect_data(self, connect_string):
+    def _parse_connect_descriptor(self, connect_string):
         """
         Internal method used for parsing connect data (name-value pairs).
         """
-        node = parse_name_value_pairs(connect_string)
+        node = parse_connect_descriptor(connect_string)
         try:
             description_node = node.description
             temp_val = getattr(description_node, "enable", None)
@@ -273,9 +273,11 @@ class ConnectParams:
             if security_node is not None:
                 self.ssl_server_cert_dn = getattr(security_node,
                                                   "ssl_server_cert_dn", None)
-        except AttributeError:
-            errors._raise_err(errors.ERR_INVALID_CONNECT_DATA,
-                              data=connect_string)
+        except exceptions.Error:
+            raise
+        except Exception as e:
+            errors._raise_err(errors.ERR_CANNOT_PARSE_CONNECT_DESCRIPTOR,
+                              str(e), data=connect_string)
 
     def _parse_ezconnect_string(self, connect_string):
         """
@@ -321,7 +323,7 @@ class ConnectParams:
         if pos < 0:
             errors._raise_err(errors.ERR_INVALID_REDIRECT_DATA,
                               data=redirect_data)
-        node = parse_name_value_pairs(redirect_data)
+        node = parse_connect_descriptor(redirect_data)
         address_node = node.description.address
         self.host = address_node.host
         self.port = int(address_node.port)
@@ -334,9 +336,9 @@ class ConnectParams:
         tnsnames_file = self._get_tnsnames_file()
         if tnsnames_file is not None:
             search_name = name.upper()
-            connect_data = tnsnames_file.entries.get(search_name)
-            if connect_data is not None:
-                self._parse_connect_data(connect_data)
+            connect_descriptor = tnsnames_file.entries.get(search_name)
+            if connect_descriptor is not None:
+                self._parse_connect_descriptor(connect_descriptor)
                 return
         errors._raise_err(errors.ERR_TNS_ENTRY_NOT_FOUND, name=name)
 
@@ -386,7 +388,7 @@ class ConnectParams:
         found in the connect string override any currently stored values.
         """
         if connect_string.startswith("("):
-            self._parse_connect_data(connect_string)
+            self._parse_connect_descriptor(connect_string)
         elif not self._parse_ezconnect_string(connect_string):
             self._search_tnsnames(connect_string)
 
@@ -463,17 +465,17 @@ class NameValuePairGroup:
     """
 
 
-def parse_name_value_pairs(data, group=None):
+def parse_connect_descriptor(data, group=None):
     """
     Utility function used to parse name-value pairs in the form (KEY = VALUE)
     where value can itself be another nested set of name-value pairs.
     """
     if data[0] != "(" or data[-1] != ")":
-        errors._raise_err(errors.ERR_INVALID_NAME_VALUE_PAIR_DATA, data=data)
+        errors._raise_err(errors.ERR_INVALID_CONNECT_DESCRIPTOR, data=data)
     data = data[1:-1]
     pos = data.find("=")
     if pos < 0:
-        errors._raise_err(errors.ERR_INVALID_NAME_VALUE_PAIR_DATA, data=data)
+        errors._raise_err(errors.ERR_INVALID_CONNECT_DESCRIPTOR, data=data)
     name = data[:pos].strip().lower()
     data = data[pos + 1:].strip()
     if not data or not data.startswith("("):
@@ -489,12 +491,12 @@ def parse_name_value_pairs(data, group=None):
             while num_closing_parens < num_opening_parens:
                 end_pos = data.find(")", search_pos)
                 if end_pos < 0:
-                    errors._raise_err(errors.ERR_INVALID_NAME_VALUE_PAIR_DATA,
+                    errors._raise_err(errors.ERR_INVALID_CONNECT_DESCRIPTOR,
                                       data=data)
                 num_closing_parens += 1
                 num_opening_parens += data.count("(", search_pos, end_pos)
                 search_pos = end_pos + 1
-            parse_name_value_pairs(data[:end_pos + 1], value)
+            parse_connect_descriptor(data[:end_pos + 1], value)
             data = data[end_pos + 1:]
     if group is None:
         group = NameValuePairGroup()
