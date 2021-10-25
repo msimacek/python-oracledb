@@ -82,7 +82,7 @@ cdef class Statement:
                 self._is_query = True
             elif sql_keyword in ("INSERT", "UPDATE", "DELETE", "MERGE"):
                 self._is_dml = True
-            elif sql_keyword in ("CREATE", "ALTER", "DROP"):
+            elif sql_keyword in ("CREATE", "ALTER", "DROP", "TRUNCATE"):
                 self._is_ddl = True
         if not self._is_plsql and re.search(dml_pattern, sql) is not None:
             self._is_returning = True
