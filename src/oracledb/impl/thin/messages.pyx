@@ -1299,7 +1299,7 @@ cdef class ExecuteMessage(MessageWithData):
         elif not self.parse_only and stmt._sql is not None:
             dml_options = TNS_EXEC_OPTION_IMPLICIT_RESULTSET
             options |= TNS_EXEC_OPTION_EXECUTE
-        if stmt._cursor_id == 0:
+        if stmt._cursor_id == 0 or stmt._is_ddl:
             options |= TNS_EXEC_OPTION_PARSE
         if stmt._is_query:
             if self.parse_only:
@@ -1332,7 +1332,7 @@ cdef class ExecuteMessage(MessageWithData):
         self._write_function_code(buf)
         buf.write_ub4(options)              # execute options
         buf.write_ub4(stmt._cursor_id)      # cursor id
-        if stmt._cursor_id == 0:
+        if stmt._cursor_id == 0 or stmt._is_ddl:
             buf.write_uint8(1)              # pointer (cursor id)
             buf.write_ub4(stmt._sql_bytes_length)
         else:
@@ -1387,7 +1387,7 @@ cdef class ExecuteMessage(MessageWithData):
         if buf._caps.ttc_field_version >= TNS_CCAP_FIELD_VERSION_12_2_EXT1:
             buf.write_uint8(0)              # pointer (chunk ids)
             buf.write_ub4(0)                # number of chunk ids
-        if stmt._cursor_id == 0:
+        if stmt._cursor_id == 0 or stmt._is_ddl:
             buf.write_bytes(stmt._sql_bytes)
             buf.write_ub4(1)                # al8i4[0] parse
         else:

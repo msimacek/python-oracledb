@@ -148,7 +148,8 @@ cdef class Protocol:
             Statement stmt = cursor_impl._statement
             MessageWithData message
         with self._request_lock:
-            if stmt._cursor_id and not stmt._requires_full_execute:
+            if stmt._cursor_id and not stmt._requires_full_execute \
+                    and not stmt._is_ddl:
                 message = ReExecuteMessage(cursor)
             else:
                 message = ExecuteMessage(cursor)

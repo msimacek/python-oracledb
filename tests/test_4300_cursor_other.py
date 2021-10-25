@@ -456,5 +456,12 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.prepare(sql)
         self.assertEqual(self.cursor.bindnames(), ["A", "B"])
 
+    def test_4339_repeated_ddl(self):
+        "4339 - test repeated DDL"
+        self.cursor.execute("truncate table TestTempTable")
+        self.cursor.execute("insert into TestTempTable (IntCol) values (1)")
+        self.cursor.execute("truncate table TestTempTable")
+        self.cursor.execute("insert into TestTempTable (IntCol) values (1)")
+
 if __name__ == "__main__":
     test_env.run_test_cases()
