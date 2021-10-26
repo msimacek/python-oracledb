@@ -501,17 +501,17 @@ class TestCase(test_env.BaseTestCase):
                                  decimal.Decimal("0"))
 
     def test_3674_cursor_description_unchanged(self):
-        "3674 - use of output type handler does not affect variable name"
+        "3674 - use of output type handler does not affect description"
         def type_handler(cursor, name, default_type, size,
                          precision, scale):
             return cursor.var(str, arraysize=cursor.arraysize)
         with self.connection.cursor() as cursor:
             cursor.execute("select user from dual")
-            name_before = cursor.description[0][0]
+            desc_before = cursor.description
         with self.connection.cursor() as cursor:
             cursor.outputtypehandler = type_handler
             cursor.execute("select user from dual")
-            self.assertEqual(cursor.description[0][0], name_before)
+            self.assertEqual(cursor.description, desc_before)
 
 if __name__ == "__main__":
     test_env.run_test_cases()

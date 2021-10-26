@@ -158,11 +158,12 @@ cdef class BaseVarImpl:
         """
         cdef:
             uint32_t display_size = 0, size_in_bytes = 0
+            FetchInfo fetch_info = self._fetch_info
+            DbType dbtype = fetch_info._dbtype
             object precision, scale
-            DbType dbtype = self.dbtype
-        if self.size > 0:
-            display_size = self.size
-            size_in_bytes = self.buffer_size
+        if fetch_info._size > 0:
+            display_size = fetch_info._size
+            size_in_bytes = fetch_info._buffer_size
         elif dbtype is DB_TYPE_DATE \
                 or dbtype is DB_TYPE_TIMESTAMP \
                 or dbtype is DB_TYPE_TIMESTAMP_LTZ \
@@ -172,19 +173,20 @@ cdef class BaseVarImpl:
                 or dbtype is DB_TYPE_BINARY_DOUBLE \
                 or dbtype is DB_TYPE_BINARY_INTEGER \
                 or dbtype is DB_TYPE_NUMBER:
-            if self.precision:
-                display_size = self.precision + 1
-                if self.scale > 0:
-                    display_size += self.scale + 1
+            if fetch_info._precision:
+                display_size = fetch_info._precision + 1
+                if fetch_info._scale > 0:
+                    display_size += fetch_info._scale + 1
             else:
                 display_size = 127
-        if self.precision or self.scale:
-            precision = self.precision
-            scale = self.scale
+        if fetch_info._precision or fetch_info._scale:
+            precision = fetch_info._precision
+            scale = fetch_info._scale
         else:
             scale = precision = None
-        return (self.name, dbtype, display_size or None, size_in_bytes or None,
-                precision, scale, self.nulls_allowed)
+        return (fetch_info._name, dbtype, display_size or None,
+                size_in_bytes or None, precision, scale,
+                fetch_info._nulls_allowed)
 
     cpdef set_value(self, uint32_t pos, object value):
         """

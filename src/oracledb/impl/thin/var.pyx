@@ -7,21 +7,9 @@
 #   Cython file defining the variable class (embedded in driver.pyx).
 #------------------------------------------------------------------------------
 
-cdef class FetchInfo:
-    cdef:
-        int16_t _precision
-        int16_t _scale
-        uint32_t _buffer_size
-        uint32_t _size
-        bint _nulls_allowed
-        str _name
-        DbType _dbtype
-
-
 cdef class ThinVarImpl(BaseVarImpl):
     cdef:
         object _conv_func
-        FetchInfo _fetch_info
 
     cdef int _bind(self, object conn, BaseCursorImpl cursor_impl,
                    uint32_t num_execs, str name=None,

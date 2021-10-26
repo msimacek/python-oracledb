@@ -53,14 +53,13 @@ cdef class BaseCursorImpl:
         raise NotImplementedError()
 
     cdef object _create_default_fetch_var(self, object typ,
-                                          str name, uint32_t size,
-                                          int16_t precision, int16_t scale,
-                                          bint nulls_allowed):
+                                          FetchInfo fetch_info):
         """
         Creates a default variable given fetch information. The defaults for
         fetching LOBs and decimals are also consulted and adjustments made as
         needed.
         """
+        cdef BaseVarImpl var_impl
         if defaults.fetch_decimals and typ is DB_TYPE_NUMBER:
             typ = decimal.Decimal
         elif not defaults.fetch_lobs:
@@ -68,12 +67,18 @@ cdef class BaseCursorImpl:
                 typ = DB_TYPE_LONG_RAW
             elif typ is DB_TYPE_CLOB or typ is DB_TYPE_NCLOB:
                 typ = DB_TYPE_LONG
-        return self.create_var(typ, name=name, size=size, precision=precision,
-                               scale=scale, nulls_allowed=nulls_allowed,
-                               num_elements=self._fetch_array_size,
-                               inconverter=None, outconverter=None,
-                               encoding_errors=None, bypass_decode=False,
-                               is_array=False)
+        var = self.create_var(typ, name=fetch_info._name,
+                              size=fetch_info._size,
+                              precision=fetch_info._precision,
+                              scale=fetch_info._scale,
+                              nulls_allowed=fetch_info._nulls_allowed,
+                              num_elements=self._fetch_array_size,
+                              inconverter=None, outconverter=None,
+                              encoding_errors=None, bypass_decode=False,
+                              is_array=False)
+        var_impl = var._impl
+        var_impl._fetch_info = fetch_info
+        return var
 
     @cython.boundscheck(False)
     @cython.wraparound(False)

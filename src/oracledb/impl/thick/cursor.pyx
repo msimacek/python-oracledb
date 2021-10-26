@@ -83,32 +83,37 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             ThickConnImpl conn_impl
             dpiQueryInfo query_info
             BaseVarImpl var_impl
-            DbType dbtype
-            uint32_t size
+            FetchInfo fetch_info
             int16_t scale
             int status
-            str name
         if dpiStmt_getQueryInfo(self._handle, pos, &query_info) < 0:
             _raise_from_odpi()
-        dbtype = DbType._from_num(query_info.typeInfo.oracleTypeNum)
-        if dbtype.num == DPI_ORACLE_TYPE_INTERVAL_YM:
+        fetch_info = FetchInfo()
+        fetch_info._dbtype = \
+                DbType._from_num(query_info.typeInfo.oracleTypeNum)
+        if fetch_info._dbtype.num == DPI_ORACLE_TYPE_INTERVAL_YM:
             errors._raise_err(errors.ERR_DB_TYPE_NOT_SUPPORTED,
-                              name=dbtype.name)
+                              name=fetch_info._dbtype.name)
         if query_info.typeInfo.sizeInChars > 0:
-            size = query_info.typeInfo.sizeInChars
+            fetch_info._size = query_info.typeInfo.sizeInChars
         else:
-            size = query_info.typeInfo.clientSizeInBytes
+            fetch_info._size = query_info.typeInfo.clientSizeInBytes
+        fetch_info._buffer_size = query_info.typeInfo.clientSizeInBytes
+        fetch_info._name = query_info.name[:query_info.nameLength].decode()
+        fetch_info._scale = query_info.typeInfo.scale + \
+                query_info.typeInfo.fsPrecision
+        fetch_info._precision = query_info.typeInfo.precision
+        fetch_info._nulls_allowed = query_info.nullOk
         type_handler = cursor.outputtypehandler \
                 or cursor.connection.outputtypehandler
-        name = query_info.name[:query_info.nameLength].decode()
         if type_handler is not None:
-            result = type_handler(cursor, name, dbtype, size,
-                                  query_info.typeInfo.precision,
-                                  query_info.typeInfo.scale)
+            result = type_handler(cursor, fetch_info._name, fetch_info._dbtype,
+                                  fetch_info._size, fetch_info._precision,
+                                  fetch_info._scale)
             if result is not None:
                 self._verify_var(result)
-                var_impl = <BaseVarImpl> result._impl
-                var_impl.name = name
+                var_impl = result._impl
+                var_impl._fetch_info = fetch_info
                 return result
         type_info = &query_info.typeInfo
         if type_info.objectType != NULL:
@@ -118,11 +123,8 @@ cdef class ThickCursorImpl(BaseCursorImpl):
                                                           type_info.objectType)
             typ = DbObjectType._from_impl(typ_impl)
         else:
-            typ = dbtype
-        scale = type_info.scale + type_info.fsPrecision
-        return self._create_default_fetch_var(typ, name, size,
-                                              type_info.precision, scale,
-                                              query_info.nullOk)
+            typ = fetch_info._dbtype
+        return self._create_default_fetch_var(typ, fetch_info)
 
     cdef bint _is_plsql(self):
         return <bint> self._stmt_info.isPLSQL

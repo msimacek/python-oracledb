@@ -32,7 +32,7 @@ from .base_impl cimport BaseDbObjectImpl, BaseLobImpl, BasePoolImpl
 from .base_impl cimport BaseSodaDbImpl, BaseSodaCollImpl, BaseSodaDocImpl
 from .base_impl cimport BaseSodaDocCursorImpl, BaseQueueImpl
 from .base_impl cimport BaseDeqOptionsImpl, BaseEnqOptionsImpl
-from .base_impl cimport BaseMsgPropsImpl, BaseSubscrImpl
+from .base_impl cimport BaseMsgPropsImpl, BaseSubscrImpl, FetchInfo
 from .base_impl cimport NUM_TYPE_FLOAT, NUM_TYPE_INT, NUM_TYPE_DECIMAL
 from libc.string cimport memchr, memset
 
