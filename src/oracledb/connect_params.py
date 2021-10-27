@@ -51,7 +51,9 @@ class ConnectParams:
                  retry_delay: int=0,
                  enable_keepalive: bool=False,
                  keepalive_idle_time: int=0,
-                 tcp_connect_timeout: float=None) -> None:
+                 tcp_connect_timeout: float=None,
+                 wallet_location: str=None,
+                 wallet_password: str=None) -> None:
         """
         Constructor for connection parameters. All parameters are optional.
 
@@ -155,6 +157,14 @@ class ConnectParams:
 
         tcp_connect_timeout: a float indicating the maximum number of seconds
         to wait for establishing a connection to the database host.
+
+        wallet_location: the location where the PKCS12-encoded wallet file
+        ewallet.p12 can be found. If this parameter is not set, one-way TLS
+        authentication will take place instead.
+
+        wallet_password: the password used to decrypt the contents of the
+        PKCS12-encoded wallet file. This parameter is mandatory if
+        wallet_location is specified.
         """
         self.host = host
         self.port = port
@@ -193,6 +203,8 @@ class ConnectParams:
         self.tcp_connect_timeout = tcp_connect_timeout \
                 if tcp_connect_timeout is not None \
                 else defaults.tcp_connect_timeout
+        self.wallet_location = wallet_location
+        self.wallet_password = wallet_password
 
     def _get_tnsnames_file(self):
         """

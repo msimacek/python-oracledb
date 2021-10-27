@@ -7,6 +7,8 @@ from cryptography.hazmat.primitives.ciphers import algorithms, modes, Cipher
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf import pbkdf2
 
+PEM_WALLET_FILE_NAME = "ewallet.pem"
+
 def decrypt_cbc(key, encrypted_text):
     """
     Decrypt the given text using the given key.
@@ -57,6 +59,14 @@ def get_ssl_socket(sock, params):
     the user.
     """
     ssl_context = ssl.create_default_context()
+    if params.wallet_location is not None:
+        pem_file_name = os.path.join(params.wallet_location,
+                                     PEM_WALLET_FILE_NAME)
+        if not os.path.exists(pem_file_name):
+            errors._raise_err(errors.ERR_WALLET_FILE_MISSING,
+                              name=pem_file_name)
+        ssl_context.load_cert_chain(pem_file_name,
+                                    password=params.wallet_password)
     if params.ssl_server_dn_match and params.ssl_server_cert_dn is None:
         sock = ssl_context.wrap_socket(sock, server_hostname=params.host)
     else:

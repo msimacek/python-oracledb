@@ -96,6 +96,7 @@ ERR_DUPLICATED_PARAMETER = 2014
 ERR_EXPECTING_VAR = 2015
 ERR_INCORRECT_VAR_ARRAYSIZE = 2016
 ERR_LIBRARY_ALREADY_INITIALIZED = 2017
+ERR_WALLET_FILE_MISSING = 2018
 
 # error numbers that result in NotSupportedError
 ERR_TIME_NOT_SUPPORTED = 3000
@@ -260,6 +261,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_TNS_ENTRY_NOT_FOUND: "unable to find {name} in tnsnames.ora",
     ERR_UNSUPPORTED_INBAND_NOTIFICATION: \
             "unsupported in-band notification with error number {err_num}",
+    ERR_WALLET_FILE_MISSING: "wallet file {name} is missing",
     ERR_WRONG_ARRAY_DEFINITION: \
             "expecting a list of two elements [type, numelems]",
     ERR_WRONG_EXECUTE_PARAMETERS_TYPE: \

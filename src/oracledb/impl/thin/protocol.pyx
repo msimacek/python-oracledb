@@ -18,10 +18,13 @@ cdef class Protocol:
 
     def __init__(self, sock):
         self._caps = Capabilities()
-        self._socket = sock
-        self._read_buf = ReadBuffer(sock, TNS_SDU, self._caps)
-        self._write_buf = WriteBuffer(sock, TNS_SDU, self._caps)
+        self.__set_socket(sock)
         self._request_lock = threading.Lock()
+
+    cdef int __set_socket(self, sock):
+         self._socket = sock
+         self._read_buf = ReadBuffer(sock, TNS_SDU, self._caps)
+         self._write_buf = WriteBuffer(sock, TNS_SDU, self._caps)
 
     cdef int _break_external(self):
         """
@@ -109,6 +112,11 @@ cdef class Protocol:
                 return connect_message.redirect_data
             if connect_message.packet_type == TNS_PACKET_TYPE_ACCEPT:
                 break
+            if params.secure_transport and params.wallet_location is not None:
+                ssl_context = self._socket.context
+                sock = socket.socket(fileno=self._socket.detach())
+                sock = ssl_context.wrap_socket(sock)
+                self.__set_socket(sock)
 
         # check if the protocol version supported by the database is high
         # enough; if not, reject the connection immediately
