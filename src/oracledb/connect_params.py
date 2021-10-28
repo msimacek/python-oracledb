@@ -289,8 +289,12 @@ class ConnectParams:
                         else constants.PURITY_ANY
             security_node = getattr(node.description, "security", None)
             if security_node is not None:
-                self.ssl_server_cert_dn = getattr(security_node,
-                                                  "ssl_server_cert_dn", None)
+                temp_val = getattr(security_node, "ssl_server_cert_dn", None)
+                if temp_val is not None:
+                    self.ssl_server_cert_dn = temp_val
+                temp_val = getattr(security_node, "my_wallet_directory", None)
+                if temp_val is not None:
+                    self.wallet_location = temp_val
         except exceptions.Error:
             raise
         except Exception as e:

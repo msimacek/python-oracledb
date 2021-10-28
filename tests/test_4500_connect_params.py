@@ -190,10 +190,22 @@ class TestCase(test_env.BaseTestCase):
         params = oracledb.ConnectParams()
         connect_string = \
             "(DESCRIPTION=(RETRY_COUNT=wrong)(RETRY_DELAY=5)" \
-            "(ADDRESS=(PROTOCOL=TCP)(HOST=my_host9)(PORT=1593))" \
-            "(CONNECT_DATA=(SERVICE_NAME=my_service_name9)))"
+            "(ADDRESS=(PROTOCOL=TCP)(HOST=my_host18)(PORT=1598))" \
+            "(CONNECT_DATA=(SERVICE_NAME=my_service_name18)))"
         self.assertRaisesRegex(oracledb.DatabaseError, "DPY-4018",
                                params.parse_connect_string, connect_string)
+
+    def test_4518_security_options(self):
+        "4518 - test connect descriptor with security options"
+        params = oracledb.ConnectParams()
+        connect_string = \
+            '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=my_host19)(PORT=872))' \
+            '(CONNECT_DATA=(SERVICE_NAME=my_service_name19))' \
+            '(SECURITY=(SSL_SERVER_CERT_DN="CN=unknown")' \
+            '(MY_WALLET_DIRECTORY="/some_place")))'
+        params.parse_connect_string(connect_string)
+        self.assertEqual(params.ssl_server_cert_dn, "CN=unknown")
+        self.assertEqual(params.wallet_location, "/some_place")
 
 if __name__ == "__main__":
     test_env.run_test_cases()
