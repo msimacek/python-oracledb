@@ -275,7 +275,7 @@ class TestCase(test_env.BaseTestCase):
         self._test_negative_set_and_get(oracledb.DB_TYPE_ROWID, 12345)
         self._test_negative_set_and_get(oracledb.DB_TYPE_ROWID, "523lkhlf")
 
-    @unittest.skipIf(oracledb.defaults.thin,
+    @unittest.skipIf(test_env.get_is_thin(),
                      "thin driver doesn't support database objects yet")
     def test_3721_DB_TYPE_OBJECT(self):
         "3721 - setting values on variables of type DB_TYPE_OBJECT"
@@ -299,7 +299,7 @@ class TestCase(test_env.BaseTestCase):
                      "unsupported client")
     @unittest.skipIf(test_env.get_server_version() < (21, 0),
                      "unsupported server")
-    @unittest.skipIf(oracledb.defaults.thin,
+    @unittest.skipIf(test_env.get_is_thin(),
                      "thin driver doesn't support JSON yet")
     def test_3722_DB_TYPE_JSON(self):
         "3722 - setting values on variables of type DB_TYPE_JSON"

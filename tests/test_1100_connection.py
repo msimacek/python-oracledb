@@ -52,7 +52,7 @@ class TestCase(test_env.BaseTestCase):
         connection = test_env.get_connection()
         self.__verify_args(connection)
 
-    @unittest.skipIf(oracledb.defaults.thin,
+    @unittest.skipIf(test_env.get_is_thin(),
                      "thin driver doesn't support application context yet")
     def test_1101_app_context(self):
         "1101 - test use of application context"
@@ -70,7 +70,7 @@ class TestCase(test_env.BaseTestCase):
             actual_value, = cursor.fetchone()
             self.assertEqual(actual_value, value)
 
-    @unittest.skipIf(oracledb.defaults.thin,
+    @unittest.skipIf(test_env.get_is_thin(),
                      "thin driver doesn't support application context yet")
     def test_1102_app_context_negative(self):
         "1102 - test invalid use of application context"
@@ -99,7 +99,7 @@ class TestCase(test_env.BaseTestCase):
         sql = "select sys_context('userenv', 'client_identifier') from dual"
         self.__verify_attributes(connection, "client_identifier",
                                  "oracledb_cid", sql)
-        if not oracledb.defaults.thin:
+        if not test_env.get_is_thin():
             sql = "select ecid from v$session " \
                   "where sid = sys_context('userenv', 'sid')"
             self.__verify_attributes(connection, "econtext_id",
@@ -193,7 +193,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1001:",
                                connection.rollback)
 
-    @unittest.skipIf(oracledb.defaults.thin, "not relevant for thin driver")
+    @unittest.skipIf(test_env.get_is_thin(), "not relevant for thin driver")
     def test_1113_connect_with_handle(self):
         "1113 - test creating a connection using a handle"
         connection = test_env.get_connection()
@@ -331,7 +331,7 @@ class TestCase(test_env.BaseTestCase):
         connection = test_env.get_connection()
         connection.ping()
 
-    @unittest.skipIf(oracledb.defaults.thin,
+    @unittest.skipIf(test_env.get_is_thin(),
                      "thin driver doesn't support two-phase commit yet")
     def test_1125_transaction_begin(self):
         "1125 - test begin, prepare, cancel transaction"
@@ -351,7 +351,7 @@ class TestCase(test_env.BaseTestCase):
         count, = cursor.fetchone()
         self.assertEqual(count, 0)
 
-    @unittest.skipIf(oracledb.defaults.thin,
+    @unittest.skipIf(test_env.get_is_thin(),
                      "thin driver doesn't support two-phase commit yet")
     def test_1126_multiple_transactions(self):
         "1126 - test multiple transactions on the same connection"
@@ -385,7 +385,7 @@ class TestCase(test_env.BaseTestCase):
             cursor.execute("select IntCol, StringCol from TestTempTable")
             self.assertEqual(cursor.fetchall(), expected_rows)
 
-    @unittest.skipIf(oracledb.defaults.thin,
+    @unittest.skipIf(test_env.get_is_thin(),
                      "thin driver doesn't support two-phase commit yet")
     def test_1127_multiple_global_transactions(self):
         "1127 - test multiple global transactions on the same connection"
@@ -431,7 +431,7 @@ class TestCase(test_env.BaseTestCase):
             cursor.execute("select IntCol, StringCol from TestTempTable")
             self.assertEqual(cursor.fetchall(), expected_rows)
 
-    @unittest.skipIf(oracledb.defaults.thin,
+    @unittest.skipIf(test_env.get_is_thin(),
                      "thin driver doesn't support two-phase commit yet")
     def test_1128_exception_creating_global_txn_after_local_txn(self):
         "1128 - test creating global txn after a local txn"
@@ -555,7 +555,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(string_var.getvalue(), test_string)
 
     @unittest.skipIf(test_env.get_client_version() < (18, 1) or \
-                     oracledb.defaults.thin, "unsupported client")
+                     test_env.get_is_thin(), "unsupported client")
     def test_1135_calltimeout(self):
         "1135 - test connection call_timeout"
         conn = test_env.get_connection()

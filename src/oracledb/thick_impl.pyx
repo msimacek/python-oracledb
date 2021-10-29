@@ -18,7 +18,7 @@ import decimal
 
 cydatetime.import_datetime()
 
-from . import constants, errors, exceptions
+from . import constants, driver_mode, errors, exceptions
 from .subscr import Message, MessageQuery, MessageRow, MessageTable
 from .lob import LOB
 from .dbobject import DbObject, DbObjectType

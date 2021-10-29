@@ -97,6 +97,7 @@ ERR_EXPECTING_VAR = 2015
 ERR_INCORRECT_VAR_ARRAYSIZE = 2016
 ERR_LIBRARY_ALREADY_INITIALIZED = 2017
 ERR_WALLET_FILE_MISSING = 2018
+ERR_THIN_CONNECTION_ALREADY_CREATED = 2019
 
 # error numbers that result in NotSupportedError
 ERR_TIME_NOT_SUPPORTED = 3000
@@ -257,6 +258,9 @@ ERR_MESSAGE_FORMATS = {
             "connections to this server version are not supported with " \
             "the thin driver",
     ERR_SET_ROWID_DIRECTLY: "rowid variables cannot be set directly",
+    ERR_THIN_CONNECTION_ALREADY_CREATED: \
+            "the thick implementation cannot be used because a thin " \
+            "connection has already been created",
     ERR_TIME_NOT_SUPPORTED: "Oracle does not support time only variables",
     ERR_TNS_ENTRY_NOT_FOUND: "unable to find {name} in tnsnames.ora",
     ERR_UNSUPPORTED_INBAND_NOTIFICATION: \

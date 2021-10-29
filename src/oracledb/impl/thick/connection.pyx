@@ -207,10 +207,6 @@ cdef class ThickConnImpl(BaseConnImpl):
             ConnectionParams params
             int status
 
-        # ensure that the Oracle Client library is initialized
-        if driver_context == NULL:
-            init_oracle_client()
-
         # set up connection parameters
         params = ConnectionParams()
         if self.username is not None:

@@ -57,7 +57,7 @@ class DMLSubscriptionData(SubscriptionData):
             self.rowids.append(row.rowid)
 
 
-@unittest.skipIf(oracledb.defaults.thin,
+@unittest.skipIf(test_env.get_is_thin(),
                  "thin driver doesn't support subscriptions")
 class TestCase(test_env.BaseTestCase):
 

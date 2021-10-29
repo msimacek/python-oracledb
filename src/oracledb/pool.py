@@ -5,6 +5,7 @@
 from typing import Callable, Type
 from . import constants, errors, exceptions, utils, thick_impl, thin_impl
 from . import connection as connection_module
+from . import driver_mode
 from .connect_params import ConnectParams
 from .defaults import defaults
 
@@ -171,9 +172,12 @@ class Pool:
                                   new_name="max_sessions_per_shard")
             max_sessions_per_shard = maxSessionsPerShard
 
-        if params.thin:
+        thin = driver_mode.check_and_return_mode()
+        if thin:
             if password is None:
                 errors._raise_err(errors.ERR_NO_PASSWORD)
+            if dsn is not None:
+                params.parse_connect_string(dsn)
             impl = thin_impl.ThinPoolImpl(params, dsn, user, password, min,
                                           max, increment, homogeneous, getmode,
                                           wait_timeout, ping_interval)

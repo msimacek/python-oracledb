@@ -28,7 +28,6 @@ class ConnectParams:
                  port: int=None,
                  service_name: str=None,
                  sid: str=None,
-                 thin: bool=None,
                  threaded: bool=None,
                  events: bool=None,
                  secure_transport: bool=False,
@@ -65,9 +64,6 @@ class ConnectParams:
         service_name: the service name of the database
 
         sid: the SID of the database (service_name should be used instead)
-
-        thin: boolean specifying whether a thin connection should be created
-        (default: oracledb.defaults.thin)
 
         threaded: boolean specifying whether threaded mode should be enabled.
         This is only relevant for the thick driver
@@ -170,7 +166,6 @@ class ConnectParams:
         self.port = port
         self.service_name = service_name
         self.sid = sid
-        self.thin = thin if thin is not None else defaults.thin
         self.threaded = threaded if threaded is not None \
                 else defaults.threaded
         self.events = events if events is not None else defaults.events
@@ -419,8 +414,7 @@ class ConnectParams:
         Parse a dsn (data source name) string supplied by the user. This can be
         in the form user/password@connect_string or it can be the connect
         string by itself. A 3-tuple is returned containing the user, password
-        and connect string. When the thin parameter is True, the connect string
-        is parsed as well and its constituent parts stored in this object.
+        and connect string.
         """
         connect_string = dsn
         user = password = None
@@ -434,8 +428,6 @@ class ConnectParams:
                 password = credentials[pos + 1:]
             else:
                 user = credentials
-        if connect_string and self.thin:
-            self.parse_connect_string(connect_string)
         return (user, password, connect_string)
 
 

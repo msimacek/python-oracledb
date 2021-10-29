@@ -13,7 +13,7 @@ import unittest
 import oracledb
 import test_env
 
-@unittest.skipIf(oracledb.defaults.thin,
+@unittest.skipIf(test_env.get_is_thin(),
                  "thin driver doesn't support database objects yet")
 class TestCase(test_env.BaseTestCase):
 

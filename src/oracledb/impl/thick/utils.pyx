@@ -380,6 +380,7 @@ def init_oracle_client(lib_dir=None, config_dir=None, error_url=None,
         bytes encoding_bytes
     if driver_context != NULL:
         errors._raise_err(errors.ERR_LIBRARY_ALREADY_INITIALIZED)
+    driver_mode.check_and_return_mode(requested_thin_mode=False)
     memset(&params, 0, sizeof(dpiContextCreateParams))
     encoding_bytes = constants.ENCODING.encode()
     params.defaultEncoding = encoding_bytes

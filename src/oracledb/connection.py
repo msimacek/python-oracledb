@@ -5,7 +5,7 @@
 import collections
 
 from typing import Callable, Type, Union
-from . import constants, errors, exceptions, utils
+from . import constants, driver_mode, errors, exceptions, utils
 from . import thick_impl, thin_impl
 from . import pool as pool_module
 from .defaults import defaults
@@ -72,6 +72,7 @@ class Connection:
         method = utils.process_connect_params
         dsn, user, password, params = method(dsn, user, password, params,
                                              kwargs)
+        thin = driver_mode.check_and_return_mode()
         if pool is None:
             pool_impl = None
         elif not isinstance(pool, pool_module.Pool):
@@ -80,14 +81,14 @@ class Connection:
         else:
             pool._verify_open()
             pool_impl = pool._impl
-            if isinstance(pool_impl, thick_impl.ThickPoolImpl):
-                params.thin = False
-        if params.thin:
+        if thin:
             if pool is not None:
                 impl = pool_impl.acquire(user, password, params)
             else:
                 if password is None:
                     errors._raise_err(errors.ERR_NO_PASSWORD)
+                if dsn is not None:
+                    params.parse_connect_string(dsn)
                 impl = thin_impl.ThinConnImpl(user, dsn)
                 while True:
                     redirect_data = impl.connect(params, password, newpassword)

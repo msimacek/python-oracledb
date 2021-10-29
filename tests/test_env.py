@@ -101,8 +101,8 @@ def get_client_version():
     name = "CLIENT_VERSION"
     value = PARAMETERS.get(name)
     if value is None:
-        if oracledb.defaults.thin:
-            value = (21, 1)
+        if get_is_thin():
+            value = (21, 3)
         else:
             value = oracledb.clientversion()[:2]
         PARAMETERS[name] = value
@@ -116,8 +116,9 @@ def get_connect_string():
     return get_value("CONNECT_STRING", "Connect String",
                      DEFAULT_CONNECT_STRING)
 
-def get_driver_type():
-    return get_value("DRIVER_TYPE", "Driver type (thin|thick)", "thin")
+def get_is_thin():
+    driver_type = get_value("DRIVER_TYPE", "Driver type (thin|thick)", "thin")
+    return driver_type == "thin"
 
 def get_main_password():
     return get_value("MAIN_PASSWORD", "Password for %s" % get_main_user())
@@ -192,7 +193,7 @@ def run_test_cases():
     unittest.main(testRunner=unittest.TextTestRunner(verbosity=2))
 
 def skip_soda_tests():
-    if oracledb.defaults.thin:
+    if get_is_thin():
         return True
     client = get_client_version()
     if client < (18, 3):
@@ -307,5 +308,6 @@ class BaseTestCase(unittest.TestCase):
             del self.cursor
             del self.connection
 
-# set default for thin so it doesn't need to be passed everywhere
-oracledb.defaults.thin = get_driver_type() == "thin"
+# ensure that thick mode is enabled, if desired
+if not get_is_thin():
+    oracledb.init_oracle_client()

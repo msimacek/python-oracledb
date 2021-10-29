@@ -10,7 +10,6 @@ class Defaults:
     """
 
     def __init__(self):
-        self.thin = True
         self.arraysize = 100
         self.stmtcachesize = 20
         self.threaded = False
