@@ -17,7 +17,7 @@
 import oracledb
 
 # this script only supports the thick driver currently
-oracledb.defaults.thin = False
+oracledb.init_oracle_client()
 
 # need to connect as SYSDBA or SYSOPER
 connection = oracledb.connect(mode=oracledb.SYSDBA)

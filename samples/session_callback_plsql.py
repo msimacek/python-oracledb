@@ -24,7 +24,7 @@ import oracledb
 import sample_env
 
 # this script only supports the thick driver currently
-oracledb.defaults.thin = False
+oracledb.init_oracle_client()
 
 # create pool with session callback defined
 pool = oracledb.create_pool(user=sample_env.get_main_user(),

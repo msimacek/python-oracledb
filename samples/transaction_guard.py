@@ -37,7 +37,7 @@ import oracledb
 import sample_env
 
 # this script only supports the thick driver currently
-oracledb.defaults.thin = False
+oracledb.init_oracle_client()
 
 # constants
 CONNECT_STRING = "localhost/orcl-tg"

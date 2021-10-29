@@ -21,7 +21,7 @@ import oracledb
 import sample_env
 
 # this script only supports the thick driver currently
-oracledb.defaults.thin = False
+oracledb.init_oracle_client()
 
 connection = oracledb.connect(sample_env.get_main_connect_string())
 client_version = oracledb.clientversion()[0]

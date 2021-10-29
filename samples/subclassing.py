@@ -14,7 +14,8 @@ import oracledb
 import sample_env
 
 # determine whether to use thin driver or not
-oracledb.defaults.thin = sample_env.get_is_thin()
+if not sample_env.get_is_thin():
+    oracledb.init_oracle_client()
 
 # sample subclassed connection which overrides the constructor (so no
 # parameters are required) and the cursor() method (so that the subclassed

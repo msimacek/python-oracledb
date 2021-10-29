@@ -17,7 +17,7 @@ import oracledb
 import sample_env
 
 # this script only supports the thick driver currently
-oracledb.defaults.thin = False
+oracledb.init_oracle_client()
 
 QUEUE_NAME = "DEMO_RAW_QUEUE_MULTI"
 PAYLOAD_DATA = [

@@ -21,7 +21,7 @@ import oracledb
 import sample_env
 
 # this script only supports the thick driver currently
-oracledb.defaults.thin = False
+oracledb.init_oracle_client()
 
 # connect to the editions user and create a procedure
 edition_connect_string = sample_env.get_edition_connect_string()

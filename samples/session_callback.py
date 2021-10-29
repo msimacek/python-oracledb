@@ -22,7 +22,7 @@ import oracledb
 import sample_env
 
 # this script only supports the thick driver currently
-oracledb.defaults.thin = False
+oracledb.init_oracle_client()
 
 # define a dictionary of NLS_DATE_FORMAT formats supported by this sample
 SUPPORTED_FORMATS = {

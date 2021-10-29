@@ -34,7 +34,7 @@ PAYLOAD_DATA = [
 ]
 
 # this script only supports the thick driver currently
-oracledb.defaults.thin = False
+oracledb.init_oracle_client()
 
 # connect to database 
 connection = oracledb.connect(sample_env.get_main_connect_string())
