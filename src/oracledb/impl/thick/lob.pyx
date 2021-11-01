@@ -11,10 +11,6 @@ cdef class ThickLobImpl(BaseLobImpl):
     cdef:
         dpiLob *_handle
 
-    def __dealloc__(self):
-        if self._handle != NULL:
-            dpiLob_release(self._handle)
-
     @staticmethod
     cdef ThickLobImpl _create(ThickConnImpl conn_impl, DbType dbtype,
                              dpiLob *handle):
@@ -56,6 +52,13 @@ cdef class ThickLobImpl(BaseLobImpl):
         if status < 0:
             _raise_from_odpi()
         return exists
+
+    def free_lob(self):
+        """
+        Internal method for releasing the handle
+        """
+        if self._handle != NULL:
+            dpiLob_release(self._handle)
 
     def get_chunk_size(self):
         """

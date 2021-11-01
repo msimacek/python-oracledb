@@ -50,6 +50,18 @@ cdef class ThinLobImpl(BaseLobImpl):
         message.source_lob_impl = self
         self._conn_impl._protocol._process_message(message)
 
+    def free_lob(self):
+        """
+        Internal method for closing a temp LOB during the next piggyback.
+        """
+        if self._locator[TNS_LOB_ABSTRACT_POS] & TNS_LOB_ABSTRACT_VALUE \
+                or self._locator[TNS_LOB_TEMP_POS] & TNS_LOB_TEMP_VALUE:
+            if self._conn_impl._temp_lobs_to_close is None:
+                self._conn_impl._temp_lobs_to_close = []
+            self._conn_impl._temp_lobs_to_close.append(self._locator)
+            self._conn_impl._temp_lobs_total_size += len(self._locator)
+            self._conn_impl = None
+
     def get_is_open(self):
         """
         Internal method for returning whether the LOB is open or not.

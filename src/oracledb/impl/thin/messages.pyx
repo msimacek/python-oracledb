@@ -815,6 +815,47 @@ cdef class MessageWithData(Message):
         buf.write_ub4(len(schema_bytes))
         buf.write_bytes(schema_bytes)
 
+    cdef int _write_close_temp_lobs_piggyback(self,
+                                              WriteBuffer buf) except -1:
+        cdef:
+            list lobs_to_close = self.conn_impl._temp_lobs_to_close
+            uint64_t total_size = 0
+        buf.write_uint8(TNS_MSG_TYPE_PIGGYBACK)
+        buf.write_uint8(TNS_FUNC_LOB_OP)
+        op_code = TNS_LOB_OP_FREE_TEMP | TNS_LOB_OP_ARRAY
+        buf.write_seq_num()
+
+        # temp lob data
+        buf.write_uint8(1)                  # pointer
+        buf.write_ub4(self.conn_impl._temp_lobs_total_size)
+        buf.write_uint8(0)                  # dest lob locator
+        buf.write_ub4(0)
+        buf.write_ub4(0)                    # source lob locator
+        buf.write_ub4(0)
+        buf.write_uint8(0)                  # source lob offset
+        buf.write_uint8(0)                  # dest lob offset
+        buf.write_uint8(0)                  # charset
+        buf.write_ub4(op_code)
+        buf.write_uint8(0)                  # scn
+        buf.write_ub4(0)                    # losbscn
+        buf.write_ub8(0)                    # lobscnl
+        buf.write_ub8(0)
+        buf.write_uint8(0)
+
+        # array lob fields
+        buf.write_uint8(0)
+        buf.write_ub4(0)
+        buf.write_uint8(0)
+        buf.write_ub4(0)
+        buf.write_uint8(0)
+        buf.write_ub4(0)
+        for i in range(len(lobs_to_close)):
+            buf.write_bytes(lobs_to_close[i])
+
+        # reset values
+        self.conn_impl._temp_lobs_to_close = None
+        self.conn_impl._temp_lobs_total_size = 0
+
     cdef int _write_end_to_end_piggyback(self, WriteBuffer buf) except -1:
         cdef:
             bytes action_bytes, client_identifier_bytes, client_info_bytes
@@ -950,6 +991,8 @@ cdef class MessageWithData(Message):
                 or self.conn_impl._dbop_modified \
                 or self.conn_impl._module_modified:
             self._write_end_to_end_piggyback(buf)
+        if self.conn_impl._temp_lobs_total_size > 0:
+            self._write_close_temp_lobs_piggyback(buf)
 
 
 @cython.final

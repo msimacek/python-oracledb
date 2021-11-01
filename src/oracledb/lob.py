@@ -6,6 +6,9 @@ from typing import Union
 
 class LOB:
 
+    def __del__(self):
+        self._impl.free_lob()
+
     def __str__(self):
         return self.read()
 

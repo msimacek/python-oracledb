@@ -252,21 +252,20 @@ class TestCase(test_env.BaseTestCase):
 
     def test_1918_temporary_lobs(self):
         "1918 - test temporary LOBs"
-        cursor = self.connection.cursor()
-        cursor.arraysize = self.cursor.arraysize
-        cursor.execute("""
+        self.cursor.execute("""
                 select sys_context('USERENV', 'SID')
                 from dual""")
-        sid, = cursor.fetchone()
+        sid, = self.cursor.fetchone()
         temp_lobs = self.__get_temp_lobs(sid)
-        self.assertEqual(temp_lobs, 0)
-        cursor.execute("""
-                select extract(xmlcol, '/').getclobval()
-                from TestXML""")
-        for lob, in cursor:
-            value = lob.read()
-            del lob
-        cursor.close()
+        with self.connection.cursor() as cursor:
+            cursor.arraysize = 27
+            self.assertEqual(temp_lobs, 0)
+            cursor.execute("""
+                    select extract(xmlcol, '/').getclobval()
+                    from TestXML""")
+            for lob, in cursor:
+                value = lob.read()
+                del lob
         temp_lobs = self.__get_temp_lobs(sid)
         self.assertEqual(temp_lobs, 0)
 

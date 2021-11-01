@@ -12,6 +12,10 @@ cdef class BaseLobImpl:
     def file_exists(self):
         pass
 
+    @utils.CheckImpls("freeing the lob object")
+    def free_lob(self):
+        pass
+
     @utils.CheckImpls("getting the chunk size of a LOB")
     def get_chunk_size(self):
         pass

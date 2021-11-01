@@ -33,6 +33,8 @@ cdef class ThinConnImpl(BaseConnImpl):
         ssize_t _num_cursors_to_close
         bint _drcp_enabled
         double _time_in_pool
+        list _temp_lobs_to_close
+        uint32_t _temp_lobs_total_size
 
     cdef int _add_cursor_to_close(self, Statement stmt) except -1:
         if self._num_cursors_to_close == TNS_MAX_CURSORS_TO_CLOSE:
@@ -87,6 +89,23 @@ cdef class ThinConnImpl(BaseConnImpl):
             return statement
 
     cdef int _return_statement(self, Statement statement) except -1:
+        """
+        Return the statement to the statement cache, if applicable. If the
+        statement must not be returned to the statement cache, add the cursor
+        id to the list of cursor ids to close on the next round trip to the
+        database. Clear all bind variables and fetch variables in order to
+        ensure that unnecessary references are not retained.
+        """
+        cdef:
+            BaseVarImpl var_impl
+            BindInfo bind_info
+        if statement._bind_info_list is not None:
+            for bind_info in statement._bind_info_list:
+                bind_info._bind_var = None
+        if statement._fetch_vars is not None:
+            for var in statement._fetch_vars:
+                var_impl = <BaseVarImpl> var._impl
+                var_impl.values = [None] * var_impl.num_elements
         with self._statement_cache_lock:
             if statement._return_to_cache:
                 statement._in_use = False
