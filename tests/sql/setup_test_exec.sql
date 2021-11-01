@@ -761,6 +761,15 @@ create or replace package &main_user..pkg_TestRefCursors as
         a_Cursor                        sys_refcursor
     ) return varchar2;
 
+    function TestReturnCursor (
+        a_MaxIntValue                   number
+    ) return sys_refcursor;
+
+    procedure TestLobCursor (
+        a_Value                         varchar2,
+        a_Cursor                        out sys_refcursor
+    );
+
 end;
 /
 
@@ -787,6 +796,31 @@ create or replace package body &main_user..pkg_TestRefCursors as
     begin
         fetch a_Cursor into t_String;
         return t_String || ' (Modified)';
+    end;
+
+    function TestReturnCursor (
+        a_MaxIntValue                   number
+    ) return sys_refcursor is
+        t_Cursor                        sys_refcursor;
+    begin
+        open t_Cursor for
+            select
+                IntCol,
+                StringCol
+            from TestSTrings
+            where IntCol <= a_MaxIntValue
+            order by IntCol;
+        return t_Cursor;
+    end;
+
+    procedure TestLobCursor (
+        a_Value                         varchar2,
+        a_Cursor                        out sys_refcursor
+    ) is
+    begin
+        open a_Cursor for
+            select to_clob(a_Value)
+            from dual;
     end;
 
 end;

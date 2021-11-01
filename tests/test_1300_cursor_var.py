@@ -156,5 +156,26 @@ class TestCase(test_env.BaseTestCase):
             refcursor.execute("begin :1 := 15; end;", [var])
             self.assertEqual(var.getvalue(), 15)
 
+    def test_1308_function_with_ref_cursor_return(self):
+        "1308 - test calling a function that returns a REF cursor"
+        with self.connection.cursor() as cursor:
+            ref_cursor = cursor.callfunc("pkg_TestRefCursors.TestReturnCursor",
+                                         oracledb.DB_TYPE_CURSOR, [2])
+            rows = ref_cursor.fetchall()
+            self.assertEqual(rows, [(1, 'String 1'), (2, 'String 2')])
+
+    def test_1309_output_type_handler_with_ref_cursor(self):
+        "1309 - test using an output type handler with a REF cursor"
+        def type_handler(cursor, name, default_type, size, precision, scale):
+            return cursor.var(str, arraysize=cursor.arraysize)
+        self.connection.outputtypehandler = type_handler
+        var = self.cursor.var(oracledb.DB_TYPE_CURSOR)
+        string_val = "Test String - 1309"
+        with self.connection.cursor() as cursor:
+            cursor.callproc("pkg_TestRefCursors.TestLobCursor",
+                            [string_val, var])
+        ref_cursor = var.getvalue()
+        self.assertEqual(ref_cursor.fetchall(), [(string_val,)])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

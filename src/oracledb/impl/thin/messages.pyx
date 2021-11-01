@@ -226,7 +226,6 @@ cdef class MessageWithData(Message):
         ThinCursorImpl cursor_impl
         ThinConnImpl conn_impl
         bint arraydmlrowcounts
-        bint requires_define
         uint32_t row_index
         uint32_t num_execs
         list dmlrowcounts
@@ -316,8 +315,7 @@ cdef class MessageWithData(Message):
                         var_impl = <ThinVarImpl> var._impl
                         var = cursor_impl._get_fetch_var(self.cursor,
                                                          type_handler,
-                                                         var_impl._fetch_info,
-                                                         &self.requires_define)
+                                                         var_impl._fetch_info)
                         cursor_impl.fetch_vars[i] = var
                     statement._last_output_type_handler = type_handler
                 self.row_var_impls = [v._impl for v in cursor_impl.fetch_vars]
@@ -492,8 +490,7 @@ cdef class MessageWithData(Message):
                 or cursor_impl._conn_impl.outputtypehandler
         for i in range(num_columns):
             fetch_info = self._process_column_info(buf, cursor_impl)
-            var = cursor_impl._get_fetch_var(cursor, type_handler, fetch_info,
-                                             &self.requires_define)
+            var = cursor_impl._get_fetch_var(cursor, type_handler, fetch_info)
             cpython.Py_INCREF(var)
             cpython.PyList_SET_ITEM(cursor_impl.fetch_vars, i, var)
         num_bytes = buf.read_ub4()
@@ -1287,14 +1284,15 @@ cdef class ExecuteMessage(MessageWithData):
         cdef:
             uint32_t options, dml_options = 0, num_params = 0, num_iters = 1
             Statement stmt = self.cursor_impl._statement
+            ThinCursorImpl cursor_impl = self.cursor_impl
             list params = stmt._bind_info_list
 
         # determine the options to use for the execute
         options = 0
-        if not self.requires_define and not self.parse_only \
+        if not cursor_impl._requires_define and not self.parse_only \
                 and params is not None:
             num_params = <uint32_t> len(params)
-        if self.requires_define:
+        if cursor_impl._requires_define:
             options |= TNS_EXEC_OPTION_DEFINE
         elif not self.parse_only and stmt._sql is not None:
             dml_options = TNS_EXEC_OPTION_IMPLICIT_RESULTSET
@@ -1308,7 +1306,7 @@ cdef class ExecuteMessage(MessageWithData):
                 if self.cursor_impl.prefetchrows > 0:
                     options |= TNS_EXEC_OPTION_FETCH
                     options |= TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
-                if stmt._cursor_id == 0 or self.requires_define:
+                if stmt._cursor_id == 0 or cursor_impl._requires_define:
                     num_iters = self.cursor_impl.prefetchrows
                 else:
                     num_iters = self.cursor_impl._fetch_array_size
@@ -1356,7 +1354,7 @@ cdef class ExecuteMessage(MessageWithData):
         buf.write_uint8(0)                  # pointer (al8txl)
         buf.write_uint8(0)                  # pointer (al8kv)
         buf.write_uint8(0)                  # pointer (al8kvl)
-        if self.requires_define:
+        if cursor_impl._requires_define:
             buf.write_uint8(1)              # pointer (al8doac)
             buf.write_ub4(len(self.cursor_impl.fetch_vars))
                                             # number of defines
@@ -1410,7 +1408,7 @@ cdef class ExecuteMessage(MessageWithData):
         buf.write_ub4(0)                    # al8i4[10]
         buf.write_ub4(0)                    # al8i4[11]
         buf.write_ub4(0)                    # al8i4[12]
-        if self.requires_define:
+        if cursor_impl._requires_define:
             self._write_column_metadata(buf, self.cursor_impl.fetch_vars)
         elif num_params > 0:
             self._write_bind_params(buf, params)
