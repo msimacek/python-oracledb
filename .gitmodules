@@ -1,4 +1,4 @@
 [submodule "src/oracledb/impl/thick/odpi"]
 	path = src/oracledb/impl/thick/odpi
-	url = ../../dataaccess_dpic/odpi.git
+	url = ../odpi-c.git
 	branch = main
