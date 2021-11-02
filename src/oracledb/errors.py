@@ -137,6 +137,7 @@ ERR_INVALID_REDIRECT_DATA = 4019
 ERR_INVALID_TNS_ALIAS_DEFINITION = 4020
 ERR_INVALID_PROTOCOL = 4021
 ERR_INVALID_POOL_PURITY = 4022
+ERR_CANNOT_PARSE_EZCONNECT_STRING = 4023
 
 # error numbers that result in InternalError
 ERR_MESSAGE_TYPE_UNKNOWN = 5000
@@ -187,6 +188,8 @@ ERR_MESSAGE_FORMATS = {
             "hold {required_buffer_len} bytes",
     ERR_CANNOT_PARSE_CONNECT_DESCRIPTOR: \
             "cannot parse connect descriptor: {data}",
+    ERR_CANNOT_PARSE_EZCONNECT_STRING: \
+            "cannot parse easy connect string: {data}",
     ERR_COLUMN_TRUNCATED: "column truncated to {col_value_len} {unit} " \
             "(actual is {actual_len})",
     ERR_CONTENT_INVALID_AFTER_NUMBER: "invalid number (content after number)",

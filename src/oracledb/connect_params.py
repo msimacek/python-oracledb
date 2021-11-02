@@ -302,33 +302,77 @@ class ConnectParams:
         returned indicating whether a string in that format was detected and
         parsed.
         """
-        protocol = None
-        protocol_pos = connect_string.find("://")
-        if protocol_pos > 0:
-            protocol = connect_string[:protocol_pos]
-            self._set_protocol(protocol)
-            connect_string = connect_string[protocol_pos + 3:]
-        slash_pos = connect_string.find("/")
-        if slash_pos < 0:
-            self.service_name = ""
-        else:
-            self.service_name = connect_string[slash_pos + 1:]
-            drcp_suffix = ":POOLED"
-            if self.service_name.upper().endswith(drcp_suffix):
-                self.enable_drcp = True
-                self.service_name = self.service_name[:-len(drcp_suffix)]
-            connect_string = connect_string[:slash_pos]
-        colon_pos = connect_string.find(":")
-        if colon_pos >= 0:
-            port = connect_string[colon_pos + 1:]
-            self.port = 1521 if not(port) else int(port)
-            connect_string = connect_string[:colon_pos]
-        elif self.port is None:
+
+        # save original connect string for use in error messages
+        user_connect_string = connect_string
+
+        try:
+
+            # parse protocol
+            protocol = None
+            protocol_pos = connect_string.find("://")
+            if protocol_pos > 0:
+                protocol = connect_string[:protocol_pos]
+                self._set_protocol(protocol)
+                connect_string = connect_string[protocol_pos + 3:]
+
+            # parse parameters
+            params_pos = connect_string.find("?")
+            if params_pos > 0:
+                for part in connect_string[params_pos + 1:].split("&"):
+                    name, value = [s.strip() for s in part.split("=", 1)]
+                    name = name.lower()
+                    if value.startswith('"') and value.endswith('"'):
+                        value = value[1:-1]
+                    if name == "ssl_server_cert_dn":
+                        self.ssl_server_cert_dn = value
+                    elif name == "ssl_server_dn_match":
+                        self.ssl_server_dn_match = value.lower() == "on"
+                    elif name == "wallet_location":
+                        self.wallet_location = value
+                    elif name == "expire_time":
+                        self.keepalive_idle_time = int(value)
+                    elif name == "retry_delay":
+                        self.retry_delay = int(value)
+                    elif name == "retry_count":
+                        self.retry_count = int(value)
+                    elif name == "transport_connect_timeout":
+                        self.tcp_connect_timeout = float(value)
+                    else:
+                        raise Exception(f"unknown parameter name: {name}")
+                connect_string = connect_string[:params_pos]
+
+            # parse service name and server type
+            slash_pos = connect_string.find("/")
             if slash_pos < 0:
-                return False
-            self.port = 1521
-        self.host = connect_string
-        return True
+                self.service_name = ""
+            else:
+                self.service_name = connect_string[slash_pos + 1:]
+                drcp_suffix = ":POOLED"
+                if self.service_name.upper().endswith(drcp_suffix):
+                    self.enable_drcp = True
+                    self.service_name = self.service_name[:-len(drcp_suffix)]
+                connect_string = connect_string[:slash_pos]
+
+            # parse host and port
+            colon_pos = connect_string.find(":")
+            if colon_pos >= 0:
+                port = connect_string[colon_pos + 1:]
+                self.port = 1521 if not(port) else int(port)
+                connect_string = connect_string[:colon_pos]
+            elif self.port is None:
+                if slash_pos < 0:
+                    return False
+                self.port = 1521
+            self.host = connect_string
+
+            return True
+
+        except exceptions.Error:
+            raise
+        except Exception as e:
+            errors._raise_err(errors.ERR_CANNOT_PARSE_EZCONNECT_STRING,
+                              str(e), data=connect_string)
 
     def _parse_redirect_data(self, redirect_data):
         """
