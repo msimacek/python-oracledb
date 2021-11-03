@@ -32,7 +32,7 @@ cdef class Statement:
     cdef:
         str _sql
         bytes _sql_bytes
-        uint32_t _sql_bytes_length
+        uint32_t _sql_length
         uint16_t _cursor_id
         bint _is_query
         bint _is_plsql
@@ -54,7 +54,7 @@ cdef class Statement:
             BindInfo bind_info
         copied_statement._sql = self._sql
         copied_statement._sql_bytes = self._sql_bytes
-        copied_statement._sql_bytes_length = self._sql_bytes_length
+        copied_statement._sql_length = self._sql_length
         copied_statement._is_query = self._is_query
         copied_statement._is_plsql = self._is_plsql
         copied_statement._is_dml = self._is_dml
@@ -87,11 +87,21 @@ cdef class Statement:
         if not self._is_plsql and re.search(dml_pattern, sql) is not None:
             self._is_returning = True
 
-    cdef _prepare(self, str sql):
+    cdef _prepare(self, str sql, bint char_conversion):
+        """
+        Prepare the SQL for execution by determining the list of bind names
+        that are found within it. The length of the SQL text is also calculated
+        at this time. If the character sets of the client and server are
+        identical, the length is calculated in bytes; otherwise, the length is
+        calculated in characters.
+        """
         self._sql = sql
         sql = sql.strip()
         self._sql_bytes = sql.encode()
-        self._sql_bytes_length = <uint32_t> len(self._sql_bytes)
+        if char_conversion:
+            self._sql_length = <uint32_t> len(sql)
+        else:
+            self._sql_length = <uint32_t> len(self._sql_bytes)
         self._get_bind_names(sql)
 
     cdef _get_bind_names(self, str sql):

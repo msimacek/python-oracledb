@@ -72,7 +72,7 @@ cdef class ThinConnImpl(BaseConnImpl):
             statement = self._statement_cache.get(sql)
             if statement is None:
                 statement = Statement()
-                statement._prepare(sql)
+                statement._prepare(sql, self._protocol._caps.char_conversion)
                 if len(self._statement_cache) < self._statement_cache_size \
                         and cache_statement:
                     self._statement_cache[sql] = statement

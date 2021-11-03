@@ -8,6 +8,7 @@ cdef class Capabilities:
         uint8_t ttc_field_version
         bytearray compile_caps
         bytearray runtime_caps
+        bint char_conversion
         bint supports_oob
 
     def __init__(self):

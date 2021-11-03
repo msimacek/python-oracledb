@@ -463,5 +463,11 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("truncate table TestTempTable")
         self.cursor.execute("insert into TestTempTable (IntCol) values (1)")
 
+    def test_4340_sql_with_non_ascii_chars(self):
+        "4340 - test executing SQL with non-ASCII characters"
+        self.cursor.execute("select 'FÖÖ' from dual")
+        result, = self.cursor.fetchone()
+        self.assertTrue(result in ('FÖÖ', 'F¿¿'))
+
 if __name__ == "__main__":
     test_env.run_test_cases()

@@ -1375,7 +1375,7 @@ cdef class ExecuteMessage(MessageWithData):
         buf.write_ub4(stmt._cursor_id)      # cursor id
         if stmt._cursor_id == 0 or stmt._is_ddl:
             buf.write_uint8(1)              # pointer (cursor id)
-            buf.write_ub4(stmt._sql_bytes_length)
+            buf.write_ub4(stmt._sql_length)
         else:
             buf.write_uint8(0)              # pointer (cursor id)
             buf.write_ub4(0)
@@ -1676,14 +1676,15 @@ cdef class ProtocolMessage(Message):
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:
         cdef:
-            uint16_t num_elem, fdo_length
+            uint16_t num_elem, fdo_length, charset_id
             bytearray server_compile_caps
             bytearray server_runtime_caps
         if message_type == TNS_MSG_TYPE_PROTOCOL:
             buf.skip_bytes(2)               # skip protocol array
             while buf.read_uint8() != 0:    # skip server banner
                 pass
-            buf.skip_bytes(2)               # skip charset (LSB)
+            charset_id = buf.read_uint16(BYTE_ORDER_LSB)
+            buf._caps.char_conversion = charset_id != TNS_CHARSET_UTF8
             buf.skip_bytes(1)               # skip server flags
             num_elem = buf.read_uint16(BYTE_ORDER_LSB)
             if num_elem > 0:                # skip elements
