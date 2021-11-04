@@ -103,7 +103,7 @@ DB_TYPE_TIMESTAMP_LTZ = DbType(2014, "DB_TYPE_TIMESTAMP_LTZ", 231,
                                buffer_size_factor=11)
 DB_TYPE_TIMESTAMP_TZ = DbType(2013, "DB_TYPE_TIMESTAMP_TZ", 181,
                               buffer_size_factor=13)
-DB_TYPE_UROWID = DbType(2028, "DB_TYPE_UROWID", 208)
+DB_TYPE_UROWID = DbType(2030, "DB_TYPE_UROWID", 208)
 DB_TYPE_VARCHAR = DbType(2001, "DB_TYPE_VARCHAR", 1, 4000, csfrm=1,
                          buffer_size_factor=4)
 
