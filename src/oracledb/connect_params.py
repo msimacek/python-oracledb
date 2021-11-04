@@ -48,8 +48,7 @@ class ConnectParams:
                  ssl_server_cert_dn: str=None,
                  retry_count: int=0,
                  retry_delay: int=0,
-                 enable_keepalive: bool=False,
-                 keepalive_idle_time: int=0,
+                 expire_time: int=0,
                  tcp_connect_timeout: float=None,
                  wallet_location: str=None,
                  wallet_password: str=None) -> None:
@@ -143,13 +142,9 @@ class ConnectParams:
         retry_delay: the number of seconds to wait before making a new
         connection attempt.
 
-        enable_keepalive: a boolean indicating if keepalive probes should be
-        sent. If the keepalive_idle_time parameter is not set the OS default
-        configuration will be used.
-
-        keepalive_idle_time: an integer indicating the number of minutes
-        between the sending of keepalive probes. If this parameter is set to a
-        value greater than zero it enables keepalive.
+        expire_time: an integer indicating the number of minutes between the
+        sending of keepalive probes. If this parameter is set to a value
+        greater than zero it enables keepalive.
 
         tcp_connect_timeout: a float indicating the maximum number of seconds
         to wait for establishing a connection to the database host.
@@ -193,8 +188,7 @@ class ConnectParams:
         self.ssl_server_cert_dn = ssl_server_cert_dn
         self.retry_count = retry_count
         self.retry_delay = retry_delay
-        self.enable_keepalive = enable_keepalive
-        self.keepalive_idle_time = keepalive_idle_time
+        self.expire_time = expire_time
         self.tcp_connect_timeout = tcp_connect_timeout \
                 if tcp_connect_timeout is not None \
                 else defaults.tcp_connect_timeout
@@ -246,12 +240,9 @@ class ConnectParams:
         node = parse_connect_descriptor(connect_string)
         try:
             description_node = node.description
-            temp_val = getattr(description_node, "enable", None)
-            if temp_val is not None and temp_val.lower() == "broken":
-                self.enable_keepalive = True
             temp_val = getattr(description_node, "expire_time", None)
             if temp_val is not None:
-                self.keepalive_idle_time = int(temp_val)
+                self.expire_time = int(temp_val)
             temp_val = getattr(description_node, "retry_count", None)
             if temp_val is not None:
                 self.retry_count = int(temp_val)
@@ -331,7 +322,7 @@ class ConnectParams:
                     elif name == "wallet_location":
                         self.wallet_location = value
                     elif name == "expire_time":
-                        self.keepalive_idle_time = int(value)
+                        self.expire_time = int(value)
                     elif name == "retry_delay":
                         self.retry_delay = int(value)
                     elif name == "retry_count":
