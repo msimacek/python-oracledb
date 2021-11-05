@@ -156,7 +156,7 @@ cdef class ThinConnImpl(BaseConnImpl):
                             params.expire_time * 60)
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 6)
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)
-        if params.secure_transport:
+        if params.protocol == "tcps":
             sock = get_ssl_socket(sock, params)
         self._protocol = Protocol(sock)
         redirect_data = self._protocol._connect(self, params,

@@ -112,7 +112,8 @@ cdef class Protocol:
                 return connect_message.redirect_data
             if connect_message.packet_type == TNS_PACKET_TYPE_ACCEPT:
                 break
-            if params.secure_transport and params.wallet_location is not None:
+            if params.protocol == "tcps" \
+                    and params.wallet_location is not None:
                 ssl_context = self._socket.context
                 sock = socket.socket(fileno=self._socket.detach())
                 sock = ssl_context.wrap_socket(sock)

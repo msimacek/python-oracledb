@@ -29,7 +29,7 @@ class ConnectParams:
                  service_name: str=None,
                  sid: str=None,
                  events: bool=None,
-                 secure_transport: bool=False,
+                 protocol: str="tcp",
                  enable_drcp: bool=False,
                  config_dir: str=None,
                  cclass: str=None,
@@ -73,8 +73,8 @@ class ConnectParams:
         query notification and high availability event notifications
         (default: oracledb.defaults.events)
 
-        secure_transport: boolean specifying whether secure transport (TLS)
-        should be used
+        protocol: one of the strings "tcp" or "tcps" indicating whether to use
+        unencrypted network traffic or encrypted network traffic (TLS).
 
         enable_drcp: boolean specifying whether Database Resident Connection
         Pooling (DRCP) should be used
@@ -162,7 +162,7 @@ class ConnectParams:
         self.service_name = service_name
         self.sid = sid
         self.events = events if events is not None else defaults.events
-        self.secure_transport = secure_transport
+        self._set_protocol(protocol)
         self.enable_drcp = enable_drcp
         self.config_dir = config_dir if config_dir is not None \
                 else defaults.config_dir
@@ -252,7 +252,7 @@ class ConnectParams:
             if temp_val is not None:
                 self.tcp_connect_timeout = self._parse_time_value(temp_val)
             address_node = description_node.address
-            self._set_protocol(address_node.protocol)
+            self._set_protocol(address_node.protocol.lower())
             self.host = address_node.host
             self.port = int(address_node.port)
             connect_data_node = node.description.connect_data
@@ -302,7 +302,7 @@ class ConnectParams:
             protocol_pos = connect_string.find("://")
             if protocol_pos > 0:
                 protocol = connect_string[:protocol_pos]
-                self._set_protocol(protocol)
+                self._set_protocol(protocol.lower())
                 connect_string = connect_string[protocol_pos + 3:]
 
             # parse parameters
@@ -409,10 +409,9 @@ class ConnectParams:
         Sets the specified protocol. Only tcp and tcps protocols are supported
         at this time.
         """
-        protocol = protocol.lower()
         if protocol not in ("tcp", "tcps"):
             errors._raise_err(errors.ERR_INVALID_PROTOCOL, protocol=protocol)
-        self.secure_transport = protocol == "tcps"
+        self.protocol = protocol
 
     def _supports_oob(self):
         """

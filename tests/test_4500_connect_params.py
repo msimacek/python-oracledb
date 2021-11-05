@@ -71,7 +71,7 @@ class TestCase(test_env.BaseTestCase):
         params.parse_connect_string("tcps://my_host6/my_service_name6")
         self.assertEqual(params.host, "my_host6")
         self.assertEqual(params.service_name, "my_service_name6")
-        self.assertEqual(params.secure_transport, True)
+        self.assertEqual(params.protocol, "tcps")
 
     def test_4506_ezconnect_with_invalid_protocol(self):
         "4506 - test EZConnect with invalid protocol"

@@ -30,7 +30,6 @@ def _get_connect_data(params):
     Return the connect data required by the listener in order to connect.
     """
     constants = _connect_constants
-    protocol = "TCPS" if params.secure_transport else "TCP"
     server_type = "(SERVER=POOLED)" if params.enable_drcp else ""
     identity = f"(SERVICE_NAME={params.service_name})" \
             if params.service_name is not None or params.sid is None \
@@ -38,7 +37,7 @@ def _get_connect_data(params):
     cid = f"(PROGRAM={constants.sanitized_program_name})" + \
           f"(HOST={constants.sanitized_machine_name})" + \
           f"(USER={constants.sanitized_user_name})"
-    return f"(DESCRIPTION=(ADDRESS=(PROTOCOL={protocol})" + \
+    return f"(DESCRIPTION=(ADDRESS=(PROTOCOL={params.protocol.upper()})" + \
            f"(HOST={params.host})(PORT={params.port}))" + \
            f"(CONNECT_DATA={identity}{server_type}(CID={cid})))"
 
