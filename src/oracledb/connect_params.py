@@ -193,6 +193,35 @@ class ConnectParams:
         self.wallet_location = wallet_location
         self.wallet_password = wallet_password
 
+    def __repr__(self):
+        return f"ConnectParams(" \
+               f"host={self.host!r}, " \
+               f"port={self.port!r}, " \
+               f"service_name={self.service_name!r}, " \
+               f"sid={self.sid!r}, " \
+               f"events={self.events!r}, " \
+               f"protocol={self.protocol!r}, " \
+               f"enable_drcp={self.enable_drcp!r}, " \
+               f"config_dir={self.config_dir!r}, " \
+               f"cclass={self.cclass!r}, " \
+               f"purity={self.purity!r}, " \
+               f"mode={self.mode!r}, " \
+               f"edition={self.edition!r}, " \
+               f"appcontext={self.appcontext!r}, " \
+               f"tag={self.tag!r}, " \
+               f"matchanytag={self.matchanytag!r}, " \
+               f"shardingkey={self.shardingkey!r}, " \
+               f"supershardingkey={self.supershardingkey!r}, " \
+               f"stmtcachesize={self.stmtcachesize!r}, " \
+               f"disable_oob={self.disable_oob!r}, " \
+               f"ssl_server_dn_match={self.ssl_server_dn_match!r}, " \
+               f"ssl_server_cert_dn={self.ssl_server_cert_dn!r}, " \
+               f"retry_count={self.retry_count!r}, " \
+               f"retry_delay={self.retry_delay!r}, " \
+               f"expire_time={self.expire_time!r}, " \
+               f"tcp_connect_timeout={self.tcp_connect_timeout!r}, " \
+               f"wallet_location={self.wallet_location!r})"
+
     def _get_tnsnames_file(self):
         """
         Return a tnsnames file, if one is present, or None if one is not. If
