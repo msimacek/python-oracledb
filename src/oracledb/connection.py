@@ -769,7 +769,8 @@ class Connection:
 
     def tpc_begin(self,
                   xid: Xid,
-                  flags: int=constants.TPC_BEGIN_NEW) -> None:
+                  flags: int=constants.TPC_BEGIN_NEW,
+                  timeout: int=0) -> None:
         """
         Begins a TPC (two-phase commit) transaction with the given transaction
         id. This method should be called outside of a transaction (i.e. nothing
@@ -777,7 +778,7 @@ class Connection:
         """
         self._verify_connected()
         self._verify_xid(xid)
-        self._impl.tpc_begin(xid, flags)
+        self._impl.tpc_begin(xid, flags, timeout)
 
     def tpc_commit(self,
                    xid: Xid=None,

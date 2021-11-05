@@ -523,12 +523,13 @@ cdef class ThickConnImpl(BaseConnImpl):
         if status < 0:
             _raise_from_odpi()
 
-    def tpc_begin(self, xid, uint32_t flags):
+    def tpc_begin(self, xid, uint32_t flags, uint32_t timeout):
         cdef:
             ThickXid thick_xid = ThickXid(xid)
             int status
         with nogil:
-            status = dpiConn_tpcBegin(self._handle, thick_xid.xid_ptr, flags)
+            status = dpiConn_tpcBegin(self._handle, thick_xid.xid_ptr,
+                                      timeout, flags)
         if status < 0:
             _raise_from_odpi()
 

@@ -575,7 +575,8 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
     int dpiConn_subscribe(dpiConn *conn, dpiSubscrCreateParams *params,
             dpiSubscr **subscr) nogil
 
-    int dpiConn_tpcBegin(dpiConn *conn, dpiXid *xid, uint32_t flags) nogil
+    int dpiConn_tpcBegin(dpiConn *conn, dpiXid *xid,
+            uint32_t transactionTimeout, uint32_t flags) nogil
 
     int dpiConn_tpcCommit(dpiConn *conn, dpiXid *xid, bint onePhase) nogil
 

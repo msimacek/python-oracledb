@@ -154,7 +154,7 @@ cdef class BaseConnImpl:
         pass
 
     @utils.CheckImpls("starting a TPC (two-phase commit) transaction")
-    def tpc_begin(self, xid, uint32_t flags):
+    def tpc_begin(self, xid, uint32_t flags, uint32_t timeout):
         pass
 
     @utils.CheckImpls("committing a TPC (two-phase commit) transaction")
