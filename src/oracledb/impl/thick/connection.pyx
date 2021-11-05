@@ -244,8 +244,7 @@ cdef class ThickConnImpl(BaseConnImpl):
         if dpiContext_initCommonCreateParams(driver_context,
                                              &common_params) < 0:
             _raise_from_odpi()
-        if user_params.threaded:
-            common_params.createMode |= DPI_MODE_CREATE_THREADED
+        common_params.createMode |= DPI_MODE_CREATE_THREADED
         if user_params.events:
             common_params.createMode |= DPI_MODE_CREATE_EVENTS
         if user_params.edition is not None:

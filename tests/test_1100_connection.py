@@ -20,11 +20,11 @@ class TestCase(test_env.BaseTestCase):
 
     def __connect_and_drop(self):
         """Connect to the database, perform a query and drop the connection."""
-        connection = test_env.get_connection(threaded=True)
-        cursor = connection.cursor()
-        cursor.execute("select count(*) from TestNumbers")
-        count, = cursor.fetchone()
-        self.assertEqual(count, 10)
+        with test_env.get_connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute("select count(*) from TestNumbers")
+            count, = cursor.fetchone()
+            self.assertEqual(count, 10)
 
     def __verify_fetched_data(self, connection):
         expected_data = [f"String {i + 1}" for i in range(10)]
@@ -452,7 +452,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_1129_threading_single_connection(self):
         "1129 - single connection to database with multiple threads"
-        with test_env.get_connection(threaded=True) as connection:
+        with test_env.get_connection() as connection:
             threads = [threading.Thread(target=self.__verify_fetched_data,
                                         args=(connection,)) for i in range(3)]
             for t in threads:

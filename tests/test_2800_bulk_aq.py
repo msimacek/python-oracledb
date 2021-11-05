@@ -33,17 +33,17 @@ RAW_PAYLOAD_DATA = [
 class TestCase(test_env.BaseTestCase):
 
     def __deq_in_thread(self, results):
-        connection = test_env.get_connection(threaded=True)
-        queue = connection.queue(RAW_QUEUE_NAME)
-        queue.deqoptions.wait = 10
-        queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
-        while len(results) < len(RAW_PAYLOAD_DATA):
-            messages = queue.deqmany(5)
-            if not messages:
-                break
-            for m in messages:
-                results.append(m.payload.decode())
-        connection.commit()
+        with test_env.get_connection() as connection:
+            queue = connection.queue(RAW_QUEUE_NAME)
+            queue.deqoptions.wait = 10
+            queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
+            while len(results) < len(RAW_PAYLOAD_DATA):
+                messages = queue.deqmany(5)
+                if not messages:
+                    break
+                for m in messages:
+                    results.append(m.payload.decode())
+            connection.commit()
 
     def __get_and_clear_raw_queue(self):
         queue = self.connection.queue(RAW_QUEUE_NAME)

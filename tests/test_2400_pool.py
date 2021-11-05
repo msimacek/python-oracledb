@@ -188,7 +188,6 @@ class TestCase(test_env.BaseTestCase):
     def test_2404_threading(self):
         "2404 - test session pool with multiple threads"
         self.pool = test_env.get_pool(min=5, max=20, increment=2,
-                                      threaded=True,
                                       getmode=oracledb.POOL_GETMODE_WAIT)
         threads = []
         for i in range(20):
@@ -201,7 +200,6 @@ class TestCase(test_env.BaseTestCase):
     def test_2405_threading_with_errors(self):
         "2405 - test session pool with multiple threads (with errors)"
         self.pool = test_env.get_pool(min=5, max=20, increment=2,
-                                      threaded=True,
                                       getmode=oracledb.POOL_GETMODE_WAIT)
         threads = []
         for i in range(20):

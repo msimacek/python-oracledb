@@ -28,7 +28,6 @@ class ConnectParams:
                  port: int=None,
                  service_name: str=None,
                  sid: str=None,
-                 threaded: bool=None,
                  events: bool=None,
                  secure_transport: bool=False,
                  enable_drcp: bool=False,
@@ -51,7 +50,12 @@ class ConnectParams:
                  expire_time: int=0,
                  tcp_connect_timeout: float=None,
                  wallet_location: str=None,
-                 wallet_password: str=None) -> None:
+                 wallet_password: str=None,
+
+                 # deprecated parameters: values are ignored
+                 threaded: bool=None,
+                 encoding: str=None,
+                 nencoding: str=None) -> None:
         """
         Constructor for connection parameters. All parameters are optional.
 
@@ -63,10 +67,6 @@ class ConnectParams:
         service_name: the service name of the database
 
         sid: the SID of the database (service_name should be used instead)
-
-        threaded: boolean specifying whether threaded mode should be enabled.
-        This is only relevant for the thick driver
-        (default: oracledb.defaults.threaded)
 
         events: boolean specifying whether events mode should be enabled. This
         is only relevant for the thick driver and is needed for continuous
@@ -161,8 +161,6 @@ class ConnectParams:
         self.port = port
         self.service_name = service_name
         self.sid = sid
-        self.threaded = threaded if threaded is not None \
-                else defaults.threaded
         self.events = events if events is not None else defaults.events
         self.secure_transport = secure_transport
         self.enable_drcp = enable_drcp

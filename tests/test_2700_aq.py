@@ -33,15 +33,15 @@ class TestCase(test_env.BaseTestCase):
             pass
 
     def __deq_in_thread(self, results):
-        connection = test_env.get_connection(threaded=True)
-        books_type = connection.gettype(self.book_type_name)
-        queue = connection.queue(self.book_queue_name, books_type)
-        queue.deqoptions.wait = 10
-        props = queue.deqone()
-        if props is not None:
-            book = props.payload
-            results.append((book.TITLE, book.AUTHORS, book.PRICE))
-        connection.commit()
+        with test_env.get_connection() as connection:
+            books_type = connection.gettype(self.book_type_name)
+            queue = connection.queue(self.book_queue_name, books_type)
+            queue.deqoptions.wait = 10
+            props = queue.deqone()
+            if props is not None:
+                book = props.payload
+                results.append((book.TITLE, book.AUTHORS, book.PRICE))
+            connection.commit()
 
     def __verify_attr(self, obj, attrName, value):
         setattr(obj, attrName, value)
