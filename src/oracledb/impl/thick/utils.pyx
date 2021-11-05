@@ -393,7 +393,7 @@ def init_oracle_client(lib_dir=None, config_dir=None, error_url=None,
         config_dir_bytes = config_dir.encode()
         params.oracleClientConfigDir = config_dir_bytes
     if driver_name is None:
-        driver_name = constants.FULL_DRIVER_NAME
+        driver_name = f"{constants.DRIVER_NAME} thk : {constants.VERSION}"
     driver_name_bytes = driver_name.encode()
     params.defaultDriverName = driver_name_bytes
     if error_url is not None:

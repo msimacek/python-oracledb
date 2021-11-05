@@ -133,7 +133,6 @@ TPC_END_SUSPEND = 0x00100000
 
 # basic configuration constants
 DRIVER_NAME = "python-oracledb"
-FULL_DRIVER_NAME = f"{DRIVER_NAME} : {VERSION}"
 INSTALLATION_URL = "https://oracledb.readthedocs.io/en/" \
                    "latest/user_guide/installation.html"
 ENCODING = "UTF-8"
