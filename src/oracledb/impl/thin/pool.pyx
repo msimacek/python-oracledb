@@ -334,9 +334,11 @@ cdef class ThinPoolImpl(BasePoolImpl):
         """
         with self._condition:
             self._busy_conn_impls.remove(conn_impl)
+            self._conn_impls_to_close.append(conn_impl)
+            conn_impl._pool = None
+            with self._bg_thread_condition:
+                self._bg_thread_condition.notify()
             self._condition.notify()
-        conn_impl._pool = None
-        conn_impl.close()
 
     def get_busy_count(self):
         """
