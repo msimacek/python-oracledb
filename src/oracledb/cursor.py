@@ -189,7 +189,7 @@ class Cursor:
     def callfunc(self, name: str, return_type: object,
                  parameters: Union[list, tuple]=None,
                  keyword_parameters: dict=None, *,
-                 keywordParameters: dict=None) -> None:
+                 keywordParameters: dict=None) -> object:
         """
         Call a function with the given name. The return type is specified in
         the same notation as is required by setinputsizes(). The sequence of
@@ -209,7 +209,7 @@ class Cursor:
 
     def callproc(self, name: str, parameters: Union[list, tuple]=None,
                  keyword_parameters: dict=None, *,
-                 keywordParameters: dict=None):
+                 keywordParameters: dict=None) -> list:
         """
         Call a procedure with the given name. The sequence of parameters must
         contain one entry for each parameter that the procedure expects. The
