@@ -7,6 +7,7 @@ from cryptography.hazmat.primitives.ciphers import algorithms, modes, Cipher
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf import pbkdf2
 
+DN_REGEX = '(?:^|,\s?)(?:(?P<name>[A-Z]+)=(?P<val>"(?:[^"]|"")+"|[^,]+))+'
 PEM_WALLET_FILE_NAME = "ewallet.pem"
 
 def decrypt_cbc(key, encrypted_text):
@@ -44,13 +45,17 @@ def get_derived_key(key, salt, length, iterations):
     return kdf.derive(key)
 
 
-def get_server_dn(sock):
+def get_server_dn_matches(sock, expected_dn):
     """
-    Return the server distinguished name (DN) given a socket.
+    Return a boolean indicating if the server distinguished name (DN) matches
+    the expected distinguished name (DN).
     """
     cert_data = sock.getpeercert(binary_form=True)
     cert = x509.load_der_x509_certificate(cert_data)
-    return cert.subject.rfc4514_string()
+    server_dn = cert.subject.rfc4514_string()
+    expected_dn_dict = dict(re.findall(DN_REGEX, expected_dn))
+    server_dn_dict = dict(re.findall(DN_REGEX, server_dn))
+    return server_dn_dict == expected_dn_dict
 
 
 def get_ssl_socket(sock, params):
@@ -73,7 +78,6 @@ def get_ssl_socket(sock, params):
         ssl_context.check_hostname = False
         sock = ssl_context.wrap_socket(sock)
     if params.ssl_server_dn_match and params.ssl_server_cert_dn is not None:
-        server_dn = get_server_dn(sock)
-        if server_dn != params.ssl_server_cert_dn:
+        if not get_server_dn_matches(sock, params.ssl_server_cert_dn):
             errors._raise_err(errors.ERR_INVALID_SERVER_CERT_DN)
     return sock
