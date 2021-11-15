@@ -149,13 +149,12 @@ class ConnectParams:
         tcp_connect_timeout: a float indicating the maximum number of seconds
         to wait for establishing a connection to the database host.
 
-        wallet_location: the location where the PKCS12-encoded wallet file
-        ewallet.p12 can be found. If this parameter is not set, one-way TLS
+        wallet_location: the location where the PEM-encoded wallet file
+        ewallet.pem can be found. If this parameter is not set, one-way TLS
         authentication will take place instead.
 
         wallet_password: the password used to decrypt the contents of the
-        PKCS12-encoded wallet file. This parameter is mandatory if
-        wallet_location is specified.
+        PEM-encoded wallet file, if applicable.
         """
         self.host = host
         self.port = port
