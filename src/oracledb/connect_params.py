@@ -263,7 +263,7 @@ class ConnectParams:
         """
         Internal method used for parsing connect data (name-value pairs).
         """
-        node = parse_connect_descriptor(connect_string)
+        node = parse_connect_descriptor(connect_string.strip())
         try:
             description_node = node.description
             temp_val = getattr(description_node, "expire_time", None)
@@ -570,8 +570,8 @@ def parse_connect_descriptor(data, group=None):
                 num_closing_parens += 1
                 num_opening_parens += data.count("(", search_pos, end_pos)
                 search_pos = end_pos + 1
-            parse_connect_descriptor(data[:end_pos + 1], value)
-            data = data[end_pos + 1:]
+            parse_connect_descriptor(data[:end_pos + 1].strip(), value)
+            data = data[end_pos + 1:].strip()
     if group is None:
         group = NameValuePairGroup()
     setattr(group, name, value)

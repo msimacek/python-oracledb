@@ -237,5 +237,18 @@ class TestCase(test_env.BaseTestCase):
                                    params.parse_connect_string,
                                    connect_string_prefix + suffix)
 
+    def test_4521_connect_string_with_newlines_and_spaces(self):
+        "4516 - test connect string containing spaces and newlines"
+        params = oracledb.ConnectParams()
+        connect_string = \
+            '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP) \n(HOST=my_host23)\n' \
+            '(PORT=1560))(CONNECT_DATA=  (SERVICE_NAME=my_service_name23))' \
+            '(SECURITY=(MY_WALLET_DIRECTORY="my wallet dir 23")))'
+        params.parse_connect_string(connect_string)
+        self.assertEqual(params.host, "my_host23")
+        self.assertEqual(params.port, 1560)
+        self.assertEqual(params.service_name, "my_service_name23")
+        self.assertEqual(params.wallet_location, "my wallet dir 23")
+
 if __name__ == "__main__":
     test_env.run_test_cases()
