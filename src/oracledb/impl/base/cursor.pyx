@@ -9,9 +9,6 @@ cdef class BaseCursorImpl:
         """
         Internal method used for binding variables by name.
         """
-        cdef:
-            object orig_var, var, value
-            str name
         if self.bind_vars is None:
             self.bind_vars = {}
         for name, value in params.items():
@@ -273,9 +270,8 @@ cdef class BaseCursorImpl:
         """
         cdef:
             BaseVarImpl var_impl
+            object var, key
             Py_ssize_t pos
-            object var
-            str key
         if isinstance(self.bind_vars, dict):
             for key, var in self.bind_vars.items():
                 var_impl = <BaseVarImpl> var._impl

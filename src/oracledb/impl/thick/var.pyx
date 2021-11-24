@@ -20,7 +20,7 @@ cdef class ThickVarImpl(BaseVarImpl):
             dpiVar_release(self._handle)
 
     cdef int _bind(self, object conn, BaseCursorImpl cursor_impl,
-                   uint32_t num_execs, str name=None,
+                   uint32_t num_execs, object name=None,
                    uint32_t pos=0) except -1:
         cdef:
             ThickCursorImpl thick_cursor_impl = <ThickCursorImpl> cursor_impl
