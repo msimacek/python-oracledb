@@ -302,5 +302,33 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute(sql, [var])
         self.assertEqual(var.getvalue(), [2])
 
+    def test_1614_parse_quoted_returning_bind(self):
+        "1614 - test DML returning with a quoted bind name"
+        sql = '''
+                insert into TestTempTable (IntCol, StringCol)
+                values (:int_val, :str_val)
+                returning IntCol, StringCol into :"_val1" , :"VaL_2"'''
+        self.cursor.parse(sql)
+        expected_bind_names = ['INT_VAL', 'STR_VAL', '_val1', 'VaL_2']
+        self.assertEqual(self.cursor.bindnames(), expected_bind_names)
+
+    def test_1615_parse_invalid_returning_bind(self):
+        "1615 - test DML returning with an invalid bind name"
+        sql = '''
+                insert into TestTempTable (IntCol)
+                values (:int_val)
+                returning IntCol, StringCol into :ROWID'''
+        self.assertRaisesRegex(oracledb.DatabaseError,
+                               "^ORA-01745:", self.cursor.parse, sql)
+
+    def test_1616_parse_non_ascii_returning_bind(self):
+        "1616 - test DML returning with a non-ascii bind name"
+        sql = '''
+                insert into TestTempTable (IntCol)
+                values (:int_val)
+                returning IntCol, StringCol into :méil'''
+        self.cursor.prepare(sql)
+        self.assertEqual(self.cursor.bindnames(), ["INT_VAL", "MÉIL"])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

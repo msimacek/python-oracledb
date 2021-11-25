@@ -203,5 +203,13 @@ class TestCase(test_env.BaseTestCase):
                                values (:1, :2)
                                returning StringCol into :out_var""", data)
 
+    def test_3921_bind_by_name_with_double_quotes(self):
+        "3921 - test binding by name with double quotes"
+        sql = 'select :"_value1" + :"VaLue_2" + :"3VALUE" from dual'
+        data = {'"_value1"': 1, '"VaLue_2"': 2, '"3VALUE"': 3}
+        self.cursor.execute(sql, data)
+        result, = self.cursor.fetchone()
+        self.assertEqual(result, 6)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

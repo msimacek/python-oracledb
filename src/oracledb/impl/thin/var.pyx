@@ -41,7 +41,10 @@ cdef class ThinVarImpl(BaseVarImpl):
 
         # bind by name
         if name is not None:
-            normalized_name = name.upper()
+            if name.startswith('"') and name.endswith('"'):
+                normalized_name = name[1:-1]
+            else:
+                normalized_name = name.upper()
             if normalized_name.startswith(":"):
                 normalized_name = normalized_name[1:]
             if normalized_name not in bind_info_dict:

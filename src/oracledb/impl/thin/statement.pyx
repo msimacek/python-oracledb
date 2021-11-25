@@ -2,6 +2,16 @@
 # Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+# Rules for named binds:
+# 1. Quoted and non-quoted bind names are allowed.
+# 2. Quoted binds can contain any characters.
+# 3. Non-quoted binds must begin with an alphabet character.
+# 4. Non-quoted binds can only contain alphabets, numbers, underscore, dollar
+#    sign and pound sign.
+# 5. Non-quoted binds cannot be Oracle Database Reserved Names (Server handles
+#    this case and returns an appropriate error)
+BIND_PATTERN = r'(?<!"\:)(?<=\:)("[^\"]*"|[^\W\d_][\w\$#]*|\d+)'
+
 cdef class BindInfo:
 
     cdef:
@@ -72,10 +82,23 @@ cdef class Statement:
         copied_statement._return_to_cache = False
         return copied_statement
 
-    cdef _determine_statement_type(self, str sql, str dml_pattern):
+    cdef object _bind_search(self, str sql):
+        cdef:
+            list bind_names = []
+            uint32_t i
+        bind_names = re.findall(BIND_PATTERN, sql)
+        for i in range(len(bind_names)):
+            bind_name = bind_names[i]
+            if bind_name.startswith('"') and bind_name.endswith('"'):
+                bind_names[i] = bind_name[1:-1]
+            else:
+                bind_names[i] = bind_name.upper()
+        return bind_names
+
+    cdef _determine_statement_type(self, str sql):
         tokens = sql.strip().lstrip("(")[:10].split()
         if tokens:
-            sql_keyword = tokens[0]
+            sql_keyword = tokens[0].upper()
             if sql_keyword in ("DECLARE", "BEGIN", "CALL"):
                 self._is_plsql = True
             elif sql_keyword in ("SELECT", "WITH"):
@@ -84,8 +107,6 @@ cdef class Statement:
                 self._is_dml = True
             elif sql_keyword in ("CREATE", "ALTER", "DROP", "TRUNCATE"):
                 self._is_ddl = True
-        if not self._is_plsql and re.search(dml_pattern, sql) is not None:
-            self._is_returning = True
 
     cdef _prepare(self, str sql, bint char_conversion):
         """
@@ -107,7 +128,7 @@ cdef class Statement:
     cdef _get_bind_names(self, str sql):
         cdef:
             list bind_names = [], return_bind_names = []
-            str name, return_str, dml_pattern
+            str name, dml_pattern
             BindInfo bind_info
 
         # Strip single/multiline comments and strings from the sql statement
@@ -116,22 +137,21 @@ cdef class Statement:
         sql = re.sub(r"'(.*?)+'", "", sql)
 
         # determine statement type
-        sql = sql.upper()
-        dml_pattern = r"RETURNING [\s\S]+ INTO .*?$|\;"
-        self._determine_statement_type(sql, dml_pattern)
+        self._determine_statement_type(sql)
 
         # bind variables can only be found in queries, DML and PL/SQL
         if self._is_query or self._is_dml or self._is_plsql:
-            bind_names = re.findall(r"(?<=\:)[A-Z]?[A-Z0-9_]+", sql)
+            bind_names = self._bind_search(sql)
             if self._is_plsql:
                 bind_names = list(collections.OrderedDict.fromkeys(bind_names))
 
         # find all bind variables used in DML returning
-        if self._is_returning:
-            return_str = re.findall(dml_pattern, sql)[0]
-            return_bind_names = re.findall(r"(?<=\:)[A-Z]?[A-Z0-9_]+",
-                                           return_str)
-
+        if not self._is_plsql:
+            dml_pattern = r"RETURNING [\s\S]+ INTO .*?$|\;"
+            return_str = re.search(dml_pattern, sql, re.IGNORECASE)
+            if return_str is not None:
+                self._is_returning = True
+                return_bind_names = self._bind_search(return_str.group(0))
         self._bind_info_dict = collections.OrderedDict()
         self._bind_info_list = [BindInfo(name) for name in bind_names]
         for bind_info in self._bind_info_list:
