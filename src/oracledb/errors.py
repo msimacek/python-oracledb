@@ -206,7 +206,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_INCORRECT_VAR_ARRAYSIZE: "variable array size of {var_arraysize} is " \
                                  "too small (should be at least " \
                                  "{required_arraysize})",
-    ERR_INVALID_BIND_NAME: "invalid named bind: {name}",
+    ERR_INVALID_BIND_NAME: \
+            'no placeholder named "{name}" was found in the SQL text',
     ERR_INVALID_CONNECT_DESCRIPTOR: "invalid connect descriptor: {data}",
     ERR_INVALID_NUMBER: "invalid number",
     ERR_INVALID_POOL_PURITY: "invalid pool purity: {purity}",
@@ -227,7 +228,9 @@ ERR_MESSAGE_FORMATS = {
     ERR_MESSAGE_HAS_NO_PAYLOAD: "message has no payload",
     ERR_MESSAGE_TYPE_UNKNOWN: \
             "protocol error: unknown message type: {message_type}",
-    ERR_MISSING_BIND_VALUE: "bind value for: {name} missing",
+    ERR_MISSING_BIND_VALUE: \
+            'a bind variable replacement value for placeholder "{name}" was ' \
+            'not provided',
     ERR_MIXED_ELEMENT_TYPES: \
             "element {element} is not the same type as previous elements",
     ERR_MIXED_POSITIONAL_AND_NAMED_BINDS: \

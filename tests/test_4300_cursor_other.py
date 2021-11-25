@@ -75,6 +75,8 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(self.cursor.bindnames(), names)
         self.cursor.prepare("select :a * :a + :b * :b from dual")
         self.assertEqual(self.cursor.bindnames(), ["A", "B"])
+        self.cursor.prepare("select :value1 + :VaLue_2 from dual")
+        self.assertEqual(self.cursor.bindnames(), ["VALUE1", "VALUE_2"])
 
     def test_4305_set_input_sizes_negative(self):
         "4305 - test cursor.setinputsizes() with invalid parameters"
@@ -468,6 +470,82 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("select 'FÖÖ' from dual")
         result, = self.cursor.fetchone()
         self.assertTrue(result in ('FÖÖ', 'F¿¿'))
+
+    def test_4341_unquoted_binds_case_sensitivity(self):
+        "4341 - test case sensitivity of unquoted bind names"
+        self.cursor.execute("select :test from dual", {"TEST": "a"})
+        result, = self.cursor.fetchone()
+        self.assertEqual(result, "a")
+
+    def test_4342_quoted_binds_case_sensitivity(self):
+        "4342 - test case sensitivity of quoted bind names"
+        sql = 'select :"test" from dual'
+        params = {'"TEST"': "a"}
+        self.assertRaisesRegex(oracledb.DatabaseError,
+                               "^ORA-01036:|^DPY-4008:", self.cursor.execute,
+                               sql, params)
+
+    def test_4343_reserved_keyword_as_bind_name(self):
+        "4343 - test using a reserved keywords as a bind name"
+        sql = 'select :ROWID from dual'
+        self.assertRaisesRegex(oracledb.DatabaseError,
+                               "^ORA-01745:", self.cursor.parse, sql)
+
+    def test_4344_invalid_quoted_bind(self):
+        "4344 - test using an invalid quoted bind"
+        sql = 'select ":test" from dual'
+        self.cursor.prepare(sql)
+        self.assertEqual(self.cursor.bindnames(), [])
+
+    def test_4345_non_ascii_bind_name(self):
+        "4345 - test using a non-ascii character in the bind name"
+        sql = 'select :méil$ from dual'
+        self.cursor.prepare(sql)
+        self.assertEqual(self.cursor.bindnames(), ['MÉIL$'])
+
+    def test_4346_various_quoted_binds(self):
+        "4346 - test various quoted bind names"
+        self.cursor.prepare('select :"percent%" from dual')
+        self.assertEqual(self.cursor.bindnames(), ["percent%"])
+
+        self.cursor.prepare('select :"q?marks" from dual')
+        self.assertEqual(self.cursor.bindnames(), ["q?marks"])
+
+        self.cursor.prepare('select :"percent%(ens)yah" from dual')
+        self.assertEqual(self.cursor.bindnames(), ["percent%(ens)yah"])
+
+        self.cursor.prepare('select :"per % cent" from dual')
+        self.assertEqual(self.cursor.bindnames(), ["per % cent"])
+
+        self.cursor.prepare('select :"per cent" from dual')
+        self.assertEqual(self.cursor.bindnames(), ["per cent"])
+
+        self.cursor.prepare('select :"par(ens)" from dual')
+        self.assertEqual(self.cursor.bindnames(), ["par(ens)"])
+
+        self.cursor.prepare('select :"more/slashes" from dual')
+        self.assertEqual(self.cursor.bindnames(), ["more/slashes"])
+
+        self.cursor.prepare('select :"%percent" from dual')
+        self.assertEqual(self.cursor.bindnames(), ["%percent"])
+
+        self.cursor.prepare('select :"/slashes/" from dual')
+        self.assertEqual(self.cursor.bindnames(), ["/slashes/"])
+
+        self.cursor.prepare('select :"1col:on" from dual')
+        self.assertEqual(self.cursor.bindnames(), ["1col:on"])
+
+        self.cursor.prepare('select :"col:ons" from dual')
+        self.assertEqual(self.cursor.bindnames(), ["col:ons"])
+
+        self.cursor.prepare('select :"more :: %colons%" from dual')
+        self.assertEqual(self.cursor.bindnames(), ["more :: %colons%"])
+
+        self.cursor.prepare('select :"more/slashes" from dual')
+        self.assertEqual(self.cursor.bindnames(), ["more/slashes"])
+
+        self.cursor.prepare('select :"spaces % more spaces" from dual')
+        self.assertEqual(self.cursor.bindnames(), ["spaces % more spaces"])
 
 if __name__ == "__main__":
     test_env.run_test_cases()
