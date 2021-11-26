@@ -45,7 +45,7 @@ cdef class ThinConnImpl(BaseConnImpl):
     cdef int _adjust_statement_cache(self) except -1:
         cdef Statement stmt
         while len(self._statement_cache) > self._statement_cache_size:
-            stmt = <Statement> self._statement_cache.popitem(last=False)
+            stmt = <Statement> self._statement_cache.popitem(last=False)[1]
             if stmt._in_use:
                 stmt._return_to_cache = False
             elif stmt._cursor_id != 0:
