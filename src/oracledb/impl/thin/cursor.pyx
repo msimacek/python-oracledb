@@ -110,6 +110,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
             if not self._is_implicit_cursor:
                 self._conn_impl._return_statement(self._statement)
             self._statement = None
-        self._statement = self._conn_impl._get_statement(sql, cache_statement)
+        self._statement = self._conn_impl._get_statement(sql.strip(),
+                                                         cache_statement)
         self._requires_define = False
         self.fetch_vars = self._statement._fetch_vars

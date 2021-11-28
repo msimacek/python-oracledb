@@ -330,5 +330,19 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.prepare(sql)
         self.assertEqual(self.cursor.bindnames(), ["INT_VAL", "MÉIL"])
 
+    def test_1617_dml_returning_with_input_bind_vars(self):
+        "1617 - test DML returning with input bind variable data"
+        self.cursor.execute("truncate table TestTempTable")
+        out_var = self.cursor.var(int)
+        self.cursor.execute("""
+                insert into TestTempTable (IntCol)
+                values (:int_val)
+                returning IntCol + :add_val into :out_val""",
+                int_val=5,
+                add_val=18,
+                out_val=out_var)
+        self.connection.commit()
+        self.assertEqual(out_var.getvalue(), [23])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

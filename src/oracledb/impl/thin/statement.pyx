@@ -6,11 +6,16 @@
 # 1. Quoted and non-quoted bind names are allowed.
 # 2. Quoted binds can contain any characters.
 # 3. Non-quoted binds must begin with an alphabet character.
-# 4. Non-quoted binds can only contain alphabets, numbers, underscore, dollar
-#    sign and pound sign.
+# 4. Non-quoted binds can only contain alphanumeric characters, the underscore,
+#    the dollar sign and the pound sign.
 # 5. Non-quoted binds cannot be Oracle Database Reserved Names (Server handles
 #    this case and returns an appropriate error)
 BIND_PATTERN = r'(?<!"\:)(?<=\:)("[^\"]*"|[^\W\d_][\w\$#]*|\d+)'
+
+# pattern used for detecting a DML returning clause; bind variables in the
+# first group are input variables; bind variables in the second group are
+# output only variables
+DML_RETURNING_PATTERN = r'(?si)(.* RETURNING .* INTO )(.*)'
 
 cdef class BindInfo:
 
@@ -28,13 +33,12 @@ cdef class BindInfo:
         uint8_t csfrm
         object _bind_var
 
-    def __cinit__(self, str name):
+    def __cinit__(self, str name, bint is_return_bind):
         self._bind_name = name
+        self._is_return_bind = is_return_bind
 
     cdef BindInfo copy(self):
-        cdef BindInfo copied_bind_info = BindInfo(self._bind_name)
-        copied_bind_info._is_return_bind = self._is_return_bind
-        return copied_bind_info
+        return BindInfo(self._bind_name, self._is_return_bind)
 
 
 cdef class Statement:
@@ -82,20 +86,33 @@ cdef class Statement:
         copied_statement._return_to_cache = False
         return copied_statement
 
-    cdef object _bind_search(self, str sql):
+    cdef int _add_binds(self, str sql, bint is_return_bind) except -1:
+        """
+        Add bind information to the statement by examining the passed SQL for
+        bind variable names.
+        """
         cdef:
-            list bind_names = []
-            uint32_t i
-        bind_names = re.findall(BIND_PATTERN, sql)
-        for i in range(len(bind_names)):
-            bind_name = bind_names[i]
-            if bind_name.startswith('"') and bind_name.endswith('"'):
-                bind_names[i] = bind_name[1:-1]
+            BindInfo info
+            str name
+        for name in re.findall(BIND_PATTERN, sql):
+            if name.startswith('"') and name.endswith('"'):
+                name = name[1:-1]
             else:
-                bind_names[i] = bind_name.upper()
-        return bind_names
+                name = name.upper()
+            if self._is_plsql and name in self._bind_info_dict:
+                continue
+            info = BindInfo(name, is_return_bind)
+            self._bind_info_list.append(info)
+            if info._bind_name in self._bind_info_dict:
+                self._bind_info_dict[info._bind_name].append(info)
+            else:
+                self._bind_info_dict[info._bind_name] = [info]
 
     cdef _determine_statement_type(self, str sql):
+        """
+        Determine the type of the SQL statement by examining the first keyword
+        found in the statement.
+        """
         tokens = sql.strip().lstrip("(")[:10].split()
         if tokens:
             sql_keyword = tokens[0].upper()
@@ -108,7 +125,7 @@ cdef class Statement:
             elif sql_keyword in ("CREATE", "ALTER", "DROP", "TRUNCATE"):
                 self._is_ddl = True
 
-    cdef _prepare(self, str sql, bint char_conversion):
+    cdef int _prepare(self, str sql, bint char_conversion) except -1:
         """
         Prepare the SQL for execution by determining the list of bind names
         that are found within it. The length of the SQL text is also calculated
@@ -116,22 +133,24 @@ cdef class Statement:
         identical, the length is calculated in bytes; otherwise, the length is
         calculated in characters.
         """
+        cdef:
+            str input_sql, returning_sql = None
+            object match
+
+        # retain normalized SQL (as string and bytes) as well as the length
         self._sql = sql
-        sql = sql.strip()
-        self._sql_bytes = sql.encode()
+        self._sql_bytes = self._sql.encode()
         if char_conversion:
-            self._sql_length = <uint32_t> len(sql)
+            self._sql_length = <uint32_t> len(self._sql)
         else:
             self._sql_length = <uint32_t> len(self._sql_bytes)
-        self._get_bind_names(sql)
 
-    cdef _get_bind_names(self, str sql):
-        cdef:
-            list bind_names = [], return_bind_names = []
-            str name, dml_pattern
-            BindInfo bind_info
+        # create empty list (bind by position) and dict (bind by name)
+        self._bind_info_dict = collections.OrderedDict()
+        self._bind_info_list = []
 
-        # Strip single/multiline comments and strings from the sql statement
+        # Strip single/multiline comments and strings from the sql statement to
+        # ease searching for bind variables
         sql = re.sub(r"/\*[\S\n ]+\*/", "", sql)
         sql = re.sub(r"\--.*(\n|$)", "", sql)
         sql = re.sub(r"'(.*?)+'", "", sql)
@@ -141,26 +160,15 @@ cdef class Statement:
 
         # bind variables can only be found in queries, DML and PL/SQL
         if self._is_query or self._is_dml or self._is_plsql:
-            bind_names = self._bind_search(sql)
-            if self._is_plsql:
-                bind_names = list(collections.OrderedDict.fromkeys(bind_names))
-
-        # find all bind variables used in DML returning
-        if not self._is_plsql:
-            dml_pattern = r"RETURNING [\s\S]+ INTO .*?$|\;"
-            return_str = re.search(dml_pattern, sql, re.IGNORECASE)
-            if return_str is not None:
+            input_sql = sql
+            if not self._is_plsql:
+                match = re.search(DML_RETURNING_PATTERN, sql)
+                if match is not None:
+                    input_sql, returning_sql = match.groups()
+            self._add_binds(input_sql, is_return_bind=False)
+            if returning_sql is not None:
                 self._is_returning = True
-                return_bind_names = self._bind_search(return_str.group(0))
-        self._bind_info_dict = collections.OrderedDict()
-        self._bind_info_list = [BindInfo(name) for name in bind_names]
-        for bind_info in self._bind_info_list:
-            if bind_info._bind_name in self._bind_info_dict:
-                self._bind_info_dict[bind_info._bind_name].append(bind_info)
-            else:
-                self._bind_info_dict[bind_info._bind_name] = [bind_info]
-            if bind_info._bind_name in return_bind_names:
-                bind_info._is_return_bind = True
+                self._add_binds(returning_sql, is_return_bind=True)
 
     cdef int _set_var(self, BindInfo bind_info, object var,
                       ThinCursorImpl cursor_impl) except -1:
