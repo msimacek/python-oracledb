@@ -134,8 +134,6 @@ cdef class ThinLobImpl(BaseLobImpl):
         message.operation = TNS_LOB_OP_WRITE
         message.source_lob_impl = self
         message.source_offset = offset
-        message.amount = <uint64_t> len(value)
-        message.send_amount = True
         if self.dbtype._ora_type_num == TNS_DATA_TYPE_BLOB:
             message.data = value
         else:

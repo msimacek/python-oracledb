@@ -274,5 +274,27 @@ class TestCase(test_env.BaseTestCase):
         nclobVar = self.cursor.var(oracledb.DB_TYPE_NCLOB)
         self.assertRaises(IndexError, nclobVar.setvalue, 1, "test char")
 
+    def test_1920_supplemental_characters(self):
+        "1920 - test read/write temporary LOBs using supplemental characters"
+        self.cursor.execute("""
+                select value
+                from nls_database_parameters
+                where parameter = 'NLS_CHARACTERSET'""")
+        charset, = self.cursor.fetchone()
+        if charset != "AL32UTF8":
+            self.skipTest("Database character set must be AL32UTF8")
+        supplemental_chars = "𠜎 𠜱 𠝹 𠱓 𠱸 𠲖 𠳏 𠳕 𠴕 𠵼 𠵿 𠸎 𠸏 𠹷 𠺝 " \
+                "𠺢 𠻗 𠻹 𠻺 𠼭 𠼮 𠽌 𠾴 𠾼 𠿪 𡁜 𡁯 𡁵 𡁶 𡁻 𡃁 𡃉 𡇙 𢃇 " \
+                "𢞵 𢫕 𢭃 𢯊 𢱑 𢱕 𢳂 𢴈 𢵌 𢵧 𢺳 𣲷 𤓓 𤶸 𤷪 𥄫 𦉘 𦟌 𦧲 " \
+                "𦧺 𧨾 𨅝 𨈇 𨋢 𨳊 𨳍 𨳒 𩶘"
+        self.cursor.execute("truncate table TestCLOBs")
+        lob = self.connection.createlob(oracledb.DB_TYPE_CLOB)
+        lob.write(supplemental_chars)
+        self.cursor.execute("insert into TestCLOBs values (1, :val)", [lob])
+        self.connection.commit()
+        self.cursor.execute("select ClobCol from TestCLOBs")
+        lob, = self.cursor.fetchone()
+        self.assertEqual(lob.read(), supplemental_chars)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
