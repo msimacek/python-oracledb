@@ -230,7 +230,7 @@ cdef class MessageWithData(Message):
         uint32_t num_execs
         list dmlrowcounts
         bint batcherrors
-        list row_var_impls
+        list out_var_impls
         bint in_fetch
         bint parse_only
         bint processed_error
@@ -298,10 +298,17 @@ cdef class MessageWithData(Message):
             object type_handler, var
             ThinVarImpl var_impl
             Statement statement
+            BindInfo bind_info
             ssize_t i
         self.processed_error = False
         statement = cursor_impl._statement
-        if statement._is_query:
+        if statement._is_returning and not self.parse_only:
+            self.out_var_impls = []
+            for bind_info in statement._bind_info_list:
+                if not bind_info._is_return_bind:
+                    continue
+                self.out_var_impls.append(bind_info._bind_var._impl)
+        elif statement._is_query:
             self.in_fetch = True
             cursor_impl._more_rows_to_fetch = True
             cursor_impl._buffer_rowcount = cursor_impl._buffer_index = 0
@@ -318,8 +325,8 @@ cdef class MessageWithData(Message):
                                                          var_impl._fetch_info)
                         cursor_impl.fetch_vars[i] = var
                     statement._last_output_type_handler = type_handler
-                self.row_var_impls = [v._impl for v in cursor_impl.fetch_vars]
-                for var_impl in self.row_var_impls:
+                self.out_var_impls = [v._impl for v in cursor_impl.fetch_vars]
+                for var_impl in self.out_var_impls:
                     if var_impl.num_elements < cursor_impl._fetch_array_size:
                         var_impl.num_elements = cursor_impl._fetch_array_size
                         var_impl.values = [None] * var_impl.num_elements
@@ -537,13 +544,13 @@ cdef class MessageWithData(Message):
         num_bytes = buf.read_ub2()          # rowid
         if num_bytes > 0:
             buf.skip_bytes(num_bytes)
-        self.row_var_impls = []
+        self.out_var_impls = []
         for i in range(temp):               # bind directions
             bind_info = self.cursor_impl._statement._bind_info_list[i]
             bind_info.bind_dir = buf.read_uint8()
             if bind_info.bind_dir == TNS_BIND_DIR_INPUT:
                 continue
-            self.row_var_impls.append(bind_info._bind_var._impl)
+            self.out_var_impls.append(bind_info._bind_var._impl)
 
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:
@@ -557,7 +564,7 @@ cdef class MessageWithData(Message):
         elif message_type == TNS_MSG_TYPE_DESCRIBE_INFO:
             buf.skip_bytes(buf.read_uint8())
             self._process_describe_info(buf, self.cursor)
-            self.row_var_impls = [v._impl for v in cursor_impl.fetch_vars]
+            self.out_var_impls = [v._impl for v in cursor_impl.fetch_vars]
         elif message_type == TNS_MSG_TYPE_ERROR:
             Message._process_error_info(self, buf)
             cursor_impl._statement._cursor_id = self.error_info.cursor_id
@@ -623,32 +630,25 @@ cdef class MessageWithData(Message):
         cdef:
             uint32_t num_rows, pos
             ThinVarImpl var_impl
-            BindInfo bind_info
-            object value, var
+            object value
             list values
             ssize_t i
-        if self.cursor_impl._statement._is_returning:
-            for bind_info in self.cursor_impl._statement._bind_info_list:
-                if not bind_info._is_return_bind:
-                    continue
+        for var_impl in self.out_var_impls:
+            if var_impl.is_array:
+                var_impl.num_elements_in_array = buf.read_ub4()
+                for pos in range(var_impl.num_elements_in_array):
+                    value = self._process_column_data(buf, var_impl, pos)
+                    var_impl.values[pos] = value
+            elif self.cursor_impl._statement._is_returning:
                 num_rows = buf.read_ub4()
                 values = [None] * num_rows
-                var = bind_info._bind_var
-                var_impl = <ThinVarImpl> var._impl
                 for i in range(num_rows):
                     values[i] = self._process_column_data(buf, var_impl, i)
                 var_impl.values[self.row_index] = values
-        else:
-            for var_impl in self.row_var_impls:
-                if var_impl.is_array:
-                    var_impl.num_elements_in_array = buf.read_ub4()
-                    for pos in range(var_impl.num_elements_in_array):
-                        value = self._process_column_data(buf, var_impl, pos)
-                        var_impl.values[pos] = value
-                else:
-                    value = self._process_column_data(buf, var_impl,
-                                                      self.row_index)
-                    var_impl.values[self.row_index] = value
+            else:
+                value = self._process_column_data(buf, var_impl,
+                                                  self.row_index)
+                var_impl.values[self.row_index] = value
         self.row_index += 1
         if self.in_fetch:
             self.cursor_impl._buffer_rowcount = self.row_index
@@ -1476,7 +1476,7 @@ cdef class ReExecuteMessage(MessageWithData):
             BindInfo bind_info
 
         if params:
-            self.row_var_impls = [bind_info._bind_var._impl \
+            self.out_var_impls = [bind_info._bind_var._impl \
                                   for bind_info in stmt._bind_info_list \
                                   if bind_info.bind_dir != TNS_BIND_DIR_INPUT]
             params = [bind_info for bind_info in stmt._bind_info_list \
