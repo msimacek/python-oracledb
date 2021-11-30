@@ -635,11 +635,11 @@ cdef class MessageWithData(Message):
                 values = [None] * num_rows
                 var = bind_info._bind_var
                 var_impl = <ThinVarImpl> var._impl
-                for j in range(num_rows):
-                    values[j] = self._process_column_data(buf, var_impl, j)
+                for i in range(num_rows):
+                    values[i] = self._process_column_data(buf, var_impl, i)
                 var_impl.values[self.row_index] = values
         else:
-            for i, var_impl in enumerate(self.row_var_impls):
+            for var_impl in self.row_var_impls:
                 if var_impl.is_array:
                     var_impl.num_elements_in_array = buf.read_ub4()
                     for pos in range(var_impl.num_elements_in_array):
