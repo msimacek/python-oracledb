@@ -530,6 +530,10 @@ cdef class MessageWithData(Message):
             self.cursor_impl._implicit_resultsets.append(child_cursor)
 
     cdef int _process_io_vector(self, ReadBuffer buf) except -1:
+        """
+        An I/O vector is sent by the database in response to a PL/SQL execute.
+        It indicates whether binds are IN only, IN/OUT or OUT only.
+        """
         cdef:
             uint32_t i, temp, num_bytes
             BindInfo bind_info
