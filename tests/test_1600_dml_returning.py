@@ -348,8 +348,22 @@ class TestCase(test_env.BaseTestCase):
         "1618 - test DML returning with LOBs and an output converter"
         self.cursor.execute("truncate table TestCLOBs")
         out_var = self.cursor.var(oracledb.DB_TYPE_CLOB,
-                             outconverter=lambda value: value.read())
+                                  outconverter=lambda value: value.read())
         lob_value = "A short CLOB - 1618"
+        self.cursor.execute("""
+                insert into TestCLOBs
+                values (1, :in_val)
+                returning CLOBCol into :out_val""",
+                in_val=lob_value,
+                out_val=out_var)
+        self.connection.commit()
+        self.assertEqual(out_var.getvalue(), [lob_value])
+
+    def test_1619_dml_returning_with_clob_converted_to_long(self):
+        "1619 - test DML returning with CLOB converted to LONG"
+        self.cursor.execute("truncate table TestCLOBs")
+        out_var = self.cursor.var(oracledb.DB_TYPE_LONG)
+        lob_value = "A short CLOB - 1619"
         self.cursor.execute("""
                 insert into TestCLOBs
                 values (1, :in_val)

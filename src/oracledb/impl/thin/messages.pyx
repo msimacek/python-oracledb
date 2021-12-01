@@ -455,7 +455,7 @@ cdef class MessageWithData(Message):
                 errors._raise_err(errors.ERR_COLUMN_TRUNCATED,
                                   col_value_len=len(column_value),
                                   unit=unit_type, actual_len=actual_num_bytes)
-        if ora_type_num == TNS_DATA_TYPE_LONG \
+        elif ora_type_num == TNS_DATA_TYPE_LONG \
                 or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
             buf.read_ub4()                  # null indicator
             buf.read_ub4()                  # return code
