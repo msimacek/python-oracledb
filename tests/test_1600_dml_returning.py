@@ -344,5 +344,20 @@ class TestCase(test_env.BaseTestCase):
         self.connection.commit()
         self.assertEqual(out_var.getvalue(), [23])
 
+    def test_1618_dml_returning_with_lob_and_outconverter(self):
+        "1618 - test DML returning with LOBs and an output converter"
+        self.cursor.execute("truncate table TestCLOBs")
+        out_var = self.cursor.var(oracledb.DB_TYPE_CLOB,
+                             outconverter=lambda value: value.read())
+        lob_value = "A short CLOB - 1618"
+        self.cursor.execute("""
+                insert into TestCLOBs
+                values (1, :in_val)
+                returning CLOBCol into :out_val""",
+                in_val=lob_value,
+                out_val=out_var)
+        self.connection.commit()
+        self.assertEqual(out_var.getvalue(), [lob_value])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

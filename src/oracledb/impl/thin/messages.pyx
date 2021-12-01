@@ -36,6 +36,9 @@ cdef class Message:
     cdef int _preprocess(self) except -1:
         pass
 
+    cdef int _postprocess(self) except -1:
+        pass
+
     cdef int _process_error_info(self, ReadBuffer buf) except -1:
         cdef:
             _OracleErrorInfo info = self.error_info
@@ -214,6 +217,7 @@ cdef class Message:
         buf.skip_bytes(2)                   # skip data flags
         while self._has_more_data(buf):
             self._process_message(buf, buf.read_uint8())
+        self._postprocess()
 
     cdef int send(self, WriteBuffer buf) except -1:
         buf.start_request(TNS_PACKET_TYPE_DATA)
@@ -331,6 +335,38 @@ cdef class MessageWithData(Message):
                         var_impl.num_elements = cursor_impl._fetch_array_size
                         var_impl.values = [None] * var_impl.num_elements
 
+    cdef int _postprocess(self) except -1:
+        """
+        Run any variable out converter functions on all non-null values that
+        were returned in the current database response. This must be done
+        independently since the out converter function may itself invoke a
+        database round-trip.
+        """
+        cdef:
+            uint32_t i, j, num_elements
+            object value, element_value
+            ThinVarImpl var_impl
+        if self.out_var_impls is None:
+            return 0
+        for var_impl in self.out_var_impls:
+            if var_impl.outconverter is None:
+                continue
+            if var_impl.is_array:
+                num_elements = var_impl.num_elements_in_array
+            else:
+                num_elements = self.row_index
+            for i in range(num_elements):
+                value = var_impl.values[i]
+                if value is None:
+                    continue
+                if isinstance(value, list):
+                    for j, element_value in enumerate(value):
+                        if element_value is None:
+                            continue
+                        value[j] = var_impl.outconverter(element_value)
+                else:
+                    var_impl.values[i] = var_impl.outconverter(value)
+
     cdef object _process_column_data(self, ReadBuffer buf,
                                      ThinVarImpl var_impl, uint32_t pos):
         cdef:
@@ -426,8 +462,6 @@ cdef class MessageWithData(Message):
         if column_value is not None:
             if var_impl._conv_func is not None:
                 column_value = var_impl._conv_func(column_value)
-            if var_impl.outconverter is not None:
-                column_value = var_impl.outconverter(column_value)
         return column_value
 
     cdef FetchInfo _process_column_info(self, ReadBuffer buf,
