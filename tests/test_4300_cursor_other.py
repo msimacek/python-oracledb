@@ -547,5 +547,15 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.prepare('select :"spaces % more spaces" from dual')
         self.assertEqual(self.cursor.bindnames(), ["spaces % more spaces"])
 
+    def test_4347_arraysize_lt_prefetchrows(self):
+        "4347 - test array size less than prefetch rows"
+        sql = "select 1 from dual union select 2 from dual"
+        for i in range(2):
+            with self.connection.cursor() as cursor:
+                cursor.arraysize = 1
+                cursor.execute(sql)
+                rows = cursor.fetchall()
+                self.assertEqual(rows, [(1,), (2,)])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

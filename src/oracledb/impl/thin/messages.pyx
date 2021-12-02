@@ -316,8 +316,6 @@ cdef class MessageWithData(Message):
             self.in_fetch = True
             cursor_impl._more_rows_to_fetch = True
             cursor_impl._buffer_rowcount = cursor_impl._buffer_index = 0
-            if not cursor_impl._requires_full_execute:
-                cursor_impl._fetch_array_size = cursor_impl.arraysize
             if cursor_impl.fetch_vars is not None:
                 type_handler = cursor_impl.outputtypehandler \
                         or cursor_impl._conn_impl.outputtypehandler
@@ -1390,6 +1388,7 @@ cdef class ExecuteMessage(MessageWithData):
                     options |= TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
                 if stmt._cursor_id == 0 or cursor_impl._requires_define:
                     num_iters = self.cursor_impl.prefetchrows
+                    self.cursor_impl._fetch_array_size = num_iters
                 else:
                     num_iters = self.cursor_impl._fetch_array_size
         if not stmt._is_plsql:
@@ -1511,19 +1510,21 @@ cdef class ReExecuteMessage(MessageWithData):
             uint32_t i, exec_flags_1 = 0, exec_flags_2 = 0, num_iters
             Statement stmt = self.cursor_impl._statement
             list params = stmt._bind_info_list
-            BindInfo bind_info
+            BindInfo info
 
         if params:
-            self.out_var_impls = [bind_info._bind_var._impl \
-                                  for bind_info in stmt._bind_info_list \
-                                  if bind_info.bind_dir != TNS_BIND_DIR_INPUT]
-            params = [bind_info for bind_info in stmt._bind_info_list \
-                      if bind_info.bind_dir != TNS_BIND_DIR_OUTPUT \
-                      and not bind_info._is_return_bind]
+            if not stmt._is_query:
+                self.out_var_impls = [info._bind_var._impl \
+                                      for info in params \
+                                      if info.bind_dir != TNS_BIND_DIR_INPUT]
+            params = [info for info in params \
+                      if info.bind_dir != TNS_BIND_DIR_OUTPUT \
+                      and not info._is_return_bind]
         if self.function_code == TNS_FUNC_REEXECUTE_AND_FETCH:
             exec_flags_1 |= TNS_EXEC_OPTION_EXECUTE | \
                             TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
             num_iters = self.cursor.prefetchrows
+            self.cursor_impl._fetch_array_size = num_iters
         else:
             if self.cursor.connection.autocommit:
                 exec_flags_2 |= TNS_EXEC_OPTION_COMMIT_REEXECUTE
@@ -1548,6 +1549,7 @@ cdef class FetchMessage(MessageWithData):
         self.function_code = TNS_FUNC_FETCH
 
     cdef int _write_message(self, WriteBuffer buf) except -1:
+        self.cursor_impl._fetch_array_size = self.cursor_impl.arraysize
         self._write_function_code(buf)
         buf.write_ub4(self.cursor_impl._statement._cursor_id)
         buf.write_ub4(self.cursor_impl._fetch_array_size)
