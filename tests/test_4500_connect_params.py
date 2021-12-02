@@ -238,7 +238,7 @@ class TestCase(test_env.BaseTestCase):
                                    connect_string_prefix + suffix)
 
     def test_4521_connect_string_with_newlines_and_spaces(self):
-        "4516 - test connect string containing spaces and newlines"
+        "4521 - test connect string containing spaces and newlines"
         params = oracledb.ConnectParams()
         connect_string = \
             '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP) \n(HOST=my_host23)\n' \
