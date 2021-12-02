@@ -153,7 +153,7 @@ cdef class Statement:
         # ease searching for bind variables
         sql = re.sub(r"/\*[\S\n ]+\*/", "", sql)
         sql = re.sub(r"\--.*(\n|$)", "", sql)
-        sql = re.sub(r"'(.*?)+'", "", sql)
+        sql = re.sub(r"'[^'\"]*'(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", "", sql)
 
         # determine statement type
         self._determine_statement_type(sql)
