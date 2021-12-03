@@ -243,10 +243,18 @@ create table &main_user..TestRowids (
 )
 /
 
+create table &main_user..TestVarchars (
+	IntCol                              integer NOT NULL,
+	StringCol1                          varchar(50 CHAR),
+	StringCol2                          varchar(50 CHAR),
+	primary key (IntCol)
+)
+/
+
 create table &main_user..PlsqlSessionCallbacks (
-    RequestedTag          varchar2(250),
-    ActualTag             varchar2(250),
-    FixupTimestamp        timestamp
+    RequestedTag                        varchar2(250),
+    ActualTag                           varchar2(250),
+    FixupTimestamp                      timestamp
 )
 /
 

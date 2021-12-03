@@ -211,5 +211,30 @@ class TestCase(test_env.BaseTestCase):
         result, = self.cursor.fetchone()
         self.assertEqual(result, 6)
 
+    def test_3922_resize_buffer(self):
+        "3922 - test executing a statement with different input buffer sizes"
+        sql = "insert into TestVarchars (IntCol, StringCol1, StringCol2) " \
+              "values (:int_col, :str_val1, :str_val2) returning IntCol " \
+              "into :ret_data"
+        values1 = {"int_col" : 1, "str_val1": '{"a", "b"}', "str_val2" : None}
+        values2 = {"int_col" : 2, "str_val1": None, "str_val2" : '{"a", "b"}'}
+        values3 = {"int_col" : 3, "str_val1": '{"a"}', "str_val2" : None}
+
+        self.cursor.execute("truncate table TestTempTable")
+        ret_bind = self.cursor.var(oracledb.DB_TYPE_VARCHAR, arraysize=1)
+        self.cursor.setinputsizes(ret_data=ret_bind)
+        self.cursor.execute(sql, values1)
+        self.assertEqual(ret_bind.values, [['1']])
+
+        ret_bind = self.cursor.var(oracledb.DB_TYPE_VARCHAR, arraysize=1)
+        self.cursor.setinputsizes(ret_data=ret_bind)
+        self.cursor.execute(sql, values2)
+        self.assertEqual(ret_bind.values, [['2']])
+
+        ret_bind = self.cursor.var(oracledb.DB_TYPE_VARCHAR, arraysize=1)
+        self.cursor.setinputsizes(ret_data=ret_bind)
+        self.cursor.execute(sql, values3)
+        self.assertEqual(ret_bind.values, [['3']])
+
 if __name__ == "__main__":
     test_env.run_test_cases()
