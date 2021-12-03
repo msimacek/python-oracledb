@@ -151,11 +151,11 @@ class TestCase(test_env.BaseTestCase):
     def test_4315_boolean_without_plsql(self):
         "4315 - test binding boolean data without the use of PL/SQL"
         self.cursor.execute("truncate table TestTempTable")
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         self.cursor.execute(sql, (False, "Value should be 0"))
         self.cursor.execute(sql, (True, "Value should be 1"))
         self.cursor.execute("""
-                select IntCol, StringCol
+                select IntCol, StringCol1
                 from TestTempTable
                 order by IntCol""")
         expected_value = [(0, "Value should be 0"), (1, "Value should be 1")]
@@ -254,7 +254,7 @@ class TestCase(test_env.BaseTestCase):
         # stetement executed with one row updated: rowid of updated row
         self.cursor.execute("""
                 update TestTempTable set
-                    StringCol = 'Modified'
+                    StringCol1 = 'Modified'
                 where IntCol = :1""", rows[-2])
         rowid = self.cursor.lastrowid
         self.cursor.execute("""
@@ -266,11 +266,11 @@ class TestCase(test_env.BaseTestCase):
         # statement executed with many rows updated: rowid of last updated row
         self.cursor.execute("""
                 update TestTempTable set
-                    StringCol = 'Row ' || to_char(IntCol)
+                    StringCol1 = 'Row ' || to_char(IntCol)
                 where IntCol = :1""", rows[-3])
         rowid = self.cursor.lastrowid
         self.cursor.execute("""
-                select StringCol
+                select StringCol1
                 from TestTempTable
                 where rowid = :1""", [rowid])
         self.assertEqual("Row %s" % rows[-3], self.cursor.fetchone()[0])

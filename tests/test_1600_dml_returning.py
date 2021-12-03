@@ -21,9 +21,9 @@ class TestCase(test_env.BaseTestCase):
         int_var = self.cursor.var(oracledb.NUMBER)
         str_var = self.cursor.var(str)
         self.cursor.execute("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (:int_val, :str_val)
-                returning IntCol, StringCol into :int_var, :str_var""",
+                returning IntCol, StringCol1 into :int_var, :str_var""",
                 int_val=int_val,
                 str_val=str_val,
                 int_var=int_var,
@@ -41,9 +41,9 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.setinputsizes(None, None, int_var, str_var)
         data = list(zip(int_values, str_values))
         self.cursor.executemany("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (:int_val, :str_val)
-                returning IntCol, StringCol into :int_var, :str_var""", data)
+                returning IntCol, StringCol1 into :int_var, :str_var""", data)
         self.assertEqual(int_var.values, [[v] for v in int_values])
         self.assertEqual(str_var.values, [[v] for v in str_values])
 
@@ -58,9 +58,9 @@ class TestCase(test_env.BaseTestCase):
                           str_var=str_var)
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4002:|^DPI-1037:",
                 self.cursor.execute, """
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (:int_val, :str_val)
-                returning IntCol, StringCol into :int_var, :str_var""",
+                returning IntCol, StringCol1 into :int_var, :str_var""",
                 parameters)
 
     def test_1603_update_single_row(self):
@@ -69,16 +69,16 @@ class TestCase(test_env.BaseTestCase):
         str_val = "The updated value of the string"
         self.cursor.execute("truncate table TestTempTable")
         self.cursor.execute("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (:1, :2)""",
                 (int_val, "The initial value of the string"))
         int_var = self.cursor.var(oracledb.NUMBER)
         str_var = self.cursor.var(str)
         self.cursor.execute("""
                 update TestTempTable set
-                    StringCol = :str_val
+                    StringCol1 = :str_val
                 where IntCol = :int_val
-                returning IntCol, StringCol into :int_var, :str_var""",
+                returning IntCol, StringCol1 into :int_var, :str_var""",
                 int_val=int_val,
                 str_val=str_val,
                 int_var=int_var,
@@ -92,16 +92,16 @@ class TestCase(test_env.BaseTestCase):
         str_val = "The updated value of the string"
         self.cursor.execute("truncate table TestTempTable")
         self.cursor.execute("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (:1, :2)""",
                 (int_val, "The initial value of the string"))
         int_var = self.cursor.var(oracledb.NUMBER)
         str_var = self.cursor.var(str)
         self.cursor.execute("""
                 update TestTempTable set
-                    StringCol = :str_val
+                    StringCol1 = :str_val
                 where IntCol = :int_val
-                returning IntCol, StringCol into :int_var, :str_var""",
+                returning IntCol, StringCol1 into :int_var, :str_var""",
                 int_val=int_val + 1,
                 str_val=str_val,
                 int_var=int_var,
@@ -116,7 +116,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("truncate table TestTempTable")
         for i in (8, 9, 10):
             self.cursor.execute("""
-                    insert into TestTempTable (IntCol, StringCol)
+                    insert into TestTempTable (IntCol, StringCol1)
                     values (:1, :2)""",
                     (i, "The initial value of string %d" % i))
         int_var = self.cursor.var(oracledb.NUMBER)
@@ -124,8 +124,8 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("""
                 update TestTempTable set
                     IntCol = IntCol + 15,
-                    StringCol = 'The final value of string ' || to_char(IntCol)
-                returning IntCol, StringCol into :int_var, :str_var""",
+                    StringCol1 = 'The final value of string ' || to_char(IntCol)
+                returning IntCol, StringCol1 into :int_var, :str_var""",
                 int_var=int_var,
                 str_var=str_var)
         self.assertEqual(self.cursor.rowcount, 3)
@@ -143,7 +143,7 @@ class TestCase(test_env.BaseTestCase):
                 for i in range(1, 11)]
         self.cursor.execute("truncate table TestTempTable")
         self.cursor.executemany("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (:1, :2)""", data)
         int_var = self.cursor.var(oracledb.NUMBER, arraysize=3)
         str_var = self.cursor.var(str, arraysize=3)
@@ -151,9 +151,9 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.executemany("""
                 update TestTempTable set
                     IntCol = IntCol + 25,
-                    StringCol = 'Updated value of string ' || to_char(IntCol)
+                    StringCol1 = 'Updated value of string ' || to_char(IntCol)
                 where IntCol < :inVal
-                returning IntCol, StringCol into :int_var, :str_var""",
+                returning IntCol, StringCol1 into :int_var, :str_var""",
                 [[3], [8], [11]])
         expected_values = [
                 [26, 27],
@@ -205,12 +205,12 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("truncate table TestTempTable")
         var = self.cursor.var(oracledb.ROWID)
         self.cursor.execute("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (278, 'String 278')
                 returning rowid into :1""", (var,))
         rowid, = var.getvalue()
         self.cursor.execute("""
-                select IntCol, StringCol
+                select IntCol, StringCol1
                 from TestTempTable
                 where rowid = :1""",
                 (rowid,))
@@ -227,12 +227,12 @@ class TestCase(test_env.BaseTestCase):
                 where IntCol >= 5
                 order by IntCol""")
         self.cursor.execute("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (187, pkg_TestRefCursors.TestInCursor(:1))
                 returning rowid into :2""", (in_cursor, var))
         rowid, = var.getvalue()
         self.cursor.execute("""
-                select IntCol, StringCol
+                select IntCol, StringCol1
                 from TestTempTable
                 where rowid = :1""",
                 (rowid,))
@@ -244,7 +244,7 @@ class TestCase(test_env.BaseTestCase):
         data = [(i, "Test String %d" % i) for i in range(1, 11)]
         self.cursor.execute("truncate table TestTempTable")
         self.cursor.executemany("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (:1, :2)""", data)
         results = []
         int_var = self.cursor.var(int)
@@ -262,7 +262,7 @@ class TestCase(test_env.BaseTestCase):
         data = [(i, "Test String %d" % i) for i in range(1, 11)]
         self.cursor.execute("truncate table TestTempTable")
         self.cursor.executemany("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (:1, :2)""", data)
         int_var = self.cursor.var(int)
         self.cursor.execute("""
@@ -281,9 +281,9 @@ class TestCase(test_env.BaseTestCase):
         int_var = self.cursor.var(oracledb.NUMBER)
         str_var = self.cursor.var(str)
         sql = """
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (:int_val, :str_val)
-                returning IntCol, StringCol into :int_var, :str_var"""
+                returning IntCol, StringCol1 into :int_var, :str_var"""
         parameters = dict(int_val=int_val, str_val=str_val, int_var=int_var,
                           str_var=str_var)
         self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-12899:",
@@ -305,9 +305,9 @@ class TestCase(test_env.BaseTestCase):
     def test_1614_parse_quoted_returning_bind(self):
         "1614 - test DML returning with a quoted bind name"
         sql = '''
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (:int_val, :str_val)
-                returning IntCol, StringCol into :"_val1" , :"VaL_2"'''
+                returning IntCol, StringCol1 into :"_val1" , :"VaL_2"'''
         self.cursor.parse(sql)
         expected_bind_names = ['INT_VAL', 'STR_VAL', '_val1', 'VaL_2']
         self.assertEqual(self.cursor.bindnames(), expected_bind_names)
@@ -317,7 +317,7 @@ class TestCase(test_env.BaseTestCase):
         sql = '''
                 insert into TestTempTable (IntCol)
                 values (:int_val)
-                returning IntCol, StringCol into :ROWID'''
+                returning IntCol, StringCol1 into :ROWID'''
         self.assertRaisesRegex(oracledb.DatabaseError,
                                "^ORA-01745:", self.cursor.parse, sql)
 
@@ -326,7 +326,7 @@ class TestCase(test_env.BaseTestCase):
         sql = '''
                 insert into TestTempTable (IntCol)
                 values (:int_val)
-                returning IntCol, StringCol into :méil'''
+                returning IntCol, StringCol1 into :méil'''
         self.cursor.prepare(sql)
         self.assertEqual(self.cursor.bindnames(), ["INT_VAL", "MÉIL"])
 

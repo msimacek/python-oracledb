@@ -180,7 +180,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("truncate table TestTempTable")
         for i in range(30):
             self.cursor.execute("""
-                    insert into TestTempTable (IntCol, StringCol)
+                    insert into TestTempTable (IntCol, StringCol1)
                     values (:1, null)""",
                     (i + 1,))
         for arraysize in range(1, 6):

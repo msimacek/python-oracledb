@@ -187,7 +187,8 @@ create table &main_user..TestLongRaws (
 
 create table &main_user..TestTempTable (
     IntCol                              number(9) not null,
-    StringCol                           varchar2(400),
+    StringCol1                          varchar2(400),
+    StringCol2                          varchar2(400),
     NumberCol                           number(25,2),
     constraint TestTempTable_pk primary key (IntCol)
 )
@@ -243,18 +244,10 @@ create table &main_user..TestRowids (
 )
 /
 
-create table &main_user..TestVarchars (
-	IntCol                              integer NOT NULL,
-	StringCol1                          varchar(50 CHAR),
-	StringCol2                          varchar(50 CHAR),
-	primary key (IntCol)
-)
-/
-
 create table &main_user..PlsqlSessionCallbacks (
-    RequestedTag                        varchar2(250),
-    ActualTag                           varchar2(250),
-    FixupTimestamp                      timestamp
+    RequestedTag          varchar2(250),
+    ActualTag             varchar2(250),
+    FixupTimestamp        timestamp
 )
 /
 

@@ -347,25 +347,25 @@ class TestCase(test_env.BaseTestCase):
                 "𦧺 𧨾 𨅝 𨈇 𨋢 𨳊 𨳍 𨳒 𩶘"
         self.cursor.execute("truncate table TestTempTable")
         self.cursor.execute("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (:1, :2)""",
                 (1, supplemental_chars))
         self.connection.commit()
-        self.cursor.execute("select StringCol from TestTempTable")
+        self.cursor.execute("select StringCol1 from TestTempTable")
         value, = self.cursor.fetchone()
         self.assertEqual(value, supplemental_chars)
 
     def test_2527_bind_twice_with_large_string_second(self):
         "2527 - test binding twice with a larger string the second time"
         self.cursor.execute("truncate table TestTempTable")
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         short_string = "short string"
         long_string = "long string " * 30
         self.cursor.execute(sql, (1, short_string))
         self.cursor.execute(sql, (2, long_string))
         self.connection.commit()
         self.cursor.execute("""
-                select IntCol, StringCol
+                select IntCol, StringCol1
                 from TestTempTable
                 order by IntCol""")
         self.assertEqual(self.cursor.fetchall(),
@@ -452,19 +452,19 @@ class TestCase(test_env.BaseTestCase):
         "2533 - test bypass string decode"
         self.cursor.execute("truncate table TestTempTable")
         string_val = "I bought a cafetière on the Champs-Élysées"
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         with self.connection.cursor() as cursor:
             cursor.execute(sql, (1, string_val))
-            cursor.execute("select IntCol, StringCol from TestTempTable")
+            cursor.execute("select IntCol, StringCol1 from TestTempTable")
             self.assertEqual(cursor.fetchone(), (1, string_val))
         with self.connection.cursor() as cursor:
             cursor.outputtypehandler = self.__return_strings_as_bytes
-            cursor.execute("select IntCol, StringCol from TestTempTable")
+            cursor.execute("select IntCol, StringCol1 from TestTempTable")
             expected_value = (1, string_val.encode())
             self.assertEqual(cursor.fetchone(), (1, string_val.encode()))
         with self.connection.cursor() as cursor:
             cursor.outputtypehandler = None
-            cursor.execute("select IntCol, StringCol from TestTempTable")
+            cursor.execute("select IntCol, StringCol1 from TestTempTable")
             self.assertEqual(cursor.fetchone(), (1, string_val))
 
 if __name__ == "__main__":
