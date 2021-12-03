@@ -212,7 +212,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(result, 6)
 
     def test_3922_resize_buffer(self):
-        "3922 - test executing a statement with different input buffer sizes
+        "3922 - test executing a statement with different input buffer sizes"
         sql = """
                 insert into TestTempTable (IntCol, StringCol1, StringCol2)
                 values (:int_col, :str_val1, :str_val2) returning IntCol
