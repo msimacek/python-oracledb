@@ -188,12 +188,12 @@ cdef class Statement:
                     errors._raise_err(errors.ERR_SELF_BIND_NOT_SUPPORTED)
             self._requires_full_execute = True
         if var_impl.dbtype._ora_type_num != bind_info.ora_type_num \
-                or var_impl.size > bind_info.size \
-                or var_impl.buffer_size > bind_info.buffer_size \
+                or var_impl.size != bind_info.size \
+                or var_impl.buffer_size != bind_info.buffer_size \
                 or var_impl.precision != bind_info.precision \
                 or var_impl.scale != bind_info.scale \
                 or var_impl.is_array != bind_info.is_array \
-                or var_impl.num_elements > bind_info.num_elements \
+                or var_impl.num_elements != bind_info.num_elements \
                 or var_impl.dbtype._csfrm != bind_info.csfrm:
             bind_info.ora_type_num = var_impl.dbtype._ora_type_num
             bind_info.csfrm = var_impl.dbtype._csfrm

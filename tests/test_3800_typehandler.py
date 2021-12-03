@@ -56,7 +56,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3800(self):
         "3800 - binding unsupported python object without input type handler"
         self.cursor.execute("truncate table TestTempTable")
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         building = Building(1, "The First Building", 5)
         self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3002:",
                                self.cursor.execute, sql,
@@ -66,7 +66,7 @@ class TestCase(test_env.BaseTestCase):
         "3801 - not callable input type handler"
         self.cursor.execute("truncate table TestTempTable")
         building = Building(1, "The First Building", 5)
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         self.cursor.inputtypehandler = 5
         self.assertRaises(TypeError, self.cursor.execute, sql,
                           (building.building_id, building))
@@ -75,11 +75,11 @@ class TestCase(test_env.BaseTestCase):
         "3802 - binding unsupported python object with input type handler"
         self.cursor.execute("truncate table TestTempTable")
         building = Building(1, "The First Building", 5)
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         self.cursor.inputtypehandler = self.input_type_handler
         self.cursor.execute(sql, (building.building_id, building))
         self.connection.commit()
-        self.cursor.execute("select IntCol, StringCol from TestTempTable")
+        self.cursor.execute("select IntCol, StringCol1 from TestTempTable")
         self.assertEqual(self.cursor.fetchall(),
                          [(building.building_id, building.to_json())])
 
@@ -88,20 +88,20 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("truncate table TestTempTable")
         building_one = Building(1, "The First Building", 5)
         building_two = Building(2, "The Second Building", 87)
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         cursor_one = self.connection.cursor()
         cursor_two = self.connection.cursor()
         cursor_one.inputtypehandler = self.input_type_handler
         cursor_one.execute(sql, (building_one.building_id, building_one))
         self.connection.commit()
-        cursor_one.execute("select IntCol, StringCol from TestTempTable")
+        cursor_one.execute("select IntCol, StringCol1 from TestTempTable")
         self.assertEqual(cursor_one.fetchall(),
                          [(building_one.building_id, building_one.to_json())])
         self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3002:",
                                cursor_two.execute, sql,
                                (building_two.building_id, building_two))
         cursor_two.outputtypehandler = self.output_type_handler
-        cursor_two.execute("select IntCol, StringCol from TestTempTable")
+        cursor_two.execute("select IntCol, StringCol1 from TestTempTable")
         self.assertEqual(cursor_two.fetchall(),
                          [(building_one.building_id, building_one)])
 
@@ -110,7 +110,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("truncate table TestTempTable")
         building_one = Building(1, "The First Building", 5)
         building_two = Building(2, "The Second Building", 87)
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         connection = test_env.get_connection()
         connection.inputtypehandler = self.input_type_handler
         cursor_one = connection.cursor()
@@ -123,9 +123,9 @@ class TestCase(test_env.BaseTestCase):
             (building_two.building_id, building_two)
         ]
         connection.outputtypehandler = self.output_type_handler
-        cursor_one.execute("select IntCol, StringCol from TestTempTable")
+        cursor_one.execute("select IntCol, StringCol1 from TestTempTable")
         self.assertEqual(cursor_one.fetchall(), expected_data)
-        cursor_two.execute("select IntCol, StringCol from TestTempTable")
+        cursor_two.execute("select IntCol, StringCol1 from TestTempTable")
         self.assertEqual(cursor_two.fetchall(), expected_data)
         other_cursor = self.connection.cursor()
         self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3002:",
@@ -135,7 +135,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3805(self):
         "3805 - output type handler with outconvert and null values"
         self.cursor.execute("truncate table TestTempTable")
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         data_to_insert = [
             (1, "String 1"),
             (2, None),
@@ -152,7 +152,7 @@ class TestCase(test_env.BaseTestCase):
                                   arraysize=cursor.arraysize)
         self.cursor.outputtypehandler = output_type_handler
         self.cursor.execute("""
-                select IntCol, StringCol
+                select IntCol, StringCol1
                 from TestTempTable
                 order by IntCol""")
         expected_data = [

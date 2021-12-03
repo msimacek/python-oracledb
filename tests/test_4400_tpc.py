@@ -23,7 +23,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(self.connection.tpc_prepare(), False)
         self.connection.tpc_begin(xid)
         self.cursor.execute("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (1, 'tesName')""")
         self.assertEqual(self.connection.tpc_prepare(), True)
         self.connection.tpc_rollback()
@@ -37,11 +37,11 @@ class TestCase(test_env.BaseTestCase):
         xid = self.connection.xid(3901, "txn3901", "branchId")
         self.connection.tpc_begin(xid)
         self.cursor.execute("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (1, 'tesName')""")
         self.assertEqual(self.connection.tpc_prepare(), True)
         self.connection.tpc_commit()
-        self.cursor.execute("select IntCol, StringCol from TestTempTable")
+        self.cursor.execute("select IntCol, StringCol1 from TestTempTable")
         self.assertEqual(self.cursor.fetchall(), [(1, 'tesName')])
 
     def test_4402_tpc_multiple_transactions(self):
@@ -51,12 +51,12 @@ class TestCase(test_env.BaseTestCase):
         xid2 = self.connection.xid(3902, "txn3902", "branch2")
         self.connection.tpc_begin(xid1)
         self.cursor.execute("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (1, 'tesName')""")
         self.connection.tpc_end()
         self.connection.tpc_begin(xid2)
         self.cursor.execute("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (2, 'tesName')""")
         self.connection.tpc_end()
         needs_commit1 = self.connection.tpc_prepare(xid1)
@@ -66,7 +66,7 @@ class TestCase(test_env.BaseTestCase):
         if needs_commit2:
             self.connection.tpc_commit(xid2)
         self.cursor.execute("""
-                select IntCol, StringCol
+                select IntCol, StringCol1
                 from TestTempTable
                 order by IntCol""")
         expected_rows = [(1, 'tesName'), (2, 'tesName')]

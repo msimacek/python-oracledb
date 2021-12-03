@@ -201,7 +201,7 @@ class TestCase(test_env.BaseTestCase):
         cursor.execute("truncate table TestTempTable")
         int_value = random.randint(1, 32768)
         cursor.execute("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (:val, null)""", val=int_value)
         connection2 = oracledb.connect(handle=connection.handle)
         cursor = connection2.cursor()
@@ -342,7 +342,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(connection.prepare(), False)
         connection.begin(10, 'trxnId', 'branchId')
         cursor.execute("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (1, 'tesName')""")
         self.assertEqual(connection.prepare(), True)
         connection.cancel()
@@ -364,7 +364,7 @@ class TestCase(test_env.BaseTestCase):
         connection.begin(*xid)
         with connection.cursor() as cursor:
             cursor.execute("""
-                    insert into TestTempTable (IntCol, StringCol)
+                    insert into TestTempTable (IntCol, StringCol1)
                     values (1, 'tesName')""")
             self.assertEqual(connection.prepare(), True)
             connection.commit()
@@ -376,13 +376,13 @@ class TestCase(test_env.BaseTestCase):
                 val = 2
             with connection.cursor() as cursor:
                 cursor.execute("""
-                        insert into TestTempTable (IntCol, StringCol)
+                        insert into TestTempTable (IntCol, StringCol1)
                         values (:int_val, 'tesName')""", int_val=val)
                 connection.commit()
 
         expected_rows = [(1, "tesName"), (2, "tesName"), (3, "tesName")]
         with connection.cursor() as cursor:
-            cursor.execute("select IntCol, StringCol from TestTempTable")
+            cursor.execute("select IntCol, StringCol1 from TestTempTable")
             self.assertEqual(cursor.fetchall(), expected_rows)
 
     @unittest.skipIf(test_env.get_is_thin(),
@@ -398,7 +398,7 @@ class TestCase(test_env.BaseTestCase):
         connection.begin(*xid)
         with connection.cursor() as cursor:
             cursor.execute("""
-                    insert into TestTempTable (IntCol, StringCol)
+                    insert into TestTempTable (IntCol, StringCol1)
                     values (1, 'tesName')""")
             self.assertEqual(connection.prepare(), True)
             connection.commit()
@@ -410,7 +410,7 @@ class TestCase(test_env.BaseTestCase):
                 val = 2
             with connection.cursor() as cursor:
                 cursor.execute("""
-                        insert into TestTempTable (IntCol, StringCol)
+                        insert into TestTempTable (IntCol, StringCol1)
                         values (:int_val, 'tesName')""", int_val=val)
                 connection.commit()
 
@@ -419,7 +419,7 @@ class TestCase(test_env.BaseTestCase):
         connection.begin(*xid2)
         with connection.cursor() as cursor:
             cursor.execute("""
-                    insert into TestTempTable (IntCol, StringCol)
+                    insert into TestTempTable (IntCol, StringCol1)
                     values (4, 'tesName')""")
             self.assertEqual(connection.prepare(), True)
             connection.commit()
@@ -442,7 +442,7 @@ class TestCase(test_env.BaseTestCase):
         val = 2
         with connection.cursor() as cursor:
             cursor.execute("""
-                    insert into TestTempTable (IntCol, StringCol)
+                    insert into TestTempTable (IntCol, StringCol1)
                     values (:int_val, 'tesName')""", int_val=val)
 
         id_ = random.randint(0, 2 ** 128)
@@ -499,7 +499,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_1132_autocommit_during_reexecute(self):
         "1132 - test use of autocommit during reexecute"
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         data_to_insert = [
             (1, "Test String #1"),
             (2, "Test String #2")
@@ -510,12 +510,12 @@ class TestCase(test_env.BaseTestCase):
         other_cursor = other_connection.cursor()
         cursor.execute("truncate table TestTempTable")
         cursor.execute(sql, data_to_insert[0])
-        other_cursor.execute("select IntCol, StringCol from TestTempTable")
+        other_cursor.execute("select IntCol, StringCol1 from TestTempTable")
         rows = other_cursor.fetchall()
         self.assertEqual(rows, [])
         connection.autocommit = True
         cursor.execute(sql, data_to_insert[1])
-        other_cursor.execute("select IntCol, StringCol from TestTempTable")
+        other_cursor.execute("select IntCol, StringCol1 from TestTempTable")
         rows = other_cursor.fetchall()
         self.assertEqual(rows, data_to_insert)
 

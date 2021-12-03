@@ -73,7 +73,7 @@ class TestCase(test_env.BaseTestCase):
     def test_4005_executemany_with_multiple_batches(self):
         "4005 - test executing multiple times (with multiple batches)"
         self.cursor.execute("truncate table TestTempTable")
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         self.cursor.executemany(sql, [(1, None), (2, None)])
         self.cursor.executemany(sql, [(3, None), (4, "Testing")])
 
@@ -107,10 +107,10 @@ class TestCase(test_env.BaseTestCase):
              (6, "Sixth"),
              (7, "Seventh and the longest one")
         ]
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         self.cursor.executemany(sql, rows)
         self.cursor.execute("""
-                select IntCol, StringCol
+                select IntCol, StringCol1
                 from TestTempTable
                 order by IntCol""")
         fetched_rows = self.cursor.fetchall()
@@ -127,7 +127,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_4009_executemany_with_invalid_parameters(self):
         "4009 - test calling executemany() with invalid parameters"
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2004:",
                                self.cursor.executemany, sql,
                                "These are not valid parameters")
@@ -143,7 +143,7 @@ class TestCase(test_env.BaseTestCase):
                     select nvl(count(*), 0) + 1 into t_Id
                     from TestTempTable;
 
-                    insert into TestTempTable (IntCol, StringCol)
+                    insert into TestTempTable (IntCol, StringCol1)
                     values (t_Id, 'Test String ' || t_Id);
                 end;""", num_rows)
         self.assertEqual(self.cursor.rowcount, num_rows)
@@ -164,7 +164,7 @@ class TestCase(test_env.BaseTestCase):
                     select nvl(count(*), 0) + 1 into t_Id
                     from TestTempTable;
 
-                    insert into TestTempTable (IntCol, StringCol)
+                    insert into TestTempTable (IntCol, StringCol1)
                     values (t_Id, 'Test String ' || t_Id);
 
                     select sum(IntCol) into :1

@@ -159,11 +159,11 @@ class TestCase(test_env.BaseTestCase):
             (1, "Test String #1"),
             (2, "ABC" * 100)
         ]
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         for row in data:
             self.cursor.execute(sql, row)
         self.connection.commit()
-        self.cursor.execute("select IntCol, StringCol from TestTempTable")
+        self.cursor.execute("select IntCol, StringCol1 from TestTempTable")
         self.assertEqual(self.cursor.fetchall(), data)
 
     def test_3918_dml_can_use_optimised_path(self):
@@ -174,20 +174,20 @@ class TestCase(test_env.BaseTestCase):
             (3, "Test String #3")
         ]
         self.cursor.execute("truncate table TestTempTable")
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         for row in data_to_insert:
             with self.connection.cursor() as cursor:
                 cursor.execute(sql, row)
         self.connection.commit()
         self.cursor.execute("""
-                select IntCol, StringCol
+                select IntCol, StringCol1
                 from TestTempTable
                 order by IntCol""")
         self.assertEqual(self.cursor.fetchall(), data_to_insert)
 
     def test_3919_execute_with_invalid_parameters(self):
         "3919 - test calling execute() with invalid parameters"
-        sql = "insert into TestTempTable (IntCol, StringCol) values (:1, :2)"
+        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2003:",
                                self.cursor.execute, sql,
                                "These are not valid parameters")
@@ -199,9 +199,9 @@ class TestCase(test_env.BaseTestCase):
         data = dict(val1=1, val2="Test String 1")
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2006:",
                                self.cursor.execute, """
-                               insert into TestTempTable (IntCol, StringCol)
+                               insert into TestTempTable (IntCol, StringCol1)
                                values (:1, :2)
-                               returning StringCol into :out_var""", data)
+                               returning StringCol1 into :out_var""", data)
 
     def test_3921_bind_by_name_with_double_quotes(self):
         "3921 - test binding by name with double quotes"
@@ -210,6 +210,32 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute(sql, data)
         result, = self.cursor.fetchone()
         self.assertEqual(result, 6)
+
+    def test_3922_resize_buffer(self):
+        "3922 - test executing a statement with different input buffer sizes
+        sql = """
+                insert into TestTempTable (IntCol, StringCol1, StringCol2)
+                values (:int_col, :str_val1, :str_val2) returning IntCol
+                into :ret_data"""
+        values1 = {"int_col" : 1, "str_val1": '{"a", "b"}', "str_val2" : None}
+        values2 = {"int_col" : 2, "str_val1": None, "str_val2" : '{"a", "b"}'}
+        values3 = {"int_col" : 3, "str_val1": '{"a"}', "str_val2" : None}
+
+        self.cursor.execute("truncate table TestTempTable")
+        ret_bind = self.cursor.var(oracledb.DB_TYPE_VARCHAR, arraysize=1)
+        self.cursor.setinputsizes(ret_data=ret_bind)
+        self.cursor.execute(sql, values1)
+        self.assertEqual(ret_bind.values, [['1']])
+
+        ret_bind = self.cursor.var(oracledb.DB_TYPE_VARCHAR, arraysize=1)
+        self.cursor.setinputsizes(ret_data=ret_bind)
+        self.cursor.execute(sql, values2)
+        self.assertEqual(ret_bind.values, [['2']])
+
+        ret_bind = self.cursor.var(oracledb.DB_TYPE_VARCHAR, arraysize=1)
+        self.cursor.setinputsizes(ret_data=ret_bind)
+        self.cursor.execute(sql, values3)
+        self.assertEqual(ret_bind.values, [['3']])
 
 if __name__ == "__main__":
     test_env.run_test_cases()

@@ -101,7 +101,7 @@ class TestCase(test_env.BaseTestCase):
 
         # insert statement
         cursor.execute("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (1, 'test')""")
         cursor.execute("select rowid from TestTempTable where IntCol = 1")
         rowids.extend(r for r, in cursor)
@@ -109,14 +109,14 @@ class TestCase(test_env.BaseTestCase):
         # update statement
         cursor.execute("""
                 update TestTempTable set
-                    StringCol = 'update'
+                    StringCol1 = 'update'
                 where IntCol = 1""")
         cursor.execute("select rowid from TestTempTable where IntCol = 1")
         rowids.extend(r for r, in cursor)
 
         # second insert statement
         cursor.execute("""
-                insert into TestTempTable (IntCol, StringCol)
+                insert into TestTempTable (IntCol, StringCol1)
                 values (2, 'test2')""")
         cursor.execute("select rowid from TestTempTable where IntCol = 2")
         rowids.extend(r for r, in cursor)
