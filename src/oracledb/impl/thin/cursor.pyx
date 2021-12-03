@@ -11,7 +11,6 @@ cdef class ThinCursorImpl(BaseCursorImpl):
         list _dmlrowcounts
         list _implicit_resultsets
         str _lastrowid
-        bint _requires_define
         bint _requires_full_execute
 
     def __cinit__(self, conn_impl):
@@ -52,7 +51,8 @@ cdef class ThinCursorImpl(BaseCursorImpl):
         var_impl = <ThinVarImpl> var._impl
         var_impl._fetch_info = fetch_info
         if var_impl.dbtype._ora_type_num != fetch_info._dbtype._ora_type_num:
-            conversion_helper(var_impl, fetch_info, &self._requires_define)
+            conversion_helper(var_impl, fetch_info,
+                              &self._statement._requires_define)
         return var
 
     cdef bint _is_plsql(self):
@@ -112,5 +112,4 @@ cdef class ThinCursorImpl(BaseCursorImpl):
             self._statement = None
         self._statement = self._conn_impl._get_statement(sql.strip(),
                                                          cache_statement)
-        self._requires_define = False
         self.fetch_vars = self._statement._fetch_vars

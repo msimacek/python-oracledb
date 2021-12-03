@@ -1369,10 +1369,10 @@ cdef class ExecuteMessage(MessageWithData):
 
         # determine the options to use for the execute
         options = 0
-        if not cursor_impl._requires_define and not self.parse_only \
+        if not stmt._requires_define and not self.parse_only \
                 and params is not None:
             num_params = <uint32_t> len(params)
-        if cursor_impl._requires_define:
+        if stmt._requires_define:
             options |= TNS_EXEC_OPTION_DEFINE
         elif not self.parse_only and stmt._sql is not None:
             dml_options = TNS_EXEC_OPTION_IMPLICIT_RESULTSET
@@ -1386,7 +1386,7 @@ cdef class ExecuteMessage(MessageWithData):
                 if self.cursor_impl.prefetchrows > 0:
                     options |= TNS_EXEC_OPTION_FETCH
                     options |= TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
-                if stmt._cursor_id == 0 or cursor_impl._requires_define:
+                if stmt._cursor_id == 0 or stmt._requires_define:
                     num_iters = self.cursor_impl.prefetchrows
                     self.cursor_impl._fetch_array_size = num_iters
                 else:
@@ -1435,7 +1435,7 @@ cdef class ExecuteMessage(MessageWithData):
         buf.write_uint8(0)                  # pointer (al8txl)
         buf.write_uint8(0)                  # pointer (al8kv)
         buf.write_uint8(0)                  # pointer (al8kvl)
-        if cursor_impl._requires_define:
+        if stmt._requires_define:
             buf.write_uint8(1)              # pointer (al8doac)
             buf.write_ub4(len(self.cursor_impl.fetch_vars))
                                             # number of defines
@@ -1489,7 +1489,7 @@ cdef class ExecuteMessage(MessageWithData):
         buf.write_ub4(0)                    # al8i4[10]
         buf.write_ub4(0)                    # al8i4[11]
         buf.write_ub4(0)                    # al8i4[12]
-        if cursor_impl._requires_define:
+        if stmt._requires_define:
             self._write_column_metadata(buf, self.cursor_impl.fetch_vars)
         elif num_params > 0:
             self._write_bind_params(buf, params)
@@ -1500,7 +1500,9 @@ cdef class ReExecuteMessage(MessageWithData):
 
     def __cinit__(self, cursor):
         cdef ThinCursorImpl cursor_impl = self.cursor_impl
-        if cursor_impl._statement._is_query and cursor_impl.prefetchrows > 0:
+        if cursor_impl._statement._is_query \
+                and not cursor_impl._statement._requires_define \
+                and cursor_impl.prefetchrows > 0:
             self.function_code = TNS_FUNC_REEXECUTE_AND_FETCH
         else:
             self.function_code = TNS_FUNC_REEXECUTE

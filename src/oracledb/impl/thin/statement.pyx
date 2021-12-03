@@ -58,6 +58,7 @@ cdef class Statement:
         object _bind_info_dict
         object _last_output_type_handler
         bint _requires_full_execute
+        bint _requires_define
         bint _return_to_cache
         bint _in_use
 
