@@ -547,6 +547,9 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.prepare('select :"spaces % more spaces" from dual')
         self.assertEqual(self.cursor.bindnames(), ["spaces % more spaces"])
 
+        self.cursor.prepare('select "col:ons", :"col:ons", :id from dual')
+        self.assertEqual(self.cursor.bindnames(), ["col:ons", "ID"])
+
     def test_4347_arraysize_lt_prefetchrows(self):
         "4347 - test array size less than prefetch rows"
         sql = "select 1 from dual union select 2 from dual"
@@ -558,7 +561,7 @@ class TestCase(test_env.BaseTestCase):
                 self.assertEqual(rows, [(1,), (2,)])
 
     def test_4348_reexecute_query_with_blob_as_bytes(self):
-        "4347 - test re-executing a query with blob as bytes"
+        "4348 - test re-executing a query with blob as bytes"
         def type_handler(cursor, name, default_type, size, precision, scale):
             if default_type == oracledb.DB_TYPE_BLOB:
                 return cursor.var(bytes, arraysize=cursor.arraysize)
@@ -574,6 +577,12 @@ class TestCase(test_env.BaseTestCase):
                             [blob_data])
         self.cursor.execute("select * from TestBLOBs")
         self.assertEqual(self.cursor.fetchall(), [(1, blob_data)])
+
+    def test_4349_test_sql_with_quoted_identifiers_and_strings(self):
+        "4349 - test parsing sql contaiting quoted identifiers and strings"
+        sql = 'select "_value1" + : "VaLue_2" + :"3VALUE" from dual'
+        self.cursor.prepare(sql)
+        self.assertEqual(self.cursor.bindnames(), ["VaLue_2", "3VALUE"])
 
 if __name__ == "__main__":
     test_env.run_test_cases()
