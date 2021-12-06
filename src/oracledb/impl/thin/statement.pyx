@@ -10,7 +10,7 @@
 #    the dollar sign and the pound sign.
 # 5. Non-quoted binds cannot be Oracle Database Reserved Names (Server handles
 #    this case and returns an appropriate error)
-BIND_PATTERN = r'(?<!"\:)(?<=\:)("[^\"]*"|[^\W\d_][\w\$#]*|\d+)'
+BIND_PATTERN = r'(?<!"\:)(?<=\:)\s*("[^\"]*"|[^\W\d_][\w\$#]*|\d+)'
 
 # pattern used for detecting a DML returning clause; bind variables in the
 # first group are input variables; bind variables in the second group are
@@ -151,10 +151,13 @@ cdef class Statement:
         self._bind_info_list = []
 
         # Strip single/multiline comments and strings from the sql statement to
-        # ease searching for bind variables
+        # ease searching for bind variables.
         sql = re.sub(r"/\*[\S\n ]+\*/", "", sql)
         sql = re.sub(r"\--.*(\n|$)", "", sql)
         sql = re.sub(r"'[^'\"]*'(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", "", sql)
+        sql = re.sub(r'(:\s*)?("([^"]*)")',
+                    lambda m: m.group(0) if sql[m.start(0)] == ":" else "",
+                    sql)
 
         # determine statement type
         self._determine_statement_type(sql)
