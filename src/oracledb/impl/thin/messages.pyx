@@ -432,7 +432,8 @@ cdef class MessageWithData(Message):
             cursor_impl._statement._cursor_id = buf.read_ub4()
             cursor_impl._requires_full_execute = True
         elif ora_type_num == TNS_DATA_TYPE_BOOLEAN:
-            column_value = buf.read_ub4() != 0
+            temp_bytes = buf.read_bytes(num_bytes)
+            column_value = temp_bytes[0] == 1
         elif ora_type_num == TNS_DATA_TYPE_INTERVAL_DS:
             column_value = buf.read_interval_ds(num_bytes)
         elif ora_type_num == TNS_DATA_TYPE_CLOB \
@@ -493,7 +494,8 @@ cdef class MessageWithData(Message):
         fetch_info._size = buf.read_ub4()
         if data_type == TNS_DATA_TYPE_RAW:
             fetch_info._size = fetch_info._buffer_size
-        buf.read_ub4()                      # oaccolid
+        if buf._caps.ttc_field_version >= TNS_CCAP_FIELD_VERSION_12_2:
+            buf.read_ub4()                  # oaccolid
         fetch_info._nulls_allowed = buf.read_uint8()
         buf.skip_bytes(1)                   # v7 length of name
         num_bytes = buf.read_ub4()
@@ -735,7 +737,8 @@ cdef class MessageWithData(Message):
             buf.write_ub4(TNS_CHARSET_UTF8)
             buf.write_uint8(var_impl.dbtype._csfrm)
             buf.write_ub4(var_impl.size)
-            buf.write_ub4(0)                # oaccolid
+            if buf._caps.ttc_field_version >= TNS_CCAP_FIELD_VERSION_12_2:
+                buf.write_ub4(0)            # oaccolid
 
     cdef int _write_bind_params_column(self, WriteBuffer buf,
                                        ThinVarImpl var_impl,
@@ -1118,11 +1121,30 @@ cdef class AuthMessage(Message):
                                                 newpassword_with_salt)
             self.encoded_newpassword = encrypted_newpassword.hex().upper()
 
+    cdef tuple _get_version_tuple(self, ReadBuffer buf):
+        """
+        Return the 5-tuple for the database version. Note that the format
+        changed with Oracle Database 18.
+        """
+        cdef uint32_t full_version_num
+        full_version_num = int(self.session_data["AUTH_VERSION_NO"])
+        if buf._caps.ttc_field_version >= TNS_CCAP_FIELD_VERSION_18_1_EXT_1:
+            return ((full_version_num >> 24) & 0xFF,
+                    (full_version_num >> 16) & 0xFF,
+                    (full_version_num >> 12) & 0x0F,
+                    (full_version_num >> 4) & 0xFF,
+                    (full_version_num & 0x0F))
+        else:
+            return ((full_version_num >> 24) & 0xFF,
+                    (full_version_num >> 20) & 0x0F,
+                    (full_version_num >> 12) & 0x0F,
+                    (full_version_num >> 8) & 0x0F,
+                    (full_version_num & 0x0F))
+
     cdef int _process_return_parameters(self, ReadBuffer buf) except -1:
         cdef:
-            uint32_t num_bytes, full_version_num
-            int port_update_num
             uint16_t num_params, i
+            uint32_t num_bytes
             str key, value
         num_params = buf.read_ub2()
         for i in range(num_params):
@@ -1145,13 +1167,8 @@ cdef class AuthMessage(Message):
                     <uint32_t> int(self.session_data["AUTH_SESSION_ID"])
             self.conn_impl._serial_num = \
                     <uint32_t> int(self.session_data["AUTH_SERIAL_NUM"])
-            full_version_num = int(self.session_data["AUTH_VERSION_NO"])
-            self.conn_impl._server_version = "%d.%d.%d.%d.%d" % \
-                    ((full_version_num >> 24) & 0xFF,
-                     (full_version_num >> 16) & 0xFF,
-                     (full_version_num >> 12) & 0x0F,
-                     (full_version_num >> 4) & 0xFF,
-                     (full_version_num & 0x0F))
+            self.conn_impl._server_version = \
+                    "%d.%d.%d.%d.%d" % self._get_version_tuple(buf)
 
     cdef int _set_auth_mode(self, uint32_t public_auth_mode) except -1:
         if self.newpassword is None:
@@ -1458,14 +1475,15 @@ cdef class ExecuteMessage(MessageWithData):
             buf.write_uint8(0)              # pointer (al8pidmlrc)
             buf.write_ub4(0)                # al8pidmlrcbl
             buf.write_uint8(0)              # pointer (al8pidmlrcl)
-        buf.write_uint8(0)                  # pointer (al8sqlsig)
-        buf.write_ub4(0)                    # SQL signature length
-        buf.write_uint8(0)                  # pointer (SQL ID)
-        buf.write_ub4(0)                    # allocated size of SQL ID
-        buf.write_uint8(0)                  # pointer (length of SQL ID)
-        if buf._caps.ttc_field_version >= TNS_CCAP_FIELD_VERSION_12_2_EXT1:
-            buf.write_uint8(0)              # pointer (chunk ids)
-            buf.write_ub4(0)                # number of chunk ids
+        if buf._caps.ttc_field_version >= TNS_CCAP_FIELD_VERSION_12_2:
+            buf.write_uint8(0)                  # pointer (al8sqlsig)
+            buf.write_ub4(0)                    # SQL signature length
+            buf.write_uint8(0)                  # pointer (SQL ID)
+            buf.write_ub4(0)                    # allocated size of SQL ID
+            buf.write_uint8(0)                  # pointer (length of SQL ID)
+            if buf._caps.ttc_field_version >= TNS_CCAP_FIELD_VERSION_12_2_EXT1:
+                buf.write_uint8(0)              # pointer (chunk ids)
+                buf.write_ub4(0)                # number of chunk ids
         if stmt._cursor_id == 0 or stmt._is_ddl:
             buf.write_bytes(stmt._sql_bytes)
             buf.write_ub4(1)                # al8i4[0] parse
