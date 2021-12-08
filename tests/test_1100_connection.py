@@ -428,7 +428,7 @@ class TestCase(test_env.BaseTestCase):
                          (4, "tesName")]
 
         with connection.cursor() as cursor:
-            cursor.execute("select IntCol, StringCol from TestTempTable")
+            cursor.execute("select IntCol, StringCol1 from TestTempTable")
             self.assertEqual(cursor.fetchall(), expected_rows)
 
     @unittest.skipIf(test_env.get_is_thin(),
