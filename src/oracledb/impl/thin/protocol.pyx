@@ -151,7 +151,7 @@ cdef class Protocol:
 
     cdef int _execute(self, object cursor, uint32_t num_execs=1,
                       bint arraydmlrowcounts=False,
-                      bint batcherrors=False) except -1:
+                      bint batcherrors=False, uint32_t offset=0) except -1:
         cdef:
             ThinCursorImpl cursor_impl = cursor._impl
             Statement stmt = cursor_impl._statement
@@ -165,6 +165,7 @@ cdef class Protocol:
             message.arraydmlrowcounts = arraydmlrowcounts
             message.batcherrors = batcherrors
             message.num_execs = num_execs
+            message.offset = offset
             self._process_message(message)
             if cursor_impl._statement._requires_define:
                 message.processed_error = False

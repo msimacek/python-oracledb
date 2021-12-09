@@ -146,7 +146,7 @@ class TestCase(test_env.BaseTestCase):
                     insert into TestTempTable (IntCol, StringCol1)
                     values (t_Id, 'Test String ' || t_Id);
                 end;""", num_rows)
-        self.assertEqual(self.cursor.rowcount, num_rows)
+        self.assertEqual(self.cursor.rowcount, 0)
         self.cursor.execute("select count(*) from TestTempTable")
         count, = self.cursor.fetchone()
         self.assertEqual(count, num_rows)
@@ -170,7 +170,7 @@ class TestCase(test_env.BaseTestCase):
                     select sum(IntCol) into :1
                     from TestTempTable;
                 end;""", num_rows)
-        self.assertEqual(self.cursor.rowcount, num_rows)
+        self.assertEqual(self.cursor.rowcount, 0)
         expected_data = [1, 3, 6, 10, 15, 21, 28, 36, 45]
         self.assertEqual(var.values, expected_data)
 
@@ -202,6 +202,69 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2006:",
                                self.cursor.executemany,
                                "select :value from dual", rows)
+
+    def test_4016_executemany_plsql_dml_returning(self):
+        "4016 - test executemany() with a pl/sql statement with dml returning"
+        num_rows = 5
+        self.cursor.execute("truncate table TestTempTable")
+        out_var = self.cursor.var(oracledb.NUMBER, arraysize=5)
+        self.cursor.setinputsizes(out_var)
+        self.cursor.executemany("""
+                declare
+                    t_Id          number;
+                begin
+                    select nvl(count(*), 0) + 1 into t_Id
+                    from TestTempTable;
+
+                    insert into TestTempTable (IntCol, StringCol1)
+                    values (t_Id, 'Test String ' || t_Id) returning
+                    IntCol into :out_bind;
+                end;""", num_rows)
+        self.assertEqual(out_var.values, [1, 2, 3, 4, 5])
+
+    def test_4017_executemany_pl_sql_with_in_and_out_binds(self):
+        "4017 - test executemany() with pl/sql in binds and out binds"
+        self.cursor.execute("truncate table TestTempTable")
+        int_values = [5, 8, 17, 24, 6]
+        str_values = ["Test 5", "Test 8", "Test 17", "Test 24", "Test 6"]
+        out_bind = self.cursor.var(oracledb.NUMBER, arraysize=5)
+        self.cursor.setinputsizes(None, None, out_bind)
+        data = list(zip(int_values, str_values))
+        self.cursor.executemany("""
+            begin
+            insert into TestTempTable (IntCol, StringCol1)
+            values (:int_val, :str_val)
+            returning IntCol into :out_bind;
+            end;""", data)
+        self.assertEqual(out_bind.values, [5, 8, 17, 24, 6])
+
+    def test_4018_executemany_pl_sql_out_bind(self):
+        "4018 - test executemany() with pl/sql outbinds"
+        self.cursor.execute("truncate table TestTempTable")
+        out_bind = self.cursor.var(oracledb.NUMBER, arraysize=5)
+        self.cursor.setinputsizes(out_bind)
+        self.cursor.executemany("""
+            begin
+            :out_var := 5;
+            end;""", 5)
+        self.assertEqual(out_bind.values, [5, 5, 5, 5, 5])
+
+    def test_4019_re_executemany_pl_sql_with_in_and_out_binds(self):
+        "4019 - test re-executemany() with pl/sql in binds and out binds"
+        int_values = [5, 8, 17, 24, 6]
+        str_values = ["Test 5", "Test 8", "Test 17", "Test 24", "Test 6"]
+        data = list(zip(int_values, str_values))
+        for i in range(2):
+            self.cursor.execute("truncate table TestTempTable")
+            out_bind = self.cursor.var(oracledb.NUMBER, arraysize=5)
+            self.cursor.setinputsizes(None, None, out_bind)
+            self.cursor.executemany("""
+                begin
+                insert into TestTempTable (IntCol, StringCol1)
+                values (:int_val, :str_val)
+                returning IntCol into :out_bind;
+                end;""", data)
+            self.assertEqual(out_bind.values, [5, 8, 17, 24, 6])
 
 if __name__ == "__main__":
     test_env.run_test_cases()

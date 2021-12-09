@@ -240,6 +240,7 @@ cdef class MessageWithData(Message):
         bint processed_error
         object cursor
         object conn
+        uint32_t offset
 
     def __cinit__(self, cursor):
         self.cursor = cursor
@@ -571,6 +572,7 @@ cdef class MessageWithData(Message):
         cdef:
             uint32_t i, temp, num_bytes
             BindInfo bind_info
+            bint has_in_bind = False
         buf.skip_bytes(1)                   # flag
         temp = buf.read_ub2()               # num requests
         self.row_index = buf.read_ub4()     # iter num
@@ -587,8 +589,12 @@ cdef class MessageWithData(Message):
             bind_info = self.cursor_impl._statement._bind_info_list[i]
             bind_info.bind_dir = buf.read_uint8()
             if bind_info.bind_dir == TNS_BIND_DIR_INPUT:
+                has_in_bind = True
                 continue
             self.out_var_impls.append(bind_info._bind_var._impl)
+        if self.cursor_impl._statement._is_plsql and \
+                self.out_var_impls and has_in_bind:
+            self.cursor_impl._statement._plsql_multiple_execs = True
 
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:
@@ -606,7 +612,8 @@ cdef class MessageWithData(Message):
         elif message_type == TNS_MSG_TYPE_ERROR:
             Message._process_error_info(self, buf)
             cursor_impl._statement._cursor_id = self.error_info.cursor_id
-            cursor_impl.rowcount = self.error_info.rowcount
+            if not cursor_impl._statement._is_plsql:
+                cursor_impl.rowcount = self.error_info.rowcount
             if self.error_info.rowcount > 0:
                 cursor_impl._lastrowid = self.error_info.rowid
             else:
@@ -686,7 +693,7 @@ cdef class MessageWithData(Message):
             else:
                 value = self._process_column_data(buf, var_impl,
                                                   self.row_index)
-                var_impl.values[self.row_index] = value
+                var_impl.values[self.row_index + self.offset] = value
         self.row_index += 1
         if self.in_fetch:
             self.cursor_impl._buffer_rowcount = self.row_index
@@ -812,7 +819,7 @@ cdef class MessageWithData(Message):
     cdef int _write_bind_params_row(self, WriteBuffer buf, list params,
                                     uint32_t pos) except -1:
         cdef:
-            uint32_t i, num_elements
+            uint32_t i, num_elements, offset = self.offset
             ThinVarImpl var_impl
             BindInfo bind_info
             object var
@@ -828,7 +835,7 @@ cdef class MessageWithData(Message):
                     self._write_bind_params_column(buf, var_impl, value)
             else:
                 self._write_bind_params_column(buf, var_impl,
-                                               var_impl.values[pos])
+                                               var_impl.values[pos + offset])
 
     cdef int _write_close_cursors_piggyback(self, WriteBuffer buf) except -1:
         cdef:
