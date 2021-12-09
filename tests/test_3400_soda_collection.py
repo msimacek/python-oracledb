@@ -27,8 +27,8 @@ class TestCase(test_env.BaseTestCase):
         soda_db = self.connection.getSodaDatabase()
         coll = soda_db.createCollection("InvalidJSON")
         doc = soda_db.createDocument(invalid_json)
-        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40780:",
-                               coll.insertOne, doc)
+        self.assertRaisesRegex(oracledb.DatabaseError,
+                               "^ORA-40780:|^ORA-02290:", coll.insertOne, doc)
         coll.drop()
 
     def test_3401_insert_documents(self):
