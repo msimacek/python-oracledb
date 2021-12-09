@@ -61,6 +61,7 @@ cdef class Statement:
         bint _requires_define
         bint _return_to_cache
         bint _in_use
+        bint _plsql_multiple_execs
 
     cdef Statement copy(self):
         cdef:

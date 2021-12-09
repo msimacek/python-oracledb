@@ -72,9 +72,28 @@ cdef class ThinCursorImpl(BaseCursorImpl):
         self._conn_impl._protocol._execute(cursor)
 
     def executemany(self, cursor, num_execs, batcherrors, arraydmlrowcounts):
+        cdef uint32_t offset = 1
         self._preprocess_execute(cursor.connection)
-        self._conn_impl._protocol._execute(cursor, num_execs,
-                                           arraydmlrowcounts, batcherrors)
+        # if a PL/SQL statement is being executed for the first time, perform
+        # one execute. If the statement contains both in and out binds,
+        # multiple executes will be performed; otherwise, a bulk execute will
+        # be performed.
+        if self._statement._is_plsql and self._statement._cursor_id == 0:
+            self._conn_impl._protocol._execute(cursor, 1,
+                                               arraydmlrowcounts,
+                                               batcherrors)
+            if self._statement._plsql_multiple_execs:
+                for offset in range(1, num_execs):
+                    self._conn_impl._protocol._execute(cursor, 1,
+                                                       arraydmlrowcounts,
+                                                       batcherrors, offset)
+            else:
+                self._conn_impl._protocol._execute(cursor, num_execs - 1,
+                                                   arraydmlrowcounts,
+                                                   batcherrors, offset)
+        else:
+            self._conn_impl._protocol._execute(cursor, num_execs,
+                                               arraydmlrowcounts, batcherrors)
 
     def fetch_rows(self, cursor):
         self._conn_impl._protocol._fetch(cursor)
