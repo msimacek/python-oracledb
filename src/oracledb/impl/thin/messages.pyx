@@ -754,7 +754,7 @@ cdef class MessageWithData(Message):
             uint8_t ora_type_num = var_impl.dbtype._ora_type_num
             ThinCursorImpl cursor_impl
             ThinLobImpl lob_impl
-            uint8_t num_bytes
+            uint32_t num_bytes
             bytes temp_bytes
         if value is None:
             if ora_type_num == TNS_DATA_TYPE_BOOLEAN:
@@ -808,10 +808,9 @@ cdef class MessageWithData(Message):
         elif ora_type_num == TNS_DATA_TYPE_CLOB \
                 or ora_type_num == TNS_DATA_TYPE_BLOB:
             lob_impl = value._impl
-            num_bytes = <uint8_t> len(lob_impl._locator)
+            num_bytes = <uint32_t> len(lob_impl._locator)
             buf.write_ub4(num_bytes)
-            buf.write_uint8(num_bytes)
-            buf.write_bytes(lob_impl._locator)
+            buf.write_bytes_chunked(lob_impl._locator)
         else:
             errors._raise_err(errors.ERR_DB_TYPE_NOT_SUPPORTED,
                               name=var_impl.dbtype.name)
@@ -1200,15 +1199,13 @@ cdef class AuthMessage(Message):
         cdef:
             bytes key_bytes = key.encode()
             bytes value_bytes = value.encode()
-            uint8_t key_len = <uint8_t> len(key_bytes)
-            uint8_t value_len = <uint8_t> len(value_bytes)
+            uint32_t key_len = <uint32_t> len(key_bytes)
+            uint32_t value_len = <uint32_t> len(value_bytes)
         buf.write_ub4(key_len)
-        buf.write_uint8(key_len)
-        buf.write_bytes(key_bytes)
+        buf.write_bytes_chunked(key_bytes)
         buf.write_ub4(value_len)
         if value_len > 0:
-            buf.write_uint8(value_len)
-            buf.write_bytes(value_bytes)
+            buf.write_bytes_chunked(value_bytes)
         buf.write_ub4(flags)
 
     cdef int _write_message(self, WriteBuffer buf) except -1:
