@@ -27,7 +27,8 @@ cdef class ThinPoolImpl(BasePoolImpl):
         object _bg_thread_condition
         object _condition
         object _params
-        bytes _password
+        bytearray _password_obfuscator
+        bytearray _password
         bint _open
 
     def __init__(self, params, dsn, user, password, min, max, increment,
@@ -39,7 +40,10 @@ cdef class ThinPoolImpl(BasePoolImpl):
         self.max = max
         self.increment = increment
         self.homogeneous = homogeneous
-        self._password = zlib.compress(password.encode())
+        self._password_obfuscator = \
+                bytearray(secrets.token_bytes(len(password)))
+        self._password = self._xor_bytes(bytearray(password.encode()),
+                                         self._password_obfuscator)
         self._getmode = getmode
         self._wait_timeout = wait_timeout
         self._stmt_cache_size = params.stmtcachesize
@@ -64,8 +68,9 @@ cdef class ThinPoolImpl(BasePoolImpl):
         """
         cdef ThinConnImpl conn_impl
         conn_impl = ThinConnImpl(self.username, self.dsn)
-        password = zlib.decompress(self._password).decode()
-        conn_impl.connect(self._params, password)
+        password_bytes = self._xor_bytes(self._password,
+                                         self._password_obfuscator)
+        conn_impl.connect(self._params, password_bytes.decode())
         conn_impl._pool = self
         return conn_impl
 
@@ -244,6 +249,20 @@ cdef class ThinPoolImpl(BasePoolImpl):
                 self._bg_thread_condition.notify()
             return False
         return self._getmode == constants.POOL_GETMODE_FORCEGET
+
+    cdef bytearray _xor_bytes(self, bytearray a, bytearray b):
+        """
+        Perform an XOR of two byte arrays as a means of obfuscating the
+        password that is stored on the class.
+        """
+        cdef:
+            ssize_t length, i
+            bytearray result
+        length = len(a)
+        result = bytearray(length)
+        for i in range(length):
+            result[i] = a[i] ^ b[i]
+        return result
 
     def acquire(self, str user, str password, object params):
         """
