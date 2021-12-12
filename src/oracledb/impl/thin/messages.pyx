@@ -25,6 +25,7 @@ cdef class Message:
         uint8_t packet_type
         bint error_occurred
         bint flush_out_binds
+        bint processed_error
 
     def __cinit__(self):
         self.message_type = TNS_MSG_TYPE_FUNCTION
@@ -69,6 +70,7 @@ cdef class Message:
         num_bytes = buf.read_ub4()          # oerrdd (logical rowid)
         if num_bytes > 0:
             buf.read_bytes(buf.read_uint8())
+        self.processed_error = True
 
         # batch error codes
         num_entries = buf.read_ub2()        # batch error codes array
@@ -213,6 +215,7 @@ cdef class Message:
 
     cdef int process(self, ReadBuffer buf) except -1:
         self.flush_out_binds = False
+        self.processed_error = False
         self._preprocess()
         buf.skip_bytes(2)                   # skip data flags
         while self._has_more_data(buf):
@@ -237,7 +240,6 @@ cdef class MessageWithData(Message):
         list out_var_impls
         bint in_fetch
         bint parse_only
-        bint processed_error
         object cursor
         object conn
         uint32_t offset
@@ -305,7 +307,6 @@ cdef class MessageWithData(Message):
             Statement statement
             BindInfo bind_info
             ssize_t i
-        self.processed_error = False
         statement = cursor_impl._statement
         if statement._is_returning and not self.parse_only:
             self.out_var_impls = []
@@ -626,7 +627,6 @@ cdef class MessageWithData(Message):
                 cursor_impl._more_rows_to_fetch = False
             if self.error_info.batcherrors is not None:
                 self.error_occurred = False
-            self.processed_error = True
         elif message_type == TNS_MSG_TYPE_BIT_VECTOR:
             num_bits = buf.read_ub2()
             num_bytes = num_bits // 8
@@ -1594,6 +1594,9 @@ cdef class LobOpMessage(Message):
 
     def __cinit__(self):
         self.function_code = TNS_FUNC_LOB_OP
+
+    cdef bint _has_more_data(self, ReadBuffer buf):
+        return not self.processed_error
 
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:
