@@ -15,7 +15,7 @@ BIND_PATTERN = r'(?<!"\:)(?<=\:)\s*("[^\"]*"|[^\W\d_][\w\$#]*|\d+)'
 # pattern used for detecting a DML returning clause; bind variables in the
 # first group are input variables; bind variables in the second group are
 # output only variables
-DML_RETURNING_PATTERN = r'(?si)(.* RETURNING .* INTO )(.*)'
+DML_RETURNING_PATTERN = r'(?si)( RETURNING [\s\S]+ INTO )(.*?$)'
 
 cdef class BindInfo:
 
@@ -169,7 +169,9 @@ cdef class Statement:
             if not self._is_plsql:
                 match = re.search(DML_RETURNING_PATTERN, sql)
                 if match is not None:
-                    input_sql, returning_sql = match.groups()
+                    pos = match.start(2)
+                    input_sql = sql[:pos]
+                    returning_sql = sql[pos:]
             self._add_binds(input_sql, is_return_bind=False)
             if returning_sql is not None:
                 self._is_returning = True
