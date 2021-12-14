@@ -1,11 +1,11 @@
 /*-----------------------------------------------------------------------------
- * Copyright 2017, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright 2017, 2021, Oracle and/or its affiliates. All rights reserved.
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
  * setup_samples.sql
  *   Creates and populates schemas with the database objects used by the
- * cx_Oracle samples. An edition is also created for the demonstration of
+ * python-oracledb samples. An edition is also created for the demonstration of
  * PL/SQL editioning.
  *
  * Run this like:

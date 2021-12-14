@@ -5,7 +5,7 @@
 #------------------------------------------------------------------------------
 # drop_samples.py
 #
-# Drops the database objects used for the py-oracledb samples.
+# Drops the database objects used for the python-oracledb samples.
 #------------------------------------------------------------------------------
 
 import oracledb

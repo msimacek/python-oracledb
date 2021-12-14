@@ -1,4 +1,4 @@
-This directory contains samples for py-oracledb.
+This directory contains samples for python-oracledb.
 
 1.  The schemas and SQL objects that are referenced in the samples can be
     created by running the Python script [setup_samples.py][1]. The script
@@ -19,7 +19,7 @@ This directory contains samples for py-oracledb.
 
         python Query.py
 
-3.  After running py-oracledb samples, the schemas and SQL objects can be
+3.  After running python-oracledb samples, the schemas and SQL objects can be
     dropped by running the Python script [drop_samples.py][4]. The script
     requires SYSDBA privileges and will prompt for these credentials as well as
     the names of the schemas and edition that will be dropped, unless a number
@@ -34,8 +34,8 @@ This directory contains samples for py-oracledb.
 
         sqlplus sys/syspassword@hostname/servicename @sql/drop_samples.sql
 
-[1]: https://github.com/oracle/python-cx_Oracle/blob/main/samples/setup_samples.py
-[2]: https://github.com/oracle/python-cx_Oracle/blob/main/samples/sample_env.py
-[3]: https://github.com/oracle/python-cx_Oracle/blob/main/samples/sql/setup_samples.sql
-[4]: https://github.com/oracle/python-cx_Oracle/blob/main/samples/drop_samples.py
-[5]: https://github.com/oracle/python-cx_Oracle/blob/main/samples/sql/drop_samples.sql
+[1]: https://github.com/oracle/python-oracledb/blob/main/samples/setup_samples.py
+[2]: https://github.com/oracle/python-oracledb/blob/main/samples/sample_env.py
+[3]: https://github.com/oracle/python-oracledb/blob/main/samples/sql/setup_samples.sql
+[4]: https://github.com/oracle/python-oracledb/blob/main/samples/drop_samples.py
+[5]: https://github.com/oracle/python-oracledb/blob/main/samples/sql/drop_samples.sql

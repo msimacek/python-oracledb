@@ -1,4 +1,4 @@
-This directory contains the test suite for py-oracledb.
+This directory contains the test suite for python-oracledb.
 
 1.  The schemas and SQL objects that are referenced in the test suite can be
     created by running the Python script [setup_test.py][1]. The script

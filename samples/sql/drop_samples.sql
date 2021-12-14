@@ -1,10 +1,10 @@
 /*-----------------------------------------------------------------------------
- * Copyright 2017, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright 2017, 2021, Oracle and/or its affiliates. All rights reserved.
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
  * drop_samples.sql
- *   Drops database objects used for cx_Oracle samples.
+ *   Drops database objects used for python-oracledb samples.
  *
  * Run this like:
  *   sqlplus sys/syspassword@hostname/servicename as sysdba @drop_samples

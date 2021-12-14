@@ -1,13 +1,13 @@
 /*-----------------------------------------------------------------------------
- * Copyright 2017, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright 2017, 2021, Oracle and/or its affiliates. All rights reserved.
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
  * drop_samples_exec.sql
  *   This script performs the actual work of dropping the database schemas and
- * edition used by the cx_Oracle samples. It is called by the drop_samples.sql
- * and setup_samples.sql files after acquiring the necessary parameters and
- * also by the Python script drop_samples.py.
+ * edition used by the python-oracledb samples. It is called by the
+ * drop_samples.sql and setup_samples.sql files after acquiring the necessary
+ * parameters and also by the Python script drop_samples.py.
  *---------------------------------------------------------------------------*/
 
 begin

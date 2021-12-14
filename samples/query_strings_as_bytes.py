@@ -8,8 +8,6 @@
 # Demonstrates how to query strings as bytes (bypassing decoding of the bytes
 # into a Python string). This can be useful when attempting to fetch data that
 # was stored in the database in the wrong encoding.
-#
-# This script requires cx_Oracle 8.2 and higher.
 #------------------------------------------------------------------------------
 
 import oracledb
