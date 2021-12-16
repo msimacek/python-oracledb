@@ -766,9 +766,9 @@ cdef class MessageWithData(Message):
                 or ora_type_num == TNS_DATA_TYPE_CHAR \
                 or ora_type_num == TNS_DATA_TYPE_LONG:
             if var_impl.dbtype._csfrm == 1:
-                temp_bytes = value.encode()
+                temp_bytes = (<str> value).encode()
             else:
-                temp_bytes = value.encode(TNS_ENCODING_UTF16)
+                temp_bytes = (<str> value).encode(TNS_ENCODING_UTF16)
             buf.write_bytes_chunked(temp_bytes)
         elif ora_type_num == TNS_DATA_TYPE_RAW \
                 or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
@@ -776,8 +776,10 @@ cdef class MessageWithData(Message):
         elif ora_type_num == TNS_DATA_TYPE_NUMBER \
                 or ora_type_num == TNS_DATA_TYPE_BINARY_INTEGER:
             if isinstance(value, bool):
-                value = int(value)
-            buf.write_oracle_number(str(value).encode())
+                temp_bytes = b'1' if value is True else b'0'
+            else:
+                temp_bytes = str(value).encode()
+            buf.write_oracle_number(temp_bytes)
         elif ora_type_num == TNS_DATA_TYPE_DATE \
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ \
@@ -1288,7 +1290,7 @@ cdef class ConnectMessage(Message):
         bytes connect_string_bytes
         str redirect_data
 
-    def __cinit__(self, connect_string):
+    def __cinit__(self, str connect_string):
         self.connect_string_bytes = connect_string.encode()
         self.connect_string_len = <uint16_t> len(self.connect_string_bytes)
 
