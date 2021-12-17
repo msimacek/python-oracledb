@@ -34,9 +34,11 @@ from .defaults import defaults
 cdef int32_t* INTEGRITY_ERROR_CODES = [
         1,          # unique constraint violated
         1400,       # cannot insert NULL
+        1438,       # value larger than specified precision
         2290,       # check constraint violated
         2291,       # integrity constraint violated - parent key not found
         2292,       # integrity constraint violated - child record found
+        21525,      # attribute or collection element violated its constraints
         40479,      # internal JSON serializer error
         0
 ]
