@@ -367,6 +367,7 @@ class TestCase(test_env.BaseTestCase):
     def test_2230_string_format(self):
         "2230 - test that string format is returned properly"
         var = self.cursor.var(oracledb.NUMBER)
+        self.assertTrue(var.type is oracledb.DB_TYPE_NUMBER)
         self.assertEqual(str(var),
                 "<oracledb.Var of type DB_TYPE_NUMBER with value None>")
         var.setvalue(0, 4)

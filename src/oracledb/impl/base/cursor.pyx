@@ -372,6 +372,7 @@ cdef class BaseCursorImpl:
                 and impl._preferred_num_type == NUM_TYPE_FLOAT:
             if scale == 0 or (scale == -127 and precision == 0):
                 impl._preferred_num_type = NUM_TYPE_INT
+        typ = impl._objtype if impl._objtype is not None else impl.dbtype
         return Var._from_impl(impl, typ)
 
     @utils.CheckImpls("executing a statement")
