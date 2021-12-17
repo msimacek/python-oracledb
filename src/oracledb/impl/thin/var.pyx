@@ -27,6 +27,31 @@ cdef class ThinVarImpl(BaseVarImpl):
         bind_info_list = stmt._bind_info_list
         var_list = thin_cursor_impl.bind_vars
 
+        # for PL/SQL blocks, if the size of a string or bytes object exceeds
+        # 32,767 bytes it must be converted to a BLOB/CLOB; and out converter
+        # needs to be established as well to return the string in the way that
+        # the user expects to get it
+        if stmt._is_plsql and self.size > 32767:
+            if self.dbtype._ora_type_num == TNS_DATA_TYPE_RAW \
+                    or self.dbtype._ora_type_num == TNS_DATA_TYPE_LONG_RAW:
+                self.dbtype = DB_TYPE_BLOB
+            elif self.dbtype._csfrm == TNS_CS_NCHAR:
+                self.dbtype = DB_TYPE_NCLOB
+            else:
+                self.dbtype = DB_TYPE_CLOB
+            orig_converter = self.outconverter
+            def converter(v):
+                v = v.read()
+                if orig_converter is not None:
+                    v = orig_converter(v)
+                return v
+            self.outconverter = converter
+            for idx, value in enumerate(self.values):
+                lob = conn.createlob(self.dbtype)
+                if value:
+                    lob.write(value)
+                self.values[idx] = lob
+
         # for variables containing LOBs, create temporary LOBs, if needed
         if self.dbtype._ora_type_num == TNS_DATA_TYPE_CLOB \
                 or self.dbtype._ora_type_num == TNS_DATA_TYPE_BLOB:

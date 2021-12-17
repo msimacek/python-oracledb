@@ -296,5 +296,55 @@ class TestCase(test_env.BaseTestCase):
         lob, = self.cursor.fetchone()
         self.assertEqual(lob.read(), supplemental_chars)
 
+    def test_1921_plsql_auto_conversion_clob(self):
+        "1921 - test automatic conversion to CLOB for PL/SQL"
+        var = self.cursor.var(str, outconverter=lambda v: v[-15:])
+        var.setvalue(0, "A" * 50000)
+        self.cursor.execute("""
+                declare
+                    t_Clob          clob;
+                begin
+                    t_Clob := :data;
+                    dbms_lob.copy(:data, t_Clob, 50000);
+                    dbms_lob.writeappend(:data, 5, 'BBBBB');
+                end;""",
+                data=var)
+        result = var.getvalue()
+        self.assertEqual(result, "A" * 10 + "B" * 5)
+
+    def test_1922_plsql_auto_conversion_nclob(self):
+        "1922 - test automatic conversion to NCLOB for PL/SQL"
+        var = self.cursor.var(oracledb.DB_TYPE_NCHAR,
+                              outconverter=lambda v: v[-12:])
+        var.setvalue(0, "N" * 51234)
+        self.cursor.execute("""
+                declare
+                    t_Clob          nclob;
+                begin
+                    t_Clob := :data;
+                    dbms_lob.copy(:data, t_Clob, 51234);
+                    dbms_lob.writeappend(:data, 7, 'PPPPPPP');
+                end;""",
+                data=var)
+        result = var.getvalue()
+        self.assertEqual(result, "N" * 5 + "P" * 7)
+
+    def test_1923_plsql_auto_conversion_blob(self):
+        "1923 - test automatic conversion to BLOB for PL/SQL"
+        var = self.cursor.var(bytes,
+                              outconverter=lambda v: v[-14:])
+        var.setvalue(0, b"L" * 52345)
+        self.cursor.execute("""
+                declare
+                    t_Blob          blob;
+                begin
+                    t_Blob := :data;
+                    dbms_lob.copy(:data, t_Blob, 52345);
+                    dbms_lob.writeappend(:data, 6, '515151515151');
+                end;""",
+                data=var)
+        result = var.getvalue()
+        self.assertEqual(result, b"L" * 8 + b"Q" * 6)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

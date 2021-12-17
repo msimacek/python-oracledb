@@ -16,7 +16,7 @@ class Var:
             value = self._impl.values[0]
         else:
             value = self._impl.values
-        typ = self._impl.dbtype
+        typ = self._type
         return f"<oracledb.Var of type {typ.name} with value {repr(value)}>"
 
     @classmethod

@@ -44,6 +44,7 @@ from .base_impl cimport get_exception_class, NUM_TYPE_FLOAT
 from .base_impl cimport NUM_TYPE_INT, NUM_TYPE_DECIMAL, NUM_TYPE_STR
 from .base_impl cimport BaseConnImpl, BaseCursorImpl, BaseVarImpl, DbType
 from .base_impl cimport BaseLobImpl, BasePoolImpl, FetchInfo
+from .base_impl import DB_TYPE_BLOB, DB_TYPE_CLOB, DB_TYPE_NCLOB
 from .cursor import Cursor
 from .lob import LOB
 from .var import Var
