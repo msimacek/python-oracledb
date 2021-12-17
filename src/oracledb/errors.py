@@ -261,8 +261,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_CONNECTION_CLOSED: "connection to database has been closed",
     ERR_SERVER_LOGON_TYPE_NOT_SUPPORTED: "server logon version not supported",
     ERR_SERVER_VERSION_NOT_SUPPORTED: \
-            "connections to this server version are not supported with " \
-            "the thin driver",
+            "connections to this database server version are not supported " \
+            "with the thin driver",
     ERR_SET_ROWID_DIRECTLY: "rowid variables cannot be set directly",
     ERR_THIN_CONNECTION_ALREADY_CREATED: \
             "the thick implementation cannot be used because a thin " \
