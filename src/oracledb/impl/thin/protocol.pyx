@@ -186,6 +186,23 @@ cdef class Protocol:
                 message = FetchMessage(cursor)
             self._process_message(message)
 
+    cdef int _force_close(self) except -1:
+        """
+        Forces the connection closed. This is used when an unrecoverable error
+        has taken place.
+        """
+        sock = self._socket
+        if DEBUG_PACKETS:
+            now = datetime.datetime.now()
+            print(now.isoformat(sep=" ", timespec="milliseconds"),
+                  f"[socket: {sock.fileno()}]", "force closing connection")
+            print()
+        self._socket = None
+        self._read_buf._socket = None
+        self._write_buf._socket = None
+        sock.shutdown(socket.SHUT_RDWR)
+        sock.close()
+
     cdef int _parse(self, object cursor) except -1:
         cdef MessageWithData message
         with self._request_lock:
@@ -217,6 +234,20 @@ cdef class Protocol:
             message.send(self._write_buf)
             self._receive_packet(message)
             message.process(self._read_buf)
+        except socket.timeout:
+            try:
+                self._break_external()
+                self._receive_packet(message)
+                self._break_in_progress = False
+                timeout = int(self._socket.gettimeout() * 1000)
+                errors._raise_err(errors.ERR_CALL_TIMEOUT_EXCEEDED,
+                                  timeout=timeout)
+            except socket.timeout:
+                self._force_close()
+                errors._raise_err(errors.ERR_NOT_CONNECTED,
+                                  "socket timed out while recovering from " \
+                                  "previous socket timeout")
+            raise
         except:
             if not self._in_connect \
                     and self._write_buf._packet_sent \
@@ -231,9 +262,15 @@ cdef class Protocol:
             self._reset(message)
             message.process(self._read_buf)
         if self._break_in_progress:
-            if self._caps.supports_oob:
-                self._send_marker(self._write_buf, TNS_MARKER_TYPE_INTERRUPT)
-            self._receive_packet(message)
+            try:
+                if self._caps.supports_oob:
+                    self._send_marker(self._write_buf,
+                                      TNS_MARKER_TYPE_INTERRUPT)
+                self._receive_packet(message)
+            except socket.timeout:
+                errors._raise_err(errors.ERR_NOT_CONNECTED,
+                                  "socket timed out while awaiting break " \
+                                  "response from server")
             message.process(self._read_buf)
             self._break_in_progress = False
         self._txn_in_progress = message.call_status & TNS_TXN_IN_PROGRESS

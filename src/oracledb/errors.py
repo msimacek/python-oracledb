@@ -138,6 +138,7 @@ ERR_INVALID_TNS_ALIAS_DEFINITION = 4020
 ERR_INVALID_PROTOCOL = 4021
 ERR_INVALID_POOL_PURITY = 4022
 ERR_CANNOT_PARSE_EZCONNECT_STRING = 4023
+ERR_CALL_TIMEOUT_EXCEEDED = 4024
 
 # error numbers that result in InternalError
 ERR_MESSAGE_TYPE_UNKNOWN = 5000
@@ -186,6 +187,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_BUFFER_LENGTH_INSUFFICIENT: \
             "split buffer of length {actual_buffer_len} insufficient to " \
             "hold {required_buffer_len} bytes",
+    ERR_CALL_TIMEOUT_EXCEEDED: "call timeout of {timeout} ms exceeded",
     ERR_CANNOT_PARSE_CONNECT_DESCRIPTOR: \
             "cannot parse connect descriptor: {data}",
     ERR_CANNOT_PARSE_EZCONNECT_STRING: \

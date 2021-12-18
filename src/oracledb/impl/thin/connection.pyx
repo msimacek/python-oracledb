@@ -35,6 +35,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         double _time_in_pool
         list _temp_lobs_to_close
         uint32_t _temp_lobs_total_size
+        uint32_t _call_timeout
 
     cdef int _add_cursor_to_close(self, Statement stmt) except -1:
         if self._num_cursors_to_close == TNS_MAX_CURSORS_TO_CLOSE:
@@ -52,19 +53,8 @@ cdef class ThinConnImpl(BaseConnImpl):
                 self._add_cursor_to_close(stmt)
 
     cdef int _force_close(self) except -1:
-        if DEBUG_PACKETS:
-            now = datetime.datetime.now()
-            print(now.isoformat(sep=" ", timespec="milliseconds"),
-                  f"[socket: {self._protocol._socket.fileno()}]",
-                  "force closing connection")
-            print()
         self._pool = None
-        sock = self._protocol._socket
-        self._protocol._socket = None
-        self._protocol._read_buf._socket = None
-        self._protocol._write_buf._socket = None
-        sock.shutdown(socket.SHUT_RDWR)
-        sock.close()
+        self._protocol._force_close()
 
     cdef Statement _get_statement(self, str sql, bint cache_statement):
         cdef Statement statement
@@ -156,6 +146,7 @@ cdef class ThinConnImpl(BaseConnImpl):
                             params.expire_time * 60)
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 6)
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)
+        sock.settimeout(None)
         if params.protocol == "tcps":
             sock = get_ssl_socket(sock, params)
         self._protocol = Protocol(sock)
@@ -176,6 +167,9 @@ cdef class ThinConnImpl(BaseConnImpl):
 
     def create_temp_lob_impl(self, DbType dbtype):
         return ThinLobImpl._create(self, dbtype)
+
+    def get_call_timeout(self):
+        return self._call_timeout
 
     def get_current_schema(self):
         return self._current_schema
@@ -207,6 +201,11 @@ cdef class ThinConnImpl(BaseConnImpl):
     def set_action(self, str value):
         self._action = value
         self._action_modified = True
+
+    def set_call_timeout(self, uint32_t value):
+        timeout = None if value == 0 else value / 1000
+        self._protocol._socket.settimeout(timeout)
+        self._call_timeout = value
 
     def set_client_identifier(self, str value):
         self._client_identifier = value
