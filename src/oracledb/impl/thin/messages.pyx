@@ -599,7 +599,10 @@ cdef class MessageWithData(Message):
 
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:
-        cdef ThinCursorImpl cursor_impl = self.cursor_impl
+        cdef:
+            ThinCursorImpl cursor_impl = self.cursor_impl
+            ThinConnImpl conn_impl = self.conn_impl
+            object exc_type
         if message_type == TNS_MSG_TYPE_ROW_HEADER:
             self._process_row_header(buf)
         elif message_type == TNS_MSG_TYPE_ROW_DATA:
@@ -625,6 +628,11 @@ cdef class MessageWithData(Message):
             if self.error_info.num == TNS_ERR_NO_DATA_FOUND:
                 self.error_info.num = 0
                 cursor_impl._more_rows_to_fetch = False
+            elif self.error_info.num != 0 and self.error_info.cursor_id != 0:
+                exc_type = get_exception_class(self.error_info.num)
+                if exc_type is not exceptions.IntegrityError:
+                    conn_impl._add_cursor_to_close(cursor_impl._statement)
+                    cursor_impl._statement._cursor_id = 0
             if self.error_info.batcherrors is not None:
                 self.error_occurred = False
         elif message_type == TNS_MSG_TYPE_BIT_VECTOR:

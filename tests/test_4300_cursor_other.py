@@ -584,5 +584,19 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.prepare(sql)
         self.assertEqual(self.cursor.bindnames(), ["VaLue_2", "3VALUE"])
 
+    def test_4350_reexecute_after_error(self):
+        "4350 - test re-executing a statement after raising an error"
+        sql = "select * from TestFakeTable"
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-00942:",
+                               self.cursor.execute, sql)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-00942:",
+                               self.cursor.execute, sql)
+
+        sql = "insert into TestStrings (StringCol) values (NULL)"
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-01400:",
+                               self.cursor.execute, sql)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-01400:",
+                               self.cursor.execute, sql)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
