@@ -1746,9 +1746,11 @@ cdef class ProtocolMessage(Message):
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:
         cdef:
-            uint16_t num_elem, fdo_length, charset_id
+            uint16_t num_elem, fdo_length, charset_id, ncharset_id
             bytearray server_compile_caps
             bytearray server_runtime_caps
+            ssize_t ix
+            bytes fdo
         if message_type == TNS_MSG_TYPE_PROTOCOL:
             buf.skip_bytes(2)               # skip protocol array
             while buf.read_uint8() != 0:    # skip server banner
@@ -1760,7 +1762,12 @@ cdef class ProtocolMessage(Message):
             if num_elem > 0:                # skip elements
                 buf.skip_bytes(num_elem * 5)
             fdo_length = buf.read_uint16()
-            buf.skip_bytes(fdo_length)
+            fdo = buf.read_bytes(fdo_length)
+            ix = 6 + fdo[5] + fdo[6]
+            ncharset_id = (fdo[ix + 3] << 8) + fdo[ix + 4]
+            if ncharset_id != TNS_CHARSET_UTF16:
+                errors._raise_err(errors.ERR_NCHAR_CS_NOT_SUPPORTED,
+                                  charset_id=ncharset_id)
             server_compile_caps = bytearray(buf.read_bytes(buf.read_uint8()))
             server_runtime_caps = bytearray(buf.read_bytes(buf.read_uint8()))
             if not server_compile_caps[TNS_CCAP_LOGON_TYPES] & TNS_CCAP_O7LOGON:

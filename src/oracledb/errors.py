@@ -112,6 +112,7 @@ ERR_UNSUPPORTED_INBAND_NOTIFICATION = 3008
 ERR_SELF_BIND_NOT_SUPPORTED = 3009
 ERR_SERVER_VERSION_NOT_SUPPORTED = 3010
 ERR_SERVER_LOGON_TYPE_NOT_SUPPORTED = 3011
+ERR_NCHAR_CS_NOT_SUPPORTED = 3012
 
 # error numbers that result in DatabaseError
 ERR_TNS_ENTRY_NOT_FOUND = 4000
@@ -237,6 +238,9 @@ ERR_MESSAGE_FORMATS = {
             "element {element} is not the same type as previous elements",
     ERR_MIXED_POSITIONAL_AND_NAMED_BINDS: \
             "positional and named binds cannot be intermixed",
+    ERR_NCHAR_CS_NOT_SUPPORTED: \
+            "NCHAR character set id {charset_id} not supported with the " \
+            "thin driver",
     ERR_NO_PASSWORD: "no password specified",
     ERR_NO_STATEMENT: "no statement specified and no prior statement prepared",
     ERR_NO_STATEMENT_EXECUTED: "no statement executed",
