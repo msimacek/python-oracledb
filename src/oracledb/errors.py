@@ -287,8 +287,8 @@ ERR_MESSAGE_FORMATS = {
             "dictionaries, or an integer specifying the number of " \
             "times to execute the statement",
     ERR_WRONG_NUMBER_OF_POSITIONAL_BINDS: \
-            "{expected_num} positional bind(s) required but only " \
-            "{actual_num} positional bind(s) provided.",
+            "{expected_num} positional bind(s) are required but " \
+            "{actual_num} positional bind(s) were provided.",
     ERR_WRONG_OBJECT_TYPE: \
             "found object of type {actual_schema}.{actual_name} " \
             "when expecting object of type {expected_schema}.{expected_name}",
