@@ -367,6 +367,14 @@ cdef class MessageWithData(Message):
                 else:
                     var_impl.values[i] = var_impl.outconverter(value)
 
+    cdef int _process_bit_vector(self, ReadBuffer buf) except -1:
+        cdef ssize_t num_bits, num_bytes
+        num_bits = buf.read_ub2()
+        num_bytes = num_bits // 8
+        if num_bits % 8 > 0:
+            num_bytes += 1
+        buf.skip_bytes(num_bytes)
+
     cdef object _process_column_data(self, ReadBuffer buf,
                                      ThinVarImpl var_impl, uint32_t pos):
         cdef:
@@ -549,6 +557,36 @@ cdef class MessageWithData(Message):
         cursor_impl._statement._fetch_vars = cursor_impl.fetch_vars
         cursor_impl._statement._last_output_type_handler = type_handler
 
+    cdef int _process_error_info(self, ReadBuffer buf) except -1:
+        cdef:
+            ThinCursorImpl cursor_impl = self.cursor_impl
+            ThinConnImpl conn_impl = self.conn_impl
+            object exc_type
+        Message._process_error_info(self, buf)
+        cursor_impl._statement._cursor_id = self.error_info.cursor_id
+        if not cursor_impl._statement._is_plsql:
+            cursor_impl.rowcount = self.error_info.rowcount
+        if self.error_info.rowcount > 0:
+            cursor_impl._lastrowid = self.error_info.rowid
+        else:
+            cursor_impl._lastrowid = None
+        cursor_impl._batcherrors = self.error_info.batcherrors
+        if self.batcherrors and cursor_impl._batcherrors is None:
+            cursor_impl._batcherrors = []
+        if self.error_info.num == TNS_ERR_NO_DATA_FOUND:
+            self.error_info.num = 0
+            cursor_impl._more_rows_to_fetch = False
+        elif self.error_info.num == TNS_ERR_VAR_NOT_IN_SELECT_LIST:
+            conn_impl._add_cursor_to_close(cursor_impl._statement)
+            cursor_impl._statement._cursor_id = 0
+        elif self.error_info.num != 0 and self.error_info.cursor_id != 0:
+            exc_type = get_exception_class(self.error_info.num)
+            if exc_type is not exceptions.IntegrityError:
+                conn_impl._add_cursor_to_close(cursor_impl._statement)
+                cursor_impl._statement._cursor_id = 0
+        if self.error_info.batcherrors is not None:
+            self.error_occurred = False
+
     cdef int _process_implicit_result(self, ReadBuffer buf) except -1:
         cdef:
             ThinCursorImpl child_cursor_impl
@@ -599,10 +637,6 @@ cdef class MessageWithData(Message):
 
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:
-        cdef:
-            ThinCursorImpl cursor_impl = self.cursor_impl
-            ThinConnImpl conn_impl = self.conn_impl
-            object exc_type
         if message_type == TNS_MSG_TYPE_ROW_HEADER:
             self._process_row_header(buf)
         elif message_type == TNS_MSG_TYPE_ROW_DATA:
@@ -612,38 +646,11 @@ cdef class MessageWithData(Message):
         elif message_type == TNS_MSG_TYPE_DESCRIBE_INFO:
             buf.skip_bytes(buf.read_uint8())
             self._process_describe_info(buf, self.cursor)
-            self.out_var_impls = [v._impl for v in cursor_impl.fetch_vars]
+            self.out_var_impls = [v._impl for v in self.cursor_impl.fetch_vars]
         elif message_type == TNS_MSG_TYPE_ERROR:
-            Message._process_error_info(self, buf)
-            cursor_impl._statement._cursor_id = self.error_info.cursor_id
-            if not cursor_impl._statement._is_plsql:
-                cursor_impl.rowcount = self.error_info.rowcount
-            if self.error_info.rowcount > 0:
-                cursor_impl._lastrowid = self.error_info.rowid
-            else:
-                cursor_impl._lastrowid = None
-            cursor_impl._batcherrors = self.error_info.batcherrors
-            if self.batcherrors and cursor_impl._batcherrors is None:
-                cursor_impl._batcherrors = []
-            if self.error_info.num == TNS_ERR_NO_DATA_FOUND:
-                self.error_info.num = 0
-                cursor_impl._more_rows_to_fetch = False
-            elif self.error_info.num == TNS_ERR_VAR_NOT_IN_SELECT_LIST:
-                conn_impl._add_cursor_to_close(cursor_impl._statement)
-                cursor_impl._statement._cursor_id = 0
-            elif self.error_info.num != 0 and self.error_info.cursor_id != 0:
-                exc_type = get_exception_class(self.error_info.num)
-                if exc_type is not exceptions.IntegrityError:
-                    conn_impl._add_cursor_to_close(cursor_impl._statement)
-                    cursor_impl._statement._cursor_id = 0
-            if self.error_info.batcherrors is not None:
-                self.error_occurred = False
+            self._process_error_info(buf)
         elif message_type == TNS_MSG_TYPE_BIT_VECTOR:
-            num_bits = buf.read_ub2()
-            num_bytes = num_bits // 8
-            if num_bits % 8 > 0:
-                num_bytes += 1
-            buf.skip_bytes(num_bytes)
+            self._process_bit_vector(buf)
         elif message_type == TNS_MSG_TYPE_IO_VECTOR:
             self._process_io_vector(buf)
         elif message_type == TNS_MSG_TYPE_IMPLICIT_RESULTSET:
