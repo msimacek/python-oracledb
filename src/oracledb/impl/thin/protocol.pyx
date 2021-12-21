@@ -157,18 +157,14 @@ cdef class Protocol:
             Statement stmt = cursor_impl._statement
             MessageWithData message
         with self._request_lock:
-            if stmt._cursor_id and not stmt._requires_full_execute \
-                    and not stmt._is_ddl:
-                message = ReExecuteMessage(cursor)
-            else:
-                message = ExecuteMessage(cursor)
+            message = ExecuteMessage(cursor)
             message.arraydmlrowcounts = arraydmlrowcounts
             message.batcherrors = batcherrors
             message.num_execs = num_execs
             message.offset = offset
             self._process_message(message)
             if cursor_impl._statement._requires_define:
-                message.processed_error = False
+                stmt._requires_full_execute = True
                 self._process_message(message)
             stmt._requires_full_execute = False
             if cursor_impl._statement._is_query:
@@ -179,7 +175,7 @@ cdef class Protocol:
             ThinCursorImpl cursor_impl = cursor._impl
             MessageWithData message
         with self._request_lock:
-            if cursor_impl._requires_full_execute:
+            if cursor_impl._statement._requires_full_execute:
                 message = ExecuteMessage(cursor)
                 message.num_execs = cursor_impl._fetch_array_size
             else:

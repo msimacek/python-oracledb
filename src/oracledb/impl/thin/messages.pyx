@@ -432,7 +432,7 @@ cdef class MessageWithData(Message):
             column_value = self._create_cursor_from_describe(buf, column_value)
             cursor_impl = column_value._impl
             cursor_impl._statement._cursor_id = buf.read_ub4()
-            cursor_impl._requires_full_execute = True
+            cursor_impl._statement._requires_full_execute = True
         elif ora_type_num == TNS_DATA_TYPE_BOOLEAN:
             temp_bytes = buf.read_bytes(num_bytes)
             column_value = temp_bytes[0] == 1
@@ -1388,10 +1388,10 @@ cdef class DataTypesMessage(Message):
 @cython.final
 cdef class ExecuteMessage(MessageWithData):
 
-    def __cinit__(self, cursor):
-        self.function_code = TNS_FUNC_EXECUTE
-
-    cdef int _write_message(self, WriteBuffer buf) except -1:
+    cdef int _write_execute_message(self, WriteBuffer buf) except -1:
+        """
+        Write the message for a full execute.
+        """
         cdef:
             uint32_t options, dml_options = 0, num_params = 0, num_iters = 1
             Statement stmt = self.cursor_impl._statement
@@ -1526,20 +1526,10 @@ cdef class ExecuteMessage(MessageWithData):
         elif num_params > 0:
             self._write_bind_params(buf, params)
 
-
-@cython.final
-cdef class ReExecuteMessage(MessageWithData):
-
-    def __cinit__(self, cursor):
-        cdef ThinCursorImpl cursor_impl = self.cursor_impl
-        if cursor_impl._statement._is_query \
-                and not cursor_impl._statement._requires_define \
-                and cursor_impl.prefetchrows > 0:
-            self.function_code = TNS_FUNC_REEXECUTE_AND_FETCH
-        else:
-            self.function_code = TNS_FUNC_REEXECUTE
-
-    cdef int _write_message(self, WriteBuffer buf) except -1:
+    cdef int _write_reexecute_message(self, WriteBuffer buf) except -1:
+        """
+        Write the message for a re-execute.
+        """
         cdef:
             uint32_t i, exec_flags_1 = 0, exec_flags_2 = 0, num_iters
             Statement stmt = self.cursor_impl._statement
@@ -1574,6 +1564,26 @@ cdef class ReExecuteMessage(MessageWithData):
             for i in range(self.num_execs):
                 buf.write_uint8(TNS_MSG_TYPE_ROW_DATA)
                 self._write_bind_params_row(buf, params, i)
+
+    cdef int _write_message(self, WriteBuffer buf) except -1:
+        """
+        Write the execute message to the buffer. Two types of execute messages
+        are possible: one for a full execute and the second, simpler message,
+        for when an existing cursor is being re-executed.
+        """
+        cdef:
+            Statement stmt = self.cursor_impl._statement
+        if stmt._cursor_id != 0 and not stmt._requires_full_execute \
+                and not stmt._is_ddl:
+            if stmt._is_query and not stmt._requires_define \
+                    and self.cursor_impl.prefetchrows > 0:
+                self.function_code = TNS_FUNC_REEXECUTE_AND_FETCH
+            else:
+                self.function_code = TNS_FUNC_REEXECUTE
+            self._write_reexecute_message(buf)
+        else:
+            self.function_code = TNS_FUNC_EXECUTE
+            self._write_execute_message(buf)
 
 
 @cython.final
