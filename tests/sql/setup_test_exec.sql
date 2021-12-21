@@ -31,6 +31,7 @@ grant
     create table,
     create procedure,
     create type,
+    create view,
     select any dictionary,
     change notification,
     unlimited tablespace

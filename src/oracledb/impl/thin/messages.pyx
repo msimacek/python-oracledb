@@ -628,6 +628,9 @@ cdef class MessageWithData(Message):
             if self.error_info.num == TNS_ERR_NO_DATA_FOUND:
                 self.error_info.num = 0
                 cursor_impl._more_rows_to_fetch = False
+            elif self.error_info.num == TNS_ERR_VAR_NOT_IN_SELECT_LIST:
+                conn_impl._add_cursor_to_close(cursor_impl._statement)
+                cursor_impl._statement._cursor_id = 0
             elif self.error_info.num != 0 and self.error_info.cursor_id != 0:
                 exc_type = get_exception_class(self.error_info.num)
                 if exc_type is not exceptions.IntegrityError:

@@ -598,5 +598,31 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-01400:",
                                self.cursor.execute, sql)
 
+    def test_4351_variable_not_in_select_list(self):
+        "4351 - test executing a statement that raises ORA-01007"
+        with self.connection.cursor() as cursor:
+            cursor.execute("""
+                    create or replace view ora_1007 as
+                    select
+                        1 as SampleNumber,
+                        'String' as SampleString,
+                        'Another String' as AnotherString
+                    from dual""")
+        with self.connection.cursor() as cursor:
+            cursor.execute("select * from ora_1007")
+            self.assertEqual(cursor.fetchone(),
+                             (1, 'String', 'Another String'))
+        with self.connection.cursor() as cursor:
+            cursor.execute("""
+                    create or replace view ora_1007 as
+                    select
+                        1 as SampleNumber,
+                        'Another String' as AnotherString
+                    from dual""")
+        with self.connection.cursor() as cursor:
+            cursor.execute("select * from ora_1007")
+            self.assertEqual(cursor.fetchone(),
+                             (1, 'Another String'))
+
 if __name__ == "__main__":
     test_env.run_test_cases()
