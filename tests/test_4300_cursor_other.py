@@ -624,5 +624,15 @@ class TestCase(test_env.BaseTestCase):
             self.assertEqual(cursor.fetchone(),
                              (1, 'Another String'))
 
+    def test_4352_update_empty_row(self):
+        "4352 - test updating an empty row"
+        int_var = self.cursor.var(int)
+        self.cursor.execute("truncate table TestTempTable")
+        sql = """
+                begin update TestTempTable set IntCol = :1 where StringCol1 =
+                :2 returning IntCol into :3; end;"""
+        self.cursor.execute(sql, [1, "test string 4352", int_var])
+        self.assertEqual(int_var.values, [None])
+
 if __name__ == "__main__":
     test_env.run_test_cases()
