@@ -401,7 +401,7 @@ cdef class MessageWithData(Message):
             num_bytes = 0                   # column is null by describe
         else:
             num_bytes = buf.read_uint8()
-        if num_bytes == 0:
+        if num_bytes == 0 or num_bytes == TNS_NULL_LENGTH_INDICATOR:
             column_value = None
         elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
                 or ora_type_num == TNS_DATA_TYPE_CHAR \
