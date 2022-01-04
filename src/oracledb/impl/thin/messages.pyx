@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 @cython.freelist(20)
@@ -250,6 +250,36 @@ cdef class MessageWithData(Message):
         self.conn = cursor.connection
         self.conn_impl = self.conn._impl
         self.num_execs = 1
+
+    cdef int _adjust_fetch_info(self,
+                                ThinVarImpl prev_var_impl,
+                                FetchInfo fetch_info) except -1:
+        """
+        When a query is re-executed but the data type of a column has changed
+        the server returns the type information of the new type. However, if
+        the data type returned now is a CLOB or BLOB and the data type
+        previously returned was CHAR/VARCHAR/RAW (or the equivalent long
+        types), then the server returns the data as LONG (RAW), similarly to
+        what happens when a define is done to return CLOB/BLOB as string/bytes.
+        Detect this situation and adjust the fetch type appropriately.
+        """
+        cdef:
+            FetchInfo prev_fetch_info = prev_var_impl._fetch_info
+            uint8_t csfrm = prev_var_impl.dbtype._csfrm
+            uint8_t type_num
+        if fetch_info._dbtype._ora_type_num == TNS_DATA_TYPE_CLOB \
+                and prev_fetch_info._dbtype._ora_type_num in \
+                        (TNS_DATA_TYPE_CHAR, TNS_DATA_TYPE_VARCHAR,
+                         TNS_DATA_TYPE_LONG):
+            type_num = TNS_DATA_TYPE_LONG
+            fetch_info._dbtype = DbType._from_ora_type_and_csfrm(type_num,
+                                                                 csfrm)
+        elif fetch_info._dbtype._ora_type_num == TNS_DATA_TYPE_BLOB \
+                and prev_fetch_info._dbtype._ora_type_num in \
+                        (TNS_DATA_TYPE_RAW, TNS_DATA_TYPE_LONG_RAW):
+            type_num = TNS_DATA_TYPE_LONG_RAW
+            fetch_info._dbtype = DbType._from_ora_type_and_csfrm(type_num,
+                                                                 csfrm)
 
     cdef object _create_cursor_from_describe(self, ReadBuffer buf,
                                              object cursor=None):
@@ -529,18 +559,20 @@ cdef class MessageWithData(Message):
             ThinCursorImpl cursor_impl = <ThinCursorImpl> cursor._impl
             uint32_t num_bytes, num_columns, i
             object type_handler, var
-            ThinVarImpl var_impl
             FetchInfo fetch_info
-            bint nulls_allowed
+            list prev_fetch_vars
             str message
         buf.read_ub4()                      # max row size
         num_columns = buf.read_ub4()
+        prev_fetch_vars = cursor_impl.fetch_vars
         cursor_impl.fetch_vars = cpython.PyList_New(num_columns)
         buf.skip_bytes(1)
         type_handler = cursor_impl.outputtypehandler \
                 or cursor_impl._conn_impl.outputtypehandler
         for i in range(num_columns):
             fetch_info = self._process_column_info(buf, cursor_impl)
+            if prev_fetch_vars is not None:
+                self._adjust_fetch_info(prev_fetch_vars[i]._impl, fetch_info)
             var = cursor_impl._get_fetch_var(cursor, type_handler, fetch_info)
             cpython.Py_INCREF(var)
             cpython.PyList_SET_ITEM(cursor_impl.fetch_vars, i, var)
