@@ -299,12 +299,11 @@ cdef class MessageWithData(Message):
 
     cdef int _write_bind_params(self, WriteBuffer buf, list params) except -1:
         cdef:
-            bint returning_only, all_values_null = False
+            bint returning_only = True, all_values_null = True
             list bind_vars, bind_vals
             uint32_t i
             BindInfo bind_info
         bind_vars = []
-        returning_only = True
         for bind_info in params:
             if not bind_info._is_return_bind:
                 returning_only = False
@@ -312,7 +311,7 @@ cdef class MessageWithData(Message):
             for i in range(len(bind_vals)):
                 if cpython.PyList_GET_ITEM(bind_vals, i) is not \
                         <cpython.ref.PyObject*> None:
-                    all_values_null = True
+                    all_values_null = False
                     break
             bind_vars.append(bind_info._bind_var)
         self._write_column_metadata(buf, bind_vars)
@@ -323,6 +322,7 @@ cdef class MessageWithData(Message):
             buf.write_uint8(TNS_MSG_TYPE_ROW_DATA)
             buf.write_uint8(TNS_ESCAPE_CHAR)
             buf.write_uint8(1)
+
         # write parameter values unless statement contains only returning binds
         elif not returning_only:
             for i in range(self.num_execs):
