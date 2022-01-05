@@ -566,7 +566,8 @@ cdef class MessageWithData(Message):
         num_columns = buf.read_ub4()
         prev_fetch_vars = cursor_impl.fetch_vars
         cursor_impl.fetch_vars = cpython.PyList_New(num_columns)
-        buf.skip_bytes(1)
+        if num_columns > 0:
+            buf.skip_bytes(1)
         type_handler = cursor_impl.outputtypehandler \
                 or cursor_impl._conn_impl.outputtypehandler
         for i in range(num_columns):
@@ -641,11 +642,11 @@ cdef class MessageWithData(Message):
         It indicates whether binds are IN only, IN/OUT or OUT only.
         """
         cdef:
-            uint32_t i, temp, num_bytes
+            uint32_t i, num_binds, num_bytes
             BindInfo bind_info
             bint has_in_bind = False
         buf.skip_bytes(1)                   # flag
-        temp = buf.read_ub2()               # num requests
+        num_binds = buf.read_ub2()          # num requests
         self.row_index = buf.read_ub4()     # iter num
         buf.read_ub4()                      # num iters this time
         buf.read_ub2()                      # uac buffer length
@@ -656,7 +657,7 @@ cdef class MessageWithData(Message):
         if num_bytes > 0:
             buf.skip_bytes(num_bytes)
         self.out_var_impls = []
-        for i in range(temp):               # bind directions
+        for i in range(num_binds):          # bind directions
             bind_info = self.cursor_impl._statement._bind_info_list[i]
             bind_info.bind_dir = buf.read_uint8()
             if bind_info.bind_dir == TNS_BIND_DIR_INPUT:
@@ -1541,6 +1542,8 @@ cdef class ExecuteMessage(MessageWithData):
                 buf.write_uint8(0)              # pointer (chunk ids)
                 buf.write_ub4(0)                # number of chunk ids
         if stmt._cursor_id == 0 or stmt._is_ddl:
+            if stmt._sql_bytes is None:
+                errors._raise_err(errors.ERR_INVALID_REF_CURSOR)
             buf.write_bytes(stmt._sql_bytes)
             buf.write_ub4(1)                # al8i4[0] parse
         else:

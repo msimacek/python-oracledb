@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 """
@@ -176,6 +176,22 @@ class TestCase(test_env.BaseTestCase):
                             [string_val, var])
         ref_cursor = var.getvalue()
         self.assertEqual(ref_cursor.fetchall(), [(string_val,)])
+
+    def test_1310_unassigned_ref_cursor(self):
+        "1310 - bind a REF cursor but never open it"
+        ref_cursor_var = self.cursor.var(oracledb.DB_TYPE_CURSOR)
+        self.cursor.execute("""
+                begin
+                    if false then
+                        open :cursor for
+                            select user
+                            from dual;
+                    end if;
+                end;""",
+                cursor=ref_cursor_var)
+        ref_cursor = ref_cursor_var.getvalue()
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4025:",
+                               ref_cursor.fetchall)
 
 if __name__ == "__main__":
     test_env.run_test_cases()

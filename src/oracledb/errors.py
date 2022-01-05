@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 from . import exceptions
@@ -140,6 +140,7 @@ ERR_INVALID_PROTOCOL = 4021
 ERR_INVALID_POOL_PURITY = 4022
 ERR_CANNOT_PARSE_EZCONNECT_STRING = 4023
 ERR_CALL_TIMEOUT_EXCEEDED = 4024
+ERR_INVALID_REF_CURSOR = 4025
 
 # error numbers that result in InternalError
 ERR_MESSAGE_TYPE_UNKNOWN = 5000
@@ -158,6 +159,7 @@ ERR_ORACLE_ERROR_XREF = {
     24349: ERR_ARRAY_DML_ROW_COUNTS_NOT_ENABLED,
     24459: ERR_POOL_NO_CONNECTION_AVAILABLE,
     24496: ERR_POOL_NO_CONNECTION_AVAILABLE,
+    24338: ERR_INVALID_REF_CURSOR,
 }
 
 # ODPI-C error number cross reference
@@ -216,6 +218,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_INVALID_POOL_PURITY: "invalid pool purity: {purity}",
     ERR_INVALID_PROTOCOL: "invalid protocol: {protocol}",
     ERR_INVALID_REDIRECT_DATA: "invalid redirect data: {data}",
+    ERR_INVALID_REF_CURSOR: \
+            "invalid REF cursor (never opened in PL/SQL block)",
     ERR_INVALID_SERVER_CERT_DN: \
             "the distinguished name (DN) on the server certificate does not " \
             "match the expected value",
