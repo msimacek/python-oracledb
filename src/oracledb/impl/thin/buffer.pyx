@@ -2,13 +2,7 @@
 # Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
-import decimal
-
-from libc.string cimport memcpy, memset
-
 ctypedef unsigned char char_type
-
-include "bswap.pxd"
 
 DEF PACKET_HEADER_SIZE = 8
 DEF NUMBER_AS_TEXT_CHARS = 172
@@ -16,10 +10,96 @@ DEF NUMBER_MAX_DIGITS = 40
 DEF BUFFER_CHUNK_SIZE = 65536
 DEF CHUNKED_BYTES_CHUNK_SIZE = 65536
 
+DEF BYTE_ORDER_LSB = 1
+DEF BYTE_ORDER_MSB = 2
+
+cdef int MACHINE_BYTE_ORDER = BYTE_ORDER_MSB \
+        if sys.byteorder == "big" else BYTE_ORDER_LSB
+
 cdef struct BytesChunk:
     char_type *ptr
     uint32_t length
     uint32_t allocated_length
+
+
+cdef inline uint16_t bswap16(uint16_t value):
+    """
+    Swap the order of bytes for a 16-bit integer.
+    """
+    return ((value << 8) & 0xff00) | ((value >> 8) & 0x00ff)
+
+
+cdef inline uint32_t bswap32(uint32_t value):
+    """
+    Swap the order of bytes for a 32-bit integer.
+    """
+    return (
+            ((value << 24) & 0xff000000) |
+            ((value << 8) & 0x00ff0000) |
+            ((value >> 8) & 0x0000ff00) |
+            ((value >> 24) & 0x000000ff)
+    )
+
+
+cdef inline uint64_t bswap64(uint64_t value):
+    """
+    Swap the order of bytes for a 64-bit integer.
+    """
+    return (
+        ((value << 56) & 0xff00000000000000ULL) |
+        ((value << 40) & 0x00ff000000000000ULL) |
+        ((value << 24) & 0x0000ff0000000000ULL) |
+        ((value << 8) & 0x000000ff00000000ULL) |
+        ((value >> 8) & 0x00000000ff000000ULL) |
+        ((value >> 24) & 0x0000000000ff0000ULL) |
+        ((value >> 40) & 0x000000000000ff00ULL) |
+        ((value >> 56) & 0x00000000000000ffULL)
+    )
+
+
+cdef inline void pack_uint16(char_type *buf, uint16_t x, int order):
+    """
+    Pack a 16-bit integer into the buffer using the specified type order.
+    """
+    (<uint16_t*> buf)[0] = x if order == MACHINE_BYTE_ORDER else bswap16(x)
+
+
+cdef inline void pack_uint32(char_type *buf, uint32_t x, int order):
+    """
+    Pack a 32-bit integer into the buffer using the specified type order.
+    """
+    (<uint32_t*> buf)[0] = x if order == MACHINE_BYTE_ORDER else bswap32(x)
+
+
+cdef inline void pack_uint64(char_type *buf, uint64_t x, int order):
+    """
+    Pack a 64-bit integer into the buffer using the specified type order.
+    """
+    (<uint64_t*> buf)[0] = x if order == MACHINE_BYTE_ORDER else bswap64(x)
+
+
+cdef inline uint16_t unpack_uint16(const char_type *buf, int order):
+    """
+    Unpacks a 16-bit integer from the buffer using the specified byte order.
+    """
+    cdef uint16_t raw_value = (<uint16_t*> buf)[0]
+    return raw_value if order == MACHINE_BYTE_ORDER else bswap16(raw_value)
+
+
+cdef inline uint32_t unpack_uint32(const char_type *buf, int order):
+    """
+    Unpacks a 32-bit integer from the buffer using the specified byte order.
+    """
+    cdef uint32_t raw_value = (<uint32_t*> buf)[0]
+    return raw_value if order == MACHINE_BYTE_ORDER else bswap32(raw_value)
+
+
+cdef inline uint64_t unpack_uint64(const char_type *buf, int order):
+    """
+    Unpacks a 64-bit integer from the buffer using the specified byte order.
+    """
+    cdef uint64_t raw_value = (<uint64_t*> buf)[0]
+    return raw_value if order == MACHINE_BYTE_ORDER else bswap64(raw_value)
 
 
 @cython.final
