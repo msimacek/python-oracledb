@@ -300,21 +300,21 @@ cdef class MessageWithData(Message):
     cdef int _write_bind_params(self, WriteBuffer buf, list params) except -1:
         cdef:
             bint returning_only = True, all_values_null = True
-            list bind_vars, bind_vals
+            list bind_var_impls, bind_vals
             uint32_t i
             BindInfo bind_info
-        bind_vars = []
+        bind_var_impls = []
         for bind_info in params:
             if not bind_info._is_return_bind:
                 returning_only = False
-            bind_vals = bind_info._bind_var.values
+            bind_vals = bind_info._bind_var_impl.values
             for i in range(len(bind_vals)):
                 if cpython.PyList_GET_ITEM(bind_vals, i) is not \
                         <cpython.ref.PyObject*> None:
                     all_values_null = False
                     break
-            bind_vars.append(bind_info._bind_var)
-        self._write_column_metadata(buf, bind_vars)
+            bind_var_impls.append(bind_info._bind_var_impl)
+        self._write_column_metadata(buf, bind_var_impls)
 
         # plsql batch executions without bind values
         if self.cursor_impl._statement._is_plsql and self.num_execs > 1 \
@@ -343,7 +343,7 @@ cdef class MessageWithData(Message):
             for bind_info in statement._bind_info_list:
                 if not bind_info._is_return_bind:
                     continue
-                self.out_var_impls.append(bind_info._bind_var._impl)
+                self.out_var_impls.append(bind_info._bind_var_impl)
         elif statement._is_query:
             self.in_fetch = True
             cursor_impl._more_rows_to_fetch = True
@@ -663,7 +663,7 @@ cdef class MessageWithData(Message):
             if bind_info.bind_dir == TNS_BIND_DIR_INPUT:
                 has_in_bind = True
                 continue
-            self.out_var_impls.append(bind_info._bind_var._impl)
+            self.out_var_impls.append(bind_info._bind_var_impl)
         if self.cursor_impl._statement._is_plsql and \
                 self.out_var_impls and has_in_bind:
             self.cursor_impl._statement._plsql_multiple_execs = True
@@ -763,13 +763,11 @@ cdef class MessageWithData(Message):
             buf.skip_bytes(num_bytes + 1)   # rxhrid
 
     cdef int _write_column_metadata(self, WriteBuffer buf,
-                                    list bind_vars) except -1:
+                                    list bind_var_impls) except -1:
         cdef:
             uint8_t ora_type_num, flag
             ThinVarImpl var_impl
-            object var
-        for var in bind_vars:
-            var_impl = <ThinVarImpl> var._impl
+        for var_impl in bind_var_impls:
             ora_type_num = var_impl.dbtype._ora_type_num
             flag = TNS_BIND_USE_INDICATORS | TNS_BIND_USE_LENGTH
             if var_impl.is_array:
@@ -874,12 +872,10 @@ cdef class MessageWithData(Message):
             uint32_t i, num_elements, offset = self.offset
             ThinVarImpl var_impl
             BindInfo bind_info
-            object var
         for i, bind_info in enumerate(params):
             if bind_info._is_return_bind:
                 continue
-            var = bind_info._bind_var
-            var_impl = <ThinVarImpl> var._impl
+            var_impl = bind_info._bind_var_impl
             if var_impl.is_array:
                 num_elements = var_impl.num_elements_in_array
                 buf.write_ub4(num_elements)
@@ -1440,6 +1436,7 @@ cdef class ExecuteMessage(MessageWithData):
             Statement stmt = self.cursor_impl._statement
             ThinCursorImpl cursor_impl = self.cursor_impl
             list params = stmt._bind_info_list
+            list fetch_var_impls
 
         # determine the options to use for the execute
         options = 0
@@ -1567,7 +1564,8 @@ cdef class ExecuteMessage(MessageWithData):
         buf.write_ub4(0)                    # al8i4[11]
         buf.write_ub4(0)                    # al8i4[12]
         if stmt._requires_define:
-            self._write_column_metadata(buf, self.cursor_impl.fetch_vars)
+            fetch_var_impls = [v._impl for v in self.cursor_impl.fetch_vars]
+            self._write_column_metadata(buf, fetch_var_impls)
         elif num_params > 0:
             self._write_bind_params(buf, params)
 
@@ -1583,7 +1581,7 @@ cdef class ExecuteMessage(MessageWithData):
 
         if params:
             if not stmt._is_query:
-                self.out_var_impls = [info._bind_var._impl \
+                self.out_var_impls = [info._bind_var_impl \
                                       for info in params \
                                       if info.bind_dir != TNS_BIND_DIR_INPUT]
             params = [info for info in params \

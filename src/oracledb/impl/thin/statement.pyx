@@ -31,7 +31,7 @@ cdef class BindInfo:
         bint is_array
         int16_t scale
         uint8_t csfrm
-        object _bind_var
+        ThinVarImpl _bind_var_impl
 
     def __cinit__(self, str name, bint is_return_bind):
         self._bind_name = name
@@ -177,7 +177,7 @@ cdef class Statement:
                 self._is_returning = True
                 self._add_binds(returning_sql, is_return_bind=True)
 
-    cdef int _set_var(self, BindInfo bind_info, object var,
+    cdef int _set_var(self, BindInfo bind_info, ThinVarImpl var_impl,
                       ThinCursorImpl cursor_impl) except -1:
         """
         Set the variable on the bind information and copy across metadata that
@@ -185,9 +185,7 @@ cdef class Statement:
         statement as requiring a full execute. In addition, binding a REF
         cursor also requires a full execute.
         """
-        cdef:
-            ThinVarImpl var_impl = <ThinVarImpl> var._impl
-            object value
+        cdef object value
         if var_impl.dbtype._ora_type_num == TNS_DATA_TYPE_CURSOR:
             for value in var_impl.values:
                 if value is not None and value._impl is cursor_impl:
@@ -210,4 +208,4 @@ cdef class Statement:
             bind_info.precision = var_impl.precision
             bind_info.scale = var_impl.scale
             self._requires_full_execute = True
-        bind_info._bind_var = var
+        bind_info._bind_var_impl = var_impl

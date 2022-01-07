@@ -76,7 +76,7 @@ cdef class ThinVarImpl(BaseVarImpl):
                 errors._raise_err(errors.ERR_INVALID_BIND_NAME, name=name)
             var = var_list[name]
             for bind_info in bind_info_dict[normalized_name]:
-                stmt._set_var(bind_info, var, thin_cursor_impl)
+                stmt._set_var(bind_info, var._impl, thin_cursor_impl)
 
         # bind by position
         else:
@@ -87,4 +87,4 @@ cdef class ThinVarImpl(BaseVarImpl):
                                   expected_num=num_binds, actual_num=num_vars)
             idx = pos - 1
             bind_info = bind_info_list[idx]
-            stmt._set_var(bind_info, var_list[idx], thin_cursor_impl)
+            stmt._set_var(bind_info, var_list[idx]._impl, thin_cursor_impl)
