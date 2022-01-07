@@ -1590,10 +1590,10 @@ cdef class ExecuteMessage(MessageWithData):
         if self.function_code == TNS_FUNC_REEXECUTE_AND_FETCH:
             exec_flags_1 |= TNS_EXEC_OPTION_EXECUTE | \
                             TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
-            num_iters = self.cursor.prefetchrows
+            num_iters = self.cursor_impl.prefetchrows
             self.cursor_impl._fetch_array_size = num_iters
         else:
-            if self.cursor.connection.autocommit:
+            if self.conn_impl.autocommit:
                 exec_flags_2 |= TNS_EXEC_OPTION_COMMIT_REEXECUTE
             num_iters = self.num_execs
 
