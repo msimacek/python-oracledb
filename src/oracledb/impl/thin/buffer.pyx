@@ -255,7 +255,7 @@ cdef class ReadBuffer:
     def __releasebuffer__(self, Py_buffer *buf):
         self._view_count -= 1
 
-    cdef int _convert_base64(self, bytearray result, long value, int size,
+    cdef int _convert_base64(self, char_type *result, long value, int size,
                              int offset):
         """
         Converts every 6 bits into a character, from left to right. This is
@@ -719,9 +719,9 @@ cdef class ReadBuffer:
 
     cdef object read_rowid(self):
         cdef:
+            char_type result[TNS_MAX_ROWID_LENGTH]
             uint16_t partition_id, slot_num
             uint32_t rba, block_num
-            bytearray result
             int offset = 0
         rba = self.read_ub4()
         partition_id = self.read_ub2()
@@ -729,12 +729,11 @@ cdef class ReadBuffer:
         block_num = self.read_ub4()
         slot_num = self.read_ub2()
         if rba != 0 or partition_id != 0 or block_num != 0 or slot_num != 0:
-            result = bytearray(TNS_MAX_ROWID_LENGTH)
             offset = self._convert_base64(result, rba, 6, offset)
             offset = self._convert_base64(result, partition_id, 3, offset)
             offset = self._convert_base64(result, block_num, 6, offset)
             offset = self._convert_base64(result, slot_num, 3, offset)
-            return bytes(result).decode()
+            return result[:TNS_MAX_ROWID_LENGTH].decode()
 
     cdef object read_urowid(self, bytes input_bytes):
         cdef:
