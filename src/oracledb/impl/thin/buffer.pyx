@@ -518,15 +518,15 @@ cdef class ReadBuffer:
     cdef int8_t read_int8(self) except *:
         return <int8_t> self.read_uint8()
 
-    cdef uint16_t read_uint16(self, byte_order=BYTE_ORDER_MSB) except *:
+    cdef uint16_t read_uint16(self, int byte_order=BYTE_ORDER_MSB) except *:
         cdef const char_type *ptr = self._get_raw(2)
         return unpack_uint16(ptr, byte_order)
 
-    cdef uint32_t read_uint32(self, byte_order=BYTE_ORDER_MSB) except *:
+    cdef uint32_t read_uint32(self, int byte_order=BYTE_ORDER_MSB) except *:
         cdef const char_type *ptr = self._get_raw(4)
         return unpack_uint32(ptr, byte_order)
 
-    cdef uint32_t read_uint64(self, byte_order=BYTE_ORDER_MSB) except *:
+    cdef uint32_t read_uint64(self, int byte_order=BYTE_ORDER_MSB) except *:
         cdef const char_type *ptr = self._get_raw(8)
         return unpack_uint64(ptr, byte_order)
 
