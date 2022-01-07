@@ -34,7 +34,7 @@ cdef inline uint32_t bswap32(uint32_t value):
     Swap the order of bytes for a 32-bit integer.
     """
     return (
-            ((value << 24) & 0xff000000) |
+            ((value << 24) & (<uint32_t> 0xff000000)) |
             ((value << 8) & 0x00ff0000) |
             ((value >> 8) & 0x0000ff00) |
             ((value >> 24) & 0x000000ff)
@@ -46,7 +46,7 @@ cdef inline uint64_t bswap64(uint64_t value):
     Swap the order of bytes for a 64-bit integer.
     """
     return (
-        ((value << 56) & 0xff00000000000000ULL) |
+        ((value << 56) & (<uint64_t> 0xff00000000000000ULL)) |
         ((value << 40) & 0x00ff000000000000ULL) |
         ((value << 24) & 0x0000ff0000000000ULL) |
         ((value << 8) & 0x000000ff00000000ULL) |
