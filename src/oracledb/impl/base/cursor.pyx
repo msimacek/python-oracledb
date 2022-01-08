@@ -202,14 +202,14 @@ cdef class BaseCursorImpl:
                 var_impl = self._create_var_impl()
                 var_impl.num_elements = num_elements
                 var_impl.dbtype = orig_var_impl.dbtype
-                var_impl._objtype = orig_var_impl._objtype
+                var_impl.objtype = orig_var_impl.objtype
                 var_impl.is_array = orig_var_impl.is_array
                 var_impl.size = orig_var_impl.size
                 var_impl.buffer_size = orig_var_impl.buffer_size
                 var_impl.inconverter = orig_var_impl.inconverter
                 var_impl.outconverter = orig_var_impl.outconverter
                 var_impl.values = [None] * num_elements
-                var = Var._from_impl(var_impl, orig_var._type)
+                var = Var._from_impl(var_impl)
             try:
                 var_impl.set_value(pos, value)
                 return var
@@ -372,8 +372,7 @@ cdef class BaseCursorImpl:
                 and impl._preferred_num_type == NUM_TYPE_FLOAT:
             if scale == 0 or (scale == -127 and precision == 0):
                 impl._preferred_num_type = NUM_TYPE_INT
-        typ = impl._objtype if impl._objtype is not None else impl.dbtype
-        return Var._from_impl(impl, typ)
+        return Var._from_impl(impl)
 
     @utils.CheckImpls("executing a statement")
     def execute(self, cursor):

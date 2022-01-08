@@ -82,8 +82,8 @@ cdef class ThickVarImpl(BaseVarImpl):
         if self._handle != NULL:
             dpiVar_release(self._handle)
             self._handle = NULL
-        if self._objtype is not None:
-            obj_type_impl = <ThickDbObjectTypeImpl> self._objtype
+        if self.objtype is not None:
+            obj_type_impl = <ThickDbObjectTypeImpl> self.objtype
             obj_type_handle = obj_type_impl._handle
         self._native_type_num = _get_native_type_num(self.dbtype)
         if dpiConn_newVar(conn_impl._handle, self.dbtype.num,
@@ -160,8 +160,8 @@ cdef class ThickVarImpl(BaseVarImpl):
                 else:
                     dbvalue = &data.value
                 buf = StringBuffer()
-                _convert_from_python(value, self.dbtype, self._objtype,
-                                     dbvalue, buf, self, pos)
+                _convert_from_python(value, self.dbtype, self.objtype, dbvalue,
+                                     buf, self, pos)
                 if needs_set:
                     as_bytes = &dbvalue.asBytes
                     if dpiVar_setFromBytes(self._handle, pos, as_bytes.ptr,
@@ -218,7 +218,7 @@ cdef class ThickVarImpl(BaseVarImpl):
                                                in_fetch)
             else:
                 value = _convert_to_python(conn._impl, self.dbtype,
-                                           self._objtype, &data.value,
+                                           self.objtype, &data.value,
                                            self._preferred_num_type,
                                            self.bypass_decode)
             if self.outconverter:

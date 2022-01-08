@@ -35,7 +35,7 @@ cdef class BaseVarImpl:
             self.dbtype = apitype.dbtypes[0]
         elif isinstance(typ, DbObjectType):
             self.dbtype = DB_TYPE_OBJECT
-            self._objtype = typ._impl
+            self.objtype = typ._impl
         elif not isinstance(typ, type):
             errors._raise_err(errors.ERR_EXPECTING_TYPE)
         elif typ is int:
@@ -140,12 +140,12 @@ cdef class BaseVarImpl:
             elif dbtype is DB_TYPE_OBJECT:
                 if not isinstance(value, DbObject):
                     raise TypeError("expecting DbObject")
-                if value._impl.type != self._objtype:
+                if value._impl.type != self.objtype:
                     errors._raise_err(errors.ERR_WRONG_OBJECT_TYPE,
                                       actual_schema=value.type.schema,
                                       actual_name=value.type.name,
-                                      expected_schema=self._objtype.schema,
-                                      expected_name=self._objtype.name)
+                                      expected_schema=self.objtype.schema,
+                                      expected_name=self.objtype.name)
             elif dbtype is DB_TYPE_CURSOR:
                 if not isinstance(value, Cursor):
                     raise TypeError("expecting cursor")

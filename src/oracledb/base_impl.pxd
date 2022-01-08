@@ -139,7 +139,7 @@ cdef class BaseVarImpl:
         public uint32_t num_elements_in_array
         readonly DbType dbtype
         readonly list values
-        BaseDbObjectTypeImpl _objtype
+        readonly BaseDbObjectTypeImpl objtype
         int _preferred_num_type
         FetchInfo _fetch_info
         bint _is_value_set

@@ -20,10 +20,10 @@ class Var:
         return f"<oracledb.Var of type {typ.name} with value {repr(value)}>"
 
     @classmethod
-    def _from_impl(cls, impl, typ):
+    def _from_impl(cls, impl):
         var = cls.__new__(cls)
         var._impl = impl
-        var._type = typ
+        var._type = impl.objtype if impl.objtype is not None else impl.dbtype
         return var
 
     @property
