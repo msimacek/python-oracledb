@@ -94,7 +94,7 @@ cdef class BaseCursorImpl:
             value = var_impl.values[self._buffer_index]
             cpython.Py_INCREF(value)
             cpython.PyTuple_SET_ITEM(row, i, value)
-        if self.rowfactory:
+        if self.rowfactory is not None:
             row = self.rowfactory(*row)
         self._buffer_index += 1
         self._buffer_rowcount -= 1
