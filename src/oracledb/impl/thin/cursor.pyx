@@ -45,8 +45,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
             if var is not None:
                 self._verify_var(var)
         if var is None:
-            var = self._create_default_fetch_var(fetch_info._dbtype,
-                                                 fetch_info)
+            var = self._create_default_fetch_var(fetch_info)
         var_impl = <ThinVarImpl> var._impl
         var_impl._fetch_info = fetch_info
         if var_impl.dbtype._ora_type_num != fetch_info._dbtype._ora_type_num:

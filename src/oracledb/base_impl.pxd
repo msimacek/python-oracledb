@@ -86,8 +86,7 @@ cdef class BaseCursorImpl:
                                uint32_t num_elements=*,
                                uint32_t pos=*) except -1
     cdef int _close(self) except -1
-    cdef object _create_default_fetch_var(self, object typ,
-                                          FetchInfo fetch_info)
+    cdef object _create_default_fetch_var(self, FetchInfo fetch_info)
     cdef object _create_row(self)
     cdef BaseVarImpl _create_var_impl(self)
     cdef object _create_var_by_type(self, object value,
@@ -121,6 +120,7 @@ cdef class FetchInfo:
         bint _nulls_allowed
         str _name
         DbType _dbtype
+        BaseDbObjectTypeImpl _objtype
 
 
 cdef class BaseVarImpl:

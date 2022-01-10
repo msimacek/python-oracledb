@@ -49,14 +49,17 @@ cdef class BaseCursorImpl:
         """
         raise NotImplementedError()
 
-    cdef object _create_default_fetch_var(self, object typ,
-                                          FetchInfo fetch_info):
+    cdef object _create_default_fetch_var(self, FetchInfo fetch_info):
         """
         Creates a default variable given fetch information. The defaults for
         fetching LOBs and decimals are also consulted and adjustments made as
         needed.
         """
         cdef BaseVarImpl var_impl
+        if fetch_info._objtype is not None:
+            typ = DbObjectType._from_impl(fetch_info._objtype)
+        else:
+            typ = fetch_info._dbtype
         if defaults.fetch_decimals and typ is DB_TYPE_NUMBER:
             typ = decimal.Decimal
         elif not defaults.fetch_lobs:
