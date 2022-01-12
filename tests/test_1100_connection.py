@@ -161,7 +161,7 @@ class TestCase(test_env.BaseTestCase):
         connection = test_env.get_connection()
         if self.is_on_oracle_cloud(connection):
             self.skipTest("passwords on Oracle Cloud are strictly controlled")
-        new_password = "1" * 150
+        new_password = "1" * 1500
         self.assertRaisesRegex(oracledb.DatabaseError,
                                "^ORA-01017:|^ORA-00988:",
                                connection.changepassword,
