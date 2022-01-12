@@ -638,5 +638,11 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute(sql, [1, "test string 4352", int_var])
         self.assertEqual(int_var.values, [None])
 
+    def test_4353_single_quoted_strings(self):
+        "4353 - test bindnames with statement containing strings"
+        sql = '''select '"string_1"', :bind_1, 'string_2' from dual'''
+        self.cursor.prepare(sql)
+        self.assertEqual(self.cursor.bindnames(), ['BIND_1'])
+
 if __name__ == "__main__":
     test_env.run_test_cases()
