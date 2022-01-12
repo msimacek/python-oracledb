@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 """
@@ -41,6 +41,34 @@ class TestCase(test_env.BaseTestCase):
                                oracledb.Time, 12, 0, 0)
         self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3000:",
                                oracledb.TimeFromTicks, 100)
+
+    def test_1004_makedsn(self):
+        "1004 - test makedsn() with valid arguments"
+        format_string = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)" + \
+                        "(HOST=%s)(PORT=%d))(CONNECT_DATA=(SID=%s)))"
+        args = ("hostname", 1521, "TEST")
+        result = oracledb.makedsn(*args)
+        self.assertEqual(result, format_string % args)
+
+    def test_1004_makedsn_invalid_args(self):
+        "1004 - test makedsn() with invalid arguments"
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2020:",
+                               oracledb.makedsn, host="(invalid)", port=1521)
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2020:",
+                               oracledb.makedsn, host="host", port=1521,
+                               sid="(invalid)")
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2020:",
+                               oracledb.makedsn, host="host", port=1521,
+                               service_name="(invalid)")
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2020:",
+                               oracledb.makedsn, host="host", port=1521,
+                               region="(invalid)")
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2020:",
+                               oracledb.makedsn, host="host", port=1521,
+                               sharding_key="(invalid)")
+        self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2020:",
+                               oracledb.makedsn, host="host", port=1521,
+                               super_sharding_key="(invalid)")
 
 if __name__ == "__main__":
     test_env.run_test_cases()

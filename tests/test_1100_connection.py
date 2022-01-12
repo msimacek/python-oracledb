@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 """
@@ -212,14 +212,6 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPI-1034:",
                                connection2.close)
         connection.close()
-
-    def test_1114_make_dsn(self):
-        "1114 - test making a data source name from host, port and sid"
-        format_string = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)" + \
-                        "(HOST=%s)(PORT=%d))(CONNECT_DATA=(SID=%s)))"
-        args = ("hostname", 1521, "TEST")
-        result = oracledb.makedsn(*args)
-        self.assertEqual(result, format_string % args)
 
     def test_1115_single_arg(self):
         "1115 - connection to database with user, password, DSN together"

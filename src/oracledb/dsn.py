@@ -1,6 +1,17 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2021, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
+
+from . import errors
+
+def _check_arg(name, value):
+    """
+    Checks the argument to ensure that it does not contain (, ) or = as these
+    characters are not permitted within connect strings.
+    """
+    if "(" in value or ")" in value or "=" in value:
+        errors._raise_err(errors.ERR_INVALID_MAKEDSN_ARG, name=name)
+
 
 def makedsn(host: str, port: int, sid: str=None, service_name: str=None,
             region:str=None, sharding_key: str=None,
@@ -11,15 +22,21 @@ def makedsn(host: str, port: int, sid: str=None, service_name: str=None,
     file.
     """
     connect_data_parts = []
+    _check_arg("host", host)
     if sid is not None:
+        _check_arg("sid", sid)
         connect_data_parts.append(f"(SID={sid})")
     if service_name is not None:
+        _check_arg("service_name", service_name)
         connect_data_parts.append(f"(SERVICE_NAME={service_name})")
     if region is not None:
+        _check_arg("region", region)
         connect_data_parts.append(f"(REGION={region})")
     if sharding_key is not None:
+        _check_arg("sharding_key", sharding_key)
         connect_data_parts.append(f"(SHARDING_KEY={sharding_key})")
     if super_sharding_key is not None:
+        _check_arg("super_sharding_key", super_sharding_key)
         connect_data_parts.append(f"(SUPER_SHARDING_KEY={super_sharding_key})")
     connect_data = "".join(connect_data_parts)
     return f"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={host})" \

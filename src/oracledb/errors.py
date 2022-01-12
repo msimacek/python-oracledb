@@ -98,6 +98,7 @@ ERR_INCORRECT_VAR_ARRAYSIZE = 2016
 ERR_LIBRARY_ALREADY_INITIALIZED = 2017
 ERR_WALLET_FILE_MISSING = 2018
 ERR_THIN_CONNECTION_ALREADY_CREATED = 2019
+ERR_INVALID_MAKEDSN_ARG = 2020
 
 # error numbers that result in NotSupportedError
 ERR_TIME_NOT_SUPPORTED = 3000
@@ -214,6 +215,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_INVALID_BIND_NAME: \
             'no placeholder named "{name}" was found in the SQL text',
     ERR_INVALID_CONNECT_DESCRIPTOR: "invalid connect descriptor: {data}",
+    ERR_INVALID_MAKEDSN_ARG: "invalid value for makedsn() argument '{name}'",
     ERR_INVALID_NUMBER: "invalid number",
     ERR_INVALID_POOL_PURITY: "invalid pool purity: {purity}",
     ERR_INVALID_PROTOCOL: "invalid protocol: {protocol}",
