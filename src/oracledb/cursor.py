@@ -93,6 +93,7 @@ class Cursor:
             self._impl.bind_vars = None
         self._impl.prepare(statement, tag, cache_statement)
         self.statement = statement
+        self._impl.rowfactory = None
 
     def _verify_fetch(self) -> None:
         """
@@ -600,7 +601,7 @@ class Cursor:
         return self._impl.rowfactory
 
     @rowfactory.setter
-    def rowfactory(self, value: Callable):
+    def rowfactory(self, value: Callable) -> None:
         self._verify_open()
         self._impl.rowfactory = value
 
