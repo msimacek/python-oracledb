@@ -237,5 +237,72 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute(sql, values3)
         self.assertEqual(ret_bind.values, [['3']])
 
+    def test_3923_rowfactory_callable(self):
+        "3923 - test using rowfactory"
+        self.cursor.execute("truncate table TestTempTable")
+        self.cursor.execute("""
+                insert into TestTempTable (IntCol, StringCol1)
+                values (1, 'Test 1')""")
+        self.connection.commit()
+        self.cursor.execute("select IntCol, StringCol1 from TestTempTable")
+        column_names = [col[0] for col in self.cursor.description]
+        self.cursor.rowfactory = lambda *row: dict(zip(column_names, row))
+        self.assertEqual(self.cursor.fetchall(),
+                         [{'INTCOL': 1, 'STRINGCOL1': 'Test 1'}])
+
+    def test_3924_rowfactory_execute_same_sql(self):
+        "3924 - test executing same query after setting rowfactory"
+        self.cursor.execute("truncate table TestTempTable")
+        data = [
+            (1, 'Test 1'),
+            (2, 'Test 2')
+        ]
+        self.cursor.executemany("""
+                insert into TestTempTable (IntCol, StringCol1)
+                values (:1, :2)""", data)
+        self.connection.commit()
+        self.cursor.execute("select IntCol, StringCol1 from TestTempTable")
+        column_names = [col[0] for col in self.cursor.description]
+        self.cursor.rowfactory = lambda *row: dict(zip(column_names, row))
+        results_1 = self.cursor.fetchall()
+        self.cursor.execute("select IntCol, StringCol1 from TestTempTable")
+        results_2 = self.cursor.fetchall()
+        self.assertEqual(results_1, results_2)
+
+    def test_3925_rowfactory_execute_different_sql(self):
+        "3925 - test executing different query after setting rowfactory"
+        self.cursor.execute("truncate table TestTempTable")
+        data = [
+            (1, 'Test 1'),
+            (2, 'Test 2')
+        ]
+        self.cursor.executemany("""
+                insert into TestTempTable (IntCol, StringCol1)
+                values (:1, :2)""", data)
+        self.connection.commit()
+        self.cursor.execute("select IntCol, StringCol1 from TestTempTable")
+        column_names = [col[0] for col in self.cursor.description]
+        self.cursor.rowfactory = lambda *row: dict(zip(column_names, row))
+        self.cursor.execute("""
+                select IntCol, StringCol from TestSTrings
+                where IntCol between 1 and 3 order by IntCol""")
+        expected_data = [
+            (1, 'String 1'),
+            (2, 'String 2'),
+            (3, 'String 3')
+        ]
+        self.assertEqual(self.cursor.fetchall(), expected_data)
+
+    def test_3926_rowfactory_on_refcursor(self):
+        "3926 - test setting rowfactory on a REF cursor"
+        with self.connection.cursor() as cursor:
+            ref_cursor = cursor.callfunc("pkg_TestRefCursors.TestReturnCursor",
+                                         oracledb.DB_TYPE_CURSOR, [2])
+            column_names = [col[0] for col in ref_cursor.description]
+            ref_cursor.rowfactory = lambda *row: dict(zip(column_names, row))
+            self.assertEqual(ref_cursor.fetchall(),
+                             [{'INTCOL': 1, 'STRINGCOL': 'String 1'},
+                              {'INTCOL': 2, 'STRINGCOL': 'String 2'}])
+
 if __name__ == "__main__":
     test_env.run_test_cases()
