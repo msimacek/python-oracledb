@@ -291,7 +291,7 @@ cdef class MessageWithData(Message):
         cursor_impl._fetch_array_size = cursor.arraysize + cursor.prefetchrows
         cursor_impl._more_rows_to_fetch = True
         cursor_impl._statement._is_query = True
-        self._process_describe_info(buf, cursor)
+        self._process_describe_info(buf, cursor, cursor_impl)
         return cursor
 
     cdef bint _has_more_data(self, ReadBuffer buf):
@@ -332,8 +332,8 @@ cdef class MessageWithData(Message):
     cdef int _preprocess(self) except -1:
         cdef:
             ThinCursorImpl cursor_impl = self.cursor_impl
-            object type_handler, var
             ThinVarImpl var_impl
+            object type_handler
             Statement statement
             BindInfo bind_info
             ssize_t i
@@ -348,18 +348,15 @@ cdef class MessageWithData(Message):
             self.in_fetch = True
             cursor_impl._more_rows_to_fetch = True
             cursor_impl._buffer_rowcount = cursor_impl._buffer_index = 0
-            if cursor_impl.fetch_vars is not None:
-                type_handler = cursor_impl.outputtypehandler \
-                        or cursor_impl._conn_impl.outputtypehandler
+            if cursor_impl.fetch_var_impls is not None:
+                type_handler = cursor_impl._get_output_type_handler()
                 if type_handler is not statement._last_output_type_handler:
-                    for i, var in enumerate(cursor_impl.fetch_vars):
-                        var_impl = <ThinVarImpl> var._impl
-                        var = cursor_impl._get_fetch_var(self.cursor,
-                                                         type_handler,
-                                                         var_impl._fetch_info)
-                        cursor_impl.fetch_vars[i] = var
+                    for i, var_impl in enumerate(cursor_impl.fetch_var_impls):
+                        cursor_impl._create_fetch_var(self.cursor,
+                                                      type_handler, i,
+                                                      var_impl._fetch_info)
                     statement._last_output_type_handler = type_handler
-                self.out_var_impls = [v._impl for v in cursor_impl.fetch_vars]
+                self.out_var_impls = cursor_impl.fetch_var_impls
                 for var_impl in self.out_var_impls:
                     if var_impl.num_elements < cursor_impl._fetch_array_size:
                         var_impl.num_elements = cursor_impl._fetch_array_size
@@ -436,11 +433,7 @@ cdef class MessageWithData(Message):
         elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
                 or ora_type_num == TNS_DATA_TYPE_CHAR \
                 or ora_type_num == TNS_DATA_TYPE_LONG:
-            temp_bytes = buf.read_bytes(num_bytes)
-            if csfrm == 1:
-                column_value = temp_bytes.decode()
-            else:
-                column_value = temp_bytes.decode(TNS_ENCODING_UTF16)
+            column_value = buf.read_str(num_bytes, csfrm)
         elif ora_type_num == TNS_DATA_TYPE_RAW \
                 or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
             column_value = buf.read_bytes(num_bytes)
@@ -554,29 +547,28 @@ cdef class MessageWithData(Message):
         return fetch_info
 
     cdef int _process_describe_info(self, ReadBuffer buf,
-                                    object cursor) except -1:
+                                    object cursor,
+                                    ThinCursorImpl cursor_impl) except -1:
         cdef:
-            ThinCursorImpl cursor_impl = <ThinCursorImpl> cursor._impl
+            Statement stmt = cursor_impl._statement
             uint32_t num_bytes, num_columns, i
-            object type_handler, var
+            list prev_fetch_var_impls
             FetchInfo fetch_info
-            list prev_fetch_vars
+            object type_handler
             str message
         buf.read_ub4()                      # max row size
         num_columns = buf.read_ub4()
-        prev_fetch_vars = cursor_impl.fetch_vars
-        cursor_impl.fetch_vars = cpython.PyList_New(num_columns)
+        prev_fetch_var_impls = self.cursor_impl.fetch_var_impls
+        cursor_impl._init_fetch_vars(num_columns)
         if num_columns > 0:
             buf.skip_bytes(1)
-        type_handler = cursor_impl.outputtypehandler \
-                or cursor_impl._conn_impl.outputtypehandler
+        type_handler = cursor_impl._get_output_type_handler()
         for i in range(num_columns):
             fetch_info = self._process_column_info(buf, cursor_impl)
-            if prev_fetch_vars is not None:
-                self._adjust_fetch_info(prev_fetch_vars[i]._impl, fetch_info)
-            var = cursor_impl._get_fetch_var(cursor, type_handler, fetch_info)
-            cpython.Py_INCREF(var)
-            cpython.PyList_SET_ITEM(cursor_impl.fetch_vars, i, var)
+            if prev_fetch_var_impls is not None:
+                self._adjust_fetch_info(prev_fetch_var_impls[i], fetch_info)
+            cursor_impl._create_fetch_var(self.cursor, type_handler, i,
+                                          fetch_info)
         num_bytes = buf.read_ub4()
         if num_bytes > 0:
             buf.skip_bytes(num_bytes + 1)   # current date
@@ -587,8 +579,9 @@ cdef class MessageWithData(Message):
         num_bytes = buf.read_ub4()
         if num_bytes > 0:
             buf.skip_bytes(num_bytes + 1)   # dcbqcky
-        cursor_impl._statement._fetch_vars = cursor_impl.fetch_vars
-        cursor_impl._statement._last_output_type_handler = type_handler
+        stmt._fetch_vars = cursor_impl.fetch_vars
+        stmt._fetch_var_impls = cursor_impl.fetch_var_impls
+        stmt._last_output_type_handler = type_handler
 
     cdef int _process_error_info(self, ReadBuffer buf) except -1:
         cdef:
@@ -678,8 +671,8 @@ cdef class MessageWithData(Message):
             self.flush_out_binds = True
         elif message_type == TNS_MSG_TYPE_DESCRIBE_INFO:
             buf.skip_bytes(buf.read_uint8())
-            self._process_describe_info(buf, self.cursor)
-            self.out_var_impls = [v._impl for v in self.cursor_impl.fetch_vars]
+            self._process_describe_info(buf, self.cursor, self.cursor_impl)
+            self.out_var_impls = self.cursor_impl.fetch_var_impls
         elif message_type == TNS_MSG_TYPE_ERROR:
             self._process_error_info(buf)
         elif message_type == TNS_MSG_TYPE_BIT_VECTOR:
@@ -1436,7 +1429,6 @@ cdef class ExecuteMessage(MessageWithData):
             Statement stmt = self.cursor_impl._statement
             ThinCursorImpl cursor_impl = self.cursor_impl
             list params = stmt._bind_info_list
-            list fetch_var_impls
 
         # determine the options to use for the execute
         options = 0
@@ -1564,8 +1556,7 @@ cdef class ExecuteMessage(MessageWithData):
         buf.write_ub4(0)                    # al8i4[11]
         buf.write_ub4(0)                    # al8i4[12]
         if stmt._requires_define:
-            fetch_var_impls = [v._impl for v in self.cursor_impl.fetch_vars]
-            self._write_column_metadata(buf, fetch_var_impls)
+            self._write_column_metadata(buf, self.cursor_impl.fetch_var_impls)
         elif num_params > 0:
             self._write_bind_params(buf, params)
 

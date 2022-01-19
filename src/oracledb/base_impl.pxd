@@ -1,11 +1,19 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 # cython: language_level=3
 
 from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
+
+ctypedef fused BindVarCollection:
+    dict
+    list
+
+ctypedef fused BindVarKey:
+    str
+    ssize_t
 
 cdef enum:
     FETCH_MODE_ABSOLUTE = 0x0020
@@ -73,42 +81,49 @@ cdef class BaseCursorImpl:
         public object rowfactory
         public bint scrollable
         public list fetch_vars
+        public list fetch_var_impls
         public object bind_vars
+        public object bind_var_impls
         uint32_t _buffer_rowcount
         uint32_t _buffer_index
         uint32_t _fetch_array_size
         bint _more_rows_to_fetch
         bint _is_implicit_cursor
 
-    cdef int _bind_by_name(self, object cursor, dict params,
-                           uint32_t num_elements=*, uint32_t pos=*) except -1
-    cdef int _bind_by_position(self, object cursor, object params,
-                               uint32_t num_elements=*,
-                               uint32_t pos=*) except -1
+    cdef int _bind_type(self, BindVarCollection bind_vars,
+                        BindVarCollection bind_var_impls, BindVarKey key,
+                        object typ) except -1
+    cdef int _bind_type_by_name(self, dict params) except -1
+    cdef int _bind_type_by_position(self, tuple params) except -1
+    cdef int _bind_value(self, object cursor, object type_handler,
+                         BindVarCollection bind_vars,
+                         BindVarCollection bind_var_impls, BindVarKey key,
+                         object value, uint32_t num_elements,
+                         uint32_t pos) except -1
+    cdef int _bind_value_by_name(self, object cursor, object type_handler,
+                                 dict params, uint32_t num_elements,
+                                 uint32_t pos) except -1
+    cdef int _bind_value_by_position(self, object cursor, object type_handler,
+                                     object params, uint32_t num_elements,
+                                     uint32_t pos) except -1
     cdef int _close(self) except -1
-    cdef object _create_default_fetch_var(self, FetchInfo fetch_info)
+    cdef int _create_fetch_var(self, object cursor, object type_handler,
+                               ssize_t pos, FetchInfo fetch_info) except -1
     cdef object _create_row(self)
     cdef BaseVarImpl _create_var_impl(self)
-    cdef object _create_var_by_type(self, object value,
-                                    uint32_t num_elements=?)
-    cdef object _create_var_by_value(self, object cursor, object value,
-                                     uint32_t num_elements)
+    cdef BaseVarImpl _create_var_impl_from_type(self, object value)
+    cdef BaseVarImpl _create_var_impl_from_value(self, object value,
+                                                 uint32_t num_elements)
     cdef int _fetch_rows(self, object cursor) except -1
-    cdef object _get_bind_var(self, object cursor, uint32_t num_elements,
-                              uint32_t pos, object value, object orig_var)
-    cdef object _get_type_and_size(self, object value, uint32_t *size, bint
-                                   is_plsql=*)
+    cdef BaseConnImpl _get_conn_impl(self)
+    cdef object _get_input_type_handler(self)
+    cdef object _get_output_type_handler(self)
+    cdef int _init_fetch_vars(self, uint32_t num_columns) except -1
     cdef bint _is_plsql(self)
     cdef int _perform_binds(self, object conn, uint32_t num_execs=*) except -1
     cdef int _scroll(self, object conn, int32_t offset,
                      uint32_t mode) except -1
     cdef int _verify_var(self, object var) except -1
-    cpdef create_var(self, object typ, uint32_t size=*,
-                     uint32_t num_elements=*, object inconverter=*,
-                     object outconverter=*, str encoding_errors=*,
-                     bint bypass_decode=*, int16_t precision=*,
-                     int16_t scale=*, str name=*, bint nulls_allowed=*,
-                     bint is_array=*)
 
 
 cdef class FetchInfo:
@@ -146,8 +161,11 @@ cdef class BaseVarImpl:
 
     cdef int _bind(self, object conn, BaseCursorImpl cursor,
                    uint32_t num_execs, object name=*, uint32_t pos=*) except -1
+    cdef int _finalize_init(self) except -1
     cdef int _resize(self, uint32_t new_size) except -1
-    cdef int _set_type(self, object typ) except -1
+    cdef int _set_type_info_from_type(self, object typ) except -1
+    cdef int _set_type_info_from_value(self, object value,
+                                       bint is_plsql) except -1
     cdef int _set_single_value(self, uint32_t pos, object value) except -1
     cpdef set_value(self, uint32_t pos, object value)
 

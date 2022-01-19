@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -30,6 +30,10 @@ from .lob import LOB
 from .dbobject import DbObject, DbObjectType
 from .var import Var
 from .defaults import defaults
+
+cdef type VAR_TYPE = Var
+cdef type DB_OBJECT_TYPE = DbObject
+cdef type DB_OBJECT_TYPE_TYPE = DbObjectType
 
 cdef int32_t* INTEGRITY_ERROR_CODES = [
         1,          # unique constraint violated

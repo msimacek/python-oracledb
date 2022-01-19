@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 # Rules for named binds:
@@ -55,6 +55,7 @@ cdef class Statement:
         bint _is_returning
         list _bind_info_list
         list _fetch_vars
+        list _fetch_var_impls
         object _bind_info_dict
         object _last_output_type_handler
         bint _requires_full_execute

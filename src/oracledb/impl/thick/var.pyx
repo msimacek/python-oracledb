@@ -185,7 +185,9 @@ cdef class ThickVarImpl(BaseVarImpl):
         for i in range(num_elements):
             self._transform_element_from_python(i, self.values[i])
 
-    cdef object _transform_array_to_python(self, object conn,
+    cdef object _transform_array_to_python(self,
+                                           object conn,
+                                           ThickConnImpl conn_impl,
                                            uint32_t num_elements,
                                            dpiData *data):
         """
@@ -197,12 +199,15 @@ cdef class ThickVarImpl(BaseVarImpl):
             uint32_t i
         return_value = cpython.PyList_New(num_elements)
         for i in range(num_elements):
-            element_value = self._transform_element_to_python(conn, i, data)
+            element_value = self._transform_element_to_python(conn, conn_impl,
+                                                              i, data)
             cpython.Py_INCREF(element_value)
             cpython.PyList_SET_ITEM(return_value, i, element_value)
         return return_value
 
-    cdef object _transform_element_to_python(self, object conn,
+    cdef object _transform_element_to_python(self,
+                                             object conn,
+                                             ThickConnImpl conn_impl,
                                              uint32_t pos,
                                              dpiData *data,
                                              bint in_fetch=False):
@@ -217,15 +222,17 @@ cdef class ThickVarImpl(BaseVarImpl):
                 value = self._get_cursor_value(conn, &data.value, pos,
                                                in_fetch)
             else:
-                value = _convert_to_python(conn._impl, self.dbtype,
+                value = _convert_to_python(conn_impl, self.dbtype,
                                            self.objtype, &data.value,
                                            self._preferred_num_type,
                                            self.bypass_decode)
-            if self.outconverter:
+            if self.outconverter is not None:
                 value = self.outconverter(value)
             return value
 
-    cdef int _transform_to_python(self, object conn,
+    cdef int _transform_to_python(self,
+                                  object conn,
+                                  ThickConnImpl conn_impl,
                                   uint32_t num_elements,
                                   bint in_fetch=False,
                                   uint32_t offset=0) except -1:
@@ -249,10 +256,11 @@ cdef class ThickVarImpl(BaseVarImpl):
                                           &num_returned_rows,
                                           &returned_data) < 0:
                     _raise_from_odpi()
-                value = self._transform_array_to_python(conn,
+                value = self._transform_array_to_python(conn, conn_impl,
                                                         num_returned_rows,
                                                         returned_data)
             else:
-                value = self._transform_element_to_python(conn, i + offset,
+                value = self._transform_element_to_python(conn, conn_impl,
+                                                          i + offset,
                                                           self._data, in_fetch)
             self.values[i] = value

@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 ctypedef unsigned char char_type
@@ -269,16 +269,6 @@ cdef class ReadBuffer:
             value = value >> 6
         return offset + size
 
-    cdef inline object _convert_number(self, int preferred_num_type,
-                                       bint is_integer, str text):
-        if preferred_num_type == NUM_TYPE_INT and is_integer:
-            return int(text)
-        elif preferred_num_type == NUM_TYPE_DECIMAL:
-            return decimal.Decimal(text)
-        elif preferred_num_type == NUM_TYPE_STR:
-            return text
-        return float(text)
-
     cdef inline int _get_data_from_socket(self, object obj,
                                           ssize_t bytes_requested,
                                           ssize_t *bytes_read) except -1:
@@ -486,7 +476,7 @@ cdef class ReadBuffer:
             b7 = ~b7
         high_bits = b0 << 24 | b1 << 16 | b2 << 8 | b3
         low_bits = b4 << 24 | b5 << 16 | b6 << 8 | b7
-        all_bits = high_bits << 32 | (low_bits & 0xffffffff)
+        all_bits = high_bits << 32 | (low_bits & <uint64_t> 0xffffffff)
         double_ptr = <double*> &all_bits
         return double_ptr[0]
 
@@ -539,38 +529,52 @@ cdef class ReadBuffer:
     cdef uint64_t read_ub8(self) except *:
         return <uint64_t> self.read_oracle_int()
 
+    cdef int _read_bytes(self, ssize_t *num_bytes,
+                         const char_type **ptr) except -1:
+        """
+        Internal method used to read the specified number of bytes from the
+        network buffer. If the number of bytes requested is
+        TNS_LONG_LENGTH_INDICATOR, though, then a chunked read is performed.
+        """
+        cdef ssize_t temp_num_bytes
+        if num_bytes[0] != TNS_LONG_LENGTH_INDICATOR:
+            ptr[0] = self._get_raw(num_bytes[0])
+        else:
+            self._chunked_bytes_buf.start_chunked_read()
+            num_bytes[0] = 0
+            while True:
+                temp_num_bytes = self.read_ub4()
+                if temp_num_bytes == 0:
+                    break
+                num_bytes[0] += temp_num_bytes
+                self._get_raw(temp_num_bytes, in_chunked_read=True)
+            ptr[0] = self._chunked_bytes_buf.end_chunked_read()
+
     cdef bytes read_bytes(self, ssize_t num_bytes):
-        cdef:
-            ssize_t total_length
-            const char_type *ptr
-        if num_bytes != TNS_LONG_LENGTH_INDICATOR:
-            ptr = self._get_raw(num_bytes)
-            return ptr[:num_bytes]
-        self._chunked_bytes_buf.start_chunked_read()
-        total_length = 0
-        while True:
-            num_bytes = self.read_ub4()
-            if num_bytes == 0:
-                break
-            total_length += num_bytes
-            self._get_raw(num_bytes, in_chunked_read=True)
-        ptr = self._chunked_bytes_buf.end_chunked_read()
-        return ptr[:total_length]
+        cdef const char_type *ptr
+        self._read_bytes(&num_bytes, &ptr)
+        return ptr[:num_bytes]
 
     cdef object read_interval_ds(self, uint8_t num_bytes):
         cdef:
-            int32_t days, hours, minutes, second, total_seconds, fseconds
+            int32_t days, hours, minutes, seconds, total_seconds, fseconds
             const char_type *ptr = self._get_raw(num_bytes)
-        days = unpack_uint32(ptr, BYTE_ORDER_MSB) - TNS_DURATION_MID
-        fseconds = unpack_uint32(&ptr[7], BYTE_ORDER_MSB) - TNS_DURATION_MID
-        hours = ptr[4] - TNS_DURATION_OFFSET
-        minutes = ptr[5] - TNS_DURATION_OFFSET
-        seconds = ptr[6] - TNS_DURATION_OFFSET
+            uint8_t duration_offset = TNS_DURATION_OFFSET
+            uint32_t duration_mid = TNS_DURATION_MID
+        days = unpack_uint32(ptr, BYTE_ORDER_MSB) - duration_mid
+        fseconds = unpack_uint32(&ptr[7], BYTE_ORDER_MSB) - duration_mid
+        hours = ptr[4] - duration_offset
+        minutes = ptr[5] - duration_offset
+        seconds = ptr[6] - duration_offset
         total_seconds = hours * 60 * 60 + minutes * 60 + seconds
         return cydatetime.timedelta_new(days, total_seconds, fseconds // 1000)
 
-    cdef str read_str(self, ssize_t num_bytes):
-        return self.read_bytes(num_bytes).decode()
+    cdef str read_str(self, ssize_t num_bytes, int csfrm=TNS_CS_IMPLICIT):
+        cdef const char_type *ptr
+        self._read_bytes(&num_bytes, &ptr)
+        if csfrm == TNS_CS_IMPLICIT:
+            return ptr[:num_bytes].decode()
+        return ptr[:num_bytes].decode(TNS_ENCODING_UTF16)
 
     cdef object read_oracle_date(self, uint8_t num_bytes):
         cdef:
@@ -635,8 +639,21 @@ cdef class ReadBuffer:
         # a mantissa length of 0 implies a value of 0 (if positive) or a value
         # of -1e126 (if negative)
         if num_bytes == 1:
-            text = "0" if is_positive else "-1e126"
-            return self._convert_number(preferred_num_type, is_positive, text)
+            if is_positive:
+                if preferred_num_type == NUM_TYPE_INT:
+                    return 0
+                elif preferred_num_type == NUM_TYPE_DECIMAL:
+                    return decimal.Decimal(0)
+                elif preferred_num_type == NUM_TYPE_STR:
+                    return "0"
+                return 0.0
+            if preferred_num_type == NUM_TYPE_INT:
+                return -10 ** 126
+            elif preferred_num_type == NUM_TYPE_DECIMAL:
+                return decimal.Decimal("-1e126")
+            elif preferred_num_type == NUM_TYPE_STR:
+                return "-1e126"
+            return -1.0e126
 
         # check for the trailing 102 byte for negative numbers and, if present,
         # reduce the number of mantissa digits
@@ -713,9 +730,13 @@ cdef class ReadBuffer:
                 num_bytes += 1
 
         # convert result to an integer or a decimal number
-        text = cpython.PyBytes_FromStringAndSize(<char*> buf,
-                                                 num_bytes).decode()
-        return self._convert_number(preferred_num_type, is_integer, text)
+        if preferred_num_type == NUM_TYPE_INT and is_integer:
+            return int(buf[:num_bytes])
+        elif preferred_num_type == NUM_TYPE_DECIMAL:
+            return decimal.Decimal(buf[:num_bytes].decode())
+        elif preferred_num_type == NUM_TYPE_STR:
+            return buf[:num_bytes].decode()
+        return float(buf[:num_bytes])
 
     cdef object read_rowid(self):
         cdef:
