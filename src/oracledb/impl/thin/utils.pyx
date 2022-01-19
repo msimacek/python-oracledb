@@ -15,6 +15,10 @@ class ConnectConstants:
         self.sanitized_program_name = self._sanitize(self.program_name)
         self.sanitized_machine_name = self._sanitize(self.machine_name)
         self.sanitized_user_name = self._sanitize(self.user_name)
+        version_tuple = tuple(int(s) for s in constants.VERSION.split("."))
+        major_num, minor_num, patch_num = version_tuple
+        self.full_version_num = \
+                major_num << 24 | minor_num << 20 | patch_num << 12
 
     def _sanitize(self, value):
         """

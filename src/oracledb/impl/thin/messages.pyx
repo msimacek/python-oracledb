@@ -1275,7 +1275,7 @@ cdef class AuthMessage(Message):
             self._write_key_value(buf, "AUTH_SID",
                                   _connect_constants.user_name)
         else:
-            num_pairs = 4
+            num_pairs = 5
             if self.newpassword is not None:
                 num_pairs += 1
                 self.auth_mode |= TNS_AUTH_MODE_CHANGE_PASSWORD
@@ -1309,6 +1309,8 @@ cdef class AuthMessage(Message):
             driver_name = f"{constants.DRIVER_NAME} thn : {constants.VERSION}"
             self._write_key_value(buf, "SESSION_CLIENT_DRIVER_NAME",
                                   driver_name)
+            self._write_key_value(buf, "SESSION_CLIENT_VERSION",
+                                  str(_connect_constants.full_version_num))
             if self.cclass is not None:
                 self._write_key_value(buf, "AUTH_KPPL_CONN_CLASS", self.cclass)
             if self.purity != 0:
