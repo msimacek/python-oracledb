@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2021, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 from typing import Callable, Union, Type
@@ -20,10 +20,15 @@ class Var:
         return f"<oracledb.Var of type {typ.name} with value {repr(value)}>"
 
     @classmethod
-    def _from_impl(cls, impl):
+    def _from_impl(cls, impl, typ=None):
         var = cls.__new__(cls)
         var._impl = impl
-        var._type = impl.objtype if impl.objtype is not None else impl.dbtype
+        if typ is not None:
+            var._type = typ
+        elif impl.objtype is not None:
+            var._type = DbObjectType._from_impl(impl.objtype)
+        else:
+            var._type = impl.dbtype
         return var
 
     @property

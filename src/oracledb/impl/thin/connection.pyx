@@ -92,9 +92,8 @@ cdef class ThinConnImpl(BaseConnImpl):
         if statement._bind_info_list is not None:
             for bind_info in statement._bind_info_list:
                 bind_info._bind_var_impl = None
-        if statement._fetch_vars is not None:
-            for var in statement._fetch_vars:
-                var_impl = <BaseVarImpl> var._impl
+        if statement._fetch_var_impls is not None:
+            for var_impl in statement._fetch_var_impls:
                 var_impl.values = [None] * var_impl.num_elements
         with self._statement_cache_lock:
             if statement._return_to_cache:

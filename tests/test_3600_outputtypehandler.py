@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2021, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 """
@@ -93,7 +93,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3603_BINT_to_NUMBER(self):
         "3603 - test output type handler conversion from integer to number"
         self.__test_type_handler(oracledb.DB_TYPE_BINARY_INTEGER,
-                                 oracledb.DB_TYPE_NUMBER, 31, 31)
+                                 oracledb.DB_TYPE_NUMBER, 31, 31.0)
 
     def test_3604_VARCHAR_to_BINT(self):
         "3604 - output type handler conversion from varchar to integer"

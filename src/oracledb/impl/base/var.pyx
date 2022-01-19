@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 cdef class BaseVarImpl:
@@ -12,55 +12,26 @@ cdef class BaseVarImpl:
         """
         raise NotImplementedError()
 
+    cdef int _finalize_init(self) except -1:
+        """
+        Internal method that finalizes initialization of the variable.
+        """
+        if self.dbtype.default_size > 0:
+            if self.size == 0:
+                self.size = self.dbtype.default_size
+            self.buffer_size = self.size * self.dbtype._buffer_size_factor
+        else:
+            self.buffer_size = self.dbtype._buffer_size_factor
+        if self.num_elements == 0:
+            self.num_elements = 1
+        self.values = [None] * self.num_elements
+
     cdef int _resize(self, uint32_t new_size) except -1:
         """
         Resize the variable to the new size provided.
         """
         self.size = new_size
         self.buffer_size = new_size * self.dbtype._buffer_size_factor
-
-    cdef int _set_type(self, object typ) except -1:
-        """
-        Internal method used to set the database type associated with the
-        variable given a Python type.
-        """
-        cdef ApiType apitype
-        if typ is None:
-            self.dbtype = DB_TYPE_VARCHAR
-            self.size = 1
-        elif isinstance(typ, DbType):
-            self.dbtype = typ
-        elif isinstance(typ, ApiType):
-            apitype = typ
-            self.dbtype = apitype.dbtypes[0]
-        elif isinstance(typ, DbObjectType):
-            self.dbtype = DB_TYPE_OBJECT
-            self.objtype = typ._impl
-        elif not isinstance(typ, type):
-            errors._raise_err(errors.ERR_EXPECTING_TYPE)
-        elif typ is int:
-            self.dbtype = DB_TYPE_NUMBER
-            self._preferred_num_type = NUM_TYPE_INT
-        elif typ is float:
-            self.dbtype = DB_TYPE_NUMBER
-            self._preferred_num_type = NUM_TYPE_FLOAT
-        elif typ is str:
-            self.dbtype = DB_TYPE_VARCHAR
-        elif typ is bytes:
-            self.dbtype = DB_TYPE_RAW
-        elif typ is decimal.Decimal:
-            self.dbtype = DB_TYPE_NUMBER
-            self._preferred_num_type = NUM_TYPE_DECIMAL
-        elif typ is bool:
-            self.dbtype = DB_TYPE_BOOLEAN
-        elif typ is datetime.date:
-            self.dbtype = DB_TYPE_DATE
-        elif typ is datetime.datetime:
-            self.dbtype = DB_TYPE_TIMESTAMP
-        elif typ is datetime.timedelta:
-            self.dbtype = DB_TYPE_INTERVAL_DS
-        else:
-            errors._raise_err(errors.ERR_PYTHON_TYPE_NOT_SUPPORTED, typ=typ)
 
     cdef int _set_single_value(self, uint32_t pos, object value) except -1:
         """
@@ -150,6 +121,91 @@ cdef class BaseVarImpl:
                 if not isinstance(value, Cursor):
                     raise TypeError("expecting cursor")
         self.values[pos] = value
+
+    cdef int _set_type_info_from_type(self, object typ) except -1:
+        """
+        Sets the type and size of the variable given a Python type.
+        """
+        cdef ApiType apitype
+        if isinstance(typ, DbType):
+            self.dbtype = typ
+        elif isinstance(typ, ApiType):
+            apitype = typ
+            self.dbtype = apitype.dbtypes[0]
+        elif isinstance(typ, DB_OBJECT_TYPE_TYPE):
+            self.dbtype = DB_TYPE_OBJECT
+            self.objtype = typ._impl
+        elif not isinstance(typ, type):
+            errors._raise_err(errors.ERR_EXPECTING_TYPE)
+        elif typ is int:
+            self.dbtype = DB_TYPE_NUMBER
+            self._preferred_num_type = NUM_TYPE_INT
+        elif typ is float:
+            self.dbtype = DB_TYPE_NUMBER
+            self._preferred_num_type = NUM_TYPE_FLOAT
+        elif typ is str:
+            self.dbtype = DB_TYPE_VARCHAR
+        elif typ is bytes:
+            self.dbtype = DB_TYPE_RAW
+        elif typ is decimal.Decimal:
+            self.dbtype = DB_TYPE_NUMBER
+            self._preferred_num_type = NUM_TYPE_DECIMAL
+        elif typ is bool:
+            self.dbtype = DB_TYPE_BOOLEAN
+        elif typ is datetime.date:
+            self.dbtype = DB_TYPE_DATE
+        elif typ is datetime.datetime:
+            self.dbtype = DB_TYPE_TIMESTAMP
+        elif typ is datetime.timedelta:
+            self.dbtype = DB_TYPE_INTERVAL_DS
+        else:
+            errors._raise_err(errors.ERR_PYTHON_TYPE_NOT_SUPPORTED, typ=typ)
+
+    cdef int _set_type_info_from_value(self, object value,
+                                       bint is_plsql) except -1:
+        """
+        Sets the type and size of the variable given a Python value. This
+        method is called once for scalars and once per element in a list for
+        array values. If a different type is detected an error is raised.
+        """
+        cdef:
+            BaseDbObjectTypeImpl objtype = None
+            DbType dbtype = None
+            uint32_t size = 0
+        if value is None:
+            dbtype = DB_TYPE_VARCHAR
+            size = 1
+        elif isinstance(value, bool):
+            dbtype = DB_TYPE_BOOLEAN if is_plsql else DB_TYPE_BINARY_INTEGER
+        elif isinstance(value, str):
+            size = <uint32_t> len(value)
+            dbtype = DB_TYPE_VARCHAR
+        elif isinstance(value, bytes):
+            size = <uint32_t> len(value)
+            dbtype = DB_TYPE_RAW
+        elif isinstance(value, (int, float, decimal.Decimal)):
+            dbtype = DB_TYPE_NUMBER
+        elif isinstance(value, (datetime.date, datetime.datetime)):
+            dbtype = DB_TYPE_DATE
+        elif isinstance(value, datetime.timedelta):
+            dbtype = DB_TYPE_INTERVAL_DS
+        elif isinstance(value, DB_OBJECT_TYPE):
+            dbtype = DB_TYPE_OBJECT
+            objtype = value.type._impl
+        elif isinstance(value, LOB):
+            dbtype = value.type
+        elif isinstance(value, Cursor):
+            dbtype = DB_TYPE_CURSOR
+        else:
+            errors._raise_err(errors.ERR_PYTHON_VALUE_NOT_SUPPORTED,
+                              type_name=type(value).__name__)
+        if self.dbtype is None:
+            self.dbtype = dbtype
+            self.objtype = objtype
+        elif dbtype is not self.dbtype or objtype is not self.objtype:
+            errors._raise_err(errors.ERR_MIXED_ELEMENT_TYPES, element=value)
+        if size > self.size:
+            self.size = size
 
     def get_description(self):
         """

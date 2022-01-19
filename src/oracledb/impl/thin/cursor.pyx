@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 cdef class ThinCursorImpl(BaseCursorImpl):
@@ -24,34 +24,32 @@ cdef class ThinCursorImpl(BaseCursorImpl):
     cdef BaseVarImpl _create_var_impl(self):
         return ThinVarImpl.__new__(ThinVarImpl)
 
-    cdef int _fetch_rows(self, object cursor) except -1:
-        self._conn_impl._protocol._fetch(cursor)
-
-    cdef object _get_fetch_var(self, object cursor, object type_handler,
-                               FetchInfo fetch_info):
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef int _create_fetch_var(self, object cursor, object type_handler,
+                               ssize_t pos, FetchInfo fetch_info) except -1:
         """
-        Return the variable to use for fetching data. The type handler is run,
-        if specified. If no type handler is specified or the type handler is
-        run and None is returned, a default variable is created using the fetch
-        information.
+        Internal method that creates a fetch variable. A check is made after
+        the variable is created to determine if a conversion is required and
+        therefore a define must be performed.
         """
-        cdef:
-            ThinVarImpl var_impl
-            object var = None
-        if type_handler is not None:
-            var = type_handler(cursor, fetch_info._name,
-                               fetch_info._dbtype, fetch_info._size,
-                               fetch_info._precision, fetch_info._scale)
-            if var is not None:
-                self._verify_var(var)
-        if var is None:
-            var = self._create_default_fetch_var(fetch_info)
-        var_impl = <ThinVarImpl> var._impl
-        var_impl._fetch_info = fetch_info
+        cdef ThinVarImpl var_impl
+        BaseCursorImpl._create_fetch_var(self, cursor, type_handler, pos,
+                                         fetch_info)
+        var_impl = self.fetch_var_impls[pos]
         if var_impl.dbtype._ora_type_num != fetch_info._dbtype._ora_type_num:
             conversion_helper(var_impl, fetch_info,
                               &self._statement._requires_define)
-        return var
+
+    cdef int _fetch_rows(self, object cursor) except -1:
+        self._conn_impl._protocol._fetch(cursor)
+
+    cdef BaseConnImpl _get_conn_impl(self):
+        """
+        Internal method used to return the connection implementation associated
+        with the cursor implementation.
+        """
+        return self._conn_impl
 
     cdef bint _is_plsql(self):
         return self._statement._is_plsql
@@ -130,3 +128,4 @@ cdef class ThinCursorImpl(BaseCursorImpl):
         self._statement = self._conn_impl._get_statement(sql.strip(),
                                                          cache_statement)
         self.fetch_vars = self._statement._fetch_vars
+        self.fetch_var_impls = self._statement._fetch_var_impls
