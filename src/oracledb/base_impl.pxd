@@ -12,7 +12,7 @@ ctypedef fused BindVarCollection:
     list
 
 ctypedef fused BindVarKey:
-    str
+    object
     ssize_t
 
 cdef enum:

@@ -304,5 +304,23 @@ class TestCase(test_env.BaseTestCase):
                              [{'INTCOL': 1, 'STRINGCOL': 'String 1'},
                               {'INTCOL': 2, 'STRINGCOL': 'String 2'}])
 
+    def test_3927_subclassed_string(self):
+        "3927 - test using a subclassed string as bind parameter keys"
+        class my_str(str):
+            pass
+        self.cursor.execute("truncate table TestTempTable")
+        keys = {my_str("str_val"): oracledb.DB_TYPE_VARCHAR}
+        self.cursor.setinputsizes(**keys)
+        values = {
+            my_str("int_val"): 3927,
+            my_str("str_val"): "3927 - String Value"
+        }
+        self.cursor.execute("""
+                insert into TestTempTable (IntCol, StringCol1)
+                values (:int_val, :str_val)""", values)
+        self.cursor.execute("select IntCol, StringCol1 from TestTempTable")
+        self.assertEqual(self.cursor.fetchall(),
+                         [(3927, "3927 - String Value")])
+
 if __name__ == "__main__":
     test_env.run_test_cases()
