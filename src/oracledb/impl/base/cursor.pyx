@@ -36,7 +36,6 @@ cdef class BaseCursorImpl:
         cdef:
             dict bind_vars, bind_var_impls
             object typ
-            str name
         bind_vars = self.bind_vars = {}
         bind_var_impls = self.bind_var_impls = {}
         for name, value in params.items():
@@ -163,8 +162,6 @@ cdef class BaseCursorImpl:
         """
         cdef:
             dict bind_vars, bind_var_impls
-            object value
-            str name
         if self.bind_vars is None:
             self.bind_vars = {}
             self.bind_var_impls = {}
