@@ -10,6 +10,8 @@ cdef class ThinCursorImpl(BaseCursorImpl):
         list _batcherrors
         list _dmlrowcounts
         list _implicit_resultsets
+        uint32_t _num_columns
+        uint32_t _last_row_index
         str _lastrowid
 
     def __cinit__(self, conn_impl):

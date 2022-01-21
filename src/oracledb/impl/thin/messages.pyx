@@ -232,9 +232,12 @@ cdef class MessageWithData(Message):
     cdef:
         ThinCursorImpl cursor_impl
         ThinConnImpl conn_impl
+        array.array bit_vector_buf
+        const char_type *bit_vector
         bint arraydmlrowcounts
         uint32_t row_index
         uint32_t num_execs
+        uint32_t num_columns_sent
         list dmlrowcounts
         bint batcherrors
         list out_var_impls
@@ -294,8 +297,39 @@ cdef class MessageWithData(Message):
         self._process_describe_info(buf, cursor, cursor_impl)
         return cursor
 
+    cdef int _get_bit_vector(self, ReadBuffer buf,
+                             ssize_t num_bytes) except -1:
+        """
+        Gets the bit vector from the buffer and stores it for later use by the
+        row processing code. Since it is possible that the packet buffer may be
+        overwritten by subsequent packet retrieval, the bit vector must be
+        copied. An array is stored and a pointer to the underlying memory is
+        used for performance reasons.
+        """
+        cdef const char_type *ptr = buf._get_raw(num_bytes)
+        if self.bit_vector_buf is None:
+            self.bit_vector_buf = array.array('B')
+            array.resize(self.bit_vector_buf, num_bytes)
+        self.bit_vector = <const char_type*> self.bit_vector_buf.data.as_chars
+        memcpy(<void*> self.bit_vector, ptr, num_bytes)
+
     cdef bint _has_more_data(self, ReadBuffer buf):
         return not self.processed_error and not self.flush_out_binds
+
+    cdef bint _is_duplicate_data(self, uint32_t column_num):
+        """
+        Returns a boolean indicating if the given column contains data
+        duplicated from the previous row. When duplicate data exists, the
+        server sends a bit vector. Bits that are set indicate that data is sent
+        with the row data; bits that are not set indicate that data should be
+        duplicated from the previous row.
+        """
+        cdef int byte_num, bit_num
+        if self.bit_vector == NULL:
+            return False
+        byte_num = column_num // 8
+        bit_num = column_num % 8
+        return self.bit_vector[byte_num] & (1 << bit_num) == 0
 
     cdef int _write_bind_params(self, WriteBuffer buf, list params) except -1:
         cdef:
@@ -331,13 +365,8 @@ cdef class MessageWithData(Message):
 
     cdef int _preprocess(self) except -1:
         cdef:
-            ThinCursorImpl cursor_impl = self.cursor_impl
-            ThinVarImpl var_impl
-            object type_handler
-            Statement statement
+            Statement statement = self.cursor_impl._statement
             BindInfo bind_info
-            ssize_t i
-        statement = cursor_impl._statement
         if statement._is_returning and not self.parse_only:
             self.out_var_impls = []
             for bind_info in statement._bind_info_list:
@@ -345,22 +374,52 @@ cdef class MessageWithData(Message):
                     continue
                 self.out_var_impls.append(bind_info._bind_var_impl)
         elif statement._is_query:
-            self.in_fetch = True
-            cursor_impl._more_rows_to_fetch = True
-            cursor_impl._buffer_rowcount = cursor_impl._buffer_index = 0
-            if cursor_impl.fetch_var_impls is not None:
-                type_handler = cursor_impl._get_output_type_handler()
-                if type_handler is not statement._last_output_type_handler:
-                    for i, var_impl in enumerate(cursor_impl.fetch_var_impls):
-                        cursor_impl._create_fetch_var(self.cursor,
-                                                      type_handler, i,
-                                                      var_impl._fetch_info)
-                    statement._last_output_type_handler = type_handler
-                self.out_var_impls = cursor_impl.fetch_var_impls
-                for var_impl in self.out_var_impls:
-                    if var_impl.num_elements < cursor_impl._fetch_array_size:
-                        var_impl.num_elements = cursor_impl._fetch_array_size
-                        var_impl.values = [None] * var_impl.num_elements
+            self._preprocess_query()
+
+    cdef int _preprocess_query(self) except -1:
+        """
+        Actions that takes place before query data is processed.
+        """
+        cdef:
+            ThinCursorImpl cursor_impl = self.cursor_impl
+            Statement statement = cursor_impl._statement
+            ThinVarImpl var_impl
+            ssize_t i, num_vals
+            object type_handler
+
+        # set values to indicate the start of a new fetch operation
+        self.in_fetch = True
+        cursor_impl._more_rows_to_fetch = True
+        cursor_impl._buffer_rowcount = cursor_impl._buffer_index = 0
+
+        # if no fetch variables exist, nothing further to do at this point; the
+        # processing that follows will take the metadata returned by the server
+        # and use it to create new fetch variables
+        if cursor_impl.fetch_var_impls is None:
+            return 0
+
+        # if the type handler set on the cursor or connection does not match
+        # the one that was used during the last fetch, rebuild the fetch
+        # variables in order to take the new type handler into account
+        type_handler = cursor_impl._get_output_type_handler()
+        if type_handler is not statement._last_output_type_handler:
+            for i, var_impl in enumerate(cursor_impl.fetch_var_impls):
+                cursor_impl._create_fetch_var(self.cursor,
+                                              type_handler, i,
+                                              var_impl._fetch_info)
+            statement._last_output_type_handler = type_handler
+
+        # the list of output variables is equivalent to the fetch variables
+        self.out_var_impls = cursor_impl.fetch_var_impls
+
+        # resize fetch variables, if necessary, to allow room in each variable
+        # for the fetch array size
+        for var_impl in self.out_var_impls:
+            if var_impl.num_elements >= cursor_impl._fetch_array_size:
+                continue
+            num_vals = (cursor_impl._fetch_array_size - var_impl.num_elements)
+            var_impl.num_elements = cursor_impl._fetch_array_size
+            var_impl.values.extend([None] * num_vals)
 
     cdef int _postprocess(self) except -1:
         """
@@ -395,12 +454,12 @@ cdef class MessageWithData(Message):
                     var_impl.values[i] = var_impl.outconverter(value)
 
     cdef int _process_bit_vector(self, ReadBuffer buf) except -1:
-        cdef ssize_t num_bits, num_bytes
-        num_bits = buf.read_ub2()
-        num_bytes = num_bits // 8
-        if num_bits % 8 > 0:
+        cdef ssize_t num_bytes
+        self.num_columns_sent = buf.read_ub2()
+        num_bytes = self.cursor_impl._num_columns // 8
+        if self.cursor_impl._num_columns % 8 > 0:
             num_bytes += 1
-        buf.skip_bytes(num_bytes)
+        self._get_bit_vector(buf, num_bytes)
 
     cdef object _process_column_data(self, ReadBuffer buf,
                                      ThinVarImpl var_impl, uint32_t pos):
@@ -551,19 +610,19 @@ cdef class MessageWithData(Message):
                                     ThinCursorImpl cursor_impl) except -1:
         cdef:
             Statement stmt = cursor_impl._statement
-            uint32_t num_bytes, num_columns, i
+            uint32_t num_bytes, i
             list prev_fetch_var_impls
             FetchInfo fetch_info
             object type_handler
             str message
         buf.read_ub4()                      # max row size
-        num_columns = buf.read_ub4()
+        cursor_impl._num_columns = buf.read_ub4()
         prev_fetch_var_impls = self.cursor_impl.fetch_var_impls
-        cursor_impl._init_fetch_vars(num_columns)
-        if num_columns > 0:
+        cursor_impl._init_fetch_vars(cursor_impl._num_columns)
+        if cursor_impl._num_columns > 0:
             buf.skip_bytes(1)
         type_handler = cursor_impl._get_output_type_handler()
-        for i in range(num_columns):
+        for i in range(cursor_impl._num_columns):
             fetch_info = self._process_column_info(buf, cursor_impl)
             if prev_fetch_var_impls is not None:
                 self._adjust_fetch_info(prev_fetch_var_impls[i], fetch_info)
@@ -719,10 +778,10 @@ cdef class MessageWithData(Message):
         cdef:
             uint32_t num_rows, pos
             ThinVarImpl var_impl
+            ssize_t i, j
             object value
             list values
-            ssize_t i
-        for var_impl in self.out_var_impls:
+        for i, var_impl in enumerate(self.out_var_impls):
             if var_impl.is_array:
                 var_impl.num_elements_in_array = buf.read_ub4()
                 for pos in range(var_impl.num_elements_in_array):
@@ -731,18 +790,24 @@ cdef class MessageWithData(Message):
             elif self.cursor_impl._statement._is_returning:
                 num_rows = buf.read_ub4()
                 values = [None] * num_rows
-                for i in range(num_rows):
-                    values[i] = self._process_column_data(buf, var_impl, i)
+                for j in range(num_rows):
+                    values[j] = self._process_column_data(buf, var_impl, j)
                 var_impl.values[self.row_index] = values
+            elif self._is_duplicate_data(i):
+                var_impl.values[self.row_index] = \
+                        var_impl.values[self.cursor_impl._last_row_index]
             else:
                 value = self._process_column_data(buf, var_impl,
                                                   self.row_index)
                 var_impl.values[self.row_index + self.offset] = value
         self.row_index += 1
         if self.in_fetch:
+            self.cursor_impl._last_row_index = self.row_index - 1
             self.cursor_impl._buffer_rowcount = self.row_index
+            self.bit_vector = NULL
 
     cdef int _process_row_header(self, ReadBuffer buf) except -1:
+        cdef uint32_t num_bytes
         buf.skip_bytes(1)                   # flags
         buf.read_ub2()                      # num requests
         buf.read_ub4()                      # iteration number
@@ -750,7 +815,8 @@ cdef class MessageWithData(Message):
         buf.read_ub2()                      # buffer length
         num_bytes = buf.read_ub4()
         if num_bytes > 0:
-            buf.skip_bytes(num_bytes + 1)   # rxhbvc
+            buf.skip_bytes(1)               # skip repeated length
+            self._get_bit_vector(buf, num_bytes)
         num_bytes = buf.read_ub4()
         if num_bytes > 0:
             buf.skip_bytes(num_bytes + 1)   # rxhrid
@@ -1450,7 +1516,6 @@ cdef class ExecuteMessage(MessageWithData):
             else:
                 if self.cursor_impl.prefetchrows > 0:
                     options |= TNS_EXEC_OPTION_FETCH
-                    options |= TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
                 if stmt._cursor_id == 0 or stmt._requires_define:
                     num_iters = self.cursor_impl.prefetchrows
                     self.cursor_impl._fetch_array_size = num_iters
@@ -1581,8 +1646,7 @@ cdef class ExecuteMessage(MessageWithData):
                       if info.bind_dir != TNS_BIND_DIR_OUTPUT \
                       and not info._is_return_bind]
         if self.function_code == TNS_FUNC_REEXECUTE_AND_FETCH:
-            exec_flags_1 |= TNS_EXEC_OPTION_EXECUTE | \
-                            TNS_EXEC_OPTION_NO_COMPRESSED_FETCH
+            exec_flags_1 |= TNS_EXEC_OPTION_EXECUTE
             num_iters = self.cursor_impl.prefetchrows
             self.cursor_impl._fetch_array_size = num_iters
         else:
