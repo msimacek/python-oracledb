@@ -640,6 +640,7 @@ cdef class MessageWithData(Message):
             buf.skip_bytes(num_bytes + 1)   # dcbqcky
         stmt._fetch_vars = cursor_impl.fetch_vars
         stmt._fetch_var_impls = cursor_impl.fetch_var_impls
+        stmt._num_columns = cursor_impl._num_columns
         stmt._last_output_type_handler = type_handler
 
     cdef int _process_error_info(self, ReadBuffer buf) except -1:

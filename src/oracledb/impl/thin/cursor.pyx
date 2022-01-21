@@ -131,3 +131,4 @@ cdef class ThinCursorImpl(BaseCursorImpl):
                                                          cache_statement)
         self.fetch_vars = self._statement._fetch_vars
         self.fetch_var_impls = self._statement._fetch_var_impls
+        self._num_columns = self._statement._num_columns

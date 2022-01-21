@@ -58,6 +58,7 @@ cdef class Statement:
         list _fetch_var_impls
         object _bind_info_dict
         object _last_output_type_handler
+        uint32_t _num_columns
         bint _requires_full_execute
         bint _requires_define
         bint _return_to_cache

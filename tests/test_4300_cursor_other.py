@@ -644,5 +644,24 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.prepare(sql)
         self.assertEqual(self.cursor.bindnames(), ['BIND_1'])
 
+    def test_4354_fetch_duplicate_data_twice(self):
+        "4354 - fetch duplicate data from query in statement cache"
+        sql = """
+            select 'A', 'B', 'C' from dual
+            union all
+            select 'A', 'B', 'C' from dual
+            union all
+            select 'A', 'B', 'C' from dual
+        """
+        expected_data = [('A', 'B', 'C')] * 3
+        with self.connection.cursor() as cursor:
+            cursor.prefetchrows = 0
+            cursor.execute(sql)
+            self.assertEqual(cursor.fetchall(), expected_data)
+        with self.connection.cursor() as cursor:
+            cursor.prefetchrows = 0
+            cursor.execute(sql)
+            self.assertEqual(cursor.fetchall(), expected_data)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
