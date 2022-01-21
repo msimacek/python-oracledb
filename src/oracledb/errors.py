@@ -99,6 +99,7 @@ ERR_LIBRARY_ALREADY_INITIALIZED = 2017
 ERR_WALLET_FILE_MISSING = 2018
 ERR_THIN_CONNECTION_ALREADY_CREATED = 2019
 ERR_INVALID_MAKEDSN_ARG = 2020
+ERR_INIT_ORACLE_CLIENT_NOT_CALLED = 2021
 
 # error numbers that result in NotSupportedError
 ERR_TIME_NOT_SUPPORTED = 3000
@@ -212,6 +213,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_INCORRECT_VAR_ARRAYSIZE: "variable array size of {var_arraysize} is " \
                                  "too small (should be at least " \
                                  "{required_arraysize})",
+    ERR_INIT_ORACLE_CLIENT_NOT_CALLED: \
+            "init_oracle_client() must be called first",
     ERR_INVALID_BIND_NAME: \
             'no placeholder named "{name}" was found in the SQL text',
     ERR_INVALID_CONNECT_DESCRIPTOR: "invalid connect descriptor: {data}",

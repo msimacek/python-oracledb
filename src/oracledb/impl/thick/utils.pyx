@@ -352,7 +352,7 @@ def clientversion():
     global client_version
     if client_version is None:
         if driver_context == NULL:
-            init_oracle_client()
+            errors._raise_err(errors.ERR_INIT_ORACLE_CLIENT_NOT_CALLED)
         if dpiContext_getClientVersion(driver_context, &info) < 0:
             _raise_from_odpi()
         client_version = (
