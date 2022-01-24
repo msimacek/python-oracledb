@@ -663,5 +663,24 @@ class TestCase(test_env.BaseTestCase):
             cursor.execute(sql)
             self.assertEqual(cursor.fetchall(), expected_data)
 
+    def test_4355_fetch_duplicate_data_with_out_converter(self):
+        "4355 - fetch duplicate data with outconverter"
+        def out_converter(value):
+            self.assertIs(type(value), str)
+            return int(value)
+        def type_handler(cursor, name, default_type, size, precision, scale):
+            if name == "COL_3":
+                return cursor.var(str, arraysize=cursor.arraysize,
+                                  outconverter=out_converter)
+        self.cursor.outputtypehandler = type_handler
+        self.cursor.execute("""
+                select 'A' as col_1, 2 as col_2, 3 as col_3 from dual
+                union all
+                select 'A' as col_1, 2 as col_2, 3 as col_3 from dual
+                union all
+                select 'A' as col_1, 2 as col_2, 3 as col_3 from dual""")
+        expected_data = [('A', 2, 3)] * 3
+        self.assertEqual(self.cursor.fetchall(), expected_data)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

@@ -437,6 +437,8 @@ cdef class MessageWithData(Message):
         for var_impl in self.out_var_impls:
             if var_impl.outconverter is None:
                 continue
+            var_impl._last_raw_value = \
+                    var_impl.values[self.cursor_impl._last_row_index]
             if var_impl.is_array:
                 num_elements = var_impl.num_elements_in_array
             else:
@@ -795,8 +797,11 @@ cdef class MessageWithData(Message):
                     values[j] = self._process_column_data(buf, var_impl, j)
                 var_impl.values[self.row_index] = values
             elif self._is_duplicate_data(i):
-                var_impl.values[self.row_index] = \
-                        var_impl.values[self.cursor_impl._last_row_index]
+                if self.row_index == 0 and var_impl.outconverter is not None:
+                    value = var_impl._last_raw_value
+                else:
+                    value = var_impl.values[self.cursor_impl._last_row_index]
+                var_impl.values[self.row_index] = value
             else:
                 value = self._process_column_data(buf, var_impl,
                                                   self.row_index)
