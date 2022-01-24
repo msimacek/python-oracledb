@@ -230,8 +230,9 @@ ERR_MESSAGE_FORMATS = {
             "match the expected value",
     ERR_INVALID_TNS_ALIAS_DEFINITION: \
             "invalid tnsnames.ora definition starting with {line}",
-    ERR_INVALID_SERVICE_NAME: "listener doesn't recognize service name",
-    ERR_INVALID_SID: "listener doesn't recognize sid",
+    ERR_INVALID_SERVICE_NAME: \
+            "listener doesn't recognize service name (see ORA-12514)",
+    ERR_INVALID_SID: "listener doesn't recognize sid (see ORA-12505)",
     ERR_KEYWORD_ARGS_MUST_BE_DICT: "keyword arguments must be a dict",
     ERR_LIBRARY_ALREADY_INITIALIZED: \
             "Oracle Client library has already been initialized",
