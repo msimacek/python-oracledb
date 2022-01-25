@@ -153,35 +153,6 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         for i in range(num_query_cols):
             self._define_var(cursor, type_handler, i)
 
-    cdef int _scroll(self, object conn, int32_t offset,
-                     uint32_t mode) except -1:
-        cdef:
-            uint32_t temp_buffer_row_index = 0, num_rows_in_buffer = 0
-            bint more_rows_to_fetch = False
-            ThickVarImpl var_impl
-            int status
-        with nogil:
-            status = dpiStmt_scroll(self._handle, mode, offset,
-                                    0 - self._buffer_rowcount)
-            if status == 0:
-                status = dpiStmt_fetchRows(self._handle,
-                                           self._fetch_array_size,
-                                           &temp_buffer_row_index,
-                                           &num_rows_in_buffer,
-                                           &more_rows_to_fetch)
-            if status == 0:
-                status = dpiStmt_getRowCount(self._handle, &self.rowcount)
-        if status < 0:
-            _raise_from_odpi()
-        for var_impl in self.fetch_var_impls:
-            var_impl._transform_to_python(conn, self._conn_impl,
-                                          num_rows_in_buffer, in_fetch=True,
-                                          offset=temp_buffer_row_index)
-        self._buffer_index = 0
-        self._buffer_rowcount = num_rows_in_buffer
-        self._more_rows_to_fetch = more_rows_to_fetch
-        self.rowcount -= num_rows_in_buffer
-
     cdef int _transform_binds(self, object conn,
                               uint32_t num_execs=1) except -1:
         cdef:
@@ -445,3 +416,42 @@ cdef class ThickCursorImpl(BaseCursorImpl):
                                                      self.prefetchrows)
         if status < 0:
             _raise_from_odpi()
+
+    def scroll(self, object conn, int32_t offset, object mode):
+        cdef:
+            uint32_t temp_buffer_row_index = 0, num_rows_in_buffer = 0
+            bint more_rows_to_fetch = False
+            ThickVarImpl var_impl
+            uint32_t int_mode = 0
+            int status
+        if mode == "relative":
+            int_mode = DPI_MODE_FETCH_RELATIVE
+        elif mode == "absolute":
+            int_mode = DPI_MODE_FETCH_ABSOLUTE
+        elif mode == "first":
+            int_mode = DPI_MODE_FETCH_FIRST
+        elif mode == "last":
+            int_mode = DPI_MODE_FETCH_LAST
+        else:
+            errors._raise_err(errors.ERR_WRONG_SCROLL_MODE)
+        with nogil:
+            status = dpiStmt_scroll(self._handle, int_mode, offset,
+                                    0 - self._buffer_rowcount)
+            if status == 0:
+                status = dpiStmt_fetchRows(self._handle,
+                                           self._fetch_array_size,
+                                           &temp_buffer_row_index,
+                                           &num_rows_in_buffer,
+                                           &more_rows_to_fetch)
+            if status == 0:
+                status = dpiStmt_getRowCount(self._handle, &self.rowcount)
+        if status < 0:
+            _raise_from_odpi()
+        for var_impl in self.fetch_var_impls:
+            var_impl._transform_to_python(conn, self._conn_impl,
+                                          num_rows_in_buffer, in_fetch=True,
+                                          offset=temp_buffer_row_index)
+        self._buffer_index = 0
+        self._buffer_rowcount = num_rows_in_buffer
+        self._more_rows_to_fetch = more_rows_to_fetch
+        self.rowcount -= num_rows_in_buffer

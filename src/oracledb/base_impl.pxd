@@ -16,12 +16,6 @@ ctypedef fused BindVarKey:
     ssize_t
 
 cdef enum:
-    FETCH_MODE_ABSOLUTE = 0x0020
-    FETCH_MODE_FIRST = 0x0004
-    FETCH_MODE_LAST = 0x0008
-    FETCH_MODE_RELATIVE = 0x0040
-
-cdef enum:
     NUM_TYPE_FLOAT = 0
     NUM_TYPE_INT = 1
     NUM_TYPE_DECIMAL = 2
@@ -121,8 +115,6 @@ cdef class BaseCursorImpl:
     cdef int _init_fetch_vars(self, uint32_t num_columns) except -1
     cdef bint _is_plsql(self)
     cdef int _perform_binds(self, object conn, uint32_t num_execs=*) except -1
-    cdef int _scroll(self, object conn, int32_t offset,
-                     uint32_t mode) except -1
     cdef int _verify_var(self, object var) except -1
 
 

@@ -109,6 +109,13 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
         DPI_MODE_STARTUP_FORCE
         DPI_MODE_STARTUP_RESTRICT
 
+    # fetch modes (for scrolling cursors)
+    enum:
+        DPI_MODE_FETCH_FIRST
+        DPI_MODE_FETCH_LAST
+        DPI_MODE_FETCH_ABSOLUTE
+        DPI_MODE_FETCH_RELATIVE
+
     # subscription constants
     uint32_t DPI_SUBSCR_QOS_QUERY
     uint32_t DPI_EVENT_OBJCHANGE

@@ -416,13 +416,6 @@ cdef class BaseCursorImpl:
             for pos, var_impl in enumerate(self.bind_var_impls):
                 var_impl._bind(conn, self, num_execs, None, pos + 1)
 
-    cdef int _scroll(self, object conn, int32_t offset,
-                     uint32_t mode) except -1:
-        """
-        Internal method for scrolling a scrollable cursor.
-        """
-        raise NotImplementedError()
-
     cdef int _verify_var(self, object var) except -1:
         """
         Internal method used for verifying if an outputtypehandler returns a
@@ -556,22 +549,12 @@ cdef class BaseCursorImpl:
     def prepare(self, str statement, str tag, bint cache_statement):
         pass
 
+    @utils.CheckImpls("scrolling a scrollable cursor")
     def scroll(self, conn, value, mode):
         """
         Scrolls a scrollable cursor.
         """
-        cdef uint32_t int_mode = 0
-        if mode == "relative":
-            int_mode = FETCH_MODE_RELATIVE
-        elif mode == "absolute":
-            int_mode = FETCH_MODE_ABSOLUTE
-        elif mode == "first":
-            int_mode = FETCH_MODE_FIRST
-        elif mode == "last":
-            int_mode = FETCH_MODE_LAST
-        else:
-            errors._raise_err(errors.ERR_WRONG_SCROLL_MODE)
-        self._scroll(conn, value, int_mode)
+        pass
 
     def setinputsizes(self, cursor, args, kwargs):
         """
