@@ -157,7 +157,7 @@ class ConnectParams:
         PEM-encoded wallet file, if applicable.
         """
         self.host = host
-        self.port = port
+        self.port = port = port if port is not None else defaults.port
         self.service_name = service_name
         self.sid = sid
         self.events = events if events is not None else defaults.events
@@ -375,12 +375,11 @@ class ConnectParams:
             colon_pos = connect_string.find(":")
             if colon_pos >= 0:
                 port = connect_string[colon_pos + 1:]
-                self.port = 1521 if not(port) else int(port)
+                if port:
+                    self.port = int(port)
                 connect_string = connect_string[:colon_pos]
-            elif self.port is None:
-                if slash_pos < 0:
-                    return False
-                self.port = 1521
+            elif slash_pos < 0:
+                return False
             self.host = connect_string
 
             return True

@@ -12,6 +12,7 @@ class Defaults:
     def __init__(self):
         self.arraysize = 100
         self.stmtcachesize = 20
+        self.port = 1521
         self.events = False
         self.ping_interval = 60
         self.config_dir = os.environ.get("TNS_ADMIN")
