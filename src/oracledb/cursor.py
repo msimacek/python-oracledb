@@ -2,7 +2,7 @@
 # Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
-from typing import Type, Union, Callable
+from typing import Any, Type, Union, Callable
 from . import errors, exceptions
 from . import connection as connection_module
 from .defaults import defaults
@@ -83,6 +83,15 @@ class Cursor:
         statement = "".join(statement_parts)
         self.execute(statement, bind_values)
 
+    def _get_oci_attr(self, attr_num: int, attr_type: int) -> Any:
+        """
+        Returns the value of the specified OCI attribute from the internal
+        handle. This is only supported by the thick driver and should only be
+        used as directed by Oracle.
+        """
+        self._verify_open()
+        return self._impl._get_oci_attr(attr_num, attr_type)
+
     def _prepare(self, statement: str, tag: str=None,
                  cache_statement: bool=True) -> None:
         """
@@ -94,6 +103,16 @@ class Cursor:
         self._impl.prepare(statement, tag, cache_statement)
         self.statement = statement
         self._impl.rowfactory = None
+
+    def _set_oci_attr(self, attr_num: int, attr_type: int,
+                      value: Any) -> None:
+        """
+        Sets the value of the specified OCI attribute on the internal handle.
+        This is only supported by the thick driver and should be used as
+        directed by Oracle.
+        """
+        self._verify_open()
+        self._impl._set_oci_attr(handle_type, attr_num, attr_type, value)
 
     def _verify_fetch(self) -> None:
         """

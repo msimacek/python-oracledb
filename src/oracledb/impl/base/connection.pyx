@@ -8,6 +8,16 @@ cdef class BaseConnImpl:
         self.username = user
         self.dsn = dsn
 
+    @utils.CheckImpls("getting a connection OCI attribute")
+    def _get_oci_attr(self, uint32_t handle_type, uint32_t attr_num,
+                      uint32_t attr_type):
+        pass
+
+    @utils.CheckImpls("setting a connection OCI attribute")
+    def _set_oci_attr(self, uint32_t handle_type, uint32_t attr_num,
+                      uint32_t attr_type, object value):
+        pass
+
     @utils.CheckImpls("aborting a currently executing statement")
     def cancel(self):
         pass

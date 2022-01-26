@@ -118,6 +118,37 @@ cdef class ThickConnImpl(BaseConnImpl):
         if self._handle != NULL:
             dpiConn_release(self._handle)
 
+    def _get_oci_attr(self, uint32_t handle_type, uint32_t attr_num,
+                      uint32_t attr_type):
+        """
+        Internal method for getting the value of an OCI attribute on the
+        connection.
+        """
+        cdef:
+            dpiDataBuffer value
+            uint32_t value_len
+        if dpiConn_getOciAttr(self._handle, handle_type, attr_num, &value,
+                              &value_len) < 0:
+            _raise_from_odpi()
+        return _convert_oci_attr_to_python(attr_type, &value, value_len)
+
+    def _set_oci_attr(self, uint32_t handle_type, uint32_t attr_num,
+                      uint32_t attr_type, object value):
+        """
+        Internal method for setting the value of an OCI attribute on the
+        connection.
+        """
+        cdef:
+            StringBuffer str_buf = StringBuffer()
+            void *oci_value = NULL
+            dpiDataBuffer oci_buf
+            uint32_t oci_len = 0
+        _convert_python_to_oci_attr(value, attr_type, str_buf, &oci_buf,
+                                    &oci_value, &oci_len)
+        if dpiConn_setOciAttr(self._handle, handle_type, attr_num, oci_value,
+                              oci_len) < 0:
+            _raise_from_odpi()
+
     cdef int _set_text_attr(self, dpiConnSetTextAttrFunc func,
                             str value) except -1:
         cdef:

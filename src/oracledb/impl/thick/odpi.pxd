@@ -5,6 +5,14 @@
 from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 
+cdef enum:
+    PYO_OCI_ATTR_TYPE_STRING = 1
+    PYO_OCI_ATTR_TYPE_BOOLEAN = 2
+    PYO_OCI_ATTR_TYPE_UINT8 = 8
+    PYO_OCI_ATTR_TYPE_UINT16 = 16
+    PYO_OCI_ATTR_TYPE_UINT32 = 32
+    PYO_OCI_ATTR_TYPE_UINT64 = 64
+
 cdef extern from "impl/thick/odpi/embed/dpi.c":
 
     # version constants
@@ -518,6 +526,10 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
     int dpiConn_getLTXID(dpiConn *conn, const char **value,
             uint32_t *valueLength) nogil
 
+    int dpiConn_getOciAttr(dpiConn *conn, uint32_t handleType,
+            uint32_t attribute, dpiDataBuffer *value,
+            uint32_t *valueLength) nogil
+
     int dpiConn_getObjectType(dpiConn *conn, const char *name,
             uint32_t nameLength, dpiObjectType **objType) nogil
 
@@ -556,6 +568,8 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
     int dpiConn_setAction(dpiConn *conn, const char *value,
             uint32_t valueLength) nogil
 
+    int dpiConn_setCallTimeout(dpiConn *conn, uint32_t value) nogil
+
     int dpiConn_setClientIdentifier(dpiConn *conn, const char *value,
             uint32_t valueLength) nogil
 
@@ -580,9 +594,10 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
     int dpiConn_setModule(dpiConn *conn, const char *value,
             uint32_t valueLength) nogil
 
-    int dpiConn_setStmtCacheSize(dpiConn *conn, uint32_t cacheSize) nogil
+    int dpiConn_setOciAttr(dpiConn *conn, uint32_t handleType,
+            uint32_t attribute, void *value, uint32_t valueLength) nogil
 
-    int dpiConn_setCallTimeout(dpiConn *conn, uint32_t value) nogil
+    int dpiConn_setStmtCacheSize(dpiConn *conn, uint32_t cacheSize) nogil
 
     int dpiConn_shutdownDatabase(dpiConn *conn, uint32_t mode) nogil
 
@@ -1076,6 +1091,9 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
 
     int dpiStmt_getLastRowid(dpiStmt *stmt, dpiRowid **rowid) nogil
 
+    int dpiStmt_getOciAttr(dpiStmt *stmt, uint32_t attribute,
+            dpiDataBuffer *value, uint32_t *valueLength) nogil
+
     int dpiStmt_getQueryInfo(dpiStmt *stmt, uint32_t pos,
             dpiQueryInfo *info) nogil
 
@@ -1092,6 +1110,9 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
             int32_t rowCountOffset) nogil
 
     int dpiStmt_setFetchArraySize(dpiStmt *stmt, uint32_t arraySize) nogil
+
+    int dpiStmt_setOciAttr(dpiStmt *stmt, uint32_t attribute, void *value,
+            uint32_t valueLength) nogil
 
     int dpiStmt_setPrefetchRows(dpiStmt *stmt, uint32_t numRows) nogil
 

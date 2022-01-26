@@ -63,6 +63,7 @@ cdef object _convert_from_json_node(dpiJsonNode *node):
     errors._raise_err(errors.ERR_ORACLE_TYPE_NOT_SUPPORTED,
                       num=node.oracleTypeNum)
 
+
 cdef int _convert_from_python(object value, DbType dbtype,
                               ThickDbObjectTypeImpl obj_type_impl,
                               dpiDataBuffer *dbvalue, StringBuffer buf,
@@ -183,6 +184,66 @@ cdef int _convert_from_python(object value, DbType dbtype,
             _raise_from_odpi()
     else:
         errors._raise_err(errors.ERR_DB_TYPE_NOT_SUPPORTED, name=dbtype.name)
+
+
+cdef object _convert_oci_attr_to_python(uint32_t attr_type,
+                                        dpiDataBuffer *value,
+                                        uint32_t value_len):
+    """
+    Convert an OCI attribute value to a Python value.
+    """
+    if attr_type == PYO_OCI_ATTR_TYPE_STRING:
+        if value.asString == NULL:
+            return None
+        return value.asString[:value_len].decode()
+    elif attr_type == PYO_OCI_ATTR_TYPE_BOOLEAN:
+        return value.asBoolean
+    elif attr_type == PYO_OCI_ATTR_TYPE_UINT8:
+        return value.asUint8
+    elif attr_type == PYO_OCI_ATTR_TYPE_UINT16:
+        return value.asUint16
+    elif attr_type == PYO_OCI_ATTR_TYPE_UINT32:
+        return value.asUint32
+    elif attr_type == PYO_OCI_ATTR_TYPE_UINT64:
+        return value.asUint64
+    errors._raise_err(errors.ERR_INVALID_OCI_ATTR_TYPE, attr_type=attr_type)
+
+
+cdef int _convert_python_to_oci_attr(object value, uint32_t attr_type,
+                                     StringBuffer str_buf,
+                                     dpiDataBuffer *oci_buf,
+                                     void **oci_value,
+                                     uint32_t *oci_len) except -1:
+    """
+    Convert a Python value to the format required by an OCI attribute.
+    """
+    if attr_type == PYO_OCI_ATTR_TYPE_STRING:
+        str_buf.set_value(value)
+        oci_value[0] = str_buf.ptr
+        oci_len[0] = str_buf.length
+    elif attr_type == PYO_OCI_ATTR_TYPE_BOOLEAN:
+        oci_buf.asBoolean = value
+        oci_value[0] = &oci_buf.asBoolean
+        oci_len[0] = sizeof(oci_buf.asBoolean)
+    elif attr_type == PYO_OCI_ATTR_TYPE_UINT8:
+        oci_buf.asUint8 = value
+        oci_value[0] = &oci_buf.asUint8
+        oci_len[0] = sizeof(oci_buf.asUint8)
+    elif attr_type == PYO_OCI_ATTR_TYPE_UINT16:
+        oci_buf.asUint16 = value
+        oci_value[0] = &oci_buf.asUint16
+        oci_len[0] = sizeof(oci_buf.asUint16)
+    elif attr_type == PYO_OCI_ATTR_TYPE_UINT32:
+        oci_buf.asUint32 = value
+        oci_value[0] = &oci_buf.asUint32
+        oci_len[0] = sizeof(oci_buf.asUint32)
+    elif attr_type == PYO_OCI_ATTR_TYPE_UINT64:
+        oci_buf.asUint64 = value
+        oci_value[0] = &oci_buf.asUint64
+        oci_len[0] = sizeof(oci_buf.asUint64)
+    else:
+        errors._raise_err(errors.ERR_INVALID_OCI_ATTR_TYPE,
+                          attr_type=attr_type)
 
 
 cdef object _convert_to_python(ThickConnImpl conn_impl, DbType dbtype,

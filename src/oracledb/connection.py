@@ -4,7 +4,7 @@
 
 import collections
 
-from typing import Callable, Type, Union
+from typing import Any, Callable, Type, Union
 from . import constants, driver_mode, errors, exceptions, utils
 from . import thick_impl, thin_impl
 from . import pool as pool_module
@@ -124,6 +124,26 @@ class Connection:
         if self.username is None:
             return f"<{cls_name} to externally identified user>"
         return f"<{cls_name} to {self.username}@{self.dsn}>"
+
+    def _get_oci_attr(self, handle_type: int, attr_num: int,
+                      attr_type: int) -> Any:
+        """
+        Returns the value of the specified OCI attribute from the internal
+        handle. This is only supported by the thick driver and should only be
+        used as directed by Oracle.
+        """
+        self._verify_connected()
+        return self._impl._get_oci_attr(handle_type, attr_num, attr_type)
+
+    def _set_oci_attr(self, handle_type: int, attr_num: int, attr_type: int,
+                      value: Any) -> None:
+        """
+        Sets the value of the specified OCI attribute on the internal handle.
+        This is only supported by the thick driver and should be used as
+        directed by Oracle.
+        """
+        self._verify_connected()
+        self._impl._set_oci_attr(handle_type, attr_num, attr_type, value)
 
     def _verify_connected(self):
         """

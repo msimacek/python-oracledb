@@ -122,6 +122,18 @@ cdef class ThickCursorImpl(BaseCursorImpl):
     cdef bint _is_plsql(self):
         return <bint> self._stmt_info.isPLSQL
 
+    def _get_oci_attr(self, uint32_t attr_num, uint32_t attr_type):
+        """
+        Internal method for getting the value of an OCI attribute on the
+        cursor.
+        """
+        cdef:
+            dpiDataBuffer value
+            uint32_t value_len
+        if dpiStmt_getOciAttr(self._handle, attr_num, &value, &value_len) < 0:
+            _raise_from_odpi()
+        return _convert_oci_attr_to_python(attr_type, &value, value_len)
+
     cdef int _perform_define(self, object cursor,
                              uint32_t num_query_cols) except -1:
         """
@@ -152,6 +164,22 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         type_handler = self._get_output_type_handler()
         for i in range(num_query_cols):
             self._define_var(cursor, type_handler, i)
+
+    def _set_oci_attr(self, uint32_t attr_num, uint32_t attr_type,
+                      object value):
+        """
+        Internal method for setting the value of an OCI attribute on the
+        cursor.
+        """
+        cdef:
+            StringBuffer str_buf = StringBuffer()
+            void *oci_value = NULL
+            dpiDataBuffer oci_buf
+            uint32_t oci_len = 0
+        _convert_python_to_oci_attr(value, attr_type, str_buf, &oci_buf,
+                                    &oci_value, &oci_len)
+        if dpiStmt_setOciAttr(self._handle, attr_num, oci_value, oci_len) < 0:
+            _raise_from_odpi()
 
     cdef int _transform_binds(self, object conn,
                               uint32_t num_execs=1) except -1:

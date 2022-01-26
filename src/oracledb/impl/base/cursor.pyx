@@ -374,6 +374,10 @@ cdef class BaseCursorImpl:
         conn_impl = self._get_conn_impl()
         return conn_impl.inputtypehandler
 
+    @utils.CheckImpls("getting a cursor OCI attribute")
+    def _get_oci_attr(self, uint32_t attr_num, uint32_t attr_type):
+        pass
+
     cdef object _get_output_type_handler(self):
         """
         Return the output type handler to use for the cursor. If one is not
@@ -415,6 +419,11 @@ cdef class BaseCursorImpl:
         else:
             for pos, var_impl in enumerate(self.bind_var_impls):
                 var_impl._bind(conn, self, num_execs, None, pos + 1)
+
+    @utils.CheckImpls("setting a cursor OCI attribute")
+    def _set_oci_attr(self, uint32_t attr_num, uint32_t attr_type,
+                      object value):
+        pass
 
     cdef int _verify_var(self, object var) except -1:
         """

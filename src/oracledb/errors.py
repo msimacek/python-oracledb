@@ -100,6 +100,7 @@ ERR_WALLET_FILE_MISSING = 2018
 ERR_THIN_CONNECTION_ALREADY_CREATED = 2019
 ERR_INVALID_MAKEDSN_ARG = 2020
 ERR_INIT_ORACLE_CLIENT_NOT_CALLED = 2021
+ERR_INVALID_OCI_ATTR_TYPE = 2022
 
 # error numbers that result in NotSupportedError
 ERR_TIME_NOT_SUPPORTED = 3000
@@ -220,6 +221,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_INVALID_CONNECT_DESCRIPTOR: "invalid connect descriptor: {data}",
     ERR_INVALID_MAKEDSN_ARG: "invalid value for makedsn() argument '{name}'",
     ERR_INVALID_NUMBER: "invalid number",
+    ERR_INVALID_OCI_ATTR_TYPE: "invalid OCI attribute type: {attr_type}",
     ERR_INVALID_POOL_PURITY: "invalid pool purity: {purity}",
     ERR_INVALID_PROTOCOL: "invalid protocol: {protocol}",
     ERR_INVALID_REDIRECT_DATA: "invalid redirect data: {data}",
