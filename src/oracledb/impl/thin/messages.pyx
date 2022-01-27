@@ -244,14 +244,12 @@ cdef class MessageWithData(Message):
         bint in_fetch
         bint parse_only
         object cursor
-        object conn
         uint32_t offset
 
-    def __cinit__(self, cursor):
+    def __cinit__(self, cursor, cursor_impl):
         self.cursor = cursor
-        self.cursor_impl = cursor._impl
-        self.conn = cursor.connection
-        self.conn_impl = self.conn._impl
+        self.cursor_impl = cursor_impl
+        self.conn_impl = self.cursor_impl._conn_impl
         self.num_execs = 1
 
     cdef int _adjust_fetch_info(self,
@@ -288,7 +286,7 @@ cdef class MessageWithData(Message):
                                              object cursor=None):
         cdef ThinCursorImpl cursor_impl
         if cursor is None:
-            cursor = Cursor(self.conn)
+            cursor = Cursor(self.cursor.connection)
         cursor_impl = cursor._impl
         cursor_impl._statement = Statement()
         cursor_impl._fetch_array_size = cursor.arraysize + cursor.prefetchrows
@@ -1695,7 +1693,7 @@ cdef class ExecuteMessage(MessageWithData):
 @cython.final
 cdef class FetchMessage(MessageWithData):
 
-    def __cinit__(self, cursor):
+    def __cinit__(self, cursor, cursor_impl):
         self.function_code = TNS_FUNC_FETCH
 
     cdef int _write_message(self, WriteBuffer buf) except -1:

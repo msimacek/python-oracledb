@@ -44,7 +44,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
                               &self._statement._requires_define)
 
     cdef int _fetch_rows(self, object cursor) except -1:
-        self._conn_impl._protocol._fetch(cursor)
+        self._conn_impl._protocol._fetch(cursor, self)
 
     cdef BaseConnImpl _get_conn_impl(self):
         """
@@ -67,7 +67,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
 
     def execute(self, cursor):
         self._preprocess_execute(cursor.connection)
-        self._conn_impl._protocol._execute(cursor)
+        self._conn_impl._protocol._execute(cursor, self)
 
     def executemany(self, cursor, num_execs, batcherrors, arraydmlrowcounts):
         cdef uint32_t offset = 1
@@ -77,24 +77,24 @@ cdef class ThinCursorImpl(BaseCursorImpl):
         # multiple executes will be performed; otherwise, a bulk execute will
         # be performed.
         if self._statement._is_plsql and self._statement._cursor_id == 0:
-            self._conn_impl._protocol._execute(cursor, 1,
+            self._conn_impl._protocol._execute(cursor, self, 1,
                                                arraydmlrowcounts,
                                                batcherrors)
             if self._statement._plsql_multiple_execs:
                 for offset in range(1, num_execs):
-                    self._conn_impl._protocol._execute(cursor, 1,
+                    self._conn_impl._protocol._execute(cursor, self, 1,
                                                        arraydmlrowcounts,
                                                        batcherrors, offset)
             else:
-                self._conn_impl._protocol._execute(cursor, num_execs - 1,
+                self._conn_impl._protocol._execute(cursor, self, num_execs - 1,
                                                    arraydmlrowcounts,
                                                    batcherrors, offset)
         else:
-            self._conn_impl._protocol._execute(cursor, num_execs,
+            self._conn_impl._protocol._execute(cursor, self, num_execs,
                                                arraydmlrowcounts, batcherrors)
 
     def fetch_rows(self, cursor):
-        self._conn_impl._protocol._fetch(cursor)
+        self._conn_impl._protocol._fetch(cursor, self)
 
     def get_array_dml_row_counts(self):
         if self._dmlrowcounts is None:
@@ -119,7 +119,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
         return self.fetch_vars is not None
 
     def parse(self, cursor):
-        self._conn_impl._protocol._parse(cursor)
+        self._conn_impl._protocol._parse(cursor, self)
 
     def prepare(self, str sql, str tag, bint cache_statement):
         self.statement = sql

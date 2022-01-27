@@ -149,15 +149,14 @@ cdef class Protocol:
         # allows the normal break/reset mechanism to fire
         self._in_connect = False
 
-    cdef int _execute(self, object cursor, uint32_t num_execs=1,
-                      bint arraydmlrowcounts=False,
+    cdef int _execute(self, object cursor, ThinCursorImpl cursor_impl,
+                      uint32_t num_execs=1, bint arraydmlrowcounts=False,
                       bint batcherrors=False, uint32_t offset=0) except -1:
         cdef:
-            ThinCursorImpl cursor_impl = cursor._impl
             Statement stmt = cursor_impl._statement
             MessageWithData message
         with self._request_lock:
-            message = ExecuteMessage(cursor)
+            message = ExecuteMessage(cursor, cursor_impl)
             message.arraydmlrowcounts = arraydmlrowcounts
             message.batcherrors = batcherrors
             message.num_execs = num_execs
@@ -170,16 +169,14 @@ cdef class Protocol:
             if cursor_impl._statement._is_query:
                 cursor_impl.rowcount = 0
 
-    cdef int _fetch(self, object cursor) except -1:
-        cdef:
-            ThinCursorImpl cursor_impl = cursor._impl
-            MessageWithData message
+    cdef int _fetch(self, object cursor, ThinCursorImpl cursor_impl) except -1:
+        cdef MessageWithData message
         with self._request_lock:
             if cursor_impl._statement._requires_full_execute:
-                message = ExecuteMessage(cursor)
+                message = ExecuteMessage(cursor, cursor_impl)
                 message.num_execs = cursor_impl._fetch_array_size
             else:
-                message = FetchMessage(cursor)
+                message = FetchMessage(cursor, cursor_impl)
             self._process_message(message)
 
     cdef int _force_close(self) except -1:
@@ -199,10 +196,10 @@ cdef class Protocol:
         sock.shutdown(socket.SHUT_RDWR)
         sock.close()
 
-    cdef int _parse(self, object cursor) except -1:
+    cdef int _parse(self, object cursor, ThinCursorImpl cursor_impl) except -1:
         cdef MessageWithData message
         with self._request_lock:
-            message = ExecuteMessage(cursor)
+            message = ExecuteMessage(cursor, cursor_impl)
             message.parse_only = True
             self._process_message(message)
 
