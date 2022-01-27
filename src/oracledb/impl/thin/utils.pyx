@@ -46,12 +46,12 @@ def _get_connect_data(params):
            f"(CONNECT_DATA={identity}{server_type}(CID={cid})))"
 
 
-def _print_packet(operation, socket_fileno, view):
+def _print_packet(operation, socket_fileno, data):
     """
     Print the packet content in a format suitable for debugging.
     """
     offset = 0
-    hex_data = view.hex().upper()
+    hex_data = memoryview(data).hex().upper()
     current_date = datetime.datetime.now().isoformat(sep=" ",
                                                      timespec="milliseconds")
     print(current_date, f"[socket: {socket_fileno}]", operation)

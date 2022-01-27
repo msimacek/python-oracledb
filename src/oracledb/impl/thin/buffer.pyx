@@ -231,8 +231,8 @@ cdef class ReadBuffer:
         ssize_t _packet_start_offset
         const char_type *_data
         bytearray _data_obj
+        char_type[:] _data_view
         Capabilities _caps
-        int _view_count
         object _socket
 
     def __cinit__(self, object sock, ssize_t max_packet_size,
@@ -242,18 +242,9 @@ cdef class ReadBuffer:
         self._max_size = max_packet_size * 2
         self._max_packet_size = max_packet_size
         self._data_obj = bytearray(self._max_size)
-        self._data = <const char_type*> self._data_obj
+        self._data_view = self._data_obj
+        self._data = <char_type*> self._data_obj
         self._chunked_bytes_buf = ChunkedBytesBuffer()
-
-    def __getbuffer__(self, Py_buffer *buf, int flags):
-        cdef char* ptr = <char*> &self._data[self._packet_start_offset]
-        self._view_count += 1
-        cpython.PyBuffer_FillInfo(buf, self, ptr,
-                                  self._size - self._packet_start_offset, 1,
-                                  flags)
-
-    def __releasebuffer__(self, Py_buffer *buf):
-        self._view_count -= 1
 
     cdef int _convert_base64(self, char_type *result, long value, int size,
                              int offset):
@@ -366,11 +357,9 @@ cdef class ReadBuffer:
         """
         cdef:
             ssize_t offset, bytes_to_read, bytes_read = 0, packet_size
-            char_type[:] view
 
         # if no bytes are left over from a previous read, perform a read of the
         # maximum packet size and reset the offset to 0
-        view = memoryview(self._data_obj)
         if self._bytes_to_process == 0:
             self._packet_start_offset = 0
             self._offset = 0
@@ -386,8 +375,8 @@ cdef class ReadBuffer:
             if self._bytes_to_process < PACKET_HEADER_SIZE:
                 offset = self._size + self._bytes_to_process
                 bytes_to_read = PACKET_HEADER_SIZE - self._bytes_to_process
-                self._get_data_from_socket(view[offset:], bytes_to_read,
-                                           &bytes_read)
+                self._get_data_from_socket(self._data_view[offset:],
+                                           bytes_to_read, &bytes_read)
 
         # if no bytes were read this means the server closed the connection
         if self._bytes_to_process < PACKET_HEADER_SIZE:
@@ -415,7 +404,7 @@ cdef class ReadBuffer:
         while self._bytes_to_process < packet_size:
             offset = self._packet_start_offset + self._bytes_to_process
             bytes_to_read = packet_size - self._bytes_to_process
-            self._get_data_from_socket(view[offset:], bytes_to_read,
+            self._get_data_from_socket(self._data_view[offset:], bytes_to_read,
                                        &bytes_read)
             self._bytes_to_process += bytes_read
 
@@ -429,8 +418,9 @@ cdef class ReadBuffer:
 
         # display packet if requested
         if DEBUG_PACKETS:
+            offset = self._packet_start_offset
             _print_packet("Receiving packet:", self._socket.fileno(),
-                          memoryview(self))
+                          self._data_view[offset:self._size])
 
     cdef int skip_bytes(self, ssize_t num_bytes) except -1:
         """
@@ -819,10 +809,10 @@ cdef class WriteBuffer:
         ssize_t _max_size, _actual_size
         uint8_t _packet_type
         bytearray _data_obj
-        Capabilities _caps
+        char_type[:] _data_view
         char_type *_data
+        Capabilities _caps
         object _socket
-        int _view_count
         uint8_t _seq_num
         bint _packet_sent
 
@@ -830,20 +820,9 @@ cdef class WriteBuffer:
         self._socket = sock
         self._caps = caps
         self._data_obj = bytearray(max_size)
+        self._data_view = self._data_obj
         self._data = <char_type*> self._data_obj
         self._max_size = max_size
-
-    def __dealloc__(self):
-        if self._view_count > 0:
-            raise BufferError('Deallocating buffer with attached memoryviews!')
-
-    def __getbuffer__(self, Py_buffer *buf, int flags):
-        self._view_count += 1
-        cpython.PyBuffer_FillInfo(buf, self, self._data, self._actual_size, 1,
-                flags)
-
-    def __releasebuffer__(self, Py_buffer *buf):
-        self._view_count -= 1
 
     cdef int _send_packet(self, bint final_packet) except -1:
         """
@@ -863,9 +842,9 @@ cdef class WriteBuffer:
         self._actual_size = size
         if DEBUG_PACKETS:
             _print_packet("Sending packet:", self._socket.fileno(),
-                          memoryview(self))
+                          self._data_view[:self._actual_size])
         try:
-            self._socket.send(memoryview(self))
+            self._socket.send(self._data_view[:self._actual_size])
         except OSError as e:
             errors._raise_err(errors.ERR_CONNECTION_CLOSED, str(e))
         self._packet_sent = True
