@@ -13,8 +13,7 @@ cdef class ThinVarImpl(BaseVarImpl):
         object _last_raw_value
 
     cdef int _bind(self, object conn, BaseCursorImpl cursor_impl,
-                   uint32_t num_execs, object name=None,
-                   uint32_t pos=0) except -1:
+                   uint32_t num_execs, object name, uint32_t pos) except -1:
         cdef:
             ThinCursorImpl thin_cursor_impl = <ThinCursorImpl> cursor_impl
             object var_list, bind_info_dict, var, value, lob

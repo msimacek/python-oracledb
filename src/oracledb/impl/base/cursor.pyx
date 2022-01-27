@@ -415,7 +415,7 @@ cdef class BaseCursorImpl:
             object key
         if isinstance(self.bind_var_impls, dict):
             for key, var_impl in self.bind_var_impls.items():
-                var_impl._bind(conn, self, num_execs, key)
+                var_impl._bind(conn, self, num_execs, key, 0)
         else:
             for pos, var_impl in enumerate(self.bind_var_impls):
                 var_impl._bind(conn, self, num_execs, None, pos + 1)

@@ -5,8 +5,7 @@
 cdef class BaseVarImpl:
 
     cdef int _bind(self, object conn, BaseCursorImpl cursor,
-                   uint32_t num_execs, object name=None,
-                   uint32_t pos=0) except -1:
+                   uint32_t num_execs, object name, uint32_t pos) except -1:
         """
         Binds a variable to the cursor.
         """

@@ -152,7 +152,7 @@ cdef class BaseVarImpl:
         bint _is_value_set
 
     cdef int _bind(self, object conn, BaseCursorImpl cursor,
-                   uint32_t num_execs, object name=*, uint32_t pos=*) except -1
+                   uint32_t num_execs, object name, uint32_t pos) except -1
     cdef int _finalize_init(self) except -1
     cdef int _resize(self, uint32_t new_size) except -1
     cdef int _set_type_info_from_type(self, object typ) except -1
