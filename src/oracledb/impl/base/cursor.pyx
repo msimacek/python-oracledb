@@ -188,13 +188,13 @@ cdef class BaseCursorImpl:
             Py_ssize_t i, num_params, orig_num_params
         num_params = len(params)
         if self.bind_vars is not None:
-            orig_num_params = len(self.bind_vars)
+            bind_vars = self.bind_vars
+            bind_var_impls = self.bind_var_impls
+            orig_num_params = len(bind_vars)
         else:
-            self.bind_vars = []
-            self.bind_var_impls = []
+            bind_vars = self.bind_vars = []
+            bind_var_impls = self.bind_var_impls = []
             orig_num_params = 0
-        bind_vars = self.bind_vars
-        bind_var_impls = self.bind_var_impls
         if num_params > orig_num_params:
             empty_values = [None] * (num_params - orig_num_params)
             bind_vars.extend(empty_values)
