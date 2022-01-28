@@ -239,7 +239,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_LIBRARY_ALREADY_INITIALIZED: \
             "Oracle Client library has already been initialized",
     ERR_LISTENER_REFUSED_CONNECTION: \
-            "listener refused connection with error {error_code}",
+            "listener refused connection (see ORA-{error_code})",
     ERR_MESSAGE_HAS_NO_PAYLOAD: "message has no payload",
     ERR_MESSAGE_TYPE_UNKNOWN: \
             "protocol error: unknown message type: {message_type}",
