@@ -161,11 +161,14 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(params.port, 1578)
         self.assertEqual(params.service_name, "")
 
-    def test_4514_ezconnect_without_port_and_service_name(self):
+    def test_4514_missing_entry_in_tnsnames(self):
         "4514 - test EZConnect string parsing with no port and service name"
-        params = oracledb.ConnectParams()
-        self.assertRaisesRegex(oracledb.DatabaseError, "DPY-4000",
-                               params.parse_connect_string, "my_host16")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            params = oracledb.ConnectParams(config_dir=temp_dir)
+            file_name = os.path.join(temp_dir, "tnsnames.ora")
+            open(file_name, "w").write("# no entries")
+            self.assertRaisesRegex(oracledb.DatabaseError, "DPY-4000",
+                                   params.parse_connect_string, "tns_alias")
 
     def test_4515_ezconnect_with_port_missing(self):
         "4515 - test EZConnect string parsing with port value missing"
@@ -249,6 +252,20 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(params.port, 1560)
         self.assertEqual(params.service_name, "my_service_name23")
         self.assertEqual(params.wallet_location, "my wallet dir 23")
+
+    def test_4522_missing_tnsnames(self):
+        "4522 - test missing tnsnames.ora in configuration directory"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            params = oracledb.ConnectParams(config_dir=temp_dir)
+            self.assertRaisesRegex(oracledb.DatabaseError, "DPY-4026:",
+                                   params.parse_connect_string, "tns_alias")
+
+    def test_4523_missing_config_dir(self):
+        "4523 - test missing configuration directory"
+        params = oracledb.ConnectParams()
+        params.config_dir = None
+        self.assertRaisesRegex(oracledb.DatabaseError, "DPY-4027:",
+                               params.parse_connect_string, "tns_alias")
 
 if __name__ == "__main__":
     test_env.run_test_cases()

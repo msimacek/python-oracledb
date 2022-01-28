@@ -144,6 +144,8 @@ ERR_INVALID_POOL_PURITY = 4022
 ERR_CANNOT_PARSE_EZCONNECT_STRING = 4023
 ERR_CALL_TIMEOUT_EXCEEDED = 4024
 ERR_INVALID_REF_CURSOR = 4025
+ERR_TNS_NAMES_FILE_MISSING = 4026
+ERR_NO_CONFIG_DIR = 4027
 
 # error numbers that result in InternalError
 ERR_MESSAGE_TYPE_UNKNOWN = 5000
@@ -253,6 +255,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_NCHAR_CS_NOT_SUPPORTED: \
             "NCHAR character set id {charset_id} not supported with the " \
             "thin driver",
+    ERR_NO_CONFIG_DIR: "no configuration directory to search for tnsnames.ora",
     ERR_NO_PASSWORD: "no password specified",
     ERR_NO_STATEMENT: "no statement specified and no prior statement prepared",
     ERR_NO_STATEMENT_EXECUTED: "no statement executed",
@@ -286,7 +289,9 @@ ERR_MESSAGE_FORMATS = {
             "the thick implementation cannot be used because a thin " \
             "connection has already been created",
     ERR_TIME_NOT_SUPPORTED: "Oracle does not support time only variables",
-    ERR_TNS_ENTRY_NOT_FOUND: "unable to find {name} in tnsnames.ora",
+    ERR_TNS_ENTRY_NOT_FOUND: \
+            "unable to find {name} in tnsnames.ora found in {config_dir}",
+    ERR_TNS_NAMES_FILE_MISSING: "tnsnames.ora not found in {config_dir}",
     ERR_UNSUPPORTED_INBAND_NOTIFICATION: \
             "unsupported in-band notification with error number {err_num}",
     ERR_WALLET_FILE_MISSING: "wallet file {name} is missing",

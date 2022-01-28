@@ -227,8 +227,6 @@ class ConnectParams:
         the file was previously loaded, the modification time is checked and,
         if unchanged, the previous file is returned.
         """
-        if self.config_dir is None:
-            return None
         file_name = os.path.join(self.config_dir, "tnsnames.ora")
         tnsnames_file = self._tnsnames_files.get(self.config_dir)
         try:
@@ -236,7 +234,8 @@ class ConnectParams:
         except:
             if tnsnames_file is not None:
                 del self._tnsnames_files[self.config_dir]
-            return None
+            errors._raise_err(errors.ERR_TNS_NAMES_FILE_MISSING,
+                              config_dir=self.config_dir)
         if tnsnames_file is not None \
                 and tnsnames_file.mtime == stat_info.st_mtime:
             return tnsnames_file
@@ -410,14 +409,14 @@ class ConnectParams:
         Internal method used to search the tnsnames.ora file. An exception is
         raised if no entry is found (or no tnsnames.ora file is found).
         """
+        if self.config_dir is None:
+            errors._raise_err(errors.ERR_NO_CONFIG_DIR)
         tnsnames_file = self._get_tnsnames_file()
-        if tnsnames_file is not None:
-            search_name = name.upper()
-            connect_descriptor = tnsnames_file.entries.get(search_name)
-            if connect_descriptor is not None:
-                self._parse_connect_descriptor(connect_descriptor)
-                return
-        errors._raise_err(errors.ERR_TNS_ENTRY_NOT_FOUND, name=name)
+        connect_descriptor = tnsnames_file.entries.get(name.upper())
+        if connect_descriptor is None:
+            errors._raise_err(errors.ERR_TNS_ENTRY_NOT_FOUND, name=name,
+                            config_dir=self.config_dir)
+        self._parse_connect_descriptor(connect_descriptor)
 
     def _set_by_keyword_args(self, keyword_args):
         """
