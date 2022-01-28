@@ -682,5 +682,11 @@ class TestCase(test_env.BaseTestCase):
         expected_data = [('A', 2, 3)] * 3
         self.assertEqual(self.cursor.fetchall(), expected_data)
 
+    def test_4356_multiple_single_quoted_strings(self):
+        "4356 - test bindnames with statement containing quoted strings"
+        sql = "select :bind_4356, 'string_4356', ':string_4356' from dual"
+        self.cursor.prepare(sql)
+        self.assertEqual(self.cursor.bindnames(), ['BIND_4356'])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

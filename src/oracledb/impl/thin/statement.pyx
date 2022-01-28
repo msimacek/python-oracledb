@@ -157,7 +157,7 @@ cdef class Statement:
         # ease searching for bind variables.
         sql = re.sub(r"/\*[\S\n ]+\*/", "", sql)
         sql = re.sub(r"\--.*(\n|$)", "", sql)
-        sql = re.sub(r"""'[^'"]*'(?=(?:[^'"]*"[^'"]*")*[^'"]*$)""", "", sql,
+        sql = re.sub(r"""'[^']*'(?=(?:[^']*[^']*')*[^']*$)*""", "", sql,
                      flags=re.MULTILINE)
         sql = re.sub(r'(:\s*)?("([^"]*)")',
                     lambda m: m.group(0) if sql[m.start(0)] == ":" else "",
