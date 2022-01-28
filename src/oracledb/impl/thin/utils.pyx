@@ -29,6 +29,36 @@ class ConnectConstants:
 
 _connect_constants = ConnectConstants()
 
+cdef int _convert_base64(char_type *buf, long value, int size, int offset):
+    """
+    Converts every 6 bits into a character, from left to right. This is
+    similar to ordinary base64 encoding with a few differences and written
+    here for performance.
+    """
+    cdef int i
+    for i in range(size):
+        buf[offset + size - i - 1] = TNS_BASE64_ALPHABET_ARRAY[value & 0x3f]
+        value = value >> 6
+    return offset + size
+
+
+cdef object _encode_rowid(Rowid *rowid):
+    """
+    Converts the rowid structure into an encoded string, if the rowid structure
+    contains valid data; otherwise, it returns None.
+    """
+    cdef:
+        char_type buf[TNS_MAX_ROWID_LENGTH]
+        int offset = 0
+    if rowid.rba != 0 or rowid.partition_id != 0 or rowid.block_num != 0 \
+            or rowid.slot_num != 0:
+        offset = _convert_base64(buf, rowid.rba, 6, offset)
+        offset = _convert_base64(buf, rowid.partition_id, 3, offset)
+        offset = _convert_base64(buf, rowid.block_num, 6, offset)
+        offset = _convert_base64(buf, rowid.slot_num, 3, offset)
+        return buf[:TNS_MAX_ROWID_LENGTH].decode()
+
+
 def _get_connect_data(params):
     """
     Return the connect data required by the listener in order to connect.

@@ -50,6 +50,8 @@ from .cursor import Cursor
 from .lob import LOB
 from .var import Var
 
+ctypedef unsigned char char_type
+
 include "impl/thin/constants.pxi"
 include "impl/thin/utils.pyx"
 include "impl/thin/crypto.pyx"

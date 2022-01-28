@@ -2,8 +2,6 @@
 # Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
-ctypedef unsigned char char_type
-
 DEF PACKET_HEADER_SIZE = 8
 DEF NUMBER_AS_TEXT_CHARS = 172
 DEF NUMBER_MAX_DIGITS = 40
@@ -20,6 +18,12 @@ cdef struct BytesChunk:
     char_type *ptr
     uint32_t length
     uint32_t allocated_length
+
+cdef struct Rowid:
+    uint32_t rba
+    uint16_t partition_id
+    uint32_t block_num
+    uint16_t slot_num
 
 
 cdef inline uint16_t bswap16(uint16_t value):
@@ -245,20 +249,6 @@ cdef class ReadBuffer:
         self._data_view = self._data_obj
         self._data = <char_type*> self._data_obj
         self._chunked_bytes_buf = ChunkedBytesBuffer()
-
-    cdef int _convert_base64(self, char_type *result, long value, int size,
-                             int offset):
-        """
-        Converts every 6 bits into a character, from left to right. This is
-        similar to ordinary base64 encoding with a few differences and written
-        here for performance.
-        """
-        cdef int i
-        for i in range(size):
-            result[offset + size - i - 1] = \
-                    TNS_BASE64_ALPHABET_ARRAY[value & 0x3f]
-            value = value >> 6
-        return offset + size
 
     cdef inline int _get_data_from_socket(self, object obj,
                                           ssize_t bytes_requested,
@@ -728,23 +718,15 @@ cdef class ReadBuffer:
             return buf[:num_bytes].decode()
         return float(buf[:num_bytes])
 
-    cdef object read_rowid(self):
-        cdef:
-            char_type result[TNS_MAX_ROWID_LENGTH]
-            uint16_t partition_id, slot_num
-            uint32_t rba, block_num
-            int offset = 0
-        rba = self.read_ub4()
-        partition_id = self.read_ub2()
+    cdef int read_rowid(self, Rowid *rowid) except -1:
+        """
+        Populates the rowid structure by reading the buffer contents.
+        """
+        rowid.rba = self.read_ub4()
+        rowid.partition_id = self.read_ub2()
         self.skip_bytes(1)
-        block_num = self.read_ub4()
-        slot_num = self.read_ub2()
-        if rba != 0 or partition_id != 0 or block_num != 0 or slot_num != 0:
-            offset = self._convert_base64(result, rba, 6, offset)
-            offset = self._convert_base64(result, partition_id, 3, offset)
-            offset = self._convert_base64(result, block_num, 6, offset)
-            offset = self._convert_base64(result, slot_num, 3, offset)
-            return result[:TNS_MAX_ROWID_LENGTH].decode()
+        rowid.block_num = self.read_ub4()
+        rowid.slot_num = self.read_ub2()
 
     cdef object read_urowid(self, bytes input_bytes):
         cdef:

@@ -12,7 +12,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
         list _implicit_resultsets
         uint32_t _num_columns
         uint32_t _last_row_index
-        str _lastrowid
+        Rowid _lastrowid
 
     def __cinit__(self, conn_impl):
         self._conn_impl = conn_impl
@@ -113,7 +113,8 @@ cdef class ThinCursorImpl(BaseCursorImpl):
         return self._implicit_resultsets
 
     def get_lastrowid(self):
-        return self._lastrowid
+        if self.rowcount > 0:
+            return _encode_rowid(&self._lastrowid)
 
     def is_query(self, connection):
         return self.fetch_vars is not None

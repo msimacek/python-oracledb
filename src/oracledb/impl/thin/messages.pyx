@@ -11,7 +11,7 @@ cdef class _OracleErrorInfo:
         uint64_t rowcount
         bint is_warning
         str message
-        str rowid
+        Rowid rowid
         list batcherrors
 
 
@@ -61,7 +61,7 @@ cdef class Message:
         buf.read_ub2()                      # user cursor options
         buf.read_uint8()                    # UPI parameter
         buf.read_uint8()                    # warning flag
-        info.rowid = buf.read_rowid()
+        buf.read_rowid(&info.rowid)         # rowid
         buf.read_ub4()                      # OS error
         buf.read_uint8()                    # statement number
         buf.read_uint8()                    # call number
@@ -471,6 +471,7 @@ cdef class MessageWithData(Message):
             ThinLobImpl lob_impl
             FetchInfo fetch_info
             bytes temp_bytes
+            Rowid rowid
         fetch_info = var_impl._fetch_info
         if fetch_info is not None:
             ora_type_num = fetch_info._dbtype._ora_type_num
@@ -505,7 +506,8 @@ cdef class MessageWithData(Message):
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ:
             column_value = buf.read_oracle_date(num_bytes)
         elif ora_type_num == TNS_DATA_TYPE_ROWID:
-            column_value = buf.read_rowid()
+            buf.read_rowid(&rowid)
+            column_value = _encode_rowid(&rowid)
         elif ora_type_num == TNS_DATA_TYPE_UROWID:
             buf.skip_bytes(num_bytes)           # skip length
             temp_bytes = buf.read_bytes(buf.read_uint8())
@@ -652,10 +654,7 @@ cdef class MessageWithData(Message):
         cursor_impl._statement._cursor_id = self.error_info.cursor_id
         if not cursor_impl._statement._is_plsql:
             cursor_impl.rowcount = self.error_info.rowcount
-        if self.error_info.rowcount > 0:
-            cursor_impl._lastrowid = self.error_info.rowid
-        else:
-            cursor_impl._lastrowid = None
+        cursor_impl._lastrowid = self.error_info.rowid
         cursor_impl._batcherrors = self.error_info.batcherrors
         if self.batcherrors and cursor_impl._batcherrors is None:
             cursor_impl._batcherrors = []
