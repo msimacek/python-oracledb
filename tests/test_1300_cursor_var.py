@@ -6,8 +6,6 @@
 1300 - Module for testing cursor variables
 """
 
-import sys
-
 import oracledb
 import test_env
 
@@ -19,7 +17,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(cursor.description, None)
         self.cursor.execute("""
                 begin
-                  open :cursor for select 'X' StringValue from dual;
+                    open :cursor for select 'X' StringValue from dual;
                 end;""",
                 cursor=cursor)
         varchar_ratio, nvarchar_ratio = test_env.get_charset_ratios()
@@ -61,9 +59,9 @@ class TestCase(test_env.BaseTestCase):
         sql = """
                 begin
                     open :pcursor for
-                    select IntCol
-                    from TestNumbers
-                    order by IntCol;
+                        select IntCol
+                        from TestNumbers
+                        order by IntCol;
                 end;"""
         self.cursor.execute(sql, pcursor=out_cursor)
         rows = out_cursor.fetchall()
@@ -76,9 +74,7 @@ class TestCase(test_env.BaseTestCase):
     def test_1304_fetch_cursor(self):
         "1304 - test fetching a cursor"
         self.cursor.execute("""
-                select
-                  IntCol,
-                  cursor(select IntCol + 1 from dual) CursorValue
+                select IntCol, cursor(select IntCol + 1 from dual) CursorValue
                 from TestNumbers
                 order by IntCol""")
         expected_value = [

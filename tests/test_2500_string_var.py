@@ -84,8 +84,8 @@ class TestCase(test_env.BaseTestCase):
         array = [r[1] for r in self.raw_data]
         statement = """
                 begin
-                  :return_value := pkg_TestStringArrays.TestInArrays(
-                      :integer_value, :array);
+                    :return_value := pkg_TestStringArrays.TestInArrays(
+                        :integer_value, :array);
                 end;"""
         self.cursor.execute(statement, return_value=return_value,
                             integer_value=5, array=array)
@@ -101,8 +101,8 @@ class TestCase(test_env.BaseTestCase):
         array = [r[1] for r in self.raw_data]
         self.cursor.execute("""
                 begin
-                  :return_value := pkg_TestStringArrays.TestInArrays(
-                      :integer_value, :array);
+                    :return_value := pkg_TestStringArrays.TestInArrays(
+                        :integer_value, :array);
                 end;""",
                 return_value=return_value,
                 integer_value=6,
@@ -116,8 +116,8 @@ class TestCase(test_env.BaseTestCase):
         array.setvalue(0, [r[1] for r in self.raw_data])
         self.cursor.execute("""
                 begin
-                  :return_value := pkg_TestStringArrays.TestInArrays(
-                      :integer_value, :array);
+                    :return_value := pkg_TestStringArrays.TestInArrays(
+                        :integer_value, :array);
                 end;""",
                 return_value=return_value,
                 integer_value=7,
@@ -134,7 +134,7 @@ class TestCase(test_env.BaseTestCase):
         array.setvalue(0, original_data)
         self.cursor.execute("""
                 begin
-                  pkg_TestStringArrays.TestInOutArrays(:num_elems, :array);
+                    pkg_TestStringArrays.TestInOutArrays(:num_elems, :array);
                 end;""",
                 num_elems=5,
                 array=array)
@@ -146,7 +146,7 @@ class TestCase(test_env.BaseTestCase):
         expected_data = ["Test out element # %d" % i for i in range(1, 7)]
         self.cursor.execute("""
                 begin
-                  pkg_TestStringArrays.TestOutArrays(:num_elems, :array);
+                    pkg_TestStringArrays.TestOutArrays(:num_elems, :array);
                 end;""",
                 num_elems=6,
                 array=array)
@@ -215,7 +215,7 @@ class TestCase(test_env.BaseTestCase):
         bind_vars = self.cursor.setinputsizes(value=oracledb.STRING)
         self.cursor.execute("""
                 begin
-                  :value := 'TSI';
+                    :value := 'TSI';
                 end;""")
         self.assertEqual(bind_vars["value"].getvalue(), "TSI")
 
@@ -224,7 +224,7 @@ class TestCase(test_env.BaseTestCase):
         bind_vars = self.cursor.setinputsizes(value=30)
         self.cursor.execute("""
                 begin
-                  :value := 'TSI (I)';
+                    :value := 'TSI (I)';
                 end;""")
         self.assertEqual(bind_vars["value"].getvalue(), "TSI (I)")
 
@@ -233,7 +233,7 @@ class TestCase(test_env.BaseTestCase):
         bind_vars = self.cursor.setinputsizes(value=oracledb.STRING)
         self.cursor.execute("""
                 begin
-                  :value := :value || ' TSI';
+                    :value := :value || ' TSI';
                 end;""",
                 value="InVal")
         self.assertEqual(bind_vars["value"].getvalue(), "InVal TSI")
@@ -243,7 +243,7 @@ class TestCase(test_env.BaseTestCase):
         bind_vars = self.cursor.setinputsizes(value=30)
         self.cursor.execute("""
                 begin
-                  :value := :value || ' TSI (I)';
+                    :value := :value || ' TSI (I)';
                 end;""",
                 value="InVal")
         self.assertEqual(bind_vars["value"].getvalue(), "InVal TSI (I)")
@@ -253,7 +253,7 @@ class TestCase(test_env.BaseTestCase):
         var = self.cursor.var(oracledb.STRING)
         self.cursor.execute("""
                 begin
-                  :value := 'TSI (VAR)';
+                    :value := 'TSI (VAR)';
                 end;""",
                 value=var)
         self.assertEqual(var.getvalue(), "TSI (VAR)")
@@ -264,7 +264,7 @@ class TestCase(test_env.BaseTestCase):
         var.setvalue(0, "InVal")
         self.cursor.execute("""
                 begin
-                  :value := :value || ' TSI (VAR)';
+                    :value := :value || ' TSI (VAR)';
                 end;""",
                 value=var)
         self.assertEqual(var.getvalue(), "InVal TSI (VAR)")
@@ -274,9 +274,9 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.setinputsizes(big_string=oracledb.DB_TYPE_LONG)
         self.cursor.execute("""
                 declare
-                  t_Temp varchar2(20000);
+                    t_Temp varchar2(20000);
                 begin
-                  t_Temp := :big_string;
+                    t_Temp := :big_string;
                 end;""",
                 big_string="X" * 10000)
 
@@ -369,7 +369,7 @@ class TestCase(test_env.BaseTestCase):
                 from TestTempTable
                 order by IntCol""")
         self.assertEqual(self.cursor.fetchall(),
-                [(1, short_string), (2, long_string)])
+                         [(1, short_string), (2, long_string)])
 
     def test_2528_issue_50(self):
         "2528 - test issue 50 - avoid error ORA-24816"
@@ -432,7 +432,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestTempXML (IntCol, XMLCol)
                 values (:1, :2)""", (int_val, xml_string))
         self.cursor.execute("select XMLCol from TestTempXML where intCol = :1",
-                (int_val,))
+                            (int_val,))
         actual_value, = self.cursor.fetchone()
         self.assertEqual(actual_value.strip(), xml_string)
 
@@ -460,7 +460,6 @@ class TestCase(test_env.BaseTestCase):
         with self.connection.cursor() as cursor:
             cursor.outputtypehandler = self.__return_strings_as_bytes
             cursor.execute("select IntCol, StringCol1 from TestTempTable")
-            expected_value = (1, string_val.encode())
             self.assertEqual(cursor.fetchone(), (1, string_val.encode()))
         with self.connection.cursor() as cursor:
             cursor.outputtypehandler = None

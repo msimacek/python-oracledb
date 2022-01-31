@@ -39,11 +39,11 @@ class TestCase(test_env.BaseTestCase):
                 bind_value = long_string
             self.cursor.execute("""
                     insert into Test%ss (
-                      IntCol,
-                      %sCol
+                        IntCol,
+                        %sCol
                     ) values (
-                      :integer_value,
-                      :long_string
+                        :integer_value,
+                        :long_string
                     )""" % (lob_type, lob_type),
                     integer_value=i,
                     long_string=bind_value)
@@ -64,11 +64,11 @@ class TestCase(test_env.BaseTestCase):
             write_value = write_value.encode("ascii")
         self.cursor.execute("""
                 insert into Test%ss (
-                  IntCol,
-                  %sCol
+                    IntCol,
+                    %sCol
                 ) values (
-                  :integer_value,
-                  :long_string
+                    :integer_value,
+                    :long_string
                 )""" % (lob_type, lob_type),
                 integer_value=1,
                 long_string=long_string)

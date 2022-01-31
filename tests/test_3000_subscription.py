@@ -139,7 +139,7 @@ class TestCase(test_env.BaseTestCase):
         # test string format of subscription object is as expected
         fmt = "<oracledb.Subscription on <oracledb.Connection to %s@%s>>"
         expected = fmt % \
-                (test_env.get_main_user(), test_env.get_connect_string())
+                   (test_env.get_main_user(), test_env.get_connect_string())
         self.assertEqual(str(sub), expected)
 
     def test_3001_deprecations(self):

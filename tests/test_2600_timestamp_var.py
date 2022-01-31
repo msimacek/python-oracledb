@@ -32,11 +32,11 @@ class TestCase(test_env.BaseTestCase):
                 str_value = str(i * 125)
                 fsecond = int(str_value + "0" * (6 - len(str_value)))
                 nullable_col = oracledb.Timestamp(date_value.year,
-                                                 date_value.month,
-                                                 date_value.day,
-                                                 date_value.hour,
-                                                 date_value.minute, i * 3,
-                                                 fsecond)
+                                                  date_value.month,
+                                                  date_value.day,
+                                                  date_value.hour,
+                                                  date_value.minute, i * 3,
+                                                  fsecond)
             else:
                 nullable_col = None
             data_tuple = (i, date_col, nullable_col)
@@ -66,7 +66,7 @@ class TestCase(test_env.BaseTestCase):
         bind_vars = self.cursor.setinputsizes(value=oracledb.DB_TYPE_TIMESTAMP)
         self.cursor.execute("""
                 begin
-                  :value := to_timestamp('20021209', 'YYYYMMDD');
+                    :value := to_timestamp('20021209', 'YYYYMMDD');
                 end;""")
         self.assertEqual(bind_vars["value"].getvalue(),
                          oracledb.Timestamp(2002, 12, 9))
@@ -76,7 +76,7 @@ class TestCase(test_env.BaseTestCase):
         bind_vars = self.cursor.setinputsizes(value=oracledb.DB_TYPE_TIMESTAMP)
         self.cursor.execute("""
                 begin
-                  :value := :value + 5.25;
+                    :value := :value + 5.25;
                 end;""",
                 value = oracledb.Timestamp(2002, 12, 12, 10, 0, 0))
         self.assertEqual(bind_vars["value"].getvalue(),
@@ -87,8 +87,8 @@ class TestCase(test_env.BaseTestCase):
         var = self.cursor.var(oracledb.DB_TYPE_TIMESTAMP)
         self.cursor.execute("""
                 begin
-                  :value := to_date('20021231 12:31:00',
-                      'YYYYMMDD HH24:MI:SS');
+                    :value := to_date('20021231 12:31:00',
+                        'YYYYMMDD HH24:MI:SS');
                 end;""",
                 value=var)
         self.assertEqual(var.getvalue(),
@@ -100,7 +100,7 @@ class TestCase(test_env.BaseTestCase):
         var.setvalue(0, oracledb.Timestamp(2002, 12, 9, 6, 0, 0))
         self.cursor.execute("""
                 begin
-                  :value := :value + 5.25;
+                    :value := :value + 5.25;
                 end;""",
                 value = var)
         self.assertEqual(var.getvalue(),
