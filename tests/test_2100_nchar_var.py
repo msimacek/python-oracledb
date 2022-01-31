@@ -31,7 +31,7 @@ class TestCase(test_env.BaseTestCase):
         return_value = self.cursor.var(int)
         self.cursor.execute("""
                 begin
-                  :retval := LENGTH(:value);
+                    :retval := LENGTH(:value);
                 end;""",
                 value="InVal \u3042",
                 retval=return_value)
@@ -74,8 +74,8 @@ class TestCase(test_env.BaseTestCase):
         array_var = self.cursor.arrayvar(oracledb.DB_TYPE_NVARCHAR, array)
         statement = """
                 begin
-                  :retval := pkg_TestUnicodeArrays.TestInArrays(
-                      :integer_value, :array);
+                    :retval := pkg_TestUnicodeArrays.TestInArrays(
+                        :integer_value, :array);
                 end;"""
         self.cursor.execute(statement, retval=return_value, integer_value=5,
                             array=array_var)
@@ -92,8 +92,8 @@ class TestCase(test_env.BaseTestCase):
         array = [r[1] for r in self.raw_data]
         self.cursor.execute("""
                 begin
-                  :retval := pkg_TestUnicodeArrays.TestInArrays(:integer_value,
-                      :array);
+                    :retval := pkg_TestUnicodeArrays.TestInArrays(:integer_value,
+                        :array);
                 end;""",
                 retval=return_value,
                 integer_value=6,
@@ -107,8 +107,8 @@ class TestCase(test_env.BaseTestCase):
         array.setvalue(0, [r[1] for r in self.raw_data])
         self.cursor.execute("""
                 begin
-                  :retval := pkg_TestUnicodeArrays.TestInArrays(:integer_value,
-                      :array);
+                    :retval := pkg_TestUnicodeArrays.TestInArrays(:integer_value,
+                        :array);
                 end;""",
                 retval=return_value,
                 integer_value=7,
@@ -121,11 +121,11 @@ class TestCase(test_env.BaseTestCase):
         original_data = [r[1] for r in self.raw_data]
         fmt = "Converted element \u3042 # %d originally had length %d"
         expected_data = [fmt % (i, len(original_data[i - 1])) \
-                for i in range(1, 6)] + original_data[5:]
+                         for i in range(1, 6)] + original_data[5:]
         array.setvalue(0, original_data)
         self.cursor.execute("""
                 begin
-                  pkg_TestUnicodeArrays.TestInOutArrays(:numElems, :array);
+                    pkg_TestUnicodeArrays.TestInOutArrays(:numElems, :array);
                 end;""",
                 numElems = 5,
                 array = array)
@@ -138,7 +138,7 @@ class TestCase(test_env.BaseTestCase):
         expected_data = [fmt % i for i in range(1, 7)]
         self.cursor.execute("""
                 begin
-                  pkg_TestUnicodeArrays.TestOutArrays(:numElems, :array);
+                    pkg_TestUnicodeArrays.TestOutArrays(:numElems, :array);
                 end;""",
                 numElems = 6,
                 array = array)
@@ -157,7 +157,7 @@ class TestCase(test_env.BaseTestCase):
         bind_vars = self.cursor.setinputsizes(value=oracledb.DB_TYPE_NVARCHAR)
         self.cursor.execute(r"""
                 begin
-                  :value := unistr('TSI \3042');
+                    :value := unistr('TSI \3042');
                 end;""")
         self.assertEqual(bind_vars["value"].getvalue(), "TSI \u3042")
 
@@ -166,18 +166,18 @@ class TestCase(test_env.BaseTestCase):
         bind_vars = self.cursor.setinputsizes(value=oracledb.DB_TYPE_NVARCHAR)
         self.cursor.execute(r"""
                 begin
-                  :value := :value || unistr(' TSI \3042');
+                    :value := :value || unistr(' TSI \3042');
                 end;""",
                 value = "InVal \u3041")
         self.assertEqual(bind_vars["value"].getvalue(),
-                "InVal \u3041 TSI \u3042")
+                         "InVal \u3041 TSI \u3042")
 
     def test_2112_bind_out_var(self):
         "2112 - test binding out with cursor.var() method"
         var = self.cursor.var(oracledb.DB_TYPE_NVARCHAR)
         self.cursor.execute(r"""
                 begin
-                  :value := unistr('TSI (VAR) \3042');
+                    :value := unistr('TSI (VAR) \3042');
                 end;""",
                 value=var)
         self.assertEqual(var.getvalue(), "TSI (VAR) \u3042")
@@ -188,7 +188,7 @@ class TestCase(test_env.BaseTestCase):
         var.setvalue(0, "InVal \u3041")
         self.cursor.execute(r"""
                 begin
-                  :value := :value || unistr(' TSI (VAR) \3042');
+                    :value := :value || unistr(' TSI (VAR) \3042');
                 end;""",
                 value = var)
         self.assertEqual(var.getvalue(), "InVal \u3041 TSI (VAR) \u3042")

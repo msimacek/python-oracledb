@@ -94,10 +94,7 @@ class TestCase(test_env.BaseTestCase):
         "2304 - test fetching objects"
         self.cursor.execute("alter session set time_zone = 'UTC'")
         self.cursor.execute("""
-                select
-                  IntCol,
-                  ObjectCol,
-                  ArrayCol
+                select IntCol, ObjectCol, ArrayCol
                 from TestObjects
                 order by IntCol""")
         expected_value = [
@@ -286,7 +283,7 @@ class TestCase(test_env.BaseTestCase):
         sub_obj.SUBSTRINGVALUE = "Substring value"
         obj.SUBOBJECTVALUE = sub_obj
         self.cursor.execute("insert into TestObjects (IntCol, ObjectCol) " \
-                "values (4, :obj)", obj = obj)
+                            "values (4, :obj)", obj = obj)
         self.cursor.execute("""
                 select IntCol, ObjectCol, ArrayCol
                 from TestObjects
@@ -320,7 +317,7 @@ class TestCase(test_env.BaseTestCase):
         obj.NCLOBVALUE = "A short NCLOB (modified)"
         obj.BLOBVALUE = "A short BLOB (modified)"
         self.cursor.execute("insert into TestObjects (IntCol, ObjectCol) " \
-                "values (5, :obj)", obj = obj)
+                            "values (5, :obj)", obj = obj)
         self.cursor.execute("""
                 select IntCol, ObjectCol, ArrayCol
                 from TestObjects
@@ -418,7 +415,7 @@ class TestCase(test_env.BaseTestCase):
         obj_type = self.connection.gettype("UDT_OBJECT")
         user = test_env.get_main_user()
         self.assertEqual(str(obj_type),
-                         "<oracledb.DbObjectType %s.UDT_OBJECT>" % user.upper())
+                "<oracledb.DbObjectType %s.UDT_OBJECT>" % user.upper())
         self.assertEqual(str(obj_type.attributes[0]),
                          "<oracledb.DbObjectAttr NUMBERVALUE>")
 

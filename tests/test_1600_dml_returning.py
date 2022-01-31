@@ -138,7 +138,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(str_var.values, expected_values)
 
     def test_1606_update_multiple_rows_executemany(self):
-        "1606 - test update multiple rows with DML returning (executeMany)"
+        "1606 - test update multiple rows with DML returning (executemany)"
         data = [(i, "The initial value of string %d" % i) \
                 for i in range(1, 11)]
         self.cursor.execute("truncate table TestTempTable")
@@ -156,9 +156,9 @@ class TestCase(test_env.BaseTestCase):
                 returning IntCol, StringCol1 into :int_var, :str_var""",
                 [[3], [8], [11]])
         expected_values = [
-                [26, 27],
-                [28, 29, 30, 31, 32],
-                [33, 34, 35]
+            [26, 27],
+            [28, 29, 30, 31, 32],
+            [33, 34, 35]
         ]
         self.assertEqual(int_var.values, expected_values)
         expected_values = [
@@ -237,7 +237,7 @@ class TestCase(test_env.BaseTestCase):
                 where rowid = :1""",
                 (rowid,))
         self.assertEqual(self.cursor.fetchall(),
-                [(187, 'String 7 (Modified)')])
+                         [(187, 'String 7 (Modified)')])
 
     def test_1610_delete_returning_decreasing_rows_returned(self):
         "1610 - test delete returning decreasing number of rows"

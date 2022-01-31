@@ -353,8 +353,8 @@ class TestCase(test_env.BaseTestCase):
         "4326 - test bindnames() with strings in the statement"
         statement = """
                     begin
-                    :value := to_date('20021231 12:31:00',
-                    'YYYYMMDD HH24:MI:SS');
+                        :value := to_date('20021231 12:31:00',
+                            'YYYYMMDD HH24:MI:SS');
                     end;"""
         self.cursor.prepare(statement)
         self.assertEqual(self.cursor.bindnames(), ["VALUE"])

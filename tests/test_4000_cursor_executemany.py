@@ -99,13 +99,13 @@ class TestCase(test_env.BaseTestCase):
         "4007 - test executing a statement multiple times (with resize)"
         self.cursor.execute("truncate table TestTempTable")
         rows = [
-             (1, "First"),
-             (2, "Second"),
-             (3, "Third"),
-             (4, "Fourth"),
-             (5, "Fifth"),
-             (6, "Sixth"),
-             (7, "Seventh and the longest one")
+            (1, "First"),
+            (2, "Second"),
+            (3, "Third"),
+            (4, "Fourth"),
+            (5, "Fifth"),
+            (6, "Sixth"),
+            (7, "Seventh and the longest one")
         ]
         sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         self.cursor.executemany(sql, rows)
@@ -232,9 +232,9 @@ class TestCase(test_env.BaseTestCase):
         data = list(zip(int_values, str_values))
         self.cursor.executemany("""
             begin
-            insert into TestTempTable (IntCol, StringCol1)
-            values (:int_val, :str_val)
-            returning IntCol into :out_bind;
+                insert into TestTempTable (IntCol, StringCol1)
+                values (:int_val, :str_val)
+                returning IntCol into :out_bind;
             end;""", data)
         self.assertEqual(out_bind.values, [5, 8, 17, 24, 6])
 
@@ -245,7 +245,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.setinputsizes(out_bind)
         self.cursor.executemany("""
             begin
-            :out_var := 5;
+                :out_var := 5;
             end;""", 5)
         self.assertEqual(out_bind.values, [5, 5, 5, 5, 5])
 
@@ -260,9 +260,9 @@ class TestCase(test_env.BaseTestCase):
             self.cursor.setinputsizes(None, None, out_bind)
             self.cursor.executemany("""
                 begin
-                insert into TestTempTable (IntCol, StringCol1)
-                values (:int_val, :str_val)
-                returning IntCol into :out_bind;
+                    insert into TestTempTable (IntCol, StringCol1)
+                    values (:int_val, :str_val)
+                    returning IntCol into :out_bind;
                 end;""", data)
             self.assertEqual(out_bind.values, [5, 8, 17, 24, 6])
 

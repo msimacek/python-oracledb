@@ -8,7 +8,6 @@
 
 import datetime
 import decimal
-import time
 import unittest
 
 import oracledb

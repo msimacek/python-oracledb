@@ -55,11 +55,11 @@ class TestCase(test_env.BaseTestCase):
                 value_dict = supported_keys.get(key)
                 if value_dict is None:
                     raise ValueError("Tag only supports keys: %s" % \
-                            (", ".join(supported_keys)))
+                                     (", ".join(supported_keys)))
                 actual_value = value_dict.get(value)
                 if actual_value is None:
                     raise ValueError("Key %s only supports values: %s" % \
-                            (key, ", ".join(value_dict)))
+                                     (key, ", ".join(value_dict)))
                 state_parts.append("%s = %s" % (key, actual_value))
             sql = "alter session set %s" % " ".join(state_parts)
             cursor = conn.cursor()
@@ -212,7 +212,7 @@ class TestCase(test_env.BaseTestCase):
     def test_2406_purity(self):
         "2406 - test session pool with various types of purity"
         pool = test_env.get_pool(min=1, max=8, increment=1,
-                             getmode=oracledb.POOL_GETMODE_WAIT)
+                                 getmode=oracledb.POOL_GETMODE_WAIT)
 
         # get connection and set the action
         action = "TEST_ACTION"
@@ -262,7 +262,7 @@ class TestCase(test_env.BaseTestCase):
         self.__verify_connection(conn, test_env.get_proxy_user())
         conn.close()
         user_str = "%s[%s]" % \
-                (test_env.get_main_user(), test_env.get_proxy_user())
+                   (test_env.get_main_user(), test_env.get_proxy_user())
         conn = pool.acquire(user_str, test_env.get_main_password())
         self.__verify_connection(conn, test_env.get_proxy_user(),
                                  test_env.get_main_user())
@@ -285,7 +285,7 @@ class TestCase(test_env.BaseTestCase):
         self.__verify_connection(conn, test_env.get_proxy_user())
         conn.close()
         user_str = "%s[%s]" % \
-                (test_env.get_main_user(), test_env.get_proxy_user())
+                   (test_env.get_main_user(), test_env.get_proxy_user())
         conn = pool.acquire(user_str, test_env.get_main_password())
         self.__verify_connection(conn, test_env.get_proxy_user(),
                                  test_env.get_main_user())
@@ -427,17 +427,17 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(pool.timeout, 0, "timeout (0)")
         self.assertEqual(pool.wait_timeout, 5000, "wait_timeout (5000)")
         self.assertEqual(pool.max_lifetime_session, 0,
-                        "max_lifetime_sessionmeout (0)")
+                         "max_lifetime_sessionmeout (0)")
         self.assertEqual(pool.max_sessions_per_shard, 0,
-                        "max_sessions_per_shard (0)")
+                         "max_sessions_per_shard (0)")
         self.assertEqual(pool.stmtcachesize, 20, "stmtcachesize (20)")
         self.assertEqual(pool.ping_interval, 60, "ping_interval (60)")
 
         pool.reconfigure(min=2, max=5, increment=2, timeout=30,
-                        getmode=oracledb.POOL_GETMODE_TIMEDWAIT,
-                        wait_timeout=3000, max_lifetime_session=20,
-                        max_sessions_per_shard=2, stmtcachesize=30,
-                        ping_interval=30)
+                         getmode=oracledb.POOL_GETMODE_TIMEDWAIT,
+                         wait_timeout=3000, max_lifetime_session=20,
+                         max_sessions_per_shard=2, stmtcachesize=30,
+                         ping_interval=30)
         self.assertEqual(pool.min, 2, "min (2)")
         self.assertEqual(pool.max, 5, "max (5)")
         self.assertEqual(pool.increment, 2, "increment (2)")
@@ -446,9 +446,9 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(pool.timeout, 30, "timeout (30)")
         self.assertEqual(pool.wait_timeout, 3000, "wait_timeout (3000)")
         self.assertEqual(pool.max_lifetime_session, 20,
-                        "max_lifetime_sessionmeout (20)")
+                         "max_lifetime_sessionmeout (20)")
         self.assertEqual(pool.max_sessions_per_shard, 2,
-                        "max_sessions_per_shard (2)")
+                         "max_sessions_per_shard (2)")
         self.assertEqual(pool.stmtcachesize, 30, "stmtcachesize (30)")
         self.assertEqual(pool.ping_interval, 30, "ping_interval (30)")
 
@@ -485,9 +485,9 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(pool.timeout, 10, "timeout (10)")
         self.assertEqual(pool.wait_timeout, 10, "wait_timeout (10)")
         self.assertEqual(pool.max_lifetime_session, 20,
-                        "max_lifetime_sessionmeout (20)")
+                         "max_lifetime_sessionmeout (20)")
         self.assertEqual(pool.max_sessions_per_shard, 1,
-                        "max_sessions_per_shard (1)")
+                         "max_sessions_per_shard (1)")
         self.assertEqual(pool.stmtcachesize, 25, "stmtcachesize (25)")
         self.assertEqual(pool.ping_interval, 25, "ping_interval (25)")
 
@@ -525,7 +525,7 @@ class TestCase(test_env.BaseTestCase):
     def test_2420_callable_session_callbacks(self):
         "2420 - test that session callbacks are being called correctly"
         pool = test_env.get_pool(min=2, max=5, increment=1,
-                                 session_callback=self.__callable_session_callback)
+                        session_callback=self.__callable_session_callback)
 
         # new connection with a tag should invoke the session callback
         with pool.acquire(tag="NLS_DATE_FORMAT=SIMPLE") as conn:
