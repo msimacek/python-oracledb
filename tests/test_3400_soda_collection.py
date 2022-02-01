@@ -337,5 +337,16 @@ class TestCase(test_env.BaseTestCase):
         result, = cursor.fetchone()
         self.assertTrue('NO_MONITOR' in result.read())
 
+    def test_3415_soda_hint_with_invalid_type(self):
+        "3415 - test error for invalid type for soda hint"
+        soda_db = self.connection.getSodaDatabase()
+        coll = soda_db.createCollection("InvalidSodaHint")
+        self.assertRaises(TypeError, coll.insertOneAndGet,
+                          dict(name="Fred", age=16), hint=5)
+        self.assertRaises(TypeError, coll.insertManyAndGet,
+                          dict(name="George", age=25), hint=10)
+        self.assertRaises(TypeError, coll.saveAndGet,
+                          dict(name="Sally", age=36), hint=5)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
