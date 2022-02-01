@@ -93,7 +93,8 @@ class TestCase(test_env.BaseTestCase):
         "3911 - test executing a statement with an incorrect positional bind"
         statement = "select * from TestNumbers where IntCol = :value " + \
                     "and LongIntCol = :value2"
-        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4009:|^ORA-01008:",
+        self.assertRaisesRegex(oracledb.DatabaseError,
+                               "^DPY-4009:|^ORA-01008:",
                                self.cursor.execute, statement, [3])
 
     def test_3912_execute_with_positional_binds(self):

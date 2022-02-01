@@ -81,8 +81,8 @@ class TestCase(test_env.BaseTestCase):
         array = [r[1] for r in self.raw_data]
         statement = """
                 begin
-                  :return_value := pkg_TestDateArrays.TestInArrays(
-                      :start_value, :base_date, :array);
+                    :return_value := pkg_TestDateArrays.TestInArrays(
+                        :start_value, :base_date, :array);
                 end;"""
         self.cursor.execute(statement, return_value=return_value,
                             start_value=5,
@@ -100,8 +100,8 @@ class TestCase(test_env.BaseTestCase):
         array = [r[1] for r in self.raw_data]
         self.cursor.execute("""
                 begin
-                  :return_value := pkg_TestDateArrays.TestInArrays(
-                      :start_value, :base_date, :array);
+                    :return_value := pkg_TestDateArrays.TestInArrays(
+                        :start_value, :base_date, :array);
                 end;""",
                 return_value=return_value,
                 start_value=6,
@@ -116,8 +116,8 @@ class TestCase(test_env.BaseTestCase):
         array.setvalue(0, [r[1] for r in self.raw_data])
         self.cursor.execute("""
                 begin
-                  :return_value := pkg_TestDateArrays.TestInArrays(
-                      :start_value, :base_date, :array);
+                    :return_value := pkg_TestDateArrays.TestInArrays(
+                        :start_value, :base_date, :array);
                 end;""",
                 return_value=return_value,
                 start_value=7,
@@ -132,7 +132,7 @@ class TestCase(test_env.BaseTestCase):
         array.setvalue(0, original_data)
         self.cursor.execute("""
                 begin
-                  pkg_TestDateArrays.TestInOutArrays(:num_elems, :array);
+                    pkg_TestDateArrays.TestInOutArrays(:num_elems, :array);
                 end;""",
                 num_elems=5,
                 array=array)
@@ -149,7 +149,7 @@ class TestCase(test_env.BaseTestCase):
         array = self.cursor.arrayvar(oracledb.DATETIME, 6, 100)
         self.cursor.execute("""
                 begin
-                  pkg_TestDateArrays.TestOutArrays(:num_elems, :array);
+                    pkg_TestDateArrays.TestOutArrays(:num_elems, :array);
                 end;""",
                 num_elems=6,
                 array=array)
@@ -166,33 +166,33 @@ class TestCase(test_env.BaseTestCase):
         bind_vars = self.cursor.setinputsizes(value=oracledb.DATETIME)
         self.cursor.execute("""
                 begin
-                  :value := to_date(20021209, 'YYYYMMDD');
+                    :value := to_date(20021209, 'YYYYMMDD');
                 end;""")
         self.assertEqual(bind_vars["value"].getvalue(),
-               oracledb.Timestamp(2002, 12, 9))
+                         oracledb.Timestamp(2002, 12, 9))
 
     def test_1411_bind_in_out_set_input_sizes(self):
         "1411 - test binding in/out with set input sizes defined"
         bind_vars = self.cursor.setinputsizes(value=oracledb.DATETIME)
         self.cursor.execute("""
                 begin
-                  :value := :value + 5.25;
+                    :value := :value + 5.25;
                 end;""",
                 value=oracledb.Timestamp(2002, 12, 12, 10, 0, 0))
         self.assertEqual(bind_vars["value"].getvalue(),
-                oracledb.Timestamp(2002, 12, 17, 16, 0, 0))
+                         oracledb.Timestamp(2002, 12, 17, 16, 0, 0))
 
     def test_1412_bind_out_var(self):
         "1412 - test binding out with cursor.var() method"
         var = self.cursor.var(oracledb.DATETIME)
         self.cursor.execute("""
                 begin
-                  :value := to_date('20021231 12:31:00',
-                      'YYYYMMDD HH24:MI:SS');
+                    :value := to_date('20021231 12:31:00',
+                        'YYYYMMDD HH24:MI:SS');
                 end;""",
                 value=var)
         self.assertEqual(var.getvalue(),
-               oracledb.Timestamp(2002, 12, 31, 12, 31, 0))
+                         oracledb.Timestamp(2002, 12, 31, 12, 31, 0))
 
     def test_1413_bind_in_out_var_direct_set(self):
         "1413 - test binding in/out with cursor.var() method"
@@ -200,7 +200,7 @@ class TestCase(test_env.BaseTestCase):
         var.setvalue(0, oracledb.Timestamp(2002, 12, 9, 6, 0, 0))
         self.cursor.execute("""
                 begin
-                  :value := :value + 5.25;
+                    :value := :value + 5.25;
                 end;""",
                 value=var)
         self.assertEqual(var.getvalue(),

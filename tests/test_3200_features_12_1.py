@@ -40,7 +40,7 @@ class TestCase(test_env.BaseTestCase):
             (5, "Fifth", 300)
         ]
         sql = "insert into TestArrayDML (IntCol,StringCol,IntCol2) " \
-                "values (:1,:2,:3)"
+              "values (:1,:2,:3)"
         self.cursor.executemany(sql, rows, arraydmlrowcounts=True)
         self.connection.commit()
         self.assertEqual(self.cursor.getarraydmlrowcounts(), [1, 1, 1, 1, 1])
@@ -344,7 +344,7 @@ class TestCase(test_env.BaseTestCase):
             (8, "Eighth", 500)
         ]
         sql = "insert into TestArrayDML (IntCol,StringCol,IntCol2) " \
-                "values (:1, :2, :3)"
+              "values (:1, :2, :3)"
         self.cursor.executemany(sql, rows)
         rows = [(200,), (300,), (400,)]
         statement = "delete from TestArrayDML where IntCol2 = :1"
@@ -366,7 +366,7 @@ class TestCase(test_env.BaseTestCase):
             (8, "Eighth",500)
         ]
         sql = "insert into TestArrayDML (IntCol,StringCol,IntCol2) " \
-                "values (:1, :2, :3)"
+              "values (:1, :2, :3)"
         self.cursor.executemany(sql, rows)
         rows = [
             ("One", 100),
@@ -387,16 +387,16 @@ class TestCase(test_env.BaseTestCase):
                     c2 sys_refcursor;
                 begin
                     open c1 for
-                    select NumberCol
-                    from TestNumbers
-                    where IntCol between 3 and 5;
+                        select NumberCol
+                        from TestNumbers
+                        where IntCol between 3 and 5;
 
                     dbms_sql.return_result(c1);
 
                     open c2 for
-                    select NumberCol
-                    from TestNumbers
-                    where IntCol between 7 and 10;
+                        select NumberCol
+                        from TestNumbers
+                        where IntCol between 7 and 10;
 
                     dbms_sql.return_result(c2);
                 end;""")
@@ -421,7 +421,7 @@ class TestCase(test_env.BaseTestCase):
             (5, "Fourth", 1000)
         ]
         sql = "insert into TestArrayDML (IntCol, StringCol, IntCol2) " \
-                "values (:1, :2, :3)"
+              "values (:1, :2, :3)"
         self.cursor.executemany(sql, rows, batcherrors=True,
                                 arraydmlrowcounts=True)
         user = test_env.get_main_user()
@@ -432,7 +432,7 @@ class TestCase(test_env.BaseTestCase):
                     "(%s.TESTARRAYDML_PK) violated" % user.upper())
         ]
         actual_errors = [(e.offset, e.code, e.message) \
-                        for e in self.cursor.getbatcherrors()]
+                         for e in self.cursor.getbatcherrors()]
         self.assertEqual(actual_errors, expected_errors)
         self.assertEqual(self.cursor.getarraydmlrowcounts(), [1, 1, 0, 1, 0])
 
@@ -445,7 +445,7 @@ class TestCase(test_env.BaseTestCase):
             (2, "Third", 300)
         ]
         sql = "insert into TestArrayDML (IntCol, StringCol, IntCol2) " \
-                "values (:1, :2, :3)"
+              "values (:1, :2, :3)"
         self.assertRaisesRegex(oracledb.IntegrityError, "^ORA-00001:",
                                self.cursor.executemany, sql, rows,
                                batcherrors=False)
@@ -464,7 +464,7 @@ class TestCase(test_env.BaseTestCase):
             (8, "Eighth", 100)
         ]
         sql = "insert into TestArrayDML (IntCol, StringCol, IntCol2) " \
-                "values (:1, :2, :3)"
+              "values (:1, :2, :3)"
         self.cursor.executemany(sql, rows, batcherrors=True)
         user = test_env.get_main_user()
         expected_errors = [
@@ -472,7 +472,7 @@ class TestCase(test_env.BaseTestCase):
                     "(%s.TESTARRAYDML_PK) violated" % user.upper())
         ]
         actual_errors = [(e.offset, e.code, e.message) \
-                        for e in self.cursor.getbatcherrors()]
+                         for e in self.cursor.getbatcherrors()]
         self.assertEqual(actual_errors, expected_errors)
         rows = [
             (101, "First"),
@@ -489,7 +489,7 @@ class TestCase(test_env.BaseTestCase):
                       "precision allowed for this column")
         ]
         actual_errors = [(e.offset, e.code, e.message) \
-                        for e in self.cursor.getbatcherrors()]
+                         for e in self.cursor.getbatcherrors()]
         self.assertEqual(actual_errors, expected_errors)
         self.assertEqual(self.cursor.getarraydmlrowcounts(), [1, 2, 0, 0, 1])
         self.assertEqual(self.cursor.rowcount, 4)
@@ -502,9 +502,9 @@ class TestCase(test_env.BaseTestCase):
                     c1 sys_refcursor;
                 begin
                     open c1 for
-                    select NumberCol
-                    from TestNumbers
-                    where IntCol between 3 and 5;
+                        select NumberCol
+                        from TestNumbers
+                        where IntCol between 3 and 5;
 
                     dbms_sql.return_result(c1);
                 end;""")

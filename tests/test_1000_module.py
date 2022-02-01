@@ -50,8 +50,8 @@ class TestCase(test_env.BaseTestCase):
         result = oracledb.makedsn(*args)
         self.assertEqual(result, format_string % args)
 
-    def test_1004_makedsn_invalid_args(self):
-        "1004 - test makedsn() with invalid arguments"
+    def test_1005_makedsn_invalid_args(self):
+        "1005 - test makedsn() with invalid arguments"
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2020:",
                                oracledb.makedsn, host="(invalid)", port=1521)
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2020:",

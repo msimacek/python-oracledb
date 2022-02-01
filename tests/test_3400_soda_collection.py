@@ -34,7 +34,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3401_insert_documents(self):
         "3401 - test inserting documents into a SODA collection"
         soda_db = self.connection.getSodaDatabase()
-        coll = soda_db.createCollection("cxoInsertDocs")
+        coll = soda_db.createCollection("TestInsertDocs")
         coll.find().remove()
         values_to_insert = [
             {"name": "George", "age": 47},
@@ -56,7 +56,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3402_skip_documents(self):
         "3402 - test skipping documents in a SODA collection"
         soda_db = self.connection.getSodaDatabase()
-        coll = soda_db.createCollection("cxoSkipDocs")
+        coll = soda_db.createCollection("TestSkipDocs")
         coll.find().remove()
         values_to_insert = [
             {"name": "Anna", "age": 62},
@@ -76,7 +76,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3403_replace_document(self):
         "3403 - test replace documents in SODA collection"
         soda_db = self.connection.getSodaDatabase()
-        coll = soda_db.createCollection("cxoReplaceDoc")
+        coll = soda_db.createCollection("TestReplaceDoc")
         coll.find().remove()
         content = {'name': 'John', 'address': {'city': 'Sydney'}}
         doc = coll.insertOneAndGet(content)
@@ -90,7 +90,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3404_search_documents_with_content(self):
         "3404 - test search documents with content using $like and $regex"
         soda_db = self.connection.getSodaDatabase()
-        coll = soda_db.createCollection("cxoSearchDocContent")
+        coll = soda_db.createCollection("TestSearchDocContent")
         coll.find().remove()
         data = [
             {'name': 'John', 'address': {'city': 'Bangalore'}},
@@ -127,7 +127,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3405_document_remove(self):
         "3405 - test removing documents"
         soda_db = self.connection.getSodaDatabase()
-        coll = soda_db.createCollection("cxoRemoveDocs")
+        coll = soda_db.createCollection("TestRemoveDocs")
         coll.find().remove()
         data = [
             {'name': 'John', 'address': {'city': 'Bangalore'}},
@@ -151,7 +151,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3406_create_and_drop_index(self):
         "3406 - test create and drop Index"
-        index_name = "cxoTestIndexes_ix_1"
+        index_name = "TestIndexes_ix_1"
         index_spec =  {
             'name': index_name,
             'fields': [
@@ -178,7 +178,7 @@ class TestCase(test_env.BaseTestCase):
         "3407 - test getting documents from Collection"
         self.connection.autocommit = True
         soda_db = self.connection.getSodaDatabase()
-        coll = soda_db.createCollection("cxoTestGetDocs")
+        coll = soda_db.createCollection("TestGetDocs")
         coll.find().remove()
         data = [
             {'name': 'John', 'address': {'city': 'Bangalore'}},
@@ -196,7 +196,7 @@ class TestCase(test_env.BaseTestCase):
         "3408 - test fetching documents from a cursor"
         self.connection.autocommit = True
         soda_db = self.connection.getSodaDatabase()
-        coll = soda_db.createCollection("cxoFindViaCursor")
+        coll = soda_db.createCollection("TestFindViaCursor")
         coll.find().remove()
         data = [
             {'name': 'John', 'address': {'city': 'Bangalore'}},
@@ -211,7 +211,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3409_multiple_document_remove(self):
         "3409 - test removing multiple documents using multiple keys"
         soda_db = self.connection.getSodaDatabase()
-        coll = soda_db.createCollection("cxoRemoveMultipleDocs")
+        coll = soda_db.createCollection("TestRemoveMultipleDocs")
         coll.find().remove()
         data = [
             {'name': 'John', 'address': {'city': 'Bangalore'}},
@@ -232,7 +232,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3410_document_version(self):
         "3410 - test using version to get documents and remove them"
         soda_db = self.connection.getSodaDatabase()
-        coll = soda_db.createCollection("cxoDocumentVersion")
+        coll = soda_db.createCollection("TestDocumentVersion")
         coll.find().remove()
         content = {'name': 'John', 'address': {'city': 'Bangalore'}}
         inserted_doc = coll.insertOneAndGet(content)
@@ -256,7 +256,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3411_get_cursor(self):
         "3411 - test keys with GetCursor"
         soda_db = self.connection.getSodaDatabase()
-        coll = soda_db.createCollection("cxoKeysWithGetCursor")
+        coll = soda_db.createCollection("TestKeysWithGetCursor")
         coll.find().remove()
         data = [
             {'name': 'John', 'address': {'city': 'Bangalore'}},
@@ -287,7 +287,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3413_soda_truncate(self):
         "3413 - test Soda truncate"
         soda_db = self.connection.getSodaDatabase()
-        coll = soda_db.createCollection("cxoTruncateDocs")
+        coll = soda_db.createCollection("TestTruncateDocs")
         coll.find().remove()
         values_to_insert = [
             {"name": "George", "age": 47},
@@ -314,9 +314,9 @@ class TestCase(test_env.BaseTestCase):
                       WHERE t2.sql_id = t1.prev_sql_id
                         AND t2.child_number = t1.prev_child_number
                     )
-                 FROM v$session t1
-                 WHERE t1.audsid = sys_context('userenv', 'sessionid')"""
-        coll = soda_db.createCollection("cxoSodaHint")
+                FROM v$session t1
+                WHERE t1.audsid = sys_context('userenv', 'sessionid')"""
+        coll = soda_db.createCollection("TestSodaHint")
         coll.find().remove()
         values_to_insert = [
             {"name": "George", "age": 47},

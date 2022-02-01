@@ -66,7 +66,7 @@ class TestCase(test_env.BaseTestCase):
         cursor = connection.cursor()
         for namespace, name, value in app_context_entries:
             cursor.execute("select sys_context(:1, :2) from dual",
-                    (namespace, name))
+                           (namespace, name))
             actual_value, = cursor.fetchone()
             self.assertEqual(actual_value, value)
 
@@ -124,7 +124,8 @@ class TestCase(test_env.BaseTestCase):
 
     def test_1105_bad_connect_string(self):
         "1105 - connection to database with bad connect string"
-        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4001:|^ORA-12154:",
+        self.assertRaisesRegex(oracledb.DatabaseError,
+                               "^DPY-4001:|^ORA-12154:",
                                oracledb.connect, test_env.get_main_user())
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4001:",
                                oracledb.connect, test_env.get_main_user() + \
@@ -464,7 +465,7 @@ class TestCase(test_env.BaseTestCase):
         try:
             with conn.cursor() as cursor:
                 self.assertRaises(oracledb.OperationalError, cursor.callproc,
-                                sleep_proc_name, [2])
+                                  sleep_proc_name, [2])
         finally:
             thread.join()
         with conn.cursor() as cursor:

@@ -34,8 +34,7 @@ class TestCase(test_env.BaseTestCase):
     def test_1501_DB_TYPE_BINARY_DOUBLE(self):
         "1501 - test oracledb.DB_TYPE_BINARY_DOUBLE comparisons and pickling"
         self.__test_compare(oracledb.DB_TYPE_BINARY_DOUBLE, oracledb.NUMBER)
-        self.assertEqual(oracledb.DB_TYPE_BINARY_DOUBLE,
-                oracledb.NATIVE_FLOAT)
+        self.assertEqual(oracledb.DB_TYPE_BINARY_DOUBLE, oracledb.NATIVE_FLOAT)
         self.__test_pickle(oracledb.DB_TYPE_BINARY_DOUBLE)
 
     def test_1502_DB_TYPE_BINARY_FLOAT(self):
@@ -46,8 +45,7 @@ class TestCase(test_env.BaseTestCase):
     def test_1503_DB_TYPE_BINARY_INTEGER(self):
         "1503 - test oracledb.DB_TYPE_BINARY_INTEGER comparisons and pickling"
         self.__test_compare(oracledb.DB_TYPE_BINARY_INTEGER, oracledb.NUMBER)
-        self.assertEqual(oracledb.DB_TYPE_BINARY_INTEGER,
-                oracledb.NATIVE_INT)
+        self.assertEqual(oracledb.DB_TYPE_BINARY_INTEGER, oracledb.NATIVE_INT)
         self.__test_pickle(oracledb.DB_TYPE_BINARY_INTEGER)
 
     def test_1504_DB_TYPE_BLOB(self):

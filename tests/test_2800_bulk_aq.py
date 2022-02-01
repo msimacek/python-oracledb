@@ -6,7 +6,6 @@
 2800 - Module for testing AQ Bulk enqueue/dequeue
 """
 
-import decimal
 import threading
 import unittest
 
@@ -91,7 +90,7 @@ class TestCase(test_env.BaseTestCase):
         data_to_enqueue = RAW_PAYLOAD_DATA
         for num in (2, 6, 4):
             messages = [self.connection.msgproperties(payload=d) \
-                    for d in data_to_enqueue[:num]]
+                        for d in data_to_enqueue[:num]]
             data_to_enqueue = data_to_enqueue[num:]
             queue.enqmany(messages)
         self.connection.commit()

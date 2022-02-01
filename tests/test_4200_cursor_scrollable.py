@@ -197,7 +197,7 @@ class TestCase(test_env.BaseTestCase):
                 num_rows_fetched = len(rows)
                 self.assertEqual(rows[0][0], 15 + num_rows + 8)
                 self.assertEqual(cursor.rowcount,
-                        15 + num_rows + num_rows_fetched + 7)
+                                 15 + num_rows + num_rows_fetched + 7)
                 cursor.scroll(-12)
                 rows = cursor.fetchmany(num_rows)
                 count = 15 + num_rows + num_rows_fetched - 5

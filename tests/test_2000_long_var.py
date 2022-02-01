@@ -31,11 +31,11 @@ class TestCase(test_env.BaseTestCase):
                     bind_value = long_string
             self.cursor.execute(f"""
                     insert into Test{name_part}s (
-                      IntCol,
-                      {name_part}Col
+                        IntCol,
+                        {name_part}Col
                     ) values (
-                      :integer_value,
-                      :long_string
+                        :integer_value,
+                        :long_string
                     )""",
                     integer_value=i,
                     long_string=bind_value)

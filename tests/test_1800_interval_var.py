@@ -55,7 +55,7 @@ class TestCase(test_env.BaseTestCase):
                 self.cursor.setinputsizes(value=oracledb.DB_TYPE_INTERVAL_DS)
         self.cursor.execute("""
                 begin
-                  :value := to_dsinterval('8 09:24:18.123789');
+                    :value := to_dsinterval('8 09:24:18.123789');
                 end;""")
         expected_value = datetime.timedelta(days=8, hours=9, minutes=24,
                                             seconds=18, microseconds=123789)
@@ -67,7 +67,7 @@ class TestCase(test_env.BaseTestCase):
                 self.cursor.setinputsizes(value=oracledb.DB_TYPE_INTERVAL_DS)
         self.cursor.execute("""
                 begin
-                  :value := :value + to_dsinterval('5 08:30:00');
+                    :value := :value + to_dsinterval('5 08:30:00');
                 end;""",
                 value=datetime.timedelta(days=5, hours=2, minutes=15))
         expected_value = datetime.timedelta(days=10, hours=10, minutes=45)
@@ -79,7 +79,7 @@ class TestCase(test_env.BaseTestCase):
                 self.cursor.setinputsizes(value=oracledb.DB_TYPE_INTERVAL_DS)
         self.cursor.execute("""
                 begin
-                  :value := :value + to_dsinterval('5 08:30:00');
+                    :value := :value + to_dsinterval('5 08:30:00');
                 end;""",
                 value=datetime.timedelta(days=5, seconds=12.123789))
         expected_value = datetime.timedelta(days=10, hours=8, minutes=30,
@@ -91,7 +91,7 @@ class TestCase(test_env.BaseTestCase):
         var = self.cursor.var(oracledb.DB_TYPE_INTERVAL_DS)
         self.cursor.execute("""
                 begin
-                  :value := to_dsinterval('15 18:35:45.586');
+                    :value := to_dsinterval('15 18:35:45.586');
                 end;""",
                 value=var)
         expected_value = datetime.timedelta(days=15, hours=18, minutes=35,
@@ -104,7 +104,7 @@ class TestCase(test_env.BaseTestCase):
         var.setvalue(0, datetime.timedelta(days=1, minutes=50))
         self.cursor.execute("""
                 begin
-                  :value := :value + to_dsinterval('8 05:15:00');
+                    :value := :value + to_dsinterval('8 05:15:00');
                 end;""",
                 value=var)
         expected_value = datetime.timedelta(days=9, hours=6, minutes=5)

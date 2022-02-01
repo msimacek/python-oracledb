@@ -7,7 +7,6 @@
 """
 
 import decimal
-import sys
 
 import oracledb
 import test_env
@@ -45,7 +44,7 @@ class TestCase(test_env.BaseTestCase):
     def test_2200_bind_boolean(self):
         "2200 - test binding in a boolean"
         result = self.cursor.callfunc("pkg_TestBooleans.GetStringRep", str,
-                (True,))
+                                      (True,))
         self.assertEqual(result, "TRUE")
 
     def test_2201_bind_boolean_as_number(self):
@@ -96,7 +95,7 @@ class TestCase(test_env.BaseTestCase):
         value_var.setvalue(0, in_val)
         self.cursor.execute("""
                 begin
-                  :value := :value + 5;
+                    :value := :value + 5;
                 end;""",
                 value=value_var)
         value = value_var.getvalue()
@@ -142,8 +141,8 @@ class TestCase(test_env.BaseTestCase):
         array = [r[2] for r in self.raw_data]
         statement = """
                 begin
-                  :return_value := pkg_TestNumberArrays.TestInArrays(
-                      :start_value, :array);
+                    :return_value := pkg_TestNumberArrays.TestInArrays(
+                        :start_value, :array);
                 end;"""
         self.cursor.execute(statement, return_value=return_value,
                             start_value=5, array=array)
@@ -159,8 +158,8 @@ class TestCase(test_env.BaseTestCase):
         array = [r[2] for r in self.raw_data]
         self.cursor.execute("""
                 begin
-                  :return_value := pkg_TestNumberArrays.TestInArrays(
-                      :start_value, :array);
+                    :return_value := pkg_TestNumberArrays.TestInArrays(
+                        :start_value, :array);
                 end;""",
                 return_value=return_value,
                 start_value=6,
@@ -174,8 +173,8 @@ class TestCase(test_env.BaseTestCase):
                                      [r[2] for r in self.raw_data])
         self.cursor.execute("""
                 begin
-                  :return_value := pkg_TestNumberArrays.TestInArrays(
-                      :integer_value, :array);
+                    :return_value := pkg_TestNumberArrays.TestInArrays(
+                        :integer_value, :array);
                 end;""",
                 return_value = return_value,
                 integer_value = 7,
@@ -188,8 +187,8 @@ class TestCase(test_env.BaseTestCase):
         array = self.cursor.arrayvar(oracledb.NUMBER, 0)
         self.cursor.execute("""
                 begin
-                  :return_value := pkg_TestNumberArrays.TestInArrays(
-                      :integer_value, :array);
+                    :return_value := pkg_TestNumberArrays.TestInArrays(
+                        :integer_value, :array);
                 end;""",
                 return_value=return_value,
                 integer_value=8,
@@ -206,7 +205,7 @@ class TestCase(test_env.BaseTestCase):
         array.setvalue(0, original_data)
         self.cursor.execute("""
                 begin
-                  pkg_TestNumberArrays.TestInOutArrays(:num_elems, :array);
+                    pkg_TestNumberArrays.TestInOutArrays(:num_elems, :array);
                 end;""",
                 num_elems=5,
                 array=array)
@@ -218,7 +217,7 @@ class TestCase(test_env.BaseTestCase):
         expected_data = [i * 100 for i in range(1, 7)]
         self.cursor.execute("""
                 begin
-                  pkg_TestNumberArrays.TestOutArrays(:num_elems, :array);
+                    pkg_TestNumberArrays.TestOutArrays(:num_elems, :array);
                 end;""",
                 num_elems=6,
                 array=array)
@@ -229,7 +228,7 @@ class TestCase(test_env.BaseTestCase):
         bind_vars = self.cursor.setinputsizes(value = oracledb.NUMBER)
         self.cursor.execute("""
                 begin
-                  :value := 5;
+                    :value := 5;
                 end;""")
         self.assertEqual(bind_vars["value"].getvalue(), 5)
 
@@ -238,7 +237,7 @@ class TestCase(test_env.BaseTestCase):
         bind_vars = self.cursor.setinputsizes(value = oracledb.NUMBER)
         self.cursor.execute("""
                 begin
-                  :value := :value + 5;
+                    :value := :value + 5;
                 end;""",
                 value = 1.25)
         self.assertEqual(bind_vars["value"].getvalue(), 6.25)
@@ -248,7 +247,7 @@ class TestCase(test_env.BaseTestCase):
         var = self.cursor.var(oracledb.NUMBER)
         self.cursor.execute("""
                 begin
-                  :value := 5;
+                    :value := 5;
                 end;""",
                 value = var)
         self.assertEqual(var.getvalue(), 5)
@@ -259,7 +258,7 @@ class TestCase(test_env.BaseTestCase):
         var.setvalue(0, 2.25)
         self.cursor.execute("""
                 begin
-                  :value := :value + 5;
+                    :value := :value + 5;
                 end;""",
                 value = var)
         self.assertEqual(var.getvalue(), 7.25)
