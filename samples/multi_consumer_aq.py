@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -9,8 +9,9 @@
 
 #------------------------------------------------------------------------------
 # multi_consumer_aq.py
-#   This script demonstrates how to use multi-consumer advanced queuing. It
-# makes use of a RAW queue created in the sample setup.
+#
+# Demonstrates how to use multi-consumer advanced queuing. It makes use of a
+# RAW queue created in the sample setup.
 #------------------------------------------------------------------------------
 
 import oracledb

@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # generic_row_factory.py
 #
-# Demonstrate the ability to return named tuples for all queries using a
+# Demonstrates the ability to return named tuples for all queries using a
 # subclassed cursor and row factory.
 #------------------------------------------------------------------------------
 

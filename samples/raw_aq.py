@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2019, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2019, 2022, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -9,8 +9,9 @@
 
 #------------------------------------------------------------------------------
 # raw_aq.py
-#   This script demonstrates how to use advanced queuing with RAW data. It
-# makes use of a RAW queue created in the sample setup.
+#
+# Demonstrates how to use advanced queuing with RAW data. It makes use of a
+# RAW queue created in the sample setup.
 #------------------------------------------------------------------------------
 
 import oracledb

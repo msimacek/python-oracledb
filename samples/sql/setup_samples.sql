@@ -1,15 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Copyright 2017, 2021, Oracle and/or its affiliates. All rights reserved.
+ * Copyright 2017, 2022, Oracle and/or its affiliates. All rights reserved.
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
  * setup_samples.sql
- *   Creates and populates schemas with the database objects used by the
+ *
+ * Creates and populates schemas with the database objects used by the
  * python-oracledb samples. An edition is also created for the demonstration of
  * PL/SQL editioning.
  *
  * Run this like:
- *   sqlplus sys/syspassword@hostname/servicename as sysdba @setup_samples
+ *     sqlplus sys/syspassword@hostname/servicename as sysdba @setup_samples
  *---------------------------------------------------------------------------*/
 
 whenever sqlerror exit failure

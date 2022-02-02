@@ -1,17 +1,18 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # json_blob.py
-#   Shows how to use a BLOB as a JSON column store.
 #
-#   Note: with Oracle Database 21c using the new JSON type is recommended
-#   instead, see json_direct.py
+# Demonstrates how to use a BLOB as a JSON column store.
 #
-#   Documentation:
-#   py-oracledb:     https://oracledb.readthedocs.io/en/latest/user_guide/json_data_type.html
-#   Oracle Database: https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=ADJSN
+# Note: with Oracle Database 21c using the new JSON type is recommended
+# instead, see json_direct.py
+#
+# Documentation:
+#     python-oracledb: https://oracledb.readthedocs.io/en/latest/user_guide/json_data_type.html
+#     Oracle Database: https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=ADJSN
 #------------------------------------------------------------------------------
 
 import json

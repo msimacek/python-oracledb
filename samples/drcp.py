@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -9,11 +9,11 @@
 
 #------------------------------------------------------------------------------
 # drcp.py
-#   This script demonstrates the use of Database Resident Connection Pooling
-# (DRCP) which provides a connection pool in the database server, thereby
-# reducing the cost of creating and tearing down client connections. The pool
-# can be started and stopped in the database by issuing the following commands
-# in SQL*Plus:
+#
+# Demonstrates the use of Database Resident Connection Pooling (DRCP) which
+# provides a connection pool in the database server, thereby reducing the cost
+# of creating and tearing down client connections. The pool can be started and
+# stopped in the database by issuing the following commands in SQL*Plus:
 #
 #   exec dbms_connection_pool.start_pool()
 #   exec dbms_connection_pool.stop_pool()
@@ -27,7 +27,6 @@
 #
 # DRCP has most benefit when used in conjunction with a local connection pool,
 # see the python-oracledb documentation.
-#
 #------------------------------------------------------------------------------
 
 import oracledb

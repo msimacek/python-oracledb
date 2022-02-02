@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # plsql_record.py
 #
-# Demonstrate how to bind (in and out) a PL/SQL record.
+# Demonstrates how to bind (in and out) a PL/SQL record.
 #
 # This feature is only available in Oracle Database 12.1 and higher.
 #------------------------------------------------------------------------------

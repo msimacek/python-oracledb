@@ -1,11 +1,12 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2018, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2018, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # aq_notification.py
-#   This script demonstrates using advanced queuing notification. Once this
-# script is running, use another session to enqueue a few messages to the
+# 
+# Demonstrates using advanced queuing notification. Once this script is
+# running, use another session to enqueue a few messages to the
 # "DEMO_BOOK_QUEUE" queue. This is most easily accomplished by running the
 # object_aq.py sample.
 #------------------------------------------------------------------------------

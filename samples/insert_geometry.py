@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -9,8 +9,9 @@
 
 #------------------------------------------------------------------------------
 # insert_geometry.py
-#   This script demonstrates the ability to create Oracle objects (this example
-# uses SDO_GEOMETRY) and insert them into a table.
+#
+# Demonstrates the ability to create Oracle objects (this example uses
+# SDO_GEOMETRY) and insert them into a table.
 #------------------------------------------------------------------------------
 
 import oracledb

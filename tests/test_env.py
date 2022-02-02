@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -10,16 +10,16 @@
 # You can set values in environment variables to bypass having the test suite
 # request the information it requires.
 #
-#     PY_ORACLEDB_TEST_MAIN_USER: user used for most test cases
-#     PY_ORACLEDB_TEST_MAIN_PASSWORD: password of user used for most test cases
-#     PY_ORACLEDB_TEST_PROXY_USER: user for testing proxying
-#     PY_ORACLEDB_TEST_PROXY_PASSWORD: password of user for testing proxying
-#     PY_ORACLEDB_TEST_CONNECT_STRING: connect string for test suite
-#     PY_ORACLEDB_TEST_ADMIN_USER: administrative user for test suite
-#     PY_ORACLEDB_TEST_ADMIN_PASSWORD: administrative password for test suite
-#     PY_ORACLEDB_TEST_DRIVER_TYPE: type of driver (thick|thin) to use
+#     PYO_TEST_MAIN_USER: user used for most test cases
+#     PYO_TEST_MAIN_PASSWORD: password of user used for most test cases
+#     PYO_TEST_PROXY_USER: user for testing proxying
+#     PYO_TEST_PROXY_PASSWORD: password of user for testing proxying
+#     PYO_TEST_CONNECT_STRING: connect string for test suite
+#     PYO_TEST_ADMIN_USER: administrative user for test suite
+#     PYO_TEST_ADMIN_PASSWORD: administrative password for test suite
+#     PYO_TEST_DRIVER_TYPE: type of driver (thick|thin) to use
 #
-# PY_ORACLEDB_TEST_CONNECT_STRING can be set to an Easy Connect string, or a
+# PYO_TEST_CONNECT_STRING can be set to an Easy Connect string, or a
 # Net Service Name from a tnsnames.ora file or external naming service,
 # or it can be the name of a local Oracle database instance.
 #
@@ -61,7 +61,7 @@ def get_value(name, label, default_value=""):
     value = PARAMETERS.get(name)
     if value is not None:
         return value
-    env_name = "PY_ORACLEDB_TEST_" + name
+    env_name = "PYO_TEST_" + name
     value = os.environ.get(env_name)
     if value is None:
         if default_value:
@@ -78,8 +78,7 @@ def get_value(name, label, default_value=""):
 
 def get_admin_connect_string():
     admin_user = get_value("ADMIN_USER", "Administrative user", "admin")
-    admin_password = get_value("ADMIN_PASSWORD",
-                               "Password for %s" % admin_user)
+    admin_password = get_value("ADMIN_PASSWORD", f"Password for {admin_user}")
     return "%s/%s@%s" % (admin_user, admin_password, get_connect_string())
 
 def get_charset_ratios():
@@ -222,8 +221,8 @@ class SystemStatInfo:
                     select ss.value
                     from v$sesstat ss, v$statname sn
                     where ss.sid = :sid
-                      and ss.statistic# = sn.statistic#
-                      and sn.name = :stat_name""",
+                        and ss.statistic# = sn.statistic#
+                        and sn.name = :stat_name""",
                     sid=self.sid, stat_name=self.stat_name)
             current_value, = cursor.fetchone()
             diff_value = current_value - self.prev_value

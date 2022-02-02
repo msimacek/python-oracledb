@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2019, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2019, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # session_callback.py
 #
-# Demonstrate how to use a connection pool session callback written in
+# Demonstrates how to use a connection pool session callback written in
 # Python. The callback is invoked whenever a newly created session is acquired
 # from the pool, or when the requested tag does not match the tag that is
 # associated with the session. It is generally used to set session state, so
@@ -15,7 +15,6 @@
 # the session callback by removing the tagging logic.
 #
 # Also see session_callback_plsql.py
-#
 #------------------------------------------------------------------------------
 
 import oracledb
@@ -62,11 +61,11 @@ def init_session(conn, requested_tag):
             value_dict = SUPPORTED_KEYS.get(key)
             if value_dict is None:
                 raise ValueError("Tag only supports keys: %s" % \
-                        (", ".join(SUPPORTED_KEYS)))
+                                 (", ".join(SUPPORTED_KEYS)))
             actual_value = value_dict.get(value)
             if actual_value is None:
                 raise ValueError("Key %s only supports values: %s" % \
-                        (key, ", ".join(value_dict)))
+                                 (key, ", ".join(value_dict)))
             state_parts.append("%s = %s" % (key, actual_value))
         sql = "alter session set %s" % " ".join(state_parts)
         cursor = conn.cursor()

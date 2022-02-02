@@ -1,13 +1,14 @@
 /*-----------------------------------------------------------------------------
- * Copyright 2017, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright 2017, 2022, Oracle and/or its affiliates. All rights reserved.
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
  * setup_samples_exec.sql
- *   This script performs the actual work of creating and populating the
- * schemas with the database objects used by the sample scripts. An edition
- * is also created for the demonstration of PL/SQL editioning. It is called by
- * the setup_samples.sql file after acquiring the necessary parameters and also
+ *
+ * Performs the actual work of creating and populating the schemas with the
+ * database objects used by the sample scripts. An edition is also created for
+ * the demonstration of PL/SQL editioning. It is called by the
+ * setup_samples.sql script after acquiring the necessary parameters and also
  * by the Python script setup_samples.py.
  *---------------------------------------------------------------------------*/
 
@@ -218,7 +219,7 @@ begin
     dbms_aqadm.start_queue('&main_user..DEMO_RAW_QUEUE');
 
     dbms_aqadm.create_queue_table('&main_user..RAW_QUEUE_MULTI_TAB', 'RAW',
-             multiple_consumers => true);
+            multiple_consumers => true);
     dbms_aqadm.create_queue('&main_user..DEMO_RAW_QUEUE_MULTI',
             '&main_user..RAW_QUEUE_MULTI_TAB');
     dbms_aqadm.start_queue('&main_user..DEMO_RAW_QUEUE_MULTI');

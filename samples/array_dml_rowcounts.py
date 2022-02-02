@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # array_dml_rowcounts.py
 #
-# Demonstrate the use of the 12.1 feature that allows cursor.executemany()
+# Demonstrates the use of the 12.1 feature that allows cursor.executemany()
 # to return the number of rows affected by each individual execution as a list.
 # The parameter "arraydmlrowcounts" must be set to True in the call to
 # cursor.executemany() after which cursor.getarraydmlrowcounts() can be called.

@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -9,9 +9,10 @@
 
 #------------------------------------------------------------------------------
 # transaction_guard.py
-#   This script demonstrates the use of Transaction Guard to verify if a
-# transaction has completed, ensuring that a duplicate transaction is not
-# created or attempted if the application chooses to handle the error. This
+#
+# Demonstrates the use of Transaction Guard to verify if a transaction has
+# completed, ensuring that a duplicate transaction is not created or attempted
+# if the application chooses to handle the error. This
 # feature is only available in Oracle Database 12.1. It follows loosely the
 # OCI sample provided by Oracle in its documentation about OCI and Transaction
 # Guard.
@@ -55,7 +56,7 @@ cursor.execute("""
         insert into TestTempTable
         values (1, null)""")
 input("Please kill %s session now. Press ENTER when complete." % \
-        sample_env.get_main_user())
+      sample_env.get_main_user())
 try:
     connection.commit() # this should fail
     sys.exit("Session was not killed. Terminating.")

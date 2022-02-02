@@ -1,14 +1,15 @@
 /*-----------------------------------------------------------------------------
- * Copyright 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright 2020, 2022, Oracle and/or its affiliates. All rights reserved.
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
  * setup_test.sql
- *   Creates and populates schemas with the database objects used by the
- * oracledb test suite.
+ *
+ * Creates and populates schemas with the database objects used by the
+ * python-oracledb test suite.
  *
  * Run this like:
- *   sqlplus sys/syspassword@hostname/servicename as sysdba @setup_test
+ *     sqlplus sys/syspassword@hostname/servicename as sysdba @setup_test
  *---------------------------------------------------------------------------*/
 
 whenever sqlerror exit failure

@@ -1,13 +1,13 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2019, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2019, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # call_timeout.py
 #
-# Demonstrate the use of the Oracle Client 18c feature that enables round trips
-# to the database to time out if a specified amount of time (in milliseconds)
-# has passed without a response from the database.
+# Demonstrates the use of the Oracle Client 18c feature that enables round
+# trips to the database to time out if a specified amount of time
+# (in milliseconds) has passed without a response from the database.
 #
 # This script requires Oracle Client 18.1 and higher.
 #------------------------------------------------------------------------------

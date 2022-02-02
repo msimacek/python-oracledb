@@ -1,10 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # sharding_number_key.py
-#   This script demonstrates how to use sharding keys with a sharded database.
+#
+# Demonstrates how to use sharding keys with a sharded database.
 # The sample schema provided does not include support for running this demo. A
 # sharded database must first be created. Information on how to create a
 # sharded database can be found in the documentation:

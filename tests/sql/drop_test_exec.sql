@@ -1,11 +1,12 @@
 /*-----------------------------------------------------------------------------
- * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
  * drop_test_exec.sql
- *   This script performs the actual work of dropping the database schemas used
- * by the oracledb test suite. It is called by the drop_test.sql and
+ *
+ * Performs the actual work of dropping the database schemas used by the
+ * python-oracledb test suite. It is called by the drop_test.sql and
  * setup_test.sql scripts after acquiring the necessary parameters and also by
  * the Python script drop_test.py.
  *---------------------------------------------------------------------------*/

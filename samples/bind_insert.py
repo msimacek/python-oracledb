@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # bind_insert.py
 #
-# Demonstrate how to insert a row into a table using bind variables.
+# Demonstrates how to insert a row into a table using bind variables.
 #------------------------------------------------------------------------------
 
 import oracledb
@@ -73,7 +73,7 @@ cursor.executemany("insert into mytab(id, data) values (11, :1)", rows)
 #------------------------------------------------------------------------------
 
 # Don't commit - this lets the demo be run multiple times
-#connection.commit()
+# connection.commit()
 
 for row in cursor.execute('select * from mytab'):
     print(row)

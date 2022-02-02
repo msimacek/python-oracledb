@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # subclassing.py
 #
-#   Demonstrate how to subclass connections and cursors in order to add
+# Demonstrates how to subclass connections and cursors in order to add
 # additional functionality (like logging) or create specialized interfaces for
 # paticular applications.
 #------------------------------------------------------------------------------

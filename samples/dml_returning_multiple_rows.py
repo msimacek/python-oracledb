@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2017, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2017, 2022, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -9,8 +9,9 @@
 
 #------------------------------------------------------------------------------
 # dml_returning_multiple_rows.py
-#   This script demonstrates the use of DML returning with multiple rows being
-# returned at once.
+#
+# Demonstrates the use of DML returning with multiple rows being returned at
+# once.
 #------------------------------------------------------------------------------
 
 import oracledb

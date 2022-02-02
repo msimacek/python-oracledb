@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # plsql_function.py
 #
-# Demonstrate how to call a PL/SQL function and get its return value.
+# Demonstrates how to call a PL/SQL function and get its return value.
 #------------------------------------------------------------------------------
 
 import oracledb
