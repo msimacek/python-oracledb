@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -9,9 +9,10 @@
 
 #------------------------------------------------------------------------------
 # scrollable_cursors.py
-#   This script demonstrates how to use scrollable cursors. These allow moving
-# forward and backward in the result set but incur additional overhead on the
-# server to retain this information.
+#
+# Demonstrates how to use scrollable cursors. These allow moving forward and
+# backward in the result set but incur additional overhead on the server to
+# retain this information.
 #------------------------------------------------------------------------------
 
 import oracledb

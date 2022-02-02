@@ -1,11 +1,12 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # dbms_output.py
-#   This script demonstrates one method of fetching the lines produced by
-# the DBMS_OUTPUT package.
+#
+# Demonstrates one method of fetching the lines produced by the DBMS_OUTPUT
+# package.
 #------------------------------------------------------------------------------
 
 import oracledb

@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -9,7 +9,8 @@
 
 #------------------------------------------------------------------------------
 # return_lobs_as_strings.py
-#   Returns all CLOB values as strings and BLOB values as bytes. The
+#
+# Returns all CLOB values as strings and BLOB values as bytes. The
 # performance of this technique is significantly better than fetching the LOBs
 # and then reading the contents of the LOBs as it avoids round-trips to the
 # database. Be aware, however, that this method requires contiguous memory so
@@ -38,17 +39,17 @@ for i in range(10):
     char = chr(ord('A') + i)
     long_string += char * 25000
     cursor.execute("insert into TestClobs values (:1, :2)",
-            (i + 1, "STRING " + long_string))
+                   (i + 1, "STRING " + long_string))
     cursor.execute("insert into TestBlobs values (:1, :2)",
-            (i + 1, long_string.encode("ascii")))
+                   (i + 1, long_string.encode("ascii")))
 connection.commit()
 
 # fetch the data and show the results
 print("CLOBS returned as strings")
 cursor.execute("""
         select
-          IntCol,
-          ClobCol
+            IntCol,
+            ClobCol
         from TestClobs
         order by IntCol""")
 for int_col, value in cursor:
@@ -57,8 +58,8 @@ print()
 print("BLOBS returned as bytes")
 cursor.execute("""
         select
-          IntCol,
-          BlobCol
+            IntCol,
+            BlobCol
         from TestBlobs
         order by IntCol""")
 for int_col, value in cursor:

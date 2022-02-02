@@ -1,10 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2018, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2018, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # spatial_to_geopandas.py
-#   GeoPandas is a popular python library for working with geospatial data.
+# 
+# GeoPandas is a popular python library for working with geospatial data.
 # GeoPandas extends the Pandas data analysis library with geospatial support
 # using the Shapely library for geometry object support.
 #

@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # batch_errors.py
 #
-# Demonstrate the use of the Oracle Database 12.1 feature that allows
+# Demonstrates the use of the Oracle Database 12.1 feature that allows
 # cursor.executemany() to complete successfully, even if errors take
 # place during the execution of one or more of the individual
 # executions. The parameter "batcherrors" must be set to True in the

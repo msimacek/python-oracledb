@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -9,9 +9,10 @@
 
 #------------------------------------------------------------------------------
 # editioning.py
-#   This script demonstrates the use of Edition-Based Redefinition, available
-# in Oracle# Database 11.2 and higher. See the Oracle documentation on the
-# subject for additional information. Adjust the contants at the top of the
+#
+# Demonstrates the use of Edition-Based Redefinition, a feature that is
+# available in Oracle Database 11.2 and higher. See the Oracle documentation on
+# the subject for additional information. Adjust the contents at the top of the
 # script for your own database as needed.
 #------------------------------------------------------------------------------
 

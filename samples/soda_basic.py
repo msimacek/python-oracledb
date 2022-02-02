@@ -1,10 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2018, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2018, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # soda_basic.py
-#   A basic Simple Oracle Document Access (SODA) example.
+#
+# A basic Simple Oracle Document Access (SODA) example.
 #
 # Oracle Client must be at 18.3 or higher.
 # Oracle Database must be at 18.1 or higher.

@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2019, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2019, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # session_callback_plsql.py
 #
-# Demonstrate how to use a connection pool session callback written in
+# Demonstrates how to use a connection pool session callback written in
 # PL/SQL. The callback is invoked whenever the tag requested by the application
 # does not match the tag associated with the session in the pool. It should be
 # used to set session state, so that the application can count on known session
@@ -17,7 +17,6 @@
 # server and no round trip is required to set state.
 #
 # Also see session_callback.py
-#
 #------------------------------------------------------------------------------
 
 import oracledb

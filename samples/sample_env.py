@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2017, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2017, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -10,18 +10,18 @@
 # You can set values in environment variables to bypass the sample requesting
 # the information it requires.
 #
-#     PY_ORACLEDB_SAMPLES_MAIN_USER: user used for most samples
-#     PY_ORACLEDB_SAMPLES_MAIN_PASSWORD: password of user used for most samples
-#     PY_ORACLEDB_SAMPLES_EDITION_USER: user for editioning
-#     PY_ORACLEDB_SAMPLES_EDITION_PASSWORD: password of user for editioning
-#     PY_ORACLEDB_SAMPLES_EDITION_NAME: name of edition for editioning
-#     PY_ORACLEDB_SAMPLES_CONNECT_STRING: connect string
-#     PY_ORACLEDB_SAMPLES_DRCP_CONNECT_STRING: DRCP connect string
-#     PY_ORACLEDB_SAMPLES_ADMIN_USER: admin user for setting up samples
-#     PY_ORACLEDB_SAMPLES_ADMIN_PASSWORD: admin password for setting up samples
-#     PY_ORACLEDB_SAMPLES_DRIVER_TYPE: type of driver (thick|thin) to use
+#     PYO_SAMPLES_MAIN_USER: user used for most samples
+#     PYO_SAMPLES_MAIN_PASSWORD: password of user used for most samples
+#     PYO_SAMPLES_EDITION_USER: user for editioning
+#     PYO_SAMPLES_EDITION_PASSWORD: password of user for editioning
+#     PYO_SAMPLES_EDITION_NAME: name of edition for editioning
+#     PYO_SAMPLES_CONNECT_STRING: connect string
+#     PYO_SAMPLES_DRCP_CONNECT_STRING: DRCP connect string
+#     PYO_SAMPLES_ADMIN_USER: admin user for setting up samples
+#     PYO_SAMPLES_ADMIN_PASSWORD: admin password for setting up samples
+#     PYO_SAMPLES_DRIVER_TYPE: type of driver (thick|thin) to use
 #
-# PY_ORACLEDB_SAMPLES_CONNECT_STRING can be set to an Easy Connect string, or a
+# PYO_SAMPLES_CONNECT_STRING can be set to an Easy Connect string, or a
 # Net Service Name from a tnsnames.ora file or external naming service,
 # or it can be the name of a local Oracle database instance.
 #
@@ -62,7 +62,7 @@ def get_value(name, label, default_value=""):
     value = PARAMETERS.get(name)
     if value is not None:
         return value
-    env_name = "PY_ORACLEDB_SAMPLES_" + name
+    env_name = "PYO_SAMPLES_" + name
     value = os.environ.get(env_name)
     if value is None:
         if default_value:
@@ -119,7 +119,7 @@ def get_edition_connect_string():
 
 def get_admin_connect_string():
     admin_user = get_value("ADMIN_USER", "Administrative user", "admin")
-    admin_password = get_value("ADMIN_PASSWORD", "Password for %s" % admin_user)
+    admin_password = get_value("ADMIN_PASSWORD", f"Password for {admin_user}")
     return "%s/%s@%s" % (admin_user, admin_password, get_connect_string())
 
 def run_sql_script(conn, script_name, **kwargs):

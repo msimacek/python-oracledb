@@ -1,13 +1,14 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # json_direct.py
-#   Shows some JSON features of Oracle Database 21c.
-#   See https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=ADJSN
 #
-#   For JSON with older databases see json_blob.py
+# Demonstrates the use of some JSON features of Oracle Database 21c.
+# See https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=ADJSN
+#
+# For JSON with older databases see json_blob.py
 #------------------------------------------------------------------------------
 
 import json

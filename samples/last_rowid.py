@@ -1,10 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2019, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2019, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # last_rowid.py
-#   Demonstrates the use of the cursor.lastrowid attribute.
+#
+# Demonstrates the use of the cursor.lastrowid attribute.
 #------------------------------------------------------------------------------
 
 import oracledb
@@ -43,7 +44,7 @@ print()
 # updating multiple rows only returns the rowid of the last updated row
 cursor.execute("update mytab set data = data || ' (Modified)'")
 cursor.execute("select id, data from mytab where rowid = :1",
-        [cursor.lastrowid])
+               [cursor.lastrowid])
 print("Last updated row:", cursor.fetchone())
 
 # deleting multiple rows only returns the rowid of the last deleted row

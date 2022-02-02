@@ -1,13 +1,14 @@
 /*-----------------------------------------------------------------------------
- * Copyright 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright 2020, 2022, Oracle and/or its affiliates. All rights reserved.
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
  * drop_test.sql
- *   Drops database objects used for oracledb tests.
+ *
+ * Drops database objects used for python-oracledb tests.
  *
  * Run this like:
- *   sqlplus sys/syspassword@hostname/servicename as sysdba @drop_test
+ *     sqlplus sys/syspassword@hostname/servicename as sysdba @drop_test
  *---------------------------------------------------------------------------*/
 
 whenever sqlerror exit failure

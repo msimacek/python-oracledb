@@ -1,14 +1,16 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2017, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2017, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # connection_pool.py
-#   This script demonstrates the use of connection pooling. Pools can
-# significantly reduce connection times for long running applications that
-# repeatedly open and close connections. Internal features help protect against
-# dead connections, and also aid use of Oracle Database features such as FAN
-# and Application Continuity.
+#
+# Demonstrates the use of connection pooling. Pools can significantly reduce
+# connection times for long running applications that repeatedly open and close
+# connections. Internal features help protect against dead connections, and
+# also aid use of Oracle Database features such as FAN and
+# Application Continuity.
+#
 # The script uses threading to show multiple users of the pool. One thread
 # performs a database sleep while another performs a query. A more typical
 # application might be a web service that handles requests from multiple users.
@@ -16,7 +18,6 @@
 # on each connection.
 #
 # Also see session_callback.py.
-#
 #------------------------------------------------------------------------------
 
 import threading

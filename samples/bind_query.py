@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # bind_query.py
 #
-# Demonstrate how to perform a simple query limiting the rows retrieved using
+# Demonstrates how to perform a simple query limiting the rows retrieved using
 # a bind variable. Since the query that is executed is identical, no additional
 # parsing is required, thereby reducing overhead and increasing performance. It
 # also permits data to be bound without having to be concerned about escaping

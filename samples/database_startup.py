@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -9,9 +9,9 @@
 
 #------------------------------------------------------------------------------
 # database_startup.py
-#   This script demonstrates starting up a database using Python. The
-# connection used assumes that the environment variable ORACLE_SID has been
-# set.
+#
+# Demonstrates starting up a database using Python. The connection used
+# assumes that the environment variable ORACLE_SID has been set.
 #------------------------------------------------------------------------------
 
 import oracledb

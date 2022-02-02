@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # query_arraysize.py
 #
-# Demonstrate how to alter the array size and prefetch rows value on a cursor
+# Demonstrates how to alter the array size and prefetch rows value on a cursor
 # in order to reduce the number of network round trips and overhead required to
 # fetch all of the rows from a large table.
 #------------------------------------------------------------------------------

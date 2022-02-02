@@ -1,10 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2019, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2019, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # soda_bulk_insert.py
-#   Demonstrates the use of SODA bulk insert.
+#
+# Demonstrates the use of SODA bulk insert.
 #
 # Oracle Client must be at 18.5 or higher.
 # Oracle Database must be at 18.1 or higher.

@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -9,8 +9,9 @@
 
 #------------------------------------------------------------------------------
 # type_handlers.py
-#   This script demonstrates the use of input and output type handlers as well
-# as variable input and output converters. These methods can be used to extend
+#
+# Demonstrates the use of input and output type handlers as well as variable
+# input and output converters. These methods can be used to extend
 # python-oracledb in many ways. This script demonstrates the binding and
 # querying of SQL objects as Python objects.
 #------------------------------------------------------------------------------
@@ -73,7 +74,7 @@ cur.inputtypehandler = input_type_handler
 for building in buildings:
     try:
         cur.execute("insert into TestBuildings values (:1, :2)",
-                (building.building_id, building))
+                    (building.building_id, building))
     except oracledb.DatabaseError as e:
         error, = e.args
         print("CONTEXT:", error.context)

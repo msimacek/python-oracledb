@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -9,9 +9,9 @@
 
 #------------------------------------------------------------------------------
 # implicit_results.py
-#   This script demonstrates the use of the 12.1 feature that allows PL/SQL
-# procedures to return result sets implicitly, without having to explicitly
-# define them.
+#
+# Demonstrates the use of the 12.1 feature that allows PL/SQL procedures to
+# return result sets implicitly, without having to explicitly define them.
 #------------------------------------------------------------------------------
 
 import oracledb
@@ -32,12 +32,12 @@ cursor.execute("""
         begin
 
             open c1 for
-            select * from TestNumbers;
+                select * from TestNumbers;
 
             dbms_sql.return_result(c1);
 
             open c2 for
-            select * from TestStrings;
+                select * from TestStrings;
 
             dbms_sql.return_result(c2);
 

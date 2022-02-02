@@ -1,12 +1,12 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2017, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2017, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # return_numbers_as_decimals.py
-#   Returns all numbers as decimals. This is needed if the full decimal
-# precision of Oracle numbers is required by the application. See this
-# article
+#
+# Returns all numbers as decimals. This is needed if the full decimal
+# precision of Oracle numbers is required by the application. See this article
 # (http://blog.reverberate.org/2016/02/06/floating-point-demystified-part2.html)
 # for an explanation of why decimal numbers (like Oracle numbers) cannot be
 # represented exactly by floating point numbers.

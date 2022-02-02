@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2017, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2017, 2022, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -9,8 +9,9 @@
 
 #------------------------------------------------------------------------------
 # universal_rowids.py
-#   This script demonstrates the use of universal rowids. Universal rowids are
-# used to identify rows in index organized tables.
+#
+# Demonstrates the use of universal rowids. Universal rowids are used to
+# identify rows in index organized tables.
 #------------------------------------------------------------------------------
 
 import datetime

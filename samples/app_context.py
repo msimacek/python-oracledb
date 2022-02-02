@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #
 # Portions Copyright 2007-2015, Anthony Tuininga. All rights reserved.
 #
@@ -9,9 +9,10 @@
 
 #------------------------------------------------------------------------------
 # app_context.py
-#   This script demonstrates the use of application context. Application
-# context is available within logon triggers and can be retrieved by using the
-# function sys_context().
+#
+# Demonstrates the use of application context. Application context is available
+# within logon triggers and can be retrieved by using the function
+# sys_context().
 #------------------------------------------------------------------------------
 
 import oracledb

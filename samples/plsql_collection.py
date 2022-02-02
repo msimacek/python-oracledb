@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # plsql_collection.py
 #
-# Demonstrate how to get the value of a PL/SQL collection from a stored
+# Demonstrates how to get the value of a PL/SQL collection from a stored
 # procedure.
 #
 # This feature is only available in Oracle Database 12.1 and higher.
