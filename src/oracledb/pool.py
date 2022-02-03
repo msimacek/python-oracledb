@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 from typing import Callable, Type
@@ -10,6 +10,7 @@ from .connect_params import ConnectParams
 from .defaults import defaults
 
 class Pool:
+    __module__ = constants.MODULE_NAME
 
     def __init__(self,
                  dsn: str=None, *,

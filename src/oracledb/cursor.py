@@ -1,9 +1,9 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2021, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 from typing import Any, Type, Union, Callable
-from . import errors, exceptions
+from . import constants, errors, exceptions
 from . import connection as connection_module
 from .defaults import defaults
 from .var import Var
@@ -11,6 +11,7 @@ from .base_impl import DbType
 from .dbobject import DbObjectType
 
 class Cursor:
+    __module__ = constants.MODULE_NAME
 
     def __init__(self, connection: Type["connection_module.Connection"],
                  scrollable: bool = False) -> None:

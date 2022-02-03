@@ -1,11 +1,14 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2021, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 from typing import Sequence, Type, Union
+
+from . import constants
 from .base_impl import DbType
 
 class DbObject:
+    __module__ = constants.MODULE_NAME
 
     def __getattr__(self, name):
         attr_impl = self._impl.type.attrs_by_name[name]
@@ -161,6 +164,7 @@ class DbObject:
 
 
 class DbObjectAttr:
+    __module__ = constants.MODULE_NAME
 
     def __repr__(self):
         return f"<oracledb.DbObjectAttr {self.name}>"
@@ -195,6 +199,7 @@ class DbObjectAttr:
 
 
 class DbObjectType:
+    __module__ = constants.MODULE_NAME
 
     def __call__(self, value=None):
         return self.newobject(value)

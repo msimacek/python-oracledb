@@ -1,10 +1,13 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2021, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 from typing import Union
 
+from . import constants
+
 class LOB:
+    __module__ = constants.MODULE_NAME
 
     def __del__(self):
         self._impl.free_lob()

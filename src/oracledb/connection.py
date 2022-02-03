@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 import collections
@@ -24,7 +24,7 @@ Xid = collections.namedtuple("Xid",
                               "branch_qualifier"])
 
 class Connection:
-    _impl = None
+    __module__ = constants.MODULE_NAME
 
     def __init__(self,
                  dsn: str=None, *,

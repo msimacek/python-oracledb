@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2021, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 import copy
@@ -15,6 +15,7 @@ class ConnectParams:
     Contains all parameters used for establishing a connection to the
     database.
     """
+    __module__ = constants.MODULE_NAME
 
     # dictionary of tnsnames files, indexed by the directory in which the file
     # is found; the results are cached in order to avoid parsing a file
