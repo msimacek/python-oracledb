@@ -112,7 +112,7 @@ class Cursor:
         directed by Oracle.
         """
         self._verify_open()
-        self._impl._set_oci_attr(handle_type, attr_num, attr_type, value)
+        self._impl._set_oci_attr(attr_num, attr_type, value)
 
     def _verify_fetch(self) -> None:
         """
