@@ -6,7 +6,6 @@
 2500 - Module for testing string variables
 """
 
-import datetime
 import random
 import string
 import unittest
@@ -174,33 +173,6 @@ class TestCase(test_env.BaseTestCase):
                 where rowid = :value""",
                 value=rowid)
         self.assertEqual(self.cursor.fetchall(), [self.data_by_key[3]])
-
-    def test_2512_bind_and_fetch_universal_rowids(self):
-        "2512 - test binding (and fetching) universal rowids"
-        self.cursor.execute("truncate table TestUniversalRowids")
-        data = [
-            (1, "ABC" * 75, datetime.datetime(2017, 4, 11)),
-            (2, "DEF" * 80, datetime.datetime(2017, 4, 12))
-        ]
-        for row in data:
-            self.cursor.execute("""
-                    insert into TestUniversalRowids
-                    values (:1, :2, :3)""", row)
-        self.connection.commit()
-        self.cursor.execute("""
-                select rowid
-                from TestUniversalRowIds
-                order by IntCol""")
-        rowids = [r for r, in self.cursor]
-        fetched_data = []
-        for rowid in rowids:
-            self.cursor.execute("""
-                    select *
-                    from TestUniversalRowids
-                    where rowid = :rid""",
-                    rid=rowid)
-            fetched_data.extend(self.cursor.fetchall())
-        self.assertEqual(fetched_data, data)
 
     def test_2513_bind_null(self):
         "2513 - test binding in a null"

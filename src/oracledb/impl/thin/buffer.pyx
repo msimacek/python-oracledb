@@ -733,14 +733,27 @@ cdef class ReadBuffer:
             ssize_t output_len, input_len, remainder, pos
             int input_offset = 1, output_offset = 0
             bytearray input_value, output_value
+            const char_type *ptr
+            Rowid rowid
+
+        # handle physical rowid
         input_len = len(input_bytes)
+        input_value = bytearray(input_bytes)
+        if input_value[0] == 1:
+            ptr = input_bytes
+            rowid.rba = unpack_uint32(&ptr[1], BYTE_ORDER_MSB)
+            rowid.partition_id = unpack_uint16(&ptr[5], BYTE_ORDER_MSB)
+            rowid.block_num = unpack_uint32(&ptr[7], BYTE_ORDER_MSB)
+            rowid.slot_num = unpack_uint16(&ptr[11], BYTE_ORDER_MSB)
+            return _encode_rowid(&rowid)
+
+        # handle logical rowid
         output_len = (input_len // 3) * 4
         remainder = input_len % 3
         if remainder == 1:
             output_len += 1
         elif remainder == 2:
             output_len += 3
-        input_value = bytearray(input_bytes)
         output_value = bytearray(output_len)
         input_len -= 1
         output_value[0] = 42            # '*'
