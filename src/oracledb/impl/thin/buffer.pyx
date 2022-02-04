@@ -98,14 +98,6 @@ cdef inline uint32_t unpack_uint32(const char_type *buf, int order):
     return raw_value if order == MACHINE_BYTE_ORDER else bswap32(raw_value)
 
 
-cdef inline uint64_t unpack_uint64(const char_type *buf, int order):
-    """
-    Unpacks a 64-bit integer from the buffer using the specified byte order.
-    """
-    cdef uint64_t raw_value = (<uint64_t*> buf)[0]
-    return raw_value if order == MACHINE_BYTE_ORDER else bswap64(raw_value)
-
-
 @cython.final
 cdef class ChunkedBytesBuffer:
 
@@ -263,6 +255,29 @@ cdef class ReadBuffer:
         except ConnectionResetError as e:
             errors._raise_err(errors.ERR_CONNECTION_CLOSED, str(e))
 
+    cdef int _get_int_length_and_sign(self, uint8_t *length,
+                                      bint *is_negative,
+                                      uint8_t max_length) except -1:
+        """
+        Returns the length of an integer sent on the wire. A check is also made
+        to ensure the integer does not exceed the maximum length. If the
+        is_negative pointer is NULL, negative integers will result in an
+        exception being raised.
+        """
+        cdef const char_type *ptr = self._get_raw(1)
+        if ptr[0] & 0x80:
+            if is_negative == NULL:
+                errors._raise_err(errors.ERR_UNEXPECTED_NEGATIVE_INTEGER)
+            is_negative[0] = True
+            length[0] = ptr[0] & 0x7f
+        else:
+            if is_negative != NULL:
+                is_negative[0] = False
+            length[0] = ptr[0]
+        if length[0] > max_length:
+            errors._raise_err(errors.ERR_INTEGER_TOO_LARGE, length=length[0],
+                              max_length=max_length)
+
     cdef const char_type* _get_raw(self, ssize_t num_bytes,
                                    bint in_chunked_read=False) except NULL:
         """
@@ -334,102 +349,78 @@ cdef class ReadBuffer:
         # the return value is ignored anyway
         return self._split_data
 
+    cdef int _read_bytes(self, ssize_t *num_bytes,
+                         const char_type **ptr) except -1:
+        """
+        Internal method used to read the specified number of bytes from the
+        network buffer. If the number of bytes requested is
+        TNS_LONG_LENGTH_INDICATOR, though, then a chunked read is performed.
+        """
+        cdef uint32_t temp_num_bytes
+        if num_bytes[0] != TNS_LONG_LENGTH_INDICATOR:
+            ptr[0] = self._get_raw(num_bytes[0])
+        else:
+            self._chunked_bytes_buf.start_chunked_read()
+            num_bytes[0] = 0
+            while True:
+                self.read_ub4(&temp_num_bytes)
+                if temp_num_bytes == 0:
+                    break
+                num_bytes[0] += temp_num_bytes
+                self._get_raw(temp_num_bytes, in_chunked_read=True)
+            ptr[0] = self._chunked_bytes_buf.end_chunked_read()
+
+    cdef int _skip_int(self, uint8_t max_length, bint *is_negative) except -1:
+        """
+        Skips reading an integer of the specified maximum length from the
+        buffer.
+        """
+        cdef uint8_t length
+        self._get_int_length_and_sign(&length, is_negative, max_length)
+        self.skip_bytes(length)
+
+    cdef uint64_t _unpack_int(self, const char_type *ptr, uint8_t length):
+        """
+        Unpacks an integer received in the buffer into its native format.
+        """
+        if length == 1:
+            return ptr[0]
+        elif length == 2:
+            return (ptr[0] << 8) | ptr[1]
+        elif length == 3:
+            return (ptr[0] << 16) | (ptr[1] << 8) | ptr[2]
+        elif length == 4:
+            return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3]
+        elif length == 5:
+            return ((<uint64_t> ptr[0]) << 32) | (ptr[1] << 24) | \
+                    (ptr[2] << 16) | (ptr[3] << 8) | ptr[4]
+        elif length == 6:
+            return ((<uint64_t> ptr[0]) << 40) | \
+                   ((<uint64_t> ptr[1]) << 32) | (ptr[2] << 24) | \
+                   (ptr[3] << 16) | (ptr[4] << 8) | ptr[5]
+        elif length == 7:
+            return ((<uint64_t> ptr[0]) << 48) | \
+                   ((<uint64_t> ptr[1]) << 40) | \
+                   ((<uint64_t> ptr[2]) << 32) | \
+                   (ptr[3] << 24) | (ptr[4] << 16) | (ptr[5] << 8) | ptr[6]
+        elif length == 8:
+            return ((<uint64_t> ptr[0]) << 46) | \
+                   ((<uint64_t> ptr[1]) << 48) | \
+                   ((<uint64_t> ptr[2]) << 40) | \
+                   ((<uint64_t> ptr[3]) << 32) | \
+                   (ptr[4] << 24) | (ptr[5] << 16) | (ptr[6] << 8) | ptr[7]
+
     cdef inline ssize_t bytes_left(self):
+        """
+        Return the number of bytes remaining in the buffer.
+        """
         return self._size - self._offset
 
-    cdef int receive_packet(self, uint8_t *packet_type) except -1:
-        """
-        Receives a packet and updates the pointers appropriately. Note that
-        multiple packets may be received if they are small enough or a portion
-        of a second packet may be received so the buffer needs to be adjusted
-        as needed. This is also why room is available in the buffer for up to
-        two complete packets.
-        """
-        cdef:
-            ssize_t offset, bytes_to_read, bytes_read = 0, packet_size
-
-        # if no bytes are left over from a previous read, perform a read of the
-        # maximum packet size and reset the offset to 0
-        if self._bytes_to_process == 0:
-            self._packet_start_offset = 0
-            self._offset = 0
-            self._get_data_from_socket(self._data_obj, self._max_packet_size,
-                                       &bytes_read)
-
-        # otherwise, set the offset to the end of the previous packet and
-        # ensure that there are at least enough bytes available to cover the
-        # contents of the packet header
-        else:
-            self._packet_start_offset = self._size
-            self._offset = self._size
-            if self._bytes_to_process < PACKET_HEADER_SIZE:
-                offset = self._size + self._bytes_to_process
-                bytes_to_read = PACKET_HEADER_SIZE - self._bytes_to_process
-                self._get_data_from_socket(self._data_view[offset:],
-                                           bytes_to_read, &bytes_read)
-
-        # if no bytes were read this means the server closed the connection
-        if self._bytes_to_process < PACKET_HEADER_SIZE:
-            if bytes_read == 0:
-                if self._socket is not None:
-                    try:
-                        self._socket.shutdown(socket.SHUT_RDWR)
-                    except OSError:
-                        pass
-                    self._socket.close()
-                    self._socket = None
-                errors._raise_err(errors.ERR_CONNECTION_CLOSED)
-            self._bytes_to_process += bytes_read
-
-        # determine the packet length and ensure that all of the bytes for the
-        # packet are available; note that as of version 12.2 the packet size is
-        # 32 bits in size instead of 16 bits, but this doesn't take effect
-        # until it is known that the server is capable of that as well
-        if self._caps.protocol_version >= TNS_VERSION_MIN_LARGE_SDU:
-            self._size += 4
-            packet_size = self.read_uint32()
-        else:
-            self._size += 2
-            packet_size = self.read_uint16()
-        while self._bytes_to_process < packet_size:
-            offset = self._packet_start_offset + self._bytes_to_process
-            bytes_to_read = packet_size - self._bytes_to_process
-            self._get_data_from_socket(self._data_view[offset:], bytes_to_read,
-                                       &bytes_read)
-            self._bytes_to_process += bytes_read
-
-        # process remainder of packet header and set size to the new packet
-        self._size = self._packet_start_offset + packet_size
-        self._bytes_to_process -= packet_size
-        if self._caps.protocol_version < TNS_VERSION_MIN_LARGE_SDU:
-            self.skip_bytes(2)          # skip packet checksum
-        packet_type[0] = self.read_uint8()
-        self.skip_bytes(3)              # skip reserved byte, header checksum
-
-        # display packet if requested
-        if DEBUG_PACKETS:
-            offset = self._packet_start_offset
-            _print_packet("Receiving packet:", self._socket.fileno(),
-                          self._data_view[offset:self._size])
-
-    cdef int skip_bytes(self, ssize_t num_bytes) except -1:
-        """
-        Skip the specified number of bytes. In order to avoid copying data, the
-        number of bytes left in the packet is determined and only that amount
-        is requested.
-        """
-        cdef ssize_t num_bytes_this_time
-        while num_bytes > 0:
-            num_bytes_this_time = min(num_bytes, self._size - self._offset)
-            self._get_raw(num_bytes_this_time)
-            num_bytes -= num_bytes_this_time
-
-    cdef void unread_bytes(self, ssize_t num_bytes):
-        self._offset -= num_bytes
-        if self._offset < 0:
-            self._offset = 0
-
     cdef object read_binary_double(self):
+        """
+        Read a binary double value from the buffer and return the corresponding
+        Python object representing that value.
+        """
         cdef:
             const uint8_t *ptr = <uint8_t*> self._get_raw(8)
             uint64_t high_bits, low_bits, all_bits
@@ -461,6 +452,10 @@ cdef class ReadBuffer:
         return double_ptr[0]
 
     cdef object read_binary_float(self):
+        """
+        Read a binary float value from the buffer and return the corresponding
+        Python object representing that value.
+        """
         cdef:
             const uint8_t *ptr = <uint8_t*> self._get_raw(4)
             uint8_t b0, b1, b2, b3
@@ -481,61 +476,31 @@ cdef class ReadBuffer:
         float_ptr = <float*> &all_bits
         return float_ptr[0]
 
-    cdef uint8_t read_uint8(self) except *:
-        cdef const char_type *ptr = self._get_raw(1)
-        return ptr[0]
-
-    cdef int8_t read_int8(self) except *:
-        return <int8_t> self.read_uint8()
-
-    cdef uint16_t read_uint16(self, int byte_order=BYTE_ORDER_MSB) except *:
-        cdef const char_type *ptr = self._get_raw(2)
-        return unpack_uint16(ptr, byte_order)
-
-    cdef uint32_t read_uint32(self, int byte_order=BYTE_ORDER_MSB) except *:
-        cdef const char_type *ptr = self._get_raw(4)
-        return unpack_uint32(ptr, byte_order)
-
-    cdef uint32_t read_uint64(self, int byte_order=BYTE_ORDER_MSB) except *:
-        cdef const char_type *ptr = self._get_raw(8)
-        return unpack_uint64(ptr, byte_order)
-
-    cdef inline uint16_t read_ub2(self) except *:
-        return <uint16_t> self.read_oracle_int()
-
-    cdef inline uint32_t read_ub4(self) except *:
-        return <uint32_t> self.read_oracle_int()
-
-    cdef uint64_t read_ub8(self) except *:
-        return <uint64_t> self.read_oracle_int()
-
-    cdef int _read_bytes(self, ssize_t *num_bytes,
-                         const char_type **ptr) except -1:
-        """
-        Internal method used to read the specified number of bytes from the
-        network buffer. If the number of bytes requested is
-        TNS_LONG_LENGTH_INDICATOR, though, then a chunked read is performed.
-        """
-        cdef ssize_t temp_num_bytes
-        if num_bytes[0] != TNS_LONG_LENGTH_INDICATOR:
-            ptr[0] = self._get_raw(num_bytes[0])
-        else:
-            self._chunked_bytes_buf.start_chunked_read()
-            num_bytes[0] = 0
-            while True:
-                temp_num_bytes = self.read_ub4()
-                if temp_num_bytes == 0:
-                    break
-                num_bytes[0] += temp_num_bytes
-                self._get_raw(temp_num_bytes, in_chunked_read=True)
-            ptr[0] = self._chunked_bytes_buf.end_chunked_read()
-
     cdef bytes read_bytes(self, ssize_t num_bytes):
         cdef const char_type *ptr
         self._read_bytes(&num_bytes, &ptr)
         return ptr[:num_bytes]
 
+    cdef object read_date(self, uint8_t num_bytes):
+        """
+        Read a date from the buffer and return the corresponding Python object
+        representing that value.
+        """
+        cdef:
+            const char_type *ptr = self._get_raw(num_bytes)
+            uint32_t fsecond = 0
+            uint16_t year
+        year = (<uint8_t> ptr[0] - 100) * 100 + <uint8_t> ptr[1] - 100
+        if num_bytes >= 11:
+            fsecond = unpack_uint32(&ptr[7], BYTE_ORDER_MSB) // 1000
+        return cydatetime.datetime_new(year, ptr[2], ptr[3], ptr[4] - 1,
+                                       ptr[5] - 1, ptr[6] - 1, fsecond, None)
+
     cdef object read_interval_ds(self, uint8_t num_bytes):
+        """
+        Read an interval day to second value from the buffer and return the
+        corresponding Python object representing that value.
+        """
         cdef:
             int32_t days, hours, minutes, seconds, total_seconds, fseconds
             const char_type *ptr = self._get_raw(num_bytes)
@@ -549,53 +514,13 @@ cdef class ReadBuffer:
         total_seconds = hours * 60 * 60 + minutes * 60 + seconds
         return cydatetime.timedelta_new(days, total_seconds, fseconds // 1000)
 
-    cdef str read_str(self, ssize_t num_bytes, int csfrm=TNS_CS_IMPLICIT):
-        cdef const char_type *ptr
-        self._read_bytes(&num_bytes, &ptr)
-        if csfrm == TNS_CS_IMPLICIT:
-            return ptr[:num_bytes].decode()
-        return ptr[:num_bytes].decode(TNS_ENCODING_UTF16)
-
-    cdef object read_oracle_date(self, uint8_t num_bytes):
-        cdef:
-            const char_type *ptr = self._get_raw(num_bytes)
-            uint32_t fsecond = 0
-            uint16_t year
-        year = (<uint8_t> ptr[0] - 100) * 100 + <uint8_t> ptr[1] - 100
-        if num_bytes >= 11:
-            fsecond = unpack_uint32(&ptr[7], BYTE_ORDER_MSB) // 1000
-        return cydatetime.datetime_new(year, ptr[2], ptr[3], ptr[4] - 1,
-                                       ptr[5] - 1, ptr[6] - 1, fsecond, None)
-
-    cdef int64_t read_oracle_int(self) except *:
-        cdef:
-            bint is_negative = False
-            uint8_t length
-            int64_t value
-        length = self.read_uint8()
-        if length & 0x80:
-            is_negative = True
-            length = length & 0x7f
-        if length == 0:
-            return 0
-        elif length == 1:
-            value = self.read_uint8()
-        elif length == 2:
-            value = self.read_uint16()
-        elif length == 3:
-            value = self.read_uint16() * 256 + self.read_uint8()
-        elif length == 4:
-            value = self.read_uint32()
-        elif length == 8:
-            value = self.read_uint64()
-        else:
-            raise Exception(f"TTC error: read integer of length {length}")
-        if is_negative:
-            value = -value
-        return value
-
     cdef object read_oracle_number(self, uint8_t num_bytes,
                                    int preferred_num_type):
+        """
+        Read an Oracle number from the buffer and return the corresponding
+        Python object representing that value. The preferred numeric type
+        (int, float, decimal.Decimal and str) is used, if possible.
+        """
         cdef:
             char_type buf[NUMBER_AS_TEXT_CHARS]
             uint8_t digits[NUMBER_MAX_DIGITS]
@@ -720,15 +645,129 @@ cdef class ReadBuffer:
 
     cdef int read_rowid(self, Rowid *rowid) except -1:
         """
-        Populates the rowid structure by reading the buffer contents.
+        Reads a rowid from the buffer and populates the rowid structure.
         """
-        rowid.rba = self.read_ub4()
-        rowid.partition_id = self.read_ub2()
+        self.read_ub4(&rowid.rba)
+        self.read_ub2(&rowid.partition_id)
         self.skip_bytes(1)
-        rowid.block_num = self.read_ub4()
-        rowid.slot_num = self.read_ub2()
+        self.read_ub4(&rowid.block_num)
+        self.read_ub2(&rowid.slot_num)
+
+    cdef int read_sb1(self, int8_t *value) except -1:
+        """
+        Read a signed 8-bit integer from the buffer.
+        """
+        cdef const char_type *ptr = self._get_raw(1)
+        value[0] = <int8_t> ptr[0]
+
+    cdef int read_sb2(self, int16_t *value) except -1:
+        """
+        Reads a signed 16-bit integer from the buffer.
+        """
+        cdef:
+            const char_type *ptr
+            bint is_negative
+            uint8_t length
+        self._get_int_length_and_sign(&length, &is_negative, 2)
+        if length == 0:
+            value[0] = 0
+        else:
+            ptr = self._get_raw(length)
+            value[0] = <int16_t> self._unpack_int(ptr, length)
+            if is_negative:
+                value[0] = -value[0]
+
+    cdef int read_sb4(self, int32_t *value) except -1:
+        """
+        Reads a signed 32-bit integer from the buffer.
+        """
+        cdef:
+            const char_type *ptr
+            bint is_negative
+            uint8_t length
+        self._get_int_length_and_sign(&length, &is_negative, 4)
+        if length == 0:
+            value[0] = 0
+        else:
+            ptr = self._get_raw(length)
+            value[0] = <int32_t> self._unpack_int(ptr, length)
+            if is_negative:
+                value[0] = -value[0]
+
+    cdef str read_str(self, ssize_t num_bytes, int csfrm=TNS_CS_IMPLICIT):
+        cdef const char_type *ptr
+        self._read_bytes(&num_bytes, &ptr)
+        if csfrm == TNS_CS_IMPLICIT:
+            return ptr[:num_bytes].decode()
+        return ptr[:num_bytes].decode(TNS_ENCODING_UTF16)
+
+    cdef int read_ub2(self, uint16_t *value) except -1:
+        """
+        Reads an unsigned 16-bit integer from the buffer.
+        """
+        cdef:
+            const char_type *ptr
+            uint8_t length
+        self._get_int_length_and_sign(&length, NULL, 2)
+        if length == 0:
+            value[0] = 0
+        else:
+            ptr = self._get_raw(length)
+            value[0] = <uint16_t> self._unpack_int(ptr, length)
+
+    cdef int read_ub4(self, uint32_t *value) except -1:
+        """
+        Reads an unsigned 32-bit integer from the buffer.
+        """
+        cdef:
+            const char_type *ptr
+            uint8_t length
+        self._get_int_length_and_sign(&length, NULL, 4)
+        if length == 0:
+            value[0] = 0
+        else:
+            ptr = self._get_raw(length)
+            value[0] = <uint32_t> self._unpack_int(ptr, length)
+
+    cdef int read_ub8(self, uint64_t *value) except -1:
+        """
+        Reads an unsigned 64-bit integer from the buffer.
+        """
+        cdef:
+            const char_type *ptr
+            uint8_t length
+        self._get_int_length_and_sign(&length, NULL, 8)
+        if length == 0:
+            value[0] = 0
+        else:
+            ptr = self._get_raw(length)
+            value[0] = self._unpack_int(ptr, length)
+
+    cdef uint8_t read_uint8(self) except *:
+        cdef const char_type *ptr = self._get_raw(1)
+        return ptr[0]
+
+    cdef int read_uint16(self, uint16_t *value,
+                         int byte_order=BYTE_ORDER_MSB) except -1:
+        """
+        Read a 16-bit integer from the buffer in the specified byte order.
+        """
+        cdef const char_type *ptr = self._get_raw(2)
+        value[0] = unpack_uint16(ptr, byte_order)
+
+    cdef int read_uint32(self, uint32_t *value,
+                         int byte_order=BYTE_ORDER_MSB) except -1:
+        """
+        Read a 32-bit integer from the buffer in the specified byte order.
+        """
+        cdef const char_type *ptr = self._get_raw(4)
+        value[0] = unpack_uint32(ptr, byte_order)
 
     cdef object read_urowid(self, bytes input_bytes):
+        """
+        Read a universal rowid from the buffer and return the Python object
+        representing its value.
+        """
         cdef:
             ssize_t output_len, input_len, remainder, pos
             int input_offset = 1, output_offset = 0
@@ -795,6 +834,121 @@ cdef class ReadBuffer:
             input_len -= 3
 
         return bytes(output_value).decode()
+
+    cdef int receive_packet(self, uint8_t *packet_type) except -1:
+        """
+        Receives a packet and updates the pointers appropriately. Note that
+        multiple packets may be received if they are small enough or a portion
+        of a second packet may be received so the buffer needs to be adjusted
+        as needed. This is also why room is available in the buffer for up to
+        two complete packets.
+        """
+        cdef:
+            ssize_t offset, bytes_to_read, bytes_read = 0
+            uint32_t packet_size
+            uint16_t temp16
+
+        # if no bytes are left over from a previous read, perform a read of the
+        # maximum packet size and reset the offset to 0
+        if self._bytes_to_process == 0:
+            self._packet_start_offset = 0
+            self._offset = 0
+            self._get_data_from_socket(self._data_obj, self._max_packet_size,
+                                       &bytes_read)
+
+        # otherwise, set the offset to the end of the previous packet and
+        # ensure that there are at least enough bytes available to cover the
+        # contents of the packet header
+        else:
+            self._packet_start_offset = self._size
+            self._offset = self._size
+            if self._bytes_to_process < PACKET_HEADER_SIZE:
+                offset = self._size + self._bytes_to_process
+                bytes_to_read = PACKET_HEADER_SIZE - self._bytes_to_process
+                self._get_data_from_socket(self._data_view[offset:],
+                                           bytes_to_read, &bytes_read)
+
+        # if no bytes were read this means the server closed the connection
+        if self._bytes_to_process < PACKET_HEADER_SIZE:
+            if bytes_read == 0:
+                if self._socket is not None:
+                    try:
+                        self._socket.shutdown(socket.SHUT_RDWR)
+                    except OSError:
+                        pass
+                    self._socket.close()
+                    self._socket = None
+                errors._raise_err(errors.ERR_CONNECTION_CLOSED)
+            self._bytes_to_process += bytes_read
+
+        # determine the packet length and ensure that all of the bytes for the
+        # packet are available; note that as of version 12.2 the packet size is
+        # 32 bits in size instead of 16 bits, but this doesn't take effect
+        # until it is known that the server is capable of that as well
+        if self._caps.protocol_version >= TNS_VERSION_MIN_LARGE_SDU:
+            self._size += 4
+            self.read_uint32(&packet_size)
+        else:
+            self._size += 2
+            self.read_uint16(&temp16)
+            packet_size = temp16
+        while self._bytes_to_process < packet_size:
+            offset = self._packet_start_offset + self._bytes_to_process
+            bytes_to_read = packet_size - self._bytes_to_process
+            self._get_data_from_socket(self._data_view[offset:], bytes_to_read,
+                                       &bytes_read)
+            self._bytes_to_process += bytes_read
+
+        # process remainder of packet header and set size to the new packet
+        self._size = self._packet_start_offset + packet_size
+        self._bytes_to_process -= packet_size
+        if self._caps.protocol_version < TNS_VERSION_MIN_LARGE_SDU:
+            self.skip_bytes(2)          # skip packet checksum
+        packet_type[0] = self.read_uint8()
+        self.skip_bytes(3)              # skip reserved byte, header checksum
+
+        # display packet if requested
+        if DEBUG_PACKETS:
+            offset = self._packet_start_offset
+            _print_packet("Receiving packet:", self._socket.fileno(),
+                          self._data_view[offset:self._size])
+
+    cdef int skip_bytes(self, ssize_t num_bytes) except -1:
+        """
+        Skip the specified number of bytes in the buffer. In order to avoid
+        copying data, the number of bytes left in the packet is determined and
+        only that amount is requested.
+        """
+        cdef ssize_t num_bytes_this_time
+        while num_bytes > 0:
+            num_bytes_this_time = min(num_bytes, self.bytes_left())
+            self._get_raw(num_bytes_this_time)
+            num_bytes -= num_bytes_this_time
+
+    cdef inline int skip_sb4(self) except -1:
+        """
+        Skips a signed 32-bit integer in the buffer.
+        """
+        cdef bint is_negative
+        return self._skip_int(4, &is_negative)
+
+    cdef inline int skip_ub1(self) except -1:
+        """
+        Skips an unsigned 8-bit integer in the buffer.
+        """
+        self._get_raw(1)
+
+    cdef inline int skip_ub2(self) except -1:
+        """
+        Skips an unsigned 16-bit integer in the buffer.
+        """
+        return self._skip_int(2, NULL)
+
+    cdef inline int skip_ub4(self) except -1:
+        """
+        Skips an unsigned 32-bit integer in the buffer.
+        """
+        return self._skip_int(4, NULL)
 
 
 @cython.final

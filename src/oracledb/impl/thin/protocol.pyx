@@ -209,12 +209,12 @@ cdef class Protocol:
 
     cdef int _process_control_packet(self, ReadBuffer buf) except -1:
         cdef uint16_t control_type, error_num
-        control_type = buf.read_uint16()
+        buf.read_uint16(&control_type)
         if control_type == TNS_CONTROL_TYPE_RESET_OOB:
             self._caps.supports_oob = False
         elif control_type == TNS_CONTROL_TYPE_INBAND_NOTIFICATION:
             buf.skip_bytes(6)           # skip flags
-            error_num = buf.read_uint16()
+            buf.read_uint16(&error_num)
             if error_num == TNS_ERR_SESSION_SHUTDOWN \
                     or error_num == TNS_ERR_INBAND_MESSAGE:
                 self._session_needs_to_be_closed = True

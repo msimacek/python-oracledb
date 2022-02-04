@@ -150,6 +150,8 @@ ERR_NO_CONFIG_DIR = 4027
 # error numbers that result in InternalError
 ERR_MESSAGE_TYPE_UNKNOWN = 5000
 ERR_BUFFER_LENGTH_INSUFFICIENT = 5001
+ERR_INTEGER_TOO_LARGE = 5002
+ERR_UNEXPECTED_NEGATIVE_INTEGER = 5003
 
 # error numbers that result in OperationalError
 ERR_LISTENER_REFUSED_CONNECTION = 6000
@@ -218,6 +220,9 @@ ERR_MESSAGE_FORMATS = {
                                  "{required_arraysize})",
     ERR_INIT_ORACLE_CLIENT_NOT_CALLED: \
             "init_oracle_client() must be called first",
+    ERR_INTEGER_TOO_LARGE: \
+            "read integer of length {length} when expecting integer of no " \
+            "more than length {max_length}",
     ERR_INVALID_BIND_NAME: \
             'no placeholder named "{name}" was found in the SQL text',
     ERR_INVALID_CONNECT_DESCRIPTOR: "invalid connect descriptor: {data}",
@@ -292,6 +297,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_TNS_ENTRY_NOT_FOUND: \
             "unable to find {name} in tnsnames.ora found in {config_dir}",
     ERR_TNS_NAMES_FILE_MISSING: "tnsnames.ora not found in {config_dir}",
+    ERR_UNEXPECTED_NEGATIVE_INTEGER: \
+            "read negative integer when expecting only a positive integer",
     ERR_UNSUPPORTED_INBAND_NOTIFICATION: \
             "unsupported in-band notification with error number {err_num}",
     ERR_WALLET_FILE_MISSING: "wallet file {name} is missing",
