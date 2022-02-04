@@ -58,7 +58,8 @@ class TestCase(test_env.BaseTestCase):
         alias = "tns_alias = " + connect_string
         with tempfile.TemporaryDirectory() as temp_dir:
             file_name = os.path.join(temp_dir, "tnsnames.ora")
-            open(file_name, "w").write(alias)
+            with open(file_name, "w") as f:
+                f.write(alias)
             params = oracledb.ConnectParams(config_dir=temp_dir)
             params.parse_connect_string("tns_alias")
         self.assertEqual(params.host, "my_host5")
@@ -166,7 +167,8 @@ class TestCase(test_env.BaseTestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             params = oracledb.ConnectParams(config_dir=temp_dir)
             file_name = os.path.join(temp_dir, "tnsnames.ora")
-            open(file_name, "w").write("# no entries")
+            with open(file_name, "w") as f:
+                f.write("# no entries")
             self.assertRaisesRegex(oracledb.DatabaseError, "DPY-4000",
                                    params.parse_connect_string, "tns_alias")
 
