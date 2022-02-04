@@ -448,13 +448,21 @@ class Connection:
     def is_healthy(self) -> bool:
         """
         Returns a boolean indicating the health status of a connection.
-        Performs a local check to determine if a connection is usable.
+
         Connections may become unusable in several cases, such as if the
         network socket is broken, if an Oracle error indicates the connection
-        is unusable, after receiving an in-band notification from the
-        database, or after the connection receives a FAN planned down
-        notification. This function is best used before starting a new
-        database request on an existing connection.
+        is unusable, or after receiving a planned down notification from the
+        database.
+
+        This function is best used before starting a new database request on an
+        existing standalone connection. Pooled connections internally perform
+        this check before returning a connection to the application.
+
+        If this function returns False, the connection should be not be used by
+        the application and a new connection should be established instead.
+
+        This function performs a local check. To fully check a connection's
+        health, use ping() which performs a round-trip to the database.
         """
         return self._impl.get_is_healthy()
 
