@@ -121,7 +121,9 @@ class Connection:
 
     def __repr__(self):
         cls_name = f"oracledb.{type(self).__name__}"
-        if self.username is None:
+        if self._impl is None:
+            return f"<{cls_name} disconnected>"
+        elif self.username is None:
             return f"<{cls_name} to externally identified user>"
         return f"<{cls_name} to {self.username}@{self.dsn}>"
 
