@@ -69,48 +69,48 @@ cdef class Message:
         buf.skip_ub4()                      # success iters
         buf.read_ub4(&num_bytes)            # oerrdd (logical rowid)
         if num_bytes > 0:
-            buf.read_bytes(buf.read_uint8())
+            buf.skip_raw_bytes_chunked()
         self.processed_error = True
 
         # batch error codes
         buf.read_ub2(&num_entries)          # batch error codes array
         if num_entries > 0:
             info.batcherrors = []
-            first_byte = buf.read_uint8()
+            buf.read_ub1(&first_byte)
             for i in range(num_entries):
                 if first_byte == TNS_LONG_LENGTH_INDICATOR:
                     buf.skip_ub4()          # chunk length ignored
                 buf.read_ub2(&error_code)
                 info.batcherrors.append(errors._Error(code=error_code))
             if first_byte == TNS_LONG_LENGTH_INDICATOR:
-                buf.skip_bytes(1)           # ignore end marker
+                buf.skip_raw_bytes(1)       # ignore end marker
 
         # batch error offsets
         buf.read_ub2(&num_entries)          # batch error row offset array
         if num_entries > 0:
-            first_byte = buf.read_uint8()
+            buf.read_ub1(&first_byte)
             for i in range(num_entries):
                 if first_byte == TNS_LONG_LENGTH_INDICATOR:
                     buf.skip_ub4()          # chunk length ignored
                 buf.read_ub4(&offset)
                 info.batcherrors[i].offset = offset
             if first_byte == TNS_LONG_LENGTH_INDICATOR:
-                buf.skip_bytes(1)           # ignore end marker
+                buf.skip_raw_bytes(1)       # ignore end marker
 
         # batch error messages
         buf.read_ub2(&num_entries)          # batch error messages array
         if num_entries > 0:
-            buf.skip_bytes(1)               # ignore packed size
+            buf.skip_raw_bytes(1)           # ignore packed size
             for i in range(num_entries):
                 buf.skip_ub2()              # skip chunk length
                 info.batcherrors[i].message = \
-                        buf.read_str(buf.read_uint8()).rstrip()
-                buf.skip_bytes(2)           # ignore end marker
+                        buf.read_str(TNS_CS_IMPLICIT).rstrip()
+                buf.skip_raw_bytes(2)       # ignore end marker
 
         buf.read_ub4(&info.num)             # error number (extended)
         buf.read_ub8(&info.rowcount)        # row number (extended)
         if info.num != 0:
-            info.message = buf.read_str(buf.read_uint8()).rstrip()
+            info.message = buf.read_str(TNS_CS_IMPLICIT).rstrip()
         info.is_warning = False
 
     cdef int _process_message(self, ReadBuffer buf,
@@ -138,29 +138,29 @@ cdef class Message:
             uint16_t num_elements, i, temp16
             uint32_t num_bytes
             uint8_t opcode
-        opcode = buf.read_uint8()
+        buf.read_ub1(&opcode)
         if opcode == TNS_SERVER_PIGGYBACK_LTXID:
             buf.read_ub4(&num_bytes)
             if num_bytes > 0:
-                buf.skip_bytes(num_bytes)
+                buf.skip_raw_bytes(num_bytes)
         elif opcode == TNS_SERVER_PIGGYBACK_QUERY_CACHE_INVALIDATION \
                 or opcode == TNS_SERVER_PIGGYBACK_TRACE_EVENT:
             pass
         elif opcode == TNS_SERVER_PIGGYBACK_OS_PID_MTS:
             buf.read_ub2(&temp16)
-            buf.skip_bytes(temp16 + 1)
+            buf.skip_raw_bytes(temp16 + 1)
         elif opcode == TNS_SERVER_PIGGYBACK_SYNC:
             buf.skip_ub2()                  # skip number of DTYs
             buf.skip_ub1()                  # skip length of DTYs
             buf.read_ub2(&num_elements)
-            buf.skip_bytes(1)               # skip length
+            buf.skip_ub1()                  # skip length
             for i in range(num_elements):
                 buf.read_ub2(&temp16)
                 if temp16 > 0:              # skip key
-                    buf.skip_bytes(temp16 + 1)
+                    buf.skip_raw_bytes(temp16 + 1)
                 buf.read_ub2(&temp16)
                 if temp16 > 0:              # skip value
-                    buf.skip_bytes(temp16 + 1)
+                    buf.skip_raw_bytes(temp16 + 1)
                 buf.skip_ub2()              # skip flags
             buf.skip_ub4()                  # skip overall flags
         elif opcode == TNS_SERVER_PIGGYBACK_EXT_SYNC:
@@ -174,20 +174,20 @@ cdef class Message:
             buf.skip_ub1()                  # skip queue
             buf.read_ub4(&num_bytes)        # skip replay context
             if num_bytes > 0:
-                buf.skip_bytes(num_bytes)
+                buf.skip_raw_bytes(num_bytes)
         elif opcode == TNS_SERVER_PIGGYBACK_SESS_RET:
             buf.skip_ub2()
-            buf.skip_bytes(1)
+            buf.skip_ub1()
             buf.read_ub2(&num_elements)
             if num_elements > 0:
-                buf.skip_bytes(1)
+                buf.skip_ub1()
                 for i in range(num_elements):
                     buf.read_ub2(&temp16)
                     if temp16 > 0:          # skip key
-                        buf.skip_bytes(temp16 + 1)
+                        buf.skip_raw_bytes(temp16 + 1)
                     buf.read_ub2(&temp16)
                     if temp16 > 0:          # skip value
-                        buf.skip_bytes(temp16 + 1)
+                        buf.skip_raw_bytes(temp16 + 1)
                     buf.skip_ub2()          # skip flags
             buf.skip_ub4()                  # session flags
             buf.skip_ub4()                  # session id
@@ -199,13 +199,15 @@ cdef class Message:
     cdef int _process_warning_info(self, ReadBuffer buf) except -1:
         cdef:
             _OracleErrorInfo info = self.error_info
+            const char_type *ptr
             uint16_t num_bytes, temp16
         buf.read_ub2(&temp16)               # error number
         info.num = temp16
         buf.read_ub2(&num_bytes)            # length of error message
         buf.skip_ub2()                      # flags
         if info.num != 0 and num_bytes > 0:
-            info.message = buf.read_str(num_bytes).rstrip()
+            ptr = buf.read_raw_bytes(num_bytes)
+            info.message = ptr[:num_bytes].decode().rstrip()
         info.is_warning = True
 
     cdef int _write_function_code(self, WriteBuffer buf) except -1:
@@ -217,12 +219,14 @@ cdef class Message:
         self._write_function_code(buf)
 
     cdef int process(self, ReadBuffer buf) except -1:
+        cdef uint8_t message_type
         self.flush_out_binds = False
         self.processed_error = False
         self._preprocess()
-        buf.skip_bytes(2)                   # skip data flags
+        buf.skip_raw_bytes(2)               # skip data flags
         while self._has_more_data(buf):
-            self._process_message(buf, buf.read_uint8())
+            buf.read_ub1(&message_type)
+            self._process_message(buf, message_type)
         self._postprocess()
 
     cdef int send(self, WriteBuffer buf) except -1:
@@ -472,9 +476,7 @@ cdef class MessageWithData(Message):
             object column_value = None
             int32_t actual_num_bytes
             uint32_t buffer_size
-            ThinLobImpl lob_impl
             FetchInfo fetch_info
-            bytes temp_bytes
             Rowid rowid
         fetch_info = var_impl._fetch_info
         if fetch_info is not None:
@@ -489,58 +491,56 @@ cdef class MessageWithData(Message):
             ora_type_num = TNS_DATA_TYPE_RAW
         if buffer_size == 0 and ora_type_num != TNS_DATA_TYPE_LONG \
                 and ora_type_num != TNS_DATA_TYPE_LONG_RAW:
-            num_bytes = 0                   # column is null by describe
-        else:
-            num_bytes = buf.read_uint8()
-        if num_bytes == 0 or num_bytes == TNS_NULL_LENGTH_INDICATOR:
-            column_value = None
+            column_value = None             # column is null by describe
         elif ora_type_num == TNS_DATA_TYPE_VARCHAR \
                 or ora_type_num == TNS_DATA_TYPE_CHAR \
                 or ora_type_num == TNS_DATA_TYPE_LONG:
-            column_value = buf.read_str(num_bytes, csfrm)
+            column_value = buf.read_str(csfrm)
         elif ora_type_num == TNS_DATA_TYPE_RAW \
                 or ora_type_num == TNS_DATA_TYPE_LONG_RAW:
-            column_value = buf.read_bytes(num_bytes)
+            column_value = buf.read_bytes()
         elif ora_type_num == TNS_DATA_TYPE_NUMBER:
-            column_value = buf.read_oracle_number(num_bytes,
-                                                  var_impl._preferred_num_type)
+            column_value = buf.read_oracle_number(var_impl._preferred_num_type)
         elif ora_type_num == TNS_DATA_TYPE_DATE \
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_LTZ \
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ:
-            column_value = buf.read_date(num_bytes)
+            column_value = buf.read_date()
         elif ora_type_num == TNS_DATA_TYPE_ROWID:
-            buf.read_rowid(&rowid)
-            column_value = _encode_rowid(&rowid)
+            buf.read_ub1(&num_bytes)
+            if _is_null_length(num_bytes):
+                column_value = None
+            else:
+                buf.read_rowid(&rowid)
+                column_value = _encode_rowid(&rowid)
         elif ora_type_num == TNS_DATA_TYPE_UROWID:
-            buf.skip_bytes(num_bytes)           # skip length
-            temp_bytes = buf.read_bytes(buf.read_uint8())
-            column_value = buf.read_urowid(temp_bytes)
+            column_value = buf.read_urowid()
         elif ora_type_num == TNS_DATA_TYPE_BINARY_DOUBLE:
             column_value = buf.read_binary_double()
         elif ora_type_num == TNS_DATA_TYPE_BINARY_FLOAT:
             column_value = buf.read_binary_float()
         elif ora_type_num == TNS_DATA_TYPE_BINARY_INTEGER:
-            column_value = int(buf.read_oracle_number(num_bytes, NUM_TYPE_INT))
+            column_value = buf.read_oracle_number(NUM_TYPE_INT)
+            if column_value is not None:
+                column_value = int(column_value)
         elif ora_type_num == TNS_DATA_TYPE_CURSOR:
-            if not self.in_fetch:
-                column_value = var_impl.values[pos]
-            column_value = self._create_cursor_from_describe(buf, column_value)
-            cursor_impl = column_value._impl
-            buf.read_ub2(&cursor_impl._statement._cursor_id)
-            cursor_impl._statement._requires_full_execute = True
+            buf.read_ub1(&num_bytes)
+            if _is_null_length(num_bytes):
+                column_value = None
+            else:
+                if not self.in_fetch:
+                    column_value = var_impl.values[pos]
+                column_value = self._create_cursor_from_describe(buf,
+                                                                 column_value)
+                cursor_impl = column_value._impl
+                buf.read_ub2(&cursor_impl._statement._cursor_id)
+                cursor_impl._statement._requires_full_execute = True
         elif ora_type_num == TNS_DATA_TYPE_BOOLEAN:
-            temp_bytes = buf.read_bytes(num_bytes)
-            column_value = temp_bytes[0] == 1
+            column_value = buf.read_bool()
         elif ora_type_num == TNS_DATA_TYPE_INTERVAL_DS:
-            column_value = buf.read_interval_ds(num_bytes)
-        elif ora_type_num == TNS_DATA_TYPE_CLOB \
-                or ora_type_num == TNS_DATA_TYPE_BLOB:
-            buf.skip_bytes(1)
-            temp_bytes = buf.read_bytes(buf.read_uint8())
-            lob_impl = ThinLobImpl._create(self.conn_impl, var_impl.dbtype,
-                                           temp_bytes)
-            column_value = LOB._from_impl(lob_impl)
+            column_value = buf.read_interval_ds()
+        elif ora_type_num in (TNS_DATA_TYPE_CLOB, TNS_DATA_TYPE_BLOB):
+            column_value = buf.read_lob(self.conn_impl, var_impl.dbtype)
         else:
             errors._raise_err(errors.ERR_DB_TYPE_NOT_SUPPORTED,
                               name=var_impl.dbtype.name)
@@ -566,9 +566,10 @@ cdef class MessageWithData(Message):
         cdef:
             uint8_t data_type, csfrm
             int8_t precision, scale
+            uint8_t nulls_allowed
             FetchInfo fetch_info
             uint32_t num_bytes
-        data_type = buf.read_uint8()
+        buf.read_ub1(&data_type)
         fetch_info = FetchInfo()
         buf.skip_ub1()                      # flags
         buf.read_sb1(&precision)
@@ -587,29 +588,30 @@ cdef class MessageWithData(Message):
         buf.skip_ub4()                      # cont flags
         buf.read_ub4(&num_bytes)            # OID
         if num_bytes > 0:
-            buf.skip_bytes(num_bytes + 1)
+            buf.skip_raw_bytes(num_bytes + 1)
         buf.skip_ub2()                      # version
         buf.skip_ub2()                      # character set id
-        csfrm = buf.read_uint8()            # character set form
+        buf.read_ub1(&csfrm)                # character set form
         fetch_info._dbtype = DbType._from_ora_type_and_csfrm(data_type, csfrm)
         buf.read_ub4(&fetch_info._size)
         if data_type == TNS_DATA_TYPE_RAW:
             fetch_info._size = fetch_info._buffer_size
         if buf._caps.ttc_field_version >= TNS_CCAP_FIELD_VERSION_12_2:
             buf.skip_ub4()                  # oaccolid
-        fetch_info._nulls_allowed = buf.read_uint8()
-        buf.skip_bytes(1)                   # v7 length of name
+        buf.read_ub1(&nulls_allowed)
+        fetch_info._nulls_allowed = nulls_allowed
+        buf.skip_ub1()                      # v7 length of name
         buf.read_ub4(&num_bytes)
         if num_bytes > 0:
-            fetch_info._name = buf.read_str(buf.read_uint8())
+            fetch_info._name = buf.read_str(TNS_CS_IMPLICIT)
         buf.read_ub4(&num_bytes)
         if num_bytes > 0:
-            buf.skip_bytes(1)               # skip repeated length
-            buf.skip_bytes(num_bytes)       # schema name
+            buf.skip_ub1()                  # skip repeated length
+            buf.skip_raw_bytes(num_bytes)   # schema name
         buf.read_ub4(&num_bytes)
         if num_bytes > 0:
-            buf.skip_bytes(1)               # skip repeated length
-            buf.skip_bytes(num_bytes)       # type name
+            buf.skip_ub1()                  # skip repeated length
+            buf.skip_raw_bytes(num_bytes)   # type name
         buf.skip_ub2()                      # column position
         buf.skip_ub4()                      # uds flag
         return fetch_info
@@ -629,7 +631,7 @@ cdef class MessageWithData(Message):
         prev_fetch_var_impls = self.cursor_impl.fetch_var_impls
         cursor_impl._init_fetch_vars(cursor_impl._num_columns)
         if cursor_impl._num_columns > 0:
-            buf.skip_bytes(1)
+            buf.skip_ub1()
         type_handler = cursor_impl._get_output_type_handler()
         for i in range(cursor_impl._num_columns):
             fetch_info = self._process_column_info(buf, cursor_impl)
@@ -639,14 +641,14 @@ cdef class MessageWithData(Message):
                                           fetch_info)
         buf.read_ub4(&num_bytes)
         if num_bytes > 0:
-            buf.skip_bytes(num_bytes + 1)   # current date
+            buf.skip_raw_bytes(num_bytes + 1)   # current date
         buf.skip_ub4()                      # dcbflag
         buf.skip_ub4()                      # dcbmdbz
         buf.skip_ub4()                      # dcbmnpr
         buf.skip_ub4()                      # dcbmxpr
         buf.read_ub4(&num_bytes)
         if num_bytes > 0:
-            buf.skip_bytes(num_bytes + 1)   # dcbqcky
+            buf.skip_raw_bytes(num_bytes + 1)   # dcbqcky
         stmt._fetch_vars = cursor_impl.fetch_vars
         stmt._fetch_var_impls = cursor_impl.fetch_var_impls
         stmt._num_columns = cursor_impl._num_columns
@@ -688,8 +690,8 @@ cdef class MessageWithData(Message):
         self.cursor_impl._implicit_resultsets = []
         buf.read_ub4(&num_results)
         for i in range(num_results):
-            num_bytes = buf.read_uint8()
-            buf.skip_bytes(num_bytes)
+            buf.read_ub1(&num_bytes)
+            buf.skip_raw_bytes(num_bytes)
             child_cursor = self._create_cursor_from_describe(buf)
             child_cursor_impl = child_cursor._impl
             buf.read_ub2(&child_cursor_impl._statement._cursor_id)
@@ -705,21 +707,21 @@ cdef class MessageWithData(Message):
             uint16_t i, num_binds, num_bytes, temp16
             BindInfo bind_info
             bint has_in_bind = False
-        buf.skip_bytes(1)                   # flag
+        buf.skip_ub1()                      # flag
         buf.read_ub2(&num_binds)            # num requests
         buf.read_ub4(&self.row_index)       # iter num
         buf.skip_ub4()                      # num iters this time
         buf.read_ub2(&temp16)               # uac buffer length
         buf.read_ub2(&num_bytes)            # bit vector for fast fetch
         if num_bytes > 0:
-            buf.skip_bytes(num_bytes)
+            buf.skip_raw_bytes(num_bytes)
         buf.read_ub2(&num_bytes)            # rowid
         if num_bytes > 0:
-            buf.skip_bytes(num_bytes)
+            buf.skip_raw_bytes(num_bytes)
         self.out_var_impls = []
         for i in range(num_binds):          # bind directions
             bind_info = self.cursor_impl._statement._bind_info_list[i]
-            bind_info.bind_dir = buf.read_uint8()
+            buf.read_ub1(&bind_info.bind_dir)
             if bind_info.bind_dir == TNS_BIND_DIR_INPUT:
                 has_in_bind = True
                 continue
@@ -737,7 +739,7 @@ cdef class MessageWithData(Message):
         elif message_type == TNS_MSG_TYPE_FLUSH_OUT_BINDS:
             self.flush_out_binds = True
         elif message_type == TNS_MSG_TYPE_DESCRIBE_INFO:
-            buf.skip_bytes(buf.read_uint8())
+            buf.skip_raw_bytes_chunked()
             self._process_describe_info(buf, self.cursor, self.cursor_impl)
             self.out_var_impls = self.cursor_impl.fetch_var_impls
         elif message_type == TNS_MSG_TYPE_ERROR:
@@ -763,15 +765,15 @@ cdef class MessageWithData(Message):
             buf.skip_ub4()
         buf.read_ub2(&num_bytes)            # al8txl (ignored)
         if num_bytes > 0:
-            buf.skip_bytes(num_bytes)
+            buf.skip_raw_bytes(num_bytes)
         buf.read_ub2(&num_params)           # num key/value pairs
         for i in range(num_params):
             buf.read_ub2(&num_bytes)        # key
             if num_bytes > 0:
-                key_value = buf.read_bytes(buf.read_uint8())
+                key_value = buf.read_bytes()
             buf.read_ub2(&num_bytes)        # value
             if num_bytes > 0:
-                buf.read_bytes(buf.read_uint8())
+                buf.skip_raw_bytes_chunked()
             buf.read_ub2(&keyword_num)      # keyword num
             if keyword_num == TNS_KEYWORD_NUM_CURRENT_SCHEMA:
                 self.conn_impl._current_schema = key_value.decode()
@@ -779,7 +781,7 @@ cdef class MessageWithData(Message):
                 self.conn_impl._edition = key_value.decode()
         buf.read_ub2(&num_bytes)            # registration
         if num_bytes > 0:
-            buf.skip_bytes(num_bytes)
+            buf.skip_raw_bytes(num_bytes)
         if self.arraydmlrowcounts:
             buf.read_ub4(&num_rows)
             rowcounts = self.cursor_impl._dmlrowcounts = []
@@ -824,18 +826,18 @@ cdef class MessageWithData(Message):
 
     cdef int _process_row_header(self, ReadBuffer buf) except -1:
         cdef uint32_t num_bytes
-        buf.skip_bytes(1)                   # flags
+        buf.skip_ub1()                      # flags
         buf.skip_ub2()                      # num requests
         buf.skip_ub4()                      # iteration number
         buf.skip_ub4()                      # num iters
         buf.skip_ub2()                      # buffer length
         buf.read_ub4(&num_bytes)
         if num_bytes > 0:
-            buf.skip_bytes(1)               # skip repeated length
+            buf.skip_ub1()                  # skip repeated length
             self._get_bit_vector(buf, num_bytes)
         buf.read_ub4(&num_bytes)
         if num_bytes > 0:
-            buf.skip_bytes(num_bytes + 1)   # rxhrid
+            buf.skip_raw_bytes(num_bytes + 1)   # rxhrid
 
     cdef int _write_column_metadata(self, WriteBuffer buf,
                                     list bind_var_impls) except -1:
@@ -1279,10 +1281,10 @@ cdef class AuthMessage(Message):
         buf.read_ub2(&num_params)
         for i in range(num_params):
             buf.skip_ub4()
-            key = buf.read_str(buf.read_uint8())
+            key = buf.read_str(TNS_CS_IMPLICIT)
             buf.read_ub4(&num_bytes)
             if num_bytes > 0:
-                value = buf.read_str(buf.read_uint8())
+                value = buf.read_str(TNS_CS_IMPLICIT)
             else:
                 value = ""
             if key == "AUTH_VFR_DATA":
@@ -1425,7 +1427,7 @@ cdef class ConnectMessage(Message):
         if self.packet_type == TNS_PACKET_TYPE_REDIRECT:
             buf.read_uint16(&redirect_data_length)
             buf.receive_packet(&self.packet_type)
-            buf.skip_bytes(2)           # skip data flags
+            buf.skip_raw_bytes(2)           # skip data flags
             redirect_data = buf._get_raw(redirect_data_length)
             self.redirect_data = \
                     redirect_data[:redirect_data_length].decode()
@@ -1738,30 +1740,34 @@ cdef class LobOpMessage(Message):
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:
         cdef:
-            bytes temp_bytes
+            const char_type *ptr
+            ssize_t num_bytes
             str encoding
         if message_type == TNS_MSG_TYPE_LOB_DATA:
-            temp_bytes = buf.read_bytes(buf.read_uint8())
+            buf.read_raw_bytes_chunked(&ptr, &num_bytes)
             if self.source_lob_impl.dbtype._ora_type_num == TNS_DATA_TYPE_BLOB:
-                self.data = temp_bytes
+                self.data = ptr[:num_bytes]
             else:
                 encoding = self.source_lob_impl._get_encoding()
-                self.data = temp_bytes.decode(encoding)
+                self.data = ptr[:num_bytes].decode(encoding)
         else:
             Message._process_message(self, buf, message_type)
 
     cdef int _process_return_parameters(self, ReadBuffer buf) except -1:
         cdef:
-            uint32_t temp_num
+            cdef const char_type *ptr
+            ssize_t num_bytes
             uint16_t temp16
         if self.source_lob_impl is not None:
-            temp_num = <uint32_t> len(self.source_lob_impl._locator)
-            self.source_lob_impl._locator = buf.read_bytes(temp_num)
+            num_bytes = len(self.source_lob_impl._locator)
+            ptr = buf.read_raw_bytes(num_bytes)
+            self.source_lob_impl._locator = ptr[:num_bytes]
         if self.dest_lob_impl is not None:
-            temp_num = <uint32_t> len(self.dest_lob_impl._locator)
-            self.dest_lob_impl._locator = buf.read_bytes(temp_num)
+            num_bytes = len(self.dest_lob_impl._locator)
+            ptr = buf.read_raw_bytes(num_bytes)
+            self.dest_lob_impl._locator = ptr[:num_bytes]
         if self.operation == TNS_LOB_OP_CREATE_TEMP:
-            buf.read_ub2(&temp16)           # skip character set
+            buf.skip_ub2()                  # skip character set
         if self.send_amount:
             buf.read_ub8(&self.amount)
         if self.operation == TNS_LOB_OP_CREATE_TEMP \
@@ -1887,27 +1893,30 @@ cdef class ProtocolMessage(Message):
             uint16_t num_elem, fdo_length, charset_id, ncharset_id
             bytearray server_compile_caps
             bytearray server_runtime_caps
+            const char_type *fdo
             ssize_t ix
-            bytes fdo
+            uint8_t c
         if message_type == TNS_MSG_TYPE_PROTOCOL:
-            buf.skip_bytes(2)               # skip protocol array
-            while buf.read_uint8() != 0:    # skip server banner
-                pass
+            buf.skip_raw_bytes(2)           # skip protocol array
+            while True:                     # skip server banner
+                buf.read_ub1(&c)
+                if c == 0:
+                    break;
             buf.read_uint16(&charset_id, BYTE_ORDER_LSB)
             buf._caps.char_conversion = charset_id != TNS_CHARSET_UTF8
-            buf.skip_bytes(1)               # skip server flags
+            buf.skip_ub1()                  # skip server flags
             buf.read_uint16(&num_elem, BYTE_ORDER_LSB)
             if num_elem > 0:                # skip elements
-                buf.skip_bytes(num_elem * 5)
+                buf.skip_raw_bytes(num_elem * 5)
             buf.read_uint16(&fdo_length)
-            fdo = buf.read_bytes(fdo_length)
+            fdo = buf.read_raw_bytes(fdo_length)
             ix = 6 + fdo[5] + fdo[6]
             ncharset_id = (fdo[ix + 3] << 8) + fdo[ix + 4]
             if ncharset_id != TNS_CHARSET_UTF16:
                 errors._raise_err(errors.ERR_NCHAR_CS_NOT_SUPPORTED,
                                   charset_id=ncharset_id)
-            server_compile_caps = bytearray(buf.read_bytes(buf.read_uint8()))
-            server_runtime_caps = bytearray(buf.read_bytes(buf.read_uint8()))
+            server_compile_caps = bytearray(buf.read_bytes())
+            server_runtime_caps = bytearray(buf.read_bytes())
             if not server_compile_caps[TNS_CCAP_LOGON_TYPES] & TNS_CCAP_O7LOGON:
                 errors._raise_err(errors.ERR_SERVER_LOGON_TYPE_NOT_SUPPORTED)
             buf._caps._adjust_for_server_compile_caps(server_compile_caps)

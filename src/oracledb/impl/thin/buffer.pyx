@@ -295,7 +295,7 @@ cdef class ReadBuffer:
         # before anything else can take place
         if self._offset == self._size:
             self.receive_packet(&packet_type)
-            self.skip_bytes(2)              # skip data flags
+            self.skip_raw_bytes(2)          # skip data flags
 
         # if there is enough room in the buffer to satisfy the number of bytes
         # requested, return a pointer to the current location and advance the
@@ -331,7 +331,7 @@ cdef class ReadBuffer:
 
             # acquire new packet
             self.receive_packet(&packet_type)
-            self.skip_bytes(2)                  # skip data flags
+            self.skip_raw_bytes(2)          # skip data flags
 
             # copy data into the chunked buffer or split buffer, as appropriate
             source_ptr = &self._data[self._offset]
@@ -349,27 +349,6 @@ cdef class ReadBuffer:
         # the return value is ignored anyway
         return self._split_data
 
-    cdef int _read_bytes(self, ssize_t *num_bytes,
-                         const char_type **ptr) except -1:
-        """
-        Internal method used to read the specified number of bytes from the
-        network buffer. If the number of bytes requested is
-        TNS_LONG_LENGTH_INDICATOR, though, then a chunked read is performed.
-        """
-        cdef uint32_t temp_num_bytes
-        if num_bytes[0] != TNS_LONG_LENGTH_INDICATOR:
-            ptr[0] = self._get_raw(num_bytes[0])
-        else:
-            self._chunked_bytes_buf.start_chunked_read()
-            num_bytes[0] = 0
-            while True:
-                self.read_ub4(&temp_num_bytes)
-                if temp_num_bytes == 0:
-                    break
-                num_bytes[0] += temp_num_bytes
-                self._get_raw(temp_num_bytes, in_chunked_read=True)
-            ptr[0] = self._chunked_bytes_buf.end_chunked_read()
-
     cdef int _skip_int(self, uint8_t max_length, bint *is_negative) except -1:
         """
         Skips reading an integer of the specified maximum length from the
@@ -377,7 +356,7 @@ cdef class ReadBuffer:
         """
         cdef uint8_t length
         self._get_int_length_and_sign(&length, is_negative, max_length)
-        self.skip_bytes(length)
+        self.skip_raw_bytes(length)
 
     cdef uint64_t _unpack_int(self, const char_type *ptr, uint8_t length):
         """
@@ -422,10 +401,14 @@ cdef class ReadBuffer:
         Python object representing that value.
         """
         cdef:
-            const uint8_t *ptr = <uint8_t*> self._get_raw(8)
+            uint8_t b0, b1, b2, b3, b4, b5, b6, b7, num_bytes
             uint64_t high_bits, low_bits, all_bits
-            uint8_t b0, b1, b2, b3, b4, b5, b6, b7
+            const uint8_t *ptr
             double *double_ptr
+        self.read_ub1(&num_bytes)
+        if _is_null_length(num_bytes):
+            return None
+        ptr = <uint8_t*> self._get_raw(num_bytes)
         b0 = ptr[0]
         b1 = ptr[1]
         b2 = ptr[2]
@@ -457,10 +440,14 @@ cdef class ReadBuffer:
         Python object representing that value.
         """
         cdef:
-            const uint8_t *ptr = <uint8_t*> self._get_raw(4)
-            uint8_t b0, b1, b2, b3
+            uint8_t b0, b1, b2, b3, num_bytes
+            const uint8_t *ptr
             uint64_t all_bits
             float *float_ptr
+        self.read_ub1(&num_bytes)
+        if _is_null_length(num_bytes):
+            return None
+        ptr = <uint8_t*> self._get_raw(num_bytes)
         b0 = ptr[0]
         b1 = ptr[1]
         b2 = ptr[2]
@@ -476,36 +463,64 @@ cdef class ReadBuffer:
         float_ptr = <float*> &all_bits
         return float_ptr[0]
 
-    cdef bytes read_bytes(self, ssize_t num_bytes):
-        cdef const char_type *ptr
-        self._read_bytes(&num_bytes, &ptr)
-        return ptr[:num_bytes]
+    cdef object read_bool(self):
+        """
+        Read a boolean from the buffer and return True, False or None.
+        """
+        cdef:
+            const char_type *ptr
+            ssize_t num_bytes
+        self.read_raw_bytes_chunked(&ptr, &num_bytes)
+        if ptr != NULL:
+            return ptr[0] == 1
 
-    cdef object read_date(self, uint8_t num_bytes):
+    cdef object read_bytes(self):
+        """
+        Read bytes from the buffer and return the corresponding Python object
+        representing that value.
+        """
+        cdef:
+            const char_type *ptr
+            ssize_t num_bytes
+        self.read_raw_bytes_chunked(&ptr, &num_bytes)
+        if ptr != NULL:
+            return ptr[:num_bytes]
+
+    cdef object read_date(self):
         """
         Read a date from the buffer and return the corresponding Python object
         representing that value.
         """
         cdef:
-            const char_type *ptr = self._get_raw(num_bytes)
+            const char_type *ptr
             uint32_t fsecond = 0
+            uint8_t num_bytes
             uint16_t year
+        self.read_ub1(&num_bytes)
+        if _is_null_length(num_bytes):
+            return None
+        ptr = self._get_raw(num_bytes)
         year = (<uint8_t> ptr[0] - 100) * 100 + <uint8_t> ptr[1] - 100
         if num_bytes >= 11:
             fsecond = unpack_uint32(&ptr[7], BYTE_ORDER_MSB) // 1000
         return cydatetime.datetime_new(year, ptr[2], ptr[3], ptr[4] - 1,
                                        ptr[5] - 1, ptr[6] - 1, fsecond, None)
 
-    cdef object read_interval_ds(self, uint8_t num_bytes):
+    cdef object read_interval_ds(self):
         """
         Read an interval day to second value from the buffer and return the
         corresponding Python object representing that value.
         """
         cdef:
             int32_t days, hours, minutes, seconds, total_seconds, fseconds
-            const char_type *ptr = self._get_raw(num_bytes)
             uint8_t duration_offset = TNS_DURATION_OFFSET
             uint32_t duration_mid = TNS_DURATION_MID
+            const char_type *ptr
+            uint8_t num_bytes
+        self.read_ub1(&num_bytes)
+        if _is_null_length(num_bytes):
+            return None
+        ptr = self._get_raw(num_bytes)
         days = unpack_uint32(ptr, BYTE_ORDER_MSB) - duration_mid
         fseconds = unpack_uint32(&ptr[7], BYTE_ORDER_MSB) - duration_mid
         hours = ptr[4] - duration_offset
@@ -514,27 +529,47 @@ cdef class ReadBuffer:
         total_seconds = hours * 60 * 60 + minutes * 60 + seconds
         return cydatetime.timedelta_new(days, total_seconds, fseconds // 1000)
 
-    cdef object read_oracle_number(self, uint8_t num_bytes,
-                                   int preferred_num_type):
+    cdef object read_lob(self, ThinConnImpl conn_impl, DbType dbtype):
+        """
+        Read a LOB locator from the buffer and return a LOB object containing
+        it.
+        """
+        cdef:
+            ThinLobImpl lob_impl
+            uint8_t num_bytes
+        self.read_ub1(&num_bytes)
+        if _is_null_length(num_bytes):
+            return None
+        self.skip_ub1()
+        lob_impl = ThinLobImpl._create(conn_impl, dbtype, self.read_bytes())
+        return LOB._from_impl(lob_impl)
+
+    cdef object read_oracle_number(self, int preferred_num_type):
         """
         Read an Oracle number from the buffer and return the corresponding
         Python object representing that value. The preferred numeric type
         (int, float, decimal.Decimal and str) is used, if possible.
         """
         cdef:
+            uint8_t num_digits, byte, digit, num_bytes
             char_type buf[NUMBER_AS_TEXT_CHARS]
             uint8_t digits[NUMBER_MAX_DIGITS]
-            uint8_t num_digits, byte, digit
             bint is_positive, is_integer
             int16_t decimal_point_index
             const char_type *ptr
             int8_t exponent
             str text
 
+        # read the number of bytes in the number; if the value is 0 or the null
+        # length indicator, return None
+        self.read_ub1(&num_bytes)
+        if _is_null_length(num_bytes):
+            return None
+
         # the first byte is the exponent; positive numbers have the highest
         # order bit set, whereas negative numbers have the highest order bit
         # cleared and the bits inverted
-        exponent = self.read_uint8()
+        self.read_sb1(&exponent)
         is_positive = (exponent & 0x80)
         if not is_positive:
             exponent = ~exponent
@@ -643,19 +678,55 @@ cdef class ReadBuffer:
             return buf[:num_bytes].decode()
         return float(buf[:num_bytes])
 
+    cdef inline const char_type* read_raw_bytes(self,
+                                                ssize_t num_bytes) except NULL:
+        """
+        Returns a pointer to a contiguous buffer containing the specified
+        number of bytes found in the buffer.
+        """
+        return self._get_raw(num_bytes)
+
+    cdef int read_raw_bytes_chunked(self, const char_type **ptr,
+                                    ssize_t *num_bytes) except -1:
+        """
+        Reads bytes from the buffer into a contiguous buffer. The first byte
+        read is the number of bytes to read, unless it is
+        TNS_LONG_LENGTH_INDICATOR, in which case a chunked read is performed.
+        """
+        cdef:
+            uint32_t temp_num_bytes
+            uint8_t length
+        self.read_ub1(&length)
+        if _is_null_length(length):
+            ptr[0] = NULL
+            num_bytes[0] = 0
+        elif length != TNS_LONG_LENGTH_INDICATOR:
+            ptr[0] = self._get_raw(length)
+            num_bytes[0] = length
+        else:
+            self._chunked_bytes_buf.start_chunked_read()
+            num_bytes[0] = 0
+            while True:
+                self.read_ub4(&temp_num_bytes)
+                if temp_num_bytes == 0:
+                    break
+                num_bytes[0] += temp_num_bytes
+                self._get_raw(temp_num_bytes, in_chunked_read=True)
+            ptr[0] = self._chunked_bytes_buf.end_chunked_read()
+
     cdef int read_rowid(self, Rowid *rowid) except -1:
         """
         Reads a rowid from the buffer and populates the rowid structure.
         """
         self.read_ub4(&rowid.rba)
         self.read_ub2(&rowid.partition_id)
-        self.skip_bytes(1)
+        self.skip_ub1()
         self.read_ub4(&rowid.block_num)
         self.read_ub2(&rowid.slot_num)
 
     cdef int read_sb1(self, int8_t *value) except -1:
         """
-        Read a signed 8-bit integer from the buffer.
+        Reads a signed 8-bit integer from the buffer.
         """
         cdef const char_type *ptr = self._get_raw(1)
         value[0] = <int8_t> ptr[0]
@@ -694,12 +765,25 @@ cdef class ReadBuffer:
             if is_negative:
                 value[0] = -value[0]
 
-    cdef str read_str(self, ssize_t num_bytes, int csfrm=TNS_CS_IMPLICIT):
-        cdef const char_type *ptr
-        self._read_bytes(&num_bytes, &ptr)
-        if csfrm == TNS_CS_IMPLICIT:
-            return ptr[:num_bytes].decode()
-        return ptr[:num_bytes].decode(TNS_ENCODING_UTF16)
+    cdef object read_str(self, int csfrm):
+        """
+        Reads a string from the buffer.
+        """
+        cdef:
+            const char_type *ptr
+            ssize_t num_bytes
+        self.read_raw_bytes_chunked(&ptr, &num_bytes)
+        if ptr != NULL:
+            if csfrm == TNS_CS_IMPLICIT:
+                return ptr[:num_bytes].decode()
+            return ptr[:num_bytes].decode(TNS_ENCODING_UTF16)
+
+    cdef int read_ub1(self, uint8_t *value) except -1:
+        """
+        Reads an unsigned 8-bit integer from the buffer.
+        """
+        cdef const char_type *ptr = self._get_raw(1)
+        value[0] = ptr[0]
 
     cdef int read_ub2(self, uint16_t *value) except -1:
         """
@@ -743,10 +827,6 @@ cdef class ReadBuffer:
             ptr = self._get_raw(length)
             value[0] = self._unpack_int(ptr, length)
 
-    cdef uint8_t read_uint8(self) except *:
-        cdef const char_type *ptr = self._get_raw(1)
-        return ptr[0]
-
     cdef int read_uint16(self, uint16_t *value,
                          int byte_order=BYTE_ORDER_MSB) except -1:
         """
@@ -763,7 +843,7 @@ cdef class ReadBuffer:
         cdef const char_type *ptr = self._get_raw(4)
         value[0] = unpack_uint32(ptr, byte_order)
 
-    cdef object read_urowid(self, bytes input_bytes):
+    cdef object read_urowid(self):
         """
         Read a universal rowid from the buffer and return the Python object
         representing its value.
@@ -771,19 +851,23 @@ cdef class ReadBuffer:
         cdef:
             ssize_t output_len, input_len, remainder, pos
             int input_offset = 1, output_offset = 0
-            bytearray input_value, output_value
-            const char_type *ptr
+            const char_type *input_ptr
+            bytearray output_value
+            uint32_t num_bytes
             Rowid rowid
 
+        # check for null
+        self.read_ub4(&num_bytes)
+        if num_bytes == 0:
+            return None
+
         # handle physical rowid
-        input_len = len(input_bytes)
-        input_value = bytearray(input_bytes)
-        if input_value[0] == 1:
-            ptr = input_bytes
-            rowid.rba = unpack_uint32(&ptr[1], BYTE_ORDER_MSB)
-            rowid.partition_id = unpack_uint16(&ptr[5], BYTE_ORDER_MSB)
-            rowid.block_num = unpack_uint32(&ptr[7], BYTE_ORDER_MSB)
-            rowid.slot_num = unpack_uint16(&ptr[11], BYTE_ORDER_MSB)
+        self.read_raw_bytes_chunked(&input_ptr, &input_len)
+        if input_ptr[0] == 1:
+            rowid.rba = unpack_uint32(&input_ptr[1], BYTE_ORDER_MSB)
+            rowid.partition_id = unpack_uint16(&input_ptr[5], BYTE_ORDER_MSB)
+            rowid.block_num = unpack_uint32(&input_ptr[7], BYTE_ORDER_MSB)
+            rowid.slot_num = unpack_uint16(&input_ptr[11], BYTE_ORDER_MSB)
             return _encode_rowid(&rowid)
 
         # handle logical rowid
@@ -800,34 +884,34 @@ cdef class ReadBuffer:
         while input_len > 0:
 
             # produce first byte of quadruple
-            pos = input_value[input_offset] >> 2
+            pos = input_ptr[input_offset] >> 2
             output_value[output_offset] = TNS_BASE64_ALPHABET_ARRAY[pos]
             output_offset += 1
 
             # produce second byte of quadruple, but if only one byte is left,
             # produce that one byte and exit
-            pos = (input_value[input_offset] & 0x3) << 4
+            pos = (input_ptr[input_offset] & 0x3) << 4
             if input_len == 1:
                 output_value[output_offset] = TNS_BASE64_ALPHABET_ARRAY[pos]
                 break
             input_offset += 1
-            pos |= ((input_value[input_offset] & 0xf0) >> 4)
+            pos |= ((input_ptr[input_offset] & 0xf0) >> 4)
             output_value[output_offset] = TNS_BASE64_ALPHABET_ARRAY[pos]
             output_offset += 1
 
             # produce third byte of quadruple, but if only two bytes are left,
             # produce that one byte and exit
-            pos = (input_value[input_offset] & 0xf) << 2
+            pos = (input_ptr[input_offset] & 0xf) << 2
             if input_len == 2:
                 output_value[output_offset] = TNS_BASE64_ALPHABET_ARRAY[pos]
                 break
             input_offset += 1
-            pos |= ((input_value[input_offset] & 0xc0) >> 6)
+            pos |= ((input_ptr[input_offset] & 0xc0) >> 6)
             output_value[output_offset] = TNS_BASE64_ALPHABET_ARRAY[pos]
             output_offset += 1
 
             # produce final byte of quadruple
-            pos = input_value[input_offset] & 0x3f
+            pos = input_ptr[input_offset] & 0x3f
             output_value[output_offset] = TNS_BASE64_ALPHABET_ARRAY[pos]
             output_offset += 1
             input_offset += 1
@@ -903,9 +987,9 @@ cdef class ReadBuffer:
         self._size = self._packet_start_offset + packet_size
         self._bytes_to_process -= packet_size
         if self._caps.protocol_version < TNS_VERSION_MIN_LARGE_SDU:
-            self.skip_bytes(2)          # skip packet checksum
-        packet_type[0] = self.read_uint8()
-        self.skip_bytes(3)              # skip reserved byte, header checksum
+            self.skip_raw_bytes(2)      # skip packet checksum
+        self.read_ub1(packet_type)
+        self.skip_raw_bytes(3)          # skip reserved byte, header checksum
 
         # display packet if requested
         if DEBUG_PACKETS:
@@ -913,7 +997,7 @@ cdef class ReadBuffer:
             _print_packet("Receiving packet:", self._socket.fileno(),
                           self._data_view[offset:self._size])
 
-    cdef int skip_bytes(self, ssize_t num_bytes) except -1:
+    cdef int skip_raw_bytes(self, ssize_t num_bytes) except -1:
         """
         Skip the specified number of bytes in the buffer. In order to avoid
         copying data, the number of bytes left in the packet is determined and
@@ -924,6 +1008,25 @@ cdef class ReadBuffer:
             num_bytes_this_time = min(num_bytes, self.bytes_left())
             self._get_raw(num_bytes_this_time)
             num_bytes -= num_bytes_this_time
+
+    cdef int skip_raw_bytes_chunked(self) except -1:
+        """
+        Skip a number of bytes that may or may not be chunked in the buffer.
+        The first byte gives the length. If the length is
+        TNS_LONG_LENGTH_INDICATOR, however, chunks are read and discarded.
+        """
+        cdef:
+            uint32_t temp_num_bytes
+            uint8_t length
+        self.read_ub1(&length)
+        if length != TNS_LONG_LENGTH_INDICATOR:
+            self.skip_raw_bytes(length)
+        else:
+            while True:
+                self.read_ub4(&temp_num_bytes)
+                if temp_num_bytes == 0:
+                    break
+                self.skip_raw_bytes(temp_num_bytes)
 
     cdef inline int skip_sb4(self) except -1:
         """

@@ -213,7 +213,7 @@ cdef class Protocol:
         if control_type == TNS_CONTROL_TYPE_RESET_OOB:
             self._caps.supports_oob = False
         elif control_type == TNS_CONTROL_TYPE_INBAND_NOTIFICATION:
-            buf.skip_bytes(6)           # skip flags
+            buf.skip_raw_bytes(6)           # skip flags
             buf.read_uint16(&error_num)
             if error_num == TNS_ERR_SESSION_SHUTDOWN \
                     or error_num == TNS_ERR_INBAND_MESSAGE:
@@ -287,8 +287,8 @@ cdef class Protocol:
             self._read_buf.receive_packet(&message.packet_type)
         elif message.packet_type == TNS_PACKET_TYPE_REFUSE:
             self._write_buf._packet_sent = False
-            self._read_buf.skip_bytes(3)
-            response = self._read_buf.read_str(self._read_buf.read_uint8())
+            self._read_buf.skip_raw_bytes(3)
+            response = self._read_buf.read_str(TNS_CS_IMPLICIT)
             error_code = "unknown"
             error_code_int = 0
             pos = response.find("(ERR=")
@@ -305,6 +305,7 @@ cdef class Protocol:
                               error_code=error_code)
 
     cdef int _reset(self, Message message) except -1:
+        cdef uint8_t marker_type
 
         # send reset marker
         self._send_marker(self._write_buf, TNS_MARKER_TYPE_RESET)
@@ -312,8 +313,9 @@ cdef class Protocol:
         # read and discard all packets until a marker packet is received
         while True:
             if message.packet_type == TNS_PACKET_TYPE_MARKER:
-                self._read_buf.skip_bytes(2)
-                if self._read_buf.read_uint8() == TNS_MARKER_TYPE_RESET:
+                self._read_buf.skip_raw_bytes(2)
+                self._read_buf.read_ub1(&marker_type)
+                if marker_type == TNS_MARKER_TYPE_RESET:
                     break
             self._read_buf.receive_packet(&message.packet_type)
 
