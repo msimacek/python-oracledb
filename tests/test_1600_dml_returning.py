@@ -6,6 +6,7 @@
 1600 - Module for testing DML returning clauses
 """
 
+import datetime
 import unittest
 
 import oracledb
@@ -372,6 +373,37 @@ class TestCase(test_env.BaseTestCase):
                 out_val=out_var)
         self.connection.commit()
         self.assertEqual(out_var.getvalue(), [lob_value])
+
+    def test_1620_dml_returning_with_index_organized_table(self):
+        "1620 - test dml returning with an index organized table"
+        self.cursor.execute("truncate table TestUniversalRowids")
+        rowid_var = self.cursor.var(oracledb.ROWID)
+        data = (1, "ABC", datetime.datetime(2017, 4, 11), rowid_var)
+        self.cursor.execute("""
+                insert into TestUniversalRowids values (:1, :2, :3)
+                returning rowid into :4""", data)
+        rowid_value, = rowid_var.getvalue()
+        self.cursor.execute("""
+                select * from TestUniversalRowids where rowid = :1""",
+                [rowid_value])
+        row, = self.cursor.fetchall()
+        self.assertEqual(data[:3], row)
+
+    def test_1621_plsql_returning_rowids_with_index_organized_table(self):
+        "1621 - test plsql returning rowids with index organized table"
+        self.cursor.execute("truncate table TestUniversalRowids")
+        rowid_var = self.cursor.var(oracledb.ROWID)
+        data = (1, "ABC", datetime.datetime(2017, 4, 11), rowid_var)
+        self.cursor.execute("""
+                begin
+                insert into TestUniversalRowids values (:1, :2, :3)
+                returning rowid into :4; end;""", data)
+        rowid_value = rowid_var.values[0]
+        self.cursor.execute("""
+                select * from TestUniversalRowids where rowid = :1""",
+                [rowid_value])
+        row, = self.cursor.fetchall()
+        self.assertEqual(data[:3], row)
 
 if __name__ == "__main__":
     test_env.run_test_cases()
