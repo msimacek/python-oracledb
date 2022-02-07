@@ -270,9 +270,9 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         if status < 0:
             _raise_from_odpi()
 
-        result = cpython.PyList_New(num_row_count)
+        result = []
         for i in range(num_row_count):
-            cpython.PyList_SET_ITEM(result, i, rowcount[i])
+            result.append(rowcount[i])
         return result
 
     def get_batch_errors(self):
