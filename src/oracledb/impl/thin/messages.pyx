@@ -507,12 +507,15 @@ cdef class MessageWithData(Message):
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP_TZ:
             column_value = buf.read_date()
         elif ora_type_num == TNS_DATA_TYPE_ROWID:
-            buf.read_ub1(&num_bytes)
-            if _is_null_length(num_bytes):
-                column_value = None
+            if not self.in_fetch:
+                column_value = buf.read_urowid()
             else:
-                buf.read_rowid(&rowid)
-                column_value = _encode_rowid(&rowid)
+                buf.read_ub1(&num_bytes)
+                if _is_null_length(num_bytes):
+                    column_value = None
+                else:
+                    buf.read_rowid(&rowid)
+                    column_value = _encode_rowid(&rowid)
         elif ora_type_num == TNS_DATA_TYPE_UROWID:
             column_value = buf.read_urowid()
         elif ora_type_num == TNS_DATA_TYPE_BINARY_DOUBLE:
@@ -846,6 +849,8 @@ cdef class MessageWithData(Message):
             ThinVarImpl var_impl
         for var_impl in bind_var_impls:
             ora_type_num = var_impl.dbtype._ora_type_num
+            if ora_type_num == TNS_DATA_TYPE_ROWID:
+                ora_type_num = TNS_DATA_TYPE_UROWID
             flag = TNS_BIND_USE_INDICATORS | TNS_BIND_USE_LENGTH
             if var_impl.is_array:
                 flag |= TNS_BIND_ARRAY
