@@ -261,7 +261,6 @@ cdef object _convert_to_python(ThickConnImpl conn_impl, DbType dbtype,
         dpiBytes *as_bytes
         const char *rowid
         int32_t seconds
-        str temp_str
     if bypass_decode:
         oracle_type = DPI_ORACLE_TYPE_RAW
     if oracle_type == DPI_ORACLE_TYPE_CHAR \
@@ -273,13 +272,12 @@ cdef object _convert_to_python(ThickConnImpl conn_impl, DbType dbtype,
         return as_bytes.ptr[:as_bytes.length].decode()
     elif oracle_type == DPI_ORACLE_TYPE_NUMBER:
         as_bytes = &dbvalue.asBytes
-        temp_str = as_bytes.ptr[:as_bytes.length].decode()
         if preferred_num_type == NUM_TYPE_INT \
                 and memchr(as_bytes.ptr, b'.', as_bytes.length) == NULL:
-            return int(temp_str)
+            return int(as_bytes.ptr[:as_bytes.length])
         elif preferred_num_type == NUM_TYPE_DECIMAL:
-            return decimal.Decimal(temp_str)
-        return float(temp_str)
+            return decimal.Decimal(as_bytes.ptr[:as_bytes.length].decode())
+        return float(as_bytes.ptr[:as_bytes.length])
     elif oracle_type == DPI_ORACLE_TYPE_RAW \
             or oracle_type == DPI_ORACLE_TYPE_LONG_RAW:
         as_bytes = &dbvalue.asBytes
