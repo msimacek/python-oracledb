@@ -33,7 +33,7 @@ class _Error:
         return self.message
 
 
-def _get_error_text(error_num: int, **args):
+def _get_error_text(error_num: int, **args) -> str:
     """
     Return the error text for the driver specific error number.
     """
@@ -46,7 +46,7 @@ def _get_error_text(error_num: int, **args):
     return f"{ERR_PREFIX}-{error_num:04}: {message}"
 
 
-def _raise_err(error_num: int, context_error_message: str=None, **args):
+def _raise_err(error_num: int, context_error_message: str=None, **args) -> None:
     """
     Raises a driver specific exception from the specified error number and
     supplied arguments.

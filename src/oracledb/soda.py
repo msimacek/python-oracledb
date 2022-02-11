@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2021, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 from typing import Type, Union
@@ -19,7 +19,7 @@ class SodaDatabase:
         db._impl = impl
         return db
 
-    def _get_content_bytes(self, content):
+    def _get_content_bytes(self, content: object) -> bytes:
         """
         Internal method used for returning the bytes to store in document
         content.
@@ -195,8 +195,7 @@ class SodaCollection:
         doc_impls = [self._process_doc_arg(d) for d in docs]
         self._impl.insert_many(doc_impls, hint=None, return_docs=False)
 
-    def insertManyAndGet(self, docs: list,
-                         hint: str=None) -> list:
+    def insertManyAndGet(self, docs: list, hint: str=None) -> list:
         """
         Similarly to insertMany() this method inserts a list of documents into
         the collection at one time. The only difference is that it returns a

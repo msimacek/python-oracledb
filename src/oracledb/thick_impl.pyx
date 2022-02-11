@@ -1,10 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # thick_impl.pyx
-#   Cython file for interfacing with ODPI-C.
+#
+# Cython file for interfacing with ODPI-C.
 #------------------------------------------------------------------------------
 
 # cython: language_level=3
