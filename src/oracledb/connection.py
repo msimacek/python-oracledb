@@ -31,7 +31,7 @@ class Connection:
                  user: str=None,
                  password: str=None,
                  handle: int=0,
-                 pool: Type["pool_module.Pool"]=None,
+                 pool: Type["pool_module.ConnectionPool"]=None,
                  newpassword: str=None,
                  params: ConnectParams=None,
                  **kwargs) -> None:
@@ -75,7 +75,7 @@ class Connection:
         thin = driver_mode.check_and_return_mode()
         if pool is None:
             pool_impl = None
-        elif not isinstance(pool, pool_module.Pool):
+        elif not isinstance(pool, pool_module.ConnectionPool):
             message = "pool must be an instance of oracledb.Pool"
             raise TypeError(message)
         else:

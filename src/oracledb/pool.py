@@ -9,7 +9,7 @@ from . import driver_mode
 from .connect_params import ConnectParams
 from .defaults import defaults
 
-class Pool:
+class ConnectionPool:
     __module__ = constants.MODULE_NAME
 
     def __init__(self,
@@ -612,4 +612,4 @@ class Pool:
 
 
 # alias
-create_pool = Pool
+create_pool = ConnectionPool

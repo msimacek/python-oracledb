@@ -9,7 +9,7 @@ from .defaults import defaults
 from .connect_params import ConnectParams
 from .connection import connect, Connection
 from .cursor import Cursor
-from .pool import create_pool, Pool
+from .pool import create_pool, ConnectionPool
 from .lob import LOB
 from .dbobject import DbObject, DbObjectType
 from .constants import *
@@ -37,7 +37,7 @@ del constructors, base_impl, thick_impl, thin_impl, utils
 # general aliases (for backwards compatibility)
 ObjectType = DbObjectType
 Object = DbObject
-SessionPool = Pool
+SessionPool = ConnectionPool
 version = __version__
 
 # aliases for database types (for backwards compatibility)
