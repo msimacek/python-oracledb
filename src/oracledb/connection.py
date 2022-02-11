@@ -147,7 +147,7 @@ class Connection:
         self._verify_connected()
         self._impl._set_oci_attr(handle_type, attr_num, attr_type, value)
 
-    def _verify_connected(self):
+    def _verify_connected(self) -> None:
         """
         Verifies that the connection is connected to the database. If it is
         not, an exception is raised.
@@ -155,7 +155,7 @@ class Connection:
         if self._impl is None:
             errors._raise_err(errors.ERR_NOT_CONNECTED)
 
-    def _verify_xid(self, xid):
+    def _verify_xid(self, xid: Xid) -> None:
         """
         Verifies that the supplied xid is of the correct type.
         """

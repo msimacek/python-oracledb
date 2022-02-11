@@ -222,7 +222,7 @@ class ConnectParams:
                f"tcp_connect_timeout={self.tcp_connect_timeout!r}, " \
                f"wallet_location={self.wallet_location!r})"
 
-    def _get_tnsnames_file(self):
+    def _get_tnsnames_file(self) -> Type["TnsNamesFile"]:
         """
         Return a tnsnames file, if one is present, or None if one is not. If
         the file was previously loaded, the modification time is checked and,
@@ -245,7 +245,7 @@ class ConnectParams:
         self._tnsnames_files[self.config_dir] = tnsnames_file
         return tnsnames_file
 
-    def _parse_time_value(self, value):
+    def _parse_time_value(self, value: str) -> float:
         """
         Parse a value that contains time with an optional unit of ms
         (milliseconds), sec (seconds) or min (minutes).
@@ -259,7 +259,7 @@ class ConnectParams:
             return float(value[:-3].strip()) * 60
         return float(value.strip())
 
-    def _parse_connect_descriptor(self, connect_string):
+    def _parse_connect_descriptor(self, connect_string: str) -> None:
         """
         Internal method used for parsing connect data (name-value pairs).
         """
@@ -313,7 +313,7 @@ class ConnectParams:
             errors._raise_err(errors.ERR_CANNOT_PARSE_CONNECT_DESCRIPTOR,
                               str(e), data=connect_string)
 
-    def _parse_ezconnect_string(self, connect_string):
+    def _parse_ezconnect_string(self, connect_string: str) -> bool:
         """
         Internal method used for parsing an EZConnect string. A boolean is
         returned indicating whether a string in that format was detected and
@@ -390,7 +390,7 @@ class ConnectParams:
             errors._raise_err(errors.ERR_CANNOT_PARSE_EZCONNECT_STRING,
                               str(e), data=connect_string)
 
-    def _parse_redirect_data(self, redirect_data):
+    def parse_redirect_data(self, redirect_data: str) -> None:
         """
         Internal method used for parsing the redirect data that is returned
         from a listener in order to determine the new host and part that should
@@ -405,7 +405,7 @@ class ConnectParams:
         self.host = address_node.host
         self.port = int(address_node.port)
 
-    def _search_tnsnames(self, name):
+    def _search_tnsnames(self, name: str) -> None:
         """
         Internal method used to search the tnsnames.ora file. An exception is
         raised if no entry is found (or no tnsnames.ora file is found).
@@ -416,10 +416,10 @@ class ConnectParams:
         connect_descriptor = tnsnames_file.entries.get(name.upper())
         if connect_descriptor is None:
             errors._raise_err(errors.ERR_TNS_ENTRY_NOT_FOUND, name=name,
-                            config_dir=self.config_dir)
+                              config_dir=self.config_dir)
         self._parse_connect_descriptor(connect_descriptor)
 
-    def _set_by_keyword_args(self, keyword_args):
+    def _set_by_keyword_args(self, keyword_args: dict) -> None:
         """
         Set parameters provided as keyword arguments. If a keyword parameter is
         supplied that is not a valid connection parameter, a TypeError
@@ -431,7 +431,7 @@ class ConnectParams:
                 raise TypeError(message)
             setattr(self, name, keyword_args[name])
 
-    def _set_protocol(self, protocol):
+    def _set_protocol(self, protocol: str) -> None:
         """
         Sets the specified protocol. Only tcp and tcps protocols are supported
         at this time.
@@ -440,7 +440,7 @@ class ConnectParams:
             errors._raise_err(errors.ERR_INVALID_PROTOCOL, protocol=protocol)
         self.protocol = protocol
 
-    def _supports_oob(self):
+    def _supports_oob(self) -> bool:
         """
         Return a boolean indicating if the platform supports out-of-band urgent
         data (all platforms besides Windows) and a configuration parameter
@@ -468,7 +468,7 @@ class ConnectParams:
         elif not self._parse_ezconnect_string(connect_string):
             self._search_tnsnames(connect_string)
 
-    def parse_dsn(self, dsn: str) -> None:
+    def parse_dsn(self, dsn: str) -> tuple:
         """
         Parse a dsn (data source name) string supplied by the user. This can be
         in the form user/password@connect_string or it can be the connect
@@ -496,12 +496,12 @@ class TnsNamesFile:
     in a tnsnames.ora file.
     """
 
-    def __init__(self, file_name, mtime):
+    def __init__(self, file_name: str, mtime: int) -> None:
         self.file_name = file_name
         self.mtime = mtime
         self.entries = {}
 
-    def read(self):
+    def read(self) -> None:
         """
         Read and parse the file and retain the connect descriptors found inside
         the file.

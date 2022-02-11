@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2021, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 from typing import Callable, Type, Union
@@ -272,7 +272,7 @@ class MessageQuery:
 
 class MessageRow:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._operation = 0
         self._rowid = None
 

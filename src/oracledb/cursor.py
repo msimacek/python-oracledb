@@ -696,7 +696,7 @@ class Cursor:
             encoding_errors: str=None,
             bypass_decode: bool=False,
             *,
-            encodingErrors: str=None):
+            encodingErrors: str=None) -> Type["Var"]:
         """
         Create a variable with the specified characteristics. This method was
         designed for use with PL/SQL in/out variables where the length or type

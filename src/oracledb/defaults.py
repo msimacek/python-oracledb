@@ -12,7 +12,7 @@ class Defaults:
     """
     __module__ = constants.MODULE_NAME
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.arraysize = 100
         self.stmtcachesize = 20
         self.port = 1521

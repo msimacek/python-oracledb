@@ -4,7 +4,8 @@
 
 #------------------------------------------------------------------------------
 # base_impl.pyx
-#   Cython file for the base implementation that the thin and thick
+#
+# Cython file for the base implementation that the thin and thick
 # implementations use.
 #------------------------------------------------------------------------------
 

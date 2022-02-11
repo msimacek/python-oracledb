@@ -4,7 +4,7 @@
 
 from . import errors
 
-def _check_arg(name, value):
+def _check_arg(name: str, value: str) -> None:
     """
     Checks the argument to ensure that it does not contain (, ) or = as these
     characters are not permitted within connect strings.
@@ -15,7 +15,7 @@ def _check_arg(name, value):
 
 def makedsn(host: str, port: int, sid: str=None, service_name: str=None,
             region:str=None, sharding_key: str=None,
-            super_sharding_key: str=None):
+            super_sharding_key: str=None) -> str:
     """
     Return a string suitable for use as the dsn parameter for connect(). This
     string is identical to the strings that are defined in the tnsnames.ora

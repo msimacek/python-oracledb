@@ -1,10 +1,11 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # thin_impl.pyx
-#   Cython file for communicating with the server directly without the use of
+#
+# Cython file for communicating with the server directly without the use of
 # any Oracle Client library.
 #------------------------------------------------------------------------------
 
