@@ -156,7 +156,7 @@ class Cursor:
         self._impl.arraysize = value
 
     def arrayvar(self, typ: Union[DbType, DbObjectType, type],
-                 value: Union[list, int], size: int=0) -> Type["Var"]:
+                 value: Union[list, int], size: int=0) -> Var:
         """
         Create an array variable associated with the cursor of the given type
         and size and return a variable object. The value is either an integer
