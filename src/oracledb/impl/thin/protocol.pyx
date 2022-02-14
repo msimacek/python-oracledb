@@ -112,9 +112,14 @@ cdef class Protocol:
                 return connect_message.redirect_data
             if connect_message.packet_type == TNS_PACKET_TYPE_ACCEPT:
                 break
+
+            # for TCPS connections that require a wallet, the socket must be
+            # rewrapped in order to be usable; disable the check on the host
+            # name, however, as that has already been done successfully
             if params.protocol == "tcps" \
                     and params.wallet_location is not None:
                 ssl_context = self._socket.context
+                ssl_context.check_hostname = False
                 sock = socket.socket(fileno=self._socket.detach())
                 sock = ssl_context.wrap_socket(sock)
                 self.__set_socket(sock)
