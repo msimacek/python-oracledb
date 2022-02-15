@@ -909,7 +909,7 @@ cdef class MessageWithData(Message):
             if isinstance(value, bool):
                 temp_bytes = b'1' if value is True else b'0'
             else:
-                temp_bytes = str(value).encode()
+                temp_bytes = (<str> cpython.PyObject_Str(value)).encode()
             buf.write_oracle_number(temp_bytes)
         elif ora_type_num == TNS_DATA_TYPE_DATE \
                 or ora_type_num == TNS_DATA_TYPE_TIMESTAMP \
