@@ -400,7 +400,7 @@ class ConnectParams:
         if pos < 0:
             errors._raise_err(errors.ERR_INVALID_REDIRECT_DATA,
                               data=redirect_data)
-        node = parse_connect_descriptor(redirect_data)
+        node = parse_connect_descriptor(redirect_data[:pos])
         address_node = node.description.address
         self.host = address_node.host
         self.port = int(address_node.port)
