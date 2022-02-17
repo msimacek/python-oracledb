@@ -688,5 +688,14 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.prepare(sql)
         self.assertEqual(self.cursor.bindnames(), ['BIND_4356'])
 
+    def test_4357_setinputsizes_with_defaults(self):
+        "4357 - test setinputsizes() with defaults specified"
+        self.cursor.setinputsizes(None, str)
+        self.assertIs(self.cursor.bindvars[0], None)
+        self.assertIsInstance(self.cursor.bindvars[1], oracledb.Var)
+        self.cursor.setinputsizes(a=None, b=str)
+        self.assertIs(self.cursor.bindvars.get("a"), None)
+        self.assertIsInstance(self.cursor.bindvars["b"], oracledb.Var)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
