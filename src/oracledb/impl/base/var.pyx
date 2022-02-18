@@ -37,78 +37,79 @@ cdef class BaseVarImpl:
         Set a single element of the variable to the specified value.
         """
         cdef:
-            uint32_t size
-            DbType dbtype
+            uint32_t db_type_num, size
             object lob
         if self.inconverter is not None:
             value = self.inconverter(value)
         if value is not None:
-            dbtype = self.dbtype
-            if dbtype is DB_TYPE_NUMBER or dbtype is DB_TYPE_BINARY_INTEGER \
-                    or dbtype is DB_TYPE_BINARY_DOUBLE \
-                    or dbtype is DB_TYPE_BINARY_FLOAT:
-                if not isinstance(value, (bool, int, float, decimal.Decimal)):
+            db_type_num = self.dbtype.num
+            if db_type_num in (DB_TYPE_NUM_NUMBER, DB_TYPE_NUM_BINARY_INTEGER,
+                               DB_TYPE_NUM_BINARY_DOUBLE,
+                               DB_TYPE_NUM_BINARY_FLOAT):
+                if not isinstance(value,
+                                  (PY_TYPE_BOOL, int, float, PY_TYPE_DECIMAL)):
                     raise TypeError("expecting number or boolean")
-                if dbtype is DB_TYPE_BINARY_FLOAT \
-                        or dbtype is DB_TYPE_BINARY_DOUBLE:
+                if db_type_num in (DB_TYPE_NUM_BINARY_FLOAT,
+                                   DB_TYPE_NUM_BINARY_DOUBLE):
                     value = float(value)
-                elif dbtype is DB_TYPE_BINARY_INTEGER \
-                        or isinstance(value, bool):
+                elif db_type_num == DB_TYPE_NUM_BINARY_INTEGER \
+                        or isinstance(value, PY_TYPE_BOOL):
                     value = int(value)
-            elif dbtype is DB_TYPE_VARCHAR or dbtype is DB_TYPE_NVARCHAR \
-                    or dbtype is DB_TYPE_CHAR or dbtype is DB_TYPE_NCHAR \
-                    or dbtype is DB_TYPE_LONG:
+            elif db_type_num in (DB_TYPE_NUM_CHAR, DB_TYPE_NUM_VARCHAR,
+                                 DB_TYPE_NUM_NCHAR, DB_TYPE_NUM_NVARCHAR,
+                                 DB_TYPE_NUM_LONG_VARCHAR,
+                                 DB_TYPE_NUM_LONG_NVARCHAR):
                 if isinstance(value, bytes):
-                    value = value.decode()
+                    value = (<bytes> value).decode()
                 elif not isinstance(value, str):
                     raise TypeError("expecting string")
-                size = <uint32_t> len(value)
+                size = <uint32_t> len(<str> value)
                 if size > self.size:
                     self._resize(size)
-            elif dbtype is DB_TYPE_RAW or dbtype is DB_TYPE_LONG_RAW:
+            elif db_type_num in (DB_TYPE_NUM_RAW, DB_TYPE_NUM_LONG_RAW):
                 if isinstance(value, str):
-                    value = value.encode()
+                    value = (<str> value).encode()
                 elif not isinstance(value, bytes):
                     raise TypeError("expecting bytes")
-                size = <uint32_t> len(value)
+                size = <uint32_t> len(<bytes> value)
                 if size > self.size:
                     self._resize(size)
-            elif dbtype is DB_TYPE_DATE or dbtype is DB_TYPE_TIMESTAMP \
-                    or dbtype is DB_TYPE_TIMESTAMP_LTZ \
-                    or dbtype is DB_TYPE_TIMESTAMP_TZ:
-                if isinstance(value, datetime.datetime):
+            elif db_type_num in (DB_TYPE_NUM_DATE, DB_TYPE_NUM_TIMESTAMP,
+                                 DB_TYPE_NUM_TIMESTAMP_LTZ,
+                                 DB_TYPE_NUM_TIMESTAMP_TZ):
+                if isinstance(value, PY_TYPE_DATETIME):
                     pass
-                elif isinstance(value, datetime.date):
+                elif isinstance(value, PY_TYPE_DATE):
                     value = cydatetime.datetime_new(value.year, value.month,
                                                     value.day, 0, 0, 0, 0,
                                                     None)
                 else:
                     message = "expecting datetime.date or datetime.datetime"
                     raise TypeError(message)
-            elif dbtype is DB_TYPE_INTERVAL_DS:
-                if not isinstance(value, datetime.timedelta):
+            elif db_type_num == DB_TYPE_NUM_INTERVAL_DS:
+                if not isinstance(value, PY_TYPE_TIMEDELTA):
                     raise TypeError("expecting datetime.timedelta")
-            elif dbtype is DB_TYPE_BOOLEAN:
+            elif db_type_num == DB_TYPE_NUM_BOOLEAN:
                 value = bool(value)
-            elif dbtype is DB_TYPE_CLOB or dbtype is DB_TYPE_NCLOB \
-                    or dbtype is DB_TYPE_BLOB:
-                if isinstance(value, LOB):
-                    if value.type is not dbtype:
-                        message = f"LOB must be of type {dbtype}"
+            elif db_type_num in (DB_TYPE_NUM_CLOB, DB_TYPE_NUM_NCLOB,
+                                 DB_TYPE_NUM_BLOB):
+                if isinstance(value, PY_TYPE_LOB):
+                    if value.type is not self.dbtype:
+                        message = f"LOB must be of type {self.dbtype}"
                         raise TypeError(message)
                 elif not isinstance(value, (bytes, str)):
                     raise TypeError("expecting LOB, string or bytes")
                 else:
                     lob = self.values[pos]
-                    if lob is not None and isinstance(lob, LOB):
+                    if lob is not None and isinstance(lob, PY_TYPE_LOB):
                         lob.trim()
                         if value:
                             lob.write(value)
                         value = lob
-            elif dbtype is DB_TYPE_ROWID:
+            elif db_type_num in (DB_TYPE_NUM_ROWID, DB_TYPE_NUM_UROWID):
                 errors._raise_err(errors.ERR_SET_ROWID_DIRECTLY)
-            elif dbtype is DB_TYPE_OBJECT:
-                if not isinstance(value, DbObject):
+            elif db_type_num == DB_TYPE_NUM_OBJECT:
+                if not isinstance(value, PY_TYPE_DB_OBJECT):
                     raise TypeError("expecting DbObject")
                 if value._impl.type != self.objtype:
                     errors._raise_err(errors.ERR_WRONG_OBJECT_TYPE,
@@ -116,8 +117,8 @@ cdef class BaseVarImpl:
                                       actual_name=value.type.name,
                                       expected_schema=self.objtype.schema,
                                       expected_name=self.objtype.name)
-            elif dbtype is DB_TYPE_CURSOR:
-                if not isinstance(value, Cursor):
+            elif db_type_num == DB_TYPE_NUM_CURSOR:
+                if not isinstance(value, PY_TYPE_CURSOR):
                     raise TypeError("expecting cursor")
         self.values[pos] = value
 
@@ -131,7 +132,7 @@ cdef class BaseVarImpl:
         elif isinstance(typ, ApiType):
             apitype = typ
             self.dbtype = apitype.dbtypes[0]
-        elif isinstance(typ, DB_OBJECT_TYPE_TYPE):
+        elif isinstance(typ, PY_TYPE_DB_OBJECT_TYPE):
             self.dbtype = DB_TYPE_OBJECT
             self.objtype = typ._impl
         elif not isinstance(typ, type):
@@ -146,16 +147,16 @@ cdef class BaseVarImpl:
             self.dbtype = DB_TYPE_VARCHAR
         elif typ is bytes:
             self.dbtype = DB_TYPE_RAW
-        elif typ is decimal.Decimal:
+        elif typ is PY_TYPE_DECIMAL:
             self.dbtype = DB_TYPE_NUMBER
             self._preferred_num_type = NUM_TYPE_DECIMAL
-        elif typ is bool:
+        elif typ is PY_TYPE_BOOL:
             self.dbtype = DB_TYPE_BOOLEAN
-        elif typ is datetime.date:
+        elif typ is PY_TYPE_DATE:
             self.dbtype = DB_TYPE_DATE
-        elif typ is datetime.datetime:
+        elif typ is PY_TYPE_DATETIME:
             self.dbtype = DB_TYPE_TIMESTAMP
-        elif typ is datetime.timedelta:
+        elif typ is PY_TYPE_TIMEDELTA:
             self.dbtype = DB_TYPE_INTERVAL_DS
         else:
             errors._raise_err(errors.ERR_PYTHON_TYPE_NOT_SUPPORTED, typ=typ)
@@ -174,7 +175,7 @@ cdef class BaseVarImpl:
         if value is None:
             dbtype = DB_TYPE_VARCHAR
             size = 1
-        elif isinstance(value, bool):
+        elif isinstance(value, PY_TYPE_BOOL):
             dbtype = DB_TYPE_BOOLEAN if is_plsql else DB_TYPE_BINARY_INTEGER
         elif isinstance(value, str):
             size = <uint32_t> len(value)
@@ -182,13 +183,13 @@ cdef class BaseVarImpl:
         elif isinstance(value, bytes):
             size = <uint32_t> len(value)
             dbtype = DB_TYPE_RAW
-        elif isinstance(value, (int, float, decimal.Decimal)):
+        elif isinstance(value, (int, float, PY_TYPE_DECIMAL)):
             dbtype = DB_TYPE_NUMBER
         elif isinstance(value, (datetime.date, datetime.datetime)):
             dbtype = DB_TYPE_DATE
         elif isinstance(value, datetime.timedelta):
             dbtype = DB_TYPE_INTERVAL_DS
-        elif isinstance(value, DB_OBJECT_TYPE):
+        elif isinstance(value, PY_TYPE_DB_OBJECT):
             dbtype = DB_TYPE_OBJECT
             objtype = value.type._impl
         elif isinstance(value, LOB):

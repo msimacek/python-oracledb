@@ -17,12 +17,12 @@ cdef class BaseCursorImpl:
         readability and in order to avoid duplicating code.
         """
         cdef BaseVarImpl var_impl
-        if isinstance(typ, VAR_TYPE):
+        if isinstance(typ, PY_TYPE_VAR):
             bind_vars[key] = typ
             bind_var_impls[key] = typ._impl
         else:
             var_impl = self._create_var_impl_from_type(typ)
-            typ = typ if isinstance(typ, DB_OBJECT_TYPE_TYPE) \
+            typ = typ if isinstance(typ, PY_TYPE_DB_OBJECT_TYPE) \
                     else var_impl.dbtype
             bind_vars[key] = Var._from_impl(var_impl, typ)
             bind_var_impls[key] = var_impl
@@ -81,7 +81,7 @@ cdef class BaseCursorImpl:
             object orig_var, var, typ
 
         # if the value to be bound is a variable, use it directly
-        if isinstance(value, VAR_TYPE):
+        if isinstance(value, PY_TYPE_VAR):
             if BindVarCollection is dict:
                 orig_var = bind_vars.get(key)
             else:
@@ -117,7 +117,7 @@ cdef class BaseCursorImpl:
             try:
                 var_impl.set_value(pos, value)
                 if var_impl is not orig_var_impl:
-                    bind_vars[key] = VAR_TYPE._from_impl(var_impl)
+                    bind_vars[key] = PY_TYPE_VAR._from_impl(var_impl)
                     bind_var_impls[key] = var_impl
                 return 0
             except TypeError:
@@ -144,9 +144,9 @@ cdef class BaseCursorImpl:
         # value that is being set
         var_impl = self._create_var_impl_from_value(value, num_elements)
         var_impl.set_value(pos, value)
-        typ = value.type if isinstance(value, DB_OBJECT_TYPE) \
+        typ = value.type if isinstance(value, PY_TYPE_DB_OBJECT) \
                 else var_impl.dbtype
-        bind_vars[key] = VAR_TYPE._from_impl(var_impl, typ)
+        bind_vars[key] = PY_TYPE_VAR._from_impl(var_impl, typ)
         bind_var_impls[key] = var_impl
 
     @cython.boundscheck(False)
@@ -269,7 +269,7 @@ cdef class BaseCursorImpl:
         # finalize variable and store in arrays
         var_impl._finalize_init()
         self.fetch_var_impls[pos] = var_impl
-        self.fetch_vars[pos] = VAR_TYPE._from_impl(var_impl)
+        self.fetch_vars[pos] = PY_TYPE_VAR._from_impl(var_impl)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -501,7 +501,7 @@ cdef class BaseCursorImpl:
         var_impl.bypass_decode = bypass_decode
         var_impl.is_array = is_array
         var_impl._finalize_init()
-        return VAR_TYPE._from_impl(var_impl)
+        return PY_TYPE_VAR._from_impl(var_impl)
 
     @utils.CheckImpls("executing a statement")
     def execute(self, cursor):

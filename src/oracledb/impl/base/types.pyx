@@ -66,47 +66,59 @@ cdef class DbType:
 
 
 # database types
-DB_TYPE_BFILE = DbType(2020, "DB_TYPE_BFILE", 114)
-DB_TYPE_BINARY_DOUBLE = DbType(2008, "DB_TYPE_BINARY_DOUBLE", 101,
+DB_TYPE_BFILE = DbType(DB_TYPE_NUM_BFILE, "DB_TYPE_BFILE", 114)
+DB_TYPE_BINARY_DOUBLE = DbType(DB_TYPE_NUM_BINARY_DOUBLE,
+                               "DB_TYPE_BINARY_DOUBLE", 101,
                                buffer_size_factor=8)
-DB_TYPE_BINARY_FLOAT = DbType(2007, "DB_TYPE_BINARY_FLOAT", 100,
-                              buffer_size_factor=4)
-DB_TYPE_BINARY_INTEGER = DbType(2009, "DB_TYPE_BINARY_INTEGER", 3,
+DB_TYPE_BINARY_FLOAT = DbType(DB_TYPE_NUM_BINARY_FLOAT, "DB_TYPE_BINARY_FLOAT",
+                              100, buffer_size_factor=4)
+DB_TYPE_BINARY_INTEGER = DbType(DB_TYPE_NUM_BINARY_INTEGER,
+                                "DB_TYPE_BINARY_INTEGER", 3,
                                 buffer_size_factor=22)
-DB_TYPE_BLOB = DbType(2019, "DB_TYPE_BLOB", 113, buffer_size_factor=112)
-DB_TYPE_BOOLEAN = DbType(2022, "DB_TYPE_BOOLEAN", 252, buffer_size_factor=4)
-DB_TYPE_CHAR = DbType(2003, "DB_TYPE_CHAR", 96, 2000, csfrm=1,
-                      buffer_size_factor=4)
-DB_TYPE_CLOB = DbType(2017, "DB_TYPE_CLOB", 112, csfrm=1,
+DB_TYPE_BLOB = DbType(DB_TYPE_NUM_BLOB, "DB_TYPE_BLOB", 113,
                       buffer_size_factor=112)
-DB_TYPE_CURSOR = DbType(2021, "DB_TYPE_CURSOR", 102, buffer_size_factor=4)
-DB_TYPE_DATE = DbType(2011, "DB_TYPE_DATE", 12, buffer_size_factor=7)
-DB_TYPE_INTERVAL_DS = DbType(2015, "DB_TYPE_INTERVAL_DS", 183,
-                             buffer_size_factor=11)
-DB_TYPE_INTERVAL_YM = DbType(2016, "DB_TYPE_INTERVAL_YM", 182)
-DB_TYPE_JSON = DbType(2027, "DB_TYPE_JSON", 119)
-DB_TYPE_LONG = DbType(2024, "DB_TYPE_LONG", 8, csfrm=1)
-DB_TYPE_LONG_NVARCHAR = DbType(2031, "DB_TYPE_LONG_NVARCHAR", 8, csfrm=2)
-DB_TYPE_LONG_RAW = DbType(2025, "DB_TYPE_LONG_RAW", 24)
-DB_TYPE_NCHAR = DbType(2004, "DB_TYPE_NCHAR", 96, 2000, csfrm=2,
-                       buffer_size_factor=4)
-DB_TYPE_NCLOB = DbType(2018, "DB_TYPE_NCLOB", 112, csfrm=2,
-                       buffer_size_factor=112)
-DB_TYPE_NUMBER = DbType(2010, "DB_TYPE_NUMBER", 2, buffer_size_factor=22)
-DB_TYPE_NVARCHAR = DbType(2002, "DB_TYPE_NVARCHAR", 1, 4000, csfrm=2,
-                          buffer_size_factor=4)
-DB_TYPE_OBJECT = DbType(2023, "DB_TYPE_OBJECT", 109)
-DB_TYPE_RAW = DbType(2006, "DB_TYPE_RAW", 23, 4000, buffer_size_factor=1)
-DB_TYPE_ROWID = DbType(2005, "DB_TYPE_ROWID", 11, buffer_size_factor=18)
-DB_TYPE_TIMESTAMP = DbType(2012, "DB_TYPE_TIMESTAMP", 180,
-                           buffer_size_factor=11)
-DB_TYPE_TIMESTAMP_LTZ = DbType(2014, "DB_TYPE_TIMESTAMP_LTZ", 231,
-                               buffer_size_factor=11)
-DB_TYPE_TIMESTAMP_TZ = DbType(2013, "DB_TYPE_TIMESTAMP_TZ", 181,
-                              buffer_size_factor=13)
-DB_TYPE_UROWID = DbType(2030, "DB_TYPE_UROWID", 208)
-DB_TYPE_VARCHAR = DbType(2001, "DB_TYPE_VARCHAR", 1, 4000, csfrm=1,
+DB_TYPE_BOOLEAN = DbType(DB_TYPE_NUM_BOOLEAN, "DB_TYPE_BOOLEAN", 252,
                          buffer_size_factor=4)
+DB_TYPE_CHAR = DbType(DB_TYPE_NUM_CHAR, "DB_TYPE_CHAR", 96, 2000, csfrm=1,
+                      buffer_size_factor=4)
+DB_TYPE_CLOB = DbType(DB_TYPE_NUM_CLOB, "DB_TYPE_CLOB", 112, csfrm=1,
+                      buffer_size_factor=112)
+DB_TYPE_CURSOR = DbType(DB_TYPE_NUM_CURSOR, "DB_TYPE_CURSOR", 102,
+                        buffer_size_factor=4)
+DB_TYPE_DATE = DbType(DB_TYPE_NUM_DATE, "DB_TYPE_DATE", 12,
+                      buffer_size_factor=7)
+DB_TYPE_INTERVAL_DS = DbType(DB_TYPE_NUM_INTERVAL_DS, "DB_TYPE_INTERVAL_DS",
+                             183, buffer_size_factor=11)
+DB_TYPE_INTERVAL_YM = DbType(DB_TYPE_NUM_INTERVAL_YM, "DB_TYPE_INTERVAL_YM",
+                             182)
+DB_TYPE_JSON = DbType(DB_TYPE_NUM_JSON, "DB_TYPE_JSON", 119)
+DB_TYPE_LONG = DbType(DB_TYPE_NUM_LONG_VARCHAR, "DB_TYPE_LONG", 8, csfrm=1)
+DB_TYPE_LONG_NVARCHAR = DbType(DB_TYPE_NUM_LONG_NVARCHAR,
+                               "DB_TYPE_LONG_NVARCHAR", 8, csfrm=2)
+DB_TYPE_LONG_RAW = DbType(DB_TYPE_NUM_LONG_RAW, "DB_TYPE_LONG_RAW", 24)
+DB_TYPE_NCHAR = DbType(DB_TYPE_NUM_NCHAR, "DB_TYPE_NCHAR", 96, 2000, csfrm=2,
+                       buffer_size_factor=4)
+DB_TYPE_NCLOB = DbType(DB_TYPE_NUM_NCLOB, "DB_TYPE_NCLOB", 112, csfrm=2,
+                       buffer_size_factor=112)
+DB_TYPE_NUMBER = DbType(DB_TYPE_NUM_NUMBER, "DB_TYPE_NUMBER", 2,
+                        buffer_size_factor=22)
+DB_TYPE_NVARCHAR = DbType(DB_TYPE_NUM_NVARCHAR, "DB_TYPE_NVARCHAR", 1, 4000,
+                          csfrm=2, buffer_size_factor=4)
+DB_TYPE_OBJECT = DbType(DB_TYPE_NUM_OBJECT, "DB_TYPE_OBJECT", 109)
+DB_TYPE_RAW = DbType(DB_TYPE_NUM_RAW, "DB_TYPE_RAW", 23, 4000,
+                     buffer_size_factor=1)
+DB_TYPE_ROWID = DbType(DB_TYPE_NUM_ROWID, "DB_TYPE_ROWID", 11,
+                       buffer_size_factor=18)
+DB_TYPE_TIMESTAMP = DbType(DB_TYPE_NUM_TIMESTAMP, "DB_TYPE_TIMESTAMP", 180,
+                           buffer_size_factor=11)
+DB_TYPE_TIMESTAMP_LTZ = DbType(DB_TYPE_NUM_TIMESTAMP_LTZ,
+                               "DB_TYPE_TIMESTAMP_LTZ", 231,
+                               buffer_size_factor=11)
+DB_TYPE_TIMESTAMP_TZ = DbType(DB_TYPE_NUM_TIMESTAMP_TZ, "DB_TYPE_TIMESTAMP_TZ",
+                              181, buffer_size_factor=13)
+DB_TYPE_UROWID = DbType(DB_TYPE_NUM_UROWID, "DB_TYPE_UROWID", 208)
+DB_TYPE_VARCHAR = DbType(DB_TYPE_NUM_VARCHAR, "DB_TYPE_VARCHAR", 1, 4000,
+                         csfrm=1, buffer_size_factor=4)
 
 # DB API types
 BINARY = ApiType("BINARY", DB_TYPE_RAW, DB_TYPE_LONG_RAW)
