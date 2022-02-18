@@ -33,25 +33,9 @@ DEF TNS_NETWORK_AUTH_STATUS_NOT_REQUIRED = 0xfcff
 
 # network data integrity service constants
 DEF TNS_NETWORK_DATA_INTEGRITY_NONE = 0
-DEF TNS_NETWORK_DATA_INTEGRITY_MD5 = 1
-DEF TNS_NETWORK_DATA_INTEGRITY_SHA1 = 3
-DEF TNS_NETWORK_DATA_INTEGRITY_SHA512 = 4
-DEF TNS_NETWORK_DATA_INTEGRITY_SHA256 = 5
-DEF TNS_NETWORK_DATA_INTEGRITY_SHA384 = 6
 
 # network encryption service constants
 DEF TNS_NETWORK_ENCRYPTION_NULL = 0
-DEF TNS_NETWORK_ENCRYPTION_RC4_BAS = 1
-DEF TNS_NETWORK_ENCRYPTION_RC4_56 = 8
-DEF TNS_NETWORK_ENCRYPTION_RC4_128 = 10
-DEF TNS_NETWORK_ENCRYPTION_RC4_256 = 6
-DEF TNS_NETWORK_ENCRYPTION_DES_40 = 3
-DEF TNS_NETWORK_ENCRYPTION_DES_56 = 2
-DEF TNS_NETWORK_ENCRYPTION_DES_112 = 11
-DEF TNS_NETWORK_ENCRYPTION_DES_168 = 12
-DEF TNS_NETWORK_ENCRYPTION_DES_128 = 15
-DEF TNS_NETWORK_ENCRYPTION_DES_192 = 16
-DEF TNS_NETWORK_ENCRYPTION_DES_256 = 17
 
 cdef class NetworkService:
 
@@ -96,7 +80,7 @@ cdef class AuthenticationService(NetworkService):
 cdef class DataIntegrityService(NetworkService):
 
     cdef uint16_t get_data_size(self):
-        return TNS_NETWORK_SERVICE_HEADER_SIZE + 8 + 10
+        return TNS_NETWORK_SERVICE_HEADER_SIZE + 8 + 5
 
     cdef int write_data(self, WriteBuffer buf) except -1:
         self.write_header(buf, TNS_NETWORK_SERVICE_DATA_INTEGRITY,
@@ -104,20 +88,15 @@ cdef class DataIntegrityService(NetworkService):
         self.write_version(buf)
 
         # write options
-        buf.write_uint16(6)             # length
+        buf.write_uint16(1)             # length
         buf.write_uint16(TNS_NETWORK_TYPE_RAW)
         buf.write_uint8(TNS_NETWORK_DATA_INTEGRITY_NONE)
-        buf.write_uint8(TNS_NETWORK_DATA_INTEGRITY_MD5)
-        buf.write_uint8(TNS_NETWORK_DATA_INTEGRITY_SHA1)
-        buf.write_uint8(TNS_NETWORK_DATA_INTEGRITY_SHA512)
-        buf.write_uint8(TNS_NETWORK_DATA_INTEGRITY_SHA256)
-        buf.write_uint8(TNS_NETWORK_DATA_INTEGRITY_SHA384)
 
 
 cdef class EncryptionService(NetworkService):
 
     cdef uint16_t get_data_size(self):
-        return TNS_NETWORK_SERVICE_HEADER_SIZE + 8 + 16
+        return TNS_NETWORK_SERVICE_HEADER_SIZE + 8 + 5
 
     cdef int write_data(self, WriteBuffer buf) except -1:
         self.write_header(buf, TNS_NETWORK_SERVICE_ENCRYPTION,
@@ -125,20 +104,9 @@ cdef class EncryptionService(NetworkService):
         self.write_version(buf)
 
         # write options
-        buf.write_uint16(12)            # length
+        buf.write_uint16(1)             # length
         buf.write_uint16(TNS_NETWORK_TYPE_RAW)
         buf.write_uint8(TNS_NETWORK_ENCRYPTION_NULL)
-        buf.write_uint8(TNS_NETWORK_ENCRYPTION_RC4_BAS)
-        buf.write_uint8(TNS_NETWORK_ENCRYPTION_RC4_56)
-        buf.write_uint8(TNS_NETWORK_ENCRYPTION_RC4_128)
-        buf.write_uint8(TNS_NETWORK_ENCRYPTION_RC4_256)
-        buf.write_uint8(TNS_NETWORK_ENCRYPTION_DES_40)
-        buf.write_uint8(TNS_NETWORK_ENCRYPTION_DES_56)
-        buf.write_uint8(TNS_NETWORK_ENCRYPTION_DES_112)
-        buf.write_uint8(TNS_NETWORK_ENCRYPTION_DES_168)
-        buf.write_uint8(TNS_NETWORK_ENCRYPTION_DES_128)
-        buf.write_uint8(TNS_NETWORK_ENCRYPTION_DES_192)
-        buf.write_uint8(TNS_NETWORK_ENCRYPTION_DES_256)
 
 
 cdef class SupervisorService(NetworkService):
