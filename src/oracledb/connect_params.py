@@ -518,8 +518,7 @@ class TnsNamesFile:
                 if entry_name is None:
                     pos = line.find("=")
                     if pos < 0:
-                        error_num = errors.ERR_INVALID_TNS_ALIAS_DEFINITION
-                        errors._raise_err(error_num, line=line)
+                        continue
                     entry_name = line[:pos].strip().upper()
                     entry_lines = []
                     num_parens = 0

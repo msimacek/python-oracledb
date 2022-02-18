@@ -269,5 +269,23 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaisesRegex(oracledb.DatabaseError, "DPY-4027:",
                                params.parse_connect_string, "tns_alias")
 
+    def test_4524_invalid_entries_in_tnsnames(self):
+        "4524 - test tnsnames.ora with invalid entries"
+        connect_string = \
+            "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=my_host24)(PORT=1148))" \
+            "(CONNECT_DATA=(SERVICE_NAME=my_service_name24)))"
+        alias = f"tns_alias24 = {connect_string}"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_name = os.path.join(temp_dir, "tnsnames.ora")
+            with open(file_name, "w") as f:
+                print("invalid_alias = something to ignore", file=f)
+                print("some garbage data which should be ignored", file=f)
+                print(alias, file=f)
+            params = oracledb.ConnectParams(config_dir=temp_dir)
+            params.parse_connect_string("tns_alias24")
+        self.assertEqual(params.host, "my_host24")
+        self.assertEqual(params.port, 1148)
+        self.assertEqual(params.service_name, "my_service_name24")
+
 if __name__ == "__main__":
     test_env.run_test_cases()

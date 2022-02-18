@@ -138,7 +138,6 @@ ERR_CONTENT_INVALID_AFTER_NUMBER = 4016
 ERR_INVALID_CONNECT_DESCRIPTOR = 4017
 ERR_CANNOT_PARSE_CONNECT_DESCRIPTOR = 4018
 ERR_INVALID_REDIRECT_DATA = 4019
-ERR_INVALID_TNS_ALIAS_DEFINITION = 4020
 ERR_INVALID_PROTOCOL = 4021
 ERR_INVALID_POOL_PURITY = 4022
 ERR_CANNOT_PARSE_EZCONNECT_STRING = 4023
@@ -237,8 +236,6 @@ ERR_MESSAGE_FORMATS = {
     ERR_INVALID_SERVER_CERT_DN: \
             "the distinguished name (DN) on the server certificate does not " \
             "match the expected value",
-    ERR_INVALID_TNS_ALIAS_DEFINITION: \
-            "invalid tnsnames.ora definition starting with {line}",
     ERR_INVALID_SERVICE_NAME: \
             "listener doesn't recognize service name (see ORA-12514)",
     ERR_INVALID_SID: "listener doesn't recognize sid (see ORA-12505)",
