@@ -56,6 +56,35 @@ cdef class ThinConnImpl(BaseConnImpl):
         self._pool = None
         self._protocol._force_close()
 
+    cdef object _get_socket(self, object params, bint raise_exception):
+        """
+	Get a socket on which to communicate using the provided parameters. If
+	a proxy is configured, a connection to the proxy is established and the
+        target host and port is forwarded to the proxy before the socket is
+        returned.
+        """
+        cdef bint use_proxy = (params.https_proxy is not None)
+        if use_proxy:
+            connect_info = (params.https_proxy, params.https_proxy_port)
+        else:
+            connect_info = (params.host, params.port)
+        try:
+            sock = socket.create_connection(connect_info,
+                                            params.tcp_connect_timeout)
+        except socket.gaierror:
+            if raise_exception:
+                raise
+            return None
+        if use_proxy:
+            data = f"CONNECT {params.host}:{params.port} HTTP/1.0\r\n\r\n"
+            sock.send(data.encode())
+            reply = sock.recv(1024)
+            match = re.search('HTTP/1.[01]\\s+(\\d+)\\s+', reply.decode())
+            if match is None or match.groups()[0] != '200':
+                errors._raise_err(errors.ERR_PROXY_FAILURE,
+                                  response=reply.decode())
+        return sock
+
     cdef Statement _get_statement(self, str sql, bint cache_statement):
         cdef Statement statement
         with self._statement_cache_lock:
@@ -127,13 +156,9 @@ cdef class ThinConnImpl(BaseConnImpl):
     def connect(self, params, str password, str newpassword=None):
         cdef unsigned long num_attempts = params.retry_count + 1
         for i in range(num_attempts):
-            try:
-                sock = socket.create_connection((params.host, params.port),
-                                                params.tcp_connect_timeout)
+            sock = self._get_socket(params, i == num_attempts - 1)
+            if sock is not None:
                 break
-            except socket.gaierror:
-                if i == num_attempts - 1:
-                    raise
             time.sleep(params.retry_delay)
         if params.expire_time > 0:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)

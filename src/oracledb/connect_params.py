@@ -52,6 +52,8 @@ class ConnectParams:
                  tcp_connect_timeout: float=None,
                  wallet_location: str=None,
                  wallet_password: str=None,
+                 https_proxy: str=None,
+                 https_proxy_port: int=None,
 
                  # deprecated parameters: values are ignored
                  threaded: bool=None,
@@ -156,6 +158,11 @@ class ConnectParams:
 
         wallet_password: the password used to decrypt the contents of the
         PEM-encoded wallet file, if applicable.
+
+        https_proxy: the name or IP address of a proxy host to use for
+        tunneling secure connections
+
+        https_proxy_port: the port on which to communicate with the proxy host
         """
         self.host = host
         self.port = port = port if port is not None else defaults.port
@@ -192,6 +199,8 @@ class ConnectParams:
                 else defaults.tcp_connect_timeout
         self.wallet_location = wallet_location
         self.wallet_password = wallet_password
+        self.https_proxy = https_proxy
+        self.https_proxy_port = https_proxy_port
 
     def __repr__(self):
         return f"ConnectParams(" \
@@ -283,6 +292,10 @@ class ConnectParams:
             self._set_protocol(address_node.protocol.lower())
             self.host = address_node.host
             self.port = int(address_node.port)
+            self.https_proxy = getattr(address_node, "https_proxy", None)
+            temp_val = getattr(address_node, "https_proxy_port", None)
+            if temp_val is not None:
+                self.https_proxy_port = int(temp_val)
             connect_data_node = node.description.connect_data
             self.service_name = getattr(connect_data_node, "service_name",
                                         None)

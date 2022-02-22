@@ -157,6 +157,7 @@ ERR_LISTENER_REFUSED_CONNECTION = 6000
 ERR_INVALID_SERVICE_NAME = 6001
 ERR_INVALID_SERVER_CERT_DN = 6002
 ERR_INVALID_SID = 6003
+ERR_PROXY_FAILURE = 6004
 
 # Oracle error number cross reference
 ERR_ORACLE_ERROR_XREF = {
@@ -277,6 +278,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_POOL_NO_CONNECTION_AVAILABLE: \
             "timed out waiting for pool to have free connections available " \
             "or create new connections",
+    ERR_PROXY_FAILURE: \
+            "use of the proxy failed: response was {response}",
     ERR_PYTHON_TYPE_NOT_SUPPORTED: "Python type {typ} not supported",
     ERR_PYTHON_VALUE_NOT_SUPPORTED: \
             "Python value of type {type_name} not supported",
