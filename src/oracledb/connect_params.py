@@ -476,6 +476,7 @@ class ConnectParams:
         simple alias which is looked up in tnsnames.ora. Any connect parameters
         found in the connect string override any currently stored values.
         """
+        connect_string = connect_string.strip()
         if connect_string.startswith("("):
             self._parse_connect_descriptor(connect_string)
         elif not self._parse_ezconnect_string(connect_string):
