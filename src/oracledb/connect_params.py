@@ -317,6 +317,10 @@ class ConnectParams:
                 temp_val = getattr(security_node, "ssl_server_cert_dn", None)
                 if temp_val is not None:
                     self.ssl_server_cert_dn = temp_val
+                temp_val = getattr(security_node, "ssl_server_dn_match", None)
+                if temp_val is not None:
+                    self.ssl_server_dn_match = \
+                            temp_val.lower() in ("on", "yes", "true")
                 temp_val = getattr(security_node, "my_wallet_directory", None)
                 if temp_val is not None:
                     self.wallet_location = temp_val
@@ -357,7 +361,8 @@ class ConnectParams:
                     if name == "ssl_server_cert_dn":
                         self.ssl_server_cert_dn = value
                     elif name == "ssl_server_dn_match":
-                        self.ssl_server_dn_match = value.lower() == "on"
+                        self.ssl_server_dn_match = \
+                                value.lower() in ("on", "yes", "true")
                     elif name == "wallet_location":
                         self.wallet_location = value
                     elif name == "expire_time":

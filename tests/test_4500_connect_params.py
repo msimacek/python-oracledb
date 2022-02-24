@@ -192,27 +192,49 @@ class TestCase(test_env.BaseTestCase):
 
     def test_4517_security_options(self):
         "4517 - test connect descriptor with security options"
-        params = oracledb.ConnectParams()
-        connect_string = \
-            '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=my_host19)(PORT=872))' \
-            '(CONNECT_DATA=(SERVICE_NAME=my_service_name19))' \
-            '(SECURITY=(SSL_SERVER_CERT_DN="CN=unknown19")' \
-            '(MY_WALLET_DIRECTORY="/wallet_loc19")))'
-        params.parse_connect_string(connect_string)
-        self.assertEqual(params.ssl_server_cert_dn, "CN=unknown19")
-        self.assertEqual(params.wallet_location, "/wallet_loc19")
+        options = [
+            ("CN=unknown19a", "/tmp/wallet_loc19a", "On", True),
+            ("CN=unknown19b", "/tmp/wallet_loc19b", "False", False),
+            ("CN=unknown19c", "/tmp/wallet_loc19c", "Off", False),
+            ("CN=unknown19d", "/tmp/wallet_loc19d", "True", True),
+            ("CN=unknown19e", "/tmp/wallet_loc19e", "yes", True),
+            ("CN=unknown19f", "/tmp/wallet_loc19f", "no", False)
+        ]
+        for dn, wallet_loc, match_option, match_value in options:
+            params = oracledb.ConnectParams()
+            connect_string = f"""
+                (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=my_host19)(PORT=872))
+                (CONNECT_DATA=(SERVICE_NAME=my_service_name19))
+                (SECURITY=(SSL_SERVER_CERT_DN="{dn}")
+                (SSL_SERVER_DN_MATCH={match_option})
+                (MY_WALLET_DIRECTORY="{wallet_loc}")))"""
+            params.parse_connect_string(connect_string)
+            self.assertEqual(params.ssl_server_cert_dn, dn)
+            self.assertEqual(params.wallet_location, wallet_loc)
+            self.assertEqual(params.ssl_server_dn_match, match_value)
 
     def test_4518_ezconnect_security_options(self):
         "4518 - test easy connect string with security options"
-        params = oracledb.ConnectParams()
-        connect_string = 'my_host20/my_server_name20?' \
-            'ssl_server_cert_dn="CN=unknown20"&' \
-            'ssl_server_dn_match= off &' \
-            'wallet_location = "/wallet_loc20"'
-        params.parse_connect_string(connect_string)
-        self.assertEqual(params.ssl_server_cert_dn, "CN=unknown20")
-        self.assertEqual(params.ssl_server_dn_match, False)
-        self.assertEqual(params.wallet_location, "/wallet_loc20")
+        options = [
+            ("CN=unknown20a", "/tmp/wallet_loc20a", "On", True),
+            ("CN=unknown20b", "/tmp/wallet_loc20b", "False", False),
+            ("CN=unknown20c", "/tmp/wallet_loc20c", "Off", False),
+            ("CN=unknown20d", "/tmp/wallet_loc20d", "True", True),
+            ("CN=unknown20e", "/tmp/wallet_loc20e", "yes", True),
+            ("CN=unknown20f", "/tmp/wallet_loc20f", "no", False)
+        ]
+        for dn, wallet_loc, match_option, match_value in options:
+            params = oracledb.ConnectParams()
+            connect_string = f'''
+                my_host20/my_server_name20?
+                ssl_server_cert_dn="{dn}"&
+                ssl_server_dn_match= {match_option} &
+                wallet_location = "{wallet_loc}"'''
+            params = oracledb.ConnectParams()
+            params.parse_connect_string(connect_string)
+            self.assertEqual(params.ssl_server_cert_dn, dn)
+            self.assertEqual(params.ssl_server_dn_match, match_value)
+            self.assertEqual(params.wallet_location, wallet_loc)
 
     def test_4519_ezconnect_description_options(self):
         "4519 - test easy connect string with description options"
