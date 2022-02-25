@@ -41,6 +41,7 @@ include "impl/thick/odpi.pxd"
 
 cdef dpiContext *driver_context = NULL
 
+driver_context_params = None
 client_version = None
 
 include "impl/thick/buffer.pyx"

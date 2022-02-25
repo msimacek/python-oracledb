@@ -437,8 +437,11 @@ def init_oracle_client(lib_dir=None, config_dir=None, error_url=None,
         dpiContextCreateParams params
         dpiErrorInfo error_info
         bytes encoding_bytes
+    global driver_context_params
+    params_tuple = (lib_dir, config_dir, error_url, driver_name)
     if driver_context != NULL:
-        errors._raise_err(errors.ERR_LIBRARY_ALREADY_INITIALIZED)
+        if params_tuple != driver_context_params:
+            errors._raise_err(errors.ERR_LIBRARY_ALREADY_INITIALIZED)
     driver_mode.check_and_return_mode(requested_thin_mode=False)
     memset(&params, 0, sizeof(dpiContextCreateParams))
     encoding_bytes = constants.ENCODING.encode()
@@ -463,3 +466,4 @@ def init_oracle_client(lib_dir=None, config_dir=None, error_url=None,
     if dpiContext_createWithParams(DPI_MAJOR_VERSION, DPI_MINOR_VERSION,
                                    &params, &driver_context, &error_info) < 0:
         _raise_from_info(&error_info)
+    driver_context_params = params_tuple

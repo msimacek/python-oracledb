@@ -242,7 +242,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_INVALID_SID: "listener doesn't recognize sid (see ORA-12505)",
     ERR_KEYWORD_ARGS_MUST_BE_DICT: "keyword arguments must be a dict",
     ERR_LIBRARY_ALREADY_INITIALIZED: \
-            "Oracle Client library has already been initialized",
+            "Oracle Client library has already been initialized with " \
+            "different arguments",
     ERR_LISTENER_REFUSED_CONNECTION: \
             "listener refused connection (see ORA-{error_code})",
     ERR_MESSAGE_HAS_NO_PAYLOAD: "message has no payload",
