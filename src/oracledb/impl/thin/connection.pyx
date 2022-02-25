@@ -107,6 +107,15 @@ cdef class ThinConnImpl(BaseConnImpl):
             statement._in_use = True
             return statement
 
+    cdef int _reset_statement_cache(self) except -1:
+        """
+        Reset the statement cache. This clears all statements and the list of
+        cursors that need to be cleared.
+        """
+        with self._statement_cache_lock:
+            self._statement_cache.clear()
+            self._num_cursors_to_close = 0
+
     cdef int _return_statement(self, Statement statement) except -1:
         """
         Return the statement to the statement cache, if applicable. If the
@@ -137,9 +146,6 @@ cdef class ThinConnImpl(BaseConnImpl):
 
     def change_password(self, str old_password, str new_password):
         self._protocol._change_password(self, old_password, new_password)
-
-    def get_is_healthy(self):
-        return not self._protocol._session_needs_to_be_closed
 
     def close(self, bint in_del=False):
         try:
@@ -203,6 +209,9 @@ cdef class ThinConnImpl(BaseConnImpl):
 
     def get_internal_name(self):
         return self._internal_name
+
+    def get_is_healthy(self):
+        return not self._protocol._session_needs_to_be_closed
 
     def get_ltxid(self):
         return self._ltxid or b''

@@ -72,6 +72,7 @@ cdef class Protocol:
                     self._process_message(RollbackMessage())
                 if conn_impl._drcp_enabled:
                     self._release_drcp_session(self._write_buf)
+                    conn_impl._reset_statement_cache()
 
             # if the connection is part of a pool, return it to the pool
             if conn_impl._pool is not None:
