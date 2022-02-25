@@ -47,7 +47,7 @@ cdef class Protocol:
                 buf = WriteBuffer(self._socket, TNS_SDU, self._caps)
                 self._send_marker(buf, TNS_MARKER_TYPE_INTERRUPT)
 
-    cpdef int _close(self, bint drcp_enabled) except -1:
+    cdef int _close(self, bint drcp_enabled) except -1:
         cdef WriteBuffer buf = self._write_buf
         if self._read_buf._socket is None:
             return 0
