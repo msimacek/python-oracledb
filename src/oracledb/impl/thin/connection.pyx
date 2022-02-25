@@ -142,13 +142,10 @@ cdef class ThinConnImpl(BaseConnImpl):
         return not self._protocol._session_needs_to_be_closed
 
     def close(self, bint in_del=False):
-        if self._pool is not None:
-            self._pool._free_busy_connection(self)
-        else:
-            try:
-                self._protocol._close(self._drcp_enabled)
-            except ssl.SSLError:
-                pass
+        try:
+            self._protocol._close(self)
+        except ssl.SSLError:
+            pass
 
     def commit(self):
         self._protocol._commit()

@@ -157,20 +157,6 @@ cdef class ThinPoolImpl(BasePoolImpl):
                 if conn_impl is None:
                     break
 
-    cdef int _free_busy_connection(self, ThinConnImpl connection) except -1:
-        if not connection._protocol._session_needs_to_be_closed:
-            connection.rollback()
-        with self._condition:
-            if connection._protocol._session_needs_to_be_closed:
-                self._conn_impls_to_close.append(connection)
-                with self._bg_thread_condition:
-                    self._bg_thread_condition.notify()
-            else:
-                self._free_used_conn_impls.append(connection)
-                connection._time_in_pool = time.monotonic()
-            self._busy_conn_impls.remove(connection)
-            self._condition.notify()
-
     cdef ThinConnImpl _get_connection_helper(self, object wait_timeout,
                                              uint32_t purity):
         cdef:
@@ -249,6 +235,19 @@ cdef class ThinPoolImpl(BasePoolImpl):
                 self._bg_thread_condition.notify()
             return False
         return self._getmode == constants.POOL_GETMODE_FORCEGET
+
+    cdef int _return_connection(self, ThinConnImpl conn_impl) except -1:
+        """
+        Returns the connection to the pool. If the connection was closed for
+        some reason it will be dropped; otherwise, it will be returned to the
+        list of connections available for further use.
+        """
+        with self._condition:
+            if conn_impl._protocol._socket is not None:
+                self._free_used_conn_impls.append(conn_impl)
+                conn_impl._time_in_pool = time.monotonic()
+            self._busy_conn_impls.remove(conn_impl)
+            self._condition.notify()
 
     cdef bytearray _xor_bytes(self, bytearray a, bytearray b):
         """

@@ -47,32 +47,40 @@ cdef class Protocol:
                 buf = WriteBuffer(self._socket, TNS_SDU, self._caps)
                 self._send_marker(buf, TNS_MARKER_TYPE_INTERRUPT)
 
-    cdef int _close(self, bint drcp_enabled) except -1:
-        cdef WriteBuffer buf = self._write_buf
-        if self._read_buf._socket is None:
-            return 0
+    cdef int _close(self, ThinConnImpl conn_impl) except -1:
+        """
+        Closes the connection. If a transaction is in progress it will be
+        rolled back. DRCP sessions will be released. For standalone
+        connections, the session will be logged off. For pooled connections,
+        the connection will be returned to the pool for subsequent use.
+        """
         with self._request_lock:
-            if self._txn_in_progress:
-                self._process_message(RollbackMessage())
-            if not drcp_enabled:
+
+            # if a read failed on the socket earlier, clear the socket
+            if self._read_buf._socket is None:
+                self._socket = None
+
+            # if the session was marked as needing to be closed, force it
+            # closed immediately (unless it was already closed)
+            if self._session_needs_to_be_closed and self._socket is not None:
+                self._force_close()
+
+            # rollback any open transaction and release the DRCP session, if
+            # applicable
+            if self._socket is not None:
+                if self._txn_in_progress:
+                    self._process_message(RollbackMessage())
+                if conn_impl._drcp_enabled:
+                    self._release_drcp_session(self._write_buf)
+
+            # if the connection is part of a pool, return it to the pool
+            if conn_impl._pool is not None:
+                conn_impl._pool._return_connection(conn_impl)
+
+            # otherwise, send the logoff message and final close
+            elif self._socket is not None:
                 self._process_message(LogoffMessage())
-
-            # if using DRCP, send session release
-            if drcp_enabled:
-                buf.start_request(TNS_PACKET_TYPE_DATA)
-                buf.write_uint8(TNS_MSG_TYPE_ONEWAY_FN)
-                buf.write_uint8(TNS_FUNC_SESSION_RELEASE)
-                buf.write_uint8(0)          # seq number
-                buf.write_uint8(0)          # pointer (tag name)
-                buf.write_uint8(0)          # tag name length
-                buf.write_ub4(0)            # mode
-                buf.end_request()
-
-            # send final close
-            buf.start_request(TNS_PACKET_TYPE_DATA, 0x0040)
-            buf.end_request()
-            self._socket.shutdown(socket.SHUT_RDWR)
-            self._socket.close()
+                self._final_close(self._write_buf)
 
     cdef int _commit(self) except -1:
         with self._request_lock:
@@ -183,6 +191,16 @@ cdef class Protocol:
             else:
                 message = FetchMessage(cursor, cursor_impl)
             self._process_message(message)
+
+    cdef int _final_close(self, WriteBuffer buf) except -1:
+        """
+        Send the final close packet to the server and close the socket.
+        """
+        buf.start_request(TNS_PACKET_TYPE_DATA, 0x0040)
+        buf.end_request()
+        self._socket.shutdown(socket.SHUT_RDWR)
+        self._socket.close()
+        self._socket = None
 
     cdef int _force_close(self) except -1:
         """
@@ -308,6 +326,19 @@ cdef class Protocol:
                 errors._raise_err(errors.ERR_INVALID_SID)
             errors._raise_err(errors.ERR_LISTENER_REFUSED_CONNECTION,
                               error_code=error_code)
+
+    cdef int _release_drcp_session(self, WriteBuffer buf) except -1:
+        """
+        Release the session back to DRCP.
+        """
+        buf.start_request(TNS_PACKET_TYPE_DATA)
+        buf.write_uint8(TNS_MSG_TYPE_ONEWAY_FN)
+        buf.write_uint8(TNS_FUNC_SESSION_RELEASE)
+        buf.write_uint8(0)                  # seq number
+        buf.write_uint8(0)                  # pointer (tag name)
+        buf.write_uint8(0)                  # tag name length
+        buf.write_ub4(0)                    # mode
+        buf.end_request()
 
     cdef int _reset(self, Message message) except -1:
         cdef uint8_t marker_type
