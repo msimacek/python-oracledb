@@ -1,12 +1,13 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2021, 2022 Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 from . import errors
 
-# the driver only supports creating connections/pools with either the thin
+# The driver only supports creating connections and pools with either the thin
 # implementation or the thick implementation, not both simultaneously; this
 # flag is used to indicate which mode is currently being used:
+#
 # None: neither thick nor thin implementation has been used yet
 # False: thick implementation is being used
 # True: thin implementation is being used
@@ -14,16 +15,22 @@ thin_mode = None
 
 def check_and_return_mode(requested_thin_mode=None):
     """
-    Returns the current state of the driver. If neither the thick nor the thin
-    implementation have been used yet (thin_mode=None), the mode is set to the
-    requested mode (or thin, if no mode is requested) and returned; otherwise,
-    if the mode requested is specified and does not match the current mode, an
-    error is raised.
+    Internal function to return the current mode of python-oracledb.
 
-    NOTE: the current implementation of the driver only requires the requested
-    thin mode to be set when initializing the thick driver; for this reason the
-    error raised is specified about a thin connection already being created. If
-    this assumption changes, a new error message will be required.
+    If neither the thick nor the thin implementation have been used yet (the
+    value of thin_mode is None), then:
+
+      - the mode is set to the requested mode, or
+
+      - the mode is set to thin, if no mode is requested.
+
+    Otherwise, if requested_thin_mode is used and the mode requested
+    does not match the current mode, an error is raised.
+
+    NOTE: the current implementation of the driver only requires
+    requested_thin_mode to be set when initializing the thick driver; for this
+    reason the error raised is specified about a thin connection already being
+    created. If this assumption changes, a new error message will be required.
     """
     global thin_mode
     if thin_mode is None:
