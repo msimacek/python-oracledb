@@ -282,7 +282,7 @@ class BaseTestCase(unittest.TestCase):
 
     def is_on_oracle_cloud(self, connection=None):
         server = get_server_version()
-        if server < (18,0):
+        if server < (18, 0):
             return False
         if connection is None:
             connection = self.connection
