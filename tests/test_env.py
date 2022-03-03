@@ -281,14 +281,17 @@ class BaseTestCase(unittest.TestCase):
         return self.connection.getSodaDatabase()
 
     def is_on_oracle_cloud(self, connection=None):
+        server = get_server_version()
+        if server < (18,0):
+            return False
         if connection is None:
             connection = self.connection
         cursor = connection.cursor()
         cursor.execute("""
-                select sys_context('userenv', 'service_name')
+                select sys_context('userenv', 'cloud_service')
                 from dual""")
         service_name, = cursor.fetchone()
-        return service_name.endswith("oraclecloud.com")
+        return service_name is not None
 
     def setUp(self):
         if self.requires_connection:
