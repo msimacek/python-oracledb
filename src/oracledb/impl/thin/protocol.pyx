@@ -94,8 +94,9 @@ cdef class Protocol:
         self._process_message(auth_message)
         self._process_message(auth_message)
 
-    cdef _connect(self, ThinConnImpl conn, object params, str connect_string,
-                  str password, str newpassword):
+    cdef _connect(self, ThinConnImpl conn, object params, object description,
+                  str connect_string, object address, str password,
+                  str newpassword):
         cdef:
             ConnectMessage connect_message
             object temp_sock, ssl_context
@@ -125,8 +126,8 @@ cdef class Protocol:
             # for TCPS connections that require a wallet, the socket must be
             # rewrapped in order to be usable; disable the check on the host
             # name, however, as that has already been done successfully
-            if params.protocol == "tcps" \
-                    and params.wallet_location is not None:
+            if address.protocol == "tcps" \
+                    and description.wallet_location is not None:
                 ssl_context = self._socket.context
                 ssl_context.check_hostname = False
                 sock = socket.socket(fileno=self._socket.detach())
@@ -154,8 +155,8 @@ cdef class Protocol:
         # key and the second time to return the response to the challenge
         auth_message = AuthMessage(conn, password, newpassword)
         auth_message._set_auth_mode(params.mode)
-        auth_message.cclass = params.cclass
-        auth_message.purity = params.purity
+        auth_message.cclass = description.cclass
+        auth_message.purity = description.purity
         self._process_message(auth_message)
         self._process_message(auth_message)
 

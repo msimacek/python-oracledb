@@ -52,31 +52,76 @@ cdef class ThinConnImpl(BaseConnImpl):
             elif stmt._cursor_id != 0:
                 self._add_cursor_to_close(stmt)
 
+    cdef object _connect_with_description(self, description):
+        cdef:
+            unsigned long timeout = description.tcp_connect_timeout
+            bint load_balance = description.load_balance, raise_exc
+            list address_lists = description.address_lists
+            uint32_t i, j, k, num_addresses, idx1, idx2
+            uint32_t num_attempts = description.retry_count + 1
+            uint32_t num_lists = len(address_lists)
+            object address
+        # Retry connecting to the socket if an attempt fails and retry_count
+        # is specified in the connect string. If an attempt succeeds, return
+        # the socket and the valid address object.
+        for i in range(num_attempts):
+            # Iterate through each address_list in the description. If the
+            # description level load_balance is on, keep track of the least
+            # recently used address for subsequent connections. If not,
+            # iterate through the list in order.
+            for j in range(num_lists):
+                if load_balance:
+                    idx1 = (j + description.lru_index) % num_lists
+                else:
+                    idx1 = j
+                address_list = address_lists[idx1]
+                num_addresses = len(address_list.addresses)
+                # Iterate through each address in an address_list. If the
+                # address_list level load_balance is on, keep track of the
+                # least recently used address for subsequent connections. If
+                # not, iterate through the list in order.
+                for k in range(num_addresses):
+                    if address_list.load_balance:
+                        idx2 = (k + address_list.lru_index) % num_addresses
+                    else:
+                        idx2 = k
+                    address = address_list.addresses[idx2]
+                    raise_exc = i == num_attempts - 1
+                    sock = self._get_socket(address, timeout, raise_exc)
+                    if sock is None:
+                        continue
+                    address_list.lru_index = (idx1 + 1) % num_addresses
+                    description.lru_index = (idx2 + 1) % num_lists
+                    return (sock, address)
+            time.sleep(description.retry_delay)
+
     cdef int _force_close(self) except -1:
         self._pool = None
         self._protocol._force_close()
 
-    cdef object _get_socket(self, object params, bint raise_exception):
+    cdef object _get_socket(self, object address,
+                            uint32_t tcp_connect_timeout,
+                            bint raise_exception):
         """
-	Get a socket on which to communicate using the provided parameters. If
-	a proxy is configured, a connection to the proxy is established and the
+	    Get a socket on which to communicate using the provided parameters. If
+	    a proxy is configured, a connection to the proxy is established and the
         target host and port is forwarded to the proxy before the socket is
         returned.
         """
-        cdef bint use_proxy = (params.https_proxy is not None)
+        cdef bint use_proxy = (address.https_proxy is not None)
         if use_proxy:
-            connect_info = (params.https_proxy, params.https_proxy_port)
+            connect_info = (address.https_proxy, address.https_proxy_port)
         else:
-            connect_info = (params.host, params.port)
+            connect_info = (address.host, address.port)
         try:
             sock = socket.create_connection(connect_info,
-                                            params.tcp_connect_timeout)
-        except socket.gaierror:
+                                            tcp_connect_timeout)
+        except (socket.gaierror, ConnectionRefusedError):
             if raise_exception:
                 raise
             return None
         if use_proxy:
-            data = f"CONNECT {params.host}:{params.port} HTTP/1.0\r\n\r\n"
+            data = f"CONNECT {address.host}:{address.port} HTTP/1.0\r\n\r\n"
             sock.send(data.encode())
             reply = sock.recv(1024)
             match = re.search('HTTP/1.[01]\\s+(\\d+)\\s+', reply.decode())
@@ -157,29 +202,41 @@ cdef class ThinConnImpl(BaseConnImpl):
         self._protocol._commit()
 
     def connect(self, params, str password, str newpassword=None):
-        cdef unsigned long num_attempts = params.retry_count + 1
-        for i in range(num_attempts):
-            sock = self._get_socket(params, i == num_attempts - 1)
-            if sock is not None:
+        cdef:
+            object description_list = params._description_list
+            list descriptions = description_list.descriptions
+            uint32_t num_descriptions = len(descriptions)
+            uint32_t i, idx
+        for i in range(num_descriptions):
+            if description_list.load_balance:
+                idx = (i + description_list.lru_index) % num_descriptions
+            else:
+                idx = i
+            description = descriptions[idx]
+            ret_tuple = self._connect_with_description(description)
+            if ret_tuple is not None:
+                sock, address = ret_tuple
+                description_list.lru_index = (idx + 1) % num_descriptions
                 break
-            time.sleep(params.retry_delay)
-        if params.expire_time > 0:
+        if description.expire_time > 0:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        if params.expire_time > 0 \
+        if description.expire_time > 0 \
                 and hasattr(socket, "TCP_KEEPIDLE") \
                 and hasattr(socket, "TCP_KEEPINTVL") \
                 and hasattr(socket, "TCP_KEEPCNT"):
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE,
-                            params.expire_time * 60)
+                            description.expire_time * 60)
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 6)
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)
         sock.settimeout(None)
-        if params.protocol == "tcps":
+        if address.protocol == "tcps":
             sock = get_ssl_socket(sock, params)
         self._protocol = Protocol(sock)
-        redirect_data = self._protocol._connect(self, params,
-                                                _get_connect_data(params),
-                                                password, newpassword)
+        redirect_data = self._protocol._connect(self, params, description,
+                                                _get_connect_data(params,
+                                                address, description),
+                                                address, password,
+                                                newpassword)
         if redirect_data is None:
             self._statement_cache = collections.OrderedDict()
             self._statement_cache_size = params.stmtcachesize
