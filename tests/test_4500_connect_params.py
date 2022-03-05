@@ -309,5 +309,77 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(params.port, 1148)
         self.assertEqual(params.service_name, "my_service_name24")
 
+    def test_4525_single_address_list(self):
+        "4525 - test connect string with an address list"
+        params = oracledb.ConnectParams()
+        connect_string = \
+            '(DESCRIPTION=(LOAD_BALANCE=ON)(RETRY_COUNT=5)(RETRY_DELAY=2)'  \
+            '(ADDRESS_LIST=(LOAD_BALANCE=ON)' \
+            '(ADDRESS=(PROTOCOL=tcp)(PORT=1521)(HOST=my_host25))' \
+            '(ADDRESS=(PROTOCOL=tcps)(PORT=222)(HOST=my_host26)))' \
+            '(CONNECT_DATA=(SERVICE_NAME=my_service_name25)))'
+        params.parse_connect_string(connect_string)
+        self.assertEqual(params.host, ["my_host25", "my_host26"])
+        self.assertEqual(params.port, [1521, 222])
+        self.assertEqual(params.protocol, ["tcp", "tcps"])
+        self.assertEqual(params.service_name, "my_service_name25")
+        self.assertEqual(params.retry_count, 5)
+        self.assertEqual(params.retry_delay, 2)
+
+    def test_4526_multiple_address_lists(self):
+        "4526 - test connect string with multiple address lists"
+        params = oracledb.ConnectParams()
+        connect_string = \
+            '(DESCRIPTION=(LOAD_BALANCE=ON)(RETRY_COUNT=5)(RETRY_DELAY=2)'  \
+            '(ADDRESS_LIST=(LOAD_BALANCE=ON)' \
+            '(ADDRESS=(PROTOCOL=tcp)(PORT=1521)(HOST=my_host26))' \
+            '(ADDRESS=(PROTOCOL=tcp)(PORT=222)(HOST=my_host27)))' \
+            '(ADDRESS_LIST=(LOAD_BALANCE=ON)' \
+            '(ADDRESS=(PROTOCOL=tcps)(PORT=5555)(HOST=my_host28))' \
+            '(ADDRESS=(PROTOCOL=tcps)(PORT=444)(HOST=my_host29)))' \
+            '(CONNECT_DATA=(SERVICE_NAME=my_service_name26)))'
+        params.parse_connect_string(connect_string)
+        hosts = ["my_host26", "my_host27", "my_host28", "my_host29"]
+        self.assertEqual(params.host, hosts)
+        self.assertEqual(params.port, [1521, 222, 5555, 444])
+        self.assertEqual(params.protocol, ["tcp", "tcp", "tcps", "tcps"])
+        self.assertEqual(params.service_name, "my_service_name26")
+        self.assertEqual(params.retry_count, 5)
+        self.assertEqual(params.retry_delay, 2)
+
+    def test_4527_multiple_descriptions(self):
+        "4527 - test connect string with multiple descriptions"
+        params = oracledb.ConnectParams()
+        connect_string = \
+            '(DESCRIPTION_LIST=(FAIL_OVER=ON)(LOAD_BALANCE=OFF)' \
+            '(DESCRIPTION=(LOAD_BALANCE=OFF)(RETRY_COUNT=1)(RETRY_DELAY=1)' \
+            '(ADDRESS_LIST=(ADDRESS=(PROTOCOL=tcp)(PORT=5001)' \
+            '(HOST=my_host30))' \
+            '(ADDRESS=(PROTOCOL=tcp)(PORT=1521)(HOST=my_host31)))' \
+            '(ADDRESS_LIST=(ADDRESS=(PROTOCOL=tcp)(PORT=5002) ' \
+            '(HOST=my_host32))' \
+            '(ADDRESS=(PROTOCOL=tcp)(PORT=5003)(HOST=my_host33)))' \
+            '(CONNECT_DATA=(SERVICE_NAME=my_service_name27)))' \
+            '(DESCRIPTION=(LOAD_BALANCE=OFF)(RETRY_COUNT=2)(RETRY_DELAY=3)' \
+            '(ADDRESS_LIST = (ADDRESS=(PROTOCOL=tcp)(PORT=5001)' \
+            '(HOST=my_host34))' \
+            '(ADDRESS=(PROTOCOL=tcp)(PORT=5001)(HOST=my_host35)))' \
+            '(ADDRESS_LIST=(ADDRESS=(PROTOCOL=tcp)(PORT=5001)' \
+            '(HOST=my_host36))' \
+            '(ADDRESS=(PROTOCOL=tcps)(HOST=my_host37)(PORT=1521)))' \
+            '(CONNECT_DATA=(SERVICE_NAME=my_service_name28))))'
+        params.parse_connect_string(connect_string)
+        hosts = ["my_host30", "my_host31", "my_host32", "my_host33", \
+                 "my_host34", "my_host35", "my_host36", "my_host37"]
+        ports = [5001, 1521, 5002, 5003, 5001, 5001, 5001, 1521]
+        protocols = ["tcp", "tcp", "tcp", "tcp", "tcp", "tcp", "tcp", "tcps"]
+        service_names = ["my_service_name27", "my_service_name28"]
+        self.assertEqual(params.host, hosts)
+        self.assertEqual(params.port, ports)
+        self.assertEqual(params.protocol, protocols)
+        self.assertEqual(params.service_name, service_names)
+        self.assertEqual(params.retry_count, [1, 2])
+        self.assertEqual(params.retry_delay, [1, 3])
+
 if __name__ == "__main__":
     test_env.run_test_cases()

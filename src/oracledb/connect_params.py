@@ -5,7 +5,7 @@
 import copy
 import os
 import sys
-from typing import Type
+from typing import Type, Union
 
 from . import constants, errors, exceptions
 from .defaults import defaults
@@ -164,17 +164,11 @@ class ConnectParams:
 
         https_proxy_port: the port on which to communicate with the proxy host
         """
-        self.host = host
-        self.port = port = port if port is not None else defaults.port
-        self.service_name = service_name
-        self.sid = sid
+
         self.events = events if events is not None else defaults.events
-        self._set_protocol(protocol)
         self.enable_drcp = enable_drcp
         self.config_dir = config_dir if config_dir is not None \
                 else defaults.config_dir
-        self.cclass = cclass
-        self.purity = purity
         self.mode = mode
         self.edition = edition
         self.appcontext = appcontext if appcontext is not None else []
@@ -187,20 +181,39 @@ class ConnectParams:
                 else defaults.stmtcachesize
         self.disable_oob = disable_oob if disable_oob is not None \
                 else defaults.disable_oob
-        self.ssl_server_dn_match = ssl_server_dn_match \
+        # build Address object
+        port = port if port is not None else defaults.port
+        address = Address(host, port, protocol.lower())
+        address.https_proxy = https_proxy
+        address.https_proxy_port = https_proxy_port
+
+        # build AddressList object
+        address_list = AddressList()
+        address_list.addresses.append(address)
+
+        # build description object
+        description = Description()
+        description.service_name = service_name
+        description.sid = sid
+        description.cclass = cclass
+        description.purity = purity
+        description.ssl_server_dn_match = ssl_server_dn_match \
                 if ssl_server_dn_match is not None \
                 else defaults.ssl_server_dn_match
-        self.ssl_server_cert_dn = ssl_server_cert_dn
-        self.retry_count = retry_count
-        self.retry_delay = retry_delay
-        self.expire_time = expire_time
-        self.tcp_connect_timeout = tcp_connect_timeout \
+        description.ssl_server_cert_dn = ssl_server_cert_dn
+        description.retry_count = retry_count
+        description.retry_delay = retry_delay
+        description.expire_time = expire_time
+        description.tcp_connect_timeout = tcp_connect_timeout \
                 if tcp_connect_timeout is not None \
                 else defaults.tcp_connect_timeout
-        self.wallet_location = wallet_location
-        self.wallet_password = wallet_password
-        self.https_proxy = https_proxy
-        self.https_proxy_port = https_proxy_port
+        description.wallet_location = wallet_location
+        description.wallet_password = wallet_password
+        description.address_lists.append(address_list)
+
+        # build description list object
+        self._description_list = DescriptionList()
+        self._description_list.descriptions.append(description)
 
     def __repr__(self):
         return f"ConnectParams(" \
@@ -231,7 +244,188 @@ class ConnectParams:
                f"tcp_connect_timeout={self.tcp_connect_timeout!r}, " \
                f"wallet_location={self.wallet_location!r})"
 
-    def _get_tnsnames_file(self) -> Type["TnsNamesFile"]:
+    def _address_attr(f):
+        """
+        Helper function used to get address level attributes.
+        """
+        def wrapped_func(self):
+            output = []
+            for description in self._description_list.descriptions:
+                for address_list in description.address_lists:
+                    for address in address_list.addresses:
+                        val = getattr(address, f.__name__, None)
+                        output.append(val)
+            return output if len(output) > 1 else output[0]
+        return wrapped_func
+
+    def _description_attr(f):
+        """
+        Helper function used to get description level attributes.
+        """
+        def wrapped_func(self):
+            output = []
+            for description in self._description_list.descriptions:
+                val = getattr(description, f.__name__, None)
+                output.append(val)
+            return output if len(output) > 1 else output[0]
+        return wrapped_func
+
+    @property
+    @_description_attr
+    def cclass(self) -> Union[list, str]:
+        """
+        Returns the cclass associated with each description in the
+        connect string. If the connect string contains multiple descriptions,
+        a list of cclass is returned in the order they appear.
+        """
+        pass
+
+    @property
+    @_description_attr
+    def expire_time(self) -> Union[list, int]:
+        """
+        Returns the expire_times associated with each description in the
+        connect string. If the connect string contains multiple descriptions,
+        a list of expire_times is returned in the order they appear.
+        """
+        pass
+
+    @property
+    @_address_attr
+    def host(self) -> Union[list, str]:
+        """
+        Returns the host associated with the address in the connect string.
+        If the connect string contains multiple addresses, a list of hosts
+        is returned in the order they appear.
+        """
+        pass
+
+    @property
+    @_address_attr
+    def port(self) -> Union[list, int]:
+        """
+        Returns the port associated with the address in the connect string. If
+        the connect string contains multiple addresses, a list of ports is
+        returned in the order they appear.
+        """
+        pass
+
+    @property
+    @_address_attr
+    def protocol(self) -> Union[list, str]:
+        """
+        Returns the protocol associated with the address in the connect
+        string. If the connect string contains multiple addresses, a list of
+        protocols is returned in the order they appear.
+        """
+        pass
+
+    @property
+    @_description_attr
+    def purity(self) -> Union[list, int]:
+        """
+        Returns the purity associated with each description in the connect
+        string. If the connect string contains multiple descriptions, a list
+        of purity is returned in the order they appear.
+        """
+        pass
+
+    @property
+    @_description_attr
+    def service_name(self) -> Union[list, str]:
+        """
+        Returns the service_names associated with each description in the
+        connect string. If the connect string contains multiple descriptions,
+        a list of service_names is returned in the order they appear.
+        """
+        pass
+
+    @property
+    @_description_attr
+    def sid(self) -> Union[list, str]:
+        """
+        Returns the sid associated with each description in the connect
+        string. If the connect string contains multiple descriptions, a list
+        of sid is returned in the order they appear.
+        """
+        pass
+
+    @property
+    @_description_attr
+    def retry_count(self) -> Union[list, int]:
+        """
+        Returns the retry_counts associated with each description in the
+        connect string. If the connect string contains multiple descriptions,
+        a list of retry_counts is returned in the order they appear.
+        """
+        pass
+
+    @property
+    @_description_attr
+    def retry_delay(self) -> Union[list, int]:
+        """
+        Returns the retry_delays associated with each description in the
+        connect string. If the connect string contains multiple descriptions,
+        a list of retry_delays is returned in the order they appear.
+        """
+        pass
+
+    @property
+    @_description_attr
+    def ssl_server_dn_match(self) -> Union[list, bool]:
+        """
+        Returns the ssl_server_dn_match associated with each description in
+        the connect string. If the connect string contains multiple
+        descriptions, a list of ssl_server_dn_match is returned in the order
+        they appear.
+        """
+        pass
+
+    @property
+    @_description_attr
+    def ssl_server_cert_dn(self) -> Union[list, str]:
+        """
+        Returns the ssl_server_cert_dn associated with each description in
+        the connect string. If the connect string contains multiple
+        descriptions, a list of ssl_server_cert_dn is returned in the order
+        they appear.
+        """
+        pass
+
+    @property
+    @_description_attr
+    def tcp_connect_timeout(self) -> Union[list, float]:
+        """
+        Returns the tcp_connect_timeout associated with each description in
+        the connect string. If the connect string contains multiple
+        descriptions, a list of tcp_connect_timeout is returned in the order
+        they appear.
+        """
+        pass
+
+    @property
+    @_description_attr
+    def wallet_location(self) -> Union[list, str]:
+        """
+        Returns the wallet_location associated with each description in
+        the connect string. If the connect string contains multiple
+        descriptions, a list of wallet_location is returned in the order
+        they appear.
+        """
+        pass
+
+    @property
+    @_description_attr
+    def wallet_password(self) -> Union[list, str]:
+        """
+        Returns the wallet_password associated with each description in
+        the connect string. If the connect string contains multiple
+        descriptions, a list of wallet_password is returned in the order
+        they appear.
+        """
+        pass
+
+    def _get_tnsnames_file(self):
         """
         Return a tnsnames file, if one is present, or None if one is not. If
         the file was previously loaded, the modification time is checked and,
@@ -268,62 +462,122 @@ class ConnectParams:
             return float(value[:-3].strip()) * 60
         return float(value.strip())
 
-    def _parse_connect_descriptor(self, connect_string: str) -> None:
+    def _parse_address(self, address_node):
+        """
+        Internal method used for parsing addresses in the connect string and
+        creating Address objects for each address.
+        """
+        host = getattr(address_node, "host", None)
+        port = getattr(address_node, "port", None)
+        protocol = getattr(address_node, "protocol", "tcp")
+        https_proxy = getattr(address_node, "https_proxy", None)
+        https_proxy_port = getattr(address_node, "https_proxy_port",
+                                    None)
+        if port is not None:
+            port = int(port)
+        if https_proxy_port is not None:
+            https_proxy_port = int(https_proxy_port)
+        address = Address(host, port, protocol.lower())
+        address.https_proxy = https_proxy
+        address.https_proxy_port = https_proxy_port
+        return address
+
+    def _parse_address_list(self, address_list_nodes):
+        """
+        Internal method used for parsing address lists in the connect string
+        and creating Address objects for each address in the address lists.
+        """
+        address_lists = []
+        for address_list_node in address_list_nodes:
+            address_list = AddressList()
+            temp_val = getattr(address_list_node, "load_balance", None)
+            if temp_val is not None:
+                address_list.load_balance = \
+                        temp_val.lower() in ("on", "yes", "true")
+            for address_node in address_list_node.address:
+                address = self._parse_address(address_node)
+                address_list.addresses.append(address)
+            address_lists.append(address_list)
+        return address_lists
+
+    def _parse_description(self, description_node):
+        """
+        Internal method used for parsing descriptions in the connect string
+        and creating Description objects for each description in the connect
+        string.
+        """
+        description = Description()
+        temp_val = getattr(description_node, "expire_time", None)
+        if temp_val is not None:
+            description.expire_time = int(temp_val)
+        temp_val = getattr(description_node, "retry_count", None)
+        if temp_val is not None:
+            description.retry_count = int(temp_val)
+        temp_val = getattr(description_node, "retry_delay", None)
+        if temp_val is not None:
+            description.retry_delay = int(temp_val)
+        temp_val = getattr(description_node, "transport_connect_timeout",
+                            None)
+        if temp_val is not None:
+            description.tcp_connect_timeout = self._parse_time_value(temp_val)
+        temp_val = getattr(description_node, "address_list", None)
+        if temp_val is not None:
+            address_lists = self._parse_address_list(temp_val)
+            description.address_lists = address_lists
+        else:
+            address_node = description_node.address[0]
+            address = self._parse_address(address_node)
+            description.address_lists = [AddressList()]
+            description.address_lists[0].addresses.append(address)
+        temp_val = getattr(description_node, "load_balance", None)
+        if temp_val is not None:
+            description.load_balance = \
+                    temp_val.lower() in ("on", "yes", "true")
+        connect_data_node = description_node.connect_data
+        description.service_name = getattr(connect_data_node, "service_name",
+                                    None)
+        description.sid = getattr(connect_data_node, "sid", None)
+        temp_val = getattr(connect_data_node, "pool_connection_class",
+                            None)
+        if temp_val is not None:
+            description.cclass = temp_val
+        temp_val = getattr(connect_data_node, "pool_purity", None)
+        if temp_val is not None:
+            temp_val = temp_val.lower()
+            if temp_val not in ("new", "self"):
+                errors._raise_err(errors.ERR_INVALID_POOL_PURITY,
+                                    purity=temp_val)
+            description.purity = constants.PURITY_NEW if temp_val == "new" \
+                    else constants.PURITY_ANY
+        security_node = getattr(description_node, "security", None)
+        if security_node is not None:
+            temp_val = getattr(security_node, "ssl_server_cert_dn", None)
+            if temp_val is not None:
+                description.ssl_server_cert_dn = temp_val
+            temp_val = getattr(security_node, "ssl_server_dn_match", None)
+            if temp_val is not None:
+                description.ssl_server_dn_match = \
+                        temp_val.lower() in ("on", "yes", "true")
+            temp_val = getattr(security_node, "my_wallet_directory", None)
+            if temp_val is not None:
+                description.wallet_location = temp_val
+        return description
+
+    def _parse_connect_descriptor(self, connect_string):
         """
         Internal method used for parsing connect data (name-value pairs).
         """
         node = parse_connect_descriptor(connect_string.strip())
         try:
-            description_node = node.description
-            temp_val = getattr(description_node, "expire_time", None)
+            temp_val = getattr(node, "description_list", None)
             if temp_val is not None:
-                self.expire_time = int(temp_val)
-            temp_val = getattr(description_node, "retry_count", None)
-            if temp_val is not None:
-                self.retry_count = int(temp_val)
-            temp_val = getattr(description_node, "retry_delay", None)
-            if temp_val is not None:
-                self.retry_delay = int(temp_val)
-            temp_val = getattr(description_node, "transport_connect_timeout",
-                               None)
-            if temp_val is not None:
-                self.tcp_connect_timeout = self._parse_time_value(temp_val)
-            address_node = description_node.address
-            self._set_protocol(address_node.protocol.lower())
-            self.host = address_node.host
-            self.port = int(address_node.port)
-            self.https_proxy = getattr(address_node, "https_proxy", None)
-            temp_val = getattr(address_node, "https_proxy_port", None)
-            if temp_val is not None:
-                self.https_proxy_port = int(temp_val)
-            connect_data_node = node.description.connect_data
-            self.service_name = getattr(connect_data_node, "service_name",
-                                        None)
-            self.sid = getattr(connect_data_node, "sid", None)
-            temp_val = getattr(connect_data_node, "pool_connection_class",
-                               None)
-            if temp_val is not None:
-                self.cclass = temp_val
-            temp_val = getattr(connect_data_node, "pool_purity", None)
-            if temp_val is not None:
-                temp_val = temp_val.lower()
-                if temp_val not in ("new", "self"):
-                    errors._raise_err(errors.ERR_INVALID_POOL_PURITY,
-                                      purity=temp_val)
-                self.purity = constants.PURITY_NEW if temp_val == "new" \
-                        else constants.PURITY_ANY
-            security_node = getattr(node.description, "security", None)
-            if security_node is not None:
-                temp_val = getattr(security_node, "ssl_server_cert_dn", None)
-                if temp_val is not None:
-                    self.ssl_server_cert_dn = temp_val
-                temp_val = getattr(security_node, "ssl_server_dn_match", None)
-                if temp_val is not None:
-                    self.ssl_server_dn_match = \
-                            temp_val.lower() in ("on", "yes", "true")
-                temp_val = getattr(security_node, "my_wallet_directory", None)
-                if temp_val is not None:
-                    self.wallet_location = temp_val
+                for description_node in temp_val.description:
+                    description = self._parse_description(description_node)
+                    self._description_list.descriptions.append(description)
+            else:
+                description_node = node.description[0]
+                description = self._parse_description(description_node)
+                self._description_list.descriptions.append(description)
         except exceptions.Error:
             raise
         except Exception as e:
@@ -343,15 +597,15 @@ class ConnectParams:
         try:
 
             # parse protocol
-            protocol = None
+            protocol = "tcp"
             protocol_pos = connect_string.find("://")
             if protocol_pos > 0:
                 protocol = connect_string[:protocol_pos]
-                self._set_protocol(protocol.lower())
                 connect_string = connect_string[protocol_pos + 3:]
 
             # parse parameters
             params_pos = connect_string.find("?")
+            description = Description()
             if params_pos > 0:
                 for part in connect_string[params_pos + 1:].split("&"):
                     name, value = [s.strip() for s in part.split("=", 1)]
@@ -359,20 +613,20 @@ class ConnectParams:
                     if value.startswith('"') and value.endswith('"'):
                         value = value[1:-1]
                     if name == "ssl_server_cert_dn":
-                        self.ssl_server_cert_dn = value
+                        description.ssl_server_cert_dn = value
                     elif name == "ssl_server_dn_match":
-                        self.ssl_server_dn_match = \
+                        description.ssl_server_dn_match = \
                                 value.lower() in ("on", "yes", "true")
                     elif name == "wallet_location":
-                        self.wallet_location = value
+                        description.wallet_location = value
                     elif name == "expire_time":
-                        self.expire_time = int(value)
+                        description.expire_time = int(value)
                     elif name == "retry_delay":
-                        self.retry_delay = int(value)
+                        description.retry_delay = int(value)
                     elif name == "retry_count":
-                        self.retry_count = int(value)
+                        description.retry_count = int(value)
                     elif name == "transport_connect_timeout":
-                        self.tcp_connect_timeout = float(value)
+                        description.tcp_connect_timeout = float(value)
                     else:
                         raise Exception(f"unknown parameter name: {name}")
                 connect_string = connect_string[:params_pos]
@@ -380,26 +634,34 @@ class ConnectParams:
             # parse service name and server type
             slash_pos = connect_string.find("/")
             if slash_pos < 0:
-                self.service_name = ""
+                description.service_name = ""
             else:
-                self.service_name = connect_string[slash_pos + 1:]
+                description.service_name = connect_string[slash_pos + 1:]
                 drcp_suffix = ":POOLED"
-                if self.service_name.upper().endswith(drcp_suffix):
+                if description.service_name.upper().endswith(drcp_suffix):
                     self.enable_drcp = True
-                    self.service_name = self.service_name[:-len(drcp_suffix)]
+                    description.service_name = description.service_name[:-len(drcp_suffix)]
                 connect_string = connect_string[:slash_pos]
 
             # parse host and port
+            port = 1521
             colon_pos = connect_string.find(":")
             if colon_pos >= 0:
-                port = connect_string[colon_pos + 1:]
-                if port:
-                    self.port = int(port)
+                port_str = connect_string[colon_pos + 1:]
+                if port_str:
+                    port = int(port_str)
                 connect_string = connect_string[:colon_pos]
             elif slash_pos < 0:
                 return False
-            self.host = connect_string
+            host = connect_string
 
+            # create Address object with the parsed host, port and protocol
+            if protocol is None:
+                protocol = "tcp"
+            address = Address(host, port, protocol.lower())
+            description.address_lists = [AddressList()]
+            description.address_lists[0].addresses.append(address)
+            self._description_list.descriptions.append(description)
             return True
 
         except exceptions.Error:
@@ -420,8 +682,9 @@ class ConnectParams:
                               data=redirect_data)
         node = parse_connect_descriptor(redirect_data[:pos])
         address_node = node.description.address
-        self.host = address_node.host
-        self.port = int(address_node.port)
+        address = Address(address_node.host, int(address_node.port))
+        self._description.address_lists = [AddressList()]
+        self._description.address_lists[0].addresses.append(address)
 
     def _search_tnsnames(self, name: str) -> None:
         """
@@ -449,15 +712,6 @@ class ConnectParams:
                 raise TypeError(message)
             setattr(self, name, keyword_args[name])
 
-    def _set_protocol(self, protocol: str) -> None:
-        """
-        Sets the specified protocol. Only tcp and tcps protocols are supported
-        at this time.
-        """
-        if protocol not in ("tcp", "tcps"):
-            errors._raise_err(errors.ERR_INVALID_PROTOCOL, protocol=protocol)
-        self.protocol = protocol
-
     def _supports_oob(self) -> bool:
         """
         Return a boolean indicating if the platform supports out-of-band urgent
@@ -481,6 +735,7 @@ class ConnectParams:
         simple alias which is looked up in tnsnames.ora. Any connect parameters
         found in the connect string override any currently stored values.
         """
+        self._description_list = DescriptionList()
         connect_string = connect_string.strip()
         if connect_string.startswith("("):
             self._parse_connect_descriptor(connect_string)
@@ -591,5 +846,69 @@ def parse_connect_descriptor(data, group=None):
             data = data[end_pos + 1:].strip()
     if group is None:
         group = NameValuePairGroup()
+    if name == "address_list" or name == "address" or name == "description":
+        temp_val = getattr(group, name, None)
+        if temp_val is None:
+            value = [value]
+        else:
+            temp_val.append(value)
+            value = temp_val
     setattr(group, name, value)
     return group
+
+class Address:
+    """
+    Constructor for creating an address object that holds the parameters
+    of an address that are used to create a connection.
+    """
+    def __init__(self, host, port, protocol="tcp"):
+        self.host = host
+        self.port = port if port is not None else defaults.port
+        if protocol not in ("tcp", "tcps"):
+            errors._raise_err(errors.ERR_INVALID_PROTOCOL, protocol=protocol)
+        self.protocol = protocol
+        self.https_proxy = None
+        self.https_proxy_port = None
+
+class AddressList:
+    """
+    Constructor for an address list object that holds parameters and a list of
+    addresses that are used to create connections.
+    """
+    def __init__(self):
+        self.addresses = []
+        self.load_balance = False
+        self.lru_index = 0
+
+class Description:
+    """
+    Constructor for a description object that holds description level
+    parameters.
+    """
+    def __init__(self):
+        self.address_lists = []
+        self.load_balance = False
+        self.lru_index = 0
+        self.expire_time = 0
+        self.retry_count = 0
+        self.retry_delay = 0
+        self.transport_connect_timeout = 0
+        self.tcp_connect_timeout = defaults.tcp_connect_timeout
+        self.service_name = None
+        self.sid = None
+        self.pool_connection_class = None
+        self.pool_purity = None
+        self.ssl_server_cert_dn = defaults.ssl_server_dn_match
+        self.wallet_location = None
+        self.cclass = None
+        self.purity = constants.PURITY_DEFAULT
+
+class DescriptionList:
+    """
+    Constructor for a description list object that holds description list
+    parameters and a list of descriptions.
+    """
+    def __init__(self):
+        self.descriptions = []
+        self.load_balance = False
+        self.lru_index = 0
