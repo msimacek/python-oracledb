@@ -23,15 +23,15 @@ cdef class ThinLobImpl(BaseLobImpl):
         if locator is not None:
             lob_impl._locator = locator
         else:
-            message = LobOpMessage()
             lob_impl._locator = bytes(40)
+            message = conn_impl._create_message(LobOpMessage)
             message.operation = TNS_LOB_OP_CREATE_TEMP
             message.amount = TNS_DURATION_SESSION
             message.send_amount = True
             message.source_lob_impl = lob_impl
             message.source_offset = dbtype._csfrm
             message.dest_offset = dbtype._ora_type_num
-            conn_impl._protocol._process_message(message)
+            conn_impl._protocol._process_single_message(message)
         return lob_impl
 
     cdef str _get_encoding(self):
@@ -45,10 +45,11 @@ cdef class ThinLobImpl(BaseLobImpl):
         """
         Internal method for closing a LOB that was opened earlier.
         """
-        cdef LobOpMessage message = LobOpMessage()
+        cdef LobOpMessage message
+        message = self._conn_impl._create_message(LobOpMessage)
         message.operation = TNS_LOB_OP_CLOSE
         message.source_lob_impl = self
-        self._conn_impl._protocol._process_message(message)
+        self._conn_impl._protocol._process_single_message(message)
 
     def free_lob(self):
         """
@@ -66,10 +67,11 @@ cdef class ThinLobImpl(BaseLobImpl):
         """
         Internal method for returning whether the LOB is open or not.
         """
-        cdef LobOpMessage message = LobOpMessage()
+        cdef LobOpMessage message
+        message = self._conn_impl._create_message(LobOpMessage)
         message.operation = TNS_LOB_OP_IS_OPEN
         message.source_lob_impl = self
-        self._conn_impl._protocol._process_message(message)
+        self._conn_impl._protocol._process_single_message(message)
         return message.bool_flag
 
     def get_max_amount(self):
@@ -82,33 +84,36 @@ cdef class ThinLobImpl(BaseLobImpl):
         """
         Internal method for returning the size of a LOB.
         """
-        cdef LobOpMessage message = LobOpMessage()
+        cdef LobOpMessage message
+        message = self._conn_impl._create_message(LobOpMessage)
         message.operation = TNS_LOB_OP_GET_LENGTH
         message.source_lob_impl = self
         message.send_amount = True
-        self._conn_impl._protocol._process_message(message)
+        self._conn_impl._protocol._process_single_message(message)
         return message.amount
 
     def open(self):
         """
         Internal method for opening a LOB.
         """
-        cdef LobOpMessage message = LobOpMessage()
+        cdef LobOpMessage message
+        message = self._conn_impl._create_message(LobOpMessage)
         message.operation = TNS_LOB_OP_OPEN
         message.source_lob_impl = self
-        self._conn_impl._protocol._process_message(message)
+        self._conn_impl._protocol._process_single_message(message)
 
     def read(self, uint64_t offset, uint64_t amount):
         """
         Internal method for reading a portion (or all) of the data in the LOB.
         """
-        cdef LobOpMessage message = LobOpMessage()
+        cdef LobOpMessage message
+        message = self._conn_impl._create_message(LobOpMessage)
         message.operation = TNS_LOB_OP_READ
         message.source_lob_impl = self
         message.source_offset = offset
         message.amount = amount
         message.send_amount = True
-        self._conn_impl._protocol._process_message(message)
+        self._conn_impl._protocol._process_single_message(message)
         if message.data is None:
             if self.dbtype._ora_type_num == TNS_DATA_TYPE_BLOB:
                 return b""
@@ -119,18 +124,20 @@ cdef class ThinLobImpl(BaseLobImpl):
         """
         Internal method for trimming the data in the LOB to the new size
         """
-        cdef LobOpMessage message = LobOpMessage()
+        cdef LobOpMessage message
+        message = self._conn_impl._create_message(LobOpMessage)
         message.operation = TNS_LOB_OP_TRIM
         message.source_lob_impl = self
         message.amount = new_size
         message.send_amount = True
-        self._conn_impl._protocol._process_message(message)
+        self._conn_impl._protocol._process_single_message(message)
 
     def write(self, object value, uint64_t offset):
         """
         Internal method for writing data to the LOB object.
         """
-        cdef LobOpMessage message = LobOpMessage()
+        cdef LobOpMessage message
+        message = self._conn_impl._create_message(LobOpMessage)
         message.operation = TNS_LOB_OP_WRITE
         message.source_lob_impl = self
         message.source_offset = offset
@@ -138,4 +145,4 @@ cdef class ThinLobImpl(BaseLobImpl):
             message.data = value
         else:
             message.data = value.encode(self._get_encoding())
-        self._conn_impl._protocol._process_message(message)
+        self._conn_impl._protocol._process_single_message(message)

@@ -95,6 +95,16 @@ cdef class ThinConnImpl(BaseConnImpl):
                     return (sock, address)
             time.sleep(description.retry_delay)
 
+    cdef Message _create_message(self, type typ):
+        """
+        Creates a message object that is used to send a request to the database
+        and receive back its response.
+        """
+        cdef Message message
+        message = typ.__new__(typ)
+        message._initialize(self)
+        return message
+
     cdef int _force_close(self) except -1:
         self._pool = None
         self._protocol._force_close()
@@ -190,7 +200,11 @@ cdef class ThinConnImpl(BaseConnImpl):
         self._protocol._break_external()
 
     def change_password(self, str old_password, str new_password):
-        self._protocol._change_password(self, old_password, new_password)
+        cdef AuthMessage message
+        message = self._create_message(AuthMessage)
+        message.password = old_password
+        message.newpassword = new_password
+        self._protocol._process_single_message(message)
 
     def close(self, bint in_del=False):
         try:
@@ -199,7 +213,9 @@ cdef class ThinConnImpl(BaseConnImpl):
             pass
 
     def commit(self):
-        self._protocol._commit()
+        cdef Message message
+        message = self._create_message(CommitMessage)
+        self._protocol._process_single_message(message)
 
     def connect(self, params, str password, str newpassword=None):
         cdef:
@@ -280,10 +296,14 @@ cdef class ThinConnImpl(BaseConnImpl):
         return self._server_version
 
     def ping(self):
-        self._protocol._ping()
+        cdef Message message
+        message = self._create_message(PingMessage)
+        self._protocol._process_single_message(message)
 
     def rollback(self):
-        self._protocol._rollback()
+        cdef Message message
+        message = self._create_message(RollbackMessage)
+        self._protocol._process_single_message(message)
 
     def set_action(self, str value):
         self._action = value

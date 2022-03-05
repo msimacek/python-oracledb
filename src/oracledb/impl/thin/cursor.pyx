@@ -26,6 +26,18 @@ cdef class ThinCursorImpl(BaseCursorImpl):
     cdef BaseVarImpl _create_var_impl(self):
         return ThinVarImpl.__new__(ThinVarImpl)
 
+    cdef MessageWithData _create_message(self, type typ, object cursor):
+        """
+        Creates a message object that is used to send a request to the database
+        and receive back its response.
+        """
+        cdef MessageWithData message
+        message = typ.__new__(typ, cursor, self)
+        message._initialize(self._conn_impl)
+        message.cursor = cursor
+        message.cursor_impl = self
+        return message
+
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef int _create_fetch_var(self, object cursor, object type_handler,
@@ -44,7 +56,16 @@ cdef class ThinCursorImpl(BaseCursorImpl):
                               &self._statement._requires_define)
 
     cdef int _fetch_rows(self, object cursor) except -1:
-        self._conn_impl._protocol._fetch(cursor, self)
+        """
+        Internal method used for fetching rows from the database.
+        """
+        cdef MessageWithData message
+        if self._statement._requires_full_execute:
+            message = self._create_message(ExecuteMessage, cursor)
+            message.num_execs = self._fetch_array_size
+        else:
+            message = self._create_message(FetchMessage, cursor)
+        self._conn_impl._protocol._process_single_message(message)
 
     cdef BaseConnImpl _get_conn_impl(self):
         """
@@ -66,35 +87,46 @@ cdef class ThinCursorImpl(BaseCursorImpl):
                                   name=bind_info._bind_name)
 
     def execute(self, cursor):
+        cdef MessageWithData message
         self._preprocess_execute(cursor.connection)
-        self._conn_impl._protocol._execute(cursor, self)
+        message = self._create_message(ExecuteMessage, cursor)
+        message.num_execs = 1
+        self._conn_impl._protocol._process_single_message(message)
+        self._statement._requires_full_execute = False
+        if self._statement._is_query:
+            self.rowcount = 0
 
     def executemany(self, cursor, num_execs, batcherrors, arraydmlrowcounts):
-        cdef uint32_t offset = 1
+        cdef:
+            MessageWithData messsage
+            uint32_t i
+
+        # set up message to send
         self._preprocess_execute(cursor.connection)
+        message = self._create_message(ExecuteMessage, cursor)
+        message.num_execs = num_execs
+        message.batcherrors = batcherrors
+        message.arraydmlrowcounts = arraydmlrowcounts
+
         # if a PL/SQL statement is being executed for the first time, perform
         # one execute. If the statement contains both in and out binds,
         # multiple executes will be performed; otherwise, a bulk execute will
         # be performed.
         if self._statement._is_plsql and self._statement._cursor_id == 0:
-            self._conn_impl._protocol._execute(cursor, self, 1,
-                                               arraydmlrowcounts,
-                                               batcherrors)
+            message.num_execs = 1
+            self._conn_impl._protocol._process_single_message(message)
+            self._statement._requires_full_execute = False
             if self._statement._plsql_multiple_execs:
-                for offset in range(1, num_execs):
-                    self._conn_impl._protocol._execute(cursor, self, 1,
-                                                       arraydmlrowcounts,
-                                                       batcherrors, offset)
+                for i in range(num_execs - 1):
+                    message.offset = i + 1
+                    self._conn_impl._protocol._process_single_message(message)
             else:
-                self._conn_impl._protocol._execute(cursor, self, num_execs - 1,
-                                                   arraydmlrowcounts,
-                                                   batcherrors, offset)
+                message.offset = 1
+                message.num_execs = num_execs - 1
+                self._conn_impl._protocol._process_single_message(message)
         else:
-            self._conn_impl._protocol._execute(cursor, self, num_execs,
-                                               arraydmlrowcounts, batcherrors)
-
-    def fetch_rows(self, cursor):
-        self._conn_impl._protocol._fetch(cursor, self)
+            self._conn_impl._protocol._process_single_message(message)
+            self._statement._requires_full_execute = False
 
     def get_array_dml_row_counts(self):
         if self._dmlrowcounts is None:
@@ -120,7 +152,10 @@ cdef class ThinCursorImpl(BaseCursorImpl):
         return self.fetch_vars is not None
 
     def parse(self, cursor):
-        self._conn_impl._protocol._parse(cursor, self)
+        cdef MessageWithData message
+        message = self._create_message(ExecuteMessage, cursor)
+        message.parse_only = True
+        self._conn_impl._protocol._process_single_message(message)
 
     def prepare(self, str sql, str tag, bint cache_statement):
         self.statement = sql

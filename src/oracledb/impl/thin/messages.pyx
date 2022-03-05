@@ -17,6 +17,7 @@ cdef class _OracleErrorInfo:
 
 cdef class Message:
     cdef:
+        ThinConnImpl conn_impl
         _OracleErrorInfo error_info
         uint8_t message_type
         uint8_t function_code
@@ -26,13 +27,31 @@ cdef class Message:
         bint error_occurred
         bint flush_out_binds
         bint processed_error
-
-    def __cinit__(self):
-        self.message_type = TNS_MSG_TYPE_FUNCTION
-        self.error_info = _OracleErrorInfo()
+        bint resend
 
     cdef bint _has_more_data(self, ReadBuffer buf):
         return buf.bytes_left() > 0 and not self.flush_out_binds
+
+    cdef int _initialize(self, ThinConnImpl conn_impl) except -1:
+        """
+        Initializes the message to contain the connection and a place to store
+        error information. For DRCP, the status of the connection may change
+        after the first round-trip to the database so this information needs to
+        be preserved. Child classes may have their own initialization. In order
+        to avoid overhead using the constructor, a special hook method is used
+        instead.
+        """
+        self.conn_impl = conn_impl
+        self.message_type = TNS_MSG_TYPE_FUNCTION
+        self.error_info = _OracleErrorInfo.__new__(_OracleErrorInfo)
+        self._initialize_hook()
+
+    cdef int _initialize_hook(self) except -1:
+        """
+        A hook that is used by subclasses to perform any necessary
+        initialization specific to that class.
+        """
+        pass
 
     cdef int _preprocess(self) except -1:
         pass
@@ -238,7 +257,6 @@ cdef class Message:
 cdef class MessageWithData(Message):
     cdef:
         ThinCursorImpl cursor_impl
-        ThinConnImpl conn_impl
         array.array bit_vector_buf
         const char_type *bit_vector
         bint arraydmlrowcounts
@@ -252,12 +270,6 @@ cdef class MessageWithData(Message):
         bint parse_only
         object cursor
         uint32_t offset
-
-    def __cinit__(self, cursor, cursor_impl):
-        self.cursor = cursor
-        self.cursor_impl = cursor_impl
-        self.conn_impl = self.cursor_impl._conn_impl
-        self.num_execs = 1
 
     cdef int _adjust_fetch_info(self,
                                 ThinVarImpl prev_var_impl,
@@ -820,7 +832,7 @@ cdef class MessageWithData(Message):
             else:
                 value = self._process_column_data(buf, var_impl,
                                                   self.row_index)
-                var_impl.values[self.row_index + self.offset] = value
+                var_impl.values[self.row_index] = value
         self.row_index += 1
         if self.in_fetch:
             self.cursor_impl._last_row_index = self.row_index - 1
@@ -1174,7 +1186,6 @@ cdef class MessageWithData(Message):
 @cython.final
 cdef class AuthMessage(Message):
     cdef:
-        ThinConnImpl conn_impl
         str encoded_password
         str password
         str newpassword
@@ -1183,21 +1194,12 @@ cdef class AuthMessage(Message):
         str speedy_key
         str cclass
         uint8_t purity
-        uint8_t user_bytes_len
+        ssize_t user_bytes_len
         bytes user_bytes
         object password_key
         dict session_data
         uint32_t auth_mode
         uint32_t verifier_type
-
-    def __cinit__(self, conn_impl, password, newpassword=None):
-        self.function_code = TNS_FUNC_AUTH_PHASE_ONE
-        self.conn_impl = conn_impl
-        self.session_data = {}
-        self.password = password
-        self.newpassword = newpassword
-        self.user_bytes = conn_impl.username.encode()
-        self.user_bytes_len = <uint8_t> len(self.user_bytes)
 
     cdef int _generate_verifier(self, bytes password_bytes,
                                 bint verifier_11g) except -1:
@@ -1277,6 +1279,16 @@ cdef class AuthMessage(Message):
                     (full_version_num >> 12) & 0x0F,
                     (full_version_num >> 8) & 0x0F,
                     (full_version_num & 0x0F))
+
+    cdef int _initialize_hook(self) except -1:
+        """
+        Perform initialization.
+        """
+        self.function_code = TNS_FUNC_AUTH_PHASE_ONE
+        self.session_data = {}
+        self.user_bytes = self.conn_impl.username.encode()
+        self.user_bytes_len = len(self.user_bytes)
+        self.resend = True
 
     cdef int _process_return_parameters(self, ReadBuffer buf) except -1:
         cdef:
@@ -1410,7 +1422,10 @@ cdef class AuthMessage(Message):
 @cython.final
 cdef class CommitMessage(Message):
 
-    def __cinit__(self):
+    cdef int _initialize_hook(self) except -1:
+        """
+        Perform initialization.
+        """
         self.function_code = TNS_FUNC_COMMIT
 
 
@@ -1420,10 +1435,6 @@ cdef class ConnectMessage(Message):
         uint16_t connect_string_len
         bytes connect_string_bytes
         str redirect_data
-
-    def __cinit__(self, str connect_string):
-        self.connect_string_bytes = connect_string.encode()
-        self.connect_string_len = <uint16_t> len(self.connect_string_bytes)
 
     cdef int process(self, ReadBuffer buf) except -1:
         cdef:
@@ -1511,6 +1522,19 @@ cdef class DataTypesMessage(Message):
 
 @cython.final
 cdef class ExecuteMessage(MessageWithData):
+
+    cdef int _postprocess(self) except -1:
+        """
+        Runs after the database response has been processed. If the statement
+        executed requires define and is not a REF cursor (which would already
+        have performed the define during its execute), then mark the message as
+        needing to be resent.
+        """
+        MessageWithData._postprocess(self)
+        cdef Statement stmt = self.cursor_impl._statement
+        if stmt._requires_define and stmt._sql is not None:
+            stmt._requires_full_execute = True
+            self.resend = True
 
     cdef int _write_execute_message(self, WriteBuffer buf) except -1:
         """
@@ -1713,7 +1737,10 @@ cdef class ExecuteMessage(MessageWithData):
 @cython.final
 cdef class FetchMessage(MessageWithData):
 
-    def __cinit__(self, cursor, cursor_impl):
+    cdef int _initialize_hook(self) except -1:
+        """
+        Perform initialization.
+        """
         self.function_code = TNS_FUNC_FETCH
 
     cdef int _write_message(self, WriteBuffer buf) except -1:
@@ -1736,11 +1763,14 @@ cdef class LobOpMessage(Message):
         bint bool_flag
         object data
 
-    def __cinit__(self):
-        self.function_code = TNS_FUNC_LOB_OP
-
     cdef bint _has_more_data(self, ReadBuffer buf):
         return not self.processed_error
+
+    cdef int _initialize_hook(self) except -1:
+        """
+        Perform initialization.
+        """
+        self.function_code = TNS_FUNC_LOB_OP
 
     cdef int _process_message(self, ReadBuffer buf,
                               uint8_t message_type) except -1:
@@ -1843,7 +1873,10 @@ cdef class LobOpMessage(Message):
 @cython.final
 cdef class LogoffMessage(Message):
 
-    def __cinit__(self):
+    cdef int _initialize_hook(self) except -1:
+        """
+        Perform initialization.
+        """
         self.function_code = TNS_FUNC_LOGOFF
 
 
@@ -1878,7 +1911,10 @@ cdef class NetworkServicesMessage(Message):
 @cython.final
 cdef class PingMessage(Message):
 
-    def __cinit__(self):
+    cdef int _initialize_hook(self) except -1:
+        """
+        Perform initialization.
+        """
         self.function_code = TNS_FUNC_PING
 
 
@@ -1933,5 +1969,8 @@ cdef class ProtocolMessage(Message):
 @cython.final
 cdef class RollbackMessage(Message):
 
-    def __cinit__(self):
+    cdef int _initialize_hook(self) except -1:
+        """
+        Perform initialization.
+        """
         self.function_code = TNS_FUNC_ROLLBACK

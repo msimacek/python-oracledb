@@ -19,21 +19,21 @@ cdef class Protocol:
     def __init__(self, sock):
         self._caps = Capabilities()
         self.__set_socket(sock)
-        self._request_lock = threading.Lock()
+        self._request_lock = threading.RLock()
 
     cdef int __set_socket(self, sock):
          self._socket = sock
          self._read_buf = ReadBuffer(sock, TNS_SDU, self._caps)
          self._write_buf = WriteBuffer(sock, TNS_SDU, self._caps)
 
-    cdef int _break_external(self):
+    cdef int _break_external(self) except -1:
         """
         Method for sending a break to the server from an external request. A
         separate write buffer is used in order to avoid a potential conflict
         with any in progress writes.
         """
         cdef WriteBuffer buf
-        if not self._break_in_progress and self._request_lock.locked():
+        if not self._break_in_progress:
             self._break_in_progress = True
             if self._caps.supports_oob:
                 if DEBUG_PACKETS:
@@ -54,6 +54,7 @@ cdef class Protocol:
         connections, the session will be logged off. For pooled connections,
         the connection will be returned to the pool for subsequent use.
         """
+        cdef Message message
         with self._request_lock:
 
             # if a read failed on the socket earlier, clear the socket
@@ -69,7 +70,8 @@ cdef class Protocol:
             # applicable
             if self._socket is not None:
                 if self._txn_in_progress:
-                    self._process_message(RollbackMessage())
+                    message = conn_impl._create_message(RollbackMessage)
+                    self._process_message(message)
                 if conn_impl._drcp_enabled:
                     self._release_drcp_session(self._write_buf)
                     conn_impl._reset_statement_cache()
@@ -80,23 +82,12 @@ cdef class Protocol:
 
             # otherwise, send the logoff message and final close
             elif self._socket is not None:
-                self._process_message(LogoffMessage())
+                self._process_message(conn_impl._create_message(LogoffMessage))
                 self._final_close(self._write_buf)
 
-    cdef int _commit(self) except -1:
-        with self._request_lock:
-            self._process_message(CommitMessage())
-
-    cdef _change_password(self, ThinConnImpl conn, str old_password,
-                          str new_password):
-        cdef AuthMessage auth_message
-        auth_message = AuthMessage(conn, old_password, new_password)
-        self._process_message(auth_message)
-        self._process_message(auth_message)
-
-    cdef _connect(self, ThinConnImpl conn, object params, object description,
-                  str connect_string, object address, str password,
-                  str newpassword):
+    cdef _connect(self, ThinConnImpl conn_impl, object params,
+                  object description, str connect_string, object address,
+                  str password, str newpassword):
         cdef:
             ConnectMessage connect_message
             object temp_sock, ssl_context
@@ -115,7 +106,10 @@ cdef class Protocol:
         # message to be resent multiple times; if a redirect packet is
         # detected, however, the process terminates and is restarted using the
         # supplied redirect data
-        connect_message = ConnectMessage(connect_string)
+        connect_message = conn_impl._create_message(ConnectMessage)
+        connect_message.connect_string_bytes = connect_string.encode()
+        connect_message.connect_string_len = \
+                <uint16_t> len(connect_message.connect_string_bytes)
         while True:
             self._process_message(connect_message)
             if connect_message.redirect_data is not None:
@@ -147,13 +141,15 @@ cdef class Protocol:
             self._send_marker(self._write_buf, TNS_MARKER_TYPE_RESET)
 
         # send services, protocol and data types messages and process responses
-        self._process_message(NetworkServicesMessage())
-        self._process_message(ProtocolMessage())
-        self._process_message(DataTypesMessage())
+        self._process_message(conn_impl._create_message(NetworkServicesMessage))
+        self._process_message(conn_impl._create_message(ProtocolMessage))
+        self._process_message(conn_impl._create_message(DataTypesMessage))
 
         # send authorization packet twice, the first time to get the session
         # key and the second time to return the response to the challenge
-        auth_message = AuthMessage(conn, password, newpassword)
+        auth_message = conn_impl._create_message(AuthMessage)
+        auth_message.password = password
+        auth_message.newpassword = newpassword
         auth_message._set_auth_mode(params.mode)
         auth_message.cclass = description.cclass
         auth_message.purity = description.purity
@@ -163,36 +159,6 @@ cdef class Protocol:
         # mark protocol to indicate that connect is no longer in progress; this
         # allows the normal break/reset mechanism to fire
         self._in_connect = False
-
-    cdef int _execute(self, object cursor, ThinCursorImpl cursor_impl,
-                      uint32_t num_execs=1, bint arraydmlrowcounts=False,
-                      bint batcherrors=False, uint32_t offset=0) except -1:
-        cdef:
-            Statement stmt = cursor_impl._statement
-            MessageWithData message
-        with self._request_lock:
-            message = ExecuteMessage(cursor, cursor_impl)
-            message.arraydmlrowcounts = arraydmlrowcounts
-            message.batcherrors = batcherrors
-            message.num_execs = num_execs
-            message.offset = offset
-            self._process_message(message)
-            if cursor_impl._statement._requires_define:
-                stmt._requires_full_execute = True
-                self._process_message(message)
-            stmt._requires_full_execute = False
-            if cursor_impl._statement._is_query:
-                cursor_impl.rowcount = 0
-
-    cdef int _fetch(self, object cursor, ThinCursorImpl cursor_impl) except -1:
-        cdef MessageWithData message
-        with self._request_lock:
-            if cursor_impl._statement._requires_full_execute:
-                message = ExecuteMessage(cursor, cursor_impl)
-                message.num_execs = cursor_impl._fetch_array_size
-            else:
-                message = FetchMessage(cursor, cursor_impl)
-            self._process_message(message)
 
     cdef int _final_close(self, WriteBuffer buf) except -1:
         """
@@ -220,17 +186,6 @@ cdef class Protocol:
         self._write_buf._socket = None
         sock.shutdown(socket.SHUT_RDWR)
         sock.close()
-
-    cdef int _parse(self, object cursor, ThinCursorImpl cursor_impl) except -1:
-        cdef MessageWithData message
-        with self._request_lock:
-            message = ExecuteMessage(cursor, cursor_impl)
-            message.parse_only = True
-            self._process_message(message)
-
-    cdef int _ping(self) except -1:
-        with self._request_lock:
-            self._process_message(PingMessage())
 
     cdef int _process_control_packet(self, ReadBuffer buf) except -1:
         cdef uint16_t control_type, error_num
@@ -302,6 +257,15 @@ cdef class Protocol:
             exc_type = get_exception_class(message.error_info.num)
             raise exc_type(error)
 
+    cdef int _process_single_message(self, Message message) except -1:
+        """
+        Process a single message within a request.
+        """
+        with self._request_lock:
+            self._process_message(message)
+            if message.resend:
+                self._process_message(message)
+
     cdef int _receive_packet(self, Message message) except -1:
         self._read_buf.receive_packet(&message.packet_type)
         if message.packet_type == TNS_PACKET_TYPE_MARKER:
@@ -365,10 +329,6 @@ cdef class Protocol:
         while message.packet_type == TNS_PACKET_TYPE_MARKER:
             self._read_buf.receive_packet(&message.packet_type)
         self._break_in_progress = False
-
-    cdef int _rollback(self) except -1:
-        with self._request_lock:
-            self._process_message(RollbackMessage())
 
     cdef int _send_marker(self, WriteBuffer buf, uint8_t marker_type):
         """
