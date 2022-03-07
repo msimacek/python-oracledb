@@ -6,6 +6,8 @@
 1900 - Module for testing LOB (CLOB and BLOB) variables
 """
 
+import pickle
+
 import oracledb
 import test_env
 
@@ -93,6 +95,17 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(lob.size(), 25000)
         lob.trim()
         self.assertEqual(lob.size(), 0)
+
+    def __test_pickle(self, lob_type):
+        value = "A test string value for pickling"
+        if lob_type == "BLOB":
+            value = value.encode("ascii")
+        db_type = getattr(oracledb, "DB_TYPE_" + lob_type)
+        lob = self.connection.createlob(db_type)
+        lob.write(value)
+        pickled_data = pickle.dumps(lob)
+        unpickled_value = pickle.loads(pickled_data)
+        self.assertEqual(unpickled_value, value)
 
     def __test_temporary_lob(self, lob_type):
         self.cursor.execute("truncate table Test%ss" % lob_type)
@@ -345,6 +358,18 @@ class TestCase(test_env.BaseTestCase):
                 data=var)
         result = var.getvalue()
         self.assertEqual(result, b"L" * 8 + b"Q" * 6)
+
+    def test_1924_pickle_blob(self):
+        "1924 - test pickling of BLOB"
+        self.__test_pickle("BLOB")
+
+    def test_1925_pickle_clob(self):
+        "1925 - test pickling of CLOB"
+        self.__test_pickle("CLOB")
+
+    def test_1926_pickle_nclob(self):
+        "1925 - test pickling of NCLOB"
+        self.__test_pickle("NCLOB")
 
 if __name__ == "__main__":
     test_env.run_test_cases()

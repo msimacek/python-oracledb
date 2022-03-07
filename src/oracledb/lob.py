@@ -12,6 +12,10 @@ class LOB:
     def __del__(self):
         self._impl.free_lob()
 
+    def __reduce__(self):
+        value = self.read()
+        return (type(value), (value,))
+
     def __str__(self):
         return self.read()
 
