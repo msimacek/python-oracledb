@@ -32,6 +32,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         array.array _cursors_to_close
         ssize_t _num_cursors_to_close
         bint _drcp_enabled
+        bint _drcp_establish_session
         double _time_in_pool
         list _temp_lobs_to_close
         uint32_t _temp_lobs_total_size
@@ -141,6 +142,15 @@ cdef class ThinConnImpl(BaseConnImpl):
         return sock
 
     cdef Statement _get_statement(self, str sql, bint cache_statement):
+        """
+        Get a statement from the statement cache, or prepare a new statement
+        for use. If a statement is already in use a copy will be made and
+        returned (and will not be returned to the cache). If a statement is
+        being executed for the first time after releasing a DRCP session, a
+        copy will also be made (and will not be returned to the cache) since it
+        is unknown at this point whether the original session or a new session
+        is going to be used.
+        """
         cdef Statement statement
         with self._statement_cache_lock:
             statement = self._statement_cache.get(sql)
@@ -148,14 +158,16 @@ cdef class ThinConnImpl(BaseConnImpl):
                 statement = Statement()
                 statement._prepare(sql, self._protocol._caps.char_conversion)
                 if len(self._statement_cache) < self._statement_cache_size \
-                        and cache_statement:
+                        and cache_statement \
+                        and not self._drcp_establish_session:
                     self._statement_cache[sql] = statement
                     statement._return_to_cache = True
-            elif statement._in_use or not cache_statement:
+            elif statement._in_use or not cache_statement \
+                    or self._drcp_establish_session:
                 if not cache_statement:
                     del self._statement_cache[sql]
                     statement._return_to_cache = False
-                if statement._in_use:
+                if statement._in_use or self._drcp_establish_session:
                     statement = statement.copy()
             else:
                 self._statement_cache.move_to_end(sql)

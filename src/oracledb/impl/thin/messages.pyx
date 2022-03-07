@@ -155,7 +155,7 @@ cdef class Message:
     cdef int _process_server_side_piggyback(self, ReadBuffer buf) except -1:
         cdef:
             uint16_t num_elements, i, temp16
-            uint32_t num_bytes
+            uint32_t num_bytes, flags
             uint8_t opcode
         buf.read_ub1(&opcode)
         if opcode == TNS_SERVER_PIGGYBACK_LTXID:
@@ -208,7 +208,11 @@ cdef class Message:
                     if temp16 > 0:          # skip value
                         buf.skip_raw_bytes(temp16 + 1)
                     buf.skip_ub2()          # skip flags
-            buf.skip_ub4()                  # session flags
+            buf.read_ub4(&flags)            # session flags
+            if flags & TNS_SESSGET_SESSION_CHANGED:
+                if self.conn_impl._drcp_establish_session:
+                    self.conn_impl._reset_statement_cache()
+            self.conn_impl._drcp_establish_session = False
             buf.skip_ub4()                  # session id
             buf.skip_ub2()                  # serial number
         else:
@@ -1171,7 +1175,8 @@ cdef class MessageWithData(Message):
     cdef int _write_piggybacks(self, WriteBuffer buf) except -1:
         if self.conn_impl._current_schema_modified:
             self._write_current_schema_piggyback(buf)
-        if self.conn_impl._num_cursors_to_close > 0:
+        if self.conn_impl._num_cursors_to_close > 0 \
+                and not self.conn_impl._drcp_establish_session:
             self._write_close_cursors_piggyback(buf)
         if self.conn_impl._action_modified \
                 or self.conn_impl._client_identifier_modified \
