@@ -271,6 +271,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
             object wait_timeout
             ThinConnImpl conn_impl
             bint requires_ping
+            Message message
 
         # if pool is closed, raise an exception
         if not self._open:
@@ -310,7 +311,8 @@ cdef class ThinPoolImpl(BasePoolImpl):
             if not requires_ping:
                 break
             try:
-                conn_impl._protocol._ping()
+                message = conn_impl._create_message(PingMessage)
+                conn_impl._protocol._process_message(message)
                 break
             except exceptions.DatabaseError:
                 self._conn_impls_to_close.append(conn_impl)
