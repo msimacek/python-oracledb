@@ -471,8 +471,7 @@ class ConnectParams:
         port = getattr(address_node, "port", None)
         protocol = getattr(address_node, "protocol", "tcp")
         https_proxy = getattr(address_node, "https_proxy", None)
-        https_proxy_port = getattr(address_node, "https_proxy_port",
-                                    None)
+        https_proxy_port = getattr(address_node, "https_proxy_port", None)
         if port is not None:
             port = int(port)
         if https_proxy_port is not None:
@@ -640,7 +639,8 @@ class ConnectParams:
                 drcp_suffix = ":POOLED"
                 if description.service_name.upper().endswith(drcp_suffix):
                     self.enable_drcp = True
-                    description.service_name = description.service_name[:-len(drcp_suffix)]
+                    description.service_name = \
+                            description.service_name[:-len(drcp_suffix)]
                 connect_string = connect_string[:slash_pos]
 
             # parse host and port
