@@ -452,8 +452,8 @@ cdef class BaseCursorImpl:
                 has_name_bind = True
                 if has_pos_bind:
                     break
-                self._bind_value_by_name(cursor, type_handler, params_row,
-                                         num_rows, i)
+                self._bind_value_by_name(cursor, type_handler,
+                                         <dict> params_row, num_rows, i)
             elif isinstance(params_row, (list, tuple)):
                 has_pos_bind = True
                 if has_name_bind:
@@ -472,7 +472,7 @@ cdef class BaseCursorImpl:
         cdef uint32_t num_rows = 1, pos = 0
         type_handler = self._get_input_type_handler()
         if isinstance(parameters, dict):
-            self._bind_value_by_name(cursor, type_handler, parameters,
+            self._bind_value_by_name(cursor, type_handler, <dict> parameters,
                                      num_rows, pos)
         else:
             self._bind_value_by_position(cursor, type_handler, parameters,
