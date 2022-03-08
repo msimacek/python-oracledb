@@ -381,5 +381,22 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(params.retry_count, [1, 2])
         self.assertEqual(params.retry_delay, [1, 3])
 
+    def test_4528_https_proxy(self):
+        "4528 - test connect strings with https_proxy defined"
+        params = oracledb.ConnectParams()
+        connect_string = \
+            "(DESCRIPTION=" \
+            "(ADDRESS=(HTTPS_PROXY=proxy_4528a)(HTTPS_PROXY_PORT=4528)" \
+            "(PROTOCOL=TCP)(HOST=my_host4528a)(PORT=8528))" \
+            "(CONNECT_DATA=(SERVICE_NAME=my_service_name4528a)))"
+        params.parse_connect_string(connect_string)
+        self.assertEqual(params.https_proxy, "proxy_4528a")
+        self.assertEqual(params.https_proxy_port, 4528)
+        connect_string = "tcps://my_host_4528b/my_service_name_4528b?" \
+                "https_proxy=proxy_4528b&https_proxy_port=9528"
+        params.parse_connect_string(connect_string)
+        self.assertEqual(params.https_proxy, "proxy_4528b")
+        self.assertEqual(params.https_proxy_port, 9528)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

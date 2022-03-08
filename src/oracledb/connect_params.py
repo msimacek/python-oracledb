@@ -242,7 +242,9 @@ class ConnectParams:
                f"retry_delay={self.retry_delay!r}, " \
                f"expire_time={self.expire_time!r}, " \
                f"tcp_connect_timeout={self.tcp_connect_timeout!r}, " \
-               f"wallet_location={self.wallet_location!r})"
+               f"wallet_location={self.wallet_location!r}, " \
+               f"https_proxy={self.https_proxy!r}, " \
+               f"https_proxy_port={self.https_proxy_port!r})"
 
     def _address_attr(f):
         """
@@ -297,6 +299,26 @@ class ConnectParams:
         Returns the host associated with the address in the connect string.
         If the connect string contains multiple addresses, a list of hosts
         is returned in the order they appear.
+        """
+        pass
+
+    @property
+    @_address_attr
+    def https_proxy(self) -> Union[list, str]:
+        """
+        Returns the proxy host associated with the address in the connect
+        string.  If the connect string contains multiple addresses, a list of
+        proxy hosts is returned in the order they appear.
+        """
+        pass
+
+    @property
+    @_address_attr
+    def https_proxy_port(self) -> Union[list, int]:
+        """
+        Returns the proxy host port associated with the address in the connect
+        string.  If the connect string contains multiple addresses, a list of
+        proxy host ports is returned in the order they appear.
         """
         pass
 
@@ -602,35 +624,14 @@ class ConnectParams:
                 protocol = connect_string[:protocol_pos]
                 connect_string = connect_string[protocol_pos + 3:]
 
-            # parse parameters
+            # split parameters out of connect string
             params_pos = connect_string.find("?")
-            description = Description()
             if params_pos > 0:
-                for part in connect_string[params_pos + 1:].split("&"):
-                    name, value = [s.strip() for s in part.split("=", 1)]
-                    name = name.lower()
-                    if value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1]
-                    if name == "ssl_server_cert_dn":
-                        description.ssl_server_cert_dn = value
-                    elif name == "ssl_server_dn_match":
-                        description.ssl_server_dn_match = \
-                                value.lower() in ("on", "yes", "true")
-                    elif name == "wallet_location":
-                        description.wallet_location = value
-                    elif name == "expire_time":
-                        description.expire_time = int(value)
-                    elif name == "retry_delay":
-                        description.retry_delay = int(value)
-                    elif name == "retry_count":
-                        description.retry_count = int(value)
-                    elif name == "transport_connect_timeout":
-                        description.tcp_connect_timeout = float(value)
-                    else:
-                        raise Exception(f"unknown parameter name: {name}")
+                params = connect_string[params_pos + 1:]
                 connect_string = connect_string[:params_pos]
 
             # parse service name and server type
+            description = Description()
             slash_pos = connect_string.find("/")
             if slash_pos < 0:
                 description.service_name = ""
@@ -662,6 +663,38 @@ class ConnectParams:
             description.address_lists = [AddressList()]
             description.address_lists[0].addresses.append(address)
             self._description_list.descriptions.append(description)
+
+            # parse parameters
+            if params_pos > 0:
+                for part in params.split("&"):
+                    name, value = [s.strip() for s in part.split("=", 1)]
+                    name = name.lower()
+                    if value.startswith('"') and value.endswith('"'):
+                        value = value[1:-1]
+                    if name == "ssl_server_cert_dn":
+                        description.ssl_server_cert_dn = value
+                    elif name == "ssl_server_dn_match":
+                        description.ssl_server_dn_match = \
+                                value.lower() in ("on", "yes", "true")
+                    elif name == "wallet_location":
+                        description.wallet_location = value
+                    elif name == "expire_time":
+                        description.expire_time = int(value)
+                    elif name == "retry_delay":
+                        description.retry_delay = int(value)
+                    elif name == "retry_count":
+                        description.retry_count = int(value)
+                    elif name == "transport_connect_timeout":
+                        description.tcp_connect_timeout = float(value)
+                    elif name == "https_proxy":
+                        address.https_proxy = value
+                    elif name == "https_proxy_port":
+                        address.https_proxy_port = int(value)
+                    else:
+                        raise Exception(f"unknown parameter name: {name}")
+                connect_string = connect_string[:params_pos]
+
+            # indicate that the string just parsed was an Easy Connect string
             return True
 
         except exceptions.Error:
