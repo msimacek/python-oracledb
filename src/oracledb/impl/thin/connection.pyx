@@ -271,7 +271,7 @@ cdef class ThinConnImpl(BaseConnImpl):
             self._statement_cache_lock = threading.Lock()
             self._cursors_to_close = array.array('I')
             array.resize(self._cursors_to_close, TNS_MAX_CURSORS_TO_CLOSE)
-            self._drcp_enabled = params.enable_drcp
+            self._drcp_enabled = params.server_type == "pooled"
         return redirect_data
 
     def create_cursor_impl(self):
