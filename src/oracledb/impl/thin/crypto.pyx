@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2021, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 from cryptography import x509
@@ -60,7 +60,7 @@ def get_server_dn_matches(sock, expected_dn):
 
 def get_ssl_socket(sock, params):
     """
-    Returns a wrapped SSL socket given a socket and the parameters supplie by
+    Returns a wrapped SSL socket given a socket and the parameters supplied by
     the user.
     """
     ssl_context = ssl.create_default_context()
