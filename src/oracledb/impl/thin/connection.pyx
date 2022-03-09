@@ -261,8 +261,8 @@ cdef class ThinConnImpl(BaseConnImpl):
             sock = get_ssl_socket(sock, params)
         self._protocol = Protocol(sock)
         redirect_data = self._protocol._connect(self, params, description,
-                                                _get_connect_data(params,
-                                                address, description),
+                                                _get_connect_data(address,
+                                                                  description),
                                                 address, password,
                                                 newpassword)
         if redirect_data is None:

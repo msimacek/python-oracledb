@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2021, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 """
@@ -31,13 +31,15 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(params.port, 1521)
         self.assertEqual(params.service_name, "my_service_name2")
 
-    def test_4502_simple_ezconnect_with_drcp(self):
+    def test_4502_simple_ezconnect_with_server_type(self):
         "4502 - test simple EZConnect string parsing with DRCP enabled"
         params = oracledb.ConnectParams()
         params.parse_connect_string("my_host3/my_service_name3:pooled")
         self.assertEqual(params.host, "my_host3")
         self.assertEqual(params.service_name, "my_service_name3")
-        self.assertEqual(params.enable_drcp, True)
+        self.assertEqual(params.server_type, "pooled")
+        params.parse_connect_string("my_host3/my_service_name3:ShArEd")
+        self.assertEqual(params.server_type, "shared")
 
     def test_4503_simple_connect_descriptor(self):
         "4503 - test simple name-value pair format connect string"
@@ -397,6 +399,20 @@ class TestCase(test_env.BaseTestCase):
         params.parse_connect_string(connect_string)
         self.assertEqual(params.https_proxy, "proxy_4528b")
         self.assertEqual(params.https_proxy_port, 9528)
+
+    def test_4529_server_type(self):
+        "4529 - test connect strings with server_type defined"
+        params = oracledb.ConnectParams()
+        connect_string = \
+            "(DESCRIPTION=" \
+            "(ADDRESS=(PROTOCOL=TCP)(HOST=my_host4529)(PORT=4529))" \
+            "(CONNECT_DATA=(SERVER_TYPE=DEDICATED)" \
+            "(SERVICE_NAME=my_service_name4529)))"
+        params.parse_connect_string(connect_string)
+        self.assertEqual(params.server_type, "dedicated")
+        connect_string = connect_string.replace("DEDICATED", "INVALID")
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4028:",
+                               params.parse_connect_string, connect_string)
 
 if __name__ == "__main__":
     test_env.run_test_cases()

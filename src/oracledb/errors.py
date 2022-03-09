@@ -145,6 +145,7 @@ ERR_CALL_TIMEOUT_EXCEEDED = 4024
 ERR_INVALID_REF_CURSOR = 4025
 ERR_TNS_NAMES_FILE_MISSING = 4026
 ERR_NO_CONFIG_DIR = 4027
+ERR_INVALID_SERVER_TYPE = 4028
 
 # error numbers that result in InternalError
 ERR_MESSAGE_TYPE_UNKNOWN = 5000
@@ -237,6 +238,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_INVALID_SERVER_CERT_DN: \
             "the distinguished name (DN) on the server certificate does not " \
             "match the expected value",
+    ERR_INVALID_SERVER_TYPE: "invalid server_type: {server_type}",
     ERR_INVALID_SERVICE_NAME: \
             "listener doesn't recognize service name (see ORA-12514)",
     ERR_INVALID_SID: "listener doesn't recognize sid (see ORA-12505)",

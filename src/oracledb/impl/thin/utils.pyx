@@ -59,12 +59,13 @@ cdef object _encode_rowid(Rowid *rowid):
         return buf[:TNS_MAX_ROWID_LENGTH].decode()
 
 
-def _get_connect_data(params, address, description):
+def _get_connect_data(address, description):
     """
     Return the connect data required by the listener in order to connect.
     """
     constants = _connect_constants
-    server_type = "(SERVER=POOLED)" if params.enable_drcp else ""
+    server_type = f"(SERVER={description.server_type})" \
+            if description.server_type is not None else ""
     identity = f"(SERVICE_NAME={description.service_name})" \
             if description.service_name is not None or \
                     description.sid is None else f"(SID={description.sid})"

@@ -31,7 +31,7 @@ class ConnectParams:
                  sid: str=None,
                  events: bool=None,
                  protocol: str="tcp",
-                 enable_drcp: bool=False,
+                 server_type=None,
                  config_dir: str=None,
                  cclass: str=None,
                  purity: int=constants.PURITY_DEFAULT,
@@ -79,8 +79,8 @@ class ConnectParams:
         protocol: one of the strings "tcp" or "tcps" indicating whether to use
         unencrypted network traffic or encrypted network traffic (TLS).
 
-        enable_drcp: boolean specifying whether Database Resident Connection
-        Pooling (DRCP) should be used
+        server_type: the type of server connection that should be established.
+        If specified, it should be one of "dedicated", "shared" or "pooled".
 
         config_dir: directory in which configuration files (tnsnames.ora) are
         found (default: oracledb.defaults.config_dir)
@@ -166,7 +166,6 @@ class ConnectParams:
         """
 
         self.events = events if events is not None else defaults.events
-        self.enable_drcp = enable_drcp
         self.config_dir = config_dir if config_dir is not None \
                 else defaults.config_dir
         self.mode = mode
@@ -195,6 +194,8 @@ class ConnectParams:
         description = Description()
         description.service_name = service_name
         description.sid = sid
+        if server_type is not None:
+            description._set_server_type(server_type)
         description.cclass = cclass
         description.purity = purity
         description.ssl_server_dn_match = ssl_server_dn_match \
@@ -223,7 +224,7 @@ class ConnectParams:
                f"sid={self.sid!r}, " \
                f"events={self.events!r}, " \
                f"protocol={self.protocol!r}, " \
-               f"enable_drcp={self.enable_drcp!r}, " \
+               f"server_type={self.server_type!r}, " \
                f"config_dir={self.config_dir!r}, " \
                f"cclass={self.cclass!r}, " \
                f"purity={self.purity!r}, " \
@@ -394,6 +395,16 @@ class ConnectParams:
 
     @property
     @_description_attr
+    def server_type(self) -> Union[list, str]:
+        """
+        Returns the type of server connection that should be established. If
+        the connect string contains multiple descriptions, a list of
+        server_types is returned in the order they appear.
+        """
+        pass
+
+    @property
+    @_description_attr
     def ssl_server_dn_match(self) -> Union[list, bool]:
         """
         Returns the ssl_server_dn_match associated with each description in
@@ -556,10 +567,12 @@ class ConnectParams:
                     temp_val.lower() in ("on", "yes", "true")
         connect_data_node = description_node.connect_data
         description.service_name = getattr(connect_data_node, "service_name",
-                                    None)
+                                           None)
         description.sid = getattr(connect_data_node, "sid", None)
-        temp_val = getattr(connect_data_node, "pool_connection_class",
-                            None)
+        temp_val = getattr(connect_data_node, "server_type", None)
+        if temp_val is not None:
+            description._set_server_type(temp_val)
+        temp_val = getattr(connect_data_node, "pool_connection_class", None)
         if temp_val is not None:
             description.cclass = temp_val
         temp_val = getattr(connect_data_node, "pool_purity", None)
@@ -567,7 +580,7 @@ class ConnectParams:
             temp_val = temp_val.lower()
             if temp_val not in ("new", "self"):
                 errors._raise_err(errors.ERR_INVALID_POOL_PURITY,
-                                    purity=temp_val)
+                                  purity=temp_val)
             description.purity = constants.PURITY_NEW if temp_val == "new" \
                     else constants.PURITY_ANY
         security_node = getattr(description_node, "security", None)
@@ -637,11 +650,12 @@ class ConnectParams:
                 description.service_name = ""
             else:
                 description.service_name = connect_string[slash_pos + 1:]
-                drcp_suffix = ":POOLED"
-                if description.service_name.upper().endswith(drcp_suffix):
-                    self.enable_drcp = True
+                server_type_pos = description.service_name.find(":")
+                if server_type_pos > 0:
+                    value = description.service_name[server_type_pos + 1:]
+                    description._set_server_type(value)
                     description.service_name = \
-                            description.service_name[:-len(drcp_suffix)]
+                            description.service_name[:server_type_pos]
                 connect_string = connect_string[:slash_pos]
 
             # parse host and port
@@ -889,6 +903,7 @@ def parse_connect_descriptor(data, group=None):
     setattr(group, name, value)
     return group
 
+
 class Address:
     """
     Constructor for creating an address object that holds the parameters
@@ -903,6 +918,7 @@ class Address:
         self.https_proxy = None
         self.https_proxy_port = None
 
+
 class AddressList:
     """
     Constructor for an address list object that holds parameters and a list of
@@ -912,6 +928,7 @@ class AddressList:
         self.addresses = []
         self.load_balance = False
         self.lru_index = 0
+
 
 class Description:
     """
@@ -928,6 +945,7 @@ class Description:
         self.transport_connect_timeout = 0
         self.tcp_connect_timeout = defaults.tcp_connect_timeout
         self.service_name = None
+        self.server_type = None
         self.sid = None
         self.pool_connection_class = None
         self.pool_purity = None
@@ -935,6 +953,18 @@ class Description:
         self.wallet_location = None
         self.cclass = None
         self.purity = constants.PURITY_DEFAULT
+
+    def _set_server_type(self, server_type):
+        """
+        Validate that the server type is one of the supported values before
+        setting the attribute.
+        """
+        server_type = server_type.lower()
+        if server_type not in ("dedicated", "shared", "pooled"):
+            errors._raise_err(errors.ERR_INVALID_SERVER_TYPE,
+                              server_type=server_type)
+        self.server_type = server_type
+
 
 class DescriptionList:
     """
