@@ -350,7 +350,7 @@ class TestCase(test_env.BaseTestCase):
         "3647 - output type handler conversion from TIMESTAMP to TIMESTAMP_TZ"
         val = datetime.datetime(2002, 12, 17, 0, 0, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP,
-                                 oracledb.DB_TYPE_TIMESTAMP_LTZ, val, val)
+                                 oracledb.DB_TYPE_TIMESTAMP_TZ, val, val)
 
     def test_3648_TIMESTAMP_to_TIMESTAMP_LTZ(self):
         "3648 - output type handler conversion from TIMESTAMP to TIMESTAMP_LTZ"
