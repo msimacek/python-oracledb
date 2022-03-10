@@ -337,8 +337,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_TIME_NOT_SUPPORTED: \
             "Oracle Database does not support time only variables",
     ERR_TNS_ENTRY_NOT_FOUND: \
-            'cannot connect: unable to find "{name}" in tnsnames.ora found ' \
-            'in {config_dir}',
+            'cannot connect: unable to find "{name}" in {file_name}',
     ERR_TNS_NAMES_FILE_MISSING: \
             "cannot connect: tnsnames.ora not found in {config_dir}",
     ERR_UNEXPECTED_NEGATIVE_INTEGER: \

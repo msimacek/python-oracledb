@@ -743,8 +743,9 @@ class ConnectParams:
         tnsnames_file = self._get_tnsnames_file()
         connect_descriptor = tnsnames_file.entries.get(name.upper())
         if connect_descriptor is None:
+            file_name = os.path.join(self.config_dir, "tnsnames.ora")
             errors._raise_err(errors.ERR_TNS_ENTRY_NOT_FOUND, name=name,
-                              config_dir=self.config_dir)
+                              file_name=file_name)
         self._parse_connect_descriptor(connect_descriptor)
 
     def _set_by_keyword_args(self, keyword_args: dict) -> None:
