@@ -189,136 +189,178 @@ ERR_EXCEPTION_TYPES = {
 
 # error message formats
 ERR_MESSAGE_FORMATS = {
-    ERR_ARGS_MUST_BE_LIST_OR_TUPLE: "arguments must be a list or tuple",
+    ERR_ARGS_MUST_BE_LIST_OR_TUPLE: \
+            "arguments must be a list or tuple",
     ERR_ARGS_AND_KEYWORD_ARGS: \
-            "expecting arguments or keyword arguments, not both",
+            "expecting positional arguments or keyword arguments, not both",
     ERR_ARRAY_DML_ROW_COUNTS_NOT_ENABLED: \
-            "array DML row counts is not enabled",
-    ERR_ARRAYS_OF_ARRAYS: "arrays of arrays are not supported",
+            "array DML row counts mode is not enabled",
+    ERR_ARRAYS_OF_ARRAYS: \
+            "arrays of arrays are not supported",
     ERR_BUFFER_LENGTH_INSUFFICIENT: \
             "split buffer of length {actual_buffer_len} insufficient to " \
             "hold {required_buffer_len} bytes",
-    ERR_CALL_TIMEOUT_EXCEEDED: "call timeout of {timeout} ms exceeded",
+    ERR_CALL_TIMEOUT_EXCEEDED: \
+            "call timeout of {timeout} ms exceeded",
     ERR_CANNOT_PARSE_CONNECT_DESCRIPTOR: \
-            "cannot parse connect descriptor: {data}",
+            'cannot parse connect descriptor "{data}"',
     ERR_CANNOT_PARSE_EZCONNECT_STRING: \
-            "cannot parse easy connect string: {data}",
-    ERR_COLUMN_TRUNCATED: "column truncated to {col_value_len} {unit} " \
-            "(actual is {actual_len})",
-    ERR_CONTENT_INVALID_AFTER_NUMBER: "invalid number (content after number)",
-    ERR_DB_TYPE_NOT_SUPPORTED: "Database type {name} not supported",
+            'cannot parse Easy Connect string "{data}"',
+    ERR_COLUMN_TRUNCATED: \
+            "column truncated to {col_value_len} {unit}. " \
+            "Untruncated was {actual_len}",
+    ERR_CONTENT_INVALID_AFTER_NUMBER: \
+            "invalid number (content after number)",
+    ERR_DB_TYPE_NOT_SUPPORTED: \
+            'database type "{name}" is not supported',
     ERR_DUPLICATED_PARAMETER: \
-            "{deprecated_name} and {new_name} cannot both be specified",
-    ERR_EXPECTING_TYPE: "expecting type",
-    ERR_EXPECTING_VAR: "output type handler should return None or the value " \
-                       "returned by a call to cursor.var()",
+            '"{deprecated_name}" and "{new_name}" cannot be specified together',
+    ERR_EXPECTING_TYPE: \
+            "expected a type",
+    ERR_EXPECTING_VAR: \
+            "output type handler should return None or the value " \
+            "returned by a call to cursor.var()",
     ERR_FEATURE_NOT_SUPPORTED: \
-            "{feature} is only supported by the {driver_type} driver",
+            "{feature} is only supported in python-oracledb {driver_type} mode",
     ERR_INCONSISTENT_DATATYPES: \
-            "cannot convert from type {input_type} to {output_type}",
-    ERR_INCORRECT_VAR_ARRAYSIZE: "variable array size of {var_arraysize} is " \
-                                 "too small (should be at least " \
-                                 "{required_arraysize})",
+            "cannot convert from data type {input_type} to {output_type}",
+    ERR_INCORRECT_VAR_ARRAYSIZE: \
+            "variable array size of {var_arraysize} is " \
+            "too small (should be at least {required_arraysize})",
     ERR_INIT_ORACLE_CLIENT_NOT_CALLED: \
             "init_oracle_client() must be called first",
     ERR_INTEGER_TOO_LARGE: \
             "read integer of length {length} when expecting integer of no " \
             "more than length {max_length}",
     ERR_INVALID_BIND_NAME: \
-            'no placeholder named "{name}" was found in the SQL text',
-    ERR_INVALID_CONNECT_DESCRIPTOR: "invalid connect descriptor: {data}",
-    ERR_INVALID_MAKEDSN_ARG: "invalid value for makedsn() argument '{name}'",
-    ERR_INVALID_NUMBER: "invalid number",
-    ERR_INVALID_OCI_ATTR_TYPE: "invalid OCI attribute type: {attr_type}",
-    ERR_INVALID_POOL_PURITY: "invalid pool purity: {purity}",
-    ERR_INVALID_PROTOCOL: "invalid protocol: {protocol}",
-    ERR_INVALID_REDIRECT_DATA: "invalid redirect data: {data}",
+            'no bind placeholder named "{name}" was found in the SQL text',
+    ERR_INVALID_CONNECT_DESCRIPTOR: \
+            'invalid connect descriptor "{data}"',
+    ERR_INVALID_MAKEDSN_ARG: \
+            '"{name}" argument contains invalid values',
+    ERR_INVALID_NUMBER: \
+            "invalid number",
+    ERR_INVALID_OCI_ATTR_TYPE: \
+            "invalid OCI attribute type {attr_type}",
+    ERR_INVALID_POOL_PURITY: \
+            "invalid DRCP purity {purity}",
+    ERR_INVALID_PROTOCOL: \
+            'invalid protocol "{protocol}"',
+    ERR_INVALID_REDIRECT_DATA: \
+            "invalid redirect data {data}",
     ERR_INVALID_REF_CURSOR: \
-            "invalid REF cursor (never opened in PL/SQL block)",
+            "invalid REF CURSOR: never opened in PL/SQL",
     ERR_INVALID_SERVER_CERT_DN: \
-            "the distinguished name (DN) on the server certificate does not " \
-            "match the expected value",
-    ERR_INVALID_SERVER_TYPE: "invalid server_type: {server_type}",
+            "cannot connect: the distinguished name (DN) on the server "
+            "certificate does not match the expected value",
+    ERR_INVALID_SERVER_TYPE: \
+            "invalid server_type: {server_type}",
     ERR_INVALID_SERVICE_NAME: \
-            "listener doesn't recognize service name (see ORA-12514)",
-    ERR_INVALID_SID: "listener doesn't recognize sid (see ORA-12505)",
-    ERR_KEYWORD_ARGS_MUST_BE_DICT: "keyword arguments must be a dict",
+            "cannot connect: database listener does not recognize service " \
+            "name (see ORA-12514)",
+    ERR_INVALID_SID: \
+            "cannot connect: database listener does not recognize SID " \
+            "(see ORA-12505)",
+    ERR_KEYWORD_ARGS_MUST_BE_DICT: \
+            '"keyword_parameters" argument must be a dict',
     ERR_LIBRARY_ALREADY_INITIALIZED: \
-            "Oracle Client library has already been initialized with " \
-            "different arguments",
+            "init_oracle_client() was already called with different arguments",
     ERR_LISTENER_REFUSED_CONNECTION: \
-            "listener refused connection (see ORA-{error_code})",
-    ERR_MESSAGE_HAS_NO_PAYLOAD: "message has no payload",
+            "cannot connect: database listener refused connection " \
+            "(see ORA-{error_code})",
+    ERR_MESSAGE_HAS_NO_PAYLOAD: \
+            "message has no payload",
     ERR_MESSAGE_TYPE_UNKNOWN: \
-            "protocol error: unknown message type: {message_type}",
+            "protocol error: unknown message type {message_type}",
     ERR_MISSING_BIND_VALUE: \
             'a bind variable replacement value for placeholder "{name}" was ' \
             'not provided',
     ERR_MIXED_ELEMENT_TYPES: \
-            "element {element} is not the same type as previous elements",
+            "element {element} is not the same data type as previous elements",
     ERR_MIXED_POSITIONAL_AND_NAMED_BINDS: \
             "positional and named binds cannot be intermixed",
     ERR_NCHAR_CS_NOT_SUPPORTED: \
-            "NCHAR character set id {charset_id} not supported with the " \
-            "thin driver",
-    ERR_NO_CONFIG_DIR: "no configuration directory to search for tnsnames.ora",
-    ERR_NO_PASSWORD: "no password specified",
-    ERR_NO_STATEMENT: "no statement specified and no prior statement prepared",
-    ERR_NO_STATEMENT_EXECUTED: "no statement executed",
-    ERR_NO_STATEMENT_PREPARED: "statement must be prepared first",
-    ERR_NOT_A_QUERY: "not a query",
-    ERR_NOT_CONNECTED: "not connected",
-    ERR_NOT_OPEN: "not open",
-    ERR_NUMBER_STRING_OF_ZERO_LENGTH: "invalid number (zero length string)",
-    ERR_NUMBER_STRING_TOO_LONG: "invalid number (too long)",
-    ERR_NUMBER_WITH_EMPTY_EXPONENT: "invalid number (exponent empty)",
-    ERR_NUMBER_WITH_INVALID_EXPONENT: "invalid number (exponent invalid)",
-    ERR_ORACLE_NUMBER_NO_REPR: "value cannot be represented as an Oracle " \
-                               "number",
-    ERR_ORACLE_TYPE_NOT_SUPPORTED: "Oracle type {num} not supported",
+            "national character set id {charset_id} is not supported by " \
+            "python-oracledb in thin mode",
+    ERR_NO_CONFIG_DIR: \
+            "no configuration directory to search for tnsnames.ora",
+    ERR_NO_PASSWORD: \
+            "no password specified",
+    ERR_NO_STATEMENT: \
+            "no statement specified and no prior statement prepared",
+    ERR_NO_STATEMENT_EXECUTED: \
+            "no statement executed",
+    ERR_NO_STATEMENT_PREPARED: \
+            "statement must be prepared first",
+    ERR_NOT_A_QUERY: \
+            "the executed statement does not return rows",
+    ERR_NOT_CONNECTED: \
+            "not connected",
+    ERR_NOT_OPEN: \
+            "not open",
+    ERR_NUMBER_STRING_OF_ZERO_LENGTH: \
+            "invalid number: zero length string",
+    ERR_NUMBER_STRING_TOO_LONG: \
+            "invalid number: string too long",
+    ERR_NUMBER_WITH_EMPTY_EXPONENT: \
+            "invalid number: empty exponent",
+    ERR_NUMBER_WITH_INVALID_EXPONENT: \
+            "invalid number: invalid exponent",
+    ERR_ORACLE_NUMBER_NO_REPR: \
+            "value cannot be represented as an Oracle number",
+    ERR_ORACLE_TYPE_NOT_SUPPORTED: \
+            "Oracle data type {num} is not supported",
     ERR_POOL_HAS_BUSY_CONNECTIONS: \
-            "pool cannot be destroyed because it has busy connections",
+            "connection pool cannot be closed because connections are busy",
     ERR_POOL_NO_CONNECTION_AVAILABLE: \
-            "timed out waiting for pool to have free connections available " \
-            "or create new connections",
+            "timed out waiting for the connection pool to return a connection",
     ERR_PROXY_FAILURE: \
-            "use of the proxy failed: response was {response}",
-    ERR_PYTHON_TYPE_NOT_SUPPORTED: "Python type {typ} not supported",
+            "network proxy failed: response was {response}",
+    ERR_PYTHON_TYPE_NOT_SUPPORTED: \
+            "Python type {typ} is not supported",
     ERR_PYTHON_VALUE_NOT_SUPPORTED: \
-            "Python value of type {type_name} not supported",
-    ERR_SELF_BIND_NOT_SUPPORTED: "binding to self not supported",
-    ERR_CONNECTION_CLOSED: "connection to database has been closed",
-    ERR_SERVER_LOGON_TYPE_NOT_SUPPORTED: "server logon version not supported",
+            'Python value of type "{type_name}" is not supported',
+    ERR_SELF_BIND_NOT_SUPPORTED: \
+            "binding to self is not supported",
+    ERR_CONNECTION_CLOSED: \
+            "database connection has been closed",
+    ERR_SERVER_LOGON_TYPE_NOT_SUPPORTED: \
+            "server logon version is not supported",
     ERR_SERVER_VERSION_NOT_SUPPORTED: \
             "connections to this database server version are not supported " \
-            "with the thin driver",
-    ERR_SET_ROWID_DIRECTLY: "rowid variables cannot be set directly",
+            "by python-oracledb in thin mode",
+    ERR_SET_ROWID_DIRECTLY: \
+            "rowid variables cannot be set directly",
     ERR_THIN_CONNECTION_ALREADY_CREATED: \
-            "the thick implementation cannot be used because a thin " \
+            "python-oracledb thick mode cannot be used because a thin mode " \
             "connection has already been created",
-    ERR_TIME_NOT_SUPPORTED: "Oracle does not support time only variables",
+    ERR_TIME_NOT_SUPPORTED: \
+            "Oracle Database does not support time only variables",
     ERR_TNS_ENTRY_NOT_FOUND: \
-            "unable to find {name} in tnsnames.ora found in {config_dir}",
-    ERR_TNS_NAMES_FILE_MISSING: "tnsnames.ora not found in {config_dir}",
+            'cannot connect: unable to find "{name}" in tnsnames.ora found ' \
+            'in {config_dir}',
+    ERR_TNS_NAMES_FILE_MISSING: \
+            "cannot connect: tnsnames.ora not found in {config_dir}",
     ERR_UNEXPECTED_NEGATIVE_INTEGER: \
-            "read negative integer when expecting only a positive integer",
+            "read a negative integer when expecting a positive integer",
     ERR_UNSUPPORTED_INBAND_NOTIFICATION: \
             "unsupported in-band notification with error number {err_num}",
-    ERR_WALLET_FILE_MISSING: "wallet file {name} is missing",
+    ERR_WALLET_FILE_MISSING: \
+            "cannot connect: wallet file {name} was not found",
     ERR_WRONG_ARRAY_DEFINITION: \
             "expecting a list of two elements [type, numelems]",
     ERR_WRONG_EXECUTE_PARAMETERS_TYPE: \
             "expecting a dictionary, list or tuple, or keyword args",
     ERR_WRONG_EXECUTEMANY_PARAMETERS_TYPE: \
-            "parameters should be a list of sequences or " \
-            "dictionaries, or an integer specifying the number of " \
-            "times to execute the statement",
+            '"parameters" argument should be a list of sequences or ' \
+            'dictionaries, or an integer specifying the number of ' \
+            'times to execute the statement',
     ERR_WRONG_NUMBER_OF_POSITIONAL_BINDS: \
-            "{expected_num} positional bind(s) are required but " \
-            "{actual_num} positional bind(s) were provided.",
+            "{expected_num} positional bind values are required but " \
+            "{actual_num} were provided",
     ERR_WRONG_OBJECT_TYPE: \
-            "found object of type {actual_schema}.{actual_name} " \
-            "when expecting object of type {expected_schema}.{expected_name}",
+            'found object of type "{actual_schema}.{actual_name}" when ' \
+            'expecting object of type "{expected_schema}.{expected_name}"',
     ERR_WRONG_SCROLL_MODE: \
-            "mode must be one of relative, absolute, first or last",
+            "scroll mode must be relative, absolute, first or last",
 }
