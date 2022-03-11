@@ -1439,6 +1439,7 @@ cdef class ConnectMessage(Message):
     cdef:
         uint16_t connect_string_len
         bytes connect_string_bytes
+        object description
         str redirect_data
 
     cdef int process(self, ReadBuffer buf) except -1:
@@ -1456,6 +1457,24 @@ cdef class ConnectMessage(Message):
             buf.read_uint16(&protocol_version)
             buf.read_uint16(&protocol_options)
             buf._caps._adjust_for_protocol(protocol_version, protocol_options)
+        elif self.packet_type == TNS_PACKET_TYPE_REFUSE:
+            response = self.error_info.message
+            error_code = "unknown"
+            error_code_int = 0
+            pos = response.find("(ERR=")
+            if pos > 0:
+                end_pos = response.find(")", pos)
+                if end_pos > 0:
+                    error_code = response[pos + 5:end_pos]
+                    error_code_int = int(error_code)
+            if error_code_int == TNS_ERR_INVALID_SERVICE_NAME:
+                errors._raise_err(errors.ERR_INVALID_SERVICE_NAME,
+                                  service_name=self.description.service_name)
+            elif error_code_int == TNS_ERR_INVALID_SID:
+                errors._raise_err(errors.ERR_INVALID_SID,
+                                  sid=self.description.sid)
+            errors._raise_err(errors.ERR_LISTENER_REFUSED_CONNECTION,
+                              error_code=error_code)
 
     cdef int send(self, WriteBuffer buf) except -1:
         cdef:

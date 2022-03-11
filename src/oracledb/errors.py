@@ -256,11 +256,11 @@ ERR_MESSAGE_FORMATS = {
     ERR_INVALID_SERVER_TYPE: \
             "invalid server_type: {server_type}",
     ERR_INVALID_SERVICE_NAME: \
-            "cannot connect: database listener does not recognize service " \
-            "name (see ORA-12514)",
+            'cannot connect: database listener does not recognize service ' \
+            'name "{service_name}" (see ORA-12514)',
     ERR_INVALID_SID: \
-            "cannot connect: database listener does not recognize SID " \
-            "(see ORA-12505)",
+            'cannot connect: database listener does not recognize SID ' \
+            '"{sid}" (see ORA-12505)',
     ERR_KEYWORD_ARGS_MUST_BE_DICT: \
             '"keyword_parameters" argument must be a dict',
     ERR_LIBRARY_ALREADY_INITIALIZED: \

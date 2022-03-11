@@ -107,6 +107,7 @@ cdef class Protocol:
         # detected, however, the process terminates and is restarted using the
         # supplied redirect data
         connect_message = conn_impl._create_message(ConnectMessage)
+        connect_message.description = description
         connect_message.connect_string_bytes = connect_string.encode()
         connect_message.connect_string_len = \
                 <uint16_t> len(connect_message.connect_string_bytes)
@@ -267,31 +268,18 @@ cdef class Protocol:
                 self._process_message(message)
 
     cdef int _receive_packet(self, Message message) except -1:
-        self._read_buf.receive_packet(&message.packet_type)
+        cdef ReadBuffer buf = self._read_buf
+        buf.receive_packet(&message.packet_type)
         if message.packet_type == TNS_PACKET_TYPE_MARKER:
             self._reset(message)
             message.error_occurred = True
         elif message.packet_type == TNS_PACKET_TYPE_CONTROL:
-            self._process_control_packet(self._read_buf)
-            self._read_buf.receive_packet(&message.packet_type)
+            self._process_control_packet(buf)
+            buf.receive_packet(&message.packet_type)
         elif message.packet_type == TNS_PACKET_TYPE_REFUSE:
             self._write_buf._packet_sent = False
-            self._read_buf.skip_raw_bytes(3)
-            response = self._read_buf.read_str(TNS_CS_IMPLICIT)
-            error_code = "unknown"
-            error_code_int = 0
-            pos = response.find("(ERR=")
-            if pos > 0:
-                end_pos = response.find(")", pos)
-                if end_pos > 0:
-                    error_code = response[pos + 5:end_pos]
-                    error_code_int = int(error_code)
-            if error_code_int == TNS_ERR_INVALID_SERVICE_NAME:
-                errors._raise_err(errors.ERR_INVALID_SERVICE_NAME)
-            elif error_code_int == TNS_ERR_INVALID_SID:
-                errors._raise_err(errors.ERR_INVALID_SID)
-            errors._raise_err(errors.ERR_LISTENER_REFUSED_CONNECTION,
-                              error_code=error_code)
+            buf.skip_raw_bytes(3)
+            message.error_info.message = buf.read_str(TNS_CS_IMPLICIT)
 
     cdef int _release_drcp_session(self, WriteBuffer buf) except -1:
         """
