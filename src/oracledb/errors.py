@@ -295,9 +295,9 @@ ERR_MESSAGE_FORMATS = {
     ERR_NOT_A_QUERY:
             'the executed statement does not return rows',
     ERR_NOT_CONNECTED:
-            'not connected',
+            'not connected to database',
     ERR_NOT_OPEN:
-            'not open',
+            'pool is not open',
     ERR_NUMBER_STRING_OF_ZERO_LENGTH:
             'invalid number: zero length string',
     ERR_NUMBER_STRING_TOO_LONG:
