@@ -943,13 +943,10 @@ class Description:
         self.expire_time = 0
         self.retry_count = 0
         self.retry_delay = 0
-        self.transport_connect_timeout = 0
         self.tcp_connect_timeout = defaults.tcp_connect_timeout
         self.service_name = None
         self.server_type = None
         self.sid = None
-        self.pool_connection_class = None
-        self.pool_purity = None
         self.ssl_server_cert_dn = defaults.ssl_server_dn_match
         self.wallet_location = None
         self.cclass = None
