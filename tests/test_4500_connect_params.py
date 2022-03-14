@@ -406,7 +406,7 @@ class TestCase(test_env.BaseTestCase):
         connect_string = \
             "(DESCRIPTION=" \
             "(ADDRESS=(PROTOCOL=TCP)(HOST=my_host4529)(PORT=4529))" \
-            "(CONNECT_DATA=(SERVER_TYPE=DEDICATED)" \
+            "(CONNECT_DATA=(SERVER=DEDICATED)" \
             "(SERVICE_NAME=my_service_name4529)))"
         params.parse_connect_string(connect_string)
         self.assertEqual(params.server_type, "dedicated")

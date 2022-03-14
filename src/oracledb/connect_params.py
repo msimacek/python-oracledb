@@ -569,7 +569,7 @@ class ConnectParams:
         description.service_name = getattr(connect_data_node, "service_name",
                                            None)
         description.sid = getattr(connect_data_node, "sid", None)
-        temp_val = getattr(connect_data_node, "server_type", None)
+        temp_val = getattr(connect_data_node, "server", None)
         if temp_val is not None:
             description._set_server_type(temp_val)
         temp_val = getattr(connect_data_node, "pool_connection_class", None)
