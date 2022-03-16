@@ -208,8 +208,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_ARRAYS_OF_ARRAYS:
             'arrays of arrays are not supported',
     ERR_BUFFER_LENGTH_INSUFFICIENT:
-            'split buffer of length {actual_buffer_len} insufficient to '
-            'hold {required_buffer_len} bytes',
+            'internal error: split buffer of length {actual_buffer_len} '
+            'insufficient to hold {required_buffer_len} bytes',
     ERR_CALL_TIMEOUT_EXCEEDED:
             'call timeout of {timeout} ms exceeded',
     ERR_CANNOT_PARSE_CONNECT_DESCRIPTOR:
@@ -240,8 +240,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_INIT_ORACLE_CLIENT_NOT_CALLED:
             'init_oracle_client() must be called first',
     ERR_INTEGER_TOO_LARGE:
-            'read integer of length {length} when expecting integer of no '
-            'more than length {max_length}',
+            'internal error: read integer of length {length} when expecting '
+            'integer of no more than length {max_length}',
     ERR_INVALID_BIND_NAME:
             'no bind placeholder named "{name}" was found in the SQL text',
     ERR_INVALID_CONNECT_DESCRIPTOR:
@@ -281,7 +281,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_MESSAGE_HAS_NO_PAYLOAD:
             'message has no payload',
     ERR_MESSAGE_TYPE_UNKNOWN:
-            'protocol error: unknown message type {message_type}',
+            'internal error: unknown protocol message type {message_type}',
     ERR_MISSING_BIND_VALUE:
             'a bind variable replacement value for placeholder "{name}" was '
             'not provided',
@@ -333,7 +333,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_SELF_BIND_NOT_SUPPORTED:
             'binding to self is not supported',
     ERR_CONNECTION_CLOSED:
-            'database connection has been closed',
+            'the database or network closed the connection',
     ERR_SERVER_LOGON_TYPE_NOT_SUPPORTED:
             'server logon version is not supported',
     ERR_SERVER_VERSION_NOT_SUPPORTED:
@@ -353,7 +353,8 @@ ERR_MESSAGE_FORMATS = {
             'cannot connect to database: tnsnames.ora not found in '
             '{config_dir}',
     ERR_UNEXPECTED_NEGATIVE_INTEGER:
-            'read a negative integer when expecting a positive integer',
+            'internal error: read a negative integer when expecting a '
+            'positive integer',
     ERR_UNSUPPORTED_INBAND_NOTIFICATION:
             'unsupported in-band notification with error number {err_num}',
     ERR_WALLET_FILE_MISSING:
