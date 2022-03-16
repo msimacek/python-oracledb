@@ -547,14 +547,15 @@ class TestCase(test_env.BaseTestCase):
         cursor.callproc("dbms_output.get_line", (string_var, number_var))
         self.assertEqual(string_var.getvalue(), test_string)
 
-    @unittest.skipIf(test_env.get_client_version() < (18, 1) or \
-                     test_env.get_is_thin(), "unsupported client")
+    @unittest.skipIf(not test_env.get_is_thin() and \
+                     test_env.get_client_version() < (18, 1),
+                     "unsupported client")
     def test_1135_calltimeout(self):
         "1135 - test connection call_timeout"
         conn = test_env.get_connection()
         conn.call_timeout = 500   # milliseconds
         self.assertEqual(conn.call_timeout, 500)
-        self.assertRaisesRegex(oracledb.DatabaseError, "^DPI-1080:|^DPI-1067:",
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4011:|^DPY-4024:",
                                conn.cursor().callproc,
                                test_env.get_sleep_proc_name(), [2])
 

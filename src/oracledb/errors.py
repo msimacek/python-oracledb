@@ -2,6 +2,8 @@
 # Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
+import re
+
 from . import exceptions
 
 class _Error:
@@ -19,14 +21,20 @@ class _Error:
         self.code = code
         self.offset = offset
         if code != 0 or (message is not None and message.startswith("DPI-")):
+            args = {}
             if code != 0:
-                driver_error_num = ERR_ORACLE_ERROR_XREF.get(code)
+                driver_error_info = ERR_ORACLE_ERROR_XREF.get(code)
             else:
                 pos = message.find(":")
                 error_num = int(message[4:pos])
-                driver_error_num = ERR_DPI_ERROR_XREF.get(error_num)
-            if driver_error_num is not None:
-                driver_error = _get_error_text(driver_error_num)
+                driver_error_info = ERR_DPI_ERROR_XREF.get(error_num)
+            if driver_error_info is not None:
+                if isinstance(driver_error_info, tuple):
+                    driver_error_num, pattern = driver_error_info
+                    args = re.search(pattern, message).groupdict()
+                else:
+                    driver_error_num = driver_error_info
+                driver_error = _get_error_text(driver_error_num, **args)
                 self.message = f"{driver_error}\n{self.message}"
 
     def __str__(self):
@@ -175,6 +183,8 @@ ERR_DPI_ERROR_XREF = {
     1010: ERR_CONNECTION_CLOSED,
     1043: ERR_INVALID_NUMBER,
     1044: ERR_ORACLE_NUMBER_NO_REPR,
+    1067: (ERR_CALL_TIMEOUT_EXCEEDED, "call timeout of (?P<timeout>\d+) ms"),
+    1080: ERR_CONNECTION_CLOSED,
 }
 
 # error message exception types (multiples of 1000)
