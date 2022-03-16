@@ -218,7 +218,7 @@ cdef class Protocol:
                                   timeout=timeout)
             except socket.timeout:
                 self._force_close()
-                errors._raise_err(errors.ERR_NOT_CONNECTED,
+                errors._raise_err(errors.ERR_CONNECTION_CLOSED,
                                   "socket timed out while recovering from " \
                                   "previous socket timeout")
             raise
@@ -242,7 +242,7 @@ cdef class Protocol:
                                       TNS_MARKER_TYPE_INTERRUPT)
                 self._receive_packet(message)
             except socket.timeout:
-                errors._raise_err(errors.ERR_NOT_CONNECTED,
+                errors._raise_err(errors.ERR_CONNECTION_CLOSED,
                                   "socket timed out while awaiting break " \
                                   "response from server")
             message.process(self._read_buf)

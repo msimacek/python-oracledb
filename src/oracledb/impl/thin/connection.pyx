@@ -221,7 +221,7 @@ cdef class ThinConnImpl(BaseConnImpl):
     def close(self, bint in_del=False):
         try:
             self._protocol._close(self)
-        except ssl.SSLError:
+        except (ssl.SSLError, exceptions.DatabaseError):
             pass
 
     def commit(self):
