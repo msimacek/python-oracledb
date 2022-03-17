@@ -197,7 +197,7 @@ class ConnectionPool:
         Verifies that the pool is open and able to perform its work.
         """
         if self._impl is None:
-            errors._raise_err(errors.ERR_NOT_OPEN)
+            errors._raise_err(errors.ERR_POOL_NOT_OPEN)
 
     def acquire(self,
                 user: str=None,

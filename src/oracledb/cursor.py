@@ -129,7 +129,7 @@ class Cursor:
         connected. If either condition is false an exception is raised.
         """
         if self._impl is None:
-            errors._raise_err(errors.ERR_NOT_OPEN)
+            errors._raise_err(errors.ERR_CURSOR_NOT_OPEN)
         self.connection._verify_connected()
 
     @property

@@ -32,7 +32,7 @@ class TestCase(test_env.BaseTestCase):
     def test_4301_exception_on_close(self):
         "4301 - confirm an exception is raised after closing a cursor"
         self.cursor.close()
-        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1002:",
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1006:",
                                self.cursor.execute, "select 1 from dual")
 
     def test_4302_iterators(self):
@@ -168,7 +168,7 @@ class TestCase(test_env.BaseTestCase):
             cursor.execute("select count(*) from TestTempTable")
             count, = cursor.fetchone()
             self.assertEqual(count, 0)
-        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1002:",
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1006:",
                                self.cursor.close)
 
     def test_4317_query_row_count(self):

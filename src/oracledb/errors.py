@@ -80,10 +80,11 @@ ERR_PREFIX = "DPY"
 # error numbers that result in InterfaceError
 ERR_MISSING_ERROR = 1000
 ERR_NOT_CONNECTED = 1001
-ERR_NOT_OPEN = 1002
+ERR_POOL_NOT_OPEN = 1002
 ERR_NOT_A_QUERY = 1003
 ERR_NO_STATEMENT_EXECUTED = 1004
 ERR_POOL_HAS_BUSY_CONNECTIONS = 1005
+ERR_CURSOR_NOT_OPEN = 1006
 
 # error numbers that result in ProgrammingError
 ERR_MESSAGE_HAS_NO_PAYLOAD = 2000
@@ -221,6 +222,8 @@ ERR_MESSAGE_FORMATS = {
             'Untruncated was {actual_len}',
     ERR_CONTENT_INVALID_AFTER_NUMBER:
             'invalid number (content after number)',
+    ERR_CURSOR_NOT_OPEN:
+            'cursor is not open',
     ERR_DB_TYPE_NOT_SUPPORTED:
             'database type "{name}" is not supported',
     ERR_DUPLICATED_PARAMETER:
@@ -306,8 +309,8 @@ ERR_MESSAGE_FORMATS = {
             'the executed statement does not return rows',
     ERR_NOT_CONNECTED:
             'not connected to database',
-    ERR_NOT_OPEN:
-            'pool is not open',
+    ERR_POOL_NOT_OPEN:
+            'connection pool is not open',
     ERR_NUMBER_STRING_OF_ZERO_LENGTH:
             'invalid number: zero length string',
     ERR_NUMBER_STRING_TOO_LONG:

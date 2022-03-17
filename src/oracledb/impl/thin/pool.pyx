@@ -275,7 +275,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
 
         # if pool is closed, raise an exception
         if not self._open:
-            errors._raise_err(errors.ERR_NOT_OPEN)
+            errors._raise_err(errors.ERR_POOL_NOT_OPEN)
 
         # session tagging has not been implemented yet
         if params.tag is not None:
