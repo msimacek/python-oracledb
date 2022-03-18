@@ -258,7 +258,7 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
         uint32_t editionLength
         const char *driverName
         uint32_t driverNameLength
-        int sodaMetadataCache
+        bint sodaMetadataCache
         uint32_t stmtCacheSize
 
     ctypedef struct dpiConnCreateParams:
@@ -270,20 +270,20 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
         uint32_t newPasswordLength
         dpiAppContext *appContext
         uint32_t numAppContext
-        int externalAuth
+        bint externalAuth
         void *externalHandle
         dpiPool *pool
         const char *tag
         uint32_t tagLength
-        int matchAnyTag
+        bint matchAnyTag
         const char *outTag
         uint32_t outTagLength
-        int outTagFound
+        bint outTagFound
         dpiShardingKeyColumn *shardingKeyColumns
         uint8_t numShardingKeyColumns
         dpiShardingKeyColumn *superShardingKeyColumns
         uint8_t numSuperShardingKeyColumns
-        int outNewSession
+        bint outNewSession
 
     ctypedef struct dpiContextCreateParams:
         const char *defaultDriverName
@@ -316,7 +316,7 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
         dpiRowid *asRowid
 
     ctypedef struct dpiData:
-        int isNull
+        bint isNull
         dpiDataBuffer value
 
     ctypedef struct dpiDataTypeInfo:
@@ -340,8 +340,8 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
         const char *fnName
         const char *action
         const char *sqlState
-        int isRecoverable
-        int isWarning
+        bint isRecoverable
+        bint isWarning
         uint32_t offset
 
     ctypedef struct dpiObjectAttrInfo:
@@ -354,7 +354,7 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
         uint32_t schemaLength
         const char *name
         uint32_t nameLength
-        int isCollection
+        bint isCollection
         dpiDataTypeInfo elementTypeInfo
         uint16_t numAttributes
 
@@ -364,8 +364,8 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
         uint32_t sessionIncrement
         int pingInterval
         int pingTimeout
-        int homogeneous
-        int externalAuth
+        bint homogeneous
+        bint externalAuth
         uint32_t getMode
         const char *outPoolName
         uint32_t outPoolNameLength
@@ -380,7 +380,7 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
         const char *name
         uint32_t nameLength
         dpiDataTypeInfo typeInfo
-        int nullOk
+        bint nullOk
 
     ctypedef struct dpiShardingKeyColumn:
         uint32_t oracleTypeNum
@@ -409,12 +409,12 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
         uint32_t fetchArraySize
 
     ctypedef struct dpiStmtInfo:
-        int isQuery
-        int isPLSQL
-        int isDDL
-        int isDML
+        bint isQuery
+        bint isPLSQL
+        bint isDDL
+        bint isDML
         uint16_t statementType
-        int isReturning
+        bint isReturning
 
     ctypedef struct dpiSubscrCreateParams:
         uint32_t subscrNamespace
@@ -435,7 +435,7 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
         uint32_t groupingValue
         uint8_t groupingType
         uint64_t outRegId
-        int clientInitiated
+        bint clientInitiated
 
     ctypedef struct dpiSubscrMessage:
         uint32_t eventType
@@ -552,12 +552,12 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
 
     int dpiConn_newVar(dpiConn *conn, uint32_t oracleTypeNum,
             uint32_t nativeTypeNum, uint32_t maxArraySize, uint32_t size,
-            int sizeIsBytes, int isArray, dpiObjectType *objType, dpiVar **var,
+            int sizeIsBytes, bint isArray, dpiObjectType *objType, dpiVar **var,
             dpiData **data) nogil
 
     int dpiConn_ping(dpiConn *conn) nogil
 
-    int dpiConn_prepareStmt(dpiConn *conn, int scrollable, const char *sql,
+    int dpiConn_prepareStmt(dpiConn *conn, bint scrollable, const char *sql,
             uint32_t sqlLength, const char *tag, uint32_t tagLength,
             dpiStmt **stmt) nogil
 
