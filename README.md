@@ -10,7 +10,7 @@ a considerable number of additions and a couple of minor exclusions, see the
 
 ## Installation
 
-Run `python -m pip install python-oracledb`
+Run `python -m pip install oracledb`
 
 See [python-oracledb Installation][installation].
 
