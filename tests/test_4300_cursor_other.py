@@ -697,8 +697,8 @@ class TestCase(test_env.BaseTestCase):
         self.assertIs(self.cursor.bindvars.get("a"), None)
         self.assertIsInstance(self.cursor.bindvars["b"], oracledb.Var)
 
-    def test_4358_close_conn_before_cursor(self):
-        "4538 - kill connection before cursor is closed"
+    def test_4358_kill_conn_with_open_cursor(self):
+        "4538 - kill connection with open cursor"
         admin_conn = oracledb.connect(test_env.get_admin_connect_string())
         conn = test_env.get_connection()
         cursor = conn.cursor()
@@ -711,8 +711,25 @@ class TestCase(test_env.BaseTestCase):
         with admin_conn.cursor() as admin_cursor:
             sql = f"alter system kill session '{sid},{serial}'"
             admin_cursor.execute(sql)
-        self.assertRaises(oracledb.DatabaseError, cursor.execute,
-                          "select user from dual")
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4011:",
+                               cursor.execute, "select user from dual")
+
+    def test_4359_kill_conn_in_context_manager(self):
+        "4538 - kill connection in cursor context manager"
+        admin_conn = oracledb.connect(test_env.get_admin_connect_string())
+        conn = test_env.get_connection()
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                    select
+                        dbms_debug_jdwp.current_session_id,
+                        dbms_debug_jdwp.current_session_serial
+                    from dual""")
+            sid, serial = cursor.fetchone()
+            with admin_conn.cursor() as admin_cursor:
+                sql = f"alter system kill session '{sid},{serial}'"
+                admin_cursor.execute(sql)
+            self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4011:",
+                                   cursor.execute, "select user from dual")
 
 if __name__ == "__main__":
     test_env.run_test_cases()
