@@ -22,7 +22,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         if self._handle != NULL:
             dpiStmt_release(self._handle)
 
-    cdef int _close(self) except -1:
+    cdef int _close(self, bint in_del) except -1:
         """
         Internal method for closing the cursor.
         """
@@ -30,7 +30,8 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             if self._conn_impl._handle != NULL \
                     and not self._is_implicit_cursor:
                 if dpiStmt_close(self._handle, NULL, 0) < 0:
-                    _raise_from_odpi()
+                    if not in_del:
+                        _raise_from_odpi()
             dpiStmt_release(self._handle)
             self._handle = NULL
 

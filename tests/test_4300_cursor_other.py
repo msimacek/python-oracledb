@@ -697,5 +697,22 @@ class TestCase(test_env.BaseTestCase):
         self.assertIs(self.cursor.bindvars.get("a"), None)
         self.assertIsInstance(self.cursor.bindvars["b"], oracledb.Var)
 
+    def test_4358_close_conn_before_cursor(self):
+        "4538 - kill connection before cursor is closed"
+        admin_conn = oracledb.connect(test_env.get_admin_connect_string())
+        conn = test_env.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+                select
+                    dbms_debug_jdwp.current_session_id,
+                    dbms_debug_jdwp.current_session_serial
+                from dual""")
+        sid, serial = cursor.fetchone()
+        with admin_conn.cursor() as admin_cursor:
+            sql = f"alter system kill session '{sid},{serial}'"
+            admin_cursor.execute(sql)
+        self.assertRaises(oracledb.DatabaseError, cursor.execute,
+                          "select user from dual")
+
 if __name__ == "__main__":
     test_env.run_test_cases()

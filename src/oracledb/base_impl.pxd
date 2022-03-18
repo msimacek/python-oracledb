@@ -131,7 +131,7 @@ cdef class BaseCursorImpl:
     cdef int _bind_value_by_position(self, object cursor, object type_handler,
                                      object params, uint32_t num_elements,
                                      uint32_t pos) except -1
-    cdef int _close(self) except -1
+    cdef int _close(self, bint in_del) except -1
     cdef int _create_fetch_var(self, object cursor, object type_handler,
                                ssize_t pos, FetchInfo fetch_info) except -1
     cdef object _create_row(self)

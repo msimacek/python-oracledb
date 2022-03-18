@@ -203,7 +203,7 @@ cdef class BaseCursorImpl:
             self._bind_value(cursor, type_handler, bind_vars, bind_var_impls,
                              i, value, num_elements, pos)
 
-    cdef int _close(self) except -1:
+    cdef int _close(self, bint in_del) except -1:
         """
         Internal method for closing the cursor.
         """
@@ -478,14 +478,14 @@ cdef class BaseCursorImpl:
             self._bind_value_by_position(cursor, type_handler, parameters,
                                          num_rows, pos)
 
-    def close(self):
+    def close(self, bint in_del=False):
         """
         Closes the cursor and makes it unusable for further operations.
         """
         self.bind_vars = None
         self.bind_var_impls = None
         self.fetch_vars = None
-        self._close()
+        self._close(in_del)
 
     def create_var(self, object typ, uint32_t size=0,
                    uint32_t num_elements=1, object inconverter=None,
