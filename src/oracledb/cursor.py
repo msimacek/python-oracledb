@@ -33,7 +33,9 @@ class Cursor:
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
-        self.close()
+        self._verify_open()
+        self._impl.close(in_del=True)
+        self._impl = None
 
     def __iter__(self):
         return self
