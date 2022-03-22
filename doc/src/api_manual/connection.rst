@@ -106,14 +106,10 @@ Connection Object
     connection is still usable.  Alternatively the error *DPI-1080* will be
     returned if the connection has become invalid and can no longer be used.
 
-    .. versionadded:: 7.0
-
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the
-        attribute `callTimeout` was renamed to `call_timeout`. The old name
-        will continue to work for a period of time.  The error *DPI-1080* was
-        also introduced in this release.
+    For consistency and compliance with the PEP 8 naming style, the
+    attribute `callTimeout` was renamed to `call_timeout`. The old name
+    will continue to work for a period of time.  The error *DPI-1080* was
+    also introduced in this release.
 
     .. note::
 
@@ -186,8 +182,6 @@ Connection Object
     specified type. The lobType parameter should be one of
     :data:`oracledb.CLOB`, :data:`oracledb.BLOB` or :data:`oracledb.NCLOB`.
 
-    .. versionadded:: 6.2
-
     .. note::
 
         This method is an extension to the DB API definition.
@@ -230,7 +224,6 @@ Connection Object
     :meth:`~Connection.msgproperties()`. The payload must be an object created
     using :meth:`ObjectType.newobject()`.
 
-    .. versionadded:: 5.3
 
     .. deprecated:: 7.2
 
@@ -247,9 +240,7 @@ Connection Object
     Returns an object specifying the options to use when dequeuing messages.
     See :ref:`deqoptions` for more information.
 
-    .. versionadded:: 5.3
-
-    .. deprecated:: 7.2
+    .. deprecated:: cx_Oracle 7.2
 
         Use the attribute :attr:`Queue.deqoptions` instead.
 
@@ -279,8 +270,6 @@ Connection Object
     Oracle Database 11.2 (both client and server must be at this level or
     higher for this to work).
 
-    .. versionadded:: 5.3
-
     .. note::
 
         This attribute is an extension to the DB API definition.
@@ -291,7 +280,7 @@ Connection Object
     This read-only attribute returns the IANA character set name of the
     character set in use by the Oracle client for regular strings.
 
-    .. deprecated:: 8.2
+    .. deprecated:: cx_Oracle 8.2
 
     .. note::
 
@@ -306,9 +295,7 @@ Connection Object
     :meth:`~Connection.msgproperties()`. The payload must be an object created
     using :meth:`ObjectType.newobject()`.
 
-    .. versionadded:: 5.3
-
-    .. deprecated:: 7.2
+    .. deprecated:: cx_Oracle 7.2
 
         Use the methods :meth:`Queue.enqone()` or :meth:`Queue.enqmany()`
         instead.
@@ -323,9 +310,7 @@ Connection Object
     Returns an object specifying the options to use when enqueuing messages.
     See :ref:`enqoptions` for more information.
 
-    .. versionadded:: 5.3
-
-    .. deprecated:: 7.2
+    .. deprecated:: cx_Oracle 7.2
 
         Use the attribute :attr:`Queue.enqoptions` instead.
 
@@ -338,8 +323,6 @@ Connection Object
 
     This read-write attribute specifies the external name that is used by the
     connection when logging distributed transactions.
-
-    .. versionadded:: 5.3
 
     .. note::
 
@@ -355,8 +338,6 @@ Connection Object
     ctx=dblatest&id=GUID-BE42F8D3-B86B-43B4-B2A3-5760A4DF79FB>`__  for
     additional information on SODA.
 
-    .. versionadded:: 7.0
-
     .. note::
 
         This method is an extension to the DB API definition.
@@ -367,8 +348,6 @@ Connection Object
     Return a :ref:`type object <objecttype>` given its name. This can then be
     used to create objects which can be bound to cursors created by this
     connection.
-
-    .. versionadded:: 5.3
 
     .. note::
 
@@ -407,8 +386,6 @@ Connection Object
     This read-write attribute specifies the internal name that is used by the
     connection when logging distributed transactions.
 
-    .. versionadded:: 5.3
-
     .. note::
 
         This attribute is an extension to the DB API definition.
@@ -439,8 +416,6 @@ Connection Object
     ensuring that transactions are not duplicated. See the Oracle documentation
     and the provided sample for more information.
 
-    .. versionadded:: 5.3
-
     .. note:
 
         This attribute is an extension to the DB API definition. It is only
@@ -453,7 +428,7 @@ Connection Object
     This read-only attribute returns the maximum number of bytes each character
     can use for the client character set.
 
-    .. deprecated:: 8.2
+    .. deprecated:: cx_Oracle 8.2
 
         Use the constant value of 4 instead.
 
@@ -481,10 +456,6 @@ Connection Object
     Each of the parameters are optional. If specified, they act as a shortcut
     for setting each of the equivalently named properties.
 
-    .. versionadded:: 5.3
-
-    .. versionchanged:: 7.2 Added parameters
-
     .. note::
 
         This method is an extension to the DB API definition.
@@ -495,7 +466,7 @@ Connection Object
     This read-only attribute returns the IANA character set name of the
     national character set in use by the Oracle client. This is always the value "UTF-8".
 
-    .. deprecated:: 8.2
+    .. deprecated:: cx_Oracle 8.2
 
     .. note::
 
@@ -535,7 +506,7 @@ Connection Object
     indicating if a transaction was actually prepared in order to avoid the
     error ORA-24756 (transaction does not exist).
 
-    .. deprecated:: 1.0
+    .. deprecated:: python-oracledb 1.0
 
         Use the method :meth:`Connection.tpc_prepare()` instead.
 
@@ -556,13 +527,9 @@ Connection Object
     :ref:`object type <objecttype>` that identifies the type of payload the
     queue expects. If not specified, RAW data is enqueued and dequeued.
 
-    .. versionadded:: 7.2
-
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the
-        parameter `payloadType` was renamed to `payload_type`. The old name
-        will continue to work as a keyword parameter for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the
+    parameter `payloadType` was renamed to `payload_type`. The old name
+    will continue to work as a keyword parameter for a period of time.
 
     .. note::
 
@@ -708,24 +675,13 @@ Connection Object
     established. Client initiated connections are only available in Oracle
     Client 19.4 and Oracle Database 19.4 and higher.
 
-    .. versionadded:: 6.4
-
-        The parameters ipAddress, groupingClass, groupingValue, groupingType
-        and name were added.
-
-    .. versionadded:: 7.3
-
-        The parameter clientInitiated was added.
-
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the
-        parameter `ipAddress` was renamed to `ip_address`, the parameter
-        `groupingClass` was renamed to `grouping_class`, the parameter
-        `groupingValue` was renamed to `grouping_value`, the parameter
-        `groupingType` was renamed to `grouping_type` and the parameter
-        `clientInitiated` was renamed to `client_initiated`. The old names will
-        continue to work as keyword parameters for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the
+    parameter `ipAddress` was renamed to `ip_address`, the parameter
+    `groupingClass` was renamed to `grouping_class`, the parameter
+    `groupingValue` was renamed to `grouping_value`, the parameter
+    `groupingType` was renamed to `grouping_type` and the parameter
+    `clientInitiated` was renamed to `client_initiated`. The old names will
+    continue to work as keyword parameters for a period of time.
 
     .. note::
 
@@ -757,8 +713,6 @@ Connection Object
 
         This attribute is an extension to the DB API definition.
 
-    .. versionadded:: 7.1
-
 
 .. attribute:: Connection.thin
 
@@ -770,7 +724,7 @@ Connection Object
     This read-only attribute returns the TNS entry of the database to which a
     connection has been established.
 
-    .. deprecated:: 8.2
+    .. deprecated:: cx_Oracle 8.2
 
         Use the attribute :attr:`~Connection.dsn` instead.
 
@@ -784,6 +738,18 @@ Connection Object
     id. This method should be called outside of a transaction (that is, nothing
     may have executed since the last commit() or rollback() was performed).
 
+    The `xid` parameter should be an object returned by the `xid()` function. This function replaces the original `begin()` function and internally `begin()` simply calls this function.
+
+    The following code sample demonstrates the ``tpc_begin()`` function:
+
+    .. code-block:: python
+
+        def tpc_begin(self,
+                  xid: Xid,
+                  flags: int=constants.TPC_BEGIN_NEW) -> None
+
+    See :ref:`tcp` for information on TPC.
+
 .. method:: Connection.tpc_commit(xid=None, one_phase=False)
 
     Prepares the global transaction for commit. This method returns a boolean 
@@ -791,47 +757,106 @@ Connection Object
     error ORA-24756 (transaction does not exist).
 
     When called with no arguments, commits a transaction previously
-    prepared with ``tpc_prepare()``. If ``tpc_prepare()`` is not called, a single
+    prepared with :meth:`~Connection.tpc_prepare()` and optionally
+    prepared with :meth:`~Connection.tpc_prepare()`. If :meth:`~Connection.tpc_prepare()` is not called, a single
     phase commit is performed. A transaction manager may choose to do this
     if only a single resource is participating in the global transaction.
 
-    When called with a transaction id, the database commits the given
-    transaction. This form should be called outside of a transaction and is
-    intended for use in recovery.
+    When called with a value for the `xid` parameter, then an object should be returned by the :meth:`~Connection.xid()` function. This form should be called outside of a transaction and is intended for use in recovery.
+
+    The `one_phase` parameter is a boolean identifying whether to
+    perform a one phase or two phase commit. This parameter is only examined if a value is
+    provided for the `xid` parameter. Otherwise, the driver already knows whether
+    :meth:`~Connection.tpc_prepare()` was called for the transaction and whether a one phase or two
+    phase commit is required.
+
+    The following code sample demonstrates the ``tpc_commit()`` function:
+
+    .. code-block:: python
+
+        def tpc_commit(self,
+                   xid: Xid=None,
+                   one_phase: bool=False) -> None
+
+    See :ref:`tcp` for information on TPC.
 
 .. method:: Connection.tpc_end(self, xid=None, flags)
 
-    This method ends or detaches from a TPC transaction.
+    This method ends or detaches from a TPC transaction. This function is only intended for use by transaction managers.
+
+    If an `xid` parameter is passed, then an object should be returned by the :meth:`~Connection.xid()` function. If no `xid` parameter is passed the one previously started with :meth:`~Connection.tpc_begin()` is used.
+
+    The following code sample demonstrates the ``tpc_end()`` function:
+
+    .. code-block:: python
+
+        def tpc_end(self,
+                xid: Xid=None,
+                flags: int=constants.TPC_END_NORMAL) -> None
+
+    See :ref:`tcp` for information on TPC.
 
 .. method:: Connection.tpc_forget(xid)
 
-    This method forgets a TPC transaction.
+    This method forgets a TPC transaction. This function is only intended to be called by transaction managers.
+    
+    The `xid` parameter is mandatory and an object should be returned by the :meth:`~Connection.xid()` function. 
+
+    The following code sample demonstrates the ``tpc_forget()`` function:
+
+    .. code-block:: python
+
+        def tpc_forget(self, xid: Xid) -> None
+
+    See :ref:`tcp` for information on TPC.
 
 .. method:: Connection.tpc_prepare(xid=None)
 
     This method prepares a global transaction for commit. After calling this function,
     no further activity should take place on this connection until either
-    ``tpc_commit()`` or ``tpc_rollback()`` have been called.
+    :meth:`~Connection.tpc_commit()` or :meth:`~Connection.tpc_rollback()` have been called.
 
-    A boolean is returned indicating whether a commit is needed or not. If
-    a commit is performed when one is not needed the error ORA-24756:
-    transaction does not exist is raised..
+    A boolean is returned indicating if a commit is needed or not. If you attempt to commit when not needed, then it results in the error `ORA-24756: transaction does not exist`.
+
+    If an `xid` parameter is passed, then an object should be returned by the :meth:`~Connection.xid()` function. If no `xid` parameter is passed, then the one previously started with :meth:`~Connection.tpc_begin()` is used.
+
+    This function replaces the original ``prepare()`` function. The original ``prepare()`` function is replaced by a call to this function without parameters.
+
+    The following code sample demonstrates the ``tpc_prepare()`` function:
+
+    .. code-block:: python
+
+        def tpc_prepare(self, xid: Xid=None) -> bool
+
+    See :ref:`tcp` for information on TPC.
 
 .. method:: Connection.tpc_recover()
 
-    This method returns a list of pending transaction ids suitable for use with
-    ``tpc_commit()`` or ``tpc_rollback()``.
+    This method returns a list of pending transaction ids that require recovery. Objects of type `Xid` (as returned by the :meth:`~Connection.xid()` function) are returned and these can be passed to :meth:`~Connection.tpc_commit()` or :meth:`~Connection.tpc_rollback()` as needed.
 
-    This function requires select privilege on the view DBA_PENDING_TRANSACTIONS.
+    This function performs a query against `DBA_PENDING_TRANSACTIONS` and requires select privilege on the view.
+    
+    .. code-block:: python
+
+        def tpc_recover(self) -> list
+
+    
+    See :ref:`tcp` for information on TPC.
 
 .. method:: Connection.tpc_rollback(xid=None)
 
+    This method rolls back a global transaction.
+    
     When this method is called without arguments, it rolls back the transaction previously
-    started with ``tpc_begin()``.
+    started with :meth:`~Connection.tpc_begin()`.
 
-    When this method is called with a transaction id, the database rolls back the given
-    transaction. This form should be called outside of a transaction and is
-    intended for use in recovery.
+    When called with a value for the `xid` parameter, then an object should be returned by the :meth:`~Connection.xid()` function and the specified transactions is rolled back. This form should be called outside of a transaction and is intended for use in recovery.
+
+    .. code-block:: python
+
+        def tpc_rollback(self, xid: Xid=None) -> None
+
+    See :ref:`tcp` for information on TPC.
 
 .. method:: Connection.unsubscribe(subscr)
 
@@ -839,9 +864,6 @@ Connection Object
     using :meth:`~Connection.subscribe()`. The connection used to unsubscribe
     should be the same one used to create the subscription, or should access
     the same database and be connected as the same user name.
-
-    .. versionadded:: 6.4
-
 
 .. attribute:: Connection.username
 
@@ -872,7 +894,20 @@ Connection Object
 
     Returns a global transaction identifier that can be used with the Two-Phase Commit (TPC) functions.
 
-    The format_id parameter should be a non-negative 32-bit integer. The
-    global_transaction_id and branch_qualifier parameters should be bytes
-    (or a string which will be UTF-8 encoded to bytes) of no more than 64
-    bytes.
+    This function is used to build a named tuple called `Xid`, which contains the three components that identify an XA transaction. There are no checks performed at the Python level. The values are checked by ODPI-C when they are passed to the relevant functions.
+    .. When this functionality is also supported in the thin driver the checks will be performed at the Python level as well.
+
+    The format_id parameter should be a positive 32-bit integer. This value identifies the format of the `global_transaction_id` and `branch_qualifier` parameters and the value is determined by the Transaction Manager (TM) if one is in use. 
+    
+    The `global_transaction_id` and `branch_qualifier` parameters should be of type `bytes` or `str`. If a value of type `str` is passed, then this value will be UTF-8 encoded to `bytes`. The values cannot exceed 64 bytes in length.
+
+    The following code sample demonstrates the ``xid()`` function:
+
+        .. code-block:: python
+
+        def xid(self,
+                format_id: int,
+                global_transaction_id: Union[bytes, str],
+                branch_qualifier: Union[bytes, str]) -> Xid
+
+    See :ref:`tcp` for information on TPC.

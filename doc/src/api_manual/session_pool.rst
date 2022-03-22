@@ -17,20 +17,20 @@ SessionPool Object
         purity=oracledb.ATTR_PURITY_DEFAULT, tag=None, matchanytag=False, \
         shardingkey=[], supershardingkey=[])
 
-    Acquire a connection from the session pool and return a
+    Acquires a connection from the session pool and return a
     :ref:`connection object <connobj>`.
 
     If the pool is homogeneous, the user and password parameters cannot be
     specified. If they are, an exception will be raised.
 
-    The cclass parameter, if specified, should be a string corresponding to the
+    The `cclass` parameter, if specified, should be a string corresponding to the
     connection class for database resident connection pooling (DRCP).
 
-    The purity parameter is expected to be one of
+    The `purity` parameter is expected to be one of
     :data:`~oracledb.ATTR_PURITY_NEW`, :data:`~oracledb.ATTR_PURITY_SELF`, or
     :data:`~oracledb.ATTR_PURITY_DEFAULT`.
 
-    The tag parameter, if specified, is expected to be a string with name=value
+    The `tag` parameter, if specified, is expected to be a string with name=value
     pairs like "k1=v1;k2=v2" and will limit the sessions that can be returned
     from a session pool unless the matchanytag parameter is set to True. In
     that case sessions with the specified tag will be preferred over others,
@@ -39,7 +39,7 @@ SessionPool Object
     no sessions with the specified tag are available.  Sessions are tagged when
     they are :meth:`released <SessionPool.release>` back to the pool.
 
-    The shardingkey and supershardingkey parameters, if specified, are expected
+    The `shardingkey` and `supershardingkey` parameters, if specified, are expected
     to be a sequence of values which will be used to identify the database
     shard to connect to.  The key values can be strings, numbers, bytes or
     dates.
@@ -52,7 +52,7 @@ SessionPool Object
 
 .. method:: SessionPool.close(force=False)
 
-    Close the session pool now, rather than when the last reference to it is
+    Closes the session pool now, rather than when the last reference to it is
     released, which makes it unusable for further work.
 
     If any connections have been acquired and not released back to the pool
@@ -61,7 +61,7 @@ SessionPool Object
 
 .. method:: SessionPool.drop(connection)
 
-    Drop the connection from the pool which is useful if the connection is no
+    Drops the connection from the pool which is useful if the connection is no
     longer usable (such as when the session is killed).
 
 
@@ -115,9 +115,6 @@ SessionPool Object
     session may exist. This attribute is only available in Oracle Database
     12.1.
 
-    .. versionadded:: 5.3
-
-
 .. attribute:: SessionPool.max_sessions_per_shard
 
     This read-write attribute returns the number of sessions that can be created
@@ -127,8 +124,6 @@ SessionPool Object
     across the shards. A value of zero will not set any maximum number of
     sessions for each shard. This attribute is only available in Oracle Client
     18.3 and higher.
-
-    .. versionadded:: 8.2
 
 
 .. attribute:: SessionPool.min
@@ -163,8 +158,6 @@ SessionPool Object
     ``aquire()`` and is not recommended.
 
     Prior to cx_Oracle 8.2, the ping interval was fixed at 60 seconds.
-
-    .. versionadded:: 8.2
 
 
 .. method:: SessionPool.reconfigure([min, max, increment, getmode, timeout, \
@@ -218,12 +211,10 @@ SessionPool Object
 
     See :ref:`Connection Pool Reconfiguration <poolreconfiguration>`.
 
-    .. versionadded:: 8.2
-
 
 .. method:: SessionPool.release(connection, tag=None)
 
-    Release the connection back to the pool now, rather than whenever __del__
+    Releases the connection back to the pool now, rather than whenever __del__
     is called. The connection will be unusable from this point forward; an
     Error exception will be raised if any operation is attempted with the
     connection. Any cursors or LOBs created by the connection will also be
@@ -254,8 +245,6 @@ SessionPool Object
     of date if changes to the metadata of cached collections are made
     externally.
 
-    .. versionadded:: 8.2
-
 
 .. attribute:: SessionPool.stmtcachesize
 
@@ -263,9 +252,6 @@ SessionPool Object
     will be used for connections obtained from the pool.
 
     See :ref:`Statement Caching <stmtcache>` for more information.
-
-    .. versionadded:: 6.0
-
 
 .. attribute:: SessionPool.timeout
 
@@ -280,7 +266,7 @@ SessionPool Object
     This read-only attribute returns the TNS entry of the database to which a
     connection has been established.
 
-    .. deprecated:: 8.2
+    .. deprecated:: cx_Oracle 8.2
 
         Use the attribute :attr:`~SessionPool.dsn` instead.
 
@@ -298,5 +284,3 @@ SessionPool Object
     returning with an error. This value is only used if the getmode parameter
     to :meth:`oracledb.SessionPool()` was the value
     :data:`oracledb.SPOOL_ATTRVAL_TIMEDWAIT`.
-
-    .. versionadded:: 6.4

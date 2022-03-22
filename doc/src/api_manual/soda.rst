@@ -86,7 +86,7 @@ SODA Database Object
     collection, and a collection with the same name and metadata already
     exists, then that existing collection is opened without error.
 
-    If metadata is specified, it is expected to be a string containing valid
+    If `metadata` is specified, it is expected to be a string containing valid
     JSON or a dictionary that will be transformed into a JSON string. This JSON
     permits you to specify the configuration of the collection including
     storage options; specifying the presence or absence of columns for creation
@@ -98,11 +98,9 @@ SODA Database Object
     lookup?ctx=dblatest&id=GUID-49EFF3D3-9FAB-4DA6-BDE2-2650383566A3>`__
     for more information.
 
-    If the mapMode parameter is set to True, the new collection is mapped to an
+    If the `mapMode` parameter is set to True, the new collection is mapped to an
     existing table instead of creating a table. If a collection is created in
     this way, dropping the collection will not drop the existing table either.
-
-    .. versionadded:: 7.0
 
 
 .. method:: SodaDatabase.createDocument(content, key=None, mediaType="application/json")
@@ -113,21 +111,19 @@ SODA Database Object
     content directly to SODA write operations. SodaDocument attributes
     'createdOn', 'lastModified' and 'version' will be None.
 
-    The content parameter can be a dictionary or list which will be transformed
+    The `content` parameter can be a dictionary or list which will be transformed
     into a JSON string and then UTF-8 encoded. It can also be a string which
     will be UTF-8 encoded or it can be a bytes object which will be stored
     unchanged. If a bytes object is provided and the content is expected to be
     JSON, note that SODA only supports UTF-8, UTF-16LE and UTF-16BE encodings.
 
-    The key parameter should only be supplied if the collection in which the
+    The `key` parameter should only be supplied if the collection in which the
     document is to be placed requires client-assigned keys.
 
-    The mediaType parameter should only be supplied if the collection in which
+    The `mediaType` parameter should only be supplied if the collection in which
     the document is to be placed supports non-JSON documents and the content
     for this document is non-JSON. Using a standard MIME type for this value is
     recommended but any string will be accepted.
-
-    .. versionadded:: 7.0
 
 
 .. method:: SodaDatabase.getCollectionNames(startName=None, limit=0)
@@ -135,14 +131,12 @@ SODA Database Object
     Returns a list of the names of collections in the database that match the
     criteria, in alphabetical order.
 
-    If the startName parameter is specified, the list of names returned will
+    If the `startName` parameter is specified, the list of names returned will
     start with this value and also contain any names that fall after this value
     in alphabetical order.
 
-    If the limit parameter is specified and is non-zero, the number of
+    If the `limit` parameter is specified and is non-zero, the number of
     collection names returned will be limited to this value.
-
-    .. versionadded:: 7.0
 
 
 .. method:: SodaDatabase.openCollection(name)
@@ -150,9 +144,6 @@ SODA Database Object
     Opens an existing collection with the given name and returns a new
     :ref:`SODA collection object <sodacoll>`. If a collection with that name
     does not exist, None is returned.
-
-    .. versionadded:: 7.0
-
 
 .. _sodacoll:
 
@@ -176,10 +167,9 @@ SODA Collection Object
     lookup?ctx=dblatest&id=GUID-4848E6A0-58A7-44FD-8D6D-A033D0CCF9CB>`__
     for information on indexes in SODA.
 
-    Note that a commit should be performed before attempting to create an
-    index.
-
-    .. versionadded:: 7.0
+    .. note::
+        
+        A commit should be performed before attempting to create an index.
 
 
 .. method:: SodaCollection.drop()
@@ -191,14 +181,12 @@ SODA Collection Object
     A boolean value is returned indicating if the collection was actually
     dropped.
 
-    .. versionadded:: 7.0
-
 
 .. method:: SodaCollection.dropIndex(name, force=False)
 
     Drops the index with the specified name, if it exists.
 
-    The force parameter, if set to True, can be used to force the dropping of
+    The `force` parameter, if set to True, can be used to force the dropping of
     an index that the underlying Oracle Database domain index doesn't normally
     permit. This is only applicable to spatial and JSON search indexes.
     See `here <https://www.oracle.com/pls/topic/
@@ -206,8 +194,6 @@ SODA Collection Object
     for more information.
 
     A boolean value is returned indicating if the index was actually dropped.
-
-    .. versionadded:: 7.0
 
 
 .. method:: SodaCollection.find()
@@ -218,8 +204,6 @@ SODA Collection Object
     and the operation that will be performed on the documents that match that
     criteria.
 
-    .. versionadded:: 7.0
-
 
 .. method:: SodaCollection.getDataGuide()
 
@@ -229,8 +213,6 @@ SODA Collection Object
     method is only supported for JSON-only collections where a JSON search
     index has been created with the 'dataguide' option enabled. If there are
     no documents in the collection, None is returned.
-
-    .. versionadded:: 7.0
 
 
 .. method:: SodaCollection.insertMany(docs)
@@ -244,8 +226,6 @@ SODA Collection Object
         This method requires Oracle Client 18.5 and higher and is available
         only as a preview.
 
-    .. versionadded:: 7.2
-
 
 .. method:: SodaCollection.insertManyAndGet(docs, hint=None)
 
@@ -254,7 +234,7 @@ SODA Collection Object
     that it returns a list of :ref:`SODA Document objects <sodadoc>`. Note that
     for performance reasons the returned documents do not contain the content.
 
-    The hint parameter, if specified, supplies a hint to the database when
+    The `hint` parameter, if specified, supplies a hint to the database when
     processing the SODA operation. This is expected to be a string in the same
     format as a SQL hint but without any comment characters, for example
     ``hint="MONITOR"``. Pass only the hint ``"MONITOR"`` (turn on monitoring)
@@ -269,22 +249,15 @@ SODA Collection Object
 
     .. note::
 
-        This method requires Oracle Client 18.5 and higher.
+        - This method requires Oracle Client 18.5 and higher.
 
-    .. versionadded:: 7.2
-
-    .. versionchanged:: 8.2
-
-        The parameter `hint` was added. Use of the hint parameter requires
-        Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
+        - Use of the `hint` parameter requires Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
 
 
 .. method:: SodaCollection.insertOne(doc)
 
     Inserts a given document into the collection. The input document can be a
     dictionary or list or an existing :ref:`SODA document object <sodadoc>`.
-
-    .. versionadded:: 7.0
 
 
 .. method:: SodaCollection.insertOneAndGet(doc, hint=None)
@@ -294,7 +267,7 @@ SODA Collection Object
     returns a :ref:`SODA Document object <sodadoc>`. Note that for performance
     reasons the returned document does not contain the content.
 
-    The hint parameter, if specified, supplies a hint to the database when
+    The `hint` parameter, if specified, supplies a hint to the database when
     processing the SODA operation. This is expected to be a string in the same
     format as a SQL hint but without any comment characters, for example
     ``hint="MONITOR"``. Pass only the hint ``"MONITOR"`` (turn on monitoring)
@@ -307,12 +280,9 @@ SODA Collection Object
     ctx=dblatest&id=GUID-C941CE9D-97E1-42F8-91ED-4949B2B710BF>`__
     for more information.
 
-    .. versionadded:: 7.0
+    .. note::
 
-    .. versionchanged:: 8.2
-
-        The parameter `hint` was added.  Use of the hint parameter requires
-        Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
+        Use of the `hint` parameter requires Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
 
 
 .. attribute:: SodaCollection.metadata
@@ -323,14 +293,10 @@ SODA Collection Object
     lookup?ctx=dblatest&id=GUID-49EFF3D3-9FAB-4DA6-BDE2-2650383566A3>`__
     for more information.
 
-    .. versionadded:: 7.0
-
 
 .. attribute:: SodaCollection.name
 
     This read-only attribute returns the name of the collection.
-
-    .. versionadded:: 7.0
 
 
 .. method:: SodaCollection.save(doc)
@@ -343,8 +309,6 @@ SODA Collection Object
     This method requires Oracle Client 19.9 or higher in addition to the usual
     SODA requirements.
 
-    .. versionadded:: 8.0
-
 
 .. method:: SodaCollection.saveAndGet(doc, hint=None)
 
@@ -353,7 +317,7 @@ SODA Collection Object
     keys are used, and the document with the specified key already exists in
     the collection, it will be replaced with the input document.
 
-    The hint parameter, if specified, supplies a hint to the database when
+    The `hint` parameter, if specified, supplies a hint to the database when
     processing the SODA operation. This is expected to be a string in the same
     format as a SQL hint but without any comment characters, for example
     ``hint="MONITOR"``. Pass only the hint ``"MONITOR"`` (turn on monitoring)
@@ -369,20 +333,15 @@ SODA Collection Object
     This method requires Oracle Client 19.9 or higher in addition to the usual
     SODA requirements.
 
-    .. versionadded:: 8.0
+    .. note::
 
-    .. versionchanged:: 8.2
-
-        The parameter `hint` was added. Use of the hint parameter requires
-        Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
+        Use of the `hint` parameter requires Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
 
 
 .. method:: SodaCollection.truncate()
 
     Removes all of the documents in the collection, similarly to what is done
     for rows in a table by the TRUNCATE TABLE statement.
-
-    .. versionadded:: 8.0
 
 
 .. _sodadoc:
@@ -408,8 +367,6 @@ SODA Document Object
     fetched from collections where this attribute is not stored will return
     None.
 
-    .. versionadded:: 7.0
-
 
 .. method:: SodaDoc.getContent()
 
@@ -418,15 +375,11 @@ SODA Document Object
     this is not the case. If there is no content, however, None will be
     returned.
 
-    .. versionadded:: 7.0
-
 
 .. method:: SodaDoc.getContentAsBytes()
 
     Returns the content of the document as a bytes object. If there is no
     content, however, None will be returned.
-
-    .. versionadded:: 7.0
 
 
 .. method:: SodaDoc.getContentAsString()
@@ -435,16 +388,12 @@ SODA Document Object
     is not known, UTF-8 will be used. If there is no content, however, None
     will be returned.
 
-    .. versionadded:: 7.0
-
 
 .. attribute:: SodaDoc.key
 
     This read-only attribute returns the unique key assigned to this document.
     Documents created by :meth:`SodaDatabase.createDocument()` may not have a
     value assigned to them and return None.
-
-    .. versionadded:: 7.0
 
 
 .. attribute:: SodaDoc.lastModified
@@ -454,8 +403,6 @@ SODA Document Object
     format. Documents created by :meth:`SodaDatabase.createDocument()` or
     fetched from collections where this attribute is not stored will return
     None.
-
-    .. versionadded:: 7.0
 
 
 .. attribute:: SodaDoc.mediaType
@@ -467,16 +414,12 @@ SODA Document Object
     collection where this component is not stored, the string
     "application/json" is returned.
 
-    .. versionadded:: 7.0
-
 
 .. attribute:: SodaDoc.version
 
     This read-only attribute returns the version assigned to this document.
     Documents created by :meth:`SodaDatabase.createDocument()` or fetched
     from collections where this attribute is not stored will return None.
-
-    .. versionadded:: 7.0
 
 
 .. _sodadoccur:
@@ -494,11 +437,9 @@ SODA Document Cursor Object
 
 .. method:: SodaDocCursor.close()
 
-    Close the cursor now, rather than whenever __del__ is called. The cursor
+    Closes the cursor now, rather than whenever __del__ is called. The cursor
     will be unusable from this point forward; an Error exception will be raised
     if any operation is attempted with the cursor.
-
-    .. versionadded:: 7.0
 
 
 .. _sodaop:
@@ -535,8 +476,6 @@ SODA Operation Object
     As a convenience, the SodaOperation object is returned so that further
     criteria can be specified by chaining methods together.
 
-    .. versionadded:: 8.0
-
 
 .. method:: SodaOperation.filter(value)
 
@@ -552,15 +491,11 @@ SODA Operation Object
     As a convenience, the SodaOperation object is returned so that further
     criteria can be specified by chaining methods together.
 
-    .. versionadded:: 7.0
-
 
 .. method:: SodaOperation.getCursor()
 
     Returns a :ref:`SODA Document Cursor object <sodadoccur>` that can be used
     to iterate over the documents that match the criteria.
-
-    .. versionadded:: 7.0
 
 
 .. method:: SodaOperation.getDocuments()
@@ -568,16 +503,12 @@ SODA Operation Object
     Returns a list of :ref:`SODA Document objects <sodadoc>` that match the
     criteria.
 
-    .. versionadded:: 7.0
-
 
 .. method:: SodaOperation.getOne()
 
     Returns a single :ref:`SODA Document object <sodadoc>` that matches the
     criteria. Note that if multiple documents match the criteria only the first
     one is returned.
-
-    .. versionadded:: 7.0
 
 
 .. method:: SodaOperation.hint(value)
@@ -599,8 +530,6 @@ SODA Operation Object
     Use of this method requires Oracle Client 21.3 or higher (or Oracle Client
     19 from 19.11).
 
-    .. versionadded:: 8.2
-
 
 .. method:: SodaOperation.key(value)
 
@@ -611,8 +540,6 @@ SODA Operation Object
     As a convenience, the SodaOperation object is returned so that further
     criteria can be specified by chaining methods together.
 
-    .. versionadded:: 7.0
-
 
 .. method:: SodaOperation.keys(seq)
 
@@ -622,8 +549,6 @@ SODA Operation Object
 
     As a convenience, the SodaOperation object is returned so that further
     criteria can be specified by chaining methods together.
-
-    .. versionadded:: 7.0
 
 
 .. method:: SodaOperation.limit(value)
@@ -637,15 +562,11 @@ SODA Operation Object
     As a convenience, the SodaOperation object is returned so that further
     criteria can be specified by chaining methods together.
 
-    .. versionadded:: 7.0
-
 
 .. method:: SodaOperation.remove()
 
     Removes all of the documents in the collection that match the criteria. The
     number of documents that have been removed is returned.
-
-    .. versionadded:: 7.0
 
 
 .. method:: SodaOperation.replaceOne(doc)
@@ -658,8 +579,6 @@ SODA Operation Object
     Currently the method :meth:`~SodaOperation.key()` must be called before
     this method can be called.
 
-    .. versionadded:: 7.0
-
 
 .. method:: SodaOperation.replaceOneAndGet(doc)
 
@@ -668,8 +587,6 @@ SODA Operation Object
     difference is that it returns a :ref:`SODA document object <sodadoc>`.
     Note that for performance reasons the returned document does not contain
     the content.
-
-    .. versionadded:: 7.0
 
 
 .. method:: SodaOperation.skip(value)
@@ -683,8 +600,6 @@ SODA Operation Object
     As a convenience, the SodaOperation object is returned so that further
     criteria can be specified by chaining methods together.
 
-    .. versionadded:: 7.0
-
 
 .. method:: SodaOperation.version(value)
 
@@ -695,5 +610,3 @@ SODA Operation Object
 
     As a convenience, the SodaOperation object is returned so that further
     criteria can be specified by chaining methods together.
-
-    .. versionadded:: 7.0

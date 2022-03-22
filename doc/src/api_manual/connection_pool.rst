@@ -47,26 +47,26 @@ These will also work:
     Acquire a connection from the session pool and return a
     :ref:`connection object <connobj>`.
 
-    If the pool is homogeneous, the user and password parameters cannot be
+    If the `pool` is homogeneous, the user and password parameters cannot be
     specified. If they are, an exception will be raised.
 
-    The cclass parameter, if specified, should be a string corresponding to the
+    The `cclass` parameter, if specified, should be a string corresponding to the
     connection class for database resident connection pooling (DRCP).
 
     The purity parameter is expected to be one of
     :data:`~oracledb.ATTR_PURITY_NEW`, :data:`~oracledb.ATTR_PURITY_SELF`, or
     :data:`~oracledb.ATTR_PURITY_DEFAULT`.
 
-    The tag parameter, if specified, is expected to be a string with name=value
+    The `tag` parameter, if specified, is expected to be a string with name=value
     pairs like "k1=v1;k2=v2" and will limit the sessions that can be returned
-    from a session pool unless the matchanytag parameter is set to True. In
+    from a session pool unless the `matchanytag` parameter is set to True. In
     that case sessions with the specified tag will be preferred over others,
     but if no such sessions are available a session with a different tag may be
     returned instead. In any case, untagged sessions will always be returned if
     no sessions with the specified tag are available.  Sessions are tagged when
     they are :meth:`released <ConnectionPool.release>` back to the pool.
 
-    The shardingkey and supershardingkey parameters, if specified, are expected
+    The `shardingkey` and `supershardingkey` parameters, if specified, are expected
     to be a sequence of values which will be used to identify the database
     shard to connect to.  The key values can be strings, numbers, bytes or
     dates.
@@ -79,7 +79,7 @@ These will also work:
 
 .. method:: ConnectionPool.close(force=False)
 
-    Close the session pool now, rather than when the last reference to it is
+    Closes the session pool now, rather than when the last reference to it is
     released, which makes it unusable for further work.
 
     If any connections have been acquired and not released back to the pool
@@ -88,7 +88,7 @@ These will also work:
 
 .. method:: ConnectionPool.drop(connection)
 
-    Drop the connection from the pool which is useful if the connection is no
+    Drops the connection from the pool which is useful if the connection is no
     longer usable (such as when the session is killed).
 
 
@@ -142,9 +142,6 @@ These will also work:
     session may exist. This attribute is only available in Oracle Database
     12.1.
 
-    .. versionadded:: 5.3
-
-
 .. attribute:: ConnectionPool.max_sessions_per_shard
 
     This read-write attribute returns the number of sessions that can be created
@@ -154,8 +151,6 @@ These will also work:
     across the shards. A value of zero will not set any maximum number of
     sessions for each shard. This attribute is only available in Oracle Client
     18.3 and higher.
-
-    .. versionadded:: 8.2
 
 
 .. attribute:: ConnectionPool.min
@@ -190,8 +185,6 @@ These will also work:
     ``aquire()`` and is not recommended.
 
     Prior to cx_Oracle 8.2, the ping interval was fixed at 60 seconds.
-
-    .. versionadded:: 8.2
 
 
 .. method:: ConnectionPool.reconfigure([min, max, increment, getmode, timeout, \
@@ -237,12 +230,10 @@ These will also work:
 
     See :ref:`Connection Pool Reconfiguration <poolreconfiguration>`.
 
-    .. versionadded:: 8.2
-
 
 .. method:: ConnectionPool.release(connection, tag=None)
 
-    Release the connection back to the pool now, rather than whenever __del__
+    Releases the connection back to the pool now, rather than whenever __del__
     is called. The connection will be unusable from this point forward; an
     Error exception will be raised if any operation is attempted with the
     connection. Any cursors or LOBs created by the connection will also be
@@ -273,9 +264,6 @@ These will also work:
     of date if changes to the metadata of cached collections are made
     externally.
 
-    .. versionadded:: 8.2
-
-
 .. attribute:: ConnectionPool.stmtcachesize
 
     This read-write attribute specifies the size of the statement cache that
@@ -284,8 +272,6 @@ These will also work:
     setting the stmtcachesize attribute on the connection itself.
 
     See :ref:`Statement Caching <stmtcache>` for more information.
-
-    .. versionadded:: 6.0
 
 
 .. attribute:: ConnectionPool.thin
@@ -300,13 +286,12 @@ These will also work:
     sessions. Note that termination only occurs when the pool is accessed. A
     value of 0 means that no idle sessions are terminated.
 
-
 .. attribute:: ConnectionPool.tnsentry
 
     This read-only attribute returns the TNS entry of the database to which a
     connection has been established.
 
-    .. deprecated:: 8.2
+    .. deprecated:: cx_Oracle 8.2
 
         Use the attribute :attr:`~ConnectionPool.dsn` instead.
 
@@ -324,8 +309,6 @@ These will also work:
     returning with an error. This value is only used if the getmode parameter
     to :meth:`oracledb.ConnectionPool()` was the value
     :data:`oracledb.POOL_GETMODE_TIMEDWAIT`.
-
-    .. versionadded:: 6.4
 
 .. method:: ConnectionPool._verify_open()
 

@@ -9,16 +9,16 @@ ConnectParams Object
     This object is an extension to the DB API.
 
 
-A connection property builder function ``oracledb.ConnectParams()`` has been
-added.  It returns a new `ConnectParams` object.  The object can be passed to
-:func:`oracledb.connect()`, :func:`oracledb.ConnectionPool()`, or :func:`oracledb.SessionPool()`, 
-see :ref:`syntax`.
+:func:`oracledb.ConnectParams()` is a connection property builder function that returns a `ConnectParams` object. The object can be passed to :func:`oracledb.connect()`, :func:`oracledb.ConnectionPool()`, or :func:`oracledb.SessionPool()`, see :ref:`syntax`.
 
-This adds support for connection parameters, facilitating:
+The ``ConnectParams()`` adds support for connection parameters, facilitating:
 
-- documentation: there is one place where all of these parameters are described
+- Documentation: A single documentation place for the description of all of these parameters.
 
-- ease of use: users can define connection parameters in one place
+- Ease of use: Users can define connection parameters in one place.
+
+The use of ``ConnectParams()`` is optional. You can continue to use previous
+approaches, see :ref:`syntax`.
 
 Example:
 
@@ -29,32 +29,26 @@ Example:
     conn = oracledb.connect(user="my_user", password="my_password",
                             params=params)
 
-The use of ``ConnectParams()`` is optional. Users can continue to use previous
-approaches, see :ref:`syntax`.
 
-Notes:
+.. note::
 
-- if the ``params`` parameter is specified and keyword parameters are
-  specified, then the ``params`` parameter is updated with the values from the
-  keyword parameters before being used to create the connection.
+  - If the ``params`` parameter is specified and keyword parameters are specified, then the ``params`` parameter is updated with the values from the keyword parameters before being used to create the connection.
 
-- if the ``dsn`` parameter is specified and the ``params`` parameter is
-  specified, then the ``params`` parameter is updated with the contents of the
-  ``dsn`` parameter before being used to create the connection.
+  - If the ``dsn`` parameter is specified and the ``params`` parameter is specified, then the ``params`` parameter is updated with the contents of the ``dsn`` parameter before being used to create the connection.
 
 
 Parameters Supported by ``ConnectParams()``
 --------------------------------------------
 
-The following values can be set by ``oracledb.ConnectParams()`` (see
-``src/oracledb/connect_params.py`` for descriptions).  They can also be passed
-to ``oracledb.connect()``, ``oracledb.Pool()`` and ``oracledb.SessionPool()``:
+The following values can be set by :func:`oracledb.ConnectParams()` (see
+``src/oracledb/connect_params.py`` for descriptions). These can also be passed
+to :func:`oracledb.connect()`, :func:`oracledb.ConnectionPool()`, and :func:`oracledb.SessionPool()`.
 
 .. list-table-with-summary:: ConnectParams() parameters
     :header-rows: 1
     :widths: 20 10 10 40
     :name: ConnectParams
-    :summary: First column is the Parameter name. The second column is the data type. The third column indicated the driver support. The fourth column is the default value. 
+    :summary: The first column is the Parameter name. The second column is the data type. The third column indicates the driver supported. The fourth column is the default value. 
 
     * - Name
       - Type
@@ -84,10 +78,10 @@ to ``oracledb.connect()``, ``oracledb.Pool()`` and ``oracledb.SessionPool()``:
       - str
       - Thin
       - "tcp"
-    * - enable_drcp
-      - bool
+    * - server_type
+      - str
       - Thin
-      - False
+      - None
     * - config_dir
       - str
       - Thin and Thick
@@ -143,7 +137,7 @@ to ``oracledb.connect()``, ``oracledb.Pool()`` and ``oracledb.SessionPool()``:
     * - ssl_server_cert_dn
       - str
       - Thin
-      - None
+      - None (If specified, this value is used for any verification. Otherwise, the hostname will be used.)
     * - retry_count
       - int
       - Thin
@@ -168,6 +162,14 @@ to ``oracledb.connect()``, ``oracledb.Pool()`` and ``oracledb.SessionPool()``:
       - str
       - Thin
       - None
+    * - https_proxy
+      - str
+      - Thin
+      - None
+    * - https_proxy_port
+      - int
+      - Thin
+      - None
 
 
 .. method:: ConnectParams._get_tnsnames_file()
@@ -178,8 +180,8 @@ to ``oracledb.connect()``, ``oracledb.Pool()`` and ``oracledb.SessionPool()``:
 
 .. method:: ConnectParams._parse_time_value(value)
     
-    Parses a value that contains time with an optional unit of ms
-    (milliseconds), sec (seconds) or min (minutes).
+    Parses a value that contains time with an optional unit of 
+    milliseconds (ms), seconds (sec), or minutes (min).
 
 .. method:: ConnectParams._set_by_keyword_args(keyword_args):
     
@@ -192,11 +194,11 @@ to ``oracledb.connect()``, ``oracledb.Pool()`` and ``oracledb.SessionPool()``:
     Sets the specified protocol. Only tcp and tcps protocols are supported
     at this time.
 
-.. method:: ConnectParams._supports_oob(self):
+.. method:: ConnectParams._supports_oob():
   
     Returns a boolean indicating if the platform supports out-of-band urgent
     data (all platforms besides Windows) and a configuration parameter
-    hasn't explicitly disabled it.
+    has not explicitly disabled it.
 
 .. method:: ConnectParams.copy()
 
@@ -215,4 +217,3 @@ to ``oracledb.connect()``, ``oracledb.Pool()`` and ``oracledb.SessionPool()``:
     in the form user/password@connect_string or it can be the connect
     string by itself. A 3-tuple is returned containing the user, password,
     and connect string.
-

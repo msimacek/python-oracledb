@@ -17,11 +17,9 @@ Variable Objects
     :func:`Cursor.arrayvar()`. For all other variables this value will be
     identical to the attribute :attr:`~Variable.numElements`.
 
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the
-        attribute `actualElements` was renamed to `actual_elements`. The old
-        name will continue to work for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the
+    attribute `actualElements` was renamed to `actual_elements`. The old
+    name will continue to work for a period of time.
 
 
 .. attribute:: Variable.buffer_size
@@ -29,16 +27,14 @@ Variable Objects
     This read-only attribute returns the size of the buffer allocated for each
     element in bytes.
 
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the
-        attribute `bufferSize` was renamed to `buffer_size`. The old
-        name will continue to work for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the
+    attribute `bufferSize` was renamed to `buffer_size`. The old
+    name will continue to work for a period of time.
 
 
 .. method:: Variable.getvalue([pos=0])
 
-    Return the value at the given position in the variable. For variables
+    Returns the value at the given position in the variable. For variables
     created using the method :func:`Cursor.arrayvar()` the value returned will
     be a list of each of the values in the PL/SQL index-by table. For variables
     bound to DML returning statements, the value returned will also be a list
@@ -60,11 +56,9 @@ Variable Objects
     array, or the number of scalar items that can be fetched into the variable
     or bound to the variable.
 
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the
-        attribute `numElements` was renamed to `num_elements`. The old
-        name will continue to work for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the
+    attribute `numElements` was renamed to `num_elements`. The old
+    name will continue to work for a period of time.
 
 
 .. attribute:: Variable.outconverter
@@ -94,9 +88,8 @@ Variable Objects
     Oracle objects; otherwise, it will be one of the
     :ref:`database type constants <dbtypes>`.
 
-    .. versionchanged:: 8.0
-        Database type constants are now used when the variable is not used for
-        binding Oracle objects.
+    Database type constants are now used when the variable is not used for
+    binding Oracle objects.
 
 
 .. attribute:: Variable.values

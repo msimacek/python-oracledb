@@ -1,177 +1,63 @@
 .. _tcp:
 
-******************
-Two-Phase Commit
-******************
+***********************
+Two-Phase Commit (TPC)
+***********************
 
-The python-oracledb driver supports two-phase commit. cx_Oracle has two methods that can be used to perform TPC (two-phase
-commit) for transactions::
+The python-oracledb driver supports two-phase commit (TPC). cx_Oracle has two methods that can be used to perform TPC for transactions::
 
     Connection.begin()
     Connection.prepare()
 
-Both functions ``connection.begin()`` and ``connection.prepare()`` are
-deprecated in python-oracledb by the new functionality of the two-phase commit feature.
+The ``Connection.begin()`` and ``Connection.prepare()`` methods are
+deprecated in python-oracledb. New methods to perform TPC are introduced in python-oracledb to better comply with Python Database API and are detailed in the subsequent sections.
 
-Implementation
-===============
+.. note::
+
+    The new TPC functionality is applicable only to the Thick mode.
 
 New Constants
--------------
+==============
 
-The following flags are intended for use with the new method `tpc_begin()`::
+The following flags are intended for use with the new method :meth:`~Connection.tpc_begin()`::
 
     TPC_BEGIN_JOIN
     TPC_BEGIN_NEW
     TPC_BEGIN_PROMOTE
     TPC_BEGIN_RESUME
 
-Open question: what is the difference between `TPC_BEGIN_JOIN` and
-`TPC_BEGIN_RESUME`?
+.. Open question: what is the difference between `TPC_BEGIN_JOIN` and `TPC_BEGIN_RESUME`?
 
-The following flags are intended for use with the new method `tpc_end()`::
+The following flags are intended for use with the new method :meth:`~Connection.tpc_end()`::
 
     TPC_END_NORMAL
     TPC_END_SUSPEND
 
-Open question: should a detailed explanation of these flags be provided?
+.. Open question: should a detailed explanation of these flags be provided?
 
 
 New Connection Methods
-----------------------
+=======================
 
-.. code-block:: python
+The following are the new connection methods introduced in python-oracledb:
 
-    def xid(self,
-            format_id: int,
-            global_transaction_id: Union[bytes, str],
-            branch_qualifier: Union[bytes, str]) -> Xid
+    - :meth:`~Connection.xid()`: This function is used to build a named tuple called `Xid`, which contains the three components that identify an XA transaction.
+    - :meth:`~Connection.tpc_begin`: This function begins work on a global transaction. 
+    - :meth:`~Connection.tpc_commit()`: This function commits a global transaction.
+    - :meth:`~Connection.tpc_end()`: This function ends work on a global transaction and is only intended for use by transaction managers.
+    - :meth:`~Connection.tpc_forget()`: This function forgets a heuristically completed global transaction. 
+    - :meth:`~Connection.tpc_prepare()`: This function prepares a global transaction for commit.
+    - :meth:`~Connection.tpc_recover()`: This function returns a list of pending transactions that require recovery. See the :ref:`samples` section for an example on how to perform recovery with the :meth:`~Connection.tpc_recover` function.
+    - :meth:`~Connection.tpc_rollback()`: This function rolls back a global transaction.
 
-This function is used to build a named tuple (called `Xid`) which contains the
-three components that identify an XA transaction. No checking is performed at
-the Python level. The values are checked by ODPI-C when they are passed to the
-relevant functions. When this functionality is also supported in the thin
-driver the checks will be performed at the Python level as well.
+.. Open question: what purpose does the tpc_forget() function actually serve?
 
-The `format_id` parameter is expected to be a positive 32-bit integer. This
-value identifies the format of the `global_transaction_id` and
-`branch_qualifier` parameters and the value is determined by the TM if one is
-in use.
-
-The `global_transaction_id` and `branch_qualifier` parameters are expected to
-be values of type `str` or `bytes`. If a value of type `str` is passed it will
-be UTF-8 encoded to `bytes`. The values cannot exceed 64 bytes in length.
-
-
-.. code-block:: python
-
-    def tpc_begin(self,
-                  xid: Xid,
-                  flags: int=constants.TPC_BEGIN_NEW) -> None
-
-This function begins work on a global transaction. The `xid` parameter should
-be an object returned by the `xid()` function. This function replaces the
-original `begin()` function and internally `begin()` simply calls this
-function.
-
-
-.. code-block:: python
-
-    def tpc_commit(self,
-                   xid: Xid=None,
-                   one_phase: bool=False) -> None
-
-This function commits a global transaction. When called with no arguments, it
-commits a transaction previously prepared with `tpc_begin()` and optionally
-prepared with `tpc_prepare()`. If `tpc_prepare()` is not called, a single phase
-commit is performed. A transaction manager may choose to do this if only a
-single resource is participating in the global transaction.
-
-When called with a value for the `xid` parameter, it should be an object
-returned by the `xid()` function. This form should be called outside a
-transaction and is intended for use in recovery.
-
-The `one_phase` parameter is expected to be a boolean identifying whether to
-perform a one phase or two phase commit. It is only examined if a value is
-provided for the `xid` parameter, as otherwise the driver already knows whether
-`tpc_prepare()` was called for the transaction and whether a one phase or two
-phase commit is required.
-
-
-.. code-block:: python
-
-    def tpc_end(self,
-                xid: Xid=None,
-                flags: int=constants.TPC_END_NORMAL) -> None
-
-This function ends work on a global transaction. It is generally only intended
-to be used by transaction managers.
-
-If an `xid` parameter is passed it is expected to be an object returned by the
-`xid()` function. If no `xid` parameter is passed the one previously started
-with `tpc_begin()` is used.
-
-
-.. code-block:: python
-
-    def tpc_forget(self, xid: Xid) -> None
-
-This function forgets a heuristically completed global transaction. The `xid`
-parameter is mandatory and is expected to be an object returned by the `xid()`
-function. It is only intended to be called by transaction managers.
-
-Open question: what purpose does this function actually serve?
-
-
-.. code-block:: python
-
-    def tpc_prepare(self, xid: Xid=None) -> bool
-
-This function prepares a global transaction for commit. A boolean is returned
-indicating if a commit is needed or not. Attempting to commit if a commit is
-not needed results in the error `ORA-24756: transaction does not exist` being
-raised.
-
-If an `xid` parameter is passed it is expected to be an object returned by the
-`xid()` function. If no `xid` parameter is passed the one previously started
-with `tpc_begin()` is used.
-
-This function replaces the original `prepare()` function. The original
-`prepare()` function is replaced by a call to this function without parameters.
-
-
-.. code-block:: python
-
-    def tpc_recover(self) -> list
-
-This function returns a list of pending transactions that require recovery.
-Objects of type `Xid` (as returned by the `xid()` function) are returned and
-these can be passed to `tpc_commit()` or `tpc_rollback()` as needed.
-
-This function performs a query against `DBA_PENDING_TRANSACTIONS` and requires
-select privilege on this view.
-
-See the samples section for an example of how to perform recovery with this
-function.
-
-.. code-block:: python
-
-    def tpc_rollback(self, xid: Xid=None) -> None
-
-This function rolls back a global transaction. When called with no arguments,
-rolls back the transaction previously started with `tpc_begin()`.
-
-When called with a value for the `xid` parameter is is expected to be an object
-returned by the `xid()` function and the specified transactions is rolled back.
-This form should be called outside of a transaction and is intended for use in
-recovery.
-
+.. _samples:
 
 Samples
 =======
 
-The following example shows how to perform recovery. This may be particularly
-useful when testing!
+The following example shows how to perform recovery.
 
 .. code-block:: python
 
@@ -185,7 +71,7 @@ useful when testing!
             conn.tpc_rollback(xid)
 
 
-The following sample shows how to perform application level two-phase commit:
+The following example shows how to perform application level two-phase commit.
 
 .. code-block:: python
 

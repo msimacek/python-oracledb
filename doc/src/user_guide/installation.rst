@@ -24,7 +24,7 @@ To use python-oracledb with Python and Oracle Database you need:
 
   python-oracledb makes calls to this package. Each python-oracledb release will be tested with the current cryptography version available at that time. At the time of writing this document, this is 35.0.0.
 
-  The minimum version currently supported is 3.4. 
+  The minimum version currently supported is 3.4.
 
   Note that pip will install the latest version if the package is missing or lower than the minimum supported version. Users will need to update their own systems whenever new versions of cryptography are released.
 
@@ -44,10 +44,10 @@ The oracledb module loads Oracle Client libraries which communicate
 over Oracle Net to an existing database.  Oracle Net is not a separate
 product: it is how the Oracle Client and Oracle Database communicate.
 
-.. figure:: /images/architecture.png
+.. figure:: /images/python-oracledb-arch.png
+   :alt: architecture for python-oracledb driver
 
-   python-oracledb Architecture
-
+   Architecture for python-oracledb driver
 
 Source Code Build Requirements
 -------------------------------
@@ -87,19 +87,20 @@ Alternatively you can:
 
   .. code-block:: shell
 
-      python -m pip install oracledb 
+      python -m pip install oracledb
 
   Packages on PyPI includes:
     - A binary package for Linux (3.6, 3.7, 3.8, 3.9, 3.10) for manylinux2014. This will work on OL7 onwards.
-    - A binary package for Windows 32-bit & 64-bit (3.6, 3.7, 3.8, 3.9)
-    - A binary package for macOS Intel x86 (3.6, 3.7, 3.8, 3.9)
+    - A binary package for Windows 32-bit & 64-bit (3.6, 3.7, 3.8, 3.9, 3.10)
+    - A binary package for macOS Intel x86 (3.6, 3.7, 3.8, 3.9, 3.10)
     - A source bundle
-  
-  Both thin and thick drivers are included in each bundle. Oracle Client Libraries are not included.
 
-  Note: If a binary wheel package is not available for your platform,
-  the source package will be downloaded instead. This will be compiled
-  and the resulting binary installed.
+  Both python-oracledb Thin and Thick drivers are included in each bundle. Oracle Client Libraries are not included in these bundles. The users of the python-oracledb Thick driver must install Oracle Client libraries separately.
+
+  .. note::
+
+    If a binary wheel package is not available for your platform, the source package will be downloaded instead. 
+    This will be compiled and the resulting binary installed.
 
   The ``--user`` option may be useful, if you don't have permission to write to
   system directories:
@@ -111,7 +112,7 @@ Alternatively you can:
   If you are behind a proxy, add a proxy server to the command, for example add
   ``--proxy=http://proxy.example.com:80``
 
-  When customers with different OS or Python versions run this command, the source code package 
+  When customers with different OS or Python versions run this command, the source code package
   is automatically downloaded, compiled, and installed.
 
 - If you are using the python-oracledb Thick driver, then add Oracle 21, 19, 18, 12 or 11.2 client libraries to your operating system
@@ -194,7 +195,7 @@ python-oracledb Thin driver connects directly to the Oracle Database and does no
 python-oracledb Thick driver requires Oracle Client libraries.  The libraries provide the
 necessary network connectivity to access an Oracle Database instance.
 They also provide basic and advanced connection management and data
-features to the thick driver.
+features to the Thick driver.
 
 The simplest way to get Oracle Client libraries is to install the free
 `Oracle Instant Client
@@ -217,7 +218,7 @@ example Oracle Client 12.2 can successfully connect to Oracle Database 10.2.
 python-oracledb Thick uses the shared library loading mechanism available on each
 supported platform to load the Oracle Client libraries at runtime.  It
 does not need to be rebuilt for different versions of the libraries.
-Since a single thick driver binary can use different client versions and
+Since a single Thick driver binary can use different client versions and
 also access multiple database versions, it is important your
 application is tested in your intended release environments.  Newer
 Oracle clients support new features, such as the `oraaccess.xml
@@ -273,7 +274,7 @@ Install Oracle Client for python-oracledb Thick
 ------------------------------------------------
 
 Using python-oracledb Thick driver requires Oracle Client libraries to be installed.
-These provide the necessary network connectivity allowing the thick driver
+These provide the necessary network connectivity allowing the Thick driver
 to access an Oracle Database instance.
 
     - If your database is on a remote computer, then download the free `Oracle
@@ -359,7 +360,7 @@ Oracle Instant Client RPMs
 
 To use python-oracledb with Oracle Instant Client RPMs:
 
-1. Download an Oracle 21,19, 18, 12, or 11.2 "Basic" or "Basic Light" RPM
+1. Download an Oracle 21, 19, 18, 12, or 11.2 "Basic" or "Basic Light" RPM
    matching your Python architecture:
 
    - `x86-64 64-bit <https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html>`__
@@ -497,7 +498,7 @@ Install Oracle Client
 
 Using python-oracledb Thick requires Oracle Client libraries to be installed.
 These provide the necessary network connectivity allowing the Thick driver
-to access an Oracle Database instance. Oracle Client versions 19, 18,
+to access an Oracle Database instance. Oracle Client versions 21, 19, 18,
 12 and 11.2 are supported.
 
     - If your database is on a remote computer, then download the free `Oracle
@@ -518,7 +519,7 @@ Oracle Instant Client Zip Files
 
 To use python-oracledb with Oracle Instant Client zip files:
 
-1. Download an Oracle 19, 18, 12, or 11.2 "Basic" or "Basic Light" zip
+1. Download an Oracle 21, 19, 18, 12, or 11.2 "Basic" or "Basic Light" zip
    file: `64-bit
    <https://www.oracle.com/database/technologies/instant-client/winx64-64-downloads.html>`__
    or `32-bit
@@ -597,9 +598,8 @@ Configure Oracle Instant Client
 Local Database or Full Oracle Client
 ++++++++++++++++++++++++++++++++++++
 
-python-oracledb Thick applications can use Oracle Client 19, 18, 12, or 11.2
-libraries libraries from a local Oracle Database or full Oracle
-Client.
+python-oracledb Thick applications can use Oracle Client 21, 19, 18, 12, or
+11.2 libraries libraries from a local Oracle Database or full Oracle Client.
 
 The Oracle libraries must be either 32-bit or 64-bit, matching your
 Python architecture.
