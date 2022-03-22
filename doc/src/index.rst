@@ -22,6 +22,7 @@ User Guide
     user_guide/introduction.rst
     user_guide/installation.rst
     user_guide/migration.rst
+    user_guide/changing_modes.rst
     user_guide/initialization.rst
     user_guide/connection_handling.rst
     user_guide/sql_execution.rst
@@ -37,7 +38,6 @@ User Guide
     user_guide/cqn.rst
     user_guide/txn_management.rst
     user_guide/tuning.rst
-    user_guide/statement_cache.rst
     user_guide/two_phase_commit.rst
     user_guide/globalization.rst
     user_guide/startup.rst

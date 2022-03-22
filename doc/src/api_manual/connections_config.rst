@@ -7,7 +7,7 @@ Connection and Connection Configuration in python-oracledb Thick and Thin
 Each python-oracledb process can create connections in Thick or Thin mode, however only one mode can be used.
 
 * If :func:`oracledb.init_oracle_client()` is called in the application before any standalone connection or pool is created, then the mode becomes Thick.
-* If an application creates a standalone connection or pool before calling :func:`oracledb.init_oracle_client()` then the mode becomes Thin.
+* If an application creates a standalone connection or pool before calling :func:`oracledb.init_oracle_client()`, then the mode becomes Thin.
 * If an application opens a connection or creates a pool and then calls :func:`oracledb.init_oracle_client()`, an error will occur.
 
 Once a mode has been established, either by calling :func:`oracledb.init_oracle_client()` or opening connections, then the mode cannot be changed.
@@ -17,9 +17,9 @@ Once a mode has been established, either by calling :func:`oracledb.init_oracle_
 Connection Syntax
 =================
 
-The :func:`oracledb.connect()`, :func:`oracledb.ConnectionPool()`, and :func:`oracledb.SessionPool()` functions support several ways of passing parameters.
+The :func:`oracledb.connect()`, :func:`oracledb.ConnectionPool()`, and :func:`oracledb.SessionPool()` functions support several ways of passing parameters which are listed below.
 
-* One connection option is to use a new ConnectParams Class object:
+* Using the ConnectParams Class object:
 
   .. code-block:: python
 
@@ -40,7 +40,7 @@ The :func:`oracledb.connect()`, :func:`oracledb.ConnectionPool()`, and :func:`or
     params = oracledb.ConnectParams(host="my_host", port=my_port, service_name="my_service_name")
     c = oracledb.connect(user='my_user', password='my_password', params=params)
 
-* The keyword parameter approach mandated by the Python Database API and generally used by frameworks (which depend on the Python Database API) can also be used:
+* Using the `keyword` parameter approach mandated by the Python Database API and generally used by frameworks (which depend on the Python Database API):
 
   .. code-block:: python
 
@@ -48,7 +48,7 @@ The :func:`oracledb.connect()`, :func:`oracledb.ConnectionPool()`, and :func:`or
 
   Any of the parameters to oracledb.ConnectParams() may be also be passed to oracledb.connect(), oracledb.ConnectionPool() and oracledb.SessionPool(). Note that some parameters may be ignored at connection time, based on whether python-oracledb is in Thin or Thick mode.
 
-* Users can also use the alternative method suggested by the Python Database API: namely the use of the dsn parameter which contains a string representation of the connection parameters:
+* Using the the `dsn` parameter which contains a string representation of the connection parameters which is an alternative method suggested by the Python Database API:
 
   .. code-block:: python
 
@@ -61,8 +61,8 @@ The :func:`oracledb.connect()`, :func:`oracledb.ConnectionPool()`, and :func:`or
     conn = oracledb.connect("my_user/my_password@my_host:my_port/my_service_name")
 
   .. note::
-    * If the params parameter is specified and keyword parameters are also specified, then the params parameter is updated with the values from the keyword parameters before being used to create the connection.
-    * If the dsn parameter is specified and the params parameter is specified, then the params parameter is updated with the contents of the dsn parameter before being used to create the connection.
+    * If the `params` parameter is specified and `keyword` parameters are also specified, then the `params` parameter is updated with the values from the `keyword` parameters before being used to create the connection.
+    * If the `dsn` parameter is specified and the `params` parameter is specified, then the `params` parameter is updated with the contents of the `dsn` parameter before being used to create the connection.
 
 .. _connmig:
 
@@ -91,51 +91,72 @@ python-oracledb Thin:
 Connection Strings
 ==================
 
-python-oracledb Thin accepts connection strings in the same format as Thick, but not all Oracle Net keywords will be supported:
+python-oracledb Thin mode accepts connection strings in the same formats as the Thick mode, but not all Oracle Net keywords will be supported. The accepted formats are:
 
-* Easy Connect Strings
-* Full Connect Descriptor Strings
-* Oracle Net Service names
+ * Easy Connect Strings
+ * Full Connect Descriptor Strings
+ * Oracle Net Service names
 
 See :ref:`connstr` for more information on connection strings.
 
-The following table lists the parameters that are recognized by the thin driver, either in full connect descriptor strings (explicitly passed or in a tnsnames.ora file) or Easy Connect strings. All unrecognized parameters are ignored.
+The following table lists the parameters that are recognized in Thin mode either as Easy Connect Strings or Full Connect Descriptor Strings that are explicitly passed or referred to by a ``tnsnames.ora`` alias. All unrecognized parameters are ignored.
 
 .. list-table-with-summary::  Oracle Net Keywords Supported by python-oracledb Thin Driver
     :header-rows: 1
     :align: center
-    :summary: The first column displays the keyword. The second column displays the equivalent oracledb.ConnectParams() attribute.
+    :summary: The first column displays the keyword. The second column displays the equivalent oracledb.ConnectParams() attribute. The third column displays the notes.
 
     * - Keyword
       - Equivalent oracledb.ConnectParams() Attribute
+      - Notes
     * - SSL_SERVER_CERT_DN
       - ssl_server_cert_dn
+      -   
     * - SSL_SERVER_DN_MATCH
       - ssl_server_dn_match
+      - Parsing the parameter supports case insensitive on/yes/true values (similar to the Thick driver and cx_Oracle). Anything else is treated as disabling it.
     * - WALLET_LOCATION
       - wallet_location
+      - Used in Easy Connect Strings. It is same as MY_WALLET_DIRECTORY in a connect descriptor.
     * - MY_WALLET_DIRECTORY
-      - wallet_location (same as for WALLET_LOCATION)
+      - wallet_location
+      - Used by connect descriptors. The ``ConnectParams()`` attribute follows the Easy Connect name.
     * - EXPIRE_TIME
       - expire_time
+      - 
+    * - HTTPS_PROXY
+      - https_proxy
+      - 
+    * - HTTPS_PROXY_PORT
+      - https_proxy_port 
+      - 
     * - RETRY_COUNT
       - retry_count
+      - 
     * - RETRY_DELAY
       - retry_delay
+      - 
     * - TRANSPORT_CONNECT_TIMEOUT
       - tcp_connect_timeout
-    * - POOL_CONNECTION_CLASS (new in 21c)
+      - 
+    * - POOL_CONNECTION_CLASS
       - cclass
-    * - POOL_PURITY (new in 21c)
+      - New in 21c
+    * - POOL_PURITY
       - purity
+      - New in 21c
     * - SERVICE_NAME
       - service_name
+      - 
     * - SID
       - sid
+      - 
     * - PORT
       - port
+      - 
     * - PROTOCOL
       - protocol
+      - 
   
 The ConnectParams class allows other values to be set for the python-oracledb Thin driver.
 
@@ -146,10 +167,12 @@ To identify which Oracle Net connect descriptor parameters are used or ignored b
 Transport Layer Security (TLS) Support
 ======================================
 
+Users have to use OS level controls to limit Transport Layer Security (TLS) versions. For example, see `Hardening TLS Configuration <https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/security_guide/sec-hardening_tls_configuration>`__.
+
 One-way TLS
 -----------
 
-The python-oracledb Thin driver supports one-way Transport Layer Security (TLS). Note that Oracle Cloud Autonomous Database (ADB) now supports one-way TLS so wallets are no longer mandatory.
+The python-oracledb Thin driver supports one-way TLS. Note that Oracle Cloud Autonomous Database (ADB) now supports one-way TLS so wallets are no longer mandatory.
 
 The python-oracledb Thick driver, cx_Oracle, and any Oracle Call Interface (OCI) based app) support one-way TLS when using Oracle Client libraries from 19.14 and 21.5.
 
@@ -218,11 +241,11 @@ The following is a sample script that converts a PKCS#12 encoded file found in O
 Native Network Encryption
 =========================
 
-The python-oracledb Thin driver does not support Oracle Native Network Encryption in python-oracledb 1 release.
+The python-oracledb Thin driver does not support Oracle Native Network Encryption in python-oracledb 1.0 release.
 
 Password Verifiers
 ==================
 
 The python-oracledb Thin driver supports multi-round hashing algorithms for the 11g (SHA1) and 12c (SHA512) verifiers.
 
-SQLNET.ALLOWED_LOGON_VERSION will not be supported in python-oracledb 1 release.
+SQLNET.ALLOWED_LOGON_VERSION is not be supported in python-oracledb 1.0 release.

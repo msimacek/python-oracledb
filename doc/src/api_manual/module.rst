@@ -17,8 +17,6 @@ Module Interface
 
         This method is an extension to the DB API definition.
 
-    .. versionadded:: 6.2
-
 .. function:: _check_arg(name, value)
 
     Checks the argument to ensure that it does not contain '(', ')' or '=' as these
@@ -27,37 +25,26 @@ Module Interface
 
 .. function:: Binary(string)
 
-    Construct an object holding a binary (long) string value.
+    Constructs an object holding a binary (long) string value.
 
 
 .. function:: clientversion()
 
-    Return the version of the client library being used as a 5-tuple. The five
-    values are the major version, minor version, update number, patch number
-    and port update number. This function can only be called in Thick mode  after ``oracledb.init_oracle_client()`` has been called.
+    Returns the version of the client library being used as a 5-tuple. The five
+    values are the major version, minor version, update number, patch number,
+    and port update number. 
+    
+    .. note::
 
-    Oracle client is not used by python-oracledb Thin.  If ``oracledb.clientversion()`` is called when in Thin mode, that is, if ``oracledb.init_oracle_client()`` is not called first, then an exception will be thrown.
+        This function can only be called in Thick mode after ``oracledb.init_oracle_client()`` has been called.
+
+    Oracle Client is not used by python-oracledb Thin.  If ``oracledb.clientversion()`` is called when in Thin mode, that is, if ``oracledb.init_oracle_client()`` is not called first, then an exception will be thrown.
 
     Applications can reference ``oracledb.__version__`` to determine the version of python-oracledb.
 
     .. note::
 
         This method is an extension to the DB API definition.
-
-.. function:: check_and_return_mode(requested_thin_mode)
-    
-    Returns the current state of the driver. If neither the Thick nor the Thin
-    implementation have been used yet (Thin_mode=None), the mode is set to the
-    requested mode (or Thin, if no mode is requested) and returned. If the mode 
-    requested is specified and does not match the current mode, an
-    error is raised.
-
-    .. note:: 
-        
-        The current implementation of the driver only requires the requested Thin mode 
-        to be set when initializing the Thick driver. For this reason, the error raised is
-        specified about a Thin connection already being created. If this assumption changes, 
-        a new error message will be required.
 
 .. function:: connect(user=None, password=None, dsn=None, \
         mode=oracledb.DEFAULT_AUTH, handle=0, pool=None, threaded=False, \
@@ -77,7 +64,7 @@ Module Interface
     specified as keyword parameters.  See :ref:`connhandling` information about
     connections.
 
-    The dsn (data source name) is the TNS entry (from the Oracle names server
+    The `dsn (data source name)` is the TNS entry (from the Oracle names server
     or tnsnames.ora file) or is a string like the one returned from
     :meth:`~oracledb.makedsn()`. If the user parameter is passed and the
     password and dsn parameters are not passed, the user parameter is assumed
@@ -85,57 +72,58 @@ Module Interface
     accepted by Oracle applications such as SQL\*Plus.  See :ref:`connstr` for
     more information.
 
-    If the mode is specified, it must be one of the
+    If the `mode` is specified, it must be one of the
     :ref:`connection authorization modes<connection-authorization-modes>`
     which are defined at the module level.
 
-    If the handle is specified, it must be of type OCISvcCtx\* and is only of
+    If the `handle` is specified, it must be of type OCISvcCtx\* and is only of
     use when embedding Python in an application (like PowerBuilder) which has
     already made the connection. The connection thus created should *never* be
     used after the source handle has been closed or destroyed.
 
-    The pool parameter is expected to be a
-    :ref:`session pool object <sesspool>` and the use of this parameter is the
-    equivalent of calling :meth:`ConnectionPool.acquire()`. Parameters not
-    accepted by that method are ignored.
+    The `pool` parameter is expected to be a :ref:`connpool` and 
+    the use of this parameter is the equivalent of calling :meth:`ConnectionPool.acquire()`. 
+    Parameters not accepted by that method are ignored.
 
-    The threaded parameter is expected to be a boolean expression which
+    The `threaded` parameter is expected to be a boolean expression which
     indicates whether or not Oracle should wrap accesses to connections with a
-    mutex.
+    mutex. This parameter is deprecated and is ignored in python-oracledb. 
+    Threaded Oracle Call Interface (OCI) is now always enabled in the Thick driver
+    and is not relevant to the Thin driver.
 
-    The events parameter is expected to be a boolean expression which indicates
+    The `events` parameter is expected to be a boolean expression which indicates
     whether or not to initialize Oracle in events mode. This is required for
     continuous query notification and high availability event notifications.
 
-    The cclass parameter is expected to be a string and defines the connection
+    The `cclass` parameter is expected to be a string and defines the connection
     class for database resident connection pooling (DRCP).
 
-    The purity parameter is expected to be one of
+    The `purity` parameter is expected to be one of
     :data:`~oracledb.ATTR_PURITY_NEW`, :data:`~oracledb.ATTR_PURITY_SELF`, or
     :data:`~oracledb.ATTR_PURITY_DEFAULT`.
 
-    The newpassword parameter is expected to be a string if specified and sets
+    The `newpassword` parameter is expected to be a string if specified and sets
     the password for the logon during the connection process.
 
     See the :ref:`globalization <globalization>` section for details on the
-    encoding and nencoding parameters.  Note the default encoding and nencoding
+    encoding and nencoding parameters. Note that the default encoding and nencoding
     values changed to "UTF-8" in cx_Oracle 8, and any character set in NLS_LANG
     is ignored. In a future release of python-oracledb, only UTF-8 will be supported.
 
-    The edition parameter is expected to be a string if specified and sets the
+    The `edition` parameter is expected to be a string if specified and sets the
     edition to use for the session. It is only relevant if both the client and
     the database are at least Oracle Database 11.2. If this parameter is used
     with the cclass parameter the exception "DPI-1058: edition not supported
     with connection class" will be raised.
 
-    The appcontext parameter is expected to be a list of 3-tuples, if specified,
+    The `appcontext` parameter is expected to be a list of 3-tuples, if specified,
     and sets the application context for the connection. Application context
     is available in the database by using the sys_context() PL/SQL method and
     can be used within a logon trigger as well as any other PL/SQL procedures.
     Each entry in the list is expected to contain three strings: the namespace,
     the name and the value.
 
-    The tag parameter, if specified, is expected to be a string and will limit
+    The `tag` parameter, if specified, is expected to be a string and will limit
     the sessions that can be returned from a session pool unless the
     matchanytag parameter is set to True. In that case sessions with the
     specified tag will be preferred over others, but if no such sessions are
@@ -144,17 +132,12 @@ Module Interface
     specified tag are available. Sessions are tagged when they are
     :meth:`released <ConnectionPool.release>` back to the pool.
 
-    The shardingkey and supershardingkey parameters, if specified, are expected
+    The `shardingkey` and `supershardingkey` parameters, if specified, are expected
     to be a sequence of values which will be used to identify the database
     shard to connect to. The key values can be strings, numbers, bytes or dates.
 
-    The stmtcachesize parameter, if specified, is expected to be an integer
+    The `stmtcachesize` parameter, if specified, is expected to be an integer
     which specifies the initial value of :data:`~Connection.stmtcachesize`.
-
-    .. versionchanged:: 8.2
-
-        The parameter `stmtcachesize` was added.
-
 
 .. function:: ConnectionPool(user=None, password=None, dsn=None, min=1, max=2, \
         increment=1, connectiontype=oracledb.Connection, threaded=True, \
@@ -164,12 +147,16 @@ Module Interface
         session_callback=None, max_sessions_per_shard=0, \
         soda_metadata_cache=False, stmtcachesize=20, ping_interval=60)
 
-    Create and return a :ref:`session pool object <sesspool>`.  Session pooling
+    Creates and returns a :ref:`session pool object <sesspool>`.  Session pooling
     (also known as connection pooling) creates a pool of available connections
     to the database, allowing applications to acquire a connection very quickly.
     It is of primary use in a server where connections are requested in rapid
     succession and used for a short period of time, for example in a web server.
     See :ref:`connpooling` for more information.
+
+    .. note::
+
+        This function is only available in the Thick driver and not in the Thin driver.
 
     Connection pooling in python-oracledb is handled by Oracle's
     `Session pooling <https://www.oracle.com/pls/topic/lookup?
@@ -178,15 +165,15 @@ Module Interface
     like `Application Continuity <https://www.oracle.com/pls/topic/lookup?
     ctx=dblatest&id=GUID-A8DD9422-2F82-42A9-9555-134296416E8F>`__.
 
-    The user, password and dsn parameters are the same as for
+    The `user`, `password`, and `dsn` parameters are the same as for
     :meth:`oracledb.connect()`
 
-    The min, max and increment parameters control pool growth behavior.  A fixed
+    The `min`, `max`, and `increment` parameters control pool growth behavior.  A fixed
     pool size where min equals max is recommended to help prevent connection
-    storms and to help overall system stability.  The min parameter is the
-    number of connections opened when the pool is created.  The increment is the
+    storms and to help overall system stability.  The `min` parameter is the
+    number of connections opened when the pool is created.  The `increment` is the
     number of connections that are opened whenever a connection request exceeds
-    the number of currently open connections.  The max parameter is the maximum
+    the number of currently open connections.  The `max` parameter is the maximum
     number of connections that can be open in the connection pool.
 
     Note that when using :ref:`external authentication <extauth>`,
@@ -198,54 +185,54 @@ Module Interface
     :meth:`~ConnectionPool.acquire()` will create connection objects of that type,
     rather than the base type defined at the module level.
 
-    The getmode parameter indicates whether or not future
+    The `getmode` parameter indicates whether or not future
     :func:`ConnectionPool.acquire()` calls will wait for available connections.  It
     can be one of the :ref:`Session Pool Get Modes <sesspoolmodes>` values.
 
-    The events parameter is expected to be a boolean expression which indicates
+    The `events` parameter is expected to be a boolean expression which indicates
     whether or not to initialize Oracle in events mode. This is required for
     continuous query notification and high availability event notifications.
 
-    The homogeneous parameter is expected to be a boolean expression which
+    The `homogeneous` parameter is expected to be a boolean expression which
     indicates whether or not to create a homogeneous pool. A homogeneous pool
     requires that all connections in the pool use the same credentials. As such
     proxy authentication and external authentication is not possible with a
     homogeneous pool.  See :ref:`Heterogeneous and Homogeneous Connection Pools
     <connpooltypes>`.
 
-    The externalauth parameter is expected to be a boolean expression which
+    The `externalauth` parameter is expected to be a boolean expression which
     indicates whether or not external authentication should be used. External
     authentication implies that something other than the database is
     authenticating the user to the database. This includes the use of operating
     system authentication and Oracle wallets.  See :ref:`Connecting Using
     External Authentication <extauth>`.
 
-    The encoding and nencoding parameters set the encodings used for string
+    The `encoding` and `nencoding` parameters set the encodings used for string
     values transferred between python-oracledb and Oracle Database, see
     :ref:`Character Sets and Globalization <globalization>`. Note the default
     encoding and nencoding values changed to "UTF-8" in cx_Oracle 8, and any
     character set in NLS_LANG is ignored. In a future release of python-oracledb,
     only UTF-8 will be supported.
 
-    The edition parameter is expected to be a string, if specified, and sets the
+    The `edition` parameter is expected to be a string, if specified, and sets the
     edition to use for the sessions in the pool. It is only relevant if both the
     client and the server are at least Oracle Database 11.2.  See
     :ref:`Edition-Based Redefinition (EBR) <ebr>`.
 
-    The timeout parameter is expected to be an integer, if specified, and sets
+    The `timeout` parameter is expected to be an integer, if specified, and sets
     the length of time (in seconds) after which idle sessions in the pool are
     terminated. Note that termination only occurs when the pool is accessed.
     The default value of 0 means that no idle sessions are terminated. The
     initial pool timeout must be non-zero if you subsequently want to change
     the timeout with :meth:`ConnectionPool.reconfigure()`.
 
-    The wait_timeout parameter is expected to be an integer, if specified, and
+    The `wait_timeout` parameter is expected to be an integer, if specified, and
     sets the length of time (in milliseconds) that the caller should wait for
     a session to become available in the pool before returning with an error.
     This value is only used if the getmode parameter is set to the value
     :data:`oracledb.SPOOL_ATTRVAL_TIMEDWAIT`.
 
-    The max_lifetime_session parameter is expected to be an integer, if
+    The `max_lifetime_session` parameter is expected to be an integer, if
     specified, and sets the maximum length of time (in seconds) a pooled
     session may exist. Sessions that are in use will not be closed. They become
     candidates for termination only when they are released back to the pool and
@@ -254,7 +241,7 @@ Module Interface
     which means that there is no maximum length of time that a pooled session
     may exist.
 
-    The session_callback parameter is expected to be either a string or a
+    The `session_callback` parameter is expected to be either a string or a
     callable. If the session_callback parameter is a callable, it will be
     called when a newly created connection is returned from the pool, or when a
     tag is requested and that tag does not match the connection's actual tag.
@@ -268,15 +255,15 @@ Module Interface
     <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
     id=GUID-B853A020-752F-494A-8D88-D0396EF57177>`__ for more information.
 
-    The max_sessions_per_shard parameter is expected to be an integer, if
+    The `max_sessions_per_shard` parameter is expected to be an integer, if
     specified. Setting this greater than zero specifies the maximum number of
     sessions in the pool that can be used for any given shard in a sharded
     database. This lets connections in the pool be balanced across the shards.
     A value of zero will not set any maximum number of sessions for each shard.
-    This value is ignored if the Oracle client library version is less than
+    This value is ignored if the Oracle Client library version is less than
     18.3.
 
-    The soda_metadata_cache parameter is expected to be a boolean expresion
+    The `soda_metadata_cache` parameter is expected to be a boolean expresion
     which indicates whether or not to enable the SODA metatata cache. This
     significantly improves the performance of methods
     :meth:`SodaDatabase.createCollection()` and
@@ -285,76 +272,73 @@ Module Interface
     Client 19.11 and higher. See :ref:`Using the SODA Metadata Cache
     <sodametadatacache>`.
 
-    The stmtcachesize parameter, if specified, is expected to be an integer
+    The `stmtcachesize` parameter, if specified, is expected to be an integer
     which specifies the initial value of :data:`~ConnectionPool.stmtcachesize`.
 
-    The ping_interval parameter, if specified, is expected to be an integer
+    The `ping_interval` parameter, if specified, is expected to be an integer
     which specifies the initial value of :data:`~ConnectionPool.ping_interval`.
 
     .. note::
 
         This method is an extension to the DB API definition.
 
-    .. versionchanged:: 8.2
-
-        The parameters `soda_metadata_cache`, `stmtcachesize` and
-        `ping_interval` were added. For consistency and compliance with the PEP
-        8 naming style, the parameter `waitTimeout` was renamed to
-        `wait_timeout`, the parameter `maxLifetimeSession` was renamed to
-        `max_lifetime_session`, the parameter `sessionCallback` was renamed to
-        `session_callback` and the parameter `maxSessionsPerShard` was renamed
-        to `max_sessions_per_shard`. The old names will continue to work as
-        keyword parameters for a period of time. The `threaded` parameter value
-        is ignored and threading is always enabled; in previous versions the
-        default was False.
+    For consistency and compliance with the PEP
+    8 naming style, the parameter `waitTimeout` was renamed to
+    `wait_timeout`, the parameter `maxLifetimeSession` was renamed to
+    `max_lifetime_session`, the parameter `sessionCallback` was renamed to
+    `session_callback` and the parameter `maxSessionsPerShard` was renamed
+    to `max_sessions_per_shard`. The old names will continue to work as
+    keyword parameters for a period of time. The `threaded` parameter value
+    is ignored and threading is always enabled; in previous cx_Oracle versions the
+    default was False.
 
 .. function:: ConnectParams(host, port, service_name, sid, events, protocol, enable_drcp, \ 
     config_dir, cclass, purity, mode, edition, appcontext, tag, matchanytag, shardingkey, \
     supershardingkey, stmtcachesize, disable_oob, ssl_server_dn_match, ssl_server_cert_dn, \
     retry_count, retry_delay, expire_time, tcp_connect_timeout, wallet_location, wallet_password)
 
-    Create and return a :ref:`connparam`. The object can be passed to :func:`oracledb.connect()`,
+    Creates and returns a :ref:`connparam`. The object can be passed to :func:`oracledb.connect()`,
     :func:`oracledb.ConnectionPool()`, or :func:`oracledb.SessionPool()`, see :ref:`syntax`.
     
     All the parameters are optional.
 
-    The host parameter is the name or IP address of the machine hosting the listener (the
+    The `host` parameter is the name or IP address of the machine hosting the listener (the
     process which handles the initial connection to the database).
 
-    The port parameter is the port number on which the listener is listening.
+    The `port` parameter is the port number on which the listener is listening.
 
-    The service_name parameter is the service name of the database.
+    The `service_name` parameter is the service name of the database.
 
-    The sid parameter is the SID of the database (service_name should be used instead).
+    The `sid` parameter is the SID of the database. Use the service_name instead.
 
-    The events parameter is a boolean specifying whether events mode should be enabled. This
-    is only relevant for the thick driver and is needed for continuous query notification and 
-    high availability event notifications (default: oracledb.defaults.events).
+    The `events` parameter is a boolean specifying whether events mode should be enabled. This
+    is only relevant for the Thick driver and is needed for continuous query notification and 
+    high availability event notifications. The default value is ``oracledb.defaults.events``.
 
-    The protocol parameter is one of the strings "tcp" or "tcps" indicating whether to use
+    The `protocol` parameter is one of the strings "tcp" or "tcps" indicating whether to use
     unencrypted network traffic or encrypted network traffic (TLS).
 
-    The enable_drcp parameter is a boolean specifying whether Database Resident Connection
+    The `enable_drcp` parameter is a boolean specifying whether Database Resident Connection
     Pooling (DRCP) should be used.
 
-    The config_dir parameter is the directory in which configuration files (tnsnames.ora) are
-    found (default: oracledb.defaults.config_dir).
+    The `config_dir` parameter is the directory in which configuration files (tnsnames.ora) are
+    found. The default value is ``oracledb.defaults.config_dir``.
 
-    The cclass parameter is the connection class to use for DRCP.
+    The `cclass` parameter is the connection class to use for DRCP.
 
-    The purity parametere is the purity to use for DRCP.
+    The `purity` parametere is the purity to use for DRCP.
 
-    The mode parameter determines the authorization mode to use.
+    The `mode` parameter determines the authorization mode to use.
 
-    The edition parameter determines the edition to use for the connection. This parameter cannot be
+    The `edition` parameter determines the edition to use for the connection. This parameter cannot be
     used simultaneously with the cclass parameter.
 
-    The appcontext parameter is the application context used by the connection. It should be a
+    The `appcontext` parameter is the application context used by the connection. It should be a
     list of 3-tuples. Each entry in the tuple is a string and makes up the namespace, the name,
     and the value. The value can be referenced in the database by using the PL/SQL method sys_context() 
     within logon triggers or other PL/SQL procedures.
 
-    The tag parameter identifies the type of connection that should be returned from a
+    The `tag` parameter identifies the type of connection that should be returned from a
     pool. Only a connection with the requested tag or a connection without
     any tag will be returned unless the matchanytag parameter is True. If
     the matchanytag parameter is True a connection with any tag (or no tag)
@@ -362,69 +346,67 @@ Module Interface
     available. Connections are tagged when they are released back to the
     pool. 
 
-    .. note::
+     .. note::
 
-        This parameter is only relevant for the Thick driver and only when acquiring a connection from a pool.
+         This parameter is only relevant for the Thick driver and only when acquiring a connection from a pool.
 
-    The matchanytag parameter is a boolean specifying whether any tag can be used when
+    The `matchanytag` parameter is a boolean specifying whether any tag can be used when
     acquiring a connection from the pool. This parameter is only relevant
     for the Thick driver and only when acquiring a connection from a pool.
 
-    The shardingkey parameter is a sequence of strings, numbers, bytes or dates that
+    The `shardingkey` parameter is a sequence of strings, numbers, bytes, or dates that
     identify the database shard to connect to. 
     
-    .. note:: 
+     .. note:: 
 
-        This parameter is only relevant for the Thick driver.
+         This parameter is only relevant for the Thick driver.
   
-
-    The supershardingkey parameter is a sequence of strings, numbers, bytes, or dates that
+    The `supershardingkey` parameter is a sequence of strings, numbers, bytes, or dates that
     identify the database shard to connect to. 
     
-    .. note::
+     .. note::
 
-        This parameter is only relevant for the Thick driver.
+         This parameter is only relevant for the Thick driver.
     
+    The `stmtcachesize` parameter identifies the initial size of the statement cache. The default value is `oracledb.defaults.stmtcachesize`.
 
-    The stmtcachesize parameter identifies the initial size of the statement cache (default: defaults.stmtcachesize).
-
-    The disable_oob parameter is a boolean indicating whether out-of-band breaks should be
-    disabled (default: defaults.disable_oob). Note that out-of-band breaks
+    The `disable_oob` parameter is a boolean indicating whether out-of-band breaks should be
+    disabled. The default value is ``oracledb.defaults.disable_oob``. Note that out-of-band breaks
     are not supported on Windows.
 
-    The ssl_server_dn_match parameter is a boolean indicating whether the server certificate
+    The `ssl_server_dn_match` parameter is a boolean indicating whether the server certificate
     distinguished name (DN) should be matched in addition to the regular
-    certificate verification that is performed (default:defaults.ssl_server_dn_match). 
-    Note that if the ssl_server_cert_dn is not provided, no matching is done regardless 
+    certificate verification that is performed. The default value is ``oraceldb.defaults.ssl_server_dn_match``. 
+    Note that if the `ssl_server_cert_dn` parameter is not provided, no matching is done regardless 
     of the value of this parameter.
 
-    The ssl_server_cert_dn parameter is the distinguished name (DN) which should be matched
-    with the server. This value is ignored if the ssl_server_dn_match
+    The `ssl_server_cert_dn` parameter is the distinguished name (DN) which should be matched
+    with the server. This value is ignored if the `ssl_server_dn_match`
     parameter is not set to the value True.
 
-    The retry_count parameter is the number of times that a connection attempt should be
+    The `retry_count` parameter is the number of times that a connection attempt should be
     made before the attempt is terminated.
 
-    The retry_delay parameter is the number of seconds to wait before making a new
+    The `retry_delay` parameter is the number of seconds to wait before making a new
     connection attempt.
 
-    The expire_time parameter is an integer indicating the number of minutes between the
+    The `expire_time` parameter is an integer indicating the number of minutes between the
     sending of keepalive probes. If this parameter is set to a value
     greater than zero it enables keepalive.
 
-    The tcp_connect_timeout parameter is a float indicating the maximum number of seconds
+    The `tcp_connect_timeout` parameter is a float indicating the maximum number of seconds
     to wait for establishing a connection to the database host.
 
-    The wallet_location parameter is the location where the PEM-encoded wallet file
+    The `wallet_location` parameter is the location where the PEM-encoded wallet file
     ewallet.pem can be found. If this parameter is not set, one-way TLS
     authentication will take place instead.
 
-    The wallet_password parameter is the password used to decrypt the contents of the
+    The `wallet_password` parameter is the password used to decrypt the contents of the
     PEM-encoded wallet file, if applicable.
 
 .. function:: Cursor(connection)
 
-    Constructor for creating a cursor.  Return a new
+    Constructor for creating a cursor.  Returns a new
     :ref:`cursor object <cursorobj>` using the connection.
 
     .. note::
@@ -434,112 +416,81 @@ Module Interface
 
 .. function:: Date(year, month, day)
 
-    Construct an object holding a date value.
+    Constructs an object holding a date value.
 
 
 .. function:: DateFromTicks(ticks)
 
-    Construct an object holding a date value from the given ticks value (number
+    Constructs an object holding a date value from the given ticks value (number
     of seconds since the epoch; see the documentation of the standard Python
     time module for details).
 
 .. function:: defaults
 
+    A singleton ``oracledb.defaults`` contains attributes that can be used to adjust the default behavior of python-oracledb in the application. The attributes will be ignored if they are not supported in a particular mode (Thick or Thin).
+
+.. list-table-with-summary::  Attributes of the ``oracledb.defaults`` function
+    :header-rows: 1
+    :align: center
+    :summary: The first column displays the attribute name. The second column displays the initial value. The third column indicates the mode supported. The fourth column displays the description of the attribute.
+
+    * - Attribute Name
+      - Initial Value
+      - Mode Supported (Thin/Thick/Both)
+      - Description
+    * - arraysize
+      - 100
+      - Both
+      - The default value for :attr:`Cursor.arraysize`. This is a query tuning attribute.
+    * - stmtcachesize
+      - 20
+      - Both
+      - The default value for :attr:`Connection.stmtcachesize`, :attr:`ConnectionPool.stmtcachesize`, and :attr:`SessionPool.stmtcachesize`. This is a tuning attribute.
+    * - events
+      - False
+      - Thick
+      - The default events mode if events is not passed to :func:`~oracledb.ConnectParams`. Also, this default value is used when getting a connection or creating a pool, if the events mode is not specified.
+    * - ping_interval
+      - 60 seconds 
+      - Both
+      - The default value of the :attr:`~ConnectionPool.ping_interval` parameter when creating a connection pool.
+    * - config_dir
+      - ``os.environ.get("TNS_ADMIN")`` 
+      - Both
+      - The directory in which configuration files such as tnsnames.ora are found by default. If the TNS_ADMIN environment variable is not set, then the default value is None in the Thin mode and no tnsnames.ora file will be usable (until the attribute value is changed). If this attribute is None in the Thick mode, then the usual Oracle Client search path behavior for configuration files is used. This is described in the cx_Oracle documentation and the Oracle Client library documentation.
+    * - fetch_lobs
+      - True
+      - Both
+      - When the value of this attribute is True, then queries of LOB columns return LOB locators. When the value of this attribute is False, then strings or bytes are fetched. If LOBs are larger than 1 GB, then this attribute should be set to True and the LOBs should be streamed. An output type handler (like the one used in `return_lobs_as_strings.py <https://github.com/oracle/python-cx_Oracle/blob/main/samples/return_lobs_as_strings.py>`__) can alternatively be used to adjust the returned type. If a type handler exists and returns a variable (that is, `cursor.var(...)`), then that return variable is used. If the type handler returns None, then the value of ``oracledb.defaults.fetch_lobs`` is used.
+    * - fetch_decimals
+      - False
+      - Both
+      - Identifies whether numbers should be fetched as ``decimal.Decimal`` values. This can help avoid inherent issues converting numbers from Oracle Database's decimal format to Python's binary format. An output type handler can still be used to adjust the returned type, if desired.
+    * - prefetchrows
+      - 2
+      - Both
+      - The default value for :attr:`Cursor.prefetchrow`. This is a query tuning attribute. 
+    * - disable_oob
+      - False  
+      - Thin
+      - Identifies whether out-of-band breaks should be disabled. In Thick mode, use the DISABLE_OOB setting in a sqlnet.ora file.
+    * - ssl_server_dn_match
+      - True 
+      - Thin
+      - Identifies whether the distinguished name (DN) on the server certificate should be matched when establishing the connection. In Thick mode, use the equivalent setting in a connect descriptor or Easy Connect String.
+    * - tcp_connect_timeout
+      - 60 seconds
+      - Thin
+      - Identifies the maximum number of seconds to wait for establishing a TCP connection to the database host before returning an error. In Thick mode, use the equivalent Oracle Net option TRANSPORT_CONNECT_TIMEOUT in a sqlnet.ora file or the Easy Connect connection string syntax.
+    * - port    
+      - 1521
+      - Thin
+      - The default database connection port number if port is not passed to :func:`~oracledb.ConnectParams`. Also, it is used when getting a connection or creating a pool if the port is not specified.
     
-A singleton ``oracledb.defaults`` contains attributes that can be used to
-adjust the default behavior of python-oracledb in the application.
-
-The following attributes are present:
-
-- ``arraysize`` with default 100.
-
-  The default array size when creating a cursor.
-
-- ``stmtcachesize`` with default 20.
-
-  The default size of the statement cache when creating a standalone connection
-  or connection pool.
-
-- ``events`` with default False.
-
-  Identifies whether standalone connections or connection pools will be created in
-  events mode by default. This value is only used by the thick driver.
-
-- ``ping_interval`` with default 60 seconds.
-
-  The default value of the ``ping_interval`` parameter when
-  creating a connection pool.
-
-- ``config_dir`` with default value ``os.environ.get("TNS_ADMIN")``.
-
-  The directory in which configuration files (e.g. tnsnames.ora) are found by
-  default.  If the environment variable is not set, the default is None for the
-  thin driver.  The thick driver has the usual defaults which are described in
-  the cx_Oracle documentation and the Oracle Client library documentation.
-
-- ``fetch_lobs`` with default True.
-
-  When True, queries of LOB columns return LOB locators.  When False, strings
-  or bytes are fetched instead.  If LOBs are larger than 1 GB, this attribute
-  should be set to True and the LOBs should be streamed.
-
-  Although a default value of False would be more usable by customers it
-  would not be compatible with cx_Oracle and would require a line to revert the
-  behavior.
-
-  An output type handler (like used in `return_lobs_as_strings.py
-  <https://github.com/oracle/python-cx_Oracle/blob/main/samples/return_lobs_as_strings.py>`__)
-  can alternatively be used to adjust the returned type.  If a type handler
-  exists and returns a variable (ie. `cursor.var(...)`), then that return
-  variable is used.  If the type handler returns None, then the value of
-  ``Oracledb.defaults.fetch_lobs`` is used.
-
-- ``fetch_decimals`` with default False.
-
-  Identifies whether numbers should be fetched as ``decimal.Decimal`` values by
-  default. An output type handler can still be used to adjust the returned type
-  if desired.
-
-- ``prefetchrows`` with default 2.
-
-  The number of rows that are prefetched when a cursor is executed.
-
-- ``disable_oob`` with default False.
-
-  Only used by Thin.  Ignored if used in Thick.
-
-  Identifies whether out-of-band breaks should be disabled.
-
-- ``ssl_server_dn_match`` with default True.
-
-  Only used by Thin.  Ignored if used in Thick.
-
-  Identifies whether the distinguished name (DN) on the server certificate
-  should be matched with the value supplied when establishing the connection.
-
-- ``tcp_connect_timeout`` with default 60 seconds.
-
-  Only used by Thin.  Ignored if used in Thick.
-
-  Identifies the maximum number of seconds to wait for establishing a TCP
-  connection to the database host.
-
-
-- ``port`` with default 1521
-
-  Only used by Thin. Ignored if used in Thick.
-
-  The default port number to use when creating connections to the database with
-  the thin driver.
-
-    Construct an object holding a date value from the given ticks value (number
-    of seconds since the epoch; see the documentation of the standard Python
-    time module for details).
-
 .. function:: init_oracle_client(lib_dir=None, config_dir=None, \
         error_url=None, driver_name=None)
 
-    Initialize the Oracle client library now, rather than when
+    Initializes the Oracle client library now, rather than when
     :func:`oracledb.clientversion()`, :func:`oracledb.connect()` or
     :func:`oracledb.ConnectionPool()` is called for the first time. If
     initialization has already taken place, an exception is raised.
@@ -580,7 +531,7 @@ The following attributes are present:
 .. function:: makedsn(host, port, sid=None, service_name=None, region=None, \
         sharding_key=None, super_sharding_key=None)
 
-    Return a string suitable for use as the dsn parameter for
+    Returns a string suitable for use as the dsn parameter for
     :meth:`~oracledb.connect()`. This string is identical to the strings that
     are defined by the Oracle names server or defined in the tnsnames.ora file.
 
@@ -597,9 +548,9 @@ The following attributes are present:
         session_callback=None, max_sessions_per_shard=0, \
         soda_metadata_cache=False, stmtcachesize=20, ping_interval=60)
 
-    This function is deprecated in python-oracledb Release 1. See :ref:`deprecations` for a complete list of deprecated features.
+    This function is deprecated in python-oracledb 1.0. See :ref:`deprecations` for a complete list of deprecated features.
     
-    Create and return a :ref:`session pool object <sesspool>`.  Session pooling
+    Creates and returns a :ref:`session pool object <sesspool>`.  Session pooling
     (also known as connection pooling) creates a pool of available connections
     to the database, allowing applications to acquire a connection very quickly.
     It is of primary use in a server where connections are requested in rapid
@@ -613,15 +564,15 @@ The following attributes are present:
     like `Application Continuity <https://www.oracle.com/pls/topic/lookup?
     ctx=dblatest&id=GUID-A8DD9422-2F82-42A9-9555-134296416E8F>`__.
 
-    The user, password and dsn parameters are the same as for
+    The `user`, `password`, and `dsn`` parameters are the same as for
     :meth:`oracledb.connect()`
 
-    The min, max and increment parameters control pool growth behavior.  A fixed
+    The `min`, `max` and `increment` parameters control pool growth behavior.  A fixed
     pool size where min equals max is recommended to help prevent connection
-    storms and to help overall system stability.  The min parameter is the
-    number of connections opened when the pool is created.  The increment is the
+    storms and to help overall system stability.  The `min` parameter is the
+    number of connections opened when the pool is created.  The `increment` is the
     number of connections that are opened whenever a connection request exceeds
-    the number of currently open connections.  The max parameter is the maximum
+    the number of currently open connections.  The `max` parameter is the maximum
     number of connections that can be open in the connection pool.
 
     Note that when using :ref:`external authentication <extauth>`,
@@ -629,58 +580,58 @@ The following attributes are present:
     growth behavior is different.  In these cases the number of connections
     created at pool startup is always zero, and the increment is always one.
 
-    If the connectiontype parameter is specified, all calls to
+    If the `connectiontype` parameter is specified, all calls to
     :meth:`~SessionPool.acquire()` will create connection objects of that type,
     rather than the base type defined at the module level.
 
-    The getmode parameter indicates whether or not future
+    The `getmode` parameter indicates whether or not future
     :func:`SessionPool.acquire()` calls will wait for available connections.  It
     can be one of the :ref:`Session Pool Get Modes <sesspoolmodes>` values.
 
-    The events parameter is expected to be a boolean expression which indicates
+    The `events` parameter is expected to be a boolean expression which indicates
     whether or not to initialize Oracle in events mode. This is required for
     continuous query notification and high availability event notifications.
 
-    The homogeneous parameter is expected to be a boolean expression which
+    The `homogeneous` parameter is expected to be a boolean expression which
     indicates whether or not to create a homogeneous pool. A homogeneous pool
     requires that all connections in the pool use the same credentials. As such
     proxy authentication and external authentication is not possible with a
     homogeneous pool.  See :ref:`Heterogeneous and Homogeneous Connection Pools
     <connpooltypes>`.
 
-    The externalauth parameter is expected to be a boolean expression which
+    The `externalauth` parameter is expected to be a boolean expression which
     indicates whether or not external authentication should be used. External
     authentication implies that something other than the database is
     authenticating the user to the database. This includes the use of operating
     system authentication and Oracle wallets.  See :ref:`Connecting Using
     External Authentication <extauth>`.
 
-    The encoding and nencoding parameters set the encodings used for string
+    The `encoding` and `nencoding` parameters set the encodings used for string
     values transferred between python-oracledb and Oracle Database, see
     :ref:`Character Sets and Globalization <globalization>`. Note the default
     encoding and nencoding values changed to "UTF-8" in cx_Oracle 8, and any
     character set in NLS_LANG is ignored. In a future release of python-oracledb,
     only UTF-8 will be supported.
 
-    The edition parameter is expected to be a string, if specified, and sets the
+    The `edition` parameter is expected to be a string, if specified, and sets the
     edition to use for the sessions in the pool. It is only relevant if both the
     client and the server are at least Oracle Database 11.2.  See
     :ref:`Edition-Based Redefinition (EBR) <ebr>`.
 
-    The timeout parameter is expected to be an integer, if specified, and sets
+    The `timeout` parameter is expected to be an integer, if specified, and sets
     the length of time (in seconds) after which idle sessions in the pool are
     terminated. Note that termination only occurs when the pool is accessed.
     The default value of 0 means that no idle sessions are terminated. The
     initial pool timeout must be non-zero if you subsequently want to change
     the timeout with :meth:`SessionPool.reconfigure()`.
 
-    The wait_timeout parameter is expected to be an integer, if specified, and
+    The `wait_timeout` parameter is expected to be an integer, if specified, and
     sets the length of time (in milliseconds) that the caller should wait for
     a session to become available in the pool before returning with an error.
     This value is only used if the getmode parameter is set to the value
     :data:`oracledb.SPOOL_ATTRVAL_TIMEDWAIT`.
 
-    The max_lifetime_session parameter is expected to be an integer, if
+    The `max_lifetime_session` parameter is expected to be an integer, if
     specified, and sets the maximum length of time (in seconds) a pooled
     session may exist. Sessions that are in use will not be closed. They become
     candidates for termination only when they are released back to the pool and
@@ -689,7 +640,7 @@ The following attributes are present:
     which means that there is no maximum length of time that a pooled session
     may exist.
 
-    The session_callback parameter is expected to be either a string or a
+    The `session_callback` parameter is expected to be either a string or a
     callable. If the session_callback parameter is a callable, it will be
     called when a newly created connection is returned from the pool, or when a
     tag is requested and that tag does not match the connection's actual tag.
@@ -703,15 +654,15 @@ The following attributes are present:
     <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
     id=GUID-B853A020-752F-494A-8D88-D0396EF57177>`__ for more information.
 
-    The max_sessions_per_shard parameter is expected to be an integer, if
+    The `max_sessions_per_shard` parameter is expected to be an integer, if
     specified. Setting this greater than zero specifies the maximum number of
     sessions in the pool that can be used for any given shard in a sharded
     database. This lets connections in the pool be balanced across the shards.
     A value of zero will not set any maximum number of sessions for each shard.
-    This value is ignored if the Oracle client library version is less than
+    This value is ignored if the Oracle Client library version is less than
     18.3.
 
-    The soda_metadata_cache parameter is expected to be a boolean expresion
+    The `soda_metadata_cache` parameter is expected to be a boolean expresion
     which indicates whether or not to enable the SODA metatata cache. This
     significantly improves the performance of methods
     :meth:`SodaDatabase.createCollection()` and
@@ -720,33 +671,30 @@ The following attributes are present:
     Client 19.11 and higher. See :ref:`Using the SODA Metadata Cache
     <sodametadatacache>`.
 
-    The stmtcachesize parameter, if specified, is expected to be an integer
+    The `stmtcachesize` parameter, if specified, is expected to be an integer
     which specifies the initial value of :data:`~SessionPool.stmtcachesize`.
 
-    The ping_interval parameter, if specified, is expected to be an integer
+    The `ping_interval` parameter, if specified, is expected to be an integer
     which specifies the initial value of :data:`~SessionPool.ping_interval`.
 
     .. note::
 
         This method is an extension to the DB API definition.
 
-    .. versionchanged:: 8.2
-
-        The parameters `soda_metadata_cache`, `stmtcachesize` and
-        `ping_interval` were added. For consistency and compliance with the PEP
-        8 naming style, the parameter `waitTimeout` was renamed to
-        `wait_timeout`, the parameter `maxLifetimeSession` was renamed to
-        `max_lifetime_session`, the parameter `sessionCallback` was renamed to
-        `session_callback` and the parameter `maxSessionsPerShard` was renamed
-        to `max_sessions_per_shard`. The old names will continue to work as
-        keyword parameters for a period of time. The `threaded` parameter value
-        is ignored and threading is always enabled; in previous versions the
-        default was False.
+    For consistency and compliance with the PEP
+    8 naming style, the parameter `waitTimeout` was renamed to
+    `wait_timeout`, the parameter `maxLifetimeSession` was renamed to
+    `max_lifetime_session`, the parameter `sessionCallback` was renamed to
+    `session_callback` and the parameter `maxSessionsPerShard` was renamed
+    to `max_sessions_per_shard`. The old names will continue to work as
+    keyword parameters for a period of time. The `threaded` parameter value
+    is ignored and threading is always enabled; in previous versions of cx_Oracle the
+    default was False.
 
 
 .. function:: Time(hour, minute, second)
 
-    Construct an object holding a time value.
+    Constructs an object holding a time value.
 
     .. note::
 
@@ -754,10 +702,9 @@ The following attributes are present:
         function will raise a NotSupportedError exception.
 
 
-
 .. function:: TimeFromTicks(ticks)
 
-    Construct an object holding a time value from the given ticks value (number
+    Constructs an object holding a time value from the given ticks value (number
     of seconds since the epoch; see the documentation of the standard Python
     time module for details).
 
@@ -769,16 +716,14 @@ The following attributes are present:
 
 .. function:: Timestamp(year, month, day, hour, minute, second)
 
-    Construct an object holding a time stamp value.
+    Constructs an object holding a time stamp value.
 
 
 .. function:: TimestampFromTicks(ticks)
 
-    Construct an object holding a time stamp value from the given ticks value
+    Constructs an object holding a time stamp value from the given ticks value
     (number of seconds since the epoch; see the documentation of the standard
     Python time module for details).
-
-
 
 .. _constants:
 
@@ -1068,8 +1013,6 @@ values for the mode parameter of the :meth:`connect()` method.
 
     This constant is used to specify that default authentication is to take
     place. This is the default value if no mode is passed at all.
-
-    .. versionadded:: 7.2
 
 .. data:: PRELIM_AUTH
 
@@ -1553,6 +1496,9 @@ when binding data.
     Describes columns, attributes or array elements in a database that are of
     type BFILE. It will compare equal to the DB API type :data:`BINARY`.
 
+    .. note::
+
+        This type is not supported in python-oracledb Thin.
 
 .. data:: DB_TYPE_BINARY_DOUBLE
 
@@ -1632,8 +1578,6 @@ when binding data.
     Describes columns in a database that are of type JSON (with Oracle Database
     21 or later).
 
-    .. versionadded:: 8.1
-
 
 .. data:: DB_TYPE_LONG
 
@@ -1678,6 +1622,10 @@ when binding data.
 
     Describes columns, attributes or array elements in a database that are an
     instance of a named SQL or PL/SQL type.
+
+    .. note::
+
+        This type is not supported in python-oracledb Thin.
 
 
 .. data:: DB_TYPE_RAW
@@ -1731,111 +1679,111 @@ version of python-oracledb.
 
     A synonym for :data:`DB_TYPE_BFILE`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 .. data:: BLOB
 
     A synonym for :data:`DB_TYPE_BLOB`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 .. data:: BOOLEAN
 
     A synonym for :data:`DB_TYPE_BOOLEAN`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 .. data:: CLOB
 
     A synonym for :data:`DB_TYPE_CLOB`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 .. data:: CURSOR
 
     A synonym for :data:`DB_TYPE_CURSOR`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 .. data:: FIXED_CHAR
 
     A synonym for :data:`DB_TYPE_CHAR`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 .. data:: FIXED_NCHAR
 
     A synonym for :data:`DB_TYPE_NCHAR`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 .. data:: INTERVAL
 
     A synonym for :data:`DB_TYPE_INTERVAL_DS`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 .. data:: LONG_BINARY
 
     A synonym for :data:`DB_TYPE_LONG_RAW`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 .. data:: LONG_STRING
 
     A synonym for :data:`DB_TYPE_LONG`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 .. data:: NATIVE_FLOAT
 
     A synonym for :data:`DB_TYPE_BINARY_DOUBLE`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 .. data:: NATIVE_INT
 
     A synonym for :data:`DB_TYPE_BINARY_INTEGER`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 .. data:: NCHAR
 
     A synonym for :data:`DB_TYPE_NVARCHAR`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 .. data:: NCLOB
 
     A synonym for :data:`DB_TYPE_NCLOB`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 .. data:: OBJECT
 
     A synonym for :data:`DB_TYPE_OBJECT`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 .. data:: TIMESTAMP
 
     A synonym for :data:`DB_TYPE_TIMESTAMP`.
 
-    .. deprecated:: 8.0
+    .. deprecated:: cx_Oracle 8.0
 
 
 Other Types
@@ -1969,9 +1917,6 @@ Exception handling
     Boolean attribute representing whether the error is recoverable or not.
     This is False in all cases unless both Oracle Database 12.1 (or later) and
     Oracle Client 12.1 (or later) are being used.
-
-    .. versionadded:: 5.3
-
 
 This allows you to use the exceptions for example in the following way:
 

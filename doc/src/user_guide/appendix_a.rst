@@ -225,8 +225,8 @@ The following table describes the differences in the way Oracle features are sup
       - No
       -
       - Yes 
-    * - Call timeouts (Oracle Call Interface (OCI) attribute)
-      - No
+    * - Call timeouts (via Oracle Call Interface (OCI) attribute for Thick) :attr:`Connection.call_timeout`
+      - Yes
       -
       - Yes 
     * - Scrollable cursors

@@ -4,6 +4,8 @@
 Tracing SQL and PL/SQL Statements
 *********************************
 
+.. _dbviews:
+
 Database Views
 ==============
 
@@ -30,29 +32,29 @@ for the thick and thin drivers:
       - the serial number
       - the serial number
     * - AUTHENTICATION_TYPE
-      - e.g. "Database"
-      - e.g. "Database"
+      - for example, "Database"
+      - for example, "Database"
     * - OSUSER
       - the OS user
       - the OS user
     * - NETWORK_SERVICE_BANNER
-      - the database banner.  Note the table has one row per banner line
-      - the database banner.  Note the table has one row per banner line
+      - the database banner. Note the table has one row per banner line.
+      - the database banner. Note the table has one row per banner line.
     * - CLIENT_CHARSET
       - AL32UTF8
       - AL32UTF8
     * - CLIENT_CONNECTION
-      - e.g. "Heterogeneous"
-      - e.g. "Heterogeneous"
+      - for example, "Heterogeneous"
+      - for example, "Heterogeneous"
     * - CLIENT_OCI_LIBRARY
-      - the Oracle Client or Instant Client type, eg. "Full Instant Client"
+      - the Oracle Client or Instant Client type, such as "Full Instant Client"
       - "Unknown"
     * - CLIENT_VERSION
       - the Oracle Client library version number
-      - the python-oracledb version number
+      - "0.9.4.0.0" (the python-oracledb version number with an extra .0.0)
     * - CLIENT_DRIVER
-      - "python-oracledb thk : 0.9.1"
-      - "python-oracledb thn : 0.9.1"
+      - "python-oracledb thk : 0.9.4"
+      - "python-oracledb thn : 0.9.4"
     * - CLIENT_LOBATTR
       - "Client Temp Lob Rfc On"
       - "Client Temp Lob Rfc Off"
@@ -71,13 +73,26 @@ configurable with the thin driver.
 ``V$SESSION``
 -------------
 
-The following describes `V$SESSION <https://docs.oracle.com/en/database/oracle/oracle-database/21/refrn/V-SESSION.html>`__ differences.
+The following table list sample values for columns with differences in `V$SESSION <https://docs.oracle.com/en/database/oracle/oracle-database/21/refrn/V-SESSION.html>`__.
 
-In the Thin driver:
+.. list-table-with-summary:: V$SESSION column values
+    :header-rows: 1
+    :widths: 15 10 10
+    :name: V$SESSION_COLUMN_VALUES
+    :summary: The first column is the name of the column. The second column lists the Thick mode value. The third column is the Thin mode value.
 
-- ``OSUSER`` - the OS user
-- ``TERMINAL`` - the string "unknown"
-- ``PROGRAM`` - the contents of Python's ``sys.executable``
+    * - Column
+      - Thick value
+      - Thin value
+    * - TERMINAL
+      - similar to `ttys001`
+      - the string "unknown"
+    * - PROGRAM
+      - similar to `python@cjones-mac2 (TNS V1-V3)`
+      - the contents of Python's ``sys.executable``, such as `/Users/cjones/.pyenv/versions/3.9.6/bin/python`
+    * - MODULE
+      - similar to `python@cjones-mac2 (TNS V1-V3)`
+      - the contents of Python's ``sys.executable``, such as `/Users/cjones/.pyenv/versions/3.9.6/bin/python`
 
 Application Tracing
 ====================
