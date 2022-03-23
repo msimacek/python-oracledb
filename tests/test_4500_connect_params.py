@@ -15,24 +15,24 @@ import test_env
 class TestCase(test_env.BaseTestCase):
     requires_connection = False
 
-    def test_4500_simple_ezconnect_with_port(self):
-        "4500 - test simple EZConnect string parsing with port specified"
+    def test_4500_simple_easy_connect_with_port(self):
+        "4500 - test simple EasyConnect string parsing with port specified"
         params = oracledb.ConnectParams()
         params.parse_connect_string("my_host:1578/my_service_name")
         self.assertEqual(params.host, "my_host")
         self.assertEqual(params.port, 1578)
         self.assertEqual(params.service_name, "my_service_name")
 
-    def test_4501_simple_ezconnect_without_port(self):
-        "4501 - test simple EZConnect string parsing with no port specified"
+    def test_4501_simple_easy_connect_without_port(self):
+        "4501 - test simple Easy Connect string parsing with no port specified"
         params = oracledb.ConnectParams()
         params.parse_connect_string("my_host2/my_service_name2")
         self.assertEqual(params.host, "my_host2")
         self.assertEqual(params.port, 1521)
         self.assertEqual(params.service_name, "my_service_name2")
 
-    def test_4502_simple_ezconnect_with_server_type(self):
-        "4502 - test simple EZConnect string parsing with DRCP enabled"
+    def test_4502_simple_easy_connect_with_server_type(self):
+        "4502 - test simple EasyConnect string parsing with DRCP enabled"
         params = oracledb.ConnectParams()
         params.parse_connect_string("my_host3/my_service_name3:pooled")
         self.assertEqual(params.host, "my_host3")
@@ -68,16 +68,16 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(params.port, 1624)
         self.assertEqual(params.service_name, "my_service_name5")
 
-    def test_4505_ezconnect_with_protocol(self):
-        "4505 - test EZConnect with protocol"
+    def test_4505_easy_connect_with_protocol(self):
+        "4505 - test EasyConnect with protocol"
         params = oracledb.ConnectParams()
         params.parse_connect_string("tcps://my_host6/my_service_name6")
         self.assertEqual(params.host, "my_host6")
         self.assertEqual(params.service_name, "my_service_name6")
         self.assertEqual(params.protocol, "tcps")
 
-    def test_4506_ezconnect_with_invalid_protocol(self):
-        "4506 - test EZConnect with invalid protocol"
+    def test_4506_easy_connect_with_invalid_protocol(self):
+        "4506 - test EasyConnect with invalid protocol"
         params = oracledb.ConnectParams()
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4021:",
                                params.parse_connect_string,
@@ -156,8 +156,8 @@ class TestCase(test_env.BaseTestCase):
         params.parse_connect_string(connect_string)
         self.assertEqual(params.tcp_connect_timeout, 34)
 
-    def test_4513_ezconnect_without_service_name(self):
-        "4513 - test EZConnect string parsing with no service name specified"
+    def test_4513_easy_connect_without_service_name(self):
+        "4513 - test EasyConnect string parsing with no service name specified"
         params = oracledb.ConnectParams()
         params.parse_connect_string("my_host15:1578")
         self.assertEqual(params.host, "my_host15")
@@ -165,7 +165,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(params.service_name, "")
 
     def test_4514_missing_entry_in_tnsnames(self):
-        "4514 - test EZConnect string parsing with no port and service name"
+        "4514 - test missing entry in tnsnames"
         with tempfile.TemporaryDirectory() as temp_dir:
             params = oracledb.ConnectParams(config_dir=temp_dir)
             file_name = os.path.join(temp_dir, "tnsnames.ora")
@@ -174,8 +174,8 @@ class TestCase(test_env.BaseTestCase):
             self.assertRaisesRegex(oracledb.DatabaseError, "DPY-4000",
                                    params.parse_connect_string, "tns_alias")
 
-    def test_4515_ezconnect_with_port_missing(self):
-        "4515 - test EZConnect string parsing with port value missing"
+    def test_4515_easy_connect_with_port_missing(self):
+        "4515 - test EasyConnect string parsing with port value missing"
         params = oracledb.ConnectParams()
         params.parse_connect_string("my_host17:/my_service_name17")
         self.assertEqual(params.host, "my_host17")
@@ -215,7 +215,7 @@ class TestCase(test_env.BaseTestCase):
             self.assertEqual(params.wallet_location, wallet_loc)
             self.assertEqual(params.ssl_server_dn_match, match_value)
 
-    def test_4518_ezconnect_security_options(self):
+    def test_4518_easy_connect_security_options(self):
         "4518 - test easy connect string with security options"
         options = [
             ("CN=unknown20a", "/tmp/wallet_loc20a", "On", True),
@@ -238,7 +238,7 @@ class TestCase(test_env.BaseTestCase):
             self.assertEqual(params.ssl_server_dn_match, match_value)
             self.assertEqual(params.wallet_location, wallet_loc)
 
-    def test_4519_ezconnect_description_options(self):
+    def test_4519_easy_connect_description_options(self):
         "4519 - test easy connect string with description options"
         params = oracledb.ConnectParams()
         connect_string = 'my_host21/my_server_name21?' \
@@ -252,7 +252,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(params.retry_count, 12)
         self.assertEqual(params.tcp_connect_timeout, 2.5)
 
-    def test_4520_ezconnect_invalid_parameters(self):
+    def test_4520_easy_connect_invalid_parameters(self):
         "4520 - test easy connect string with invalid parameters"
         params = oracledb.ConnectParams()
         connect_string_prefix = 'my_host22/my_server_name22?'
