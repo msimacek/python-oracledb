@@ -189,5 +189,29 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4025:",
                                ref_cursor.fetchall)
 
+    def test_1311_fetch_cursor_uses_custom_class(self):
+        "1311 - test fetching a cursor with a custom class"
+        class Counter:
+            num_cursors_created = 0
+            @classmethod
+            def cursor_created(cls):
+                cls.num_cursors_created += 1
+        class MyConnection(oracledb.Connection):
+            def cursor(self):
+                Counter.cursor_created()
+                return super().cursor()
+        conn = MyConnection(test_env.get_connect_string(),
+                            user=test_env.get_main_user(),
+                            password=test_env.get_main_password())
+        cursor = conn.cursor()
+        cursor.execute("""
+                select
+                    cursor(select 1 from dual),
+                    cursor(select 2 from dual)
+                from dual""")
+        cursor.fetchall()
+        self.assertEqual(Counter.num_cursors_created, 3)
+
+
 if __name__ == "__main__":
     test_env.run_test_cases()

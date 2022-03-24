@@ -309,7 +309,7 @@ cdef class MessageWithData(Message):
                                              object cursor=None):
         cdef ThinCursorImpl cursor_impl
         if cursor is None:
-            cursor = Cursor(self.cursor.connection)
+            cursor = self.cursor.connection.cursor()
         cursor_impl = cursor._impl
         cursor_impl._statement = Statement()
         cursor_impl._fetch_array_size = cursor.arraysize + cursor.prefetchrows
