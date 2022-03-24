@@ -271,17 +271,17 @@ ERR_MESSAGE_FORMATS = {
             'invalid server_type: {server_type}',
     ERR_INVALID_SERVICE_NAME:
             'cannot connect to database: service "{service_name}" is not '
-            'registered with the listener (see ORA-12514)',
+            'registered with the listener. (Similar to ORA-12514)',
     ERR_INVALID_SID:
             'cannot connect to database: SID "{sid}" is not registered '
-            'with the listener (see ORA-12505)',
+            'with the listener. (Similar to ORA-12505)',
     ERR_KEYWORD_ARGS_MUST_BE_DICT:
             '"keyword_parameters" argument must be a dict',
     ERR_LIBRARY_ALREADY_INITIALIZED:
             'init_oracle_client() was already called with different arguments',
     ERR_LISTENER_REFUSED_CONNECTION:
-            'cannot connect to database: listener refused connection '
-            '(see ORA-{error_code})',
+            'cannot connect to database: listener refused connection. '
+            '(Similar to ORA-{error_code})',
     ERR_MESSAGE_HAS_NO_PAYLOAD:
             'message has no payload',
     ERR_MESSAGE_TYPE_UNKNOWN:
