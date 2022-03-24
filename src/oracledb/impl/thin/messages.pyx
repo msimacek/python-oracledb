@@ -1201,7 +1201,6 @@ cdef class AuthMessage(Message):
         uint8_t purity
         ssize_t user_bytes_len
         bytes user_bytes
-        object password_key
         dict session_data
         uint32_t auth_mode
         uint32_t verifier_type
