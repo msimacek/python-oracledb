@@ -92,7 +92,7 @@ performance and scalability.  An overhead of prefetching is the need for an
 additional data copy from Oracle Client's prefetch buffers.
 
 Choosing values for ``arraysize`` and ``prefetchrows``
-++++++++++++++++++++++++++++++++++++++++++++++++++++++
+------------------------------------------------------
 
 The best :attr:`Cursor.arraysize` and :attr:`Cursor.prefetchrows` values can be
 found by experimenting with your application under the expected load of normal
@@ -214,7 +214,7 @@ data from one database to another:
         target_connection.commit()
 
 Tuning REF CURSORS
-++++++++++++++++++
+-------------------
 
 In python-oracledb, REF CURSORS can also be tuned by setting the values of ``arraysize``
 and ``prefetchrows``. The prefetchrows value must be set before calling the PL/SQL
@@ -263,7 +263,7 @@ Some general tips for reducing round-trips are:
 * When using SODA, use pooled connections and enable the :ref:`SODA metadata cache <sodametadatacache>`.
 
 Finding the Number of Round-Trips
-+++++++++++++++++++++++++++++++++
+----------------------------------
 
 Oracle's `Automatic Workload Repository
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-56AEF38E-9400-427B-A818-EDEC145F7ACD>`__
@@ -296,11 +296,10 @@ also reduces metadata transfer costs between python-oracledb and the database.
 Performance and scalability are improved.
 
 Each standalone or pooled connection has its own cache of statements with a
-default size of 20.  The size can be set when creating connection pools or
-standalone connections.  The size can subsequently be changed with
-:attr:`Connection.stmtcachesize` or :attr:`SessionPool.stmtcachesize`.  In
-general, set the statement cache size to the size of the working set of
-statements being executed by the application.  To manually tune the cache,
+default size of 20. The default size of the statement cache can be changed using 
+the `stmtcachesize` attribute in the :func:`oracledb.defaults` function. The size can be set 
+when creating connection pools or standalone connections. In general, set the statement cache size 
+to the size of the working set of statements being executed by the application.  To manually tune the cache,
 monitor the general application load and the `Automatic Workload Repository
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-56AEF38E-9400-427B-A818-EDEC145F7ACD>`__
 (AWR) "bytes sent via SQL*Net to client" values.  The latter statistic should
@@ -309,44 +308,97 @@ cache size to your satisfaction. With Oracle Database 12c, or later, the
 statement cache size can be automatically tuned using an :ref:`oraaccess.xml
 <optclientfiles>` file.
 
-Statement caching can be disabled by setting the size to 0.  Disabling
-the cache may be beneficial when the quantity or order of statements
-causes cache entries to be flushed before they get a chance to be
-reused.  For example if there are more distinct statements than cache
-slots, and the order of statement execution causes older statements to
-be flushed from the cache before the statements are re-executed.
+Setting the Statement Cache
+---------------------------
 
-With connection pools, the effect of changing :attr:`SessionPool.stmtcachesize`
-after pool creation depends on the Oracle Client version:
-
-- When using Oracle Client 21 (or later), changing the cache size does not
-  immediately affect connections previously acquired and currently in use. When
-  those connections are subsequently released to the pool and re-acquired, they
-  will then use the new value. If it is neccessary to change the size on a
-  connection because it is not being released to the pool, use
-  :data:`Connection.stmtcachesize`.
-
-- When using Oracle Client prior to version 21, changing the pool's statement
-  cache size has no effect on connections that already exist in the pool but
-  will affect new connections that are subsequently created, for example when
-  the pool grows.  To change the size on a connection, use
-  :data:`Connection.stmtcachesize`.
-
-When it is inconvenient to pass statement text through an application, the
-:meth:`Cursor.prepare()` call can be used to avoid statement re-parsing.
-Subsequent ``execute()`` calls use the value ``None`` instead of the SQL text:
+The statement cache size can be set globally with `oracledb.defaults.stmtcachesize`:
 
 .. code-block:: python
 
-    cur.prepare("select * from dept where deptno = :id order by deptno")
+    oracledb.defaults.stmtcachesize = 40;
 
-    cur.execute(None, id = 20)
-    res = cur.fetchall()
-    print(res)
+The value can be overridden in an ``oracledb.Connection()`` call, or when creating a pool 
+with ``oracledb.ConnectionPool()``. For example:
 
-    cur.execute(None, id = 10)
-    res = cur.fetchall()
-    print(res)
+.. code-block:: python
+
+    <example to be added>
+
+When using Oracle Client 21 (or later), changing the cache size with :meth:`ConnectionPool.reconfigure()` 
+does not immediately affect connections previously acquired and currently in use. When those connections 
+are subsequently released to the pool and re-acquired, they will then use the new value. 
+When using Oracle Client prior to version 21, changing the pool’s statement cache size has no effect 
+on connections that already exist in the pool but will affect new connections that are subsequently 
+created, for example when the pool grows.
+
+Tuning the Statement Cache
+--------------------------
+
+In general, set the statement cache to the size of the working set of statements being executed 
+by the application. SODA internally makes SQL calls, so tuning the cache is also beneficial for SODA applications.
+
+With Oracle Client Libraries 12c, or later, the statement cache size can be automatically tuned 
+with the Oracle Client Configuration oraaccess.xml file.
+
+For manual tuning use views like V$SYSSTAT:
+
+.. code-block:: sql
+
+    SELECT value FROM V$SYSSTAT WHERE name = 'parse count (total)'
+
+Find the value before and after running application load to give the number of statement parses 
+during the load test. Alter the statement cache size and repeat the test until you find a minimal number of parses.
+
+If you have Automatic Workload Repository (AWR) reports you can monitor general application load and 
+the “bytes sent via SQL*Net to client” values. The latter statistic should benefit from not shipping 
+statement metadata to python-oracledb. Adjust the statement cache size and re-run the test to find the best cache size.
+
+Disabling the Statement Cache
+-----------------------------
+
+Statement caching can be disabled by setting the cache size to 0:
+
+.. code-block:: python
+
+    oracledb.stmtCacheSize = 0;
+
+Disabling the cache may be beneficial when the quantity or order of statements
+causes cache entries to be flushed before they get a chance to be
+reused. For example if there are more distinct statements than cache
+slots, and the order of statement execution causes older statements to
+be flushed from the cache before the statements are re-executed.
+
+Disabling the statement cache may also be helpful in test and development environments. 
+The statement cache can become invalid if connections remain open and database schema
+objects are recreated. This can also happen when a connection uses identical query text 
+with different ``fetchAsString`` or ``fetchInfo`` data types. Applications can receive 
+errors such as ORA-3106. After a statement execution error is returned once to the application, 
+python-oracledb automatically drops that statement from the cache. This lets subsequent 
+re-executions of the statement on that connection to succeed.
+
+When it is inconvenient to pass statement text through an application, the
+:meth:`Cursor.prepare()` call can be used to avoid statement re-parsing. 
+If the `cache_statement` parameter in the :meth:`Cursor.prepare()` method is True and the statement cache size 
+is greater than 0, then the statements will be added to the cache, if not already present.
+If the `cache_statement` parameter in the :meth:`Cursor.prepare()` method is False and the statement cache size 
+is greater than 0, then the statement will be removed from the statement cache (if present) 
+or will not be cached (if not present). The subsequent ``execute()`` calls use the value ``None`` instead of the SQL text.
+
+This feature can prevent a rarely executed statement from flushing a potential more frequently executed one from a full cache. 
+For example, if a statement will only ever be executed once:
+
+.. code-block:: python
+
+    cursor.prepare("select user from dual", cache_statement = False)
+    cursor.execute(None)
+
+Alternatively,
+
+.. code-block:: python
+
+    sql = "select user from dual"
+    cursor.prepare(sql, cache_statement=Fasle)
+    cursor.execute(sql)
 
 Statements passed to :meth:`~Cursor.prepare()` are also stored in the statement
 cache.

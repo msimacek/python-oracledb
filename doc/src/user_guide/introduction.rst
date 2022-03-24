@@ -3,8 +3,8 @@
 ********************************
 Introduction to python-oracledb
 ********************************
-python-oracledb is a Python extension module that enables access to Oracle Database using either one of its two drivers: the python-oracledb Thin driver, which connects to the database directly, or, the python-oracledb 
-Thick driver, which loads ODPI-C and Oracle Client libraries to connect to Oracle Database using the Oracle 
+python-oracledb is a Python extension module that enables access to Oracle Database using either one of its two drivers: the python-oracledb Thin driver, which connects to the database directly, or, the python-oracledb
+Thick driver, which loads ODPI-C and Oracle Client libraries to connect to Oracle Database using the Oracle
 Call Interface (OCI) API.  python-oracledb conforms to the `Python Database API v2.0 Specification
 <https://www.python.org/dev/peps/pep-0249/>`__ with a considerable number of
 additions and a couple of exclusions.
@@ -12,12 +12,12 @@ additions and a couple of exclusions.
 Architecture
 ============
 
-Python programs call python-oracledb functions. The connection to the Oracle Database is established depending on the driver option chosen and is detailed in the subsequent sections. You can choose either the Thick driver or the Thin driver through an application script runtime option.  By default, the Thin driver is chosen. 
+Python programs call python-oracledb functions. The connection to the Oracle Database is established depending on the driver option chosen and is detailed in the subsequent sections. You can choose either the Thick driver or the Thin driver through an application script runtime option.  By default, the Thin driver is chosen.
 
 The database can be on the same machine as Python, or it can be remote.
 
 .. _archfig:
-.. figure:: /images/python-oracledb-arch.png 
+.. figure:: /images/python-oracledb-arch.png
   :alt: architecture for python-oracledb driver
 
   Architecture for python-oracledb driver
@@ -26,7 +26,7 @@ The figure shows the architecture of the python-oracledb for both Thin and Thick
 
 python-oracledb is typically installed from `PyPI
 <https://pypi.org/project/oracledb/>`__ using `pip
-<https://pip.pypa.io/en/latest/installing/>`__.  
+<https://pip.pypa.io/en/latest/installing/>`__.
 
 python-oracledb Thin Driver Architecture
 ----------------------------------------
@@ -34,7 +34,7 @@ python-oracledb Thin Driver Architecture
 The python-oracledb Thin driver directly connects to the Oracle Database.  The Thin driver does not require Oracle Client libraries.
 
 .. _thinarchfig:
-.. figure:: /images/python-oracledb-Thin-arch.png 
+.. figure:: /images/python-oracledb-thin-arch.png
   :alt: architecture for python-oracledb Thin driver
 
   Architecture for python-oracledb Thin driver
@@ -44,10 +44,10 @@ The figure shows the architecture of the python-oracledb Thin driver. The applic
 python-oracledb Thick Driver Architecture
 -----------------------------------------
 
-The python-oracledb Thick driver dynamically loads Oracle Client libraries to access Oracle Database. 
+The python-oracledb Thick driver dynamically loads Oracle Client libraries to access Oracle Database.
 
 .. _thickarchfig:
-.. figure:: /images/python-oracledb-Thick-arch.png 
+.. figure:: /images/python-oracledb-thick-arch.png
   :alt: architecture for python-oracledb Thick driver
 
   Architecture for python-oracledb Thick driver

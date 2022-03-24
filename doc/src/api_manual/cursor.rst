@@ -131,12 +131,10 @@ Cursor Object
 
     See :ref:`plsqlfunc` for an example.
 
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the
-        parameter `keywordParameters` was renamed to `keyword_parameters`. The
-        old name will continue to work as a keyword parameter for a period of
-        time.
+    For consistency and compliance with the PEP 8 naming style, the
+    parameter `keywordParameters` was renamed to `keyword_parameters`. The
+    old name will continue to work as a keyword parameter for a period of
+    time.
 
     .. note::
 
@@ -160,12 +158,10 @@ Cursor Object
 
     See :ref:`plsqlproc` for an example.
 
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the
-        parameter `keywordParameters` was renamed to `keyword_parameters`. The
-        old name will continue to work as a keyword parameter for a period of
-        time.
+    For consistency and compliance with the PEP 8 naming style, the
+    parameter `keywordParameters` was renamed to `keyword_parameters`. The
+    old name will continue to work as a keyword parameter for a period of
+    time.
 
     .. note::
 
@@ -292,7 +288,8 @@ Cursor Object
 
         The DB API definition does not define this method.
 
-    .. deprecated:: 6.4
+    .. deprecated:: cx_Oracle 6.4
+        
         Use :meth:`~Cursor.executemany()` instead with None for the statement
         argument and an integer for the parameters argument.
 
@@ -346,7 +343,7 @@ Cursor Object
     An exception is raised if the previous call to :meth:`~Cursor.execute()`
     did not produce any result set or no call was issued yet.
 
-    .. deprecated:: 8.2
+    .. deprecated:: cx_Oracle 8.2
 
         Use :meth:`Cursor.fetchmany()` instead.
 
@@ -403,8 +400,6 @@ Cursor Object
     closed. Closing the parent cursor will invalidate the cursors returned by
     this method.
 
-    .. versionadded:: 5.3
-
     .. note::
 
         The DB API definition does not define this method and it is only
@@ -445,8 +440,6 @@ Cursor Object
     This read-only attribute returns the rowid of the last row modified by the
     cursor. If no row was modified by the last operation performed on the
     cursor, the value None is returned.
-
-    .. versionadded:: 7.3
 
 
 .. attribute:: Cursor.outputtypehandler
@@ -551,8 +544,6 @@ Cursor Object
     An error is raised if the mode is "relative" or "absolute" and the scroll
     operation would position the cursor outside of the result set.
 
-    .. versionadded:: 5.3
-
     .. note::
 
         This method is an extension to the DB API definition but it is
@@ -566,8 +557,6 @@ Cursor Object
     resources and response times are greater than nonscrollable cursors. This
     attribute is checked and the corresponding mode set in Oracle when calling
     the method :meth:`~Cursor.execute()`.
-
-    .. versionadded:: 5.3
 
     .. note::
 
@@ -680,15 +669,9 @@ Cursor Object
     meaning that python-oracledb doesn't do any decoding. See :ref:`Fetching raw
     data <fetching-raw-data>` for more information.
 
-    .. versionadded:: 8.2
-
-        The parameter `bypass_decode` was added.
-
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the
-        parameter `encodingErrors` was renamed to `encoding_errors`. The old
-        name will continue to work as a keyword parameter for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the
+    parameter `encodingErrors` was renamed to `encoding_errors`. The old
+    name will continue to work as a keyword parameter for a period of time.
 
     .. note::
 

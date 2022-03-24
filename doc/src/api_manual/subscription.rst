@@ -35,21 +35,15 @@ Subscription Object
     notifications from the database server. If not set during construction,
     this value is None.
 
-    .. versionadded:: 6.4
-
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the
-        attribute `ipAddress` was renamed to `ip_address`. The old name will
-        continue to work for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the
+    attribute `ipAddress` was renamed to `ip_address`. The old name will
+    continue to work for a period of time.
 
 
 .. attribute:: Subscription.name
 
     This read-only attribute returns the name used to register the subscription
     when it was created.
-
-    .. versionadded:: 6.4
 
 
 .. attribute:: Subscription.namespace
@@ -86,7 +80,7 @@ Subscription Object
 
 .. method:: Subscription.registerquery(statement, [args])
 
-    Register the query for subsequent notification when tables referenced by
+    Registers the query for subsequent notification when tables referenced by
     the query are changed. This behaves similarly to cursor.execute() but only
     queries are permitted and the args parameter must be a sequence or
     dictionary.  If the qos parameter included the flag
@@ -119,13 +113,9 @@ Message Objects
     the namespace :data:`oracledb.SUBSCR_NAMESPACE_AQ` and the queue is a
     multiple consumer queue.
 
-    .. versionadded:: 6.4
-
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the
-        attribute `consumerName` was renamed to `consumer_name`. The old name
-        will continue to work for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the
+    attribute `consumerName` was renamed to `consumer_name`. The old name
+    will continue to work for a period of time.
 
 
 .. attribute:: Message.dbname
@@ -148,13 +138,9 @@ Message Objects
     notification. It will only be populated if the subscription was created
     with the namespace :data:`oracledb.SUBSCR_NAMESPACE_AQ`.
 
-    .. versionadded:: 6.4
-
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the
-        attribute `queueName` was renamed to `queue_name`. The old name will
-        continue to work for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the
+    attribute `queueName` was renamed to `queue_name`. The old name will
+    continue to work for a period of time.
 
 
 .. attribute:: Message.registered
@@ -164,8 +150,6 @@ Message Objects
     is automatically deregistered with the database when the subscription
     timeout value is reached or when the first notification is sent (when the
     quality of service flag :data:`oracledb.SUBSCR_QOS_DEREG_NFY` is used).
-
-    .. versionadded:: 6.4
 
 
 .. attribute:: Message.subscription

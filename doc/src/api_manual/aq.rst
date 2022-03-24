@@ -19,10 +19,6 @@ Queues
 These objects are created using the :meth:`Connection.queue()` method and are
 used to enqueue and dequeue messages.
 
-.. method:: Queue._verify_message(message)
-
-    Internal method used for verifying a message.
-
 .. attribute:: Queue.connection
 
     This read-only attribute returns a reference to the connection object on
@@ -35,11 +31,9 @@ used to enqueue and dequeue messages.
     a list of these messages. Each element of the returned list is a
     :ref:`message property<msgproperties>` object.
 
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the name of
-        the method was changed from `deqMany()`. The old name will continue to
-        work for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the name of
+    the method was changed from `deqMany()`. The old name will continue to
+    work for a period of time.
 
 .. method:: Queue.deqone()
 
@@ -47,22 +41,18 @@ used to enqueue and dequeue messages.
     will be a :ref:`message property<msgproperties>` object; otherwise, it will
     be the value None.
 
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the name of
-        the method was changed from `deqOne()`. The old name will continue to
-        work for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the name of
+    the method was changed from `deqOne()`. The old name will continue to
+    work for a period of time.
 
 .. attribute:: Queue.deqoptions
 
     This read-only attribute returns a reference to the :ref:`options
     <deqoptions>` that will be used when dequeuing messages from the queue.
 
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the name of
-        the attribute was changed from `deqOptions`. The old name will continue
-        to work for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the name of
+    the attribute was changed from `deqOptions`. The old name will continue
+    to work for a period of time.
 
 .. method:: Queue.enqmany(messages)
 
@@ -71,18 +61,19 @@ used to enqueue and dequeue messages.
     have all had their payload attribute set to a value that the queue
     supports.
 
-    Warning: calling this function in parallel on different connections
-    acquired from the same pool may fail due to Oracle bug 29928074. Ensure
-    that this function is not run in parallel, use standalone connections or
-    connections from different pools, or make multiple calls to
-    :meth:`Queue.enqone()` instead. The function :meth:`Queue.deqmany()`
-    call is not affected.
+    .. warning::
 
-    .. versionchanged:: 8.2
+        Calling this function in parallel on different connections
+        acquired from the same pool may fail due to Oracle bug 29928074. Ensure 
+        that this function is not run in parallel, use standalone connections or
+        connections from different pools, or make multiple calls to 
+        :meth:`Queue.enqone()` instead. The function :meth:`Queue.deqmany()` 
+        call is not affected.
 
-        For consistency and compliance with the PEP 8 naming style, the name of
-        the method was changed from `enqMany()`. The old name will continue
-        to work for a period of time.
+    
+    For consistency and compliance with the PEP 8 naming style, the name of
+    the method was changed from `enqMany()`. The old name will continue
+    to work for a period of time.
 
 
 .. method:: Queue.enqone(message)
@@ -91,22 +82,18 @@ used to enqueue and dequeue messages.
     :ref:`message property<msgproperties>` object which has had its payload
     attribute set to a value that the queue supports.
 
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the name of
-        the method was changed from `enqOne()`. The old name will continue
-        to work for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the name of
+    the method was changed from `enqOne()`. The old name will continue
+    to work for a period of time.
 
 .. attribute:: Queue.enqoptions
 
     This read-only attribute returns a reference to the :ref:`options
     <enqoptions>` that will be used when enqueuing messages into the queue.
 
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the name of
-        the attribute was changed from `enqOptions`. The old name will continue
-        to work for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the name of
+    the attribute was changed from `enqOptions`. The old name will continue
+    to work for a period of time.
 
 
 .. attribute:: Queue.name
@@ -119,11 +106,9 @@ used to enqueue and dequeue messages.
     This read-only attribute returns the object type for payloads that can be
     enqueued and dequeued. If using a raw queue, this returns the value None.
 
-    .. versionchanged:: 8.2
-
-        For consistency and compliance with the PEP 8 naming style, the name of
-        the attribute was changed from `payloadType`. The old name will
-        continue to work for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the name of
+    the attribute was changed from `payloadType`. The old name will
+    continue to work for a period of time.
 
 
 .. _deqoptions:

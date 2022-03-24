@@ -9,7 +9,8 @@ Oracle Net to an existing database.  The Oracle Client libraries need to be
 installed separately.  See :ref:`installation`.  Oracle Net is not a separate
 product: it is how the Oracle Client and Oracle Database communicate.
 
-.. figure:: /images/python-oracledb-Thick-arch.png
+.. figure:: /images/python-oracledb-thick-arch.png
+   :alt: architecture for python-oracledb Thick driver
 
    python-oracledb Thick Architecture
 
@@ -33,9 +34,9 @@ Support's `Doc ID 207303.1
 * On Windows, python-oracledb Thick looks for the Oracle Client libraries as follows:
 
     - In the ``lib_dir`` directory specified in a call to
-      :meth:`oracledb.init_oracle_client()`.  When this is called it will attempt 
+      :meth:`oracledb.init_oracle_client()`.  When this is called it will attempt
       to load ``libclntsh``, either from the default location or the passed
-      ``lib_dir`` parameter. This allows future python-oracledb connections to use 
+      ``lib_dir`` parameter. This allows future python-oracledb connections to use
       the thick driver. This directory should contain
       the libraries from an unzipped Instant Client 'Basic' or 'Basic Light'
       package.  If you pass the library directory from a full client or
