@@ -9,5 +9,4 @@ recursive-include src/oracledb/impl/thick/odpi *.c
 recursive-include src/oracledb/impl/thick/odpi *.h
 prune src/oracledb/impl/thick/odpi/test
 prune src/oracledb/impl/thick/odpi/samples
-include src/oracledb/impl/thin/bswap.c
 recursive-include tests *.py
