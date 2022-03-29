@@ -4,14 +4,6 @@
 
 cdef class BasePoolImpl:
 
-    def __init__(self, user, dsn, min, max, increment, homogeneous):
-        self.username = user
-        self.dsn = dsn
-        self.min = min
-        self.max = max
-        self.increment = increment
-        self.homogeneous = homogeneous
-
     @utils.CheckImpls("acquiring a connection from a pool")
     def acquire(self, str user, str password, str cclass, uint32_t purity,
                 str tag, bint matchanytag, list shardingkey,

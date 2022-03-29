@@ -85,14 +85,14 @@ cdef class Protocol:
                 self._process_message(conn_impl._create_message(LogoffMessage))
                 self._final_close(self._write_buf)
 
-    cdef _connect(self, ThinConnImpl conn_impl, object params,
-                  object description, str connect_string, object address,
-                  str password, str newpassword):
+    cdef _connect(self, ThinConnImpl conn_impl, ConnectParamsImpl params,
+                  Description description, Address address):
         cdef:
             ConnectMessage connect_message
             object temp_sock, ssl_context
             AuthMessage auth_message
             uint8_t packet_type
+            str connect_string
 
         # mark protocol to indicate that connect is in progress; this prevents
         # the normal break/reset mechanism from firing, which is unnecessary
@@ -100,12 +100,14 @@ cdef class Protocol:
         self._in_connect = True
 
         # store whether OOB processing is possible or not
-        self._caps.supports_oob = params._supports_oob()
+        self._caps.supports_oob = not params.disable_oob \
+                and sys.platform != "win32"
 
         # send connect message and process response; this may request the
         # message to be resent multiple times; if a redirect packet is
         # detected, however, the process terminates and is restarted using the
         # supplied redirect data
+        connect_string = _get_connect_data(address, description)
         connect_message = conn_impl._create_message(ConnectMessage)
         connect_message.description = description
         connect_message.connect_string_bytes = connect_string.encode()
@@ -149,11 +151,7 @@ cdef class Protocol:
         # send authorization packet twice, the first time to get the session
         # key and the second time to return the response to the challenge
         auth_message = conn_impl._create_message(AuthMessage)
-        auth_message.password = password
-        auth_message.newpassword = newpassword
-        auth_message._set_auth_mode(params.mode)
-        auth_message.cclass = description.cclass
-        auth_message.purity = description.purity
+        auth_message._set_params(params, description)
         self._process_message(auth_message)
         self._process_message(auth_message)
 

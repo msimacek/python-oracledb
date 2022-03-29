@@ -3,194 +3,61 @@
 #------------------------------------------------------------------------------
 
 from typing import Callable, Type
-from . import constants, errors, exceptions, utils, thick_impl, thin_impl
+from . import constants, errors, exceptions, utils
+from . import base_impl, thick_impl, thin_impl
 from . import connection as connection_module
 from . import driver_mode
 from .connect_params import ConnectParams
+from .pool_params import PoolParams
 from .defaults import defaults
 
 class ConnectionPool:
     __module__ = constants.MODULE_NAME
 
-    def __init__(self,
-                 dsn: str=None, *,
-                 user: str=None,
-                 password: str=None,
-                 params: ConnectParams=None,
-                 min: int=1,
-                 max: int=2,
-                 increment: int=1,
-                 connectiontype: Type["connection_module.Connection"]=None,
-                 getmode: int=constants.POOL_GETMODE_WAIT,
-                 homogeneous: bool=True,
-                 externalauth: bool=False,
-                 timeout: int=0,
-                 wait_timeout: int=0,
-                 max_lifetime_session: int=0,
-                 session_callback: Callable=None,
-                 max_sessions_per_shard: int=0,
-                 soda_metadata_cache: bool=False,
-                 ping_interval: int=None,
-
-                 # deprecated parameters
-                 waitTimeout: int=0,
-                 maxLifetimeSession: int=0,
-                 sessionCallback: Callable=None,
-                 maxSessionsPerShard: int=0,
-
-                 # additional parameters as keyword parameters
+    def __init__(self, dsn: str=None, *,
+                 pool_params: PoolParams=None,
+                 conn_params: ConnectParams=None,
                  **kwargs) -> None:
         """
-        Constructor for the pool. Connection pooling creates a pool of
-        available connections to the database, allowing applications to acquire
-        a connection very quickly. It is of primary use in a server where
-        connections are requested in rapid succession and used for a short
-        period of time, for example in a web server.
+        Constructor for creating a connection pool. Connection pooling creates
+        a pool of available connections to the database, allowing applications
+        to acquire a connection very quickly. It is of primary use in a server
+        where connections are requested in rapid succession and used for a
+        short period of time, for example in a web server.
 
-        The dsn, user and password parameters are the same as for connect().
+        The pool_params parameter is expected to be of type PoolParams and
+        containins pool configuration parameters. If not specified, a new
+        instance will be created using the additional keyword arguments.
 
-        The min, max and increment parameters control pool growth behavior. A
-        fixed pool size where min equals max is recommended to help prevent
-        connection storms and to help overall system stability. The min
-        parameter is the number of connections opened when the pool is created.
-        The increment is the number of connections that are opened whenever a
-        connection request exceeds the number of currently open connections.
-        The max parameter is the maximum number of connections that can be open
-        in the connection pool.
-
-        Note that when using external authentication, heterogeneous pools, or
-        Database Resident Connection Pooling (DRCP), then the pool growth
-        behavior is different. In these cases the number of connections created
-        at pool startup is always zero, and the increment is always one.
-
-        If the connectiontype parameter is specified, all calls to acquire()
-        will create connection objects of that type, rather than the base type
-        defined at the module level.
-
-        The getmode parameter indicates whether or not future acquire() calls
-        will wait for available connections.
-
-        The homogeneous parameter is expected to be a boolean expression which
-        indicates whether or not to create a homogeneous pool. A homogeneous
-        pool requires that all connections in the pool use the same
-        credentials. As such proxy authentication and external authentication
-        is not possible with a homogeneous pool. See Heterogeneous and
-        Homogeneous Connection Pools.
-
-        The externalauth parameter is expected to be a boolean expression which
-        indicates whether or not external authentication should be used.
-        External authentication implies that something other than the database
-        is authenticating the user to the database. This includes the use of
-        operating system authentication and Oracle wallets. See Connecting
-        Using External Authentication.
-
-        The timeout parameter is expected to be an integer, if specified, and
-        sets the length of time (in seconds) after which idle connections in
-        the pool are terminated. Note that termination only occurs when the
-        pool is accessed. The default value of 0 means that no idle connections
-        are terminated.
-
-        The wait_timeout parameter is expected to be an integer, if specified,
-        and sets the length of time (in milliseconds) that the caller should
-        wait for a connection to become available in the pool before returning
-        with an error. This value is only used if the getmode parameter is set
-        to the value POOL_GETMODE_TIMEDWAIT.
-
-        The max_lifetime_session parameter is expected to be an integer, if
-        specified, and sets the maximum length of time (in seconds) a pooled
-        connection may exist. Connections that are in use will not be closed.
-        They become candidates for termination only when they are released back
-        to the pool and have existed for longer than max_lifetime_session
-        seconds.  Note that termination only occurs when the pool is accessed.
-        The default value is 0 which means that there is no maximum length of
-        time that a pooled connection may exist.
-
-        The session_callback parameter is expected to be either a string or a
-        callable. If the session_callback parameter is a callable, it will be
-        called when a newly created connection is returned from the pool, or
-        when a tag is requested and that tag does not match the connection’s
-        actual tag. The callable will be invoked with the connection and the
-        requested tag as its only parameters. If the parameter is a string, it
-        should be the name of a PL/SQL procedure that will be called when
-        acquire() requests a tag and that tag does not match the connection’s
-        actual tag. Support for the PL/SQL procedure requires Oracle Client
-        libraries 12.2 or later. See the OCI documentation for more
-        information.
-
-        The max_sessions_per_shard parameter is expected to be an integer, if
-        specified, and sets the maximum number of connections in the pool that
-        can be used for any given shard in a sharded database. This lets
-        connections in the pool be balanced across the shards. A value of zero
-        will not set any maximum number of sessions for each shard. This value
-        is ignored if the Oracle client library version is less than 18.3.
-
-        The soda_metadata_cache parameter is expected to be a boolean expresion
-        which indicates whether or not to enable the SODA metatata cache. This
-        significantly improves the performance of methods
-        SodaDatabase.createCollection() and SodaDatabase.openCollection() but
-        can become out of date as it does not track changes made externally. It
-        is also only available in Oracle Client 19.11 and higher. See Using the
-        SODA Metadata Cache.
-
-        The ping_interval parameter, if specified, is expected to be an integer
-        which specifies the initial value of ping_interval.
+        The conn_params parameter is expected to be of type ConnectParams and
+        contains connection parameters that will be used when creating
+        connections to the database. If not specified, a new instance will be
+        created using the additional keyword arguments.
         """
         self._impl = None
-        if ping_interval is None:
-            ping_interval = defaults.ping_interval
-        if connectiontype is None:
-            connectiontype = connection_module.Connection
-        elif not issubclass(connectiontype, connection_module.Connection):
-            message = "connection type must be a subclass of " \
-                      "oracledb.Connection"
-            raise TypeError(message)
-        self._connection_type = connectiontype
-        method = utils.process_connect_params
-        dsn, user, password, params = method(dsn, user, password, params,
-                                             kwargs)
-        if waitTimeout != 0:
-            if wait_timeout != 0:
-                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
-                                  deprecated_name="waitTimeout",
-                                  new_name="wait_timeout")
-            wait_timeout = waitTimeout
-        if maxLifetimeSession != 0:
-            if max_lifetime_session != 0:
-                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
-                                  deprecated_name="maxLifetimeSession",
-                                  new_name="max_lifetime_session")
-            max_lifetime_session = maxLifetimeSession
-        if sessionCallback is not None:
-            if session_callback is not None:
-                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
-                                  deprecated_name="sessionCallback",
-                                  new_name="session_callback")
-            session_callback = sessionCallback
-        if maxSessionsPerShard != 0:
-            if max_sessions_per_shard != 0:
-                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
-                                  deprecated_name="maxSessionsPerShard",
-                                  new_name="max_sessions_per_shard")
-            max_sessions_per_shard = maxSessionsPerShard
-
-        thin = driver_mode.check_and_return_mode()
-        if thin:
-            if password is None:
-                errors._raise_err(errors.ERR_NO_PASSWORD)
-            if dsn is not None:
-                params.parse_connect_string(dsn)
-            impl = thin_impl.ThinPoolImpl(params, dsn, user, password, min,
-                                          max, increment, homogeneous, getmode,
-                                          wait_timeout, ping_interval)
+        if pool_params is None:
+            pool_params_impl = base_impl.PoolParamsImpl(kwargs)
+        elif not isinstance(pool_params, PoolParams):
+            errors._raise_err(errors.ERR_INVALID_POOL_PARAMS)
         else:
-            impl = thick_impl.ThickPoolImpl(user, dsn, min, max, increment,
-                                            homogeneous)
-            impl._create(params, password, getmode, externalauth, timeout,
-                         wait_timeout, max_lifetime_session, session_callback,
-                         max_sessions_per_shard, soda_metadata_cache,
-                         ping_interval)
+            pool_params_impl = pool_params._impl
+        if conn_params is None:
+            conn_params_impl = base_impl.ConnectParamsImpl(kwargs)
+        elif not isinstance(conn_params, ConnectParams):
+            errors._raise_err(errors.ERR_INVALID_CONNECT_PARAMS)
+        else:
+            conn_params_impl = conn_params._impl
+        self._connection_type = \
+                pool_params_impl.connectiontype or connection_module.Connection
+        thin = driver_mode.check_and_return_mode()
+        if dsn is not None:
+            conn_params_impl.parse_dsn(dsn, thin)
+        if thin:
+            impl = thin_impl.ThinPoolImpl(pool_params_impl, conn_params_impl)
+        else:
+            impl = thick_impl.ThickPoolImpl(pool_params_impl, conn_params_impl)
         self._impl = impl
-        self.session_callback = session_callback
+        self.session_callback = pool_params_impl.session_callback
 
     def _verify_open(self) -> None:
         """
@@ -611,5 +478,119 @@ class ConnectionPool:
         self._impl.set_wait_timeout(value)
 
 
-# alias
-create_pool = ConnectionPool
+def _pool_factory(f):
+    """
+    Decorator which checks the validity of the supplied keyword parameters by
+    calling the original function (which does nothing), then creates and
+    returns an instance of the requested ConnectionPool class. The base
+    ConnectionPool class constructor does not check the validity of the
+    supplied keyword parameters.
+    """
+    def wrapped(dsn: str=None, *,
+                pool_class: Type[ConnectionPool]=ConnectionPool,
+                pool_params: PoolParams=None,
+                conn_params: ConnectParams=None,
+                **kwargs) -> ConnectionPool:
+        f(dsn=dsn, pool_class=pool_class, pool_params=pool_params,
+          conn_params=conn_params, **kwargs)
+        if not issubclass(pool_class, ConnectionPool):
+            errors._raise_err(errors.INVALID_POOL_CLASS)
+        return pool_class(dsn, pool_params=pool_params,
+                          conn_params=conn_params, **kwargs)
+    return wrapped
+
+
+@_pool_factory
+def create_pool(dsn: str=None, *,
+                pool_class: Type[ConnectionPool]=ConnectionPool,
+                pool_params: PoolParams=None,
+                conn_params: ConnectParams=None,
+
+                # pool creation parameters
+                min: int=None,
+                max: int=None,
+                increment: int=None,
+                connectiontype: Type["connection_module.Connection"]=None,
+                getmode: int=None,
+                homogeneous: bool=True,
+                externalauth: bool=None,
+                timeout: int=0,
+                wait_timeout: int=0,
+                max_lifetime_session: int=0,
+                session_callback: Callable=None,
+                max_sessions_per_shard: int=0,
+                soda_metadata_cache: bool=None,
+                ping_interval: int=None,
+
+                # credentials
+                user: str=None,
+                proxy_user: str=None,
+                password: str=None,
+                newpassword: str=None,
+                wallet_password: str=None,
+
+                # connect string parameters
+                host: str=None,
+                port: int=None,
+                protocol: str=None,
+                https_proxy: str=None,
+                https_port: int=None,
+                service_name: str=None,
+                sid: str=None,
+                server_type: str=None,
+                cclass: str=None,
+                purity: int=None,
+                expire_time: int=None,
+                retry_count: int=None,
+                retry_delay: int=None,
+                tcp_connect_timeout: float=None,
+                ssl_server_dn_match: bool=None,
+                ssl_server_cert_dn: str=None,
+                wallet_location: str=None,
+
+                # other parameters
+                events: bool=None,
+                mode: int=None,
+                disable_oob: bool=None,
+                stmtcachesize: int=None,
+                edition: str=None,
+                tag: str=None,
+                matchanytag: bool=None,
+                config_dir: str=None,
+                appcontext: list=None,
+                shardingkey: list=None,
+                supershardingkey: list=None,
+                handle: int=None,
+
+                # deprecated parameters
+                waitTimeout: int=None,
+                maxLifetimeSession: int=None,
+                maxSessionsPerShard: int=None,
+                sessionCallback: Callable=None,
+
+                # deprecated (ignored) parameters
+                threaded: bool=None,
+                encoding: str=None,
+                nencoding: str=None) -> ConnectionPool:
+    """
+    Creates a connection pool with the supplied parameters and returns it.
+
+    The dsn parameter (data source name) can be a string in the format
+    user/password@connect_string or can simply be the connect string (in
+    which case the user and password need to be specified separately). See the
+    documentation on connection strings for more information.
+
+    The pool_class parameter is expected to be ConnectionPool or a subclass of
+    ConnectionPool.
+
+    The pool_params parameter is expected to be of type PoolParams and contains
+    parameters that are used to create the pool. If not specified, a new
+    PoolParams object will be created using the additional keyword arguments.
+
+    The conn_params parameter is expected to be of type ConnectParams and
+    contains connection parameters that will be used when creating connections
+    in the pool. If not specified, a new ConnectParams object will be created
+    using the additional keyword arguments. If a dsn is supplied it will modify
+    the connection parameters to include the parameters supplied in the dsn.
+    """
+    pass

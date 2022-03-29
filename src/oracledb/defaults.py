@@ -15,6 +15,7 @@ class Defaults:
     def __init__(self) -> None:
         self.arraysize = 100
         self.stmtcachesize = 20
+        self.protocol = "tcp"
         self.port = 1521
         self.events = False
         self.ping_interval = 60

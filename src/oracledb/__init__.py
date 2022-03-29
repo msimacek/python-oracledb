@@ -6,10 +6,11 @@ from .version import __version__
 from .exceptions import *
 from .errors import _Error
 from .defaults import defaults
-from .connect_params import ConnectParams
 from .connection import connect, Connection
 from .cursor import Cursor
 from .pool import create_pool, ConnectionPool
+from .connect_params import ConnectParams
+from .pool_params import PoolParams
 from .lob import LOB
 from .dbobject import DbObject, DbObjectType
 from .constants import *

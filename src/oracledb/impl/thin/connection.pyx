@@ -53,15 +53,16 @@ cdef class ThinConnImpl(BaseConnImpl):
             elif stmt._cursor_id != 0:
                 self._add_cursor_to_close(stmt)
 
-    cdef object _connect_with_description(self, description):
+    cdef object _connect_with_description(self, Description description):
         cdef:
-            unsigned long timeout = description.tcp_connect_timeout
+            double timeout = description.tcp_connect_timeout
             bint load_balance = description.load_balance, raise_exc
             list address_lists = description.address_lists
             uint32_t i, j, k, num_addresses, idx1, idx2
             uint32_t num_attempts = description.retry_count + 1
             uint32_t num_lists = len(address_lists)
-            object address
+            AddressList address_list
+            Address address
         # Retry connecting to the socket if an attempt fails and retry_count
         # is specified in the connect string. If an attempt succeeds, return
         # the socket and the valid address object.
@@ -96,6 +97,46 @@ cdef class ThinConnImpl(BaseConnImpl):
                     return (sock, address)
             time.sleep(description.retry_delay)
 
+    cdef str _connect_with_params(self, ConnectParamsImpl params):
+        """
+        Internal method used for connecting with the given parameters. If the
+        listener requests a redirect, the redirect data is returned so tht this
+        process can be repeated as needed.
+        """
+        cdef:
+            DescriptionList description_list = params.description_list
+            list descriptions = description_list.descriptions
+            ssize_t i, idx, num_descriptions = len(descriptions)
+            Description description
+            Address address
+            tuple ret_tuple
+        for i in range(num_descriptions):
+            if description_list.load_balance:
+                idx = (i + description_list.lru_index) % num_descriptions
+            else:
+                idx = i
+            description = descriptions[idx]
+            ret_tuple = self._connect_with_description(description)
+            if ret_tuple is not None:
+                sock, address = ret_tuple
+                description_list.lru_index = (idx + 1) % num_descriptions
+                break
+        if description.expire_time > 0:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            if hasattr(socket, "TCP_KEEPIDLE") \
+                    and hasattr(socket, "TCP_KEEPINTVL") \
+                    and hasattr(socket, "TCP_KEEPCNT"):
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE,
+                                description.expire_time * 60)
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 6)
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)
+        sock.settimeout(None)
+        if address.protocol == "tcps":
+            sock = get_ssl_socket(sock, params, description, address)
+        self._drcp_enabled = description.server_type == "pooled"
+        self._protocol = Protocol(sock)
+        return self._protocol._connect(self, params, description, address)
+
     cdef Message _create_message(self, type typ):
         """
         Creates a message object that is used to send a request to the database
@@ -111,7 +152,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         self._protocol._force_close()
 
     cdef object _get_socket(self, object address,
-                            uint32_t tcp_connect_timeout,
+                            double tcp_connect_timeout,
                             bint raise_exception):
         """
 	    Get a socket on which to communicate using the provided parameters. If
@@ -214,8 +255,8 @@ cdef class ThinConnImpl(BaseConnImpl):
     def change_password(self, str old_password, str new_password):
         cdef AuthMessage message
         message = self._create_message(AuthMessage)
-        message.password = old_password
-        message.newpassword = new_password
+        message.password = old_password.encode()
+        message.newpassword = new_password.encode()
         self._protocol._process_single_message(message)
 
     def close(self, bint in_del=False):
@@ -229,50 +270,21 @@ cdef class ThinConnImpl(BaseConnImpl):
         message = self._create_message(CommitMessage)
         self._protocol._process_single_message(message)
 
-    def connect(self, params, str password, str newpassword=None):
-        cdef:
-            object description_list = params._description_list
-            list descriptions = description_list.descriptions
-            uint32_t num_descriptions = len(descriptions)
-            uint32_t i, idx
-        for i in range(num_descriptions):
-            if description_list.load_balance:
-                idx = (i + description_list.lru_index) % num_descriptions
-            else:
-                idx = i
-            description = descriptions[idx]
-            ret_tuple = self._connect_with_description(description)
-            if ret_tuple is not None:
-                sock, address = ret_tuple
-                description_list.lru_index = (idx + 1) % num_descriptions
+    def connect(self, ConnectParamsImpl params):
+        cdef str redirect_data
+        if params._password is None:
+            errors._raise_err(errors.ERR_NO_PASSWORD)
+        while True:
+            redirect_data = self._connect_with_params(params)
+            if redirect_data is None:
                 break
-        if description.expire_time > 0:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        if description.expire_time > 0 \
-                and hasattr(socket, "TCP_KEEPIDLE") \
-                and hasattr(socket, "TCP_KEEPINTVL") \
-                and hasattr(socket, "TCP_KEEPCNT"):
-            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE,
-                            description.expire_time * 60)
-            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 6)
-            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)
-        sock.settimeout(None)
-        if address.protocol == "tcps":
-            sock = get_ssl_socket(sock, params)
-        self._protocol = Protocol(sock)
-        redirect_data = self._protocol._connect(self, params, description,
-                                                _get_connect_data(address,
-                                                                  description),
-                                                address, password,
-                                                newpassword)
-        if redirect_data is None:
-            self._statement_cache = collections.OrderedDict()
-            self._statement_cache_size = params.stmtcachesize
-            self._statement_cache_lock = threading.Lock()
-            self._cursors_to_close = array.array('I')
-            array.resize(self._cursors_to_close, TNS_MAX_CURSORS_TO_CLOSE)
-            self._drcp_enabled = params.server_type == "pooled"
-        return redirect_data
+            params = params.copy()
+            params._parse_redirect_data(redirect_data)
+        self._statement_cache = collections.OrderedDict()
+        self._statement_cache_size = params.stmtcachesize
+        self._statement_cache_lock = threading.Lock()
+        self._cursors_to_close = array.array('I')
+        array.resize(self._cursors_to_close, TNS_MAX_CURSORS_TO_CLOSE)
 
     def create_cursor_impl(self):
         return ThinCursorImpl.__new__(ThinCursorImpl, self)

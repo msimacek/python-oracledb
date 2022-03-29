@@ -54,7 +54,8 @@ def _get_error_text(error_num: int, **args) -> str:
     return f"{ERR_PREFIX}-{error_num:04}: {message}"
 
 
-def _raise_err(error_num: int, context_error_message: str=None, **args) -> None:
+def _raise_err(error_num: int, context_error_message: str=None,
+               cause: Exception=None, **args) -> None:
     """
     Raises a driver specific exception from the specified error number and
     supplied arguments.
@@ -63,7 +64,7 @@ def _raise_err(error_num: int, context_error_message: str=None, **args) -> None:
     if context_error_message is not None:
         message = f"{message}\n{context_error_message}"
     exc_type = ERR_EXCEPTION_TYPES[error_num // 1000]
-    raise exc_type(_Error(message)) from None
+    raise exc_type(_Error(message)) from cause
 
 
 def _raise_from_string(exc_type: Exception, message: str) -> None:
@@ -110,6 +111,11 @@ ERR_THIN_CONNECTION_ALREADY_CREATED = 2019
 ERR_INVALID_MAKEDSN_ARG = 2020
 ERR_INIT_ORACLE_CLIENT_NOT_CALLED = 2021
 ERR_INVALID_OCI_ATTR_TYPE = 2022
+ERR_INVALID_CONN_CLASS = 2023
+ERR_PARAMS_AND_KEYWORD_PARAMS = 2024
+ERR_INVALID_CONNECT_PARAMS = 2025
+ERR_INVALID_POOL_CLASS = 2026
+ERR_INVALID_POOL_PARAMS = 2027
 
 # error numbers that result in NotSupportedError
 ERR_TIME_NOT_SUPPORTED = 3000
@@ -145,11 +151,10 @@ ERR_NUMBER_STRING_TOO_LONG = 4014
 ERR_NUMBER_WITH_EMPTY_EXPONENT = 4015
 ERR_CONTENT_INVALID_AFTER_NUMBER = 4016
 ERR_INVALID_CONNECT_DESCRIPTOR = 4017
-ERR_CANNOT_PARSE_CONNECT_DESCRIPTOR = 4018
+ERR_CANNOT_PARSE_CONNECT_STRING = 4018
 ERR_INVALID_REDIRECT_DATA = 4019
 ERR_INVALID_PROTOCOL = 4021
 ERR_INVALID_POOL_PURITY = 4022
-ERR_CANNOT_PARSE_EZCONNECT_STRING = 4023
 ERR_CALL_TIMEOUT_EXCEEDED = 4024
 ERR_INVALID_REF_CURSOR = 4025
 ERR_TNS_NAMES_FILE_MISSING = 4026
@@ -214,10 +219,8 @@ ERR_MESSAGE_FORMATS = {
             'insufficient to hold {required_buffer_len} bytes',
     ERR_CALL_TIMEOUT_EXCEEDED:
             'call timeout of {timeout} ms exceeded',
-    ERR_CANNOT_PARSE_CONNECT_DESCRIPTOR:
-            'cannot parse connect descriptor "{data}"',
-    ERR_CANNOT_PARSE_EZCONNECT_STRING:
-            'cannot parse Easy Connect string "{data}"',
+    ERR_CANNOT_PARSE_CONNECT_STRING:
+            'cannot parse connect string "{data}"',
     ERR_COLUMN_TRUNCATED:
             'column truncated to {col_value_len} {unit}. '
             'Untruncated was {actual_len}',
@@ -248,14 +251,22 @@ ERR_MESSAGE_FORMATS = {
             'integer of no more than length {max_length}',
     ERR_INVALID_BIND_NAME:
             'no bind placeholder named "{name}" was found in the SQL text',
+    ERR_INVALID_CONN_CLASS:
+            'invalid connection class',
     ERR_INVALID_CONNECT_DESCRIPTOR:
             'invalid connect descriptor "{data}"',
+    ERR_INVALID_CONNECT_PARAMS:
+            'invalid connection params',
     ERR_INVALID_MAKEDSN_ARG:
             '"{name}" argument contains invalid values',
     ERR_INVALID_NUMBER:
             'invalid number',
     ERR_INVALID_OCI_ATTR_TYPE:
             'invalid OCI attribute type {attr_type}',
+    ERR_INVALID_POOL_CLASS:
+            'invalid connection pool class',
+    ERR_INVALID_POOL_PARAMS:
+            'invalid pool params',
     ERR_INVALID_POOL_PURITY:
             'invalid DRCP purity {purity}',
     ERR_INVALID_PROTOCOL:
@@ -310,8 +321,6 @@ ERR_MESSAGE_FORMATS = {
             'the executed statement does not return rows',
     ERR_NOT_CONNECTED:
             'not connected to database',
-    ERR_POOL_NOT_OPEN:
-            'connection pool is not open',
     ERR_NUMBER_STRING_OF_ZERO_LENGTH:
             'invalid number: zero length string',
     ERR_NUMBER_STRING_TOO_LONG:
@@ -324,10 +333,14 @@ ERR_MESSAGE_FORMATS = {
             'value cannot be represented as an Oracle number',
     ERR_ORACLE_TYPE_NOT_SUPPORTED:
             'Oracle data type {num} is not supported',
+    ERR_PARAMS_AND_KEYWORD_PARAMS:
+            'both params and keyword parameters cannot be specified',
     ERR_POOL_HAS_BUSY_CONNECTIONS:
             'connection pool cannot be closed because connections are busy',
     ERR_POOL_NO_CONNECTION_AVAILABLE:
             'timed out waiting for the connection pool to return a connection',
+    ERR_POOL_NOT_OPEN:
+            'connection pool is not open',
     ERR_PROXY_FAILURE:
             'network proxy failed: response was {response}',
     ERR_PYTHON_TYPE_NOT_SUPPORTED:

@@ -15,6 +15,15 @@ import test_env
 class TestCase(test_env.BaseTestCase):
     requires_connection = False
 
+    def __test_writable_parameter(self, name, value):
+        """
+        Tests that a writable parameter can be written to and the modified
+        value read back successfully.
+        """
+        params = oracledb.ConnectParams()
+        setattr(params, name, value)
+        self.assertEqual(getattr(params, name), value)
+
     def test_4500_simple_easy_connect_with_port(self):
         "4500 - test simple EasyConnect string parsing with port specified"
         params = oracledb.ConnectParams()
@@ -34,8 +43,8 @@ class TestCase(test_env.BaseTestCase):
     def test_4502_simple_easy_connect_with_server_type(self):
         "4502 - test simple EasyConnect string parsing with DRCP enabled"
         params = oracledb.ConnectParams()
-        params.parse_connect_string("my_host3/my_service_name3:pooled")
-        self.assertEqual(params.host, "my_host3")
+        params.parse_connect_string("my_host3.org/my_service_name3:pooled")
+        self.assertEqual(params.host, "my_host3.org")
         self.assertEqual(params.service_name, "my_service_name3")
         self.assertEqual(params.server_type, "pooled")
         params.parse_connect_string("my_host3/my_service_name3:ShArEd")
@@ -159,7 +168,7 @@ class TestCase(test_env.BaseTestCase):
     def test_4513_easy_connect_without_service_name(self):
         "4513 - test EasyConnect string parsing with no service name specified"
         params = oracledb.ConnectParams()
-        params.parse_connect_string("my_host15:1578")
+        params.parse_connect_string("my_host15:1578/")
         self.assertEqual(params.host, "my_host15")
         self.assertEqual(params.port, 1578)
         self.assertEqual(params.service_name, "")
@@ -257,12 +266,11 @@ class TestCase(test_env.BaseTestCase):
         params = oracledb.ConnectParams()
         connect_string_prefix = 'my_host22/my_server_name22?'
         suffixes = [
-            'unknown_parameter=5',
             'expire_time=invalid',
             'expire_time'
         ]
         for suffix in suffixes:
-            self.assertRaisesRegex(oracledb.DatabaseError, "DPY-4023",
+            self.assertRaisesRegex(oracledb.DatabaseError, "DPY-4018",
                                    params.parse_connect_string,
                                    connect_string_prefix + suffix)
 
@@ -413,6 +421,20 @@ class TestCase(test_env.BaseTestCase):
         connect_string = connect_string.replace("DEDICATED", "INVALID")
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4028:",
                                params.parse_connect_string, connect_string)
+
+    def test_4530_writable_params(self):
+        "4530 - test writable parameters"
+        self.__test_writable_parameter("appcontext", [("a", "b", "c")])
+        self.__test_writable_parameter("config_dir", "config_dir_4530")
+        self.__test_writable_parameter("disable_oob", True)
+        self.__test_writable_parameter("edition", "edition_4530")
+        self.__test_writable_parameter("events", True)
+        self.__test_writable_parameter("matchanytag", True)
+        self.__test_writable_parameter("mode", oracledb.AUTH_MODE_SYSDBA)
+        self.__test_writable_parameter("shardingkey", [1, 2, 3])
+        self.__test_writable_parameter("stmtcachesize", 25)
+        self.__test_writable_parameter("supershardingkey", [1, 2, 3])
+        self.__test_writable_parameter("tag", "tag_4530")
 
 if __name__ == "__main__":
     test_env.run_test_cases()
