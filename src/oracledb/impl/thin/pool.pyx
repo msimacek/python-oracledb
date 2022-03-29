@@ -10,6 +10,7 @@
 cdef class ThinPoolImpl(BasePoolImpl):
 
     cdef:
+        ConnectParamsImpl _connect_params
         list _free_new_conn_impls
         list _free_used_conn_impls
         list _busy_conn_impls
@@ -26,28 +27,23 @@ cdef class ThinPoolImpl(BasePoolImpl):
         object _bg_thread
         object _bg_thread_condition
         object _condition
-        object _params
-        bytearray _password_obfuscator
-        bytearray _password
         bint _open
 
-    def __init__(self, params, dsn, user, password, min, max, increment,
-                 homogeneous, getmode, wait_timeout, ping_interval):
-        self._params = params
-        self.username = user
-        self.dsn = dsn
-        self.min = min
-        self.max = max
-        self.increment = increment
-        self.homogeneous = homogeneous
-        self._password_obfuscator = \
-                bytearray(secrets.token_bytes(len(password)))
-        self._password = self._xor_bytes(bytearray(password.encode()),
-                                         self._password_obfuscator)
-        self._getmode = getmode
-        self._wait_timeout = wait_timeout
-        self._stmt_cache_size = params.stmtcachesize
-        self._ping_interval = ping_interval
+    def __init__(self, PoolParamsImpl pool_params,
+                 ConnectParamsImpl connect_params):
+        if connect_params._password is None:
+            errors._raise_err(errors.ERR_NO_PASSWORD)
+        self._connect_params = connect_params.copy()
+        self.username = connect_params.user
+        self.dsn = connect_params.connect_string
+        self.min = pool_params.min
+        self.max = pool_params.max
+        self.increment = pool_params.increment
+        self.homogeneous = pool_params.homogeneous
+        self._getmode = pool_params.getmode
+        self._wait_timeout = pool_params.wait_timeout
+        self._stmt_cache_size = connect_params.stmtcachesize
+        self._ping_interval = pool_params.ping_interval
         self._free_new_conn_impls = []
         self._free_used_conn_impls = []
         self._busy_conn_impls = []
@@ -67,10 +63,8 @@ cdef class ThinPoolImpl(BasePoolImpl):
         as when the pool is full and POOL_GETMODE_FORCEGET is being used).
         """
         cdef ThinConnImpl conn_impl
-        conn_impl = ThinConnImpl(self.username, self.dsn)
-        password_bytes = self._xor_bytes(self._password,
-                                         self._password_obfuscator)
-        conn_impl.connect(self._params, password_bytes.decode())
+        conn_impl = ThinConnImpl(self._connect_params)
+        conn_impl.connect(self._connect_params)
         conn_impl._pool = self
         return conn_impl
 
@@ -249,21 +243,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
             self._busy_conn_impls.remove(conn_impl)
             self._condition.notify()
 
-    cdef bytearray _xor_bytes(self, bytearray a, bytearray b):
-        """
-        Perform an XOR of two byte arrays as a means of obfuscating the
-        password that is stored on the class.
-        """
-        cdef:
-            ssize_t length, i
-            bytearray result
-        length = len(a)
-        result = bytearray(length)
-        for i in range(length):
-            result[i] = a[i] ^ b[i]
-        return result
-
-    def acquire(self, str user, str password, object params):
+    def acquire(self, ConnectParamsImpl params):
         """
         Internal method for acquiring a connection from the pool.
         """
@@ -271,6 +251,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
             object wait_timeout
             ThinConnImpl conn_impl
             bint requires_ping
+            uint32_t purity
             Message message
 
         # if pool is closed, raise an exception
@@ -293,10 +274,10 @@ cdef class ThinPoolImpl(BasePoolImpl):
         # acquire a connection from the pool and perform a ping if the ping
         # interval is set to 0 or if the connection was previously used and
         # has been idle for a time greater than the value of ping interval
+        purity = params._default_description.purity
         while True:
             requires_ping = False
-            conn_impl = self._get_connection_helper(wait_timeout,
-                                                    params.purity)
+            conn_impl = self._get_connection_helper(wait_timeout, purity)
             if conn_impl._protocol._session_needs_to_be_closed:
                 self._conn_impls_to_close.append(conn_impl)
                 with self._bg_thread_condition:

@@ -230,34 +230,38 @@ cdef class ThickConnImpl(BaseConnImpl):
         if status < 0:
             _raise_from_odpi()
 
-    def connect(self, object user_params, uint64_t handle,
-                ThickPoolImpl pool_impl, str password, str newpassword):
+    def connect(self, ConnectParamsImpl user_params, ThickPoolImpl pool_impl):
         cdef:
+            bytes password_bytes, new_password_bytes
             dpiCommonCreateParams common_params
             dpiConnCreateParams conn_params
             ConnectionParams params
+            str full_user
             int status
 
         # set up connection parameters
         params = ConnectionParams()
-        if self.username is not None:
-            params.username = self.username.encode()
+        password_bytes = user_params._get_password()
+        new_password_bytes = user_params._get_new_password()
+        full_user = user_params.get_full_user()
+        if full_user is not None:
+            params.username = full_user.encode()
             params.username_ptr = params.username
             params.username_len = <uint32_t> len(params.username)
-        if password is not None:
-            params.password = password.encode()
+        if password_bytes is not None:
+            params.password = password_bytes
             params.password_ptr = params.password
             params.password_len = <uint32_t> len(params.password)
         if self.dsn is not None:
             params.dsn = self.dsn.encode()
             params.dsn_ptr = params.dsn
             params.dsn_len = <uint32_t> len(params.dsn)
-        if user_params.cclass is not None:
-            params.cclass = user_params.cclass.encode()
+        if user_params._default_description.cclass is not None:
+            params.cclass = user_params._default_description.cclass.encode()
             params.cclass_ptr = params.cclass
             params.cclass_len = <uint32_t> len(params.cclass)
-        if newpassword is not None:
-            params.new_password = newpassword.encode()
+        if new_password_bytes is not None:
+            params.new_password = new_password_bytes
             params.new_password_ptr = params.new_password
             params.new_password_len = <uint32_t> len(params.new_password)
         if user_params.edition is not None:
@@ -287,10 +291,10 @@ cdef class ThickConnImpl(BaseConnImpl):
             _raise_from_odpi()
         if params.username_len == 0 and params.password_len == 0:
             conn_params.externalAuth = 1
-        if user_params.cclass is not None:
+        if user_params._default_description.cclass is not None:
             conn_params.connectionClass = params.cclass_ptr
             conn_params.connectionClassLength = params.cclass_len
-        if newpassword is not None:
+        if new_password_bytes is not None:
             conn_params.newPassword = params.new_password_ptr
             conn_params.newPasswordLength = params.new_password_len
         if user_params.appcontext:
@@ -299,15 +303,15 @@ cdef class ThickConnImpl(BaseConnImpl):
         if user_params.tag is not None:
             conn_params.tag = params.tag_ptr
             conn_params.tagLength = params.tag_len
-        if handle:
-            conn_params.externalHandle = <void*> (<uint64_t> handle)
+        if user_params._external_handle != 0:
+            conn_params.externalHandle = <void*> user_params._external_handle
             self._is_external = True
         if pool_impl is not None:
             conn_params.pool = pool_impl._handle
         common_params.stmtCacheSize = user_params.stmtcachesize
         conn_params.authMode = user_params.mode
         conn_params.matchAnyTag = user_params.matchanytag
-        conn_params.purity = user_params.purity
+        conn_params.purity = user_params._default_description.purity
 
         # perform connection
         with nogil:

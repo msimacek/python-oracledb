@@ -1192,12 +1192,13 @@ cdef class MessageWithData(Message):
 cdef class AuthMessage(Message):
     cdef:
         str encoded_password
-        str password
-        str newpassword
+        bytes password
+        bytes newpassword
         str encoded_newpassword
         str session_key
         str speedy_key
         str cclass
+        str proxy_user
         uint8_t purity
         ssize_t user_bytes_len
         bytes user_bytes
@@ -1205,8 +1206,7 @@ cdef class AuthMessage(Message):
         uint32_t auth_mode
         uint32_t verifier_type
 
-    cdef int _generate_verifier(self, bytes password_bytes,
-                                bint verifier_11g) except -1:
+    cdef int _generate_verifier(self, bint verifier_11g) except -1:
         """
         Generate the multi-round verifier.
         """
@@ -1215,14 +1215,14 @@ cdef class AuthMessage(Message):
         verifier_data = bytes.fromhex(self.session_data['AUTH_VFR_DATA'])
         if verifier_11g:
             keylen = 24
-            h = hashlib.sha1(password_bytes)
+            h = hashlib.sha1(self.password)
             h.update(verifier_data)
             password_hash = h.digest() + bytes(4)
         else:
             keylen = 32
             iterations = int(self.session_data['AUTH_PBKDF2_VGEN_COUNT'])
             salt = verifier_data + b'AUTH_PBKDF2_SPEEDY_KEY'
-            password_key = get_derived_key(password_bytes, salt, 64,
+            password_key = get_derived_key(self.password, salt, 64,
                                            iterations)
             h = hashlib.new("sha512")
             h.update(password_key)
@@ -1253,13 +1253,13 @@ cdef class AuthMessage(Message):
 
         # encrypt password
         salt = secrets.token_bytes(16)
-        password_with_salt = salt + password_bytes
+        password_with_salt = salt + self.password
         encrypted_password = encrypt_cbc(session_key, password_with_salt)
         self.encoded_password = encrypted_password.hex().upper()
 
         # encrypt new password
         if self.newpassword is not None:
-            newpassword_with_salt = salt + self.newpassword.encode()
+            newpassword_with_salt = salt + self.newpassword
             encrypted_newpassword = encrypt_cbc(session_key,
                                                 newpassword_with_salt)
             self.encoded_newpassword = encrypted_newpassword.hex().upper()
@@ -1323,22 +1323,33 @@ cdef class AuthMessage(Message):
             self.conn_impl._server_version = \
                     "%d.%d.%d.%d.%d" % self._get_version_tuple(buf)
 
-    cdef int _set_auth_mode(self, uint32_t public_auth_mode) except -1:
-        if self.newpassword is None:
+    cdef int _set_params(self, ConnectParamsImpl params,
+                         Description description) except -1:
+        """
+        Sets the parameters to use for the AuthMessage. The user and auth mode
+        are retained in order to avoid duplicating this effort for both trips
+        to the server.
+        """
+        self.password = params._get_password()
+        self.newpassword = params._get_new_password()
+        self.cclass = description.cclass
+        self.purity = description.purity
+        self.proxy_user = params.proxy_user
+        if params._new_password is None:
             self.auth_mode = TNS_AUTH_MODE_LOGON
-        if public_auth_mode & constants.AUTH_MODE_SYSDBA:
+        if params.mode & constants.AUTH_MODE_SYSDBA:
             self.auth_mode |= TNS_AUTH_MODE_SYSDBA
-        if public_auth_mode & constants.AUTH_MODE_SYSOPER:
+        if params.mode & constants.AUTH_MODE_SYSOPER:
             self.auth_mode |= TNS_AUTH_MODE_SYSOPER
-        if public_auth_mode & constants.AUTH_MODE_SYSASM:
+        if params.mode & constants.AUTH_MODE_SYSASM:
             self.auth_mode |= TNS_AUTH_MODE_SYSASM
-        if public_auth_mode & constants.AUTH_MODE_SYSBKP:
+        if params.mode & constants.AUTH_MODE_SYSBKP:
             self.auth_mode |= TNS_AUTH_MODE_SYSBKP
-        if public_auth_mode & constants.AUTH_MODE_SYSDGD:
+        if params.mode & constants.AUTH_MODE_SYSDGD:
             self.auth_mode |= TNS_AUTH_MODE_SYSDGD
-        if public_auth_mode & constants.AUTH_MODE_SYSKMT:
+        if params.mode & constants.AUTH_MODE_SYSKMT:
             self.auth_mode |= TNS_AUTH_MODE_SYSKMT
-        if public_auth_mode & constants.AUTH_MODE_SYSRAC:
+        if params.mode & constants.AUTH_MODE_SYSRAC:
             self.auth_mode |= TNS_AUTH_MODE_SYSRAC
 
     cdef int _write_key_value(self, WriteBuffer buf, str key, str value,
@@ -1358,7 +1369,6 @@ cdef class AuthMessage(Message):
     cdef int _write_message(self, WriteBuffer buf) except -1:
         cdef:
             bint verifier_11g = False
-            bytes password_bytes
             uint32_t num_pairs
         self._write_function_code(buf)
         buf.write_uint8(1)                  # pointer (authusr)
@@ -1384,24 +1394,28 @@ cdef class AuthMessage(Message):
             if self.newpassword is not None:
                 num_pairs += 1
                 self.auth_mode |= TNS_AUTH_MODE_CHANGE_PASSWORD
+            if self.proxy_user is not None:
+                num_pairs += 1
             if self.cclass is not None:
                 num_pairs += 1
             if self.purity != 0:
                 num_pairs += 1
             self.auth_mode |= TNS_AUTH_MODE_WITH_PASSWORD
-            password_bytes = self.password.encode()
             if self.verifier_type == TNS_VERIFIER_TYPE_SHA1 \
                     or self.verifier_type == TNS_VERIFIER_TYPE_SSHA1:
                 verifier_11g = True
             else:
                 num_pairs += 1
-            self._generate_verifier(password_bytes, verifier_11g)
+            self._generate_verifier(verifier_11g)
             buf.write_ub4(self.auth_mode)   # authentication mode
             buf.write_uint8(1)              # pointer (authivl)
             buf.write_ub4(num_pairs)        # number of key/value pairs
             buf.write_uint8(1)              # pointer (authovl)
             buf.write_uint8(1)              # pointer (authovln)
             buf.write_bytes(self.user_bytes)
+            if self.proxy_user is not None:
+                self._write_key_value(buf, "PROXY_CLIENT_NAME",
+                                      self.proxy_user)
             self._write_key_value(buf, "AUTH_SESSKEY", self.session_key, 1)
             self._write_key_value(buf, "AUTH_PASSWORD", self.encoded_password)
             if self.newpassword is not None:
@@ -1417,7 +1431,8 @@ cdef class AuthMessage(Message):
             self._write_key_value(buf, "SESSION_CLIENT_VERSION",
                                   str(_connect_constants.full_version_num))
             if self.cclass is not None:
-                self._write_key_value(buf, "AUTH_KPPL_CONN_CLASS", self.cclass)
+                self._write_key_value(buf, "AUTH_KPPL_CONN_CLASS",
+                                      self.cclass)
             if self.purity != 0:
                 self._write_key_value(buf, "AUTH_KPPL_PURITY",
                                       str(self.purity), 1)

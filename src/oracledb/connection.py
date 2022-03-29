@@ -6,7 +6,7 @@ import collections
 
 from typing import Any, Callable, Type, Union
 from . import constants, driver_mode, errors, exceptions, utils
-from . import thick_impl, thin_impl
+from . import base_impl, thick_impl, thin_impl
 from . import pool as pool_module
 from .defaults import defaults
 from .connect_params import ConnectParams
@@ -28,83 +28,80 @@ class Connection:
 
     def __init__(self,
                  dsn: str=None, *,
-                 user: str=None,
-                 password: str=None,
-                 handle: int=0,
                  pool: Type["pool_module.ConnectionPool"]=None,
-                 newpassword: str=None,
                  params: ConnectParams=None,
                  **kwargs) -> None:
         """
-        Constructor for creating a connection to the database. All parameters
-        are optional.
+        Constructor for creating a connection to the database.
 
-        The dsn (data source name) can be a string in the format
+        The dsn parameter (data source name) can be a string in the format
         user/password@connect_string or can simply be the connect string (in
         which case the user and password need to be specified separately). See
         the documentation on connection strings for more information.
 
-        If the handle is specified, it must be an integer representing a
-        pointer to type OCISvcCtx* and is only of use when embedding Python in
-        an application (like PowerBuilder) which has already made the
-        connection.  The connection thus created should never be used after the
-        source handle has been closed or destroyed. This parameter is only
-        useful when creating a thick connection.
-
         The pool parameter is expected to be a pool object and the use of this
         parameter is the equivalent of calling acquire() on the pool.
-        Parameters not accepted by that method are ignored.
-
-        The newpassword parameter is expected to be a string and sets the
-        password for the logon during the connection process.
 
         The params parameter is expected to be of type ConnectParams and
         contains connection parameters that will be used when establishing the
-        connection. See the documentation on ConnectParams for more
-        information. Note that this object can have its contents changed
-        internally. Use a copy if this is unacceptable.
-
-        Any additional keyword parmeters will modify the params paramter, if
-        specified, or will create a new one using those parameters as the
-        constructor arguments.
+        connection.  See the documentation on ConnectParams for more
+        information. If this parameter is not specified, the additional keyword
+        parameters will be used to create an instance of ConnectParams. If both
+        the params parameter and additional keyword parameters are specified an
+        exception is raised. Note that if a dsn is also supplied, the params
+        will be modified to contain the connection parameters found within the
+        dsn.
         """
+
+        # if this variable is not present, exceptions raised during
+        # construction can result in cascading exceptions; the __repr__()
+        # method depends on this variable being present, too, so make it
+        # available first thing
         self._impl = None
-        method = utils.process_connect_params
-        dsn, user, password, params = method(dsn, user, password, params,
-                                             kwargs)
+
+        # determine if thin mode is being used
         thin = driver_mode.check_and_return_mode()
+
+        # determine which connection parameters to use
+        if params is None:
+            params_impl = base_impl.ConnectParamsImpl(kwargs)
+        elif not isinstance(params, ConnectParams):
+            errors._raise_err(errors.ERR_INVALID_CONNECT_PARAMS)
+        elif kwargs:
+            errors._raise_err(errors.ERR_PARAMS_AND_KEYWORD_PARAMS)
+        else:
+            params_impl = ConnectParams(**kwargs)
+        if dsn is not None:
+            params_impl.parse_dsn(dsn, thin)
+
+        # see if connection is being acquired from a pool
         if pool is None:
             pool_impl = None
         elif not isinstance(pool, pool_module.ConnectionPool):
-            message = "pool must be an instance of oracledb.Pool"
+            message = "pool must be an instance of oracledb.ConnectionPool"
             raise TypeError(message)
         else:
             pool._verify_open()
             pool_impl = pool._impl
+
+        # create thin or thick implementation object
         if thin:
             if pool is not None:
-                impl = pool_impl.acquire(user, password, params)
+                impl = pool_impl.acquire(params_impl)
             else:
-                if password is None:
-                    errors._raise_err(errors.ERR_NO_PASSWORD)
-                if dsn is not None:
-                    params.parse_connect_string(dsn)
-                impl = thin_impl.ThinConnImpl(user, dsn)
-                while True:
-                    redirect_data = impl.connect(params, password, newpassword)
-                    if redirect_data is None:
-                        break
-                    params = params.copy()
-                    params.parse_redirect_data(redirect_data)
+                impl = thin_impl.ThinConnImpl(params_impl)
+                impl.connect(params_impl)
         else:
-            impl = thick_impl.ThickConnImpl(user, dsn)
-            impl.connect(params, handle, pool_impl, password, newpassword)
+            impl = thick_impl.ThickConnImpl(params_impl)
+            impl.connect(params_impl, pool_impl)
         self._impl = impl
         self._version = None
+
+        # invoke callback, if applicable
         if impl.invoke_session_callback and pool is not None \
                 and pool.session_callback is not None \
                 and callable(pool.session_callback):
-            pool.session_callback(self, params.tag)
+            pool.session_callback(self, params_impl.tag)
             impl.invoke_session_callback = False
 
     def __del__(self):
@@ -946,5 +943,97 @@ class Connection:
         return Xid(format_id, global_transaction_id, branch_qualifier)
 
 
-# alias required by the DB API
-connect = Connection
+def _connection_factory(f):
+    """
+    Decorator which checks the validity of the supplied keyword parameters by
+    calling the original function (which does nothing), then creates and
+    returns an instance of the requested Connection class. The base Connection
+    class constructor does not check the validity of the supplied keyword
+    parameters.
+    """
+    def wrapped(dsn: str=None, *,
+                pool: Type["pool_module.ConnectionPool"]=None,
+                conn_class: Type[Connection]=Connection,
+                params: ConnectParams=None,
+                **kwargs) -> Connection:
+        f(dsn=dsn, pool=pool, conn_class=conn_class, params=params, **kwargs)
+        if not issubclass(conn_class, Connection):
+            errors._raise_err(errors.INVALID_CONN_CLASS)
+        return conn_class(dsn=dsn, pool=pool, params=params, **kwargs)
+    return wrapped
+
+
+@_connection_factory
+def connect(dsn: str=None, *,
+            pool: Type["pool_module.ConnectionPool"]=None,
+            conn_class: Type[Connection]=Connection,
+            params: ConnectParams=None,
+
+            # credentials
+            user: str=None,
+            proxy_user: str=None,
+            password: str=None,
+            newpassword: str=None,
+            wallet_password: str=None,
+
+            # connect string parameters
+            host: str=None,
+            port: int=None,
+            protocol: str=None,
+            https_proxy: str=None,
+            https_port: int=None,
+            service_name: str=None,
+            sid: str=None,
+            server_type: str=None,
+            cclass: str=None,
+            purity: int=None,
+            expire_time: int=None,
+            retry_count: int=None,
+            retry_delay: int=None,
+            tcp_connect_timeout: float=None,
+            ssl_server_dn_match: bool=None,
+            ssl_server_cert_dn: str=None,
+            wallet_location: str=None,
+
+            # other parameters
+            events: bool=None,
+            mode: int=None,
+            disable_oob: bool=None,
+            stmtcachesize: int=None,
+            edition: str=None,
+            tag: str=None,
+            matchanytag: bool=None,
+            config_dir: str=None,
+            appcontext: list=None,
+            shardingkey: list=None,
+            supershardingkey: list=None,
+            handle: int=None,
+
+            # deprecated (ignored) parameters
+            threaded: bool=None,
+            encoding: str=None,
+            nencoding: str=None) -> Connection:
+    """
+    Factory function which creates a connection to the database and returns it.
+
+    The dsn parameter (data source name) can be a string in the format
+    user/password@connect_string or can simply be the connect string (in
+    which case the user and password need to be specified separately). See the
+    documentation on connection strings for more information.
+
+    The pool parameter is expected to be a pool object and the use of this
+    parameter is the equivalent of calling pool.acquire().
+
+    The conn_class parameter is expected to be Connection or a subclass of
+    Connection.
+
+    The params parameter is expected to be of type ConnectParams and contains
+    connection parameters that will be used when establishing the connection.
+    See the documentation on ConnectParams for more information. If this
+    parameter is not specified, the additional keyword parameters will be used
+    to create an instance of ConnectParams. If both the params parameter and
+    additional keyword parameters are specified an exception is raised. Note
+    that if a dsn is also supplied, the params will be modified to contain the
+    connection parameters found within the dsn.
+    """
+    pass

@@ -4,9 +4,9 @@
 
 cdef class BaseConnImpl:
 
-    def __init__(self, user, dsn):
-        self.username = user
-        self.dsn = dsn
+    def __init__(self, ConnectParamsImpl params):
+        self.username = params.user
+        self.dsn = params.get_connect_string()
 
     @utils.CheckImpls("getting a connection OCI attribute")
     def _get_oci_attr(self, uint32_t handle_type, uint32_t attr_num,

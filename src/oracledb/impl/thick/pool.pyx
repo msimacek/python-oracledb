@@ -11,23 +11,26 @@ cdef class ThickPoolImpl(BasePoolImpl):
     cdef:
         dpiPool *_handle
 
-    def __dealloc__(self):
-        if self._handle != NULL:
-            dpiPool_release(self._handle)
-
-    def _create(self, params, password, getmode, externalauth, timeout,
-                wait_timeout, max_lifetime_session, session_callback,
-                max_sessions_per_shard, soda_metadata_cache, ping_interval):
+    def __init__(self, PoolParamsImpl pool_params,
+                 ConnectParamsImpl conn_params):
         cdef:
             bytes edition_bytes, user_bytes, password_bytes, dsn_bytes
             uint32_t password_len = 0, user_len = 0, dsn_len = 0
             bytes session_callback_bytes, name_bytes
             dpiCommonCreateParams common_params
-            dpiPoolCreateParams pool_params
+            dpiPoolCreateParams create_params
             const char *password_ptr = NULL
             const char *user_ptr = NULL
             const char *dsn_ptr = NULL
             int status
+
+        # save parameters
+        self.username = conn_params.user
+        self.dsn = conn_params.connect_string
+        self.min = pool_params.min
+        self.max = pool_params.max
+        self.increment = pool_params.increment
+        self.homogeneous = pool_params.homogeneous
 
         # ensure that the Oracle Client library is initialized
         if driver_context == NULL:
@@ -38,41 +41,42 @@ cdef class ThickPoolImpl(BasePoolImpl):
                                              &common_params) < 0:
             _raise_from_odpi()
         common_params.createMode |= DPI_MODE_CREATE_THREADED
-        if params.events:
+        if conn_params.events:
             common_params.createMode |= DPI_MODE_CREATE_EVENTS
-        if params.edition:
-            edition_bytes = params.edition.encode()
+        if conn_params.edition is not None:
+            edition_bytes = conn_params.edition.encode()
             common_params.edition = edition_bytes
             common_params.editionLength = <uint32_t> len(edition_bytes)
 
         # set up pool creation parameters
-        if dpiContext_initPoolCreateParams(driver_context, &pool_params) < 0:
+        if dpiContext_initPoolCreateParams(driver_context, &create_params) < 0:
             _raise_from_odpi()
-        pool_params.minSessions = self.min
-        pool_params.maxSessions = self.max
-        pool_params.sessionIncrement = self.increment
-        pool_params.homogeneous = self.homogeneous
-        pool_params.getMode = getmode
-        if session_callback is not None and not callable(session_callback):
-            session_callback_bytes = session_callback.encode()
-            pool_params.plsqlFixupCallback = session_callback_bytes
-            pool_params.plsqlFixupCallbackLength = \
+        create_params.minSessions = self.min
+        create_params.maxSessions = self.max
+        create_params.sessionIncrement = self.increment
+        create_params.homogeneous = self.homogeneous
+        create_params.getMode = pool_params.getmode
+        if pool_params.session_callback is not None \
+                and not callable(pool_params.session_callback):
+            session_callback_bytes = pool_params.session_callback.encode()
+            create_params.plsqlFixupCallback = session_callback_bytes
+            create_params.plsqlFixupCallbackLength = \
                     <uint32_t> len(session_callback_bytes)
-        pool_params.timeout = timeout
-        pool_params.waitTimeout = wait_timeout
-        pool_params.maxSessionsPerShard = max_sessions_per_shard
-        pool_params.maxLifetimeSession = max_lifetime_session
-        pool_params.pingInterval = ping_interval
-        common_params.stmtCacheSize = params.stmtcachesize
-        common_params.sodaMetadataCache = <bint> soda_metadata_cache
+        create_params.timeout = pool_params.timeout
+        create_params.waitTimeout = pool_params.wait_timeout
+        create_params.maxSessionsPerShard = pool_params.max_sessions_per_shard
+        create_params.maxLifetimeSession = pool_params.max_lifetime_session
+        create_params.pingInterval = pool_params.ping_interval
+        common_params.stmtCacheSize = conn_params.stmtcachesize
+        common_params.sodaMetadataCache = pool_params.soda_metadata_cache
 
         # prepare user, password and DSN for use
         if self.username is not None:
             user_bytes = self.username.encode()
             user_ptr = user_bytes
             user_len = <uint32_t> len(user_bytes)
-        if password is not None:
-            password_bytes = password.encode()
+        password_bytes = conn_params._get_password()
+        if password_bytes is not None:
             password_ptr = password_bytes
             password_len = <uint32_t> len(password_bytes)
         if self.dsn is not None:
@@ -84,12 +88,17 @@ cdef class ThickPoolImpl(BasePoolImpl):
         with nogil:
             status = dpiPool_create(driver_context, user_ptr, user_len,
                                     password_ptr, password_len, dsn_ptr,
-                                    dsn_len, &common_params, &pool_params,
+                                    dsn_len, &common_params, &create_params,
                                     &self._handle)
         if status < 0:
             _raise_from_odpi()
-        name_bytes = pool_params.outPoolName[:pool_params.outPoolNameLength]
+
+        name_bytes = create_params.outPoolName[:create_params.outPoolNameLength]
         self.name = name_bytes.decode()
+
+    def __dealloc__(self):
+        if self._handle != NULL:
+            dpiPool_release(self._handle)
 
     def close(self, bint force):
         """

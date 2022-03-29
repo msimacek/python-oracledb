@@ -21,9 +21,14 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 import datetime
 import decimal
 import json
+import os
+import re
+import secrets
 import sys
 
 cydatetime.import_datetime()
+
+include "impl/base/types.pyx"
 
 from . import constants, errors, exceptions, utils
 from .cursor import Cursor
@@ -111,6 +116,9 @@ cdef object get_exception_class(int32_t code):
     return exceptions.DatabaseError
 
 
+include "impl/base/utils.pyx"
+include "impl/base/connect_params.pyx"
+include "impl/base/pool_params.pyx"
 include "impl/base/connection.pyx"
 include "impl/base/pool.pyx"
 include "impl/base/cursor.pyx"
@@ -120,4 +128,3 @@ include "impl/base/lob.pyx"
 include "impl/base/soda.pyx"
 include "impl/base/queue.pyx"
 include "impl/base/subscr.pyx"
-include "impl/base/types.pyx"

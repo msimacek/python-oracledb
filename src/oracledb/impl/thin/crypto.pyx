@@ -58,26 +58,29 @@ def get_server_dn_matches(sock, expected_dn):
     return server_dn_dict == expected_dn_dict
 
 
-def get_ssl_socket(sock, params):
+def get_ssl_socket(sock, ConnectParamsImpl params, Description description,
+                   Address address):
     """
     Returns a wrapped SSL socket given a socket and the parameters supplied by
     the user.
     """
     ssl_context = ssl.create_default_context()
-    if params.wallet_location is not None:
-        pem_file_name = os.path.join(params.wallet_location,
+    if description.wallet_location is not None:
+        pem_file_name = os.path.join(description.wallet_location,
                                      PEM_WALLET_FILE_NAME)
         if not os.path.exists(pem_file_name):
             errors._raise_err(errors.ERR_WALLET_FILE_MISSING,
                               name=pem_file_name)
         ssl_context.load_cert_chain(pem_file_name,
-                                    password=params.wallet_password)
-    if params.ssl_server_dn_match and params.ssl_server_cert_dn is None:
-        sock = ssl_context.wrap_socket(sock, server_hostname=params.host)
+                                    password=params._get_wallet_password())
+    if description.ssl_server_dn_match \
+            and description.ssl_server_cert_dn is None:
+        sock = ssl_context.wrap_socket(sock, server_hostname=address.host)
     else:
         ssl_context.check_hostname = False
         sock = ssl_context.wrap_socket(sock)
-    if params.ssl_server_dn_match and params.ssl_server_cert_dn is not None:
-        if not get_server_dn_matches(sock, params.ssl_server_cert_dn):
+    if description.ssl_server_dn_match \
+            and description.ssl_server_cert_dn is not None:
+        if not get_server_dn_matches(sock, description.ssl_server_cert_dn):
             errors._raise_err(errors.ERR_INVALID_SERVER_CERT_DN)
     return sock

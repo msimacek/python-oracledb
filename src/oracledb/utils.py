@@ -3,7 +3,6 @@
 #------------------------------------------------------------------------------
 
 from . import errors
-from .connect_params import ConnectParams
 
 class CheckImpls:
     """
@@ -27,26 +26,21 @@ class CheckImpls:
                               feature=feature, driver_type=driver_type)
         return wrapped_f
 
-def process_connect_params(dsn, user, password, params, additional_args):
+
+class WithParamsImpl:
     """
-    Process the connection parameters and return the massaged parameters as a
-    4-tuple (dsn, user, password, params).
+    Decorator class which is used on the ConnectParams and PoolParams
+    classes which creates the implementation object using the supplied keyword
+    parameters. The original function is called first solely to ensure that the
+    keyword parameters supplied are valid (the function itself does nothing).
     """
-    if params is None:
-        params = ConnectParams(**additional_args)
-    elif not isinstance(params, ConnectParams):
-        message = "params must be of type oracledb.ConnectParams"
-        raise TypeError(message)
-    elif additional_args:
-        params._set_by_keyword_args(additional_args)
-    if dsn is not None:
-        split_user, split_password, dsn = params.parse_dsn(dsn)
-        if user and split_user or password and split_password:
-            message = "credentials cannot be specified as independent " \
-                      "parameters and as part of the dsn parmeters"
-            raise TypeError(message)
-        if split_user:
-            user = split_user
-        if split_password:
-            password = split_password
-    return (dsn, user, password, params)
+
+    def __init__(self, impl_class):
+        self.impl_class = impl_class
+
+    def __call__(self, f):
+        impl_class = self.impl_class
+        def wrapped_f(self, *args, **kwargs):
+            f(self, *args, **kwargs)
+            self._impl = impl_class(kwargs)
+        return wrapped_f

@@ -74,6 +74,115 @@ cdef class DbType:
     cdef DbType _from_ora_type_and_csfrm(uint8_t ora_type_num, uint8_t csfrm)
 
 
+cdef class Address:
+    cdef:
+        public str host
+        public uint32_t port
+        public str protocol
+        public str https_proxy
+        public uint32_t https_proxy_port
+
+
+cdef class AddressList:
+    cdef:
+        public list addresses
+        bint load_balance
+        int lru_index
+
+
+cdef class Description:
+    cdef:
+        public list address_lists
+        public bint load_balance
+        public int lru_index
+        public uint32_t expire_time
+        public uint32_t retry_count
+        public uint32_t retry_delay
+        public double tcp_connect_timeout
+        public str service_name
+        public str server_type
+        public str sid
+        public str cclass
+        public uint32_t purity
+        public bint ssl_server_dn_match
+        public str ssl_server_cert_dn
+        public str wallet_location
+
+
+cdef class DescriptionList:
+    cdef:
+        public list descriptions
+        bint load_balance
+        int lru_index
+
+
+cdef class TnsnamesFile:
+    cdef:
+        str file_name
+        int mtime
+        dict entries
+
+
+cdef class ConnectParamsImpl:
+    cdef:
+        public str config_dir
+        public str user
+        public str proxy_user
+        public bint events
+        public uint32_t mode
+        public str edition
+        public list appcontext
+        public str tag
+        public bint matchanytag
+        public list shardingkey
+        public list supershardingkey
+        public uint32_t stmtcachesize
+        public bint disable_oob
+        public DescriptionList description_list
+        public str connect_string
+        uint64_t _external_handle
+        Description _default_description
+        Address _default_address
+        bytearray _password
+        bytearray _password_obfuscator
+        bytearray _new_password
+        bytearray _new_password_obfuscator
+        bytearray _wallet_password
+        bytearray _wallet_password_obfuscator
+
+    cdef str _build_connect_string(self)
+    cdef bytes _get_new_password(self)
+    cdef bytearray _get_obfuscator(self, str password)
+    cdef bytes _get_password(self)
+    cdef TnsnamesFile _get_tnsnames_file(self)
+    cdef str _get_wallet_password(self)
+    cdef int _parse_connect_string(self, str connect_string) except -1
+    cdef int _process_connect_descriptor(self, dict args) except -1
+    cdef int _process_redirect_data(self, str redirect_data) except -1
+    cdef int _set_new_password(self, str password) except -1
+    cdef int _set_password(self, str password) except -1
+    cdef int _set_wallet_password(self, str password) except -1
+    cdef bytearray _xor_bytes(self, bytearray a, bytearray b)
+
+
+cdef class PoolParamsImpl:
+    cdef:
+        public uint32_t min
+        public uint32_t max
+        public uint32_t increment
+        public type connectiontype
+        public uint32_t getmode
+        public bint homogeneous
+        public bint externalauth
+        public uint32_t timeout
+        public uint32_t wait_timeout
+        public uint32_t max_lifetime_session
+        public object session_callback
+        public uint32_t max_sessions_per_shard
+        public bint soda_metadata_cache
+        public int ping_interval
+
+
 cdef class BaseConnImpl:
     cdef:
         readonly str username
