@@ -559,5 +559,16 @@ class TestCase(test_env.BaseTestCase):
                                conn.cursor().callproc,
                                test_env.get_sleep_proc_name(), [2])
 
+    def test_1136_connect_with_params(self):
+        "1136 - test connection using ConnectParams()"
+        params = oracledb.ConnectParams(user=test_env.get_main_user(),
+                                        password=test_env.get_main_password())
+        params.parse_connect_string(test_env.get_connect_string())
+        with oracledb.connect(params=params) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("select user from dual")
+                user, = cursor.fetchone()
+                self.assertEqual(user, test_env.get_main_user().upper())
+
 if __name__ == "__main__":
     test_env.run_test_cases()
