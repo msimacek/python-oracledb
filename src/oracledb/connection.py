@@ -70,7 +70,7 @@ class Connection:
         elif kwargs:
             errors._raise_err(errors.ERR_PARAMS_AND_KEYWORD_PARAMS)
         else:
-            params_impl = ConnectParams(**kwargs)
+            params_impl = params._impl
         if dsn is not None:
             params_impl.parse_dsn(dsn, thin)
 
