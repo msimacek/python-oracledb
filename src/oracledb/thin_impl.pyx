@@ -33,9 +33,16 @@ import socket
 import re
 import secrets
 import ssl
+import subprocess
 import sys
 import threading
 import time
+
+try:
+    import certifi
+except ImportError:
+    certifi = None
+macos_certs = None
 
 cydatetime.import_datetime()
 
