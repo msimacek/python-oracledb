@@ -435,10 +435,12 @@ class Cursor:
         that the cursor’s arraysize attribute can affect the performance of
         this operation.
 
-        The number of rows to fetch is specified by the parameter. If it is not
-        given, the cursor’s arraysize attribute determines the number of rows
-        to be fetched. If the number of rows available to be fetched is fewer
-        than the amount requested, fewer rows will be returned.
+        The number of rows to fetch is specified by the parameter (the second
+        parameter is retained for backwards compatibility and should not be
+        used). If it is not given, the cursor’s arraysize attribute determines
+        the number of rows to be fetched. If the number of rows available to be
+        fetched is fewer than the amount requested, fewer rows will be
+        returned.
 
         An exception is raised if the previous call to execute() did not
         produce any result set or no call was issued yet.
