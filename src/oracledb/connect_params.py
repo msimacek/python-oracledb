@@ -134,7 +134,7 @@ class ConnectParams:
           matched with the server. This value is ignored if the
           ssl_server_dn_match parameter is not set to the value True.
 
-        - wallet_location: the location where the wallet can be found; in thin
+        - wallet_location: the directory where the wallet can be found; in thin
           mode this must be the location of the PEM-encoded wallet file
           ewallet.pem; in thick mode this must be the location of the file
           cwallet.sso (default: None)
