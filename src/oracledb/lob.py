@@ -4,7 +4,7 @@
 
 from typing import Union
 
-from . import constants
+from . import constants, errors
 
 class LOB:
     __module__ = constants.MODULE_NAME
@@ -103,10 +103,17 @@ class LOB:
         """
         return self._impl.get_size()
 
-    def trim(self, new_size: int=0) -> None:
+    def trim(self, new_size: int=0, *, newSize: int=None) -> None:
         """
-        Trim the LOB to the new size.
+        Trim the LOB to the new size (the second parameter is deprecated and
+        should not be used).
         """
+        if newSize is not None:
+            if new_size != 0:
+                errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                                  deprecated_name="newSize",
+                                  new_name="new_size")
+            new_size = newSize
         self._impl.trim(new_size)
 
     @property

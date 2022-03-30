@@ -93,6 +93,10 @@ class TestCase(test_env.BaseTestCase):
                          write_value + long_string[4:] + write_value)
         lob.trim(25000)
         self.assertEqual(lob.size(), 25000)
+        lob.trim(newSize=10000)
+        self.assertEqual(lob.size(), 10000)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-2014:",
+                               lob.trim, new_size=50, newSize=60)
         lob.trim()
         self.assertEqual(lob.size(), 0)
 
