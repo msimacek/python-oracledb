@@ -285,6 +285,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         self._statement_cache_lock = threading.Lock()
         self._cursors_to_close = array.array('I')
         array.resize(self._cursors_to_close, TNS_MAX_CURSORS_TO_CLOSE)
+        self.invoke_session_callback = True
 
     def create_cursor_impl(self):
         return ThinCursorImpl.__new__(ThinCursorImpl, self)

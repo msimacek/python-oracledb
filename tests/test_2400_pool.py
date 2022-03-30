@@ -491,8 +491,6 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(pool.stmtcachesize, 25, "stmtcachesize (25)")
         self.assertEqual(pool.ping_interval, 25, "ping_interval (25)")
 
-    @unittest.skipIf(test_env.get_is_thin(),
-                     "thin driver doesn't support all the pool params yet")
     def test_2418_deprecations(self):
         "2418 - test to verify deprecations"
         callback = "pkg_SessionCallback.TheCallback"
@@ -609,6 +607,23 @@ class TestCase(test_env.BaseTestCase):
         pool.getmode = oracledb.POOL_GETMODE_NOWAIT
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4005:",
                                pool.acquire)
+
+    def test_2426_session_callback_for_new_connections(self):
+        "2426 - callable session callback is executed for new connections"
+        class Counter:
+            num_calls = 0
+            @classmethod
+            def session_callback(cls, conn, requested_tag):
+                cls.num_calls += 1
+        pool = test_env.get_pool(min=1, max=2, increment=1,
+                                 session_callback=Counter.session_callback)
+        with pool.acquire() as conn1:
+            with pool.acquire() as conn2:
+                pass
+        with pool.acquire() as conn1:
+            with pool.acquire() as conn2:
+                pass
+        self.assertEqual(Counter.num_calls, 2)
 
 if __name__ == "__main__":
     test_env.run_test_cases()
