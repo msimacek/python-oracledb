@@ -85,8 +85,9 @@ cdef class Protocol:
                 self._process_message(conn_impl._create_message(LogoffMessage))
                 self._final_close(self._write_buf)
 
-    cdef _connect(self, ThinConnImpl conn_impl, ConnectParamsImpl params,
-                  Description description, Address address):
+    cdef ConnectParamsImpl _connect(self, ThinConnImpl conn_impl,
+                                    ConnectParamsImpl params,
+                                    Description description, Address address):
         cdef:
             ConnectMessage connect_message
             object temp_sock, ssl_context
@@ -116,7 +117,11 @@ cdef class Protocol:
         while True:
             self._process_message(connect_message)
             if connect_message.redirect_data is not None:
-                return connect_message.redirect_data
+                params = params.copy()
+                params._default_description = description
+                params._default_address = address
+                params._process_redirect_data(connect_message.redirect_data)
+                return params
             if connect_message.packet_type == TNS_PACKET_TYPE_ACCEPT:
                 break
 

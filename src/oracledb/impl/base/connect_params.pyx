@@ -291,7 +291,7 @@ cdef class ConnectParamsImpl:
             self.description_list.set_from_args(list_args)
         else:
             list_args = args
-        for desc_args in list_args.get("description", []):
+        for desc_args in list_args.get("description", [list_args]):
             description = self._default_description.copy()
             description.set_from_description_args(desc_args)
             self.description_list.descriptions.append(description)

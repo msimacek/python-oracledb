@@ -97,7 +97,8 @@ cdef class ThinConnImpl(BaseConnImpl):
                     return (sock, address)
             time.sleep(description.retry_delay)
 
-    cdef str _connect_with_params(self, ConnectParamsImpl params):
+    cdef ConnectParamsImpl _connect_with_params(self,
+                                                ConnectParamsImpl params):
         """
         Internal method used for connecting with the given parameters. If the
         listener requests a redirect, the redirect data is returned so tht this
@@ -271,15 +272,14 @@ cdef class ThinConnImpl(BaseConnImpl):
         self._protocol._process_single_message(message)
 
     def connect(self, ConnectParamsImpl params):
-        cdef str redirect_data
+        cdef ConnectParamsImpl redirect_params
         if params._password is None:
             errors._raise_err(errors.ERR_NO_PASSWORD)
         while True:
-            redirect_data = self._connect_with_params(params)
-            if redirect_data is None:
+            redirect_params = self._connect_with_params(params)
+            if redirect_params is None:
                 break
-            params = params.copy()
-            params._parse_redirect_data(redirect_data)
+            params = redirect_params
         self._statement_cache = collections.OrderedDict()
         self._statement_cache_size = params.stmtcachesize
         self._statement_cache_lock = threading.Lock()
