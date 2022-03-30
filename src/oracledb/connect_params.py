@@ -29,7 +29,7 @@ class ConnectParams:
                  port: int=None,
                  protocol: str=None,
                  https_proxy: str=None,
-                 https_port: int=None,
+                 https_proxy_port: int=None,
                  service_name: str=None,
                  sid: str=None,
                  server_type: str=None,
