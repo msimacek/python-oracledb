@@ -110,6 +110,7 @@ cdef class Protocol:
         # supplied redirect data
         connect_string = _get_connect_data(address, description)
         connect_message = conn_impl._create_message(ConnectMessage)
+        connect_message.address = address
         connect_message.description = description
         connect_message.connect_string_bytes = connect_string.encode()
         connect_message.connect_string_len = \
