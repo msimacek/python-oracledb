@@ -731,5 +731,24 @@ class TestCase(test_env.BaseTestCase):
             self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4011:",
                                    cursor.execute, "select user from dual")
 
+    def test_4560_fetchmany(self):
+        "4560 - fetchmany() with and without parameters"
+        sql_part = "select user from dual"
+        sql = " union all ".join([sql_part] * 10)
+        with self.connection.cursor() as cursor:
+            cursor.arraysize = 6
+            cursor.execute(sql)
+            rows = cursor.fetchmany()
+            self.assertEqual(len(rows), cursor.arraysize)
+            cursor.execute(sql)
+            rows = cursor.fetchmany(size=2)
+            self.assertEqual(len(rows), 2)
+            cursor.execute(sql)
+            rows = cursor.fetchmany(numRows=4)
+            self.assertEqual(len(rows), 4)
+            cursor.execute(sql)
+            self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-2014:",
+                                   cursor.fetchmany, size=2, numRows=4)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

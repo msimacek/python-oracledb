@@ -428,7 +428,7 @@ class Cursor:
             result.append(row)
         return result
 
-    def fetchmany(self, size: int=None) -> list:
+    def fetchmany(self, size: int=None, numRows: int=None) -> list:
         """
         Fetch the next set of rows of a query result, returning a list of
         tuples. An empty list is returned if no more rows are available. Note
@@ -445,7 +445,13 @@ class Cursor:
         """
         self._verify_fetch()
         if size is None:
-            size = self._impl.arraysize
+            if numRows is not None:
+                size = numRows
+            else:
+                size = self._impl.arraysize
+        elif numRows is not None:
+            errors._raise_err(errors.ERR_DUPLICATED_PARAMETER,
+                              deprecated_name="numRows", new_name="size")
         result = []
         fetch_next_row = self._impl.fetch_next_row
         while len(result) < size:
