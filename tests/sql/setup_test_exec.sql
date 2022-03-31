@@ -284,6 +284,14 @@ begin
     dbms_aqadm.create_queue('&main_user..TEST_RAW_QUEUE',
             '&main_user..RAW_QUEUE_TAB');
     dbms_aqadm.start_queue('&main_user..TEST_RAW_QUEUE');
+
+    dbms_aqadm.create_queue_table('&main_user..BOOK_QUEUE_MULTI_TAB',
+            '&main_user..UDT_BOOK', multiple_consumers => TRUE);
+    dbms_aqadm.create_queue('&main_user..BOOK_QUEUE_MULTI',
+            '&main_user..BOOK_QUEUE_MULTI_TAB');
+    dbms_aqadm.start_queue('&main_user..BOOK_QUEUE_MULTI');
+    dbms_aqadm.add_subscriber('&main_user..BOOK_QUEUE_MULTI',
+            sys.aq$_agent('Sub1', null, null));
 end;
 /
 

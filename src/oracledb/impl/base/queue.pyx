@@ -197,3 +197,7 @@ cdef class BaseMsgPropsImpl:
     @utils.CheckImpls("setting the priority")
     def set_priority(self, int32_t value):
         pass
+
+    @utils.CheckImpls("setting recipients list")
+    def set_recipients(self, list value):
+        pass

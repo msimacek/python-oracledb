@@ -498,7 +498,7 @@ class Connection:
     def msgproperties(self, payload: Union[bytes, DbObject]=None,
                       correlation: str=None, delay: int=None,
                       exceptionq: str=None, expiration: int=None,
-                      priority: int=None) -> MessageProperties:
+                      priority: int=None, recipients: list=None) -> MessageProperties:
         """
         Create and return a message properties object. If the parameters are
         not None, they act as a shortcut for setting each of the equivalently
@@ -518,6 +518,8 @@ class Connection:
             props.expiration = expiration
         if priority is not None:
             props.priority = priority
+        if recipients is not None:
+            props.recipients = recipients
         return props
 
     @property

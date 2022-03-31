@@ -544,3 +544,30 @@ cdef class ThickMsgPropsImpl(BaseMsgPropsImpl):
         """
         if dpiMsgProps_setPriority(self._handle, value) < 0:
             _raise_from_odpi()
+
+    def set_recipients(self, list value):
+        """
+        Internal method for setting the recipients list.
+        """
+        cdef:
+            dpiMsgRecipient *recipients
+            uint32_t num_recipients
+            ssize_t num_bytes
+            list buffers = []
+            StringBuffer buf
+
+        num_recipients = <uint32_t> len(value)
+        num_bytes = num_recipients * sizeof(dpiMsgRecipient)
+        recipients = <dpiMsgRecipient*> cpython.PyMem_Malloc(num_bytes)
+        try:
+            for i in range(num_recipients):
+                buf = StringBuffer()
+                buf.set_value(value[i])
+                buffers.append(buf)
+                recipients[i].name = buf.ptr
+                recipients[i].nameLength = buf.length
+            if dpiMsgProps_setRecipients(self._handle, recipients,
+                                         num_recipients) < 0:
+                _raise_from_odpi()
+        finally:
+            cpython.PyMem_Free(recipients)
