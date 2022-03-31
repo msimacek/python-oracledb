@@ -84,12 +84,12 @@ class ConnectParams:
         - host: the name or IP address of the machine hosting the listener,
           which handles the initial connection to the database (default: None)
 
-        - port: the port number on which the listener is listening (default:
-          oracledb.defaults.port)
+        - port: the port number on which the listener is listening
+          (default: 1521)
 
         - protocol: one of the strings "tcp" or "tcps" indicating whether to
           use unencrypted network traffic or encrypted network traffic (TLS)
-          (default: oracledb.defaults.protocol)
+          (default: "tcp")
 
         - https_proxy: the name or IP address of a proxy host to use for
           tunneling secure connections (default: None)
@@ -122,13 +122,13 @@ class ConnectParams:
 
         - tcp_connect_timeout: a float indicating the maximum number of seconds
           to wait for establishing a connection to the database host
-          (default: oracledb.defaults.tcp_connect_timeout)
+          (default: 60.0)
 
         - ssl_server_dn_match: boolean indicating whether the server
           certificate distinguished name (DN) should be matched in addition to
           the regular certificate verification that is performed; note that if
           the ssl_server_cert_dn parameter is not privided, host name matching
-          is performed instead (default: oracledb.defaults.ssl_server_dn_match)
+          is performed instead (default: True)
 
         - ssl_server_cert_dn: the distinguished name (DN) which should be
           matched with the server. This value is ignored if the
@@ -142,14 +142,13 @@ class ConnectParams:
         - events: boolean specifying whether events mode should be enabled;
           this value is only used in thick mode and is needed for continuous
           query notification and high availability event notifications
-          (default: oracledb.defaults.events)
+          (default: False)
 
         - mode: authorization mode to use (default: oracledb.AUTH_MODE_DEFAULT)
 
         - disable_oob: boolean indicating whether out-of-band breaks should be
           disabled; this value is only used in thin mode and has no effect on
-          Windows which doesn't support this functionality (default:
-          oracledb.defaults.disable_oob)
+          Windows which doesn't support this functionality (default: False)
 
         - stmtcachesize: identifies the initial size of the statement cache
           (default: oracledb.defaults.stmtcachesize)

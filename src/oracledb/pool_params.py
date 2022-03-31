@@ -83,8 +83,7 @@ class PoolParams:
 
         - ping_interval: length of time (in seconds) after which an idle
           connection will be pinged before being returned to the caller, or a
-          negative value, which will disable this functionality
-          (default: defaults.ping_interval)
+          negative value, which will disable this functionality (default: 60)
 
         """
         pass

@@ -10,7 +10,7 @@ cdef class PoolParamsImpl:
         self.increment = 1
         self.getmode = constants.POOL_GETMODE_WAIT
         self.homogeneous = True
-        self.ping_interval = defaults.ping_interval
+        self.ping_interval = 60
         _set_uint_param(args, "min", &self.min)
         _set_uint_param(args, "max", &self.max)
         _set_uint_param(args, "increment", &self.increment)

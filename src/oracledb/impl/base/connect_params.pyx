@@ -34,6 +34,11 @@ EASY_CONNECT_PATTERN = \
 # and parsed.
 _tnsnames_files = {}
 
+# internal default values
+cdef str DEFAULT_PROTOCOL = "tcp"
+cdef uint32_t DEFAULT_PORT = 1521
+cdef double DEFAULT_TCP_CONNECT_TIMEOUT = 60
+
 
 cdef dict _parse_connect_descriptor(str data, dict args):
     """
@@ -82,8 +87,6 @@ cdef class ConnectParamsImpl:
 
     def __init__(self, dict args):
         cdef AddressList address_list
-        self.events = defaults.events
-        self.disable_oob = defaults.disable_oob
         self.stmtcachesize = defaults.stmtcachesize
         self.config_dir = defaults.config_dir
         self._external_handle = args.get("handle", 0)
@@ -147,7 +150,7 @@ cdef class ConnectParamsImpl:
             args.append(f"retry_count={description.retry_count}")
         if description.retry_delay != 0:
             args.append(f"retry_delay={description.retry_delay}")
-        if description.tcp_connect_timeout != defaults.tcp_connect_timeout:
+        if description.tcp_connect_timeout != DEFAULT_TCP_CONNECT_TIMEOUT:
             tcp_connect_timeout = description.tcp_connect_timeout
             temp = self._build_tcp_connect_timeout_str(tcp_connect_timeout)
             args.append(f"transport_connect_timeout={temp}")
@@ -497,8 +500,8 @@ cdef class Address:
     """
 
     def __init__(self):
-        self.port = defaults.port
-        self.protocol = defaults.protocol
+        self.protocol = DEFAULT_PROTOCOL
+        self.port = DEFAULT_PORT
 
     def copy(self):
         """
@@ -558,8 +561,8 @@ cdef class Description:
 
     def __init__(self):
         self.address_lists = []
-        self.tcp_connect_timeout = defaults.tcp_connect_timeout
-        self.ssl_server_dn_match = defaults.ssl_server_dn_match
+        self.tcp_connect_timeout = DEFAULT_TCP_CONNECT_TIMEOUT
+        self.ssl_server_dn_match = True
 
     def copy(self):
         """
