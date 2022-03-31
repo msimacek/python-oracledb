@@ -129,7 +129,8 @@ cdef class ConnectParamsImpl:
         cdef:
             Description description = self._default_description
             Address address = self._default_address
-            str connect_string
+            double tcp_connect_timeout
+            str connect_string, temp
             list args = []
         connect_string = \
                 f"{address.protocol}://{address.host}:{address.port}/" \
@@ -147,8 +148,9 @@ cdef class ConnectParamsImpl:
         if description.retry_delay != 0:
             args.append(f"retry_delay={description.retry_delay}")
         if description.tcp_connect_timeout != defaults.tcp_connect_timeout:
-            a = f"transport_connect_timeout={description.tcp_connect_timeout}"
-            args.append(a)
+            tcp_connect_timeout = description.tcp_connect_timeout
+            temp = self._build_tcp_connect_timeout_str(tcp_connect_timeout)
+            args.append(f"transport_connect_timeout={temp}")
         if not description.ssl_server_dn_match:
             a = f"ssl_server_dn_match={description.ssl_server_dn_match}"
             args.append(a)
@@ -159,6 +161,20 @@ cdef class ConnectParamsImpl:
         if args:
             connect_string += "?" + "&".join(args)
         return connect_string
+
+    cdef str _build_tcp_connect_timeout_str(self, double value):
+        """
+        Build up the value to display for the TCP connect timeout in the
+        connect string. This must be an integer with the units following it.
+        """
+        cdef int value_int, value_minutes
+        value_int = <int> value
+        if value != value_int:
+            return f"{int(value * 1000)}ms"
+        value_minutes = (value_int // 60)
+        if value_minutes * 60 == value_int:
+            return f"{value_minutes}min"
+        return f"{value_int}"
 
     cdef bytes _get_new_password(self):
         """

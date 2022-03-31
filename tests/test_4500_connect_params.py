@@ -436,5 +436,23 @@ class TestCase(test_env.BaseTestCase):
         self.__test_writable_parameter("supershardingkey", [1, 2, 3])
         self.__test_writable_parameter("tag", "tag_4530")
 
+    def test_4531_build_connect_string_with_tcp_connect_timeout(self):
+        "4531 - test building connect string with TCP connect timeout"
+        host = "my_host4531"
+        service_name = "my_service4531"
+        options = [
+            (25, "25"),
+            (120, "2min"),
+            (2.5, "2500ms"),
+            (3.4328, "3432ms")
+        ]
+        for in_val, out_val in options:
+            params = oracledb.ConnectParams(host=host,
+                                            service_name=service_name,
+                                            tcp_connect_timeout=in_val)
+            connect_string = f"tcp://{host}:1521/{service_name}" + \
+                             f"?transport_connect_timeout={out_val}"
+            self.assertEqual(params.get_connect_string(), connect_string)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

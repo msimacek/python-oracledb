@@ -151,6 +151,7 @@ cdef class ConnectParamsImpl:
         bytearray _wallet_password_obfuscator
 
     cdef str _build_connect_string(self)
+    cdef str _build_tcp_connect_timeout_str(self, double value)
     cdef bytes _get_new_password(self)
     cdef bytearray _get_obfuscator(self, str password)
     cdef bytes _get_password(self)
