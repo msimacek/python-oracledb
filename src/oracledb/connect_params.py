@@ -135,8 +135,8 @@ class ConnectParams:
           ssl_server_dn_match parameter is not set to the value True.
 
         - wallet_location: the directory where the wallet can be found; in thin
-          mode this must be the location of the PEM-encoded wallet file
-          ewallet.pem; in thick mode this must be the location of the file
+          mode this must be the directory of the PEM-encoded wallet file
+          ewallet.pem; in thick mode this must be the directory of the file
           cwallet.sso (default: None)
 
         - events: boolean specifying whether events mode should be enabled;
