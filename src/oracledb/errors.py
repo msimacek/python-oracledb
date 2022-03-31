@@ -280,16 +280,16 @@ ERR_MESSAGE_FORMATS = {
     ERR_INVALID_REF_CURSOR:
             'invalid REF CURSOR: never opened in PL/SQL',
     ERR_INVALID_SERVER_CERT_DN:
-            'cannot connect to database: the distinguished name (DN) on '
+            'cannot connect to database. The distinguished name (DN) on '
             'the server certificate does not match the expected value',
     ERR_INVALID_SERVER_TYPE:
             'invalid server_type: {server_type}',
     ERR_INVALID_SERVICE_NAME:
-            'cannot connect to database: service "{service_name}" is not '
+            'cannot connect to database. Service "{service_name}" is not '
             'registered with the listener at host "{host}" port {port}. '
             '(Similar to ORA-12514)',
     ERR_INVALID_SID:
-            'cannot connect to database: SID "{sid}" is not registered '
+            'cannot connect to database. SID "{sid}" is not registered '
             'with the listener at host "{host}" port {port}. '
             '(Similar to ORA-12505)',
     ERR_KEYWORD_ARGS_MUST_BE_DICT:
@@ -297,7 +297,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_LIBRARY_ALREADY_INITIALIZED:
             'init_oracle_client() was already called with different arguments',
     ERR_LISTENER_REFUSED_CONNECTION:
-            'cannot connect to database: listener refused connection. '
+            'cannot connect to database. Listener refused connection. '
             '(Similar to ORA-{error_code})',
     ERR_MESSAGE_HAS_NO_PAYLOAD:
             'message has no payload',
@@ -370,10 +370,10 @@ ERR_MESSAGE_FORMATS = {
     ERR_TIME_NOT_SUPPORTED:
             'Oracle Database does not support time only variables',
     ERR_TNS_ENTRY_NOT_FOUND:
-            'cannot connect to database: unable to find "{name}" in '
+            'cannot connect to database. Unable to find "{name}" in '
             '{file_name}',
     ERR_TNS_NAMES_FILE_MISSING:
-            'cannot connect to database: tnsnames.ora not found in '
+            'cannot connect to database. File tnsnames.ora not found in '
             '{config_dir}',
     ERR_UNEXPECTED_NEGATIVE_INTEGER:
             'internal error: read a negative integer when expecting a '
@@ -381,7 +381,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_UNSUPPORTED_INBAND_NOTIFICATION:
             'unsupported in-band notification with error number {err_num}',
     ERR_WALLET_FILE_MISSING:
-            'cannot connect to database: wallet file {name} was not found',
+            'cannot connect to database. Wallet file {name} was not found',
     ERR_WRONG_ARRAY_DEFINITION:
             'expecting a list of two elements [type, numelems]',
     ERR_WRONG_EXECUTE_PARAMETERS_TYPE:
