@@ -18,6 +18,7 @@ class TestCase(test_env.BaseTestCase):
         with self.assertRaises(oracledb.Error) as cm:
             self.cursor.execute("begin t_Missing := 5; end;")
         error_obj, = cm.exception.args
+        self.assertEqual(error_obj.full_code, "ORA-06550")
         self.assertEqual(error_obj.offset, 6)
 
     def test_1701_pickle_error(self):
@@ -40,6 +41,26 @@ class TestCase(test_env.BaseTestCase):
         self.assertTrue(new_error_obj.offset == error_obj.offset)
         self.assertTrue(new_error_obj.context == error_obj.context)
         self.assertTrue(new_error_obj.isrecoverable == error_obj.isrecoverable)
+
+    def test_1702_error_full_code(self):
+        "1702 - test generation of full_code for ORA, DPI and DPY errors"
+        with self.assertRaises(oracledb.Error) as cm:
+            self.cursor.execute(None)
+        error_obj, = cm.exception.args
+        self.assertEqual(error_obj.full_code, "DPY-2001")
+        if not self.connection.thin:
+            with self.assertRaises(oracledb.Error) as cm:
+                self.cursor.execute("truncate table TestTempTable")
+                int_var = self.cursor.var(int)
+                str_var = self.cursor.var(str, 2)
+                self.cursor.execute("""
+                        insert into TestTempTable (IntCol, StringCol1)
+                        values (1, 'Longer than two chars')
+                        returning IntCol, StringCol1
+                        into :int_var, :str_var""",
+                        int_var=int_var, str_var=str_var)
+            error_obj, = cm.exception.args
+            self.assertEqual(error_obj.full_code, "DPI-1037")
 
 if __name__ == "__main__":
     test_env.run_test_cases()

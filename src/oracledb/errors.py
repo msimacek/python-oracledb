@@ -20,13 +20,17 @@ class _Error:
         self.iswarning = iswarning
         self.code = code
         self.offset = offset
-        if code != 0 or (message is not None and message.startswith("DPI-")):
+        self.full_code = ""
+        if message is not None:
+            pos = message.find(":")
+            if pos > 0:
+                self.full_code = message[:pos]
+        if code != 0 or self.full_code.startswith("DPI-"):
             args = {}
             if code != 0:
                 driver_error_info = ERR_ORACLE_ERROR_XREF.get(code)
             else:
-                pos = message.find(":")
-                error_num = int(message[4:pos])
+                error_num = int(self.full_code[4:])
                 driver_error_info = ERR_DPI_ERROR_XREF.get(error_num)
             if driver_error_info is not None:
                 if isinstance(driver_error_info, tuple):
