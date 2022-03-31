@@ -487,6 +487,10 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
         const char *branchQualifier
         uint32_t branchQualifierLength
 
+    ctypedef struct dpiMsgRecipient:
+        const char *name
+        uint32_t nameLength
+
     # functions
     int dpiConn_breakExecution(dpiConn *conn) nogil
 
@@ -813,6 +817,9 @@ cdef extern from "impl/thick/odpi/embed/dpi.c":
     int dpiMsgProps_setPayloadObject(dpiMsgProps *props, dpiObject *obj) nogil
 
     int dpiMsgProps_setPriority(dpiMsgProps *props, int32_t value) nogil
+
+    int dpiMsgProps_setRecipients(dpiMsgProps *props,
+            dpiMsgRecipient *recipients, uint32_t numRecipients) nogil
 
     int dpiObject_addRef(dpiObject *obj) nogil
 

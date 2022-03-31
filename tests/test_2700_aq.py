@@ -381,5 +381,27 @@ class TestCase(test_env.BaseTestCase):
         props = queue.deqone()
         self.assertEqual(props.msgid, actual_msgid)
 
+    def test_2719_recipients_list(self):
+        "2719 - verify use of recipients property"
+        books_type = self.connection.gettype(self.book_type_name)
+        book = books_type.newobject()
+        book.TITLE, book.AUTHORS, book.PRICE = self.book_data[0]
+        queue = self.connection.queue("BOOK_QUEUE_MULTI", books_type)
+        props = self.connection.msgproperties(payload=book,
+                                              recipients=["sub2", "sub3"])
+        self.assertEqual(props.recipients, ["sub2", "sub3"])
+        queue.enqone(props)
+        self.connection.commit()
+        queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
+        queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
+        queue.deqoptions.consumername = "sub3"
+        props1 = queue.deqone()
+        book = props1.payload
+        results = (book.TITLE, book.AUTHORS, book.PRICE)
+        self.assertEqual(results, self.book_data[0])
+        queue.deqoptions.consumername = "sub1"
+        props1 = queue.deqone()
+        self.assertTrue(props1 is None)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
