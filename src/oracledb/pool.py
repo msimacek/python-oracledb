@@ -435,8 +435,9 @@ class ConnectionPool:
         """
         Specifies the time (in seconds) after which idle connections will be
         terminated in order to maintain an optimum number of open connections.
-        Note that termination only occurs when the pool is accessed. A value of
-        0 means that no idle connections are terminated.
+        A value of 0 means that no idle connections are terminated. Note that
+        in thick mode with older Oracle Client libraries termination only
+        occurs when the pool is accessed.
         """
         self._verify_open()
         return self._impl.get_timeout()
