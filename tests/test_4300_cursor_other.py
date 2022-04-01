@@ -195,7 +195,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(var.getvalue(), value_to_set)
 
     @unittest.skipIf(test_env.get_is_thin(),
-                     "thin driver doesn't support database objects yet")
+                     "thin mode doesn't support database objects yet")
     def test_4319_var_type_with_object_type(self):
         "4319 - test that an object type can be used as type in cursor.var()"
         obj_type = self.connection.gettype("UDT_OBJECT")
@@ -209,7 +209,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(result, exp)
 
     @unittest.skipIf(test_env.get_is_thin(),
-                     "thin driver doesn't support XML type objects yet")
+                     "thin mode doesn't support XML type objects yet")
     def test_4320_fetch_xmltype(self):
         "4320 - test that fetching an XMLType returns a string"
         int_val = 5

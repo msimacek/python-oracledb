@@ -22,7 +22,7 @@
 import oracledb
 import sample_env
 
-# this script only supports the thick driver currently
+# this script is currently only supported in python-oracledb thick mode
 oracledb.init_oracle_client()
 
 # create pool with session callback defined

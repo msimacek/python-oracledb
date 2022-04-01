@@ -380,7 +380,7 @@ class TestCase(test_env.BaseTestCase):
                                var.setvalue, 0, "ABDHRYTHFJGKDKKDH")
 
     @unittest.skipIf(test_env.get_is_thin(),
-                     "thin driver doesn't support XML type objects yet")
+                     "thin mode doesn't support XML type objects yet")
     def test_2530_short_xml_as_string(self):
         "2530 - test fetching XMLType object as a string"
         self.cursor.execute("""
@@ -392,7 +392,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(actual_value, expected_value)
 
     @unittest.skipIf(test_env.get_is_thin(),
-                     "thin driver doesn't support XML type objects yet")
+                     "thin mode doesn't support XML type objects yet")
     def test_2531_long_xml_as_string(self):
         "2531 - test inserting and fetching an XMLType object (1K) as a string"
         chars = string.ascii_uppercase + string.ascii_lowercase

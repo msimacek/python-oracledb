@@ -53,7 +53,7 @@ class TestCase(test_env.BaseTestCase):
         self.__verify_args(connection)
 
     @unittest.skipIf(test_env.get_is_thin(),
-                     "thin driver doesn't support application context yet")
+                     "thin mode doesn't support application context yet")
     def test_1101_app_context(self):
         "1101 - test use of application context"
         namespace = "CLIENTCONTEXT"
@@ -71,7 +71,7 @@ class TestCase(test_env.BaseTestCase):
             self.assertEqual(actual_value, value)
 
     @unittest.skipIf(test_env.get_is_thin(),
-                     "thin driver doesn't support application context yet")
+                     "thin mode doesn't support application context yet")
     def test_1102_app_context_negative(self):
         "1102 - test invalid use of application context"
         self.assertRaises(TypeError, oracledb.connect,
@@ -194,7 +194,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1001:",
                                connection.rollback)
 
-    @unittest.skipIf(test_env.get_is_thin(), "not relevant for thin driver")
+    @unittest.skipIf(test_env.get_is_thin(), "not relevant for thin mode")
     def test_1113_connect_with_handle(self):
         "1113 - test creating a connection using a handle"
         connection = test_env.get_connection()
@@ -325,7 +325,7 @@ class TestCase(test_env.BaseTestCase):
         connection.ping()
 
     @unittest.skipIf(test_env.get_is_thin(),
-                     "thin driver doesn't support two-phase commit yet")
+                     "thin mode doesn't support two-phase commit yet")
     def test_1125_transaction_begin(self):
         "1125 - test begin, prepare, cancel transaction"
         connection = test_env.get_connection()
@@ -345,7 +345,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(count, 0)
 
     @unittest.skipIf(test_env.get_is_thin(),
-                     "thin driver doesn't support two-phase commit yet")
+                     "thin mode doesn't support two-phase commit yet")
     def test_1126_multiple_transactions(self):
         "1126 - test multiple transactions on the same connection"
         connection = test_env.get_connection()
@@ -379,7 +379,7 @@ class TestCase(test_env.BaseTestCase):
             self.assertEqual(cursor.fetchall(), expected_rows)
 
     @unittest.skipIf(test_env.get_is_thin(),
-                     "thin driver doesn't support two-phase commit yet")
+                     "thin mode doesn't support two-phase commit yet")
     def test_1127_multiple_global_transactions(self):
         "1127 - test multiple global transactions on the same connection"
         connection = test_env.get_connection()
@@ -425,7 +425,7 @@ class TestCase(test_env.BaseTestCase):
             self.assertEqual(cursor.fetchall(), expected_rows)
 
     @unittest.skipIf(test_env.get_is_thin(),
-                     "thin driver doesn't support two-phase commit yet")
+                     "thin mode doesn't support two-phase commit yet")
     def test_1128_exception_creating_global_txn_after_local_txn(self):
         "1128 - test creating global txn after a local txn"
         connection = test_env.get_connection()

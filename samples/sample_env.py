@@ -19,7 +19,7 @@
 #     PYO_SAMPLES_DRCP_CONNECT_STRING: DRCP connect string
 #     PYO_SAMPLES_ADMIN_USER: admin user for setting up samples
 #     PYO_SAMPLES_ADMIN_PASSWORD: admin password for setting up samples
-#     PYO_SAMPLES_DRIVER_TYPE: type of driver (thick|thin) to use
+#     PYO_SAMPLES_DRIVER_MODE: python-oracledb mode (thick or thin) to use
 #
 # PYO_SAMPLES_CONNECT_STRING can be set to an Easy Connect string, or a
 # Net Service Name from a tnsnames.ora file or external naming service,
@@ -102,11 +102,11 @@ def get_main_connect_string(password=None):
         password = get_main_password()
     return "%s/%s@%s" % (get_main_user(), password, get_connect_string())
 
-def get_driver_type():
-    return get_value("DRIVER_TYPE", "Driver type (thin|thick)", "thin")
+def get_driver_mode():
+    return get_value("DRIVER_MODE", "Driver mode (thin|thick)", "thin")
 
 def get_is_thin():
-    return get_driver_type() == "thin"
+    return get_driver_mode() == "thin"
 
 def get_drcp_connect_string():
     connect_string = get_value("DRCP_CONNECT_STRING", "DRCP Connect String",

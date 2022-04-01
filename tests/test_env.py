@@ -17,7 +17,7 @@
 #     PYO_TEST_CONNECT_STRING: connect string for test suite
 #     PYO_TEST_ADMIN_USER: administrative user for test suite
 #     PYO_TEST_ADMIN_PASSWORD: administrative password for test suite
-#     PYO_TEST_DRIVER_TYPE: type of driver (thick|thin) to use
+#     PYO_TEST_DRIVER_MODE: python-oracledb mode (thick or thin) to use
 #
 # PYO_TEST_CONNECT_STRING can be set to an Easy Connect string, or a
 # Net Service Name from a tnsnames.ora file or external naming service,
@@ -116,8 +116,8 @@ def get_connect_string():
                      DEFAULT_CONNECT_STRING)
 
 def get_is_thin():
-    driver_type = get_value("DRIVER_TYPE", "Driver type (thin|thick)", "thin")
-    return driver_type == "thin"
+    driver_mode = get_value("DRIVER_MODE", "Driver mode (thin|thick)", "thin")
+    return driver_mode == "thin"
 
 def get_main_password():
     return get_value("MAIN_PASSWORD", "Password for %s" % get_main_user())

@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 #------------------------------------------------------------------------------
 
 """
@@ -13,7 +13,7 @@ import unittest
 import oracledb
 import test_env
 
-@unittest.skipIf(test_env.get_is_thin(), "thin driver doesn't support AQ yet")
+@unittest.skipIf(test_env.get_is_thin(), "thin mode doesn't support AQ yet")
 class TestCase(test_env.BaseTestCase):
     book_type_name = "UDT_BOOK"
     book_queue_name = "TEST_BOOK_QUEUE"

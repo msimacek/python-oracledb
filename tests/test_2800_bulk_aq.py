@@ -28,7 +28,7 @@ RAW_PAYLOAD_DATA = [
     "The twelfth and final message"
 ]
 
-@unittest.skipIf(test_env.get_is_thin(), "thin driver doesn't support AQ yet")
+@unittest.skipIf(test_env.get_is_thin(), "thin mode doesn't support AQ yet")
 class TestCase(test_env.BaseTestCase):
 
     def __deq_in_thread(self, results):

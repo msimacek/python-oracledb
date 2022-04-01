@@ -12,7 +12,7 @@ import oracledb
 import test_env
 
 @unittest.skipIf(test_env.get_is_thin(),
-                 "thin driver doesn't support scrollable cursors yet")
+                 "thin mode doesn't support scrollable cursors yet")
 class TestCase(test_env.BaseTestCase):
 
     def test_4200_create_scrollable_cursor(self):

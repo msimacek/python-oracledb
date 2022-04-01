@@ -58,7 +58,7 @@ class DMLSubscriptionData(SubscriptionData):
 
 
 @unittest.skipIf(test_env.get_is_thin(),
-                 "thin driver doesn't support subscriptions")
+                 "thin mode doesn't support subscriptions")
 class TestCase(test_env.BaseTestCase):
 
     @unittest.skip("FIXME: threaded mode fails on close of connection?")

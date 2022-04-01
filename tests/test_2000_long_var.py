@@ -100,7 +100,7 @@ class TestCase(test_env.BaseTestCase):
         ]
         self.assertEqual(self.cursor.description, expected_value)
 
-    @unittest.skipIf(test_env.get_is_thin(), "not relevant for thin driver")
+    @unittest.skipIf(test_env.get_is_thin(), "not relevant for thin mode")
     def test_2005_array_size_too_large(self):
         "2005 - test array size too large generates an exception"
         self.cursor.arraysize = 268435456

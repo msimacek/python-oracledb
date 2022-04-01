@@ -4,7 +4,7 @@
 
 #------------------------------------------------------------------------------
 # aq_notification.py
-# 
+#
 # Demonstrates using advanced queuing notification. Once this script is
 # running, use another session to enqueue a few messages to the
 # "DEMO_BOOK_QUEUE" queue. This is most easily accomplished by running the
@@ -16,7 +16,7 @@ import time
 import oracledb
 import sample_env
 
-# this script only supports the thick driver currently
+# this script is currently only supported in python-oracledb thick mode
 oracledb.init_oracle_client()
 
 registered = True

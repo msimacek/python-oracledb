@@ -30,7 +30,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(self.cursor.fetchall(), [(query_value_2,)])
 
     @unittest.skipIf(not test_env.get_is_thin(),
-                     "thick driver doesn't support this type change")
+                     "thick mode doesn't support this type change")
     def test_4600_VARCHAR_to_CLOB(self):
         "4600 - test data type changing from VARCHAR to CLOB"
         self.__test_type_change("cast('string_4600' as VARCHAR2(15))",
@@ -38,7 +38,7 @@ class TestCase(test_env.BaseTestCase):
                                 "clob_4600")
 
     @unittest.skipIf(not test_env.get_is_thin(),
-                     "thick driver doesn't support this type change")
+                     "thick mode doesn't support this type change")
     def test_4601_CHAR_to_CLOB(self):
         "4601 - test data type changing from CHAR to CLOB"
         self.__test_type_change("cast('string_4601' as CHAR(11))",
@@ -46,7 +46,7 @@ class TestCase(test_env.BaseTestCase):
                                 "clob_4601")
 
     @unittest.skipIf(not test_env.get_is_thin(),
-                     "thick driver doesn't support this type change")
+                     "thick mode doesn't support this type change")
     def test_4602_LONG_to_CLOB(self):
         "4602 - test data type changing from LONG to CLOB"
         self.cursor.execute("truncate table TestLongs")
@@ -56,7 +56,7 @@ class TestCase(test_env.BaseTestCase):
                                 "TestLongs")
 
     @unittest.skipIf(not test_env.get_is_thin(),
-                     "thick driver doesn't support this type change")
+                     "thick mode doesn't support this type change")
     def test_4603_NVARCHAR_to_CLOB(self):
         "4603 - test data type changing from NVARCHAR to CLOB"
         self.__test_type_change("cast('string_4603' as NVARCHAR2(15))",
@@ -64,7 +64,7 @@ class TestCase(test_env.BaseTestCase):
                                 "clob_4603")
 
     @unittest.skipIf(not test_env.get_is_thin(),
-                     "thick driver doesn't support this type change")
+                     "thick mode doesn't support this type change")
     def test_4604_NCHAR_to_CLOB(self):
         "4604 - test data type changing from NCHAR to CLOB"
         self.__test_type_change("cast('string_4604' as NCHAR(11))",
@@ -72,7 +72,7 @@ class TestCase(test_env.BaseTestCase):
                                 "clob_4604")
 
     @unittest.skipIf(not test_env.get_is_thin(),
-                     "thick driver doesn't support this type change")
+                     "thick mode doesn't support this type change")
     def test_4605_RAW_to_BLOB(self):
         "4605 - test data type changing from RAW to BLOB"
         self.__test_type_change("utl_raw.cast_to_raw('string_4605')",
@@ -81,7 +81,7 @@ class TestCase(test_env.BaseTestCase):
                                 b"blob_4605")
 
     @unittest.skipIf(not test_env.get_is_thin(),
-                     "thick driver doesn't support this type change")
+                     "thick mode doesn't support this type change")
     def test_4606_LONG_RAW_to_BLOB(self):
         "4606 - test data type changing from LONGRAW to BLOB"
         self.cursor.execute("truncate table TestLongRaws")
@@ -92,7 +92,7 @@ class TestCase(test_env.BaseTestCase):
                                 b"blob_4606", "TestLongRaws")
 
     @unittest.skipIf(not test_env.get_is_thin(),
-                     "thick driver doesn't support this type change")
+                     "thick mode doesn't support this type change")
     def test_4607_VARCHAR_to_NCLOB(self):
         "4607 - test data type changing from VARCHAR to NCLOB"
         self.__test_type_change("cast('string_4607' as VARCHAR2(15))",
@@ -100,7 +100,7 @@ class TestCase(test_env.BaseTestCase):
                                 "nclob_4607")
 
     @unittest.skipIf(not test_env.get_is_thin(),
-                     "thick driver doesn't support this type change")
+                     "thick mode doesn't support this type change")
     def test_4608_CHAR_to_NCLOB(self):
         "4608 - test data type changing from CHAR to NCLOB"
         self.__test_type_change("cast('string_4608' as CHAR(11))",
@@ -108,7 +108,7 @@ class TestCase(test_env.BaseTestCase):
                                 "nclob_4608")
 
     @unittest.skipIf(not test_env.get_is_thin(),
-                     "thick driver doesn't support this type change")
+                     "thick mode doesn't support this type change")
     def test_4609_LONG_to_NCLOB(self):
         "4609 - test data type changing from LONG to NCLOB"
         self.cursor.execute("truncate table TestLongs")
@@ -118,7 +118,7 @@ class TestCase(test_env.BaseTestCase):
                                 "TestLongs")
 
     @unittest.skipIf(not test_env.get_is_thin(),
-                     "thick driver doesn't support this type change")
+                     "thick mode doesn't support this type change")
     def test_4610_NVARCHAR_to_NCLOB(self):
         "4610 - test data type changing from NVARCHAR to NCLOB"
         self.__test_type_change("cast('string_4610' as NVARCHAR2(15))",
@@ -126,7 +126,7 @@ class TestCase(test_env.BaseTestCase):
                                 "nclob_4610")
 
     @unittest.skipIf(not test_env.get_is_thin(),
-                     "thick driver doesn't support this type change")
+                     "thick mode doesn't support this type change")
     def test_4611_NCHAR_to_NCLOB(self):
         "4611 - test data type changing from NCHAR to NCLOB"
         self.__test_type_change("cast('string_4611' as NCHAR(11))",

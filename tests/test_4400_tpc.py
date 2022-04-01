@@ -12,7 +12,7 @@ import oracledb
 import test_env
 
 @unittest.skipIf(test_env.get_is_thin(),
-                 "thin driver doesn't support two-phase commit yet")
+                 "thin mode doesn't support two-phase commit yet")
 class TestCase(test_env.BaseTestCase):
 
     def test_4400_tpc_with_rolback(self):

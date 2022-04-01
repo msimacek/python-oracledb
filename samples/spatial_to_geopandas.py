@@ -4,7 +4,7 @@
 
 #------------------------------------------------------------------------------
 # spatial_to_geopandas.py
-# 
+#
 # GeoPandas is a popular python library for working with geospatial data.
 # GeoPandas extends the Pandas data analysis library with geospatial support
 # using the Shapely library for geometry object support.
@@ -29,7 +29,7 @@ import geopandas as gpd
 import oracledb
 import sample_env
 
-# this script only supports the thick driver currently
+# this script is currently only supported in python-oracledb thick mode
 oracledb.init_oracle_client()
 
 # create Oracle connection and cursor objects
