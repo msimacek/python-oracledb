@@ -48,28 +48,29 @@ class PoolParams:
           during calls to pool.acquire(). It must be Connection or a subclass
           of Connection (default: oracledb.Connection)
 
-        - getmode: one of the constants POOL_GETMODE_WAIT, POOL_GETMODE_NOWAIT,
-          POOL_GETMODE_FORCEGET, POOL_GETMODE_TIMEDWAIT (default:
-          oracledb.POOL_GETMODE_WAIT)
+        - getmode: how pool.acquire() will behave. One of the constants
+          oracledb.POOL_GETMODE_WAIT, oracledb.POOL_GETMODE_NOWAIT,
+          oracledb.POOL_GETMODE_FORCEGET, or oracledb.POOL_GETMODE_TIMEDWAIT
+          (default: oracledb.POOL_GETMODE_WAIT)
 
         - homogeneous: a boolean indicating whether the connections are
           homogeneous (same user) or heterogeneous (multiple users) (default:
           True)
 
-        - externalauth: a boolean indicating whether external authentication is
-          in use or not (default: False)
+        - externalauth: a boolean indicating whether to use external
+          authentication (default: False)
 
         - timeout: length of time (in seconds) that a connection may remain
-          idle in the pool before it is terminated or the value 0 which means
-          that connections are never terminated (default: 0)
+          idle in the pool before it is terminated. If it is 0 then connections
+          are never terminated (default: 0)
 
         - wait_timeout: length of time (in milliseconds) that a caller should
           wait when acquiring a connection from the pool with getmode set to
-          POOL_GETMODE_TIMEDWAIT (default: 0)
+          oracledb.POOL_GETMODE_TIMEDWAIT (default: 0)
 
-        - max_lifetime_session: length of time (in seconds) that a connection
-          can remain in the pool, or the value 0 which means that the
-          connection may remain in the pool indefinitely (default: 0)
+        - max_lifetime_session: length of time (in seconds) that connections
+          can remain in the pool. If it is 0 then connections may remain in the
+          pool indefinitely (default: 0)
 
         - session_callback: a callable that is invoked when a connection is
           returned from the pool for the first time, or when the connection tag
@@ -82,9 +83,11 @@ class PoolParams:
           metadata cache should be enabled (default: False)
 
         - ping_interval: length of time (in seconds) after which an unused
-          connection in the pool will be a candiate for pinging and potential
-          replacement when acquire() is called. If it is a negative value
-          the ping functionality will be disabled (default: 60)
+          connection in the pool will be a candidate for pinging when
+          pool.acquire() is called. If the ping to the database indicates the
+          connection is not alive a replacement connection will be returned by
+          pool.acquire(). If ping_interval is a negative value the ping
+          functionality will be disabled (default: 60)
         """
         pass
 
@@ -210,9 +213,12 @@ class PoolParams:
     @property
     def ping_interval(self) -> int:
         """
-        Returns the number of seconds a connection must be idle before pinging
-        the database to see if it is still alive. A negative value disables
-        this functionality.
+        Returns the number of seconds after which an unused connection in the
+        pool will be a candidate for pinging when pool.acquire() is called.
+        If the ping to the database indicates the connection is not alive a
+        replacement connection will be returned by pool.acquire(). If
+        ping_interval is a negative value the ping functionality will be
+        disabled.
         """
         return self._impl.ping_interval
 
