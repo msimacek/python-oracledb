@@ -45,7 +45,7 @@ class PoolParams:
           whenever a new connection needs to be created (default: 1)
 
         - connectiontype: the class of the connection that should be returned
-          during calls to pool.acquire(); it must be Connection or a subclass
+          during calls to pool.acquire(). It must be Connection or a subclass
           of Connection (default: oracledb.Connection)
 
         - getmode: one of the constants POOL_GETMODE_WAIT, POOL_GETMODE_NOWAIT,
@@ -81,10 +81,10 @@ class PoolParams:
         - soda_metadata_cache: boolean indicating whether or not the SODA
           metadata cache should be enabled (default: False)
 
-        - ping_interval: length of time (in seconds) after which an idle
-          connection will be pinged before being returned to the caller, or a
-          negative value, which will disable this functionality (default: 60)
-
+        - ping_interval: length of time (in seconds) after which an unused
+          connection in the pool will be a candiate for pinging and potential
+          replacement when acquire() is called. If it is a negative value
+          the ping functionality will be disabled (default: 60)
         """
         pass
 
