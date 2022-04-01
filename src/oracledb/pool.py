@@ -243,7 +243,7 @@ class ConnectionPool:
     def name(self) -> str:
         """
         Returns the name assigned to the pool by Oracle. This attribute is only
-        relevant for the thick portion of the driver.
+        relevant in python-oracledb thick mode.
         """
         self._verify_open()
         return self._impl.name
@@ -424,8 +424,8 @@ class ConnectionPool:
     @property
     def thin(self) -> bool:
         """
-        Returns a boolean indicating if the pool was created with the thin
-        driver (True) or thick driver (False).
+        Returns a boolean indicating if the pool was created in
+        python-oracledb's thin mode (True) or thick mode (False).
         """
         self._verify_open()
         return isinstance(self._impl, thin_impl.ThinPoolImpl)

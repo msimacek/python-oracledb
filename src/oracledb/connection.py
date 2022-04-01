@@ -128,8 +128,8 @@ class Connection:
                       attr_type: int) -> Any:
         """
         Returns the value of the specified OCI attribute from the internal
-        handle. This is only supported by the thick driver and should only be
-        used as directed by Oracle.
+        handle. This is only supported in python-oracledb thick mode and should
+        only be used as directed by Oracle.
         """
         self._verify_connected()
         return self._impl._get_oci_attr(handle_type, attr_num, attr_type)
@@ -138,8 +138,8 @@ class Connection:
                       value: Any) -> None:
         """
         Sets the value of the specified OCI attribute on the internal handle.
-        This is only supported by the thick driver and should be used as
-        directed by Oracle.
+        This is only supported in python-oracledb thick mode and should only
+        be used as directed by Oracle.
         """
         self._verify_connected()
         self._impl._set_oci_attr(handle_type, attr_num, attr_type, value)
@@ -405,7 +405,7 @@ class Connection:
         primarily provided to facilitate testing the creation of a connection
         using the OCI service context handle.
 
-        This property is only relevant for the thick driver.
+        This property is only relevant to python-oracledb's thick mode.
         """
         self._verify_connected()
         return self._impl.get_handle()
@@ -783,8 +783,8 @@ class Connection:
     @property
     def thin(self) -> bool:
         """
-        Returns a boolean indicating if the connection was established with the
-        thin driver (True) or thick driver (False).
+        Returns a boolean indicating if the connection was established in
+        python-oracledb's thin mode (True) or thick mode (False).
         """
         self._verify_connected()
         return isinstance(self._impl, thin_impl.ThinConnImpl)

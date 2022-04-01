@@ -434,7 +434,7 @@ cdef class ConnectParamsImpl:
     def get_full_user(self):
         """
         Internal method used for getting the full user (including any proxy
-        user) which is used by the thick driver exlusively and which is used in
+        user) which is used in thick mode exlusively and which is used in
         the repr() methods for Connection and ConnectionPool.
         """
         if self.proxy_user is not None:

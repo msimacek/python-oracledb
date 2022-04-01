@@ -89,8 +89,8 @@ class Cursor:
     def _get_oci_attr(self, attr_num: int, attr_type: int) -> Any:
         """
         Returns the value of the specified OCI attribute from the internal
-        handle. This is only supported by the thick driver and should only be
-        used as directed by Oracle.
+        handle. This is only supported in python-oracledb's thick mode and
+        should only be used as directed by Oracle.
         """
         self._verify_open()
         return self._impl._get_oci_attr(attr_num, attr_type)
@@ -111,8 +111,8 @@ class Cursor:
                       value: Any) -> None:
         """
         Sets the value of the specified OCI attribute on the internal handle.
-        This is only supported by the thick driver and should be used as
-        directed by Oracle.
+        This is only supported in python-oracledb's thick mode and should only
+        be used as directed by Oracle.
         """
         self._verify_open()
         self._impl._set_oci_attr(attr_num, attr_type, value)
@@ -691,8 +691,8 @@ class Cursor:
 
     def setoutputsize(self, size: int, column: int=0) -> None:
         """
-        Sets a column buffer size for fetches of long columns but the driver
-        does not require it so nothing is done here.
+        Sets a column buffer size for fetches of long columns.  However
+        python-oracledb does not require it so this method does nothing.
         """
         pass
 
@@ -719,7 +719,7 @@ class Cursor:
         API constants, an object type returned from the method
         Connection.gettype() or one of the following Python types:
 
-            Python Type	        Database Type
+            Python Type         Database Type
             bool                DB_TYPE_BOOLEAN
             bytes               DB_TYPE_RAW
             datetime.date       DB_TYPE_DATE

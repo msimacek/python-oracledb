@@ -28,9 +28,10 @@ def check_and_return_mode(requested_thin_mode=None):
     does not match the current mode, an error is raised.
 
     NOTE: the current implementation of the driver only requires
-    requested_thin_mode to be set when initializing the thick driver; for this
-    reason the error raised is specified about a thin connection already being
-    created. If this assumption changes, a new error message will be required.
+    requested_thin_mode to be set when initializing the thick mode; for this
+    reason the error raised is specified about a thin mode connection already
+    being created. If this assumption changes, a new error message will be
+    required.
     """
     global thin_mode
     if thin_mode is None:
