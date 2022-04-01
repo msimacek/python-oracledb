@@ -490,20 +490,22 @@ class MessageProperties:
     @property
     def recipients(self) -> list:
         """
-        A message producer can submit a list of recipients at the time a
-        message is enqueued into a AQ queue. This allows for a unique set of
-        recipients for each message in the queue. The recipient list associated
-        with the message overrides the subscriber list associated with the
-        queue, if there is one. The recipients need not be in the subscriber
-        list. However, recipients can be selected from among the subscribers. A
-        recipient can be specified only by its name, in which case the
-        recipient must dequeue the message from the queue in which the message
-        was enqueued. Subscribing to a queue is like subscribing to a magazine:
-        each subscriber can dequeue all the messages placed into a specific
-        queue, just as each magazine subscriber has access to all its articles.
-        Being a recipient, however, is like getting a letter: each recipient is
-        a designated target of a particular message.  This can be fetched at
-        enqueue time only and not at dequeue time.
+        A list of recipient names can be associated with a message at the time
+        a message is enqueued. This allows a limited set of recipients to
+        dequeue each message. The recipient list associated with the message
+        overrides the queue subscriber list, if there is one. The recipient
+        names need not be in the subscriber list but can be, if desired.
+
+        To dequeue a message, the consumername attribute can be set to one of
+        the recipient names. The original message recipient list is not
+        available on dequeued messages. All recipients have to dequeue a
+        message before it gets removed from the queue.
+
+        Subscribing to a queue is like subscribing to a magazine: each
+        subscriber can dequeue all the messages placed into a specific queue,
+        just as each magazine subscriber has access to all its articles. Being
+        a recipient, however, is like getting a letter: each recipient is a
+        designated target of a particular message.
         """
         return self._recipients
 
