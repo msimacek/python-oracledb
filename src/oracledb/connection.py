@@ -645,7 +645,7 @@ class Connection:
 
     def subscribe(self,
                   namespace: int=constants.SUBSCR_NAMESPACE_DBCHANGE,
-                  protocol: int=constants.SUBSCR_PROTOCOL_CALLBACK,
+                  protocol: int=constants.SUBSCR_PROTO_CALLBACK,
                   callback: Callable=None,
                   timeout: int=0,
                   operations: int=constants.OPCODE_ALLOPS,
@@ -671,7 +671,7 @@ class Connection:
         It can be one of SUBSCR_NAMESPACE_DBCHANGE or SUBSCR_NAMESPACE_AQ.
 
         The protocol parameter specifies the protocol to use when notifications
-        are sent. Currently the only valid value is SUBSCR_PROTOCOL_CALLBACK.
+        are sent. Currently the only valid value is SUBSCR_PROTO_CALLBACK.
 
         The callback is expected to be a callable that accepts a single
         parameter. A message object is passed to this callback whenever a
