@@ -10,10 +10,10 @@
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# oracledb_migration.py
+# oracledb_upgrade.py
 #
-# Example module to assist migration of large applications from cx_Oracle 8 to
-# python-oracledb.
+# Example module to assist upgrading large applications from cx_Oracle 8 to
+# python-oracledb (the renamed major new release of cx_Oracle).
 #
 # An environment variable ORA_PYTHON_DRIVER_TYPE can be set to determine
 # whether to use cx_Oracle, python-oracledb Thin mode, or python-oracledb Thick
@@ -40,7 +40,7 @@
 #
 #       c = oracledb.connect(user="un", password="pw", dsn="cs")
 #
-#   Other updates noted in the migration documentation may also need to be
+#   Other updates noted in the upgrade documentation may also need to be
 #   made.
 #
 #   However, if you want to toggle which driver to use or have code where
@@ -54,7 +54,7 @@
 #
 #   - Change your code's first "import cx_Oracle" to:
 #
-#       import oracledb_migration as cx_Oracle
+#       import oracledb_upgrade as cx_Oracle
 #
 #     This needs to be imported before cx_Oracle is ever imported for it to
 #     take effect. Subsequent imports do not need to be changed but may be,
@@ -81,22 +81,22 @@
 #
 #   - Run your application
 #
-#   An example application that shows this module in use is:
+#     An example application showing this module in use is:
 #
-#      import oracledb_migration as cx_Oracle
-#      import os
+#       import oracledb_upgrade as cx_Oracle
+#       import os
 #
-#      un = os.environ.get("PYTHON_USERNAME")
-#      pw = os.environ.get("PYTHON_PASSWORD")
-#      cs = os.environ.get("PYTHON_CONNECTSTRING")
+#       un = os.environ.get("PYTHON_USERNAME")
+#       pw = os.environ.get("PYTHON_PASSWORD")
+#       cs = os.environ.get("PYTHON_CONNECTSTRING")
 #
-#      connection = cx_Oracle.connect(user=un, password=pw, dsn=cs)
-#      with connection.cursor() as cursor:
-#          sql = """SELECT UNIQUE CLIENT_DRIVER
-#                   FROM V$SESSION_CONNECT_INFO
-#                   WHERE SID = SYS_CONTEXT('USERENV', 'SID')"""
-#          for r, in cursor.execute(sql):
-#              print(r)
+#       connection = cx_Oracle.connect(user=un, password=pw, dsn=cs)
+#       with connection.cursor() as cursor:
+#           sql = """SELECT UNIQUE CLIENT_DRIVER
+#                    FROM V$SESSION_CONNECT_INFO
+#                    WHERE SID = SYS_CONTEXT('USERENV', 'SID')"""
+#           for r, in cursor.execute(sql):
+#               print(r)
 #
 #------------------------------------------------------------------------------
 
