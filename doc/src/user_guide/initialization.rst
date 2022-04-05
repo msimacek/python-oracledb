@@ -1,10 +1,12 @@
 .. _initialization:
 
 ********************************************
-python-oracledb Thick driver Initialization
+python-oracledb Thick Mode Initialization
 ********************************************
 
-The python-oracledb Thick module loads Oracle Client libraries which communicate over
+If you intend to use the Thick mode, then you must call :func:`~oracledb.init_oracle_client()` 
+in the application before any standalone connection or pool is created.
+The python-oracledb Thick mode loads Oracle Client libraries which communicate over
 Oracle Net to an existing database.  The Oracle Client libraries need to be
 installed separately.  See :ref:`installation`.  Oracle Net is not a separate
 product: it is how the Oracle Client and Oracle Database communicate.
@@ -19,6 +21,7 @@ product: it is how the Oracle Client and Oracle Database communicate.
 Locating the Oracle Client Libraries
 ====================================
 
+To establish the mode as Thick, you must call :func:`~oracledb.init_oracle_client()` atleast once.
 python-oracledb Thick dynamically loads the Oracle Client libraries using a search
 heuristic.  Only the first set of libraries found are loaded.  The libraries
 can be in an installation of Oracle Instant Client, in a full Oracle Client
@@ -34,17 +37,15 @@ Support's `Doc ID 207303.1
 * On Windows, python-oracledb Thick looks for the Oracle Client libraries as follows:
 
     - In the ``lib_dir`` directory specified in a call to
-      :meth:`oracledb.init_oracle_client()`.  When this is called it will attempt
-      to load ``libclntsh``, either from the default location or the passed
-      ``lib_dir`` parameter. This allows future python-oracledb connections to use
-      the thick driver. This directory should contain
+      :meth:`oracledb.init_oracle_client()`. This allows future python-oracledb connections to use
+      the Thick mode. This directory should contain
       the libraries from an unzipped Instant Client 'Basic' or 'Basic Light'
       package.  If you pass the library directory from a full client or
       database installation, such as Oracle Database "XE" Express Edition, then
       you will need to have previously set your environment to use that
       software installation, otherwise files such as message files will not be
       located. On Windows when the path contains backslashes, use a 'raw'
-      string like ``lib_dir=r"C:\instantclient_19_6"``. If the Oracle Client
+      string like ``lib_dir=r"C:\instantclient_19_14"``. If the Oracle Client
       libraries cannot be loaded from ``lib_dir``, then an exception is raised.
 
     - If ``lib_dir`` was not specified, then Oracle Client libraries are looked
@@ -149,7 +150,7 @@ Linux, you might use::
 Using oracledb.init_oracle_client() to set the Oracle Client directory
 -----------------------------------------------------------------------
 
-Applications can call the function :meth:`oracledb.init_oracle_client()` to
+Applications must call the function :meth:`oracledb.init_oracle_client()` to
 specify the directory containing Oracle Instant Client libraries.  The Oracle
 Client Libraries are loaded when ``init_oracle_client()`` is called.  For
 example, if the Oracle Instant Client Libraries are in
@@ -236,8 +237,8 @@ If :meth:`~oracledb.init_oracle_client()` is not called, or it is called but
 configuration files.  They include:
 
 * ``$TNS_ADMIN``
-* ``/opt/oracle/instantclient_19_6/network/admin`` if Instant Client is in ``/opt/oracle/instantclient_19_6``.
-* ``/usr/lib/oracle/19.6/client64/lib/network/admin`` if Oracle 19.6 Instant Client RPMs are used on Linux.
+* ``/opt/oracle/instantclient_19_14/network/admin`` if Instant Client is in ``/opt/oracle/instantclient_19_14``.
+* ``/usr/lib/oracle/19.14/client64/lib/network/admin`` if Oracle 19.6 Instant Client RPMs are used on Linux.
 * ``$ORACLE_HOME/network/admin`` if python-oracledb Thick is using libraries from a database installation.
 
 A wallet configuration file ``cwallet.sso`` for secure connection can be
@@ -245,7 +246,7 @@ located with, or separately from, the ``tnsnames.ora`` and ``sqlnet.ora``
 files.  It should be securely stored.  The ``sqlnet.ora`` file's
 ``WALLET_LOCATION`` path should be set to the directory containing
 ``cwallet.sso``.  For Oracle Autonomous Database use of wallets, see
-:ref:`autononmousdb`.
+:ref:`autonomousdb`.
 
 Note the :ref:`easyconnect` can set many common configuration options without
 needing ``tnsnames.ora`` or ``sqlnet.ora`` files.

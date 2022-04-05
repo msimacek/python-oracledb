@@ -4,6 +4,8 @@
 Cursor Object
 *************
 
+Methods
+========
 
 .. method:: Cursor.__enter__()
 
@@ -26,14 +28,14 @@ Cursor Object
 .. method:: Cursor._get_oci_attr(attr_num, attr_type)
     
     Returns the value of the specified OCI attribute from the internal
-    handle. This is only supported by the Thick driver and should only be
-    used as directed by Oracle.
+    handle. This is only supported in the python-oracledb Thick mode and 
+    should only be used as directed by Oracle.
 
 .. method:: Cursor._set_oci_attr(attr_num, attr_type, value)
     
     Sets the value of the specified OCI attribute on the internal handle.
-    This is only supported by the Thick driver and should be used as
-    directed by Oracle.
+    This is only supported in the python-oracledb Thick mode and should 
+    be used as directed by Oracle.
 
 .. method:: Cursor._verify_fetch()
     
@@ -43,35 +45,6 @@ Cursor Object
     
     Verifies that the cursor is open and the associated connection is
     connected. If either condition is false an exception is raised.
-
-.. attribute:: Cursor.arraysize
-
-    This read-write attribute can be used to tune the number of rows internally
-    fetched and buffered by internal calls to the database when fetching rows
-    from SELECT statements and REF CURSORS.  The value can drastically affect
-    the performance of a query since it directly affects the number of network
-    round trips between Python and the database.  For methods like
-    :meth:`~Cursor.fetchone()` and :meth:`~Cursor.fetchall()` it does not change
-    how many rows are returned to the application. For
-    :meth:`~Cursor.fetchmany()` it is the default number of rows to fetch.
-
-    Due to the performance benefits, the default ``Cursor.arraysize`` is 100
-    instead of the 1 that the DB API recommends.  This value means that 100 rows
-    are fetched by each internal call to the database.
-
-    See :ref:`Tuning Fetch Performance <tuningfetch>` for more information.
-
-.. attribute:: Cursor.bindarraysize
-
-    This read-write attribute specifies the number of rows to bind at a time
-    and is used when creating variables via :meth:`~Cursor.setinputsizes()` or
-    :meth:`~Cursor.var()`. It defaults to 1 meaning to bind a single row at a
-    time.
-
-    .. note::
-
-        The DB API definition does not define this attribute.
-
 
 .. method:: Cursor.arrayvar(typ, value, [size])
 
@@ -104,20 +77,6 @@ Cursor Object
     .. note::
 
         The DB API definition does not define this method.
-
-
-.. attribute:: Cursor.bindvars
-
-    This read-only attribute provides the bind variables used for the last
-    execute. The value will be either a list or a dictionary depending on
-    whether binding was done by position or name. Care should be taken when
-    referencing this attribute. In particular, elements should not be removed
-    or replaced.
-
-    .. note::
-
-        The DB API definition does not define this attribute.
-
 
 .. method:: Cursor.callfunc(name, returnType, parameters=[], \
         keyword_parameters={})
@@ -167,36 +126,11 @@ Cursor Object
 
         The DB API definition does not allow for keyword parameters.
 
-
 .. method:: Cursor.close()
 
     Close the cursor now, rather than whenever __del__ is called. The cursor
     will be unusable from this point forward; an Error exception will be raised
     if any operation is attempted with the cursor.
-
-
-.. attribute:: Cursor.connection
-
-    This read-only attribute returns a reference to the connection object on
-    which the cursor was created.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition but it is
-        mentioned in PEP 249 as an optional extension.
-
-
-.. data:: Cursor.description
-
-    This read-only attribute is a sequence of 7-item sequences. Each of these
-    sequences contains information describing one result column: (name, type,
-    display_size, internal_size, precision, scale, null_ok). This attribute
-    will be None for operations that do not return rows or if the cursor has
-    not had an operation invoked via the :meth:`~Cursor.execute()` method yet.
-
-    The type will be one of the :ref:`database type constants <dbtypes>`
-    defined at the module level.
-
 
 .. method:: Cursor.execute(statement, parameters=[], ** keyword_parameters)
 
@@ -352,18 +286,6 @@ Cursor Object
         The DB API definition does not define this method.
 
 
-.. attribute:: Cursor.fetchvars
-
-    This read-only attribute specifies the list of variables created for the
-    last query that was executed on the cursor.  Care should be taken when
-    referencing this attribute. In particular, elements should not be removed
-    or replaced.
-
-    .. note::
-
-        The DB API definition does not define this attribute.
-
-
 .. method:: Cursor.getarraydmlrowcounts()
 
     Retrieve the DML row counts after a call to :meth:`~Cursor.executemany()`
@@ -410,21 +332,6 @@ Cursor Object
         fetched independently of each other.
 
 
-.. attribute:: Cursor.inputtypehandler
-
-    This read-write attribute specifies a method called for each value that is
-    bound to a statement executed on the cursor and overrides the attribute
-    with the same name on the connection if specified. The method signature is
-    handler(cursor, value, arraysize) and the return value is expected to be a
-    variable object or None in which case a default variable object will be
-    created. If this attribute is None, the value of the attribute with the
-    same name on the connection is used.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
-
 .. method:: Cursor.__iter__()
 
     Returns the cursor itself to be used as an iterator.
@@ -433,29 +340,6 @@ Cursor Object
 
         This method is an extension to the DB API definition but it is
         mentioned in PEP 249 as an optional extension.
-
-
-.. data:: Cursor.lastrowid
-
-    This read-only attribute returns the rowid of the last row modified by the
-    cursor. If no row was modified by the last operation performed on the
-    cursor, the value None is returned.
-
-
-.. attribute:: Cursor.outputtypehandler
-
-    This read-write attribute specifies a method called for each column that is
-    to be fetched from this cursor. The method signature is
-    handler(cursor, name, defaultType, length, precision, scale) and the return
-    value is expected to be a variable object or None in which case a default
-    variable object will be created. If this attribute is None, the value of
-    the attribute with the same name on the connection is used instead.
-
-    See :ref:`outputtypehandlers`.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
 
 
 .. method:: Cursor.parse(statement)
@@ -471,21 +355,6 @@ Cursor Object
 
         You can parse any DML or DDL statement. DDL statements are executed
         immediately and an implied commit takes place.
-
-
-.. attribute:: Cursor.prefetchrows
-
-    This read-write attribute can be used to tune the number of rows that the
-    Oracle Client library fetches when a SELECT statement is executed. This
-    value can reduce the number of round-trips to the database that are required
-    to fetch rows but at the cost of additional memory. Setting this value to 0
-    can be useful when the timing of fetches must be explicitly controlled.
-
-    See :ref:`Tuning Fetch Performance <tuningfetch>` for more information.
-
-    .. note::
-
-        The DB API definition does not define this method.
 
 
 .. method:: Cursor.prepare(statement, tag, cache_statement)
@@ -506,30 +375,6 @@ Cursor Object
         The DB API definition does not define this method.
 
 
-.. attribute:: Cursor.rowcount
-
-    This read-only attribute specifies the number of rows that have currently
-    been fetched from the cursor (for select statements), that have been
-    affected by the operation (for insert, update, delete and merge
-    statements), or the number of successful executions of the statement
-    (for PL/SQL statements).
-
-
-.. attribute:: Cursor.rowfactory
-
-    This read-write attribute specifies a method to call for each row that is
-    retrieved from the database. Ordinarily a tuple is returned for each row
-    but if this attribute is set, the method is called with the tuple that
-    would normally be returned, and the result of the method is returned
-    instead.
-
-    See :ref:`rowfactories`.
-
-    .. note::
-
-        The DB API definition does not define this attribute.
-
-
 .. method:: Cursor.scroll(value=0, mode="relative")
 
     Scroll the cursor in the result set to a new position according to the
@@ -548,19 +393,6 @@ Cursor Object
 
         This method is an extension to the DB API definition but it is
         mentioned in PEP 249 as an optional extension.
-
-
-.. attribute:: Cursor.scrollable
-
-    This read-write boolean attribute specifies whether the cursor can be
-    scrolled or not. By default, cursors are not scrollable, as the server
-    resources and response times are greater than nonscrollable cursors. This
-    attribute is checked and the corresponding mode set in Oracle when calling
-    the method :meth:`~Cursor.execute()`.
-
-    .. note::
-
-        The DB API definition does not define this attribute.
 
 
 .. method:: Cursor.setinputsizes(\*args, \*\*keywordArgs)
@@ -586,17 +418,6 @@ Cursor Object
     This method does nothing and is retained solely for compatibility with the
     DB API. The module automatically allocates as much space as needed to fetch
     LONG and LONG RAW columns (or CLOB as string and BLOB as bytes).
-
-
-.. attribute:: Cursor.statement
-
-    This read-only attribute provides the string object that was previously
-    prepared with :meth:`~Cursor.prepare()` or executed with
-    :meth:`~Cursor.execute()`.
-
-    .. note::
-
-        The DB API definition does not define this attribute.
 
 
 .. method:: Cursor.var(typ, [size, arraysize, inconverter, outconverter, \
@@ -676,3 +497,174 @@ Cursor Object
     .. note::
 
         The DB API definition does not define this method.
+
+Attributes
+===========
+
+.. attribute:: Cursor.arraysize
+
+    This read-write attribute can be used to tune the number of rows internally
+    fetched and buffered by internal calls to the database when fetching rows
+    from SELECT statements and REF CURSORS.  The value can drastically affect
+    the performance of a query since it directly affects the number of network
+    round trips between Python and the database.  For methods like
+    :meth:`~Cursor.fetchone()` and :meth:`~Cursor.fetchall()` it does not change
+    how many rows are returned to the application. For
+    :meth:`~Cursor.fetchmany()` it is the default number of rows to fetch.
+
+    Due to the performance benefits, the default ``Cursor.arraysize`` is 100
+    instead of the 1 that the DB API recommends.  This value means that 100 rows
+    are fetched by each internal call to the database.
+
+    See :ref:`Tuning Fetch Performance <tuningfetch>` for more information.
+
+.. attribute:: Cursor.bindarraysize
+
+    This read-write attribute specifies the number of rows to bind at a time
+    and is used when creating variables via :meth:`~Cursor.setinputsizes()` or
+    :meth:`~Cursor.var()`. It defaults to 1 meaning to bind a single row at a
+    time.
+
+    .. note::
+
+        The DB API definition does not define this attribute.
+
+.. attribute:: Cursor.bindvars
+
+    This read-only attribute provides the bind variables used for the last
+    execute. The value will be either a list or a dictionary depending on
+    whether binding was done by position or name. Care should be taken when
+    referencing this attribute. In particular, elements should not be removed
+    or replaced.
+
+    .. note::
+
+        The DB API definition does not define this attribute.
+
+.. attribute:: Cursor.connection
+
+    This read-only attribute returns a reference to the connection object on
+    which the cursor was created.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition but it is
+        mentioned in PEP 249 as an optional extension.
+
+.. data:: Cursor.description
+
+    This read-only attribute is a sequence of 7-item sequences. Each of these
+    sequences contains information describing one result column: (name, type,
+    display_size, internal_size, precision, scale, null_ok). This attribute
+    will be None for operations that do not return rows or if the cursor has
+    not had an operation invoked via the :meth:`~Cursor.execute()` method yet.
+
+    The type will be one of the :ref:`database type constants <dbtypes>`
+    defined at the module level.
+
+.. attribute:: Cursor.fetchvars
+
+    This read-only attribute specifies the list of variables created for the
+    last query that was executed on the cursor.  Care should be taken when
+    referencing this attribute. In particular, elements should not be removed
+    or replaced.
+
+    .. note::
+
+        The DB API definition does not define this attribute.
+
+.. attribute:: Cursor.inputtypehandler
+
+    This read-write attribute specifies a method called for each value that is
+    bound to a statement executed on the cursor and overrides the attribute
+    with the same name on the connection if specified. The method signature is
+    handler(cursor, value, arraysize) and the return value is expected to be a
+    variable object or None in which case a default variable object will be
+    created. If this attribute is None, the value of the attribute with the
+    same name on the connection is used.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+.. data:: Cursor.lastrowid
+
+    This read-only attribute returns the rowid of the last row modified by the
+    cursor. If no row was modified by the last operation performed on the
+    cursor, the value None is returned.
+
+
+.. attribute:: Cursor.outputtypehandler
+
+    This read-write attribute specifies a method called for each column that is
+    to be fetched from this cursor. The method signature is
+    handler(cursor, name, defaultType, length, precision, scale) and the return
+    value is expected to be a variable object or None in which case a default
+    variable object will be created. If this attribute is None, the value of
+    the attribute with the same name on the connection is used instead.
+
+    See :ref:`outputtypehandlers`.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+.. attribute:: Cursor.prefetchrows
+
+    This read-write attribute can be used to tune the number of rows that the
+    Oracle Client library fetches when a SELECT statement is executed. This
+    value can reduce the number of round-trips to the database that are required
+    to fetch rows but at the cost of additional memory. Setting this value to 0
+    can be useful when the timing of fetches must be explicitly controlled.
+
+    See :ref:`Tuning Fetch Performance <tuningfetch>` for more information.
+
+    .. note::
+
+        The DB API definition does not define this method.
+
+.. attribute:: Cursor.rowcount
+
+    This read-only attribute specifies the number of rows that have currently
+    been fetched from the cursor (for select statements), that have been
+    affected by the operation (for insert, update, delete and merge
+    statements), or the number of successful executions of the statement
+    (for PL/SQL statements).
+
+
+.. attribute:: Cursor.rowfactory
+
+    This read-write attribute specifies a method to call for each row that is
+    retrieved from the database. Ordinarily a tuple is returned for each row
+    but if this attribute is set, the method is called with the tuple that
+    would normally be returned, and the result of the method is returned
+    instead.
+
+    See :ref:`rowfactories`.
+
+    .. note::
+
+        The DB API definition does not define this attribute.
+
+.. attribute:: Cursor.scrollable
+
+    This read-write boolean attribute specifies whether the cursor can be
+    scrolled or not. By default, cursors are not scrollable, as the server
+    resources and response times are greater than nonscrollable cursors. This
+    attribute is checked and the corresponding mode set in Oracle when calling
+    the method :meth:`~Cursor.execute()`.
+
+    .. note::
+
+        The DB API definition does not define this attribute.
+
+.. attribute:: Cursor.statement
+
+    This read-only attribute provides the string object that was previously
+    prepared with :meth:`~Cursor.prepare()` or executed with
+    :meth:`~Cursor.execute()`.
+
+    .. note::
+
+        The DB API definition does not define this attribute.
+
