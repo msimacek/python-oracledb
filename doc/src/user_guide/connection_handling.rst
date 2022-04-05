@@ -6,12 +6,15 @@ Connecting to Oracle Database
 
 Connections between python-oracledb and Oracle Database are used for executing
 :ref:`SQL <sqlexecution>`, :ref:`PL/SQL <plsqlexecution>`, and :ref:`SODA
-<sodausermanual>`.
+<sodausermanual>`. python-oracledb provides access to Oracle Database using either the Thin mode or the Thick mode. 
+You can choose your desired mode through an application script runtime option.
+   
+The python-oracledb Thick mode dynamically loads Oracle Client libraries to access the Oracle Database. If you intend to use the Thick mode to connect to Oracle Database, then you must call :func:`~oracledb.init_oracle_client()` in the application before any standalone connection or pool is created. The python-oracledb Thin mode connects directly to Oracle Database. To use the Thin mode to connect to the database, you can create a standalone connection or pool. To understand how the two modes of python-oracledb differ, see :ref:`Thin and Thick mode differences <driverdiff>`.
 
 Establishing Database Connections
 =================================
 
-There are two ways to connect to Oracle Database using python-oracledb:
+There are two ways to create a connection to Oracle Database using python-oracledb:
 
 *  **Standalone connections**
 
@@ -27,8 +30,8 @@ There are two ways to connect to Oracle Database using python-oracledb:
    support Oracle's :ref:`high availability <highavailability>` features and are
    recommended for applications that must be reliable.  Small pools can also be
    useful for applications that want a few connections available for infrequent
-   use.  Pools are created with :meth:`oracledb.SessionPool()` at application
-   initialization time, and then :meth:`SessionPool.acquire()` can be called to
+   use.  Pools are created with :meth:`oracledb.create_pool()` at application
+   initialization time, and then :meth:`ConnectionPool.acquire()` can be called to
    obtain a connection from a pool.
 
 Many connection behaviors can be controlled by python-oracledb options.  Other
@@ -84,7 +87,7 @@ Connection Strings
 ==================
 
 The data source name parameter ``dsn`` of :meth:`oracledb.connect()` and
-:meth:`oracledb.SessionPool()` is the Oracle Database connection string
+:meth:`oracledb.create_pool()` is the Oracle Database connection string
 identifying which database service to connect to. The ``dsn`` string can be one
 of:
 
@@ -101,7 +104,7 @@ Easy Connect Syntax for Connection Strings
 
 An Easy Connect string is often the simplest connection string to use for the
 data source name parameter ``dsn`` of :meth:`oracledb.connect()` and
-:meth:`oracledb.SessionPool()`.  This method does not need configuration files
+:meth:`oracledb.create_pool()`.  This method does not need configuration files
 such as ``tnsnames.ora``.
 
 For example, to connect to the Oracle Database service ``orclpdb1`` that is
@@ -145,7 +148,7 @@ Oracle Net Connect Descriptor Strings
 
 The :meth:`oracledb.makedsn()` function can be used to construct a connect
 descriptor string for the data source name parameter ``dsn`` of
-:meth:`oracledb.connect()` and :meth:`oracledb.SessionPool()`.  The
+:meth:`oracledb.connect()` and :meth:`oracledb.create_pool()`.  The
 :meth:`~oracledb.makedsn()` function accepts the database hostname, the port
 number, and the service name.  It also supports :ref:`sharding <connsharding>`
 syntax.
@@ -192,7 +195,7 @@ Net Service Names for Connection Strings
 Connect Descriptor Strings are commonly stored in a :ref:`tnsnames.ora
 <optnetfiles>` file and associated with a Net Service Name.  This name can be
 used directly for the data source name parameter ``dsn`` of
-:meth:`oracledb.connect()` and :meth:`oracledb.SessionPool()`.  For example,
+:meth:`oracledb.connect()` and :meth:`oracledb.create_pool()`.  For example,
 given a ``tnsnames.ora`` file with the following contents::
 
     ORCLPDB1 =
@@ -272,6 +275,55 @@ This can be referenced in python-oracledb:
     connection = oracledb.connect(user="hr", password=userpwd, dsn="finance",
                                    encoding="UTF-8")
 
+
+Using ConnectParams Class Object
+================================
+
+The function :func:`oracledb.ConnectParams()` is a connection property builder function 
+that returns a `ConnectParams` object. The object can be passed to :func:`oracledb.connect()`, 
+:func:`oracledb.create_pool()`, or :func:`oracledb.SessionPool()`, see :ref:`syntax`.
+
+The ``ConnectParams()`` adds support for connection parameters by facilitating:
+
+- The setting of network parameters in python-oracledb Thin mode
+
+- A single documentation place for the description of all of these parameters
+
+- A single place for users to define connection parameters
+
+The use of ``ConnectParams()`` is optional. You can continue to use the previous
+approaches, see :ref:`syntax`. In some cases, ``ConnectParams()`` is required since
+it replaces the use of sqlnet.ora in python-oracledb Thin mode.
+
+The following examples show how to use the :func:`oracledb.ConnectParams()` function:
+
+.. code-block:: python
+
+    # Example 1
+
+    params = oracledb.ConnectParams(user="my_user", password="my_password",
+                                    host="my_host", port=my_port,
+                                    service_name="my_service_name")
+    conn = oracledb.connect(params=params)
+
+    # Example 2
+
+    params = oracledb.ConnectParams(host="my_host", port=my_port,
+                                    service_name="my_service_name")
+    dsn = cp.get_connect_string()
+    conn = oracledb.connect(user="my_user", password="my_password", dsn=dsn)
+
+Some of the values are settable or gettable as attributes.  The following example shows 
+how to set the user as an attribute:
+
+.. code-block:: python
+
+    p = oracledb.ConnectParams(password="my_password", host="localhost",
+                               service_name="orclpdb1", port=1521)
+    p.user = "my_user"
+    connection = oracledb.connect(params=p)
+
+
 .. _connpooling:
 
 Connection Pooling
@@ -288,7 +340,7 @@ applications that must be reliable.  This also means that small pools can be
 useful for applications that want a few connections available for infrequent
 use.
 
-A connection pool is created by calling :meth:`~oracledb.SessionPool()`.  This
+A connection pool is created by calling :meth:`~oracledb.create_pool()`.  This
 is generally called during application initialization.  The initial pool size
 and the maximum pool size are provided at the time of pool creation.  When the
 pool needs to grow, new connections are created automatically.  The pool can
@@ -300,24 +352,24 @@ specified for ``min``.  Also in these cases the pool increment is always 1,
 regardless of the value of ``increment``.
 
 After a pool has been created, connections can be obtained from it by calling
-:meth:`~SessionPool.acquire()`.  These connections can be used in the same way
+:meth:`~ConnectionPool.acquire()`.  These connections can be used in the same way
 that standalone connections are used.
 
 Connections acquired from the pool should be released back to the pool using
-:meth:`SessionPool.release()` or :meth:`Connection.close()` when they are no
+:meth:`ConnectionPool.release()` or :meth:`Connection.close()` when they are no
 longer required.  Otherwise, they will be released back to the pool
 automatically when all of the variables referencing the connection go out of
 scope.  This make connections available for other users of the pool.
 
-The session pool can be completely closed using :meth:`SessionPool.close()`.
+The connection pool can be completely closed using :meth:`ConnectionPool.close()`.
 
 The example below shows how to connect to Oracle Database using a
 connection pool:
 
 .. code-block:: python
 
-    # Create the session pool
-    pool = oracledb.SessionPool(user="hr", password=userpwd,
+    # Create the connection pool
+    pool = oracledb.create_pool(user="hr", password=userpwd,
                                  dsn="dbhost.example.com/orclpdb1", min=2,
                                  max=5, increment=1, encoding="UTF-8")
 
@@ -335,7 +387,7 @@ connection pool:
     # Close the pool
     pool.close()
 
-Other :meth:`oracledb.SessionPool()` options can be used at pool creation.
+Other :meth:`oracledb.create_pool()` options can be used at pool creation.
 For example the ``getmode`` value can be set so that any ``aquire()`` call will
 wait for a connection to become available if all are currently in use, for
 example:
@@ -343,7 +395,7 @@ example:
 .. code-block:: python
 
     # Create the session pool
-    pool = oracledb.SessionPool(user="hr", password=userpwd,
+    pool = oracledb.create_pool(user="hr", password=userpwd,
                                  dsn="dbhost.example.com/orclpdb1", min=2,
                                  max=5, increment=1,
                                  getmode=oracledb.SPOOL_ATTRVAL_WAIT,
@@ -353,19 +405,19 @@ See `ConnectionPool.py
 <https://github.com/oracle/oracledb/tree/main/samples/ConnectionPool.py>`__
 for an example.
 
-Before :meth:`SessionPool.acquire()` returns, python-oracledb does a lightweight check
+Before :meth:`ConnectionPool.acquire()` returns, python-oracledb does a lightweight check
 to see if the network transport for the selected connection is still open.  If
-it is not, then :meth:`~SessionPool.acquire()` will clean up the connection and
+it is not, then :meth:`~ConnectionPool.acquire()` will clean up the connection and
 return a different one.  This check will not detect cases such as where the
 database session has been killed by the DBA, or reached a database resource
-manager quota limit.  To help in those cases, :meth:`~SessionPool.acquire()`
+manager quota limit.  To help in those cases, :meth:`~ConnectionPool.acquire()`
 will also do a full :ref:`round-trip <roundtrips>` ping to the database when it
 is about to return a connection that was unused in the pool for
-:data:`SessionPool.ping_interval` seconds.  If the ping fails, the connection
-will be discarded and another one obtained before :meth:`~SessionPool.acquire()`
+:data:`ConnectionPool.ping_interval` seconds.  If the ping fails, the connection
+will be discarded and another one obtained before :meth:`~ConnectionPool.acquire()`
 returns to the application.  Because this full ping is time based, it won't
 catch every failure.  Also network timeouts and session kills may occur after
-:meth:`~SessionPool.acquire()` and before :meth:`Cursor.execute()`.  To handle
+:meth:`~ConnectionPool.acquire()` and before :meth:`Cursor.execute()`.  To handle
 these cases, applications need to check for errors after each
 :meth:`~Cursor.execute()` and make application-specific decisions about retrying
 work if there was a connection failure.  Oracle's :ref:`Application Continuity
@@ -389,7 +441,7 @@ throughput.  See `Guideline for Preventing Connection Storms: Use Static Pools
 which contains more details about sizing of pools.  Having a fixed size will
 guarantee that the database can handle the upper pool size.  For example, if a
 pool needs to grow but the database resources are limited, then
-:meth:`SessionPool.acquire()` may return errors such as ORA-28547.  With a fixed
+:meth:`ConnectionPool.acquire()` may return errors such as ORA-28547.  With a fixed
 pool size, this class of error will occur when the pool is created, allowing you
 to change the size before users access the application.  With a dynamically
 growing pool, the error may occur much later after the pool has been in use for
@@ -413,7 +465,7 @@ Connection Pool Reconfiguration
 -------------------------------
 
 Some pool settings can be changed dynamically with
-:meth:`SessionPool.reconfigure()`.  This allows the pool size and other
+:meth:`ConnectionPool.reconfigure()`.  This allows the pool size and other
 attributes to be changed during application runtime without needing to restart
 the pool or application.
 
@@ -429,14 +481,14 @@ when changing one attribute, then an exception will be generated but any already
 changed attributes will retain their new values.
 
 During reconfiguration of a pool's size, the behavior of
-:meth:`SessionPool.acquire()` depends on the ``getmode`` in effect when
-``acquire()`` is called, see :meth:`SessionPool.reconfigure()`.  Closing
+:meth:`ConnectionPool.acquire()` depends on the ``getmode`` in effect when
+``acquire()`` is called, see :meth:`ConnectionPool.reconfigure()`.  Closing
 connections or closing the pool will wait until after pool reconfiguration is
 complete.
 
 Calling ``reconfigure()`` is the only way to change a pool's ``min``, ``max``
 and ``increment`` values.  Other attributes such as
-:data:`~SessionPool.wait_timeout` can also be passed to ``reconfigure()`` or
+:data:`~ConnectionPool.wait_timeout` can also be passed to ``reconfigure()`` or
 they can be set directly:
 
 .. code-block:: python
@@ -452,13 +504,13 @@ Applications can set "session" state in each connection.  Examples of session
 state are NLS settings from ``ALTER SESSION`` statements.  Pooled connections
 will retain their session state after they have been released back to the pool.
 However, because pools can grow, or connections in the pool can be recreated,
-there is no guarantee a subsequent :meth:`~SessionPool.acquire()` call will
+there is no guarantee a subsequent :meth:`~ConnectionPool.acquire()` call will
 return a database connection that has any particular state.
 
-The :meth:`~oracledb.SessionPool()` parameter ``session_callback``
+The :meth:`~oracledb.create_pool()` parameter ``session_callback``
 enables efficient setting of session state so that connections have a
 known session state, without requiring that state to be explicitly set
-after each :meth:`~SessionPool.acquire()` call.
+after each :meth:`~ConnectionPool.acquire()` call.
 
 Connections can also be tagged when they are released back to the pool.  The
 tag is a user-defined string that represents the session state of the
@@ -484,7 +536,7 @@ There are three common scenarios for ``session_callback``:
 **Python Callback**
 
 If the ``session_callback`` parameter is a Python procedure, it will be called
-whenever :meth:`~SessionPool.acquire()` will return a newly created database
+whenever :meth:`~ConnectionPool.acquire()` will return a newly created database
 connection that has not been used before.  It is also called when connection
 tagging is being used and the requested tag is not identical to the tag in the
 connection returned by the pool.
@@ -499,7 +551,7 @@ An example is:
         cursor.execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI'")
 
     # Create the pool with session callback defined
-    pool = oracledb.SessionPool(user="hr", password=userpwd, dsn="orclpdb1",
+    pool = oracledb.create_pool(user="hr", password=userpwd, dsn="orclpdb1",
                                  session_callback=init_session,
                                  encoding="UTF-8")
 
@@ -515,7 +567,7 @@ scalability.
 In this example tagging was not being used, so the ``requested_tag`` parameter
 is ignored.
 
-Note: if you need to execute multiple SQL statements in the callback, use an
+Note: If you need to execute multiple SQL statements in the callback, use an
 anonymous PL/SQL block to save :ref:`round-trips <roundtrips>` of repeated
 ``execute()`` calls.  With ALTER SESSION, pass multiple settings in the one
 statement:
@@ -533,7 +585,7 @@ statement:
 
 Connection tagging is used when connections in a pool should have differing
 session states.  In order to retrieve a connection with a desired state, the
-``tag`` attribute in :meth:`~SessionPool.acquire()` needs to be set.
+``tag`` attribute in :meth:`~ConnectionPool.acquire()` needs to be set.
 
 When python-oracledb is using Oracle Client libraries 12.2 or later, then python-oracledb
 uses 'multi-property tags' and the tag string must be of the form of one or
@@ -545,7 +597,7 @@ is not present in the pool, then a new connection, or an existing connection
 with cleaned session state, will be chosen by the pool and the session callback
 procedure will be invoked.  The callback can then set desired session state and
 update the connection's tag.  However if the ``matchanytag`` parameter of
-:meth:`~SessionPool.acquire()` is *True*, then any other tagged connection may
+:meth:`~ConnectionPool.acquire()` is *True*, then any other tagged connection may
 be chosen by the pool and the callback procedure should parse the actual and
 requested tags to determine which bits of session state should be reset.
 
@@ -562,7 +614,7 @@ The example below demonstrates connection tagging:
         cursor.execute(sql)
         connection.tag = requested_tag
 
-    pool = oracledb.SessionPool(user="hr", password=userpwd, dsn="orclpdb1",
+    pool = oracledb.create_pool(user="hr", password=userpwd, dsn="orclpdb1",
                                  session_callback=init_session,
                                  encoding="UTF-8")
 
@@ -595,9 +647,9 @@ The PL/SQL session callback should accept two VARCHAR2 arguments:
 The logic in this procedure can parse the actual tag in the session that has
 been selected by the pool and compare it with the tag requested by the
 application.  The procedure can then change any state required before the
-connection is returned to the application from :meth:`~SessionPool.acquire()`.
+connection is returned to the application from :meth:`~ConnectionPool.acquire()`.
 
-If the ``matchanytag`` attribute of :meth:`~SessionPool.acquire()` is *True*,
+If the ``matchanytag`` attribute of :meth:`~ConnectionPool.acquire()` is *True*,
 then a connection with any state may be chosen by the pool.
 
 Oracle 'multi-property tags' must be used.  The tag string must be of the form
@@ -609,7 +661,7 @@ example:
 
 .. code-block:: python
 
-    pool = oracledb.SessionPool(user="hr", password=userpwd,
+    pool = oracledb.create_pool(user="hr", password=userpwd,
                                  dsn="dbhost.example.com/orclpdb1:pooled",
                                  session_callback="MyPlsqlCallback",
                                  encoding="UTF-8")
@@ -632,17 +684,17 @@ By default, connection pools are ‘homogeneous’, meaning that all connections
 use the same database credentials.  However, if the pool option ``homogeneous``
 is False at the time of pool creation, then a ‘heterogeneous’ pool will be
 created.  This allows different credentials to be used each time a connection
-is acquired from the pool with :meth:`~SessionPool.acquire()`.
+is acquired from the pool with :meth:`~ConnectionPool.acquire()`.
 
 **Heterogeneous Pools**
 
 When a heterogeneous pool is created by setting ``homogeneous`` to False and no
 credentials are supplied during pool creation, then a user name and password
-may be passed to :meth:`~SessionPool.acquire()` as shown in this example:
+may be passed to :meth:`~ConnectionPool.acquire()` as shown in this example:
 
 .. code-block:: python
 
-    pool = oracledb.SessionPool(dsn="dbhost.example.com/orclpdb1",
+    pool = oracledb.create_pool(dsn="dbhost.example.com/orclpdb1",
                                  homogeneous=False, encoding="UTF-8")
     connection = pool.acquire(user="hr", password=userpwd)
 
@@ -816,7 +868,7 @@ python-oracledb's connection pooling:
 
 .. code-block:: python
 
-    mypool = oracledb.SessionPool(user="hr", password=userpwd,
+    mypool = oracledb.create_pool(user="hr", password=userpwd,
                                    dsn="dbhost.example.com/orcl:pooled",
                                    encoding="UTF-8")
     connection = mypool.acquire(cclass="MYCLASS",
@@ -1003,7 +1055,7 @@ Pooled connection examples:
 .. code-block:: python
 
     # Basic Authentication without a proxy
-    pool = oracledb.SessionPool(user="myproxyuser", password="myproxyuser",
+    pool = oracledb.create_pool(user="myproxyuser", password="myproxyuser",
                                  dsn="dbhost.example.com/orclpdb1",
                                  encoding="UTF-8")
     connection = pool.acquire()
@@ -1011,7 +1063,7 @@ Pooled connection examples:
     # SESSION_USER: MYPROXYUSER
 
     # Basic Authentication with proxy
-    pool = oracledb.SessionPool(user="myproxyuser[mysessionuser]",
+    pool = oracledb.create_pool(user="myproxyuser[mysessionuser]",
                                  password="myproxyuser",
                                  dsn="dbhost.example.com/orclpdb1",
                                  homogeneous=False, encoding="UTF-8")
@@ -1119,7 +1171,7 @@ or:
 
 .. code-block:: python
 
-    pool = oracledb.SessionPool(externalauth=True, homogeneous=False,
+    pool = oracledb.create_pool(externalauth=True, homogeneous=False,
                                  dsn="mynetalias", encoding="UTF-8")
     pool.acquire()
 
@@ -1137,7 +1189,7 @@ will show::
 
     Wallets are also used to configure TLS connections.  If you are using a
     wallet like this, you may need a database username and password in
-    :meth:`oracledb.connect()` and :meth:`oracledb.SessionPool()` calls.
+    :meth:`oracledb.connect()` and :meth:`oracledb.create_pool()` calls.
 
 **External Authentication and Proxy Authentication**
 
@@ -1170,7 +1222,7 @@ Pooled connection example:
 .. code-block:: python
 
     # External Authentication with proxy
-    pool = oracledb.SessionPool(externalauth=True, homogeneous=False,
+    pool = oracledb.create_pool(externalauth=True, homogeneous=False,
                                  dsn="mynetalias", encoding="UTF-8")
     pool.acquire(user="[mysessionuser]")
     # PROXY_USER:   MYUSER
@@ -1180,7 +1232,7 @@ The following usage is not supported:
 
 .. code-block:: python
 
-    pool = oracledb.SessionPool(user="[mysessionuser]", externalauth=True,
+    pool = oracledb.create_pool(user="[mysessionuser]", externalauth=True,
                                  homogeneous=False, dsn="mynetalias",
                                  encoding="UTF-8")
     pool.acquire()
@@ -1348,19 +1400,65 @@ of the function :meth:`oracledb.connect()` constructor:
                                    dsn="dbhost.example.com/orclpdb1",
                                    newpassword=newpwd, encoding="UTF-8")
 
-.. _autononmousdb:
+.. _autonomousdb:
 
-Connecting to Oracle Cloud Autononmous Databases
+Connecting to Oracle Cloud Autonomous Databases
 ================================================
 
-To enable connection to Oracle Autonomous Database in Oracle Cloud, a wallet
-needs be downloaded from the cloud, and python-oracledb needs to be configured to use
-it.  The wallet gives mutual TLS which provides enhanced security for
-authentication and encryption.  A database username and password is still
-required for your application connections.
+Python applications can connect to Oracle Autonomous Database (ADB) in Oracle Cloud either through 
+one-way TLS (Transport Layer Security) or mutual TLS. One-way TLS and mutual TLS provide enhanced 
+security for authentication and encryption. A database username and password is still required 
+for your application connections.
+
+
+python-oracledb needs to be configured to use TLS. Users have to use OS level controls to limit 
+Transport Layer Security (TLS) versions. For example, 
+see `Hardening TLS Configuration <https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/security_guide/sec-hardening_tls_configuration>`__.
+
+One-way TLS on Oracle ADB
+--------------------------
+
+In one-way TLS, applications can connect to Oracle ADBs without using a wallet on the client side.
+Both python-oracledb Thin and Thick modes support one-way TLS. The python-oracledb Thick mode, 
+cx_Oracle, and any other Oracle Call Interface (OCI) based application support one-way TLS when using 
+Oracle Client libraries versions from 19.14 to 21.5. You must have access to the ADB through 
+an Oracle Cloud Infrastructure account.
+
+To enable one-way TLS on an ADB instance, complete the following steps from the Oracle Cloud console for the database:
+
+    1. Update the Access Control List (ACL). The ACL limits access to only the IP addresses or Virtual Cloud Networks that have been defined and blocks all other incoming traffic.
+    2. Deselect the Require mutual TLS (mTLS) authentication check box to disbale the mTLS requirement on Oracle ADB.
+    3. Copy the appropriate Connection String based on your application's requirement. Then, paste and store the connection string in any file, say connstring.txt. The connection string has the following format::
+
+        (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=xxx.oraclecloud.com))
+        (connect_data=(service_name=xxx.adb.oraclecloud.com))(security=(ssl_server_cert_dn="CN=adwc.uscom-east-1.oraclecloud.com,OU=Oracle BMCS US, O=Oracle Corporation, L=Redwood City, ST=California, C=US")))
+
+It is recommended to get the ADB credentials and connect string from user input, environment variables, wallets, 
+or even use external authentication such as Kerberos. It is not advisable to provide hard-coded values for the ADB 
+credentials and connect string in the application as they are less secure and impose restrictions on the usage of
+the application across other databases. 
+
+For example, you can pass the ADB credentials and connect string from specific environment variables in
+the application as shown below::
+
+    export PYTHON_USERNAME={ADB USERNAME}
+    export PYTHON_PASSWORD={ADB PASSWORD}
+    export PYTHON_CONNECTSTRING={ADB CONNECTSTRING}
+
+The {ADB CONNECTSTRING} value is obtained from the connect string stored in the connstring.txt file, which was received earlier from the ADB.
+
+Once you have set the Oracle environment variables used by your application, you can start your application.
+
+Mutual TLS (mTLS) or Two-way TLS on Oracle ADB
+-----------------------------------------------
+
+To enable connection to Oracle ADB in Oracle Cloud using mutual TLS, a wallet needs to be downloaded from the cloud. 
+python-oracledb needs to be configured to use mutual TLS. For the python-oracledb Thick mode, mutual TLS can be used 
+similarly to cx_Oracle as detailed in the subsequent sections. For the python-oracledb Thin mode, you must also
+:ref:`create a PEM file <createpem>`.
 
 Install the Wallet and Network Configuration Files
---------------------------------------------------
++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 From the Oracle Cloud console for the database, download the wallet zip file.
 It contains the wallet and network configuration files.  Note: keep wallet
@@ -1397,7 +1495,7 @@ There are now two options:
   the ``network/admin`` directory.
 
 Run Your Application
---------------------
++++++++++++++++++++++
 
 The ``tnsnames.ora`` file contains net service names for various levels of
 database service.  For example, if you create a database called CJDB1 with the
@@ -1423,7 +1521,7 @@ example see `Create Database Users
 in the Oracle Autonomous Database manual.
 
 Access Through a Proxy
-----------------------
++++++++++++++++++++++++
 
 If you are behind a firewall, you can tunnel TLS/SSL connections via a proxy
 using `HTTPS_PROXY
@@ -1447,7 +1545,7 @@ name you plan to use, for example::
         (protocol=tcps)(port=1522)(host= . . . )
 
 Using the Easy Connect Syntax with Autonomous Database
-------------------------------------------------------
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 When python-oracledb is using Oracle Client libraries 19c or later, you can
 optionally use the :ref:`Easy Connect <easyconnect>` syntax to connect to
@@ -1483,6 +1581,69 @@ You can add other Easy Connect parameters to the connection string, for example:
 
     dsn = dsn + "&https_proxy=myproxy.example.com&https_proxy_port=80"
 
+.. _createpem:
+
+Creating a PEM File for python-oracledb Thin Mode
++++++++++++++++++++++++++++++++++++++++++++++++++
+
+For the python-oracledb Thin mode, you must create a Privacy Enhanced Mail (PEM) file. Oracle Cloud users who do not wish to move to using one-way TLS need to convert the Wallet PKCS12 ewallet.p12 file to PEM format using third party tools or the script below. A password is optional, depending on whether the wallet is encrypted or not.
+
+The Thin mode functions :func:`oracledb.connect()`, :func:`oracledb.ConnectionPool()`, and :func:`oracledb.SessionPool()` take wallet_location and wallet_password parameters, see :ref:`connparam`.
+
+The following is a sample script that converts a PKCS#12 encoded file found in Oracle Cloud wallet zip files to the PEM encoded file that the python-oracledb Thin mode expects.
+
+.. code-block:: python
+
+    import argparse
+    import getpass
+    import os
+
+    from cryptography.hazmat.primitives.serialization \
+            import pkcs12, Encoding, PrivateFormat, BestAvailableEncryption, \
+                   NoEncryption
+
+    # parse command line
+    parser = argparse.ArgumentParser(description="convert PKCS#12 to PEM")
+    parser.add_argument("wallet_location",
+                        help="the directory in which the PKCS#12 encoded "
+                             "wallet file ewallet.p12 is found")
+    parser.add_argument("--wallet-password",
+                        help="the password for the wallet which is used to "
+                             "decrypt the PKCS#12 encoded wallet file; if not "
+                             "specified, it will be requested securely")
+    parser.add_argument("--no-encrypt",
+                        dest="encrypt", action="store_false", default=True,
+                        help="do not encrypt the converted PEM file with the "
+                             "wallet password")
+    args = parser.parse_args()
+
+    # validate arguments and acquire password if one was not specified
+    pkcs12_file_name = os.path.join(args.wallet_location, "ewallet.p12")
+    if not os.path.exists(pkcs12_file_name):
+        msg = f"wallet location {args.wallet_location} does not contain " \
+               "ewallet.p12"
+        raise Exception(msg)
+    if args.wallet_password is None:
+        args.wallet_password = getpass.getpass()
+
+    pem_file_name = os.path.join(args.wallet_location, "ewallet.pem")
+    pkcs12_data = open(pkcs12_file_name, "rb").read()
+    result = pkcs12.load_key_and_certificates(pkcs12_data,
+                                              args.wallet_password.encode())
+    private_key, certificate, additional_certificates = result
+    if args.encrypt:
+        encryptor = BestAvailableEncryption(args.wallet_password.encode())
+    else:
+        encryptor = NoEncryption()
+    with open(pem_file_name, "wb") as f:
+        f.write(private_key.private_bytes(Encoding.PEM, PrivateFormat.PKCS8,
+                                          encryptor))
+        f.write(certificate.public_bytes(Encoding.PEM))
+        for cert in additional_certificates:
+            f.write(cert.public_bytes(Encoding.PEM))
+    print("PEM file", pem_file_name, "written.")
+
+
 .. _connsharding:
 
 Connecting to Sharded Databases
@@ -1497,14 +1658,14 @@ Sharding is configured in Oracle Database, see the `Oracle Sharding
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=SHARD>`__ manual.
 Sharding requires Oracle Database and Oracle Client libraries 12.2, or later.
 
-The :meth:`oracledb.connect()` and :meth:`SessionPool.acquire()` functions
+The :meth:`oracledb.connect()` and :meth:`ConnectionPool.acquire()` functions
 accept ``shardingkey`` and ``supershardingkey`` parameters that are a sequence
 of values used to route the connection directly to a given shard.  A sharding
 key is always required.  A super sharding key is additionally required when
 using composite sharding, which is when data has been partitioned by a list or
 range (the super sharding key), and then further partitioned by a sharding key.
 
-When creating a connection pool, the :meth:`oracledb.SessionPool()` attribute
+When creating a connection pool, the :meth:`oracledb.create_pool()` attribute
 ``max_sessions_per_shard`` can be set.  This is used to balance connections in
 the pool equally across shards.  It requires Oracle Client libraries 18.3, or
 later.

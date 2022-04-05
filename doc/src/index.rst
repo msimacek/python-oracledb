@@ -22,6 +22,7 @@ User Guide
     user_guide/introduction.rst
     user_guide/installation.rst
     user_guide/migration.rst
+    user_guide/frameworks.rst
     user_guide/changing_modes.rst
     user_guide/initialization.rst
     user_guide/connection_handling.rst
@@ -57,6 +58,7 @@ API Manual
     api_manual/cursor.rst
     api_manual/lob.rst
     api_manual/connect_param.rst
+    api_manual/pool_params.rst
     api_manual/connection_pool.rst
     api_manual/object_type.rst
     api_manual/session_pool.rst

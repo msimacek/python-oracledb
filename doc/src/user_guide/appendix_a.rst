@@ -1,369 +1,392 @@
 .. _appendixa:
 
 ***********************************************************************************************************
-Appendix A: Feature Support Differences between python-oracledb Thin, python-oracledb Thick, and cx_Oracle
+Appendix A: Features Supported in python-oracledb Thin Mode, python-oracledb Thick Mode, and cx_Oracle 8.3
 ***********************************************************************************************************
 
-The following table describes the differences in the way Oracle features are supported by the three drivers.
+The following table describes the Oracle Database and Oracle Client features supported by the python-oracledb (both Thin and Thick modes) and cx_Oracle 8.3 drivers.
 
-.. list-table-with-summary::  Feature Support between python-oracledb Thin, python-oracledb Thick, and cx_Oracle drivers
+.. list-table-with-summary::  Features Supported in python-oracledb (Thin mode and Thick mode) and cx_Oracle 8.3 Drivers
     :header-rows: 1
     :align: center
-    :summary: The first column displays the Oracle feature. The second column indicated whether the feature is supported by the python-oracledb Thin driver. The third column indicates the difference between python-oracledb Thick and cx_Oracle. The fourth column indicates if the feature is supported in cx_Oracle.
+    :summary: The first column displays the Oracle feature. The second column indicates whether the feature is supported in the python-oracledb Thin mode. The third column indicates whether the feature is supported in the python-oracledb Thick mode. The fourth column indicates if the feature is supported in cx_Oracle 8.3.
 
     * - Oracle Feature
-      - Support for Thin Driver
-      - Differences between Thick and cx_Oracle
-      - Support for cx_Oracle
+      - python-oracledb Thin Mode
+      - python-oracledb Thick Mode
+      - cx_Oracle 8.3
     * - Oracle Client version
-      - n/a
-      -
-      - 11.2+
+      - Not applicable
+      - Release 11.2 and later
+      - Release 11.2 and later
     * - Oracle Database version
-      - Release 12.1 and later.
-      -
+      - Release 12.1 and later
       - Release 9.2 and later depending on Oracle Client library version
-    * - Client/Server version interoperability
+      - Release 9.2 and later depending on Oracle Client library version
+    * - Oracle Client/Database version interoperability
+      - Not applicable. Connects directly to Oracle Database Release 12.1 and later.
+      - Yes
       - Yes 
-      -
+    * - Thin driver (direct Oracle Network calls)
       - Yes 
-    * - Thin driver
-      - Yes 
-      -
-      - No - Uses libclntsh
+      - No - Uses Oracle Client libraries
+      - No - Uses Oracle Client libraries
     * - Standalone connections
-      - Yes 
-      - Must use named arguments, see :ref:`syntax`
+      - Yes - Must use named arguments, see :ref:`syntax`
+      - Yes - Must use named arguments, see :ref:`syntax`
       - Yes 
     * - Connection pooling
-      - Yes - new implementation in Thin.   Review ``getmode`` default change, see :ref:`connpooling`.
-      - Must use named arguments, see :ref:`syntax`
+      - Yes - new implementation in Thin. New class and method. Review ``getmode`` default change. Must use named arguments, see :ref:`syntax`. See :ref:`connpooling`.
+      - Yes - Review ``getmode`` default change. Must use named arguments, see :ref:`syntax`
       - Yes - through the Oracle Call Interface (OCI) Connection Pool
     * - Homogeneous connection pools
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Heterogeneous connection pools
       - No
-      -
+      - Yes
       - Yes 
     * - Pool draining
       - Yes 
-      -
+      - Yes
       - Yes 
-    * - Session tagging in session pool
+    * - Connection pool session state callback
+      - Yes - Python function but not PL/SQL function
+      - Yes
+      - Yes 
+    * - Connection pool session tagging
       - No
-      -
+      - Yes
       - Yes 
-    * - Proxy connection
+    * - Proxy connections
       - No
-      -
+      - Yes
       - Yes 
-    * - OCI_ATTR_CURRENT_SCHEMA
+    * - Set the current schema using an attribute
       - Yes 
-      -
+      - Yes
       - Yes 
     * - External authentication
       - No
-      -
+      - Yes
       - Yes 
     * - SYSDBA, SYSOPER, SYSASM, SYSBKP, SYSDGD, SYSKMT, SYSRAC
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Prelim connections
       - No
-      -
-      - Yes 
-    * - Cloud connectivity
-      - Yes 
-      -
-      - Yes 
+      - Yes
+      - Yes
     * - RAC
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Sharding
       - No
-      -
-      - Yes No TIMESTAMP support (e.g Bug 30570712 or NJS Bug 31574904)
-    * - Connection & Runtime Load Balancing - CLB & RLB
-      - Yes for CLB
-      -
+      - Yes - No TIMESTAMP support (for example, Bug 30570712 or NJS Bug 31574904)
+      - Yes - No TIMESTAMP support (for example, Bug 30570712 or NJS Bug 31574904)
+    * - Connection Pool Connection Load Balancing (CLB)
+      - Yes
+      - Yes
+      - Yes 
+    * - Connection Pool Runtime Load Balancing (RLB)
+      - No
+      - Yes
       - Yes 
     * - IAM Tokens
       - No
-      -
-      - Yes in connection string with appropriate Oracle Client
+      - Yes - in connection string with appropriate Oracle Client
+      - Yes - in connection string with appropriate Oracle Client
     * - Kerberos, Radius etc authentication
       - No
-      -
+      - Yes
       - Yes 
     * - Native Network Encryption (NNE)
       - No
-      -
+      - Yes
       - Yes 
-    * - Connection pinging
+    * - Connection pinging API
       - Yes 
-      -
+      - Yes
       - Yes 
-    * - ``tnsnames.ora``, ``sqlnet.ora``
-      - Yes (``sqlnet.ora`` ignored, ``tnsnames.ora`` supported - see :ref:`sqlnetclientconfig`)
-      -
+    * - ``tnsnames.ora``
+      - Yes
+      - Yes
       - Yes 
-    * - Client Configuration
+    * - ``sqlnet.ora``
+      - No - many values can be set using the :ref:`ConnectParams class <connparam>`.
+      - Yes
+      - Yes 
+    * - Oracle Client library configuration file ``oraaccess.xml``
       - No
-      -
-      - Yes (``oraaccess.xml``)
-    * - Easy Connect
+      - Yes
+      - Yes
+    * - Easy Connect connection strings
+      - Yes - mostly supported. Unknown settings are ignored and not passed to Oracle Database.
+      - Yes
       - Yes 
-      -
+    * - Cloud connectivity
+      - Yes
+      - Yes
       - Yes 
-    * - TLS aka SSL connections
-      - Yes (with manual conversion from PKCS#12 to PEM format)
-      -
+    * - One-way TLS (SSL connections)
+      - Yes
+      - Yes
+      - Yes 
+    * - Two-way TLS (Mutual TLS or mTLS)
+      - Yes - with manual conversion from PKCS#12 to PEM format, subject to Cloud wallet enhancements
+      - Yes
       - Yes 
     * - Dedicated Servers
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Shared Servers
       - Yes 
-      -
+      - Yes
       - Yes 
-    * - DRCP
+    * - Database Resident Connection Pooling (DRCP)
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Multitenant Databases
       - Yes 
-      -
+      - Yes
       - Yes 
     * - CMAN, CMAN-TDM
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Password changing
       - Yes 
-      -
+      - Yes
       - Yes 
-    * - Break/reset (``connection.cancel()``)
+    * - Break/reset (:meth:`Connection.cancel()`)
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Edition Based Redefinition (EBR)
       - No
-      -
+      - Yes
       - Yes 
     * - Python DATABASE API Support
-      - Yes (mostly) - Some features not feasible.  Many extensions.
-      -
-      - Yes (mostly) - Some features not feasible.  Many extensions.
+      - Yes - some features are not feasible. Many extensions.
+      - Yes - some features are not feasible. Many extensions.
+      - Yes - some features are not feasible. Many extensions.
     * - SQL execution
-      - Yes - bind and fetch all types except BFILE, OBJECT and JSON
-      -
+      - Yes - bind and fetch all types except BFILE, OBJECT, and JSON
+      - Yes
       - Yes 
     * - PL/SQL execution
-      - Y scalar types. Y collection types using array interface
-      -
+      - Yes for scalar types. Yes for collection types using array interface.
+      - Yes
       - Yes 
-    * - Data binding
+    * - Bind variables for data binding
       - Yes 
-      -
+      - Yes
       - Yes 
-    * - Array DML binding for bulk DML & PL/SQL (aka ``executemany()``)
+    * - Array DML binding for bulk DML and PL/SQL (:meth:`Cursor.executemany()`)
       - Yes 
-      -
+      - Yes
       - Yes 
-    * - SQL and PL/SQL type & collections
+    * - SQL and PL/SQL type and collections
       - No
-      -
+      - Yes
       - Yes 
     * - Column metadata
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Client character set support
-      - UTF-8 (N* - types UTF-16BE)
-      -
-      - Yes Can use Python encodings.  Default in 8.0 is UTF-8
-    * - Globalization
-      - No
-      -
-      - Yes NLS_* - environment variables respected (except character set in NLS_LANG in 8.0)
+      - UTF-8 - see :ref:`globalization`
+      - UTF-8
+      - Yes - can use Python encodings. Default in 8.0 is UTF-8
+    * - Oracle Globalization support
+      - No - NLS_* environment variables are ignored
+      - Yes - NLS_* environment variables are respected except character set
+      - Yes - NLS_* environment variables are respected (except character set in NLS_LANG as of cx_Oracle 8.0)
     * - Statement caching
+      - Yes - New driver supports dropping from the cache, see :ref:`stmtcache`.
+      - Yes - New driver supports dropping from the cache, see :ref:`stmtcache`.
       - Yes 
-      - New driver supports dropping from the cache, see :ref:`stmtcaching`.
+    * - Row prefetching on first execute
       - Yes 
-    * - Row prefetching
+      - Yes
+      - Yes
+    * - Array fetching
       - Yes 
-      -
-      - Yes Configurable in 8.0
-    * - Array fetching (with prefetch on execute)
-      - Yes 
-      -
+      - Yes
       - Yes 
     * - Client Result Caching (CRC)
       - No
-      -
+      - Yes
       - Yes 
-    * - In-band  notifications
+    * - In-band notifications
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Continuous Query Notification (CQN)
       - No
-      -
+      - Yes
       - Yes 
     * - Advanced Queuing (AQ)
       - No
-      - Must use "new" cx_Oracle 7.2+ API, see the cx_Oracle `Advanced Queuing
-        (AQ) <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html>`__
-        documentation.
-      - Yes 
-    * - AQ: Transactional Event Queue (TEQ)
-      - No
-      -
-      - Yes 
-    * - Call timeouts (via Oracle Call Interface (OCI) attribute for Thick) :attr:`Connection.call_timeout`
+      - Yes - must use "new" cx_Oracle 7.2 and later API. See the cx_Oracle `Advanced Queuing
+        (AQ) <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html>`__ documentation.
       - Yes
-      -
+    * - Call timeouts :attr:`Connection.call_timeout`
+      - Yes
+      - Yes
       - Yes 
     * - Scrollable cursors
       - No
-      -
+      - Yes
       - Yes 
     * - DATABASE startup & shutdown
       - No
-      -
+      - Yes
       - Yes 
     * - Transaction management
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Automatic Diagnostic Repository (ADR)
       - No
-      -
+      - Yes
       - Yes 
+    * - ''Events'' mode for notifications
+      - No
+      - Yes
+      - Yes
     * - Fast Application Notification (FAN)
       - No
-      -
+      - Yes
       - Yes 
+    * - Fast Connection Failover (FCF)
+      - No
+      - 
+      - 
     * - Transparent Application Failover (TAF)
       - No
-      -
-      - Yes 
+      - Yes - no callback
+      - Yes - no callback
     * - Transaction Guard (TG)
       - No
-      -
+      - Yes
       - Yes 
     * - Dataguard (DG) & ADG
       - No
-      -
+      - Yes
       - Yes 
     * - Application Continuity (AC and TAC)
       - No
-      -
+      - Yes
       - Yes 
     * - End-to-end monitoring and tracing attributes
-      - Yes , see :ref:`tracingsql`.
-      -
+      - Yes - see :ref:`tracingsql`
+      - Yes
+      - Yes 
+    * - ORA_DEBUG_JDWP environment variable for debugging
+      - No - applications can call PL/SQL to enable
+      - Yes
       - Yes 
     * - OCI_ATTR_COLLECT_CALL_TIME and OCI_ATTR_CALL_TIME
-      - No (use PYO_DEBUG_PACKETS)
-      -
-      - No (use DPI tracing)
+      - No - use PYO_DEBUG_PACKETS
+      - No - use DPI tracing
+      - No - use DPI tracing
     * - Feature Tracking
       - No
-      -
-      - Y
+      - Yes
+      - Yes
     * - Two-phase Commit (TPC)
       - No
-      - New Thick driver has improved TPC support, see :ref:`tcp`.
-      - Yes (limited support)
+      - Yes - improved support, see :ref:`tcp`
+      - Yes - limited support
     * - REF CURSORS
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Nested Cursors
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Pipelined tables
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Implicit Result Sets
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Application Contexts
       - No
-      -
+      - Yes
       - Yes 
     * - Persistent LOBs
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Temporary LOBs
       - Yes 
-      -
+      - Yes
       - Yes 
     * - LOB prefetching
       - No
-      -
-      - No (does have LOB length prefetch)
-    * - LOB locator operations e.g trim
+      - No - does have LOB length prefetch
+      - No - does have LOB length prefetch
+    * - LOB locator operations such as trim
       - Yes 
-      -
+      - Yes
       - Yes 
     * - INTERVAL data types
       - Y (DAY TO SECOND), N (YEAR TO MONTH)
-      -
+      - Y (DAY TO SECOND), N (YEAR TO MONTH)
       - Y (DAY TO SECOND), N (YEAR TO MONTH)
     * - SODA
       - No
-      -
+      - Yes
       - Yes 
     * - Oracle 12c JSON
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Oracle 21c JSON data type
-      - No (Can fetch with an output type handler, see :ref:`Fetching JSON Differences<fetchJSON>`)
-      -
+      - No - can fetch with an output type handler, see :ref:`Fetching JSON Differences<fetchJSON>`
+      - Yes
       - Yes 
     * - ROWID
       - Yes 
-      -
+      - Yes
       - Yes 
     * - UROWID
       - Yes 
-      -
+      - Yes
       - Yes 
     * - XMLType data type
-      - No
-      -
-      - No (solution is to use ``xmltype.getclobval()``)
+      - No - solution is to use ``xmltype.getclobval()``
+      - No - solution is to use ``xmltype.getclobval()``
+      - No - solution is to use ``xmltype.getclobval()``
     * - BFILE data type
       - No
-      -
+      - Yes
       - Yes 
     * - TIMESTAMP WITH TIME ZONE
       - Yes 
-      -
+      - Yes
       - Yes 
     * - NCHAR and NVARCHAR2
       - Yes 
-      -
+      - Yes
       - Yes 
     * - NCLOB
       - Yes 
-      -
+      - Yes
       - Yes 
     * - Bind PL/SQL Boolean
       - Yes 
-      -
+      - Yes
       - Yes 
 
 A complete list of supported features can be seen `here

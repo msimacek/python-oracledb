@@ -23,14 +23,14 @@ Things to Know Before Migrating
 Below is a list of things you must know before migrating from cx_Oracle to python-oracledb:
 
  - If you only want to use python-oracledb driver in the Thin mode, then you do not need to install Oracle Instant Client.
- - The Thin and Thick mode have the same level of support for the Python Database API and can be used to connect to on-premise databases and Oracle Cloud databases. However, the Thin mode does not support some of the advanced Oracle Database features such as Application Continuity (AC), Advanced Queueing (AQ), Continuous Query Notification (CQN), and Sharding.
- - python-oracledb can be used in SQLAlchemy, Django, Pandas, and other frameworks and Object-relational Mappers (ORMs). Until they add native support, you need to override the use of cx_Oraclea with a few lines of code. See :ref:`alchemyanddjango`.
+ - The Thin and Thick mode have the same level of support for the `Python Database API <https://peps.python.org/pep-0249/>`_ and can be used to connect to on-premise databases and Oracle Cloud databases. However, the Thin mode does not support some of the advanced Oracle Database features such as Application Continuity (AC), Advanced Queueing (AQ), Continuous Query Notification (CQN), and Sharding.
+ - python-oracledb can be used in SQLAlchemy, Django, Pandas, and other frameworks and Object-relational Mappers (ORMs). Until they add native support, you need to override the use of cx_Oracle with a few lines of code. See :ref:`frameworks`.
  - python-oracledb connection calls require keyword arguments such as::
 
         oracledb.connect(user="scott", password=pw, dsn="localhost/orclpdb1")
 
  - The Thin mode ignores all NLS environment variables.
- - To use a tnsnames.ora file from a previous default location such ``$ORACLE_HOME/network/admin/`` in Thin mode, you will need to set ``oracledb.defaults.config_dir`` to the directory containing the file.
+ - To use a tnsnames.ora file from a previous default location such ``$ORACLE_HOME/network/admin/`` in Thin mode, you will need to set :attr:`oracledb.defaults.config_dir` to the directory containing the file.
  - To use Thin mode in an ORACLE_HOME database installation environment, you will need to connect using an explicit connection string since ``ORACLE_SID`` is not used in Thin mode.
 
 Once you have migrated to python-oracledb, you can also change from Thick mode to Thin mode and vice-versa. See :ref:`changingmodes` to understand the steps that need to be performed.
@@ -38,7 +38,7 @@ Once you have migrated to python-oracledb, you can also change from Thick mode t
 Code Migration Preparation
 ============================
 
-Many of the preparatory code migration tasks can be done while still using the latest versions of cx_Oracle. To sum it up, you can:
+Many of the preparatory tasks can be done while still using the latest versions of cx_Oracle. To sum it up, you can:
 
 1. Adjust calls to :func:`~oracledb.connect()`, :func:`oracledb.Connection()`, and :func:`~oracledb.SessionPool()`.
 2. Review the ``SessionPool()`` value of parameter :attr:`SessionPool.getmode`.
@@ -80,7 +80,7 @@ To migrate from cx_Oracle to python-oracledb, perform the following steps:
  You must replace positional parameters with keyword parameters, unless only one parameter is being passed.
  python-oracledb uses keyword parameters exclusively unless a DSN containing the user, password, and 
  connect string combined (``un/pw@cs``) is used. This change makes the driver compliant with the 
- Python Database API spec PEP 249.
+ Python Database API spec `PEP 249 <https://peps.python.org/pep-0249/>`_.
 
  For example, the following code will fail::
 
@@ -96,18 +96,17 @@ To migrate from cx_Oracle to python-oracledb, perform the following steps:
 
 4.  Review obsolete encoding parameters in calls to :func:`~oracledb.connect()`, :func:`oracledb.Connection()`, and :func:`~oracledb.SessionPool()`:
 
- The parameters ``encoding`` and ``nencoding`` are ignored by python-oracledb. The python-oracledb driver uses UTF-8 exclusively.
+ The parameters encoding and nencoding are ignored by python-oracledb. The python-oracledb driver uses UTF-8 exclusively.
 
- The parameter ``threaded`` is ignored in :func:`~oracledb.connect()` and :func:`oracledb.Connection()` by python-oracledb. In cx_Oracle 8.0, this parameter was ignored in :func:`~oracledb.SessionPool()`.
+ The parameter threaded is ignored in :func:`~oracledb.connect()` and :func:`oracledb.Connection()` by python-oracledb. This parameter was ignored in :func:`~oracledb.SessionPool()` from cx_Oracle 8.2.
 
  In cx_Oracle 8.0, the default encodings were changed to UTF-8.
 
-5.  Remove all references to :meth:`Cursor.fetchraw()` as this method was deprecated in cx_Oracle 8.2 and has 
-    been removed in python-oracledb. Instead, use one of the other fetch methods such as :meth:`Cursor.fetchmany()`.
+5.  Remove all references to :meth:`Cursor.fetchraw()` as this method was deprecated in cx_Oracle 8.2 and has been removed in python-oracledb. Instead, use one of the other fetch methods such as :meth:`Cursor.fetchmany()`.
 
-6.  The default value of the ``SessionPool()`` parameter :attr:`Connection.getmode` is now ``SPOOL_ATTRVAL_WAIT`` instead of ``SPOOL_ATTRVAL_NOWAIT``. 
+6.  The default value of the ``SessionPool()`` parameter :attr:`~Connection.getmode` now waits for an available connection, that is it is :data:`~oracledb.SPOOL_ATTRVAL_WAIT` instead of :data:`~oracledb.SPOOL_ATTRVAL_NOWAIT`. 
     
-    If the old default value is required, modify any pool creation code to explicitly specify ``getmode=oracledb.POOL_SPOOL_ATTRVAL_NOWAIT`` or the new equivalent value ``oracledb.POOL_GETMODE_NOWAIT``. 
+    If the old default value is required, modify any pool creation code to explicitly specify ``getmode=oracledb.POOL_SPOOL_ATTRVAL_NOWAIT`` or the new equivalent value :data:`~oracledb.POOL_GETMODE_NOWAIT`. 
     
     The new default value improves the behavior for most applications. It prevents transient errors from occurring when using the Thick mode with recent Oracle Client libraries, if the pool is in the middle of growing. It also helps when using the Thin 
     mode, see the subsequent sections.
@@ -121,11 +120,11 @@ The following changes need to be made at a minimum:
 
  1. Remove calls to :func:`~oracledb.init_oracle_client` since this turns on the Thick mode.
 
- 2. If the ``config_dir`` parameter of :func:`~oracledb.init_oracle_client` had been used, then set the new ``oracledb.defaults.config_dir`` attribute to the desired value.
+ 2. If the ``config_dir`` parameter of :func:`~oracledb.init_oracle_client` had been used, then set the new :attr:`oracledb.defaults.config_dir` attribute to the desired value.
 
- 3. Remove calls to :func:`oracledb.clientversion()` which is only available in the python-oracledb Thick mode. Applications can reference ``oracledb.__version__`` to determine the version of python-oracledb.
+ 3. Remove calls to :func:`oracledb.clientversion()` which is only available in the python-oracledb Thick mode. Applications can reference :data:`oracledb.__version__` to determine the version of python-oracledb.
 
- 4. Ensure that any assumptions about when connections are created in the pool are eliminated. The python-oracledb Thin mode creates connections in a daemon thread and so the attribute :attr:`ConnectionPool.opened` will change over time and will not be equal to :attr:`ConnectionPool.min` immediately after the pool is created. Unless the :func:`oracledb.SessionPool()` parameter getmode is the new default ``POOL_GETMODE_WAIT``, then applications should not call :meth:`ConnectionPool.acquire()` until sufficient time has passed for connections in the pool to be opened.
+ 4. Ensure that any assumptions about when connections are created in the pool are eliminated. The python-oracledb Thin mode creates connections in a daemon thread and so the attribute :attr:`ConnectionPool.opened` will change over time and will not be equal to :attr:`ConnectionPool.min` immediately after the pool is created. Unless the :func:`oracledb.ConnectionPool()` parameter getmode is the new default :data:`oracledb.POOL_GETMODE_WAIT`, then applications should not call :meth:`ConnectionPool.acquire()` until sufficient time has passed for connections in the pool to be opened.
 
  5. If the application is connecting using a net service alias and Python cx_Oracle is looking up that alias in a ``tnsnames.ora`` file from a default location such as from the Instant Client ``network/admin/`` subdirectory, from ``$ORACLE_HOME/network/admin/``, or from ``$ORACLE_BASE/homes/XYZ/network/admin/`` (in a read-only Oracle Database home), then the Oracle Configuration directory containing the file must now explicitly be set as shown in :ref:`sqlnetclientconfig`.
 
@@ -163,6 +162,8 @@ The following changes need to be made at a minimum:
 Migration Tips
 ===============
 
+.. _toggling:
+
 Runtime Toggling between Drivers 
 --------------------------------
 
@@ -187,8 +188,8 @@ Alternatively, to allow toggling between drivers, use the following code:
        import os
        import platform
        import sys
-       driver_type = os.environ.get("DRIVER_TYPE", "thin")
-       if driver_type != "cx":
+       driver_mode = os.environ.get("DRIVER_MODE", "thin")
+       if driver_mode != "cx":
               import oracledb
               oracledb.version = "8.3.0"
               sys.modules["cx_Oracle"] = oracledb
@@ -196,7 +197,7 @@ Alternatively, to allow toggling between drivers, use the following code:
        # This import must appear after 'sys.modules["cx_Oracle"] = oracledb'
        import cx_Oracle
 
-       if (driver_type == "thick" or driver_type == "cx"):
+       if (driver_mode == "thick" or driver_mode == "cx"):
               # Calling init_oracle_client(), with or without the lib_dir parameter, is
               # required for Thick, but cx_Oracle can use the system library search path
               # or appropriate file system library link on macOS.
@@ -206,21 +207,14 @@ Alternatively, to allow toggling between drivers, use the following code:
                      cx_Oracle.init_oracle_client(lib_dir=r"C:\oracle\instantclient_19_14")
               else:
                      cx_Oracle.init_oracle_client()
-       if driver_type == "cx":
+       if driver_mode == "cx":
               print("Using cx_Oracle")
-       elif driver_type == "thick":
+       elif driver_mode == "thick":
               print("Using python-oracledb thick")
        else:
               print("Using python-oracledb thin")
 
-Before running the application, set the environment variable ``DRIVER_TYPE`` to ``cx``, ``thick``, or ``thin``. If you do not set the environment variable, the python-oracledb Thin mode is used.
-
-.. _alchemyanddjango:
-
-SQLAlchemy and Django
-----------------------
-
-Until SQLAlchemy, Django, or other third-party frameworks and Object-relational Mappers (ORMs) add native support for python-oracledb, you can use one of the solutions detailed in the Runtime Toggling Between Drivers section.
+Before running the application, set the environment variable ``DRIVER_MODE`` to ``cx``, ``thick``, or ``thin``. If you do not set the environment variable, the python-oracledb Thin mode is used.
 
 Testing Which Driver is in Use
 -------------------------------
@@ -238,12 +232,12 @@ To know whether the driver is cx_Oracle or python-oracledb, you can use code sim
        else:
               print('oracledb')
 
-Another method that can be used to check which driver is in use is to query the ``CLIENT_DRIVER`` column of ``V$SESSION_CONNECT_INFO``. See :ref:`dbviews`. This method has the overhead of a round-trip to the database.
+Another method that can be used to check which driver is in use is to query the ``CLIENT_DRIVER`` column of ``V$SESSION_CONNECT_INFO``. See :ref:`dbviews`. However, this method has the overhead of a round-trip to the database.
 
-Migrating to the Thick Driver Without Changing Connect Calls
+Migrating to python-oracledb Without Changing Connect Calls
 ------------------------------------------------------------
 
-If your connection calls do not use keyword arguments, then the following shim can be added to your code in order to facilitate migration to the Thick mode without needing to change calls to :func:`~oracledb.connect()` or :func:`~oracledb.SessionPool()`.
+If your connection calls do not use keyword arguments, then the following shim can be added to your code to facilitate the migration to python-oracledb without changing calls to :func:`~oracledb.connect()` or :func:`~oracledb.Connection()`.
 
 .. code-block:: python
 
@@ -272,7 +266,7 @@ If your connection calls do not use keyword arguments, then the following shim c
                      stmtcachesize=stmtcachesize)
        cx_Oracle.connect = ShimConnection
        cx_Oracle.Connection = ShimConnection
-       # With the shim, connecting doesn't need named arguments
+       # With the shim, connecting does not need named arguments
        connection = cx_Oracle.connect(username, password, connect_string)
        # or
        connection = cx_Oracle.Connection(username, password, connect_string)

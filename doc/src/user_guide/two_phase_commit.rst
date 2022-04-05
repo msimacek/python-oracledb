@@ -4,74 +4,25 @@
 Two-Phase Commit (TPC)
 ***********************
 
-The python-oracledb driver supports two-phase commit (TPC). cx_Oracle has two methods that can be used to perform TPC for transactions::
-
-    Connection.begin()
-    Connection.prepare()
-
-The ``Connection.begin()`` and ``Connection.prepare()`` methods are
-deprecated in python-oracledb. New methods to perform TPC are introduced in python-oracledb to better comply with Python Database API and are detailed in the subsequent sections.
+The python-oracledb functions :meth:`~Connection.tpc_begin()` and :meth:`~Connection.tpc_end()` support distributed transactions. See `Two-Phase Commit Mechanism <https://docs.oracle.com/en/database/oracle/oracle-database/21/admin/distributed-transactions-concepts.html#GUID-8152084F-4760-4B89-A91C-9A84F81C23D1>_` in the Oracle Database documentation. 
 
 .. note::
 
-    The new TPC functionality is applicable only to the Thick mode.
+    The two-phase commit (TPC) functionality is applicable only to the Thick mode.
 
-New Constants
-==============
+The method :meth:`Connection.tpc_begin()` can be used to start a TPC transaction.
 
-The following flags are intended for use with the new method :meth:`~Connection.tpc_begin()`::
+Distributed transaction protocols attempt to keep multiple data sources consistent with one another by ensuring updates to the data sources participating in a distributed transaction are all performed, or none of them performed. These data sources, also called participants or resource managers, may be traditional database systems, messaging systems, and other systems that store state such as caches. A common class of distributed transaction protocols are referred to as two-phase commit protocols. These protocols split the commitment of a distributed transaction into two distinct, separate phases.
 
-    TPC_BEGIN_JOIN
-    TPC_BEGIN_NEW
-    TPC_BEGIN_PROMOTE
-    TPC_BEGIN_RESUME
+During the first phase, the participants (data sources) are polled or asked to vote on the outcome of the distributed transaction. This phase, called the prepare phase, ensures agreement or consensus on the ability for each participant to commit their portion of the transaction. When asked to prepare, the participants respond positively if they can commit their portion of the distributed transaction when requested or respond that there were no changes, so they have no need to be committed. Once all participants have responded to the first phase, the second phase of the protocol can begin. The method :meth:`Connection.tpc_prepare()` can be used to prepare a global transaction for commit.
 
-.. Open question: what is the difference between `TPC_BEGIN_JOIN` and `TPC_BEGIN_RESUME`?
+During the second phase of the protocol, called the commit phase, all of the participants that indicated they needed to be committed are asked to either commit their prepared changes or roll them back. If the decision on the outcome of the distributed transaction was to commit the transaction, each participant is asked to commit their changes. If the decision was to abort or rollback the distributed transaction, each participant is asked to rollback their changes. The methods :meth:`Connection.tpc_commit()` and :meth:`Connection.tpc_rollback()` can be used to commit or rollback a transaction respectively.
 
-The following flags are intended for use with the new method :meth:`~Connection.tpc_end()`::
+While applications can coordinate these activities, it takes on additional responsibilities to ensure the correct outcome of all participants, even in the face of failures. These failures could be of the application itself, one of the participants in the transaction, of communication links, etc. In order to assure the atomic characteristics of a distributed transaction, once the decision has been made to commit the distributed transaction, this decision needs to be durably recorded in case of failure. The application, as part of its steps for recovery from a failure, now needs to check the durable log and notify the participants of the outcome. Failures may be nested such that not only might the application fail, one or more participants or connections to participants might fail. All these scenarios require careful consideration and remediation to ensure that all participants either committed or rolled back their local updates.
 
-    TPC_END_NORMAL
-    TPC_END_SUSPEND
+As a result, most applications rely upon the services provided by a transaction manager (TM), also called a transaction coordinator. The purpose of having a transaction manager perform this coordination is to eliminate having to have each application perform these transaction management functions. The application asks the transaction manager to start a transaction. As additional participants or resource managers join the transaction, they register with the transaction manager as participants. When the original application decides the transaction is to be committed or rolled back, it asks the transaction manager to commit or rollback the transaction. If the application asked the transaction to be rolled back, the transaction coordinator notifies all participants to roll back. Otherwise, the transaction manager then starts the two-phase commit protocol.
 
-.. Open question: should a detailed explanation of these flags be provided?
-
-
-New Connection Methods
-=======================
-
-The following are the new connection methods introduced in python-oracledb:
-
-    - :meth:`~Connection.xid()`: This function is used to build a named tuple called `Xid`, which contains the three components that identify an XA transaction.
-    - :meth:`~Connection.tpc_begin`: This function begins work on a global transaction. 
-    - :meth:`~Connection.tpc_commit()`: This function commits a global transaction.
-    - :meth:`~Connection.tpc_end()`: This function ends work on a global transaction and is only intended for use by transaction managers.
-    - :meth:`~Connection.tpc_forget()`: This function forgets a heuristically completed global transaction. 
-    - :meth:`~Connection.tpc_prepare()`: This function prepares a global transaction for commit.
-    - :meth:`~Connection.tpc_recover()`: This function returns a list of pending transactions that require recovery. See the :ref:`samples` section for an example on how to perform recovery with the :meth:`~Connection.tpc_recover` function.
-    - :meth:`~Connection.tpc_rollback()`: This function rolls back a global transaction.
-
-.. Open question: what purpose does the tpc_forget() function actually serve?
-
-.. _samples:
-
-Samples
-=======
-
-The following example shows how to perform recovery.
-
-.. code-block:: python
-
-    import oracledb
-
-    oracledb.defaults.thin = False
-
-    with oracledb.connect(DSN, mode=oracledb.SYSDBA) as conn:
-        for xid in conn.tpc_recover():
-            print("Recovering xid by rolling it back:", xid)
-            conn.tpc_rollback(xid)
-
-
-The following example shows how to perform application level two-phase commit.
+The following example shows how to perform an application level two-phase commit:
 
 .. code-block:: python
 
@@ -101,3 +52,16 @@ The following example shows how to perform application level two-phase commit.
     if commit_needed2:
         conn2.tpc_commit()
 
+
+The following example shows how to perform recovery.
+
+.. code-block:: python
+
+    import oracledb
+
+    oracledb.defaults.thin = False
+
+    with oracledb.connect(DSN, mode=oracledb.SYSDBA) as conn:
+        for xid in conn.tpc_recover():
+            print("Recovering xid by rolling it back:", xid)
+            conn.tpc_rollback(xid)

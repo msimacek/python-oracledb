@@ -4,18 +4,23 @@
 ConnectionPool Object
 **********************
 
-A new ConnectionPool class is introduced in python-oracledb.  It is synonomous with
-SessionPool.  The SessionPool class and function ``Oracledb.SessionPool`` is
-deprecated in python-oracledb.  (The name SessionPool came from the `Oracle Call Interface (OCI)
+.. note::
+
+    This object is an extension to the DB API.
+
+The new ConnectionPool class is synonomous with SessionPool. The SessionPool class 
+and function ``Oracledb.SessionPool`` is deprecated in python-oracledb. 
+(The name SessionPool came from the `Oracle Call Interface (OCI)
 session pool
-<https://docs.oracle.com/en/database/oracle/oracle-database/19/lnoci/session-and-connection-pooling.html#GUID-F9662FFB-EAEF-495C-96FC-49C6D1D9625C>`__.
-However this implementation is not available to the Thin driver and is only
-used by the Thick driver).
+<https://docs.oracle.com/en/database/oracle/oracle-database/19/lnoci/session-and-
+connection-pooling.html#GUID-F9662FFB-EAEF-495C-96FC-49C6D1D9625C>`__.
+This implementation is only used in the python-oracledb Thick mode
+and is not available in the python-oracledb Thin mode).
 
-In python-oracledb, a Python `type` will show `oracledb.ConnectionPool`.  This only
-affects the name.
+In python-oracledb, the type `pool` will show the class `oracledb.ConnectionPool`. 
+This only affects the name.
 
-These will continue to work, giving backward compatibility:
+The following code will continue to work providing backward compatibility:
 
 .. code-block:: python
 
@@ -23,7 +28,7 @@ These will continue to work, giving backward compatibility:
 
    isinstance(pool, oracledb.SessionPool) == True
 
-These will also work:
+The following code will also work:
 
 .. code-block:: python
 
@@ -31,14 +36,12 @@ These will also work:
 
    isinstance(pool, oracledb.ConnectionPool) == True
 
-.. note::
+The function :meth:`oracledb.SessionPool` that is used to create pools 
+is deprecated in python-oracledb 1.0 and has been replaced by the function
+:meth:`oracledb.create_pool`.
 
-    This object is an extension to the DB API.
-
-    Connection pooling in python-oracledb is handled by ConnectionPool objects.
-
-    See :ref:`connpooling` for information on connection pooling.
-
+Methods
+=======
 
 .. method:: ConnectionPool.acquire(user=None, password=None, cclass=None, \
         purity=oracledb.ATTR_PURITY_DEFAULT, tag=None, matchanytag=False, \
@@ -84,6 +87,38 @@ These will also work:
 
     If any connections have been acquired and not released back to the pool
     this method will fail unless the force parameter is set to True.
+
+.. method:: ConnectionPool.create_pool(dsn, pool_class, pool_params, conn_params, \
+    min, max, increment, connectiontype, getmode, homogeneous, externalauth,timeout, \
+    wait_timeout, max_lifetime_session, session_callback, max_sessions_per_shard, \
+    soda_metadata_cache, ping_interval, user, proxy_user, password, newpassword, \
+    wallet_password, host, port, protocol, https_proxy, https_proxy_port, service_name, \
+    sid, server_type, cclass, purity, expire_time, retry_count, retry_delay, \
+    tcp_connect_timeout, ssl_server_dn_match, ssl_server_cert_dn, wallet_location, \
+    events, mode, disable_oob, stmtcachesize, edition, tag, matchanytag, config_dir, \
+    appcontext, shardingkey, supershardingkey, handle)
+
+    Creates a connection pool with the supplied parameters and returns it.
+
+    The dsn parameter (data source name) can be a string in the format
+    ``user/password@connect_string`` or can simply be a connect string in
+    which case the user and password need to be specified separately. 
+    See :ref:`connstr` for more information.
+
+    The pool_class parameter is a ConnectionPool or a subclass of
+    ConnectionPool. 
+
+    The pool_params parameter is of type PoolParams and contains
+    parameters that are used to create the pool. If not specified, a new
+    PoolParams object will be created using the additional keyword arguments.
+    See :ref:`poolparam` for more information.
+
+    The conn_params parameter is of type ConnectParams and contains 
+    connection parameters that will be used when creating connections
+    in the pool. If not specified, a new ConnectParams object will be created
+    using the additional keyword arguments. See :ref:`connparam` for more information.
+    If a dsn is supplied, it will modify the connection parameters to include the 
+    parameters supplied in the dsn.
 
 
 .. method:: ConnectionPool.drop(connection)

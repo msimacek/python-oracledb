@@ -9,7 +9,8 @@ Connection Object
     Any outstanding changes will be rolled back when the connection object
     is destroyed or closed.
 
-
+Methods
+=======
 
 .. method:: Connection.__enter__()
 
@@ -36,7 +37,7 @@ Connection Object
 
     .. note::
 
-        This is only supported by the Thick driver and should only be used as directed by Oracle.
+        This method is only supported in python-oracledb Thick mode and should only be used as directed by Oracle.
 
 .. method:: Connection.__set_oci_attr(handle_type, attr_num, attr_type, value)
     
@@ -44,7 +45,7 @@ Connection Object
 
     .. note::
 
-        This is only supported by the Thick driver and should only be used as directed by Oracle.
+        This method is only supported in python-oracledb Thick mode and should only be used as directed by Oracle.
 
 .. method:: Connection._verify_connected()
 
@@ -53,28 +54,6 @@ Connection Object
 .. method:: Connection._verify_xid(xid)
 
     Verifies that the supplied xid is of the correct type.
-
-.. attribute:: Connection.action
-
-    This write-only attribute sets the action column in the v$session table. It
-    is a string attribute and cannot be set to None -- use the empty string
-    instead.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
-
-.. attribute:: Connection.autocommit
-
-    This read-write attribute determines whether autocommit mode is on or off.
-    When autocommit mode is on, all statements are committed as soon as they
-    have completed executing.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
 
 .. method:: Connection.begin([formatId, transactionId, branchId])
 
@@ -95,28 +74,6 @@ Connection Object
 
         This method is an extension to the DB API definition.
 
-
-.. attribute:: Connection.call_timeout
-
-    This read-write attribute specifies the amount of time (in milliseconds)
-    that a single round-trip to the database may take before a timeout will
-    occur. A value of 0 means that no timeout will take place.
-
-    If a timeout occurs, the error *DPI-1067* will be returned if the
-    connection is still usable.  Alternatively the error *DPI-1080* will be
-    returned if the connection has become invalid and can no longer be used.
-
-    For consistency and compliance with the PEP 8 naming style, the
-    attribute `callTimeout` was renamed to `call_timeout`. The old name
-    will continue to work for a period of time.  The error *DPI-1080* was
-    also introduced in this release.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition and is only
-        available in Oracle Client 18c and higher.
-
-
 .. method:: Connection.cancel()
 
     Break a long-running transaction.
@@ -134,27 +91,6 @@ Connection Object
 
         This method is an extension to the DB API definition.
 
-
-.. attribute:: Connection.client_identifier
-
-    This write-only attribute sets the client_identifier column in the
-    v$session table.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
-
-.. attribute:: Connection.clientinfo
-
-    This write-only attribute sets the client_info column in the v$session
-    table.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
-
 .. method:: Connection.close()
 
     Close the connection now, rather than whenever __del__ is called. The
@@ -170,11 +106,9 @@ Connection Object
     control references to these related objects carefully or explicitly close
     connections in order to ensure sufficient resources are available.
 
-
 .. method:: Connection.commit()
 
     Commit any pending transactions to the database.
-
 
 .. method:: Connection.createlob(lobType)
 
@@ -186,34 +120,9 @@ Connection Object
 
         This method is an extension to the DB API definition.
 
-
-.. attribute:: Connection.current_schema
-
-    This read-write attribute sets the current schema attribute for the
-    session. Setting this value is the same as executing the SQL statement
-    "ALTER SESSION SET CURRENT_SCHEMA". The attribute is set (and verified) on
-    the next call that does a round trip to the server. The value is placed
-    before unqualified database objects in SQL statements you then execute.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
-
 .. method:: Connection.cursor()
 
     Return a new :ref:`cursor object <cursorobj>` using the connection.
-
-
-.. attribute:: Connection.dbop
-
-    This write-only attribute sets the database operation that is to be
-    monitored. This can be viewed in the DBOP_NAME column of the V$SQL_MONITOR
-    table.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
 
 
 .. method:: Connection.deq(name, options, msgproperties, payload)
@@ -224,8 +133,7 @@ Connection Object
     :meth:`~Connection.msgproperties()`. The payload must be an object created
     using :meth:`ObjectType.newobject()`.
 
-
-    .. deprecated:: 7.2
+    .. deprecated:: cx_Oracle 7.2
 
         Use the methods :meth:`Queue.deqone()` or :meth:`Queue.deqmany()`
         instead.
@@ -233,7 +141,6 @@ Connection Object
     .. note::
 
         This method is an extension to the DB API definition.
-
 
 .. method:: Connection.deqoptions()
 
@@ -247,45 +154,6 @@ Connection Object
     .. note::
 
         This method is an extension to the DB API definition.
-
-
-.. attribute:: Connection.dsn
-
-    This read-only attribute returns the TNS entry of the database to which a
-    connection has been established.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
-.. attribute:: Connection.econtext_id
-
-    This write-only attribute specifies the execution context id. This value can be found as ecid in
-    the v$session table and econtext_id in the auditing tables. The maximum length is 64 bytes.
-
-
-.. attribute:: Connection.edition
-
-    This read-only attribute gets the session edition and is only available in
-    Oracle Database 11.2 (both client and server must be at this level or
-    higher for this to work).
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
-
-.. attribute:: Connection.encoding
-
-    This read-only attribute returns the IANA character set name of the
-    character set in use by the Oracle client for regular strings.
-
-    .. deprecated:: cx_Oracle 8.2
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
 
 .. method:: Connection.enq(name, options, msgproperties, payload)
 
@@ -318,17 +186,6 @@ Connection Object
 
         This method is an extension to the DB API definition.
 
-
-.. attribute:: Connection.external_name
-
-    This read-write attribute specifies the external name that is used by the
-    connection when logging distributed transactions.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
-
 .. method:: Connection.getSodaDatabase()
 
     Return a :ref:`SodaDatabase <sodadb>` object for Simple Oracle Document
@@ -354,44 +211,7 @@ Connection Object
         This method is an extension to the DB API definition.
 
 
-.. attribute:: Connection.handle
-
-    This read-only attribute returns the Oracle Call Interface (OCI) service context handle for the
-    connection. It is primarily provided to facilitate testing the creation of
-    a connection using the OCI service context handle.
-
-    This property is only relevant for the Thick driver.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
-
-.. attribute:: Connection.inputtypehandler
-
-    This read-write attribute specifies a method called for each value that is
-    bound to a statement executed on any cursor associated with this
-    connection.  The method signature is handler(cursor, value, arraysize) and
-    the return value is expected to be a variable object or None in which case
-    a default variable object will be created. If this attribute is None, the
-    default behavior will take place for all values bound to statements.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
-
-.. attribute:: Connection.internal_name
-
-    This read-write attribute specifies the internal name that is used by the
-    connection when logging distributed transactions.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
-
-.. function:: Connection.is_healthy()
+.. method:: Connection.is_healthy()
 
     This function returns a boolean indicating the health status of a connection.
 
@@ -409,45 +229,6 @@ Connection Object
     This function performs a local check.  To fully check a connection's health,
     use ``Connection.ping()`` which performs a round-trip to the database.
 
-.. attribute:: Connection.ltxid
-
-    This read-only attribute returns the logical transaction id for the
-    connection. It is used within Oracle Transaction Guard as a means of
-    ensuring that transactions are not duplicated. See the Oracle documentation
-    and the provided sample for more information.
-
-    .. note:
-
-        This attribute is an extension to the DB API definition. It is only
-        available when Oracle Database 12.1 or higher is in use on both the
-        server and the client.
-
-
-.. attribute:: Connection.maxBytesPerCharacter
-
-    This read-only attribute returns the maximum number of bytes each character
-    can use for the client character set.
-
-    .. deprecated:: cx_Oracle 8.2
-
-        Use the constant value of 4 instead.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
-
-.. attribute:: Connection.module
-
-    This write-only attribute sets the module column in the v$session table.
-    The maximum length for this string is 48 and if you exceed this length you
-    will get ORA-24960.
-
-    .. note:
-
-        This attribute is an extension to the DB API definition.
-
-
 .. method:: Connection.msgproperties(payload, correlation, delay, exceptionq, expiration, priority)
 
     Returns an object specifying the properties of messages used in advanced
@@ -459,36 +240,6 @@ Connection Object
     .. note::
 
         This method is an extension to the DB API definition.
-
-
-.. attribute:: Connection.nencoding
-
-    This read-only attribute returns the IANA character set name of the
-    national character set in use by the Oracle client. This is always the value "UTF-8".
-
-    .. deprecated:: cx_Oracle 8.2
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
-
-.. attribute:: Connection.outputtypehandler
-
-    This read-write attribute specifies a method called for each column that is
-    going to be fetched from any cursor associated with this connection. The
-    method signature is handler(cursor, name, defaultType, length, precision,
-    scale) and the return value is expected to be a variable object or None in
-    which case a default variable object will be created. If this attribute is
-    None, the default behavior will take place for all columns fetched from
-    cursors.
-
-    See :ref:`outputtypehandlers`.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
 
 .. method:: Connection.ping()
 
@@ -593,22 +344,6 @@ Connection Object
 
         This method is an extension to the DB API definition.
 
-
-.. attribute:: Connection.stmtcachesize
-
-    This read-write attribute specifies the size of the statement cache. This
-    value can make a significant difference in performance if you have a small
-    number of statements that you execute repeatedly.
-
-    The default value is 20.
-
-    See :ref:`Statement Caching <stmtcache>` for more information.
-
-    .. note::
-
-        This attribute is an extension to the DB API definition.
-
-
 .. method:: Connection.subscribe(namespace=oracledb.SUBSCR_NAMESPACE_DBCHANGE, protocol=oracledb.SUBSCR_PROTO_OCI, callback=None, timeout=0, operations=OPCODE_ALLOPS, port=0, qos=0, ip_address=None, grouping_class=0, grouping_value=0, grouping_type=oracledb.SUBSCR_GROUPING_TYPE_SUMMARY, name=None, client_initiated=False)
 
     Return a new :ref:`subscription object <subscrobj>` that receives
@@ -695,6 +430,387 @@ Connection Object
         explicitly closed using the function :meth:`~Connection.close()`, the
         subscription will not be deregistered in the database.
 
+.. method:: Connection.tpc_begin(xid, flags)
+
+    Begins a Two-Phase Commit (TPC) on a global transaction using the specified transaction
+    identifier (xid).
+
+    The `xid` parameter should be an object returned by the :meth:`~Connection.xid()` function.
+
+    The `flags` parameter is one of the constants :data:`oracledb.TPC_BEGIN_JOIN`, :data:`oracledb.TPC_BEGIN_NEW`, :data:`oracledb.TPC_BEGIN_PROMOTE`, or :data:`oracledb.TPC_BEGIN_RESUME`. The default is :data:`oracledb.TPC_BEGIN_NEW`.
+
+    The following code sample demonstrates the ``tpc_begin()`` function::
+
+        connection.tpc_begin(xid=x, flags=oracledb.TPC_BEGIN_NEW)
+        x = connection.xid(format_id=1, global_transaction_id=“tx1”, branch_qualifier=“br1”)
+
+    See :ref:`tcp` for information on TPC.
+
+.. method:: Connection.tpc_commit(xid, one_phase)
+
+    Commits a global transaction. When called with no arguments, this method commits a transaction previously
+    prepared with :meth:`~Connection.tpc_begin()` and optionally
+    prepared with :meth:`~Connection.tpc_prepare()`. If :meth:`~Connection.tpc_prepare()` is not called, a single
+    phase commit is performed. A transaction manager may choose to do this
+    if only a single resource is participating in the global transaction.
+
+    If an `xid` parameter is passed, then an object should be returned by the :meth:`~Connection.xid()` function. This form should be called outside of a transaction and is intended for use in recovery.
+
+    The `one_phase` parameter is a boolean identifying whether to
+    perform a one-phase or two-phase commit. If `one_phase` is true, a single-phase commit is performed.
+    The default value is false. This parameter is only examined if a value is provided for the `xid` parameter. 
+    Otherwise, the driver already knows whether :meth:`~Connection.tpc_prepare()` was called 
+    for the transaction and whether a one-phase or two-phase commit is required.
+
+    The following code sample demonstrates the ``tpc_commit()`` function::
+
+        connection.tpc_commit(xid=x, one_phase=False)
+        x = connection.xid(format_id=1, global_transaction_id=“tx1”, branch_qualifier=“br1”)
+
+    See :ref:`tcp` for information on TPC.
+
+.. method:: Connection.tpc_end(xid, flags)
+
+    Ends or suspends work on a global transaction. This function is only intended for use by transaction managers.
+
+    If an `xid` parameter is passed, then an object should be returned by the :meth:`~Connection.xid()` function. If no `xid` parameter is passed, then the transaction identifier used by the previous :meth:`~Connection.tpc_begin()` is used.
+
+    The flags is one of the constants :data:`oracledb.TPC_END_NORMAL` or :data:`oracledb.TPC_END_SUSPEND`. The default is :data:`oracledb.TPC_END_NORMAL`.
+
+    If the flag is :data:`oracledb.TPC_END_SUSPEND` then the transaction may be resumed later by calling :meth:`Connection.tpc_begin()` with the flag :data:`oracledb.TPC_BEGIN_RESUME`.
+
+    The following code sample demonstrates the ``tpc_end()`` function::
+
+        connection.tpc_end(xid=x, flags=oracledb.TPC_END_NORMAL)
+        x = connection.xid(format_id=1, global_transaction_id=“tx1”, branch_qualifier=“br1”)
+
+    See :ref:`tcp` for information on TPC.
+
+.. method:: Connection.tpc_forget(xid)
+
+    Causes the database to forget a heuristically completed TPC transaction. This function is only intended to be called by transaction managers.
+    
+    The `xid` parameter is mandatory and should be an object should be returned by the :meth:`~Connection.xid()` function. 
+
+    The following code sample demonstrates the ``tpc_forget()`` function::
+
+        connection.tpc_forget(xid=x)
+        x = connection.xid(format_id=1, global_transaction_id=“tx1”, branch_qualifier=“br1”)
+
+    See :ref:`tcp` for information on TPC.
+
+.. method:: Connection.tpc_prepare(xid)
+
+    Prepares a two-phase transaction for commit. After this function is called,
+    no further activity should take place on this connection until either
+    :meth:`~Connection.tpc_commit()` or :meth:`~Connection.tpc_rollback()` have been called.
+
+    Returns a boolean indicating whether a commit is needed or not. If you attempt to commit when not needed, then it results in the error ``ORA-24756: transaction does not exist``.
+
+    If an `xid` parameter is passed, then an object should be returned by the :meth:`~Connection.xid()` function. If an `xid` parameter is not passed, then the transaction identifier used by the previous :meth:`~Connection.tpc_begin()` is used.
+
+    The following code sample demonstrates the ``tpc_prepare()`` function::
+
+        connection.tpc_prepare(xid=x)
+        x = connection.xid(format_id=1, global_transaction_id=“tx1”, branch_qualifier=“br1”)
+
+    See :ref:`tcp` for information on TPC.
+
+.. method:: Connection.tpc_recover()
+
+    Returns a list of pending transaction identifiers that require recovery. Objects of type `Xid` (as returned by the :meth:`~Connection.xid()` function) are returned and these can be passed to :meth:`~Connection.tpc_commit()` or :meth:`~Connection.tpc_rollback()` as needed.
+
+    This function queries the view ``DBA_PENDING_TRANSACTIONS`` and requires ``SELECT`` privilege on that view.
+
+    The following code sample demonstrates the ``tpc_recover()`` function::
+
+        connection.tpc_recover()
+
+
+    See :ref:`tcp` for information on TPC.
+
+.. method:: Connection.tpc_rollback(xid)
+
+    Rolls back a global transaction.
+    
+    If `xid` is not passed, then it rolls back the transaction that was previously started with :meth:`~Connection.tpc_begin()`.
+
+    If `xid` is passed, then an object should be returned by :meth:`~Connection.xid()` and the specified transaction is rolled back. This form should be called outside of a transaction and is intended for use in recovery.
+
+    The following code sample demonstrates the ``tpc_rollback()`` function::
+
+        connection.tpc_rollback(xid=x)
+        x = connection.xid(format_id=1, global_transaction_id=“tx1”, branch_qualifier=“br1”)
+
+    See :ref:`tcp` for information on TPC.
+
+.. method:: Connection.unsubscribe(subscr)
+
+    Unsubscribe from events in the database that were originally subscribed to
+    using :meth:`~Connection.subscribe()`. The connection used to unsubscribe
+    should be the same one used to create the subscription, or should access
+    the same database and be connected as the same user name.
+
+.. method:: Connection.xid (format_id, global_transaction_id, branch_qualifier)
+
+    Returns a global transaction identifier (xid) that can be used with the Two-Phase Commit (TPC) functions.
+
+    The xid contains a format identifier, a global transaction identifier, and a branch identifier. There are no checks performed at the Python level. The values are checked by ODPI-C when they are passed to the relevant functions.
+    .. When this functionality is also supported in the thin driver the checks will be performed at the Python level as well.
+
+    The format_id parameter should be a positive 32-bit integer. This value identifies the format of the `global_transaction_id` and `branch_qualifier` parameters and the value is determined by the Transaction Manager (TM), if one is in use. 
+    
+    The `global_transaction_id` and `branch_qualifier` parameters should be of type `bytes` or `str`. If a value of type `str` is passed, then this value will be UTF-8 encoded to `bytes`. The values cannot exceed 64 bytes in length.
+
+    The following code sample demonstrates the ``xid()`` function::
+
+        connection.xid(format_id=1, global_transaction_id=“tx1”, branch_qualifier=“br1”)
+
+    See :ref:`tcp` for information on TPC.
+
+Attributes
+==========
+
+.. attribute:: Connection.action
+
+    This write-only attribute sets the action column in the v$session table. It
+    is a string attribute and cannot be set to None -- use the empty string
+    instead.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+
+.. attribute:: Connection.autocommit
+
+    This read-write attribute determines whether autocommit mode is on or off.
+    When autocommit mode is on, all statements are committed as soon as they
+    have completed executing.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+.. attribute:: Connection.call_timeout
+
+    This read-write attribute specifies the amount of time (in milliseconds)
+    that a single round-trip to the database may take before a timeout will
+    occur. A value of 0 means that no timeout will take place.
+
+    If a timeout occurs, the error *DPI-1067* will be returned if the
+    connection is still usable.  Alternatively the error *DPI-1080* will be
+    returned if the connection has become invalid and can no longer be used.
+
+    For consistency and compliance with the PEP 8 naming style, the
+    attribute `callTimeout` was renamed to `call_timeout`. The old name
+    will continue to work for a period of time.  The error *DPI-1080* was
+    also introduced in this release.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition and is only
+        available in Oracle Client 18c and higher.
+
+.. attribute:: Connection.client_identifier
+
+    This write-only attribute sets the client_identifier column in the
+    v$session table.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+
+.. attribute:: Connection.clientinfo
+
+    This write-only attribute sets the client_info column in the v$session
+    table.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+.. attribute:: Connection.current_schema
+
+    This read-write attribute sets the current schema attribute for the
+    session. Setting this value is the same as executing the SQL statement
+    "ALTER SESSION SET CURRENT_SCHEMA". The attribute is set (and verified) on
+    the next call that does a round trip to the server. The value is placed
+    before unqualified database objects in SQL statements you then execute.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+.. attribute:: Connection.dbop
+
+    This write-only attribute sets the database operation that is to be
+    monitored. This can be viewed in the DBOP_NAME column of the V$SQL_MONITOR
+    table.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+.. attribute:: Connection.dsn
+
+    This read-only attribute returns the TNS entry of the database to which a
+    connection has been established.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+.. attribute:: Connection.econtext_id
+
+    This write-only attribute specifies the execution context id. This value can be found as ecid in
+    the v$session table and econtext_id in the auditing tables. The maximum length is 64 bytes.
+
+.. attribute:: Connection.edition
+
+    This read-only attribute gets the session edition and is only available in
+    Oracle Database 11.2 (both client and server must be at this level or
+    higher for this to work).
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+.. attribute:: Connection.encoding
+
+    This read-only attribute returns the IANA character set name of the
+    character set in use by the Oracle client for regular strings.
+
+    .. deprecated:: cx_Oracle 8.2
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+.. attribute:: Connection.external_name
+
+    This read-write attribute specifies the external name that is used by the
+    connection when logging distributed transactions.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+.. attribute:: Connection.handle
+
+    This read-only attribute returns the Oracle Call Interface (OCI) service context handle for the
+    connection. It is primarily provided to facilitate testing the creation of
+    a connection using the OCI service context handle.
+
+    This property is only relevant in the python-oracledb Thick mode.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+
+.. attribute:: Connection.inputtypehandler
+
+    This read-write attribute specifies a method called for each value that is
+    bound to a statement executed on any cursor associated with this
+    connection.  The method signature is handler(cursor, value, arraysize) and
+    the return value is expected to be a variable object or None in which case
+    a default variable object will be created. If this attribute is None, the
+    default behavior will take place for all values bound to statements.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+
+.. attribute:: Connection.internal_name
+
+    This read-write attribute specifies the internal name that is used by the
+    connection when logging distributed transactions.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+.. attribute:: Connection.ltxid
+
+    This read-only attribute returns the logical transaction id for the
+    connection. It is used within Oracle Transaction Guard as a means of
+    ensuring that transactions are not duplicated. See the Oracle documentation
+    and the provided sample for more information.
+
+    .. note:
+
+        This attribute is an extension to the DB API definition. It is only
+        available when Oracle Database 12.1 or higher is in use on both the
+        server and the client.
+
+
+.. attribute:: Connection.maxBytesPerCharacter
+
+    This read-only attribute returns the maximum number of bytes each character
+    can use for the client character set.
+
+    .. deprecated:: cx_Oracle 8.2
+
+        Use the constant value of 4 instead.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+
+.. attribute:: Connection.module
+
+    This write-only attribute sets the module column in the v$session table.
+    The maximum length for this string is 48 and if you exceed this length you
+    will get ORA-24960.
+
+    .. note:
+
+        This attribute is an extension to the DB API definition.
+
+.. attribute:: Connection.nencoding
+
+    This read-only attribute returns the IANA character set name of the
+    national character set in use by the Oracle client. This is always the value "UTF-8".
+
+    .. deprecated:: cx_Oracle 8.2
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+.. attribute:: Connection.outputtypehandler
+
+    This read-write attribute specifies a method called for each column that is
+    going to be fetched from any cursor associated with this connection. The
+    method signature is handler(cursor, name, defaultType, length, precision,
+    scale) and the return value is expected to be a variable object or None in
+    which case a default variable object will be created. If this attribute is
+    None, the default behavior will take place for all columns fetched from
+    cursors.
+
+    See :ref:`outputtypehandlers`.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
+.. attribute:: Connection.stmtcachesize
+
+    This read-write attribute specifies the size of the statement cache. This
+    value can make a significant difference in performance if you have a small
+    number of statements that you execute repeatedly.
+
+    The default value is 20.
+
+    See :ref:`Statement Caching <stmtcache>` for more information.
+
+    .. note::
+
+        This attribute is an extension to the DB API definition.
 
 .. attribute:: Connection.tag
 
@@ -713,11 +829,10 @@ Connection Object
 
         This attribute is an extension to the DB API definition.
 
-
 .. attribute:: Connection.thin
 
-    This read-only attribute returns a boolean indicating if the connection was established with the
-    Thin driver (True) or Thick driver (False).
+    This read-only attribute returns a boolean indicating if the connection was established
+    with the python-oracledb Thin mode (True) or python-oracledb Thick mode (False).
 
 .. attribute:: Connection.tnsentry
 
@@ -732,139 +847,6 @@ Connection Object
 
         This attribute is an extension to the DB API definition.
 
-.. method:: Connection.tpc_begin(xid, flags, timeout)
-
-    Begins a Two-Phase Commit (TPC) transaction with the given transaction
-    id. This method should be called outside of a transaction (that is, nothing
-    may have executed since the last commit() or rollback() was performed).
-
-    The `xid` parameter should be an object returned by the `xid()` function. This function replaces the original `begin()` function and internally `begin()` simply calls this function.
-
-    The following code sample demonstrates the ``tpc_begin()`` function:
-
-    .. code-block:: python
-
-        def tpc_begin(self,
-                  xid: Xid,
-                  flags: int=constants.TPC_BEGIN_NEW) -> None
-
-    See :ref:`tcp` for information on TPC.
-
-.. method:: Connection.tpc_commit(xid=None, one_phase=False)
-
-    Prepares the global transaction for commit. This method returns a boolean 
-    indicating if a transaction was actually prepared in order to avoid the 
-    error ORA-24756 (transaction does not exist).
-
-    When called with no arguments, commits a transaction previously
-    prepared with :meth:`~Connection.tpc_prepare()` and optionally
-    prepared with :meth:`~Connection.tpc_prepare()`. If :meth:`~Connection.tpc_prepare()` is not called, a single
-    phase commit is performed. A transaction manager may choose to do this
-    if only a single resource is participating in the global transaction.
-
-    When called with a value for the `xid` parameter, then an object should be returned by the :meth:`~Connection.xid()` function. This form should be called outside of a transaction and is intended for use in recovery.
-
-    The `one_phase` parameter is a boolean identifying whether to
-    perform a one phase or two phase commit. This parameter is only examined if a value is
-    provided for the `xid` parameter. Otherwise, the driver already knows whether
-    :meth:`~Connection.tpc_prepare()` was called for the transaction and whether a one phase or two
-    phase commit is required.
-
-    The following code sample demonstrates the ``tpc_commit()`` function:
-
-    .. code-block:: python
-
-        def tpc_commit(self,
-                   xid: Xid=None,
-                   one_phase: bool=False) -> None
-
-    See :ref:`tcp` for information on TPC.
-
-.. method:: Connection.tpc_end(self, xid=None, flags)
-
-    This method ends or detaches from a TPC transaction. This function is only intended for use by transaction managers.
-
-    If an `xid` parameter is passed, then an object should be returned by the :meth:`~Connection.xid()` function. If no `xid` parameter is passed the one previously started with :meth:`~Connection.tpc_begin()` is used.
-
-    The following code sample demonstrates the ``tpc_end()`` function:
-
-    .. code-block:: python
-
-        def tpc_end(self,
-                xid: Xid=None,
-                flags: int=constants.TPC_END_NORMAL) -> None
-
-    See :ref:`tcp` for information on TPC.
-
-.. method:: Connection.tpc_forget(xid)
-
-    This method forgets a TPC transaction. This function is only intended to be called by transaction managers.
-    
-    The `xid` parameter is mandatory and an object should be returned by the :meth:`~Connection.xid()` function. 
-
-    The following code sample demonstrates the ``tpc_forget()`` function:
-
-    .. code-block:: python
-
-        def tpc_forget(self, xid: Xid) -> None
-
-    See :ref:`tcp` for information on TPC.
-
-.. method:: Connection.tpc_prepare(xid=None)
-
-    This method prepares a global transaction for commit. After calling this function,
-    no further activity should take place on this connection until either
-    :meth:`~Connection.tpc_commit()` or :meth:`~Connection.tpc_rollback()` have been called.
-
-    A boolean is returned indicating if a commit is needed or not. If you attempt to commit when not needed, then it results in the error `ORA-24756: transaction does not exist`.
-
-    If an `xid` parameter is passed, then an object should be returned by the :meth:`~Connection.xid()` function. If no `xid` parameter is passed, then the one previously started with :meth:`~Connection.tpc_begin()` is used.
-
-    This function replaces the original ``prepare()`` function. The original ``prepare()`` function is replaced by a call to this function without parameters.
-
-    The following code sample demonstrates the ``tpc_prepare()`` function:
-
-    .. code-block:: python
-
-        def tpc_prepare(self, xid: Xid=None) -> bool
-
-    See :ref:`tcp` for information on TPC.
-
-.. method:: Connection.tpc_recover()
-
-    This method returns a list of pending transaction ids that require recovery. Objects of type `Xid` (as returned by the :meth:`~Connection.xid()` function) are returned and these can be passed to :meth:`~Connection.tpc_commit()` or :meth:`~Connection.tpc_rollback()` as needed.
-
-    This function performs a query against `DBA_PENDING_TRANSACTIONS` and requires select privilege on the view.
-    
-    .. code-block:: python
-
-        def tpc_recover(self) -> list
-
-    
-    See :ref:`tcp` for information on TPC.
-
-.. method:: Connection.tpc_rollback(xid=None)
-
-    This method rolls back a global transaction.
-    
-    When this method is called without arguments, it rolls back the transaction previously
-    started with :meth:`~Connection.tpc_begin()`.
-
-    When called with a value for the `xid` parameter, then an object should be returned by the :meth:`~Connection.xid()` function and the specified transactions is rolled back. This form should be called outside of a transaction and is intended for use in recovery.
-
-    .. code-block:: python
-
-        def tpc_rollback(self, xid: Xid=None) -> None
-
-    See :ref:`tcp` for information on TPC.
-
-.. method:: Connection.unsubscribe(subscr)
-
-    Unsubscribe from events in the database that were originally subscribed to
-    using :meth:`~Connection.subscribe()`. The connection used to unsubscribe
-    should be the same one used to create the subscription, or should access
-    the same database and be connected as the same user name.
-
 .. attribute:: Connection.username
 
     This read-only attribute returns the name of the user which established the
@@ -873,7 +855,6 @@ Connection Object
     .. note::
 
         This attribute is an extension to the DB API definition.
-
 
 .. attribute:: Connection.version
 
@@ -889,25 +870,3 @@ Connection Object
         If you connect to Oracle Database 18 or higher with client libraries
         12.2 or lower that you will only receive the base version (such as
         18.0.0.0.0) instead of the full version (18.3.0.0.0).
-
-.. method:: Connection.xid (format_id, global_transaction_id, branch_qualifier)
-
-    Returns a global transaction identifier that can be used with the Two-Phase Commit (TPC) functions.
-
-    This function is used to build a named tuple called `Xid`, which contains the three components that identify an XA transaction. There are no checks performed at the Python level. The values are checked by ODPI-C when they are passed to the relevant functions.
-    .. When this functionality is also supported in the thin driver the checks will be performed at the Python level as well.
-
-    The format_id parameter should be a positive 32-bit integer. This value identifies the format of the `global_transaction_id` and `branch_qualifier` parameters and the value is determined by the Transaction Manager (TM) if one is in use. 
-    
-    The `global_transaction_id` and `branch_qualifier` parameters should be of type `bytes` or `str`. If a value of type `str` is passed, then this value will be UTF-8 encoded to `bytes`. The values cannot exceed 64 bytes in length.
-
-    The following code sample demonstrates the ``xid()`` function:
-
-        .. code-block:: python
-
-        def xid(self,
-                format_id: int,
-                global_transaction_id: Union[bytes, str],
-                branch_qualifier: Union[bytes, str]) -> Xid
-
-    See :ref:`tcp` for information on TPC.
