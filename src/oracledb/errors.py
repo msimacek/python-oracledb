@@ -261,7 +261,7 @@ ERR_MESSAGE_FORMATS = {
             'internal error: read integer of length {length} when expecting '
             'integer of no more than length {max_length}',
     ERR_INVALID_BIND_NAME:
-            'no bind placeholder named "{name}" was found in the SQL text',
+            'no bind placeholder named ":{name}" was found in the SQL text',
     ERR_INVALID_CONN_CLASS:
             'invalid connection class',
     ERR_INVALID_CONNECT_DESCRIPTOR:
@@ -311,7 +311,7 @@ ERR_MESSAGE_FORMATS = {
     ERR_MESSAGE_TYPE_UNKNOWN:
             'internal error: unknown protocol message type {message_type}',
     ERR_MISSING_BIND_VALUE:
-            'a bind variable replacement value for placeholder "{name}" was '
+            'a bind variable replacement value for placeholder ":{name}" was '
             'not provided',
     ERR_MIXED_ELEMENT_TYPES:
             'element {element} is not the same data type as previous elements',
