@@ -632,5 +632,44 @@ class TestCase(test_env.BaseTestCase):
                 pass
         self.assertEqual(Counter.num_calls, 2)
 
+    def test_2427_drop_dead_connection_from_pool(self):
+        "2427 - drop the pooled connection on receiving dead connection error"
+        admin_conn = oracledb.connect(test_env.get_admin_connect_string())
+        pool = test_env.get_pool(min=2, max=2, increment=2)
+
+        # acquire connections from the pool and kill all the sessions
+        with admin_conn.cursor() as admin_cursor:
+            for conn in [pool.acquire() for i in range(2)]:
+                with conn.cursor() as cursor:
+                    cursor.execute("""
+                        select
+                            dbms_debug_jdwp.current_session_id,
+                            dbms_debug_jdwp.current_session_serial
+                        from dual""")
+                    sid, serial = cursor.fetchone()
+                    sql = f"alter system kill session '{sid},{serial}'"
+                    admin_cursor.execute(sql)
+                conn.close()
+        self.assertEqual(pool.opened, 2)
+
+        # when try to re-use the killed sessions error will be raised;
+        # release all such connections
+        for conn in [pool.acquire() for i in range(2)]:
+            with conn.cursor() as cursor:
+                self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4011:",
+                                       cursor.execute, "select user from dual")
+            conn.close()
+        self.assertEqual(pool.opened, 0)
+
+        # if a free connection is available, it can be used; otherwise a new
+        # connection will be created
+        for conn in [pool.acquire() for i in range(2)]:
+            with conn.cursor() as cursor:
+                cursor.execute("select user from dual")
+                user, = cursor.fetchone()
+                self.assertEqual(user, test_env.get_main_user().upper())
+            conn.close()
+        self.assertEqual(pool.opened, 2)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
