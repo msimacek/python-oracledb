@@ -27,6 +27,7 @@ class _Error:
         self.iswarning = iswarning
         self.code = code
         self.offset = offset
+        self.is_session_dead = False
         self.full_code = ""
         if message is not None:
             pos = message.find(":")
@@ -45,6 +46,8 @@ class _Error:
                     args = re.search(pattern, message).groupdict()
                 else:
                     driver_error_num = driver_error_info
+                if driver_error_num == ERR_CONNECTION_CLOSED:
+                    self.is_session_dead = True
                 driver_error = _get_error_text(driver_error_num, **args)
                 self.message = f"{driver_error}\n{self.message}"
 
@@ -188,6 +191,7 @@ ERR_PROXY_FAILURE = 6004
 # Oracle error number cross reference
 ERR_ORACLE_ERROR_XREF = {
     28: ERR_CONNECTION_CLOSED,
+    600: ERR_CONNECTION_CLOSED,
     1005: ERR_NO_PASSWORD,
     24422: ERR_POOL_HAS_BUSY_CONNECTIONS,
     24349: ERR_ARRAY_DML_ROW_COUNTS_NOT_ENABLED,

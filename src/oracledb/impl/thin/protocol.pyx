@@ -266,6 +266,11 @@ cdef class Protocol:
             error = errors._Error(message.error_info.message,
                                   code=message.error_info.num,
                                   offset=message.error_info.pos)
+
+            # if a connection has received dead connection error then it is no
+            # longer usable
+            if error.is_session_dead:
+                self._force_close()
             exc_type = get_exception_class(message.error_info.num)
             raise exc_type(error)
 
