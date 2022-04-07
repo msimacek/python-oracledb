@@ -16,14 +16,15 @@
 # trips to the database to time out if a specified amount of time
 # (in milliseconds) has passed without a response from the database.
 #
-# This script requires Oracle Client 18.1 and higher.
+# This script requires Oracle Client 18.1 and higher when using thick mode.
 #------------------------------------------------------------------------------
 
 import oracledb
 import sample_env
 
-# this script is currently only supported in python-oracledb thick mode
-oracledb.init_oracle_client()
+# determine whether to use python-oracledb thin mode or thick mode
+if not sample_env.get_is_thin():
+    oracledb.init_oracle_client()
 
 connection = oracledb.connect(sample_env.get_main_connect_string())
 connection.call_timeout = 2000
