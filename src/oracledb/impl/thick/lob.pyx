@@ -11,7 +11,9 @@
 
 #------------------------------------------------------------------------------
 # lob.pyx
-#   Cython file defining the Lob class (embedded in driver.pyx).
+#
+# Cython file defining the thick Lob implementation class (embedded in
+# thick_impl.pyx).
 #------------------------------------------------------------------------------
 
 cdef class ThickLobImpl(BaseLobImpl):

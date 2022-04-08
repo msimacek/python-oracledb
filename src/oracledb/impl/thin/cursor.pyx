@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# cursor.pyx
+#
+# Cython file defining the thin Cursor implementation class (embedded in
+# thin_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef class ThinCursorImpl(BaseCursorImpl):
 
     cdef:

@@ -11,7 +11,9 @@
 
 #------------------------------------------------------------------------------
 # json.pyx
-#   Cython file defining methods and classes used for processing JSON data.
+#
+# Cython file defining methods and classes used for processing JSON data
+# (embedded in thick_impl.pyx).
 #------------------------------------------------------------------------------
 
 cdef class JsonBuffer:

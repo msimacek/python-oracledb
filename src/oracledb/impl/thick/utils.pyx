@@ -11,7 +11,8 @@
 
 #------------------------------------------------------------------------------
 # utils.pyx
-#   Cython file for utility functions (embedded in driver.pyx).
+#
+# Cython file for utility functions (embedded in thick_impl.pyx).
 #------------------------------------------------------------------------------
 
 cdef object _convert_from_json_node(dpiJsonNode *node):

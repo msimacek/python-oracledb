@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# dbobject.pyx
+#
+# Cython file defining the base DbObjectType, DbObjectAttr and DbObject
+# implementation classes (embedded in base_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef class BaseDbObjectImpl:
 
     @utils.CheckImpls("appending a value to a collection")

@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# soda.pyx
+#
+# Cython file defining the base SODA implementation classes (embedded in
+# base_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef class BaseSodaDbImpl:
 
     @utils.CheckImpls("creating a SODA collection")

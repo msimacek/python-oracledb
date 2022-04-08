@@ -11,7 +11,9 @@
 
 #------------------------------------------------------------------------------
 # var.pyx
-#   Cython file defining the variable class (embedded in driver.pyx).
+#
+# Cython file defining the variable implementation class (embedded in
+# thin_impl.pyx).
 #------------------------------------------------------------------------------
 
 cdef class ThinVarImpl(BaseVarImpl):

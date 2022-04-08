@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# odpi.pxd
+#
+# Cython definition file for the constants, functions and structures found in
+# ODPI-C used by the thick implementation classes (embedded in thick_impl.pyx).
+#------------------------------------------------------------------------------
+
 from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 

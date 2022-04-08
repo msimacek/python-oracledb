@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# data_types.pyx
+#
+# Cython file defining the data type array sent to the database server during
+# connect (embedded in thin_impl.pyx).
+#------------------------------------------------------------------------------
+
 ctypedef struct DataType:
     uint16_t data_type
     uint16_t conv_data_type

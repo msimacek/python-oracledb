@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# queue.pyx
+#
+# Cython file defining the base Queue implementation class (embedded in
+# base_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef class BaseQueueImpl:
 
     @utils.CheckImpls("dequeuing multiple messages")

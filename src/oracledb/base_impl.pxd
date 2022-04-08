@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# base_impl.pxd
+#
+# Cython definition file defining the base classes from which the thick and
+# thin implementations derive their classes.
+#------------------------------------------------------------------------------
+
 # cython: language_level=3
 
 from libc.stdint cimport int8_t, int16_t, int32_t, int64_t

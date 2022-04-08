@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# crypto.pyx
+#
+# Cython file defining the cryptographic methods used by the thin client
+# (embedded in thin_impl.pyx).
+#------------------------------------------------------------------------------
+
 from cryptography import x509
 from cryptography.hazmat.primitives.ciphers import algorithms, modes, Cipher
 from cryptography.hazmat.primitives import hashes

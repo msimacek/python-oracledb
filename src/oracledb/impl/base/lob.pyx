@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# lob.pyx
+#
+# Cython file defining the base Lob implementation class (embedded in
+# base_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef class BaseLobImpl:
 
     @utils.CheckImpls("closing a LOB")

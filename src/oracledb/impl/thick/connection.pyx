@@ -11,7 +11,9 @@
 
 #------------------------------------------------------------------------------
 # connection.pyx
-#   Cython file defining the connection class (embedded in driver.pyx).
+#
+# Cython file defining the thick Connection implementation class (embedded in
+# thick_impl.pyx).
 #------------------------------------------------------------------------------
 
 ctypedef int (*dpiConnSetTextAttrFunc)(dpiConn*, const char*, uint32_t) nogil

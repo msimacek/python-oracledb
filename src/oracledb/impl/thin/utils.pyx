@@ -9,6 +9,12 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# utils.pyx
+#
+# Cython file defining utility classes and methods (embedded in thin_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef bint DEBUG_PACKETS = ("PYO_DEBUG_PACKETS" in os.environ)
 
 class ConnectConstants:

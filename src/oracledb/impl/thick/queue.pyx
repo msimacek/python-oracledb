@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# queue.pyx
+#
+# Cython file defining the thick Queue implementation class (embedded in
+# thick_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef class ThickQueueImpl(BaseQueueImpl):
     cdef:
         dpiQueue* _handle

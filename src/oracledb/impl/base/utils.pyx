@@ -9,6 +9,12 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# utils.pyx
+#
+# Cython file defining utility methods (embedded in base_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef int _set_bool_param(dict args, str name, bint *out_val) except -1:
     """
     Sets a boolean parameter to the value provided in the dictionary. This can

@@ -11,7 +11,9 @@
 
 #------------------------------------------------------------------------------
 # soda.pyx
-#   Cython file defining the SODA classes (embedded in driver.pyx).
+#
+# Cython file defining the thick implementation SODA classes (embedded in
+# thick_impl.pyx).
 #------------------------------------------------------------------------------
 
 cdef class ThickSodaDbImpl(BaseSodaDbImpl):

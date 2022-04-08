@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# constants.pxi
+#
+# Cython file defining constants used by the thin implementation classes
+# (embedded in thin_impl.pyx).
+#------------------------------------------------------------------------------
+
 # packet types
 DEF TNS_PACKET_TYPE_CONNECT = 1
 DEF TNS_PACKET_TYPE_ACCEPT = 2

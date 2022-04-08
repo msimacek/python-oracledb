@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# conversions.pyx
+#
+# Cython file defining the conversions between data types that are supported by
+# the thin client (embedded in thin_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef converter_dict = {
     (TNS_DATA_TYPE_CHAR, TNS_DATA_TYPE_NUMBER): float,
     (TNS_DATA_TYPE_VARCHAR, TNS_DATA_TYPE_NUMBER): float,

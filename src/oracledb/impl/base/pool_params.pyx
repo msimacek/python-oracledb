@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# pool_params.pyx
+#
+# Cython file defining the base PoolParams implementation class (embedded in
+# base_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef class PoolParamsImpl(ConnectParamsImpl):
 
     def __init__(self):

@@ -11,8 +11,11 @@
 
 #------------------------------------------------------------------------------
 # cursor.pyx
-#   Cython file defining the cursor class (embedded in driver.pyx).
+#
+# Cython file defining the thick Cursor implementation class (embedded in
+# thick_impl.pyx).
 #------------------------------------------------------------------------------
+
 
 cdef class ThickCursorImpl(BaseCursorImpl):
     cdef:

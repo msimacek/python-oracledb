@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# cursor.pyx
+#
+# Cython file defining the base Cursor implementation class (embedded in
+# base_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef class BaseCursorImpl:
 
     @cython.boundscheck(False)

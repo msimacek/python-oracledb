@@ -11,7 +11,9 @@
 
 #------------------------------------------------------------------------------
 # pool.pyx
-#   Cython file defining the pool class (embedded in driver.pyx).
+#
+# Cython file defining the thick Pool implementation class (embedded in
+# thick_impl.pyx).
 #------------------------------------------------------------------------------
 
 cdef class ThickPoolImpl(BasePoolImpl):

@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# protocol.pyx
+#
+# Cython file defining the protocol used by the client when communicating with
+# the database (embedded in thin_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef class Protocol:
 
     cdef:

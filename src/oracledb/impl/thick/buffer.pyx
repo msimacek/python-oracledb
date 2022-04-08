@@ -11,7 +11,10 @@
 
 #------------------------------------------------------------------------------
 # buffer.pyx
-#   Cython file for the StringBuffer class (embedded in driver.pyx).
+#
+# Cython file defining the StringBuffer class, used for transforming Python
+# "str" and "bytes" objects into the C buffer representation required by ODPI-C
+# (embedded in thick_impl.pyx).
 #------------------------------------------------------------------------------
 
 @cython.freelist(20)

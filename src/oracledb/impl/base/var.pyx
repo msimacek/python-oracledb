@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# var.pyx
+#
+# Cython file defining the base Variable implementation class (embedded in
+# base_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef class BaseVarImpl:
 
     cdef int _bind(self, object conn, BaseCursorImpl cursor,

@@ -9,6 +9,14 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# buffer.pyx
+#
+# Cython file defining the low-level network buffer read and write classes and
+# methods for reading and writing low-level data from those buffers (embedded
+# in thin_impl.pyx).
+#------------------------------------------------------------------------------
+
 DEF PACKET_HEADER_SIZE = 8
 DEF NUMBER_AS_TEXT_CHARS = 172
 DEF NUMBER_MAX_DIGITS = 40

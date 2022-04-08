@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# network_services.pyx
+#
+# Cython file defining the network services packet sent to the database and the
+# response received by the client (embedded in thin_impl.pyx).
+#------------------------------------------------------------------------------
+
 # magic value used to recognize network data
 DEF TNS_NETWORK_MAGIC = 0xdeadbeef
 

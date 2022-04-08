@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# connection.pyx
+#
+# Cython file defining the thin Connection implementation class (embedded in
+# thin_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef class ThinConnImpl(BaseConnImpl):
 
     cdef:

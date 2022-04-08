@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# subscr.pyx
+#
+# Cython file defining the thick Subscription implementation class (embedded in
+# thick_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef void _callback_handler(void* context, dpiSubscrMessage* message) with gil:
     cdef:
         object subscr = <object> context

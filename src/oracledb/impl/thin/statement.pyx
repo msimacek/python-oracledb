@@ -9,6 +9,14 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# statement.pyx
+#
+# Cython file defining the Statement and BindInfo classes used to hold
+# information about statements that are executed and any bind parameters that
+# may be bound to those statements (embedded in thin_impl.pyx).
+#------------------------------------------------------------------------------
+
 # Rules for named binds:
 # 1. Quoted and non-quoted bind names are allowed.
 # 2. Quoted binds can contain any characters.

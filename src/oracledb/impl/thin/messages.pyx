@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# messages.pyx
+#
+# Cython file defining the various messages that are sent to the database and
+# the responses that are received by the client (embedded in thin_impl.pyx).
+#------------------------------------------------------------------------------
+
 @cython.freelist(20)
 cdef class _OracleErrorInfo:
     cdef:

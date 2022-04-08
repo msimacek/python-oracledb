@@ -9,6 +9,14 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# capabilities.pyx
+#
+# Cython file defining the capabilities (neogiated at connect time) that both
+# the database server and the client are capable of (embedded in
+# thin_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef class Capabilities:
     cdef:
         uint16_t protocol_version

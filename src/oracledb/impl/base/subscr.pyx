@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# subscr.pyx
+#
+# Cython file defining the base Subscription implementation class (embedded in
+# base_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef class BaseSubscrImpl:
 
     @utils.CheckImpls("registering a query on a subscription")

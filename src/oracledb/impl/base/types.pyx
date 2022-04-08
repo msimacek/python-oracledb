@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# types.pyx
+#
+# Cython file defining the API types mandated by the Python Database API as
+# well as the database types specific to Oracle (embedded in base_impl.pyx).
+#------------------------------------------------------------------------------
+
 cdef class ApiType:
 
     def __init__(self, name, *dbtypes):

@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# connect_params.pyx
+#
+# Cython file defining the base ConnectParams implementation class (embedded in
+# base_impl.pyx).
+#------------------------------------------------------------------------------
+
 # a set of alternative parameter names that are used in connect descriptors
 # the key is the parameter name used in connect descriptors and the value is
 # the key used in argument dictionaries (and stored in the parameter objects)

@@ -11,8 +11,9 @@
 
 #------------------------------------------------------------------------------
 # dbobject.pyx
-#   Cython file defining the ObjectType, ObjectAttr and Object classes
-# (embedded in driver.pyx).
+#
+# Cython file defining the thick DbObjectType, DbObjectAttr and DbObject
+# implementation classes (embedded in thick_impl.pyx).
 #------------------------------------------------------------------------------
 
 cdef class ThickDbObjectImpl(BaseDbObjectImpl):
