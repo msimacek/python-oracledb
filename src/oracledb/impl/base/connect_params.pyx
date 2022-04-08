@@ -92,10 +92,23 @@ cdef dict _parse_connect_descriptor(str data, dict args):
 
 cdef class ConnectParamsImpl:
 
-    def __init__(self, dict args):
+    def __init__(self):
         cdef AddressList address_list
         self.stmtcachesize = defaults.stmtcachesize
         self.config_dir = defaults.config_dir
+        self._default_description = Description()
+        self._default_address = Address()
+        self.description_list = DescriptionList()
+        self.description_list.descriptions.append(self._default_description)
+        address_list = AddressList()
+        address_list.addresses.append(self._default_address)
+        self._default_description.address_lists.append(address_list)
+
+    def set(self, dict args):
+        """
+        Sets the property values based on the supplied arguments. All values
+        not supplied will be left unchanged.
+        """
         self._external_handle = args.get("handle", 0)
         _set_str_param(args, "user", self)
         _set_str_param(args, "proxy_user", self)
@@ -115,17 +128,10 @@ cdef class ConnectParamsImpl:
         self.appcontext = args.get("appcontext")
         self.shardingkey = args.get("shardingkey")
         self.supershardingkey = args.get("supershardingkey")
-        self._default_description = Description()
         self._default_description.set_from_connect_data_args(args)
         self._default_description.set_from_description_args(args)
         self._default_description.set_from_security_args(args)
-        self._default_address = Address()
         self._default_address.set_from_args(args)
-        self.description_list = DescriptionList()
-        self.description_list.descriptions.append(self._default_description)
-        address_list = AddressList()
-        address_list.addresses.append(self._default_address)
-        self._default_description.address_lists.append(address_list)
 
     cdef str _build_connect_string(self):
         """
@@ -185,6 +191,36 @@ cdef class ConnectParamsImpl:
         if value_minutes * 60 == value_int:
             return f"{value_minutes}min"
         return f"{value_int}"
+
+    cdef int _copy(self, ConnectParamsImpl other_params) except -1:
+        """
+        Internal method for copying attributes from another set of parameters.
+        """
+        self.config_dir = other_params.config_dir
+        self.user = other_params.user
+        self.proxy_user = other_params.proxy_user
+        self.events = other_params.events
+        self.mode = other_params.mode
+        self.edition = other_params.edition
+        self.appcontext = other_params.appcontext
+        self.tag = other_params.tag
+        self.matchanytag = other_params.matchanytag
+        self.shardingkey = other_params.shardingkey
+        self.supershardingkey = other_params.supershardingkey
+        self.stmtcachesize = other_params.stmtcachesize
+        self.disable_oob = other_params.disable_oob
+        self.description_list = other_params.description_list
+        self.connect_string = other_params.connect_string
+        self._external_handle = other_params._external_handle
+        self._default_description = other_params._default_description
+        self._default_address = other_params._default_address
+        self._password = other_params._password
+        self._password_obfuscator = other_params._password_obfuscator
+        self._new_password = other_params._new_password
+        self._new_password_obfuscator = other_params._new_password_obfuscator
+        self._wallet_password = other_params._wallet_password
+        self._wallet_password_obfuscator = \
+                other_params._wallet_password_obfuscator
 
     cdef bytes _get_new_password(self):
         """
@@ -398,34 +434,10 @@ cdef class ConnectParamsImpl:
         """
         Creates a copy of the connection parameters and returns it.
         """
-        cdef ConnectParamsImpl params_impl
-        params_impl = ConnectParamsImpl.__new__(ConnectParamsImpl)
-        params_impl.config_dir = self.config_dir
-        params_impl.user = self.user
-        params_impl.proxy_user = self.proxy_user
-        params_impl.events = self.events
-        params_impl.mode = self.mode
-        params_impl.edition = self.edition
-        params_impl.appcontext = self.appcontext
-        params_impl.tag = self.tag
-        params_impl.matchanytag = self.matchanytag
-        params_impl.shardingkey = self.shardingkey
-        params_impl.supershardingkey = self.supershardingkey
-        params_impl.stmtcachesize = self.stmtcachesize
-        params_impl.disable_oob = self.disable_oob
-        params_impl.description_list = self.description_list
-        params_impl.connect_string = self.connect_string
-        params_impl._external_handle = self._external_handle
-        params_impl._default_description = self._default_description
-        params_impl._default_address = self._default_address
-        params_impl._password = self._password
-        params_impl._password_obfuscator = self._password_obfuscator
-        params_impl._new_password = self._new_password
-        params_impl._new_password_obfuscator = self._new_password_obfuscator
-        params_impl._wallet_password = self._wallet_password
-        params_impl._wallet_password_obfuscator = \
-                self._wallet_password_obfuscator
-        return params_impl
+        cdef ConnectParamsImpl new_params
+        new_params = ConnectParamsImpl.__new__(ConnectParamsImpl)
+        new_params._copy(self)
+        return new_params
 
     def get_connect_string(self):
         """

@@ -28,8 +28,11 @@ class TestCase(test_env.BaseTestCase):
         value read back successfully.
         """
         params = oracledb.ConnectParams()
+        orig_value = getattr(params, name)
+        copied_params = params.copy()
         setattr(params, name, value)
         self.assertEqual(getattr(params, name), value)
+        self.assertEqual(getattr(copied_params, name), orig_value)
 
     def test_4500_simple_easy_connect_with_port(self):
         "4500 - test simple EasyConnect string parsing with port specified"

@@ -22,8 +22,7 @@ class ConnectionPool:
     __module__ = constants.MODULE_NAME
 
     def __init__(self, dsn: str=None, *,
-                 pool_params: PoolParams=None,
-                 conn_params: ConnectParams=None,
+                 params: PoolParams=None,
                  **kwargs) -> None:
         """
         Constructor for creating a connection pool. Connection pooling creates
@@ -42,29 +41,25 @@ class ConnectionPool:
         created using the additional keyword arguments.
         """
         self._impl = None
-        if pool_params is None:
-            pool_params_impl = base_impl.PoolParamsImpl(kwargs)
-        elif not isinstance(pool_params, PoolParams):
+        if params is None:
+            params_impl = base_impl.PoolParamsImpl()
+        elif not isinstance(params, PoolParams):
             errors._raise_err(errors.ERR_INVALID_POOL_PARAMS)
         else:
-            pool_params_impl = pool_params._impl
-        if conn_params is None:
-            conn_params_impl = base_impl.ConnectParamsImpl(kwargs)
-        elif not isinstance(conn_params, ConnectParams):
-            errors._raise_err(errors.ERR_INVALID_CONNECT_PARAMS)
-        else:
-            conn_params_impl = conn_params._impl
+            params_impl = params._impl
+        if kwargs:
+            params_impl.set(kwargs)
         self._connection_type = \
-                pool_params_impl.connectiontype or connection_module.Connection
+                params_impl.connectiontype or connection_module.Connection
         thin = driver_mode.check_and_return_mode()
         if dsn is not None:
-            conn_params_impl.parse_dsn(dsn, thin)
+            params_impl.parse_dsn(dsn, thin)
         if thin:
-            impl = thin_impl.ThinPoolImpl(pool_params_impl, conn_params_impl)
+            impl = thin_impl.ThinPoolImpl(params_impl)
         else:
-            impl = thick_impl.ThickPoolImpl(pool_params_impl, conn_params_impl)
+            impl = thick_impl.ThickPoolImpl(params_impl)
         self._impl = impl
-        self.session_callback = pool_params_impl.session_callback
+        self.session_callback = params_impl.session_callback
 
     def _verify_open(self) -> None:
         """
@@ -496,23 +491,19 @@ def _pool_factory(f):
     """
     def wrapped(dsn: str=None, *,
                 pool_class: Type[ConnectionPool]=ConnectionPool,
-                pool_params: PoolParams=None,
-                conn_params: ConnectParams=None,
+                params: PoolParams=None,
                 **kwargs) -> ConnectionPool:
-        f(dsn=dsn, pool_class=pool_class, pool_params=pool_params,
-          conn_params=conn_params, **kwargs)
+        f(dsn=dsn, pool_class=pool_class, params=params, **kwargs)
         if not issubclass(pool_class, ConnectionPool):
             errors._raise_err(errors.INVALID_POOL_CLASS)
-        return pool_class(dsn, pool_params=pool_params,
-                          conn_params=conn_params, **kwargs)
+        return pool_class(dsn, params=params, **kwargs)
     return wrapped
 
 
 @_pool_factory
 def create_pool(dsn: str=None, *,
                 pool_class: Type[ConnectionPool]=ConnectionPool,
-                pool_params: PoolParams=None,
-                conn_params: ConnectParams=None,
+                params: PoolParams=None,
 
                 # pool creation parameters
                 min: int=None,
@@ -591,14 +582,13 @@ def create_pool(dsn: str=None, *,
     The pool_class parameter is expected to be ConnectionPool or a subclass of
     ConnectionPool.
 
-    The pool_params parameter is expected to be of type PoolParams and contains
-    parameters that are used to create the pool. If not specified, a new
-    PoolParams object will be created using the additional keyword arguments.
-
-    The conn_params parameter is expected to be of type ConnectParams and
-    contains connection parameters that will be used when creating connections
-    in the pool. If not specified, a new ConnectParams object will be created
-    using the additional keyword arguments. If a dsn is supplied it will modify
-    the connection parameters to include the parameters supplied in the dsn.
+    The params parameter is expected to be of type PoolParams and contains
+    parameters that are used to create the pool. See the documentation on
+    PoolParams for more information. If this parameter is not specified, the
+    additional keyword parameters will be used to create an instance of
+    PoolParams. If both the params parameter and additional keyword parameters
+    are specified an exception is raised. Note that if a dsn is also supplied,
+    the params will be modified to contain the connection parameters found
+    within the dsn.
     """
     pass

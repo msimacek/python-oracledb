@@ -25,8 +25,11 @@ class TestCase(test_env.BaseTestCase):
         value read back successfully.
         """
         params = oracledb.PoolParams()
+        orig_value = getattr(params, name)
+        copied_params = params.copy()
         setattr(params, name, value)
         self.assertEqual(getattr(params, name), value)
+        self.assertEqual(getattr(copied_params, name), orig_value)
 
     def test_4700_writable_params(self):
         "4700 - test writable parameters"

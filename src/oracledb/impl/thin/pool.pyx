@@ -36,21 +36,20 @@ cdef class ThinPoolImpl(BasePoolImpl):
         object _condition
         bint _open
 
-    def __init__(self, PoolParamsImpl pool_params,
-                 ConnectParamsImpl connect_params):
-        if connect_params._password is None:
+    def __init__(self, PoolParamsImpl params):
+        if params._password is None:
             errors._raise_err(errors.ERR_NO_PASSWORD)
-        self._connect_params = connect_params.copy()
-        self.username = connect_params.user
-        self.dsn = connect_params.connect_string
-        self.min = pool_params.min
-        self.max = pool_params.max
-        self.increment = pool_params.increment
-        self.homogeneous = pool_params.homogeneous
-        self._getmode = pool_params.getmode
-        self._wait_timeout = pool_params.wait_timeout
-        self._stmt_cache_size = connect_params.stmtcachesize
-        self._ping_interval = pool_params.ping_interval
+        self._connect_params = params.copy()
+        self.username = params.user
+        self.dsn = params.connect_string
+        self.min = params.min
+        self.max = params.max
+        self.increment = params.increment
+        self.homogeneous = params.homogeneous
+        self._getmode = params.getmode
+        self._wait_timeout = params.wait_timeout
+        self._stmt_cache_size = params.stmtcachesize
+        self._ping_interval = params.ping_interval
         self._free_new_conn_impls = []
         self._free_used_conn_impls = []
         self._busy_conn_impls = []
