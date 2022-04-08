@@ -159,6 +159,7 @@ cdef class ConnectParamsImpl:
 
     cdef str _build_connect_string(self)
     cdef str _build_tcp_connect_timeout_str(self, double value)
+    cdef int _copy(self, ConnectParamsImpl other_params) except -1
     cdef bytes _get_new_password(self)
     cdef bytearray _get_obfuscator(self, str password)
     cdef bytes _get_password(self)
@@ -173,7 +174,7 @@ cdef class ConnectParamsImpl:
     cdef bytearray _xor_bytes(self, bytearray a, bytearray b)
 
 
-cdef class PoolParamsImpl:
+cdef class PoolParamsImpl(ConnectParamsImpl):
     cdef:
         public uint32_t min
         public uint32_t max

@@ -13,90 +13,24 @@ from typing import Callable, Type, Union
 
 from . import base_impl, constants, errors, utils
 from . import connection as connection_module
+from .connect_params import ConnectParams
 
-class PoolParams:
+class PoolParams(ConnectParams):
     """
     Contains all parameters used for creating a connection pool.
     """
     __module__ = constants.MODULE_NAME
     __slots__ = ["_impl"]
 
-    @utils.WithParamsImpl(base_impl.PoolParamsImpl)
-    def __init__(self, *,
-                 min: int=None,
-                 max: int=None,
-                 increment: int=None,
-                 connectiontype: Type["connection_module.Connection"]=None,
-                 getmode: int=None,
-                 homogeneous: bool=True,
-                 externalauth: bool=None,
-                 timeout: int=0,
-                 wait_timeout: int=0,
-                 max_lifetime_session: int=0,
-                 session_callback: Callable=None,
-                 max_sessions_per_shard: int=0,
-                 soda_metadata_cache: bool=None,
-                 ping_interval: int=None):
+    def __init__(self, **kwargs):
         """
-        Constructor for pool parameters. All parameters are optional and must
-        be specified as keyword parameters only. A brief description of each
-        parameter follows:
-
-        - min: the minimum number of connections the pool should contain
-          (default: 1)
-
-        - max: the maximum number of connections the pool should contain
-          (default: 2)
-
-        - increment: the number of connections that should be added to the pool
-          whenever a new connection needs to be created (default: 1)
-
-        - connectiontype: the class of the connection that should be returned
-          during calls to pool.acquire(). It must be Connection or a subclass
-          of Connection (default: oracledb.Connection)
-
-        - getmode: how pool.acquire() will behave. One of the constants
-          oracledb.POOL_GETMODE_WAIT, oracledb.POOL_GETMODE_NOWAIT,
-          oracledb.POOL_GETMODE_FORCEGET, or oracledb.POOL_GETMODE_TIMEDWAIT
-          (default: oracledb.POOL_GETMODE_WAIT)
-
-        - homogeneous: a boolean indicating whether the connections are
-          homogeneous (same user) or heterogeneous (multiple users) (default:
-          True)
-
-        - externalauth: a boolean indicating whether to use external
-          authentication (default: False)
-
-        - timeout: length of time (in seconds) that a connection may remain
-          idle in the pool before it is terminated. If it is 0 then connections
-          are never terminated (default: 0)
-
-        - wait_timeout: length of time (in milliseconds) that a caller should
-          wait when acquiring a connection from the pool with getmode set to
-          oracledb.POOL_GETMODE_TIMEDWAIT (default: 0)
-
-        - max_lifetime_session: length of time (in seconds) that connections
-          can remain in the pool. If it is 0 then connections may remain in the
-          pool indefinitely (default: 0)
-
-        - session_callback: a callable that is invoked when a connection is
-          returned from the pool for the first time, or when the connection tag
-          differs from the one requested (default: None)
-
-        - max_sessions_per_shard: the maximum number of connections that may be
-          associated with a particular shard
-
-        - soda_metadata_cache: boolean indicating whether or not the SODA
-          metadata cache should be enabled (default: False)
-
-        - ping_interval: length of time (in seconds) after which an unused
-          connection in the pool will be a candidate for pinging when
-          pool.acquire() is called. If the ping to the database indicates the
-          connection is not alive a replacement connection will be returned by
-          pool.acquire(). If ping_interval is a negative value the ping
-          functionality will be disabled (default: 60)
+        Constructor for pool parameters. If any parameters are specified they
+        are passed to the set() method. See the documentation there for details
+        on the available parameters.
         """
-        pass
+        self._impl = base_impl.PoolParamsImpl()
+        if kwargs:
+            self.set(**kwargs)
 
     def __repr__(self):
         return f"PoolParams(" \
@@ -125,6 +59,14 @@ class PoolParams:
     @connectiontype.setter
     def connectiontype(self, value: Type["connection_module.Connection"]) -> None:
         self._impl.connectiontype = value
+
+    def copy(self) -> Type["PoolParams"]:
+        """
+        Creates a copy of the parameters and returns it.
+        """
+        params = PoolParams.__new__(PoolParams)
+        params._impl = self._impl.copy()
+        return params
 
     @property
     def externalauth(self) -> bool:
@@ -244,6 +186,133 @@ class PoolParams:
     @session_callback.setter
     def session_callback(self, value: Callable) -> None:
         self._impl.session_callback = value
+
+    @utils.params_setter
+    def set(self, *,
+
+            # pool configuration parameters
+            min: int=None,
+            max: int=None,
+            increment: int=None,
+            connectiontype: Type["connection_module.Connection"]=None,
+            getmode: int=None,
+            homogeneous: bool=True,
+            externalauth: bool=None,
+            timeout: int=0,
+            wait_timeout: int=0,
+            max_lifetime_session: int=0,
+            session_callback: Callable=None,
+            max_sessions_per_shard: int=0,
+            soda_metadata_cache: bool=None,
+            ping_interval: int=None,
+
+            # credentials
+            user: str=None,
+            proxy_user: str=None,
+            password: str=None,
+            newpassword: str=None,
+            wallet_password: str=None,
+
+            # connect string parameters
+            host: str=None,
+            port: int=None,
+            protocol: str=None,
+            https_proxy: str=None,
+            https_proxy_port: int=None,
+            service_name: str=None,
+            sid: str=None,
+            server_type: str=None,
+            cclass: str=None,
+            purity: int=None,
+            expire_time: int=None,
+            retry_count: int=None,
+            retry_delay: int=None,
+            tcp_connect_timeout: float=None,
+            ssl_server_dn_match: bool=None,
+            ssl_server_cert_dn: str=None,
+            wallet_location: str=None,
+
+            # other parameters
+            events: bool=None,
+            mode: int=None,
+            disable_oob: bool=None,
+            stmtcachesize: int=None,
+            edition: str=None,
+            tag: str=None,
+            matchanytag: bool=None,
+            config_dir: str=None,
+            appcontext: list=None,
+            shardingkey: list=None,
+            supershardingkey: list=None,
+            handle: int=None,
+
+            # deprecated (ignored) parameters
+            threaded: bool=None,
+            encoding: str=None,
+            nencoding: str=None) -> None:
+        """
+        Sets pool parameters. Only those parameters which are specified (and
+        are not None) will be changed; all other values will remain unchanged.
+        A brief description of each parameter follows:
+
+        - min: the minimum number of connections the pool should contain
+          (default: 1)
+
+        - max: the maximum number of connections the pool should contain
+          (default: 2)
+
+        - increment: the number of connections that should be added to the pool
+          whenever a new connection needs to be created (default: 1)
+
+        - connectiontype: the class of the connection that should be returned
+          during calls to pool.acquire(). It must be Connection or a subclass
+          of Connection (default: oracledb.Connection)
+
+        - getmode: how pool.acquire() will behave. One of the constants
+          oracledb.POOL_GETMODE_WAIT, oracledb.POOL_GETMODE_NOWAIT,
+          oracledb.POOL_GETMODE_FORCEGET, or oracledb.POOL_GETMODE_TIMEDWAIT
+          (default: oracledb.POOL_GETMODE_WAIT)
+
+        - homogeneous: a boolean indicating whether the connections are
+          homogeneous (same user) or heterogeneous (multiple users) (default:
+          True)
+
+        - externalauth: a boolean indicating whether to use external
+          authentication (default: False)
+
+        - timeout: length of time (in seconds) that a connection may remain
+          idle in the pool before it is terminated. If it is 0 then connections
+          are never terminated (default: 0)
+
+        - wait_timeout: length of time (in milliseconds) that a caller should
+          wait when acquiring a connection from the pool with getmode set to
+          oracledb.POOL_GETMODE_TIMEDWAIT (default: 0)
+
+        - max_lifetime_session: length of time (in seconds) that connections
+          can remain in the pool. If it is 0 then connections may remain in the
+          pool indefinitely (default: 0)
+
+        - session_callback: a callable that is invoked when a connection is
+          returned from the pool for the first time, or when the connection tag
+          differs from the one requested (default: None)
+
+        - max_sessions_per_shard: the maximum number of connections that may be
+          associated with a particular shard
+
+        - soda_metadata_cache: boolean indicating whether or not the SODA
+          metadata cache should be enabled (default: False)
+
+        - ping_interval: length of time (in seconds) after which an unused
+          connection in the pool will be a candidate for pinging when
+          pool.acquire() is called. If the ping to the database indicates the
+          connection is not alive a replacement connection will be returned by
+          pool.acquire(). If ping_interval is a negative value the ping
+          functionality will be disabled (default: 60)
+
+        The remaining parameters are the same as for connection parameters and
+        are described there.
+        """
+        pass
 
     @property
     def soda_metadata_cache(self) -> bool:

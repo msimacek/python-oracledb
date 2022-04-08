@@ -71,13 +71,13 @@ class Connection:
 
         # determine which connection parameters to use
         if params is None:
-            params_impl = base_impl.ConnectParamsImpl(kwargs)
+            params_impl = base_impl.ConnectParamsImpl()
         elif not isinstance(params, ConnectParams):
             errors._raise_err(errors.ERR_INVALID_CONNECT_PARAMS)
-        elif kwargs:
-            errors._raise_err(errors.ERR_PARAMS_AND_KEYWORD_PARAMS)
         else:
             params_impl = params._impl
+        if kwargs:
+            params_impl.set(kwargs)
         if dsn is not None:
             params_impl.parse_dsn(dsn, thin)
 

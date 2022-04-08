@@ -21,178 +21,15 @@ class ConnectParams:
     __module__ = constants.MODULE_NAME
     __slots__ = ["_impl"]
 
-    @utils.WithParamsImpl(base_impl.ConnectParamsImpl)
-    def __init__(self, *,
-
-                 # credentials
-                 user: str=None,
-                 proxy_user: str=None,
-                 password: str=None,
-                 newpassword: str=None,
-                 wallet_password: str=None,
-
-                 # connect string parameters
-                 host: str=None,
-                 port: int=None,
-                 protocol: str=None,
-                 https_proxy: str=None,
-                 https_proxy_port: int=None,
-                 service_name: str=None,
-                 sid: str=None,
-                 server_type: str=None,
-                 cclass: str=None,
-                 purity: int=None,
-                 expire_time: int=None,
-                 retry_count: int=None,
-                 retry_delay: int=None,
-                 tcp_connect_timeout: float=None,
-                 ssl_server_dn_match: bool=None,
-                 ssl_server_cert_dn: str=None,
-                 wallet_location: str=None,
-
-                 # other parameters
-                 events: bool=None,
-                 mode: int=None,
-                 disable_oob: bool=None,
-                 stmtcachesize: int=None,
-                 edition: str=None,
-                 tag: str=None,
-                 matchanytag: bool=None,
-                 config_dir: str=None,
-                 appcontext: list=None,
-                 shardingkey: list=None,
-                 supershardingkey: list=None,
-                 handle: int=None,
-
-                 # deprecated (ignored) parameters
-                 threaded: bool=None,
-                 encoding: str=None,
-                 nencoding: str=None) -> None:
+    def __init__(self, **kwargs):
         """
-        Constructor for connection parameters. All parameters are optional and
-        must be specified as keyword parameters only. A brief description of
-        each parameter follows:
-
-        - user: the name of the user to connect to (default: None)
-
-        - proxy_user: the name of the proxy user to connect to. If this value
-          is not specified, it will be parsed out of user if user is in the
-          form "user[proxy_user]" (default: None)
-
-        - password: the password for the user (default: None)
-
-        - newpassword: the new password for the user. The new password will
-          take effect immediately upon a successful connection to the database
-          (default: None)
-
-        - wallet_password: the password to use to decrypt the wallet, if it is
-          encrypted. This value is only used in thin mode (default: None)
-
-        - host: the name or IP address of the machine hosting the listener,
-          which handles the initial connection to the database (default: None)
-
-        - port: the port number on which the listener is listening
-          (default: 1521)
-
-        - protocol: one of the strings "tcp" or "tcps" indicating whether to
-          use unencrypted network traffic or encrypted network traffic (TLS)
-          (default: "tcp")
-
-        - https_proxy: the name or IP address of a proxy host to use for
-          tunneling secure connections (default: None)
-
-        - https_proxy_port: the port on which to communicate with the proxy
-          host (default: 0)
-
-        - service_name: the service name of the database (default: None)
-
-        - sid: the SID of the database. Note using a service_name instead is
-          recommended (default: None)
-
-        - server_type: the type of server connection that should be
-          established. If specified, it should be one of "dedicated", "shared"
-          or "pooled" (default: None)
-
-        - cclass: connection class to use for DRCP (default: None)
-
-        - purity: purity to use for DRCP (default: oracledb.PURITY_DEFAULT)
-
-        - expire_time: an integer indicating the number of minutes between the
-          sending of keepalive probes. If this parameter is set to a value
-          greater than zero it enables keepalive (default: 0)
-
-        - retry_count: the number of times that a connection attempt should be
-          retried before the attempt is terminated (default: 0)
-
-        - retry_delay: the number of seconds to wait before making a new
-          connection attempt (default: 0)
-
-        - tcp_connect_timeout: a float indicating the maximum number of seconds
-          to wait for establishing a connection to the database host
-          (default: 60.0)
-
-        - ssl_server_dn_match: boolean indicating whether the server
-          certificate distinguished name (DN) should be matched in addition to
-          the regular certificate verification that is performed. Note that if
-          the ssl_server_cert_dn parameter is not privided, host name matching
-          is performed instead (default: True)
-
-        - ssl_server_cert_dn: the distinguished name (DN) which should be
-          matched with the server. This value is ignored if the
-          ssl_server_dn_match parameter is not set to the value True.
-
-        - wallet_location: the directory where the wallet can be found. In thin
-          mode this must be the directory of the PEM-encoded wallet file
-          ewallet.pem. In thick mode this must be the directory of the file
-          cwallet.sso (default: None)
-
-        - events: boolean specifying whether events mode should be enabled.
-          This value is only used in thick mode and is needed for continuous
-          query notification and high availability event notifications
-          (default: False)
-
-        - mode: authorization mode to use (default: oracledb.AUTH_MODE_DEFAULT)
-
-        - disable_oob: boolean indicating whether out-of-band breaks should be
-          disabled. This value is only used in thin mode and has no effect on
-          Windows which doesn't support this functionality (default: False)
-
-        - stmtcachesize: identifies the initial size of the statement cache
-          (default: oracledb.defaults.stmtcachesize)
-
-        - edition: edition to use for the connection. This parameter cannot be
-          used simultaneously with the cclass parameter (default: None)
-
-        - tag: identifies the type of connection that should be returned from a
-          pool. This value is only used in thick mode (default: None)
-
-        - matchanytag: boolean specifying whether any tag can be used when
-          acquiring a connection from the pool. This value is only used in
-          thick mode when acquiring a connection from a pool (default: None)
-
-        - config_dir: directory in which configuration files (tnsnames.ora) are
-          found. This value is only used in thin mode (default:
-          oracledb.defaults.config_dir)
-
-        - appcontext: application context used by the connection. It should be
-          a list of 3-tuples (namespace, name, value) and each entry in the
-          tuple should be a string. This value is only used in thick mode
-          (default: [])
-
-        - shardingkey: a list of strings, numbers, bytes or dates that identify
-          the database shard to connect to. This value is only used in thick
-          mode (default: [])
-
-        - supershardingkey: a list of strings, numbers, bytes or dates that
-          identify the database shard to connect to. This value is only used in
-          thick mode (default: [])
-
-        - handle: an integer representing a pointer to a valid service context
-          handle. This value is only used in thick mode and should be used with
-          extreme caution (default: 0)
-
+        Constructor for connection parameters. If any parameters are specified
+        they are passed to the set() method. See the documentation there for
+        details on the available parameters.
         """
-        pass
+        self._impl = base_impl.ConnectParamsImpl()
+        if kwargs:
+            self.set(**kwargs)
 
     def __repr__(self):
         return f"ConnectParams(" \
@@ -428,6 +265,179 @@ class ConnectParams:
         Returns the service_names associated with each description in the
         connect string. If the connect string contains multiple descriptions,
         a list of service_names is returned in the order they appear.
+        """
+        pass
+
+    @utils.params_setter
+    def set(self, *,
+
+            # credentials
+            user: str=None,
+            proxy_user: str=None,
+            password: str=None,
+            newpassword: str=None,
+            wallet_password: str=None,
+
+            # connect string parameters
+            host: str=None,
+            port: int=None,
+            protocol: str=None,
+            https_proxy: str=None,
+            https_proxy_port: int=None,
+            service_name: str=None,
+            sid: str=None,
+            server_type: str=None,
+            cclass: str=None,
+            purity: int=None,
+            expire_time: int=None,
+            retry_count: int=None,
+            retry_delay: int=None,
+            tcp_connect_timeout: float=None,
+            ssl_server_dn_match: bool=None,
+            ssl_server_cert_dn: str=None,
+            wallet_location: str=None,
+
+            # other parameters
+            events: bool=None,
+            mode: int=None,
+            disable_oob: bool=None,
+            stmtcachesize: int=None,
+            edition: str=None,
+            tag: str=None,
+            matchanytag: bool=None,
+            config_dir: str=None,
+            appcontext: list=None,
+            shardingkey: list=None,
+            supershardingkey: list=None,
+            handle: int=None,
+
+            # deprecated (ignored) parameters
+            threaded: bool=None,
+            encoding: str=None,
+            nencoding: str=None) -> None:
+        """
+        Sets connection parameters. Only those parameters which are specified
+        (and are not None) will be changed; all other values will remain
+        unchanged. A brief description of each parameter follows:
+
+        - user: the name of the user to connect to (default: None)
+
+        - proxy_user: the name of the proxy user to connect to. If this value
+          is not specified, it will be parsed out of user if user is in the
+          form "user[proxy_user]" (default: None)
+
+        - password: the password for the user (default: None)
+
+        - newpassword: the new password for the user. The new password will
+          take effect immediately upon a successful connection to the database
+          (default: None)
+
+        - wallet_password: the password to use to decrypt the wallet, if it is
+          encrypted. This value is only used in thin mode (default: None)
+
+        - host: the name or IP address of the machine hosting the listener,
+          which handles the initial connection to the database (default: None)
+
+        - port: the port number on which the listener is listening
+          (default: 1521)
+
+        - protocol: one of the strings "tcp" or "tcps" indicating whether to
+          use unencrypted network traffic or encrypted network traffic (TLS)
+          (default: "tcp")
+
+        - https_proxy: the name or IP address of a proxy host to use for
+          tunneling secure connections (default: None)
+
+        - https_proxy_port: the port on which to communicate with the proxy
+          host (default: 0)
+
+        - service_name: the service name of the database (default: None)
+
+        - sid: the SID of the database. Note using a service_name instead is
+          recommended (default: None)
+
+        - server_type: the type of server connection that should be
+          established. If specified, it should be one of "dedicated", "shared"
+          or "pooled" (default: None)
+
+        - cclass: connection class to use for DRCP (default: None)
+
+        - purity: purity to use for DRCP (default: oracledb.PURITY_DEFAULT)
+
+        - expire_time: an integer indicating the number of minutes between the
+          sending of keepalive probes. If this parameter is set to a value
+          greater than zero it enables keepalive (default: 0)
+
+        - retry_count: the number of times that a connection attempt should be
+          retried before the attempt is terminated (default: 0)
+
+        - retry_delay: the number of seconds to wait before making a new
+          connection attempt (default: 0)
+
+        - tcp_connect_timeout: a float indicating the maximum number of seconds
+          to wait for establishing a connection to the database host
+          (default: 60.0)
+
+        - ssl_server_dn_match: boolean indicating whether the server
+          certificate distinguished name (DN) should be matched in addition to
+          the regular certificate verification that is performed. Note that if
+          the ssl_server_cert_dn parameter is not privided, host name matching
+          is performed instead (default: True)
+
+        - ssl_server_cert_dn: the distinguished name (DN) which should be
+          matched with the server. This value is ignored if the
+          ssl_server_dn_match parameter is not set to the value True.
+
+        - wallet_location: the directory where the wallet can be found. In thin
+          mode this must be the directory of the PEM-encoded wallet file
+          ewallet.pem. In thick mode this must be the directory of the file
+          cwallet.sso (default: None)
+
+        - events: boolean specifying whether events mode should be enabled.
+          This value is only used in thick mode and is needed for continuous
+          query notification and high availability event notifications
+          (default: False)
+
+        - mode: authorization mode to use (default: oracledb.AUTH_MODE_DEFAULT)
+
+        - disable_oob: boolean indicating whether out-of-band breaks should be
+          disabled. This value is only used in thin mode and has no effect on
+          Windows which doesn't support this functionality (default: False)
+
+        - stmtcachesize: identifies the initial size of the statement cache
+          (default: oracledb.defaults.stmtcachesize)
+
+        - edition: edition to use for the connection. This parameter cannot be
+          used simultaneously with the cclass parameter (default: None)
+
+        - tag: identifies the type of connection that should be returned from a
+          pool. This value is only used in thick mode (default: None)
+
+        - matchanytag: boolean specifying whether any tag can be used when
+          acquiring a connection from the pool. This value is only used in
+          thick mode when acquiring a connection from a pool (default: None)
+
+        - config_dir: directory in which configuration files (tnsnames.ora) are
+          found. This value is only used in thin mode (default:
+          oracledb.defaults.config_dir)
+
+        - appcontext: application context used by the connection. It should be
+          a list of 3-tuples (namespace, name, value) and each entry in the
+          tuple should be a string. This value is only used in thick mode
+          (default: [])
+
+        - shardingkey: a list of strings, numbers, bytes or dates that identify
+          the database shard to connect to. This value is only used in thick
+          mode (default: [])
+
+        - supershardingkey: a list of strings, numbers, bytes or dates that
+          identify the database shard to connect to. This value is only used in
+          thick mode (default: [])
+
+        - handle: an integer representing a pointer to a valid service context
+          handle. This value is only used in thick mode and should be used with
+          extreme caution (default: 0)
+
         """
         pass
 

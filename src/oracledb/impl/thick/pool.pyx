@@ -18,8 +18,7 @@ cdef class ThickPoolImpl(BasePoolImpl):
     cdef:
         dpiPool *_handle
 
-    def __init__(self, PoolParamsImpl pool_params,
-                 ConnectParamsImpl conn_params):
+    def __init__(self, PoolParamsImpl params):
         cdef:
             bytes edition_bytes, user_bytes, password_bytes, dsn_bytes
             uint32_t password_len = 0, user_len = 0, dsn_len = 0
@@ -32,12 +31,12 @@ cdef class ThickPoolImpl(BasePoolImpl):
             int status
 
         # save parameters
-        self.username = conn_params.user
-        self.dsn = conn_params.connect_string
-        self.min = pool_params.min
-        self.max = pool_params.max
-        self.increment = pool_params.increment
-        self.homogeneous = pool_params.homogeneous
+        self.username = params.user
+        self.dsn = params.connect_string
+        self.min = params.min
+        self.max = params.max
+        self.increment = params.increment
+        self.homogeneous = params.homogeneous
 
         # ensure that the Oracle Client library is initialized
         if driver_context == NULL:
@@ -48,10 +47,10 @@ cdef class ThickPoolImpl(BasePoolImpl):
                                              &common_params) < 0:
             _raise_from_odpi()
         common_params.createMode |= DPI_MODE_CREATE_THREADED
-        if conn_params.events:
+        if params.events:
             common_params.createMode |= DPI_MODE_CREATE_EVENTS
-        if conn_params.edition is not None:
-            edition_bytes = conn_params.edition.encode()
+        if params.edition is not None:
+            edition_bytes = params.edition.encode()
             common_params.edition = edition_bytes
             common_params.editionLength = <uint32_t> len(edition_bytes)
 
@@ -62,27 +61,27 @@ cdef class ThickPoolImpl(BasePoolImpl):
         create_params.maxSessions = self.max
         create_params.sessionIncrement = self.increment
         create_params.homogeneous = self.homogeneous
-        create_params.getMode = pool_params.getmode
-        if pool_params.session_callback is not None \
-                and not callable(pool_params.session_callback):
-            session_callback_bytes = pool_params.session_callback.encode()
+        create_params.getMode = params.getmode
+        if params.session_callback is not None \
+                and not callable(params.session_callback):
+            session_callback_bytes = params.session_callback.encode()
             create_params.plsqlFixupCallback = session_callback_bytes
             create_params.plsqlFixupCallbackLength = \
                     <uint32_t> len(session_callback_bytes)
-        create_params.timeout = pool_params.timeout
-        create_params.waitTimeout = pool_params.wait_timeout
-        create_params.maxSessionsPerShard = pool_params.max_sessions_per_shard
-        create_params.maxLifetimeSession = pool_params.max_lifetime_session
-        create_params.pingInterval = pool_params.ping_interval
-        common_params.stmtCacheSize = conn_params.stmtcachesize
-        common_params.sodaMetadataCache = pool_params.soda_metadata_cache
+        create_params.timeout = params.timeout
+        create_params.waitTimeout = params.wait_timeout
+        create_params.maxSessionsPerShard = params.max_sessions_per_shard
+        create_params.maxLifetimeSession = params.max_lifetime_session
+        create_params.pingInterval = params.ping_interval
+        common_params.stmtCacheSize = params.stmtcachesize
+        common_params.sodaMetadataCache = params.soda_metadata_cache
 
         # prepare user, password and DSN for use
         if self.username is not None:
             user_bytes = self.username.encode()
             user_ptr = user_bytes
             user_len = <uint32_t> len(user_bytes)
-        password_bytes = conn_params._get_password()
+        password_bytes = params._get_password()
         if password_bytes is not None:
             password_ptr = password_bytes
             password_len = <uint32_t> len(password_bytes)

@@ -126,7 +126,6 @@ ERR_INVALID_MAKEDSN_ARG = 2020
 ERR_INIT_ORACLE_CLIENT_NOT_CALLED = 2021
 ERR_INVALID_OCI_ATTR_TYPE = 2022
 ERR_INVALID_CONN_CLASS = 2023
-ERR_PARAMS_AND_KEYWORD_PARAMS = 2024
 ERR_INVALID_CONNECT_PARAMS = 2025
 ERR_INVALID_POOL_CLASS = 2026
 ERR_INVALID_POOL_PARAMS = 2027
@@ -350,8 +349,6 @@ ERR_MESSAGE_FORMATS = {
             'value cannot be represented as an Oracle number',
     ERR_ORACLE_TYPE_NOT_SUPPORTED:
             'Oracle data type {num} is not supported',
-    ERR_PARAMS_AND_KEYWORD_PARAMS:
-            'both params and keyword parameters cannot be specified',
     ERR_POOL_HAS_BUSY_CONNECTIONS:
             'connection pool cannot be closed because connections are busy',
     ERR_POOL_NO_CONNECTION_AVAILABLE:
