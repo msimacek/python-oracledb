@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# connect_params.py
+#
+# Contains the ConnectParams class used for managing the parameters required to
+# establish a connection to the database.
+#------------------------------------------------------------------------------
+
 from typing import Type, Union
 
 from . import base_impl, constants, errors, utils

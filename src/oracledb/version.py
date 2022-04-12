@@ -9,4 +9,11 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# version.py
+#
+# Defines the version of the package. This is the only place where this is
+# found. The setup.cfg configuration file references this file directly.
+#------------------------------------------------------------------------------
+
 __version__ = "0.9.5"

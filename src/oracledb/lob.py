@@ -9,6 +9,12 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# lob.py
+#
+# Contains the LOB class for managing BLOB, CLOB, NCLOB and BFILE data.
+#------------------------------------------------------------------------------
+
 from typing import Union
 
 from . import constants, errors

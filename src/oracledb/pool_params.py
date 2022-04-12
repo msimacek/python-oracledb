@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# pool_params.py
+#
+# Contains the PoolParams class used for managing the parameters required to
+# create a connection pool.
+#------------------------------------------------------------------------------
+
 from typing import Callable, Type, Union
 
 from . import base_impl, constants, errors, utils

@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# pool.py
+#
+# Contains the ConnectionPool class and the factory method create_pool() used
+# for creating connection pools.
+#------------------------------------------------------------------------------
+
 from typing import Callable, Type
 from . import constants, errors, exceptions, utils
 from . import base_impl, thick_impl, thin_impl

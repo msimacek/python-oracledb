@@ -9,6 +9,14 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# subscr.py
+#
+# Contains the Subscription class and Message classes used for managing
+# subscriptions to database events and the messages that are sent when those
+# events are detected.
+#------------------------------------------------------------------------------
+
 from typing import Callable, Type, Union
 from . import connection
 

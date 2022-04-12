@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# aq.py
+#
+# Contains the classes used for handling Advanced Queuing (AQ): Queue,
+# DeqOptions, EnqOptions and MessageProperties.
+#------------------------------------------------------------------------------
+
 import datetime
 
 from . import connection as connection_module

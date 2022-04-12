@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# soda.py
+#
+# Contains the classes for managing Simple Oracle Document Access (SODA):
+# SodaDatabase, SodaCollection, SodaDocument, SodaDocCursor and SodaOperation.
+#------------------------------------------------------------------------------
+
 from typing import Type, Union
 import json
 

@@ -9,6 +9,14 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# dsn.py
+#
+# Contains makedsn(), a method available for backwards compatibility with
+# cx_Oracle. Use of the ConnectParams class or the keyword arguments to
+# connect() and create_pool() is recommended instead.
+#------------------------------------------------------------------------------
+
 from . import errors
 
 def _check_arg(name: str, value: str) -> None:

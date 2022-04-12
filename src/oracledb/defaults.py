@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# defaults.py
+#
+# Contains the Defaults class used for managing default values used throughout
+# the module.
+#------------------------------------------------------------------------------
+
 import os
 
 from . import constants

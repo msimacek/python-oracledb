@@ -9,6 +9,15 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# errors.py
+#
+# Contains the _Error class and all of the errors that are raised explicitly by
+# the package. Oracle Database errors and ODPI-C errors (when using thick mode)
+# are only referenced here if they are transformed into package specific
+# errors.
+#------------------------------------------------------------------------------
+
 import re
 
 from . import exceptions

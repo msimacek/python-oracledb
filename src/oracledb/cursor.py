@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# cursor.py
+#
+# Contains the Cursor class used for executing statements on connections and
+# fetching results from queries.
+#------------------------------------------------------------------------------
+
 from typing import Any, Type, Union, Callable
 from . import constants, errors, exceptions
 from . import connection as connection_module

@@ -9,6 +9,12 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# __init__.py
+#
+# Package initialization module.
+#------------------------------------------------------------------------------
+
 from .version import __version__
 from .exceptions import *
 from .errors import _Error

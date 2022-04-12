@@ -9,12 +9,18 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# driver_mode.py
+#
+# Contains a simple method for checking and returning which mode the driver is
+# currently using. The driver only supports creating connections and pools with
+# either the thin implementation or the thick implementation, not both
+# simultaneously.
+#------------------------------------------------------------------------------
+
 from . import errors
 
-# The driver only supports creating connections and pools with either the thin
-# implementation or the thick implementation, not both simultaneously; this
-# flag is used to indicate which mode is currently being used:
-#
+# this flag is used to indicate which mode is currently being used:
 # None: neither thick nor thin implementation has been used yet
 # False: thick implementation is being used
 # True: thin implementation is being used

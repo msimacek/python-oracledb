@@ -9,6 +9,12 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# constants.py
+#
+# Contains the constants defined by the package.
+#------------------------------------------------------------------------------
+
 from . import __version__ as VERSION
 from . import __name__ as MODULE_NAME
 

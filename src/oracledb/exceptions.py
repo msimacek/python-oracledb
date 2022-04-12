@@ -9,6 +9,12 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# exceptions.py
+#
+# Contains the exception classes mandated by the Python Database API.
+#------------------------------------------------------------------------------
+
 class Warning(Exception):
     pass
 

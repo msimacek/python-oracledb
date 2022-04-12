@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# dbobject.py
+#
+# Contains the classes used for managing database objects and the database
+# object type metadata: DbObject, DbObjectType and DbObjectAttr.
+#------------------------------------------------------------------------------
+
 from typing import Sequence, Type, Union
 
 from . import constants

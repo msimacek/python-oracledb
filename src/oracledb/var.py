@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# var.py
+#
+# Contains the Var class used for managing variables used during bind and
+# fetch. These hold the metadata as well as any necessary buffers.
+#------------------------------------------------------------------------------
+
 from typing import Callable, Union, Type
 from . import errors
 from .dbobject import DbObjectType

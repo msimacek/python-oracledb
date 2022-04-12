@@ -9,6 +9,12 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# constructors.py
+#
+# Contains the constructors mandated by the Python Database API.
+#------------------------------------------------------------------------------
+
 import datetime
 
 from . import errors

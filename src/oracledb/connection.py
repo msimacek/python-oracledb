@@ -9,6 +9,13 @@
 # (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# connection.py
+#
+# Contains the Connection class and the factory method connect() used for
+# establishing connections to the database.
+#------------------------------------------------------------------------------
+
 import collections
 
 from typing import Any, Callable, Type, Union
