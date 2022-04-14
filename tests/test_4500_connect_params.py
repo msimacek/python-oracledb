@@ -30,7 +30,9 @@ class TestCase(test_env.BaseTestCase):
         params = oracledb.ConnectParams()
         orig_value = getattr(params, name)
         copied_params = params.copy()
-        setattr(params, name, value)
+        args = {}
+        args[name] = value
+        params.set(**args)
         self.assertEqual(getattr(params, name), value)
         self.assertEqual(getattr(copied_params, name), orig_value)
 
@@ -306,9 +308,8 @@ class TestCase(test_env.BaseTestCase):
 
     def test_4523_missing_config_dir(self):
         "4523 - test missing configuration directory"
-        params = oracledb.ConnectParams()
-        params.config_dir = None
-        self.assertRaisesRegex(oracledb.DatabaseError, "DPY-4027:",
+        params = oracledb.ConnectParams(config_dir="/missing")
+        self.assertRaisesRegex(oracledb.DatabaseError, "DPY-4026:",
                                params.parse_connect_string, "tns_alias")
 
     def test_4524_invalid_entries_in_tnsnames(self):

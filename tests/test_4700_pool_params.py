@@ -27,7 +27,9 @@ class TestCase(test_env.BaseTestCase):
         params = oracledb.PoolParams()
         orig_value = getattr(params, name)
         copied_params = params.copy()
-        setattr(params, name, value)
+        args = {}
+        args[name] = value
+        params.set(**args)
         self.assertEqual(getattr(params, name), value)
         self.assertEqual(getattr(copied_params, name), orig_value)
 

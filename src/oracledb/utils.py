@@ -40,9 +40,25 @@ class CheckImpls:
         return wrapped_f
 
 
+def params_initer(f):
+    """
+    Decorator function which is used on the ConnectParams and PoolParams
+    classes. It creates the implementation object using the implementation
+    class stored on the parameter class. It first, however, calls the original
+    method to ensure that the keyword parameters supplied are valid (the
+    original method itself does nothing).
+    """
+    def wrapped_f(self, *args, **kwargs):
+        f(self, *args, **kwargs)
+        self._impl = self._impl_class()
+        if kwargs:
+            self._impl.set(kwargs)
+    return wrapped_f
+
+
 def params_setter(f):
     """
-    Decorator class which is used on the ConnectParams and PoolParams
+    Decorator function which is used on the ConnectParams and PoolParams
     classes. It calls the set() method on the parameter implementation object
     with the supplied keyword arguments. It first, however, calls the original
     method to ensure that the keyword parameters supplied are valid (the
