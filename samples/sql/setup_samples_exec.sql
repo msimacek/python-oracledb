@@ -158,9 +158,16 @@ create table &main_user..TestUniversalRowids (
 ) organization index
 /
 
-create table &main_user..TestBuildings (
+create table &main_user..BuildingsAsObjects (
     BuildingId            number(9) not null,
     BuildingObj &main_user..udt_Building not null
+)
+/
+
+create table &main_user..BuildingsAsJsonStrings (
+    BuildingId            number(9) not null,
+    BuildingStr           varchar2(400) not null,
+    constraint BuildingsAsJsonStrings_pk primary key (BuildingId)
 )
 /
 
@@ -209,6 +216,32 @@ create table &main_user..PlsqlSessionCallbacks (
     ActualTag             varchar2(250),
     FixupTimestamp        timestamp
 )
+/
+
+create table &main_user..CustomersAsBlob (
+    id                number(9) not null,
+    json_data         blob check (json_data is json),
+    constraint CustomersAsBlob_pk primary key (id)
+)
+/
+
+declare
+    t_Version                           number;
+begin
+
+    select to_number(substr(version, 1, instr(version, '.') - 1))
+    into t_Version
+    from product_component_version
+    where product like 'Oracle Database%';
+
+    if t_Version >= 21 then
+        execute immediate 'create table &main_user..CustomersAsJson (' ||
+                          '    id number(9) not null primary key,' ||
+                          '    json_data json' ||
+                          ')';
+    end if;
+
+end;
 /
 
 -- create queue table, queues and subscribers for demonstrating Advanced Queuing

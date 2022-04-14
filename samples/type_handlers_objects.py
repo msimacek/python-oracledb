@@ -16,7 +16,7 @@
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# type_handlers.py
+# type_handlers_objects.py
 #
 # Demonstrates the use of input and output type handlers as well as variable
 # input and output converters. These methods can be used to extend
@@ -80,23 +80,17 @@ buildings = [
 cur = con.cursor()
 cur.inputtypehandler = input_type_handler
 for building in buildings:
-    try:
-        cur.execute("insert into TestBuildings values (:1, :2)",
-                    (building.building_id, building))
-    except oracledb.DatabaseError as e:
-        error, = e.args
-        print("CONTEXT:", error.context)
-        print("MESSAGE:", error.message)
-        raise
+    cur.execute("insert into BuildingsAsObjects values (:1, :2)",
+                (building.building_id, building))
 
 print("NO OUTPUT TYPE HANDLER:")
-for row in cur.execute("select * from TestBuildings order by BuildingId"):
+for row in cur.execute("select * from BuildingsAsObjects order by BuildingId"):
     print(row)
 print()
 
 cur = con.cursor()
 cur.outputtypehandler = output_type_handler
 print("WITH OUTPUT TYPE HANDLER:")
-for row in cur.execute("select * from TestBuildings order by BuildingId"):
+for row in cur.execute("select * from BuildingsAsObjects order by BuildingId"):
     print(row)
 print()

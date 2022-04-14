@@ -12,10 +12,14 @@
 #------------------------------------------------------------------------------
 # json_direct.py
 #
-# Demonstrates the use of some JSON features of Oracle Database 21c.
+# Demonstrates the use of some JSON features with the JSON type that is
+# available in Oracle Database 21c and higher.
+#
 # See https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=ADJSN
 #
 # For JSON with older databases see json_blob.py
+#
+# Note: To use the JSON type in python-oracledb thin mode see json_type.py
 #------------------------------------------------------------------------------
 
 import json
@@ -37,27 +41,12 @@ if db_version < 21:
     sys.exit("This example requires Oracle Database 21.1 or later. "
              "Try json_blob.py")
 
-# Create a table
-
 cursor = connection.cursor()
-cursor.execute("""
-        begin
-            execute immediate 'drop table customers';
-        exception when others then
-            if sqlcode <> -942 then
-                raise;
-            end if;
-        end;""")
-cursor.execute("""
-        create table customers (
-            id integer not null primary key,
-            json_data json
-        )""")
 
 # Insert JSON data
 
 data = dict(name="Rod", dept="Sales", location="Germany")
-inssql = "insert into customers values (:1, :2)"
+inssql = "insert into CustomersAsJson values (:1, :2)"
 if client_version >= 21:
     # Take advantage of direct binding
     cursor.setinputsizes(None, oracledb.DB_TYPE_JSON)
@@ -68,7 +57,7 @@ else:
 
 # Select JSON data
 
-sql = "SELECT c.json_data FROM customers c"
+sql = "SELECT c.json_data FROM CustomersAsJson c"
 if client_version >= 21:
     for j, in cursor.execute(sql):
         print(j)
@@ -79,7 +68,7 @@ else:
 # Using JSON_VALUE to extract a value from a JSON column
 
 sql = """SELECT JSON_VALUE(json_data, '$.location')
-         FROM customers
+         FROM CustomersAsJson
          OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY"""
 for r in cursor.execute(sql):
     print(r)
@@ -87,7 +76,7 @@ for r in cursor.execute(sql):
 # Using dot-notation to extract a value from a JSON column
 
 sql = """SELECT c.json_data.location
-         FROM customers c
+         FROM CustomersAsJson c
          OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY"""
 if client_version >= 21:
     for j, in cursor.execute(sql):
