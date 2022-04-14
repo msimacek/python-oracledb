@@ -15,7 +15,10 @@
 # Package initialization module.
 #------------------------------------------------------------------------------
 
+import sys
+
 from .version import __version__
+from .constants import *
 from .exceptions import *
 from .errors import _Error
 from .defaults import defaults
@@ -26,12 +29,14 @@ from .connect_params import ConnectParams
 from .pool_params import PoolParams
 from .lob import LOB
 from .dbobject import DbObject, DbObjectType
-from .constants import *
+from .var import Var
 from .constructors import *
 from .dsn import makedsn
 
 from .base_impl import *
 from .thick_impl import clientversion, init_oracle_client
+
+initialize_base_impl(sys.modules[constants.MODULE_NAME])
 
 # future object used for managing backwards incompatible changes
 class Future:

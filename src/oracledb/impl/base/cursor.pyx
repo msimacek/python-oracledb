@@ -38,7 +38,7 @@ cdef class BaseCursorImpl:
             var_impl = self._create_var_impl_from_type(typ)
             typ = typ if isinstance(typ, PY_TYPE_DB_OBJECT_TYPE) \
                     else var_impl.dbtype
-            bind_vars[key] = Var._from_impl(var_impl, typ)
+            bind_vars[key] = PY_TYPE_VAR._from_impl(var_impl, typ)
             bind_var_impls[key] = var_impl
 
     @cython.boundscheck(False)
@@ -145,7 +145,7 @@ cdef class BaseCursorImpl:
         if type_handler is not None:
             var = type_handler(cursor, value, num_elements)
             if var is not None:
-                if not isinstance(var, Var):
+                if not isinstance(var, PY_TYPE_VAR):
                     message = "expecting variable from input type handler"
                     raise TypeError(message)
                 var_impl = var._impl
@@ -444,7 +444,7 @@ cdef class BaseCursorImpl:
         Internal method used for verifying if an outputtypehandler returns a
         valid var object.
         """
-        if not isinstance(var, Var):
+        if not isinstance(var, PY_TYPE_VAR):
             errors._raise_err(errors.ERR_EXPECTING_VAR)
         if self.arraysize > var.num_elements:
             errors._raise_err(errors.ERR_INCORRECT_VAR_ARRAYSIZE,

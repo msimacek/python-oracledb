@@ -38,22 +38,18 @@ cydatetime.import_datetime()
 include "impl/base/types.pyx"
 
 from . import constants, errors, exceptions, utils
-from .cursor import Cursor
-from .lob import LOB
-from .dbobject import DbObject, DbObjectType
-from .var import Var
 from .defaults import defaults
 
 cdef type PY_TYPE_BOOL = bool
-cdef type PY_TYPE_CURSOR = Cursor
+cdef type PY_TYPE_CURSOR
 cdef type PY_TYPE_DATE = datetime.date
 cdef type PY_TYPE_DATETIME = datetime.datetime
 cdef type PY_TYPE_DECIMAL = decimal.Decimal
-cdef type PY_TYPE_DB_OBJECT = DbObject
-cdef type PY_TYPE_DB_OBJECT_TYPE = DbObjectType
-cdef type PY_TYPE_LOB = LOB
+cdef type PY_TYPE_DB_OBJECT
+cdef type PY_TYPE_DB_OBJECT_TYPE
+cdef type PY_TYPE_LOB
 cdef type PY_TYPE_TIMEDELTA = datetime.timedelta
-cdef type PY_TYPE_VAR = Var
+cdef type PY_TYPE_VAR
 
 cdef int32_t* INTEGRITY_ERROR_CODES = [
         1,          # unique constraint violated
