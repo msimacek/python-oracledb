@@ -630,8 +630,9 @@ class Cursor:
         merge statements), or the number of successful executions of the
         statement (for PL/SQL statements).
         """
-        self._verify_open()
-        return self._impl.rowcount
+        if self._impl is not None and self.connection._impl is not None:
+            return self._impl.rowcount
+        return -1
 
     @property
     def rowfactory(self) -> Callable:

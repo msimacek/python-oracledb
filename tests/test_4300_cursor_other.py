@@ -722,7 +722,7 @@ class TestCase(test_env.BaseTestCase):
                                cursor.execute, "select user from dual")
 
     def test_4359_kill_conn_in_context_manager(self):
-        "4538 - kill connection in cursor context manager"
+        "4359 - kill connection in cursor context manager"
         admin_conn = oracledb.connect(test_env.get_admin_connect_string())
         conn = test_env.get_connection()
         with conn.cursor() as cursor:
@@ -738,8 +738,8 @@ class TestCase(test_env.BaseTestCase):
             self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4011:",
                                    cursor.execute, "select user from dual")
 
-    def test_4560_fetchmany(self):
-        "4560 - fetchmany() with and without parameters"
+    def test_4360_fetchmany(self):
+        "4360 - fetchmany() with and without parameters"
         sql_part = "select user from dual"
         sql = " union all ".join([sql_part] * 10)
         with self.connection.cursor() as cursor:
@@ -756,6 +756,14 @@ class TestCase(test_env.BaseTestCase):
             cursor.execute(sql)
             self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-2014:",
                                    cursor.fetchmany, size=2, numRows=4)
+
+    def test_4361_rowcount_after_close(self):
+        "4361 - access cursor.rowcount after closing cursor"
+        with self.connection.cursor() as cursor:
+            cursor.execute("select user from dual")
+            cursor.fetchall()
+            self.assertEqual(cursor.rowcount, 1)
+        self.assertEqual(cursor.rowcount, -1)
 
 if __name__ == "__main__":
     test_env.run_test_cases()
