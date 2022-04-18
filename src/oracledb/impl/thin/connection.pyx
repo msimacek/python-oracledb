@@ -115,8 +115,8 @@ cdef class ThinConnImpl(BaseConnImpl):
                                                 ConnectParamsImpl params):
         """
         Internal method used for connecting with the given parameters. If the
-        listener requests a redirect, the redirect data is returned so tht this
-        process can be repeated as needed.
+        listener requests a redirect, the redirect data is returned so that
+        this process can be repeated as needed.
         """
         cdef:
             DescriptionList description_list = params.description_list

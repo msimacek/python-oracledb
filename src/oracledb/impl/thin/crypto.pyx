@@ -81,7 +81,7 @@ def get_ssl_socket(sock, ConnectParamsImpl params, Description description,
     ssl_context = ssl.create_default_context()
 
     # if the platform is macOS, and one-way TLS is being used, check if the
-    # certifi package in installed. If certifi is not installed, load the
+    # certifi package is installed. If certifi is not installed, load the
     # certificates from the macOS keychain in PEM format.
     if description.wallet_location is None:
         if sys.platform == "darwin" and certifi is None:
