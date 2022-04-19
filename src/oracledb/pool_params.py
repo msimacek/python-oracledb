@@ -162,11 +162,11 @@ class PoolParams(ConnectParams):
         - wallet_password: the password to use to decrypt the wallet, if it is
           encrypted. This value is only used in thin mode (default: None)
 
-        - host: the name or IP address of the machine hosting the listener,
-          which handles the initial connection to the database (default: None)
+        - host: the name or IP address of the machine hosting the database or
+          the database listener (default: None)
 
-        - port: the port number on which the listener is listening (default:
-          1521)
+        - port: the port number on which the database listener is listening
+          (default: 1521)
 
         - protocol: one of the strings "tcp" or "tcps" indicating whether to
           use unencrypted network traffic or encrypted network traffic (TLS)
@@ -180,16 +180,18 @@ class PoolParams(ConnectParams):
 
         - service_name: the service name of the database (default: None)
 
-        - sid: the SID of the database. Note using a service_name instead is
-          recommended (default: None)
+        - sid: the system identifier (SID) of the database. Note using a
+          service_name instead is recommended (default: None)
 
         - server_type: the type of server connection that should be
           established. If specified, it should be one of "dedicated", "shared"
           or "pooled" (default: None)
 
-        - cclass: connection class to use for DRCP (default: None)
+        - cclass: connection class to use for Database Resident Connection
+          Pooling (DRCP) (default: None)
 
-        - purity: purity to use for DRCP (default: 0)
+        - purity: purity to use for Database Resident Connection Pooling (DRCP)
+          (default: 0)
 
         - expire_time: an integer indicating the number of minutes between the
           sending of keepalive probes. If this parameter is set to a value
@@ -213,24 +215,26 @@ class PoolParams(ConnectParams):
 
         - ssl_server_cert_dn: the distinguished name (DN) which should be
           matched with the server. This value is ignored if the
-          ssl_server_dn_match parameter is not set to the value True (default:
-          None)
+          ssl_server_dn_match parameter is not set to the value True. If
+          specified this value is used for any verfication. Otherwise the
+          hostname will be used. (default: None)
 
         - wallet_location: the directory where the wallet can be found. In thin
-          mode this must be the directory of the PEM-encoded wallet file
-          ewallet.pem. In thick mode this must be the directory of the file
-          cwallet.sso (default: None)
+          mode this must be the directory containing the PEM-encoded wallet
+          file ewallet.pem. In thick mode this must be the directory containing
+          the file cwallet.sso (default: None)
 
         - events: boolean specifying whether events mode should be enabled.
           This value is only used in thick mode and is needed for continuous
           query notification and high availability event notifications
           (default: False)
 
-        - mode: authorization mode to use (default: 0)
+        - mode: authorization mode to use. For example
+          constants.AUTH_MODE_SYSDBA (default: 0)
 
         - disable_oob: boolean indicating whether out-of-band breaks should be
-          disabled. This value is only used in thin mode and has no effect on
-          Windows which doesn't support this functionality (default: False)
+          disabled. This value is only used in thin mode. It has no effect on
+          Windows which does not support this functionality (default: False)
 
         - stmtcachesize: identifies the initial size of the statement cache
           (default: oracledb.defaults.stmtcachesize)
@@ -243,11 +247,12 @@ class PoolParams(ConnectParams):
 
         - matchanytag: boolean specifying whether any tag can be used when
           acquiring a connection from the pool. This value is only used in
-          thick mode when acquiring a connection from a pool (default: False)
+          thick mode. (default: False)
 
-        - config_dir: directory in which configuration files (tnsnames.ora) are
-          found. This value is only used in thin mode (default:
-          oracledb.defaults.config_dir)
+        - config_dir: directory in which the optional tnsnames.ora
+          configuration file is located. This value is only used in thin mode.
+          For thick mode use the config_dir parameter of init_oracle_client()
+          (default: oracledb.defaults.config_dir)
 
         - appcontext: application context used by the connection. It should be
           a list of 3-tuples (namespace, name, value) and each entry in the
@@ -263,7 +268,7 @@ class PoolParams(ConnectParams):
           thick mode (default: None)
 
         - handle: an integer representing a pointer to a valid service context
-          handle. This value is only used in thick mode and should be used with
+          handle. This value is only used in thick mode. It should be used with
           extreme caution (default: 0)
         """
         pass
@@ -561,10 +566,10 @@ class PoolParams(ConnectParams):
         - wallet_password: the password to use to decrypt the wallet, if it is
           encrypted. This value is only used in thin mode
 
-        - host: the name or IP address of the machine hosting the listener,
-          which handles the initial connection to the database
+        - host: the name or IP address of the machine hosting the database or
+          the database listener
 
-        - port: the port number on which the listener is listening
+        - port: the port number on which the database listener is listening
 
         - protocol: one of the strings "tcp" or "tcps" indicating whether to
           use unencrypted network traffic or encrypted network traffic (TLS)
@@ -577,16 +582,17 @@ class PoolParams(ConnectParams):
 
         - service_name: the service name of the database
 
-        - sid: the SID of the database. Note using a service_name instead is
-          recommended
+        - sid: the system identifier (SID) of the database. Note using a
+          service_name instead is recommended
 
         - server_type: the type of server connection that should be
           established. If specified, it should be one of "dedicated", "shared"
           or "pooled"
 
-        - cclass: connection class to use for DRCP
+        - cclass: connection class to use for Database Resident Connection
+          Pooling (DRCP)
 
-        - purity: purity to use for DRCP
+        - purity: purity to use for Database Resident Connection Pooling (DRCP)
 
         - expire_time: an integer indicating the number of minutes between the
           sending of keepalive probes. If this parameter is set to a value
@@ -609,22 +615,25 @@ class PoolParams(ConnectParams):
 
         - ssl_server_cert_dn: the distinguished name (DN) which should be
           matched with the server. This value is ignored if the
-          ssl_server_dn_match parameter is not set to the value True
+          ssl_server_dn_match parameter is not set to the value True. If
+          specified this value is used for any verfication. Otherwise the
+          hostname will be used.
 
         - wallet_location: the directory where the wallet can be found. In thin
-          mode this must be the directory of the PEM-encoded wallet file
-          ewallet.pem. In thick mode this must be the directory of the file
-          cwallet.sso
+          mode this must be the directory containing the PEM-encoded wallet
+          file ewallet.pem. In thick mode this must be the directory containing
+          the file cwallet.sso
 
         - events: boolean specifying whether events mode should be enabled.
           This value is only used in thick mode and is needed for continuous
           query notification and high availability event notifications
 
-        - mode: authorization mode to use
+        - mode: authorization mode to use. For example
+          constants.AUTH_MODE_SYSDBA
 
         - disable_oob: boolean indicating whether out-of-band breaks should be
-          disabled. This value is only used in thin mode and has no effect on
-          Windows which doesn't support this functionality
+          disabled. This value is only used in thin mode. It has no effect on
+          Windows which does not support this functionality
 
         - stmtcachesize: identifies the initial size of the statement cache
 
@@ -636,10 +645,11 @@ class PoolParams(ConnectParams):
 
         - matchanytag: boolean specifying whether any tag can be used when
           acquiring a connection from the pool. This value is only used in
-          thick mode when acquiring a connection from a pool
+          thick mode.
 
-        - config_dir: directory in which configuration files (tnsnames.ora) are
-          found. This value is only used in thin mode
+        - config_dir: directory in which the optional tnsnames.ora
+          configuration file is located. This value is only used in thin mode.
+          For thick mode use the config_dir parameter of init_oracle_client()
 
         - appcontext: application context used by the connection. It should be
           a list of 3-tuples (namespace, name, value) and each entry in the
@@ -654,7 +664,7 @@ class PoolParams(ConnectParams):
           thick mode
 
         - handle: an integer representing a pointer to a valid service context
-          handle. This value is only used in thick mode and should be used with
+          handle. This value is only used in thick mode. It should be used with
           extreme caution
         """
         pass
