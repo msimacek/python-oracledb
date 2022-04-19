@@ -5,14 +5,25 @@
 python-oracledb Release Notes
 =============================
 
-For any deprecations, see :ref:`Deprecations <deprecations>`.
+For deprecations, see :ref:`Deprecations <deprecations>`.
 
-Version 8.3 (TBD)
------------------
+
+python-oracledb 1.0 (TBD)
+-------------------------
+
+#)  Renamed cx_Oracle to python-oracledb
+
+cx_Oracle 8.3 (November 2021)
+-----------------------------
 
 #)  Updated embedded ODPI-C to `version 4.3.0
     <https://oracle.github.io/odpi/doc/releasenotes.html#
-    version-4-3-tbd>`__.
+    version-4-3-november-4-2021>`__.
+#)  Added official support for Python 3.10.
+#)  Support for dequeuing messages from Oracle Transactional Event Queue (TEQ)
+    queues was restored.
+#)  Corrected calculation of attribute :data:`MessageProperties.msgid`. Note
+    that the attribute is now also read only.
 #)  Binary integer variables now explicitly convert values to integers (since
     implicit conversion to integer has become an error in Python 3.10) and
     values that are not `int`, `float` or `decimal.Decimal` are explicitly
@@ -20,8 +31,8 @@ Version 8.3 (TBD)
 #)  Improved samples and test suite.
 
 
-Version 8.2.1 (June 2021)
--------------------------
+cx_Oracle 8.2.1 (June 2021)
+---------------------------
 
 #)  Updated embedded ODPI-C to `version 4.2.1
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -36,8 +47,8 @@ Version 8.2.1 (June 2021)
 #)  Improved documentation and the test suite.
 
 
-Version 8.2 (May 2021)
-----------------------
+cx_Oracle 8.2 (May 2021)
+------------------------
 
 #)  Updated embedded ODPI-C to `version 4.2.0
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -105,8 +116,8 @@ Version 8.2 (May 2021)
 #)  Improved the test suite.
 
 
-Version 8.1 (December 2020)
----------------------------
+cx_Oracle 8.1 (December 2020)
+-----------------------------
 
 #)  Updated embedded ODPI-C to `version 4.1.0
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -129,8 +140,8 @@ Version 8.1 (December 2020)
 #)  Improved documentation, samples and test suite.
 
 
-Version 8.0.1 (August 2020)
----------------------------
+cx_Oracle 8.0.1 (August 2020)
+-----------------------------
 
 #)  Updated embedded ODPI-C to `version 4.0.2
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -144,8 +155,8 @@ Version 8.0.1 (August 2020)
 #)  Documentation improvements.
 
 
-Version 8.0 (June 2020)
------------------------
+cx_Oracle 8.0 (June 2020)
+-------------------------
 
 #)  Dropped support for Python 2. For those still requiring Python 2, see
     :ref:`python2`.
@@ -224,8 +235,8 @@ Version 8.0 (June 2020)
 #)  Documentation, samples and test suite improvements.
 
 
-Version 7.3 (December 2019)
----------------------------
+cx_Oracle 7.3 (December 2019)
+-----------------------------
 
 #)  Added support for Python 3.8.
 #)  Updated embedded ODPI-C to `version 3.3
@@ -279,8 +290,8 @@ Version 7.3 (December 2019)
 #)  Improved documentation.
 
 
-Version 7.2.3 (October 2019)
-----------------------------
+cx_Oracle 7.2.3 (October 2019)
+------------------------------
 
 #)  Updated embedded ODPI-C to `version 3.2.2
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -294,8 +305,8 @@ Version 7.2.3 (October 2019)
 #)  Improved documentation.
 
 
-Version 7.2.2 (August 2019)
----------------------------
+cx_Oracle 7.2.2 (August 2019)
+-----------------------------
 
 #)  Updated embedded ODPI-C to `version 3.2.1
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -312,8 +323,8 @@ Version 7.2.2 (August 2019)
 #)  Updated default connect strings to use 19c and XE 18c defaults.
 
 
-Version 7.2.1 (July 2019)
--------------------------
+cx_Oracle 7.2.1 (July 2019)
+---------------------------
 
 #)  Resolved ``MemoryError`` exception on Windows when using an output type
     handler
@@ -322,8 +333,8 @@ Version 7.2.1 (July 2019)
 #)  Improved documentation.
 
 
-Version 7.2 (July 2019)
------------------------
+cx_Oracle 7.2 (July 2019)
+-------------------------
 
 #)  Updated embedded ODPI-C to `version 3.2
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -374,8 +385,8 @@ Version 7.2 (July 2019)
 #)  Improved documentation.
 
 
-Version 7.1.3 (April 2019)
---------------------------
+cx_Oracle 7.1.3 (April 2019)
+----------------------------
 
 #)  Updated to `ODPI-C 3.1.4
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -394,8 +405,8 @@ Version 7.1.3 (April 2019)
     Python 2.7.
 
 
-Version 7.1.2 (March 2019)
---------------------------
+cx_Oracle 7.1.2 (March 2019)
+----------------------------
 
 #)  Updated to `ODPI-C 3.1.3
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -421,8 +432,8 @@ Version 7.1.2 (March 2019)
 #)  Improved test suite and documentation.
 
 
-Version 7.1.1 (February 2019)
------------------------------
+cx_Oracle 7.1.1 (February 2019)
+-------------------------------
 
 #)  Updated to `ODPI-C 3.1.2
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -433,8 +444,8 @@ Version 7.1.1 (February 2019)
 #)  Improved error messages and installation documentation.
 
 
-Version 7.1 (February 2019)
----------------------------
+cx_Oracle 7.1 (February 2019)
+-----------------------------
 
 #)  Updated to `ODPI-C 3.1
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -516,8 +527,8 @@ Version 7.1 (February 2019)
 #)  Improved documentation.
 
 
-Version 7.0 (September 2018)
-----------------------------
+cx_Oracle 7.0 (September 2018)
+------------------------------
 
 #)  Update to `ODPI-C 3.0
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -561,8 +572,8 @@ Version 7.0 (September 2018)
 #)  Improved documentation.
 
 
-Version 6.4.1 (July 2018)
--------------------------
+cx_Oracle 6.4.1 (July 2018)
+---------------------------
 
 #)  Update to `ODPI-C 2.4.2
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -579,8 +590,8 @@ Version 6.4.1 (July 2018)
     (`issue 199 <https://github.com/oracle/python-cx_Oracle/issues/199>`__).
 
 
-Version 6.4 (July 2018)
------------------------
+cx_Oracle 6.4 (July 2018)
+-------------------------
 
 #)  Update to `ODPI-C 2.4.1
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -647,8 +658,8 @@ Version 6.4 (July 2018)
 #)  Added additional test cases.
 
 
-Version 6.3.1 (May 2018)
-------------------------
+cx_Oracle 6.3.1 (May 2018)
+--------------------------
 
 #)  Update to `ODPI-C 2.3.2
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -664,8 +675,8 @@ Version 6.3.1 (May 2018)
     (`issue 176 <https://github.com/oracle/python-cx_Oracle/issues/176>`__).
 
 
-Version 6.3 (April 2018)
-------------------------
+cx_Oracle 6.3 (April 2018)
+--------------------------
 
 #)  Update to `ODPI-C 2.3.1
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -727,15 +738,15 @@ Version 6.3 (April 2018)
     order to make setup a bit more generic.
 
 
-Version 6.2.1 (March 2018)
---------------------------
+cx_Oracle 6.2.1 (March 2018)
+----------------------------
 
 #)  Make sure cxoModule.h is included in the source archive
     (`issue 155 <https://github.com/oracle/python-cx_Oracle/issues/155>`__).
 
 
-Version 6.2 (March 2018)
-------------------------
+cx_Oracle 6.2 (March 2018)
+--------------------------
 
 #)  Update to `ODPI-C 2.2.1
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -780,8 +791,8 @@ Version 6.2 (March 2018)
 #)  Added test cases to the test suite.
 
 
-Version 6.1 (December 2017)
----------------------------
+cx_Oracle 6.1 (December 2017)
+-----------------------------
 
 #)  Update to `ODPI-C 2.1
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -849,8 +860,8 @@ Version 6.1 (December 2017)
 #)  Added test cases to the test suite.
 
 
-Version 6.0.3 (November 2017)
------------------------------
+cx_Oracle 6.0.3 (November 2017)
+-------------------------------
 
 #)  Update to `ODPI-C 2.0.3
     <https://oracle.github.io/odpi/doc/releasenotes.html#
@@ -878,8 +889,8 @@ Version 6.0.3 (November 2017)
     IndexError, as is already done for getting variable values.
 
 
-Version 6.0.2 (August 2017)
----------------------------
+cx_Oracle 6.0.2 (August 2017)
+-----------------------------
 
 #)  Update to `ODPI-C 2.0.2
     <https://oracle.github.io/odpi/doc/releasenotes.html
@@ -903,8 +914,8 @@ Version 6.0.2 (August 2017)
 #)  Updated documentation.
 
 
-Version 6.0.1 (August 2017)
----------------------------
+cx_Oracle 6.0.1 (August 2017)
+-----------------------------
 
 #)  Update to `ODPI-C 2.0.1
     <https://oracle.github.io/odpi/doc/releasenotes.html
@@ -925,8 +936,8 @@ Version 6.0.1 (August 2017)
 #)  Updated documentation.
 
 
-Version 6.0 (August 2017)
--------------------------
+cx_Oracle 6.0 (August 2017)
+---------------------------
 
 #)  Update to `ODPI-C 2.0 <https://oracle.github.io/odpi/doc/releasenotes.html
     #version-2-0-august-14-2017>`__.
@@ -963,8 +974,8 @@ Version 6.0 (August 2017)
 #)  Documentation improvements.
 
 
-Version 6.0 rc 2 (July 2017)
-----------------------------
+cx_Oracle 6.0 rc 2 (July 2017)
+------------------------------
 
 #)  Update to `ODPI-C rc 2 <https://oracle.github.io/odpi/doc/releasenotes.html
     #version-2-0-0-rc-2-july-20-2017>`__.
@@ -995,8 +1006,8 @@ Version 6.0 rc 2 (July 2017)
 #)  Documentation improvements.
 
 
-Version 6.0 rc 1 (June 2017)
-----------------------------
+cx_Oracle 6.0 rc 1 (June 2017)
+------------------------------
 
 #)  Update to `ODPI-C rc 1 <https://oracle.github.io/odpi/doc/releasenotes.html
     #version-2-0-0-rc-1-june-16-2017>`__.
@@ -1020,8 +1031,8 @@ Version 6.0 rc 1 (June 2017)
 #)  Documentation improvements.
 
 
-Version 6.0 beta 2 (May 2017)
------------------------------
+cx_Oracle 6.0 beta 2 (May 2017)
+-------------------------------
 
 #)  Added support for getting/setting attributes of objects or element values
     in collections that contain LOBs, BINARY_FLOAT values, BINARY_DOUBLE values
@@ -1051,8 +1062,8 @@ Version 6.0 beta 2 (May 2017)
     statements (which behaves a little differently from PL/SQL statements).
 
 
-Version 6.0 beta 1 (April 2017)
--------------------------------
+cx_Oracle 6.0 beta 1 (April 2017)
+---------------------------------
 
 #)  Simplify building cx_Oracle considerably by use of
     `ODPI-C <https://oracle.github.io/odpi>`__. This means that cx_Oracle can
@@ -1120,8 +1131,8 @@ Version 6.0 beta 1 (April 2017)
     main/samples/cqn.py>`__.
 
 
-Version 5.3 (March 2017)
-------------------------
+cx_Oracle 5.3 (March 2017)
+--------------------------
 
 #)  Added support for Python 3.6.
 #)  Dropped support for Python versions earlier than 2.6.
@@ -1198,8 +1209,8 @@ Version 5.3 (March 2017)
     handler should be used instead.
 
 
-Version 5.2.1 (January 2016)
-----------------------------
+cx_Oracle 5.2.1 (January 2016)
+------------------------------
 
 #)  Added support for Python 3.5.
 #)  Removed password attribute from connection and session pool objects in
@@ -1216,8 +1227,8 @@ Version 5.2.1 (January 2016)
     procedures (available in Oracle 12.1).
 
 
-Version 5.2 (June 2015)
------------------------
+cx_Oracle 5.2 (June 2015)
+-------------------------
 
 #)  Added support for strings up to 32k characters (new in Oracle 12c).
 #)  Added support for getting array DML row counts (new in Oracle 12c).
@@ -1244,8 +1255,8 @@ Version 5.2 (June 2015)
     (`Issue #7 <https://bitbucket.org/anthony_tuininga/cx_oracle/issue/7>`__)
 
 
-Version 5.1.3 (May 2014)
-------------------------
+cx_Oracle 5.1.3 (May 2014)
+--------------------------
 
 #)  Added support for Oracle 12c.
 #)  Added support for Python 3.4.
@@ -1265,8 +1276,8 @@ Version 5.1.3 (May 2014)
 #)  Class name of cursors changed to real name cx_Oracle.Cursor.
 
 
-Version 5.1.2 (July 2012)
--------------------------
+cx_Oracle 5.1.2 (July 2012)
+---------------------------
 
 #)  Added support for LONG_UNICODE which is a type used to handle long unicode
     strings. These are not explicitly supported in Oracle but can be used to
@@ -1279,8 +1290,8 @@ Version 5.1.2 (July 2012)
     requested by Rodney Barnett.
 
 
-Version 5.1.1 (October 2011)
-----------------------------
+cx_Oracle 5.1.1 (October 2011)
+------------------------------
 
 #)  Simplify management of threads for callbacks performed by database change
     notification and eliminate a crash that occurred under high load in
@@ -1301,8 +1312,8 @@ Version 5.1.1 (October 2011)
 #)  Removed redundant code in setup.py for calculating the library path.
 
 
-Version 5.1 (March 2011)
-------------------------
+cx_Oracle 5.1 (March 2011)
+--------------------------
 
 #)  Remove support for UNICODE mode and permit Unicode to be passed through in
     everywhere a string may be passed in. This means that strings will be
@@ -1325,8 +1336,8 @@ Version 5.1 (March 2011)
     Thanks to Uwe Hoffmann for the initial patch.
 
 
-Version 5.0.4 (July 2010)
--------------------------
+cx_Oracle 5.0.4 (July 2010)
+---------------------------
 
 #)  Added support for Python 2.7.
 #)  Added support for new parameter (port) for subscription() call which allows
@@ -1336,8 +1347,8 @@ Version 5.0.4 (July 2010)
 #)  Fixed a few error messages.
 
 
-Version 5.0.3 (February 2010)
------------------------------
+cx_Oracle 5.0.3 (February 2010)
+-------------------------------
 
 #)  Added support for 64-bit Windows.
 #)  Added support for Python 3.1 and dropped support for Python 3.0.
@@ -1365,8 +1376,8 @@ Version 5.0.3 (February 2010)
     for the solution to this problem.
 
 
-Version 5.0.2 (May 2009)
-------------------------
+cx_Oracle 5.0.2 (May 2009)
+--------------------------
 
 #)  Fix creation of temporary NCLOB values and the writing of NCLOB values in
     non Unicode mode.
@@ -1381,8 +1392,8 @@ Version 5.0.2 (May 2009)
 #)  Fixed a few documentation issues.
 
 
-Version 5.0.1 (February 2009)
------------------------------
+cx_Oracle 5.0.1 (February 2009)
+-------------------------------
 
 #)  Added support for database change notification available in Oracle 10g
     Release 2 and higher.
@@ -1400,8 +1411,8 @@ Version 5.0.1 (February 2009)
     3.0.1.
 
 
-Version 5.0 (December 2008)
----------------------------
+cx_Oracle 5.0 (December 2008)
+-----------------------------
 
 #)  Added support for Python 3.0 with much help from Amaury Forgeot d'Arc.
 #)  Removed support for Python 2.3 and Oracle 8i.
@@ -1433,8 +1444,8 @@ Version 5.0 (December 2008)
     session pools to fetch objects without exceptions taking place.
 
 
-Version 4.4.1 (October 2008)
-----------------------------
+cx_Oracle 4.4.1 (October 2008)
+------------------------------
 
 #)  Make the bind variables and fetch variables accessible although they need
     to be treated carefully since they are used internally; support added for
@@ -1468,8 +1479,8 @@ Version 4.4.1 (October 2008)
 #)  Added additional link arguments for Cygwin as requested by Rob Gillen.
 
 
-Version 4.4 (June 2008)
------------------------
+cx_Oracle 4.4 (June 2008)
+-------------------------
 
 #)  Fix setup.py to handle the Oracle instant client and Oracle XE on both
     Linux and Windows as pointed out by many. Thanks also to the many people
@@ -1511,8 +1522,8 @@ Version 4.4 (June 2008)
     not 10.1.
 
 
-Version 4.3.3 (October 2007)
-----------------------------
+cx_Oracle 4.3.3 (October 2007)
+------------------------------
 
 #)  Added method ping() on connections which can be used to test whether or not
     a connection is still active (available in Oracle 10g R2).
@@ -1541,8 +1552,8 @@ Version 4.3.3 (October 2007)
 #)  Remove unnecessary dependency on win32api to build module on Windows.
 
 
-Version 4.3.2 (August 2007)
----------------------------
+cx_Oracle 4.3.2 (August 2007)
+-----------------------------
 
 #)  Added methods open(), close(), isopen() and getchunksize() in order to
     improve performance of reading/writing LOB values in chunks.
@@ -1569,8 +1580,8 @@ Version 4.3.2 (August 2007)
 #)  When copying the value of a variable, copy the return code as well.
 
 
-Version 4.3.1 (April 2007)
---------------------------
+cx_Oracle 4.3.1 (April 2007)
+----------------------------
 
 #)  Ensure that if the client buffer size exceeds 4000 bytes that the server
     buffer size does not as strings may only contain 4000 bytes; this allows
@@ -1585,8 +1596,8 @@ Version 4.3.1 (April 2007)
     for noticing this discrepancy.
 
 
-Version 4.3 (March 2007)
-------------------------
+cx_Oracle 4.3 (March 2007)
+--------------------------
 
 #)  Added preliminary support for fetching Oracle objects (SQL types) as
     requested by Kristof Beyls (who kindly provided an initial patch).
@@ -1614,8 +1625,8 @@ Version 4.3 (March 2007)
     the connection is closed solves the problem.
 
 
-Version 4.2.1 (September 2006)
-------------------------------
+cx_Oracle 4.2.1 (September 2006)
+--------------------------------
 
 #)  Added additional type (NCLOB) to handle CLOBs that use the national
     character set as requested by Chris Dunscombe.
@@ -1627,8 +1638,8 @@ Version 4.2.1 (September 2006)
 #)  Fixed binding of decimal objects with absolute values less than 0.1.
 
 
-Version 4.2 (July 2006)
------------------------
+cx_Oracle 4.2 (July 2006)
+-------------------------
 
 #)  Added support for parsing an Oracle statement as requested by Patrick
     Blackwill.
@@ -1667,14 +1678,14 @@ Version 4.2 (July 2006)
 #)  Fixed typo in error message.
 
 
-Version 4.1.2 (December 2005)
------------------------------
+cx_Oracle 4.1.2 (December 2005)
+-------------------------------
 
 #)  Restore support of Oracle 9i features when using the Oracle 10g client.
 
 
-Version 4.1.1 (December 2005)
------------------------------
+cx_Oracle 4.1.1 (December 2005)
+-------------------------------
 
 #)  Add support for dropping a connection from a session pool.
 #)  Add support for write only attributes "module", "action" and "clientinfo"
@@ -1701,8 +1712,8 @@ Version 4.1.1 (December 2005)
     information.
 
 
-Version 4.1 (January 2005)
---------------------------
+cx_Oracle 4.1 (January 2005)
+----------------------------
 
 #)  Fixed bug where subclasses of Cursor do not pass the connection in the
     constructor causing a segfault.
@@ -1727,8 +1738,8 @@ Version 4.1 (January 2005)
     character sets.
 
 
-Version 4.1 beta 1 (September 2004)
------------------------------------
+cx_Oracle 4.1 beta 1 (September 2004)
+-------------------------------------
 
 #)  Added support for Python 2.4. In Python 2.4, the datetime module is used
     for both binding and fetching of date and timestamp data. In Python 2.3,
@@ -1773,8 +1784,8 @@ Version 4.1 beta 1 (September 2004)
 #)  Added support for binary_float and binary_double columns in Oracle 10g.
 
 
-Version 4.0.1 (February 2004)
------------------------------
+cx_Oracle 4.0.1 (February 2004)
+-------------------------------
 
 #)  Fixed bugs on 64-bit platforms that caused segmentation faults and bus
     errors in session pooling and determining the bind variables associated
@@ -1801,8 +1812,8 @@ Version 4.0.1 (February 2004)
     and its solution.
 
 
-Version 4.0 (December 2003)
----------------------------
+cx_Oracle 4.0 (December 2003)
+-----------------------------
 
 #)  Added support for subclassing connections, cursors and session pools. The
     changes involved made it necessary to drop support for Python 2.1 and
@@ -1843,8 +1854,8 @@ Version 4.0 (December 2003)
     Connection(handle=) if needed.
 
 
-Version 3.1 (August 2003)
--------------------------
+cx_Oracle 3.1 (August 2003)
+---------------------------
 
 #)  Added support for connecting with SYSDBA and SYSOPER access which is
     needed for connecting as sys in Oracle 9i.
@@ -1877,8 +1888,8 @@ Version 3.1 (August 2003)
     it does imply a performance penalty when used.
 
 
-Version 3.0a (June 2003)
-------------------------
+cx_Oracle 3.0a (June 2003)
+--------------------------
 
 #)  Fixed bug where zero length PL/SQL arrays were being mishandled
 #)  Fixed support for the data type "float" in Oracle; added one to the
@@ -1894,8 +1905,8 @@ Version 3.0a (June 2003)
     as well as within the packages that are distributed
 
 
-Version 3.0 (March 2003)
-------------------------
+cx_Oracle 3.0 (March 2003)
+--------------------------
 
 #)  Removed support for connection to Oracle7 databases; it is entirely
     possible that it will still work but I no longer have any way of testing
@@ -1939,8 +1950,8 @@ Version 3.0 (March 2003)
     core Python library
 
 
-Version 2.5a (August 2002)
---------------------------
+cx_Oracle 2.5a (August 2002)
+----------------------------
 
 #)  Fix problem with Oracle 9i and retrieving strings; it seems that Oracle 9i
     uses the correct method for dynamic callback but Oracle 8i will not work
@@ -1948,8 +1959,8 @@ Version 2.5a (August 2002)
     Oracle 9i feature; thanks to Paul Denize for discovering this problem
 
 
-Version 2.5 (July 2002)
------------------------
+cx_Oracle 2.5 (July 2002)
+-------------------------
 
 #)  Added flag OPT_NoOracle7 which, if set, assumes that connections are being
     made to Oracle8 or higher databases; this allows for eliminating the
@@ -2000,8 +2011,8 @@ Version 2.5 (July 2002)
     on Cygwin
 
 
-Version 2.4 (January 2002)
---------------------------
+cx_Oracle 2.4 (January 2002)
+----------------------------
 
 #)  String variables can now be made any length (previously restricted to the
     64K limit imposed by Oracle for default binding); use the type
@@ -2023,8 +2034,8 @@ Version 2.4 (January 2002)
 #)  Now support building RPMs for Linux.
 
 
-Version 2.3 (October 2001)
---------------------------
+cx_Oracle 2.3 (October 2001)
+----------------------------
 
 #)  Incremental performance enhancements (dealing with reusing cursors and
     bind handles)
@@ -2036,8 +2047,8 @@ Version 2.3 (October 2001)
     non-zero scale.
 
 
-Version 2.2 (July 2001)
------------------------
+cx_Oracle 2.2 (July 2001)
+-------------------------
 
 #)  Upgraded thread safety to level 1 (according to the Python DB API 2.0) as
     an internal project required the ability to share the module between
