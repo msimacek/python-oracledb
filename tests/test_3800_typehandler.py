@@ -14,6 +14,7 @@
 """
 
 import json
+import unittest
 
 import oracledb
 import test_env
@@ -168,6 +169,44 @@ class TestCase(test_env.BaseTestCase):
             (3, "CONVERTED")
         ]
         self.assertEqual(self.cursor.fetchall(), expected_data)
+
+    @unittest.skipUnless(test_env.get_server_version() >= (21, 0),
+                         "unsupported server")
+    def test_3806(self):
+        "3806 - output type handler for fetching 21c JSON when using thin mode"
+        self.cursor.execute("truncate table TestJson")
+        insert_sql = "insert into TestJson values (:1, :2)"
+        json_data = [
+            (dict(name="John", city="Delhi")),
+            (dict(name="George", city="Bangalore")),
+            (dict(name="Sam", city="Mumbai"))
+        ]
+        data_to_insert = list(enumerate(json_data))
+        json_as_string = self.connection.thin or \
+                test_env.get_client_version() < (21, 0)
+        if json_as_string:
+            # insert data as JSON string
+            self.cursor.executemany(insert_sql,
+                    [(i, json.dumps(j)) for i, j in data_to_insert])
+        else:
+            # take advantage of direct binding
+            self.cursor.setinputsizes(None, oracledb.DB_TYPE_JSON)
+            self.cursor.executemany(insert_sql, data_to_insert)
+        def output_type_handler(cursor, name, default_type, size, precision,
+                                scale):
+            # fetch 21c JSON datatype when using python-oracledb thin mode
+            if default_type == oracledb.DB_TYPE_JSON:
+                return cursor.var(str, arraysize=cursor.arraysize,
+                                  outconverter=json.loads)
+            # if using Oracle Client version < 21, then database returns BLOB
+            # data type instead of JSON data type
+            elif default_type == oracledb.DB_TYPE_BLOB:
+                return cursor.var(default_type, arraysize=cursor.arraysize,
+                                  outconverter=lambda v: json.loads(v.read()))
+        if json_as_string:
+            self.cursor.outputtypehandler = output_type_handler
+        self.cursor.execute("select * from TestJson")
+        self.assertEqual(self.cursor.fetchall(), data_to_insert)
 
 if __name__ == "__main__":
     test_env.run_test_cases()
