@@ -1,8 +1,8 @@
 .. _soda:
 
-****
-SODA
-****
+**********
+API: SODA
+**********
 
 `Oracle Database Simple Oracle Document Access (SODA)
 <https://docs.oracle.com/en/database/oracle/simple-oracle-document-access>`__
@@ -12,9 +12,8 @@ strings. See the :ref:`user manual <sodausermanual>` for examples.
 
 .. _sodarequirements:
 
------------------
 SODA Requirements
------------------
+==================
 
 To use SODA, the role SODA_APP must be granted to the user.  To create
 collections, users need the CREATE TABLE privilege.  These can be granted by a
@@ -69,9 +68,8 @@ SODA requires Oracle Client 18.3 or higher and Oracle Database 18.1 and higher.
 
 .. _sodadb:
 
---------------------
 SODA Database Object
---------------------
+=====================
 
 .. note::
 
@@ -147,9 +145,8 @@ SODA Database Object
 
 .. _sodacoll:
 
-----------------------
 SODA Collection Object
-----------------------
+=======================
 
 .. note::
 
@@ -158,6 +155,8 @@ SODA Collection Object
     :meth:`SodaDatabase.createCollection()` and
     :meth:`SodaDatabase.openCollection()`.
 
+Methods
+-------
 
 .. method:: SodaCollection.createIndex(spec)
 
@@ -285,20 +284,6 @@ SODA Collection Object
         Use of the `hint` parameter requires Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
 
 
-.. attribute:: SodaCollection.metadata
-
-    This read-only attribute returns a dictionary containing the metadata that
-    was used to create the collection. See this `collection metadata reference
-    <https://www.oracle.com/pls/topic/
-    lookup?ctx=dblatest&id=GUID-49EFF3D3-9FAB-4DA6-BDE2-2650383566A3>`__
-    for more information.
-
-
-.. attribute:: SodaCollection.name
-
-    This read-only attribute returns the name of the collection.
-
-
 .. method:: SodaCollection.save(doc)
 
     Saves a document into the collection. This method is equivalent to
@@ -343,12 +328,27 @@ SODA Collection Object
     Removes all of the documents in the collection, similarly to what is done
     for rows in a table by the TRUNCATE TABLE statement.
 
+Attributes
+----------
+
+.. attribute:: SodaCollection.metadata
+
+    This read-only attribute returns a dictionary containing the metadata that
+    was used to create the collection. See this `collection metadata reference
+    <https://www.oracle.com/pls/topic/
+    lookup?ctx=dblatest&id=GUID-49EFF3D3-9FAB-4DA6-BDE2-2650383566A3>`__
+    for more information.
+
+
+.. attribute:: SodaCollection.name
+
+    This read-only attribute returns the name of the collection.
+
 
 .. _sodadoc:
 
---------------------
 SODA Document Object
---------------------
+=====================
 
 .. note::
 
@@ -358,15 +358,8 @@ SODA Document Object
     :meth:`SodaOperation.getOne()` as well as by iterating over
     :ref:`SODA document cursors <sodadoccur>`.
 
-
-.. attribute:: SodaDoc.createdOn
-
-    This read-only attribute returns the creation time of the document in
-    `ISO 8601 <https://www.iso.org/iso-8601-date-and-time-format.html>`__
-    format. Documents created by :meth:`SodaDatabase.createDocument()` or
-    fetched from collections where this attribute is not stored will return
-    None.
-
+Methods
+-------
 
 .. method:: SodaDoc.getContent()
 
@@ -388,6 +381,16 @@ SODA Document Object
     is not known, UTF-8 will be used. If there is no content, however, None
     will be returned.
 
+Attributes
+-----------
+
+.. attribute:: SodaDoc.createdOn
+
+    This read-only attribute returns the creation time of the document in
+    `ISO 8601 <https://www.iso.org/iso-8601-date-and-time-format.html>`__
+    format. Documents created by :meth:`SodaDatabase.createDocument()` or
+    fetched from collections where this attribute is not stored will return
+    None.
 
 .. attribute:: SodaDoc.key
 
@@ -424,9 +427,8 @@ SODA Document Object
 
 .. _sodadoccur:
 
----------------------------
 SODA Document Cursor Object
----------------------------
+============================
 
 .. note::
 
@@ -444,9 +446,8 @@ SODA Document Cursor Object
 
 .. _sodaop:
 
----------------------
 SODA Operation Object
----------------------
+=====================
 
 .. note::
 
@@ -461,8 +462,6 @@ SODA Operation Object
     the criteria. If :meth:`~SodaOperation.skip()` or
     :meth:`~SodaOperation.limit()` were called on this object, an exception is
     raised.
-
-    .. versionadded:: 7.0
 
 
 .. method:: SodaOperation.fetchArraySize(value)

@@ -1,7 +1,7 @@
 .. _plsqlexecution:
 
 ****************
-PL/SQL Execution
+Executing PL/SQL
 ****************
 
 PL/SQL stored procedures, functions and anonymous blocks can be called from
@@ -53,7 +53,7 @@ The :meth:`Cursor.callfunc()` method is used to call PL/SQL functions.
 
 The ``returnType`` parameter for :meth:`~Cursor.callfunc()` is
 expected to be a Python type, one of the :ref:`oracledb types <types>` or
-an :ref:`Object Type <objecttype>`.
+an :ref:`Object Type <dbobjecttype>`.
 
 If a function with the following definition exists:
 
@@ -283,6 +283,11 @@ the database component of an application while it is in use, thereby minimizing
 or eliminating down time. This feature allows multiple versions of views,
 synonyms, PL/SQL objects and SQL Translation profiles to be used concurrently.
 Different versions of the database objects are associated with an "edition".
+
+.. note::
+    
+    Edition-Based Redefinition (EBR) is only supported in the python-oracledb Thick mode.
+    For information on changing from one mode to the other, see :ref:`changingmodes`.
 
 The simplest way to set an edition is to pass the ``edition`` parameter to
 :meth:`oracledb.connect()` or :meth:`oracledb.SessionPool()`:

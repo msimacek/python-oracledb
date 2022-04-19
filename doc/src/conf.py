@@ -21,7 +21,7 @@ sys.path.append(os.path.abspath("_ext"))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ["table_with_summary"]
+extensions = ["table_with_summary", "oracle_deprecated"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
@@ -33,7 +33,7 @@ source_suffix = '.rst'
 root_doc = master_doc = 'index'
 
 # General substitutions.
-project = 'oracledb'
+project = 'python-oracledb'
 copyright = u'2016, 2021, 2022, Oracle and/or its affiliates. All rights reserved. Portions Copyright © 2007-2015, Anthony Tuininga. All rights reserved. Portions Copyright © 2001-2007, Computronix (Canada) Ltd., Edmonton, Alberta, Canada. All rights reserved'
 author = 'Oracle'
 

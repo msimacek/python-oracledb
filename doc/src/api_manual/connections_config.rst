@@ -93,7 +93,7 @@ Oracle Net Services and Client Configuration Files
  The Thin mode does not automatically use the default file locations such as the Instant Client ``network/admin/`` subdirectory, ``$ORACLE_HOME/network/admin/``, or ``$ORACLE_BASE/homes/XYZ/network/admin/`` in a read-only Oracle Database home. Also, the JDBC-thin driver does not use these default file locations.
 
 * The python-oracledb Thin mode does not read ``sqlnet.ora`` files. Instead, use :func:`oracledb.defaults()` or :func:`oracledb.ConnectParams()`.
-* The python-oracledb does not support ``oraaccess.xml``.
+* The python-oracledb Thin mode does not support ``oraaccess.xml``.
 
 Connection Strings
 ==================

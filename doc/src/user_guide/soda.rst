@@ -1,8 +1,8 @@
 .. _sodausermanual:
 
-************************************
-Simple Oracle Document Access (SODA)
-************************************
+*************************************************
+Working with Simple Oracle Document Access (SODA)
+*************************************************
 
 Overview
 ========

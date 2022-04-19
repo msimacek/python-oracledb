@@ -1,13 +1,31 @@
 .. _varobj:
 
-****************
-Variable Objects
-****************
+*********************
+API: Variable Object
+*********************
 
 .. note::
 
     The DB API definition does not define this object.
 
+Methods
+=======
+
+.. method:: Variable.getvalue([pos=0])
+
+    Returns the value at the given position in the variable. For variables
+    created using the method :func:`Cursor.arrayvar()` the value returned will
+    be a list of each of the values in the PL/SQL index-by table. For variables
+    bound to DML returning statements, the value returned will also be a list
+    corresponding to the returned data for the given execution of the statement
+    (as identified by the pos parameter).
+
+.. method:: Variable.setvalue(pos, value)
+
+    Set the value at the given position in the variable.
+
+Attributes
+==========
 
 .. attribute:: Variable.actual_elements
 
@@ -32,16 +50,6 @@ Variable Objects
     name will continue to work for a period of time.
 
 
-.. method:: Variable.getvalue([pos=0])
-
-    Returns the value at the given position in the variable. For variables
-    created using the method :func:`Cursor.arrayvar()` the value returned will
-    be a list of each of the values in the PL/SQL index-by table. For variables
-    bound to DML returning statements, the value returned will also be a list
-    corresponding to the returned data for the given execution of the statement
-    (as identified by the pos parameter).
-
-
 .. attribute:: Variable.inconverter
 
     This read-write attribute specifies the method used to convert data from
@@ -63,15 +71,10 @@ Variable Objects
 
 .. attribute:: Variable.outconverter
 
-     This read-write attribute specifies the method used to convert data from
-     the Oracle database to Python. The method signature is converter(value)
-     and the expected return value is the value to return to Python. If this
-     attribute is None, the value is returned directly without any conversion.
-
-
-.. method:: Variable.setvalue(pos, value)
-
-    Set the value at the given position in the variable.
+    This read-write attribute specifies the method used to convert data from
+    the Oracle database to Python. The method signature is converter(value)
+    and the expected return value is the value to return to Python. If this
+    attribute is None, the value is returned directly without any conversion.
 
 
 .. attribute:: Variable.size

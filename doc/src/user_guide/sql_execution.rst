@@ -1,7 +1,7 @@
 .. _sqlexecution:
 
 *************
-SQL Execution
+Executing SQL
 *************
 
 Executing SQL statements is the primary way in which a Python application
@@ -221,7 +221,7 @@ Python object that is returned by default. Python types can be changed with
       - str
     * - OBJECT [3]_
       - :attr:`oracledb.DB_TYPE_OBJECT`
-      - :ref:`oracledb.Object <objecttype>`
+      - :ref:`oracledb.Object <dbobjecttype>`
     * - RAW
       - :attr:`oracledb.DB_TYPE_RAW`
       - bytes
@@ -417,6 +417,12 @@ rows, and to move to a particular row in a query result set. The result set is
 cached on the database server until the cursor is closed. In contrast, regular
 cursors are restricted to moving forward.
 
+.. note::
+
+  Scrollable cursors are not supported in python-oracledb Thin mode.
+  See :ref:`Appendix A <appendixa>` for a complete list of features
+  supported in python-oracledb Thin and Thick modes.
+
 A scrollable cursor is created by setting the parameter ``scrollable=True``
 when creating the cursor. The method :meth:`Cursor.scroll()` is used to move to
 different locations in the result set.
@@ -450,10 +456,10 @@ Fetching Oracle Database Objects and Collections
 
 Oracle Database named object types and user-defined types can be fetched
 directly in queries.  Each item is represented as a :ref:`Python object
-<objecttype>` corresponding to the Oracle Database object.  This Python object
+<dbobjecttype>` corresponding to the Oracle Database object.  This Python object
 can be traversed to access its elements.  Attributes including
-:attr:`ObjectType.name` and :attr:`ObjectType.iscollection`, and methods
-including :meth:`Object.aslist` and :meth:`Object.asdict` are available.
+:attr:`DbObjectType.name` and :attr:`DbObjectType.iscollection`, and methods
+including :meth:`DbObject.aslist` and :meth:`DbObject.asdict` are available.
 
 For example, if a table ``mygeometrytab`` contains a column ``geometry`` of
 Oracle's predefined Spatial object type `SDO_GEOMETRY
@@ -618,6 +624,12 @@ client memory for immediate use when the same query is re-executed.  This is
 useful for reducing the cost of queries for small, mostly static, lookup tables,
 such as for postal codes.  CRC reduces network :ref:`round-trips <roundtrips>`,
 and also reduces database server CPU usage.
+
+.. note::
+
+  Client Result Caching is not supported in python-oracledb Thin mode.
+  See :ref:`Appendix A <appendixa>` for a complete list of features
+  supported in python-oracledb Thin and Thick modes.
 
 The cache is at the application process level.  Access and invalidation is
 managed by the Oracle Client libraries.  This removes the need for extra

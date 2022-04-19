@@ -30,14 +30,54 @@ if applicable. The most recent deprecations are listed first.
       -  This was  used to allow the Oracle Client libraries to support threaded applications. The value is ignored in python-oracledb: threaded OCI is now always enabled  in Thick, and the option is not relevant to Thin. The equivalent parameter was already deprecated for ``Oracledb.SessionPool()`` in cx_Oracle 8.2
     * - The attribute ``connection.maxBytesPerCharacter`` of the Connection object
       - This will return a constant value of 4 since encodings are always UTF-8.
-
-
+    * - The size argument, ``numRows`` of the :meth:`Cursor.fetchmany()` method
+      - Renamed ``size``
+    * - :meth:`cx_Oracle.makedsn`
+      - Use :ref:`ConnectParams Class <connparam>`
+    * - Constant :data:`~oracledb.ATTR_PURITY_DEFAULT`
+      - Replace by :data:`~oracledb.PURITY_DEFAULT`
+    * - Constant :data:`~oracledb.ATTR_PURITY_NEW`
+      - Replace by :data:`~oracledb.PURITY_NEW`
+    * - Constant :data:`~oracledb.ATTR_PURITY_SELF`
+      - Replace by :data:`~oracledb.PURITY_ANY`
+    * - Constant :data:`~oracledb.SPOOL_ATTRVAL_WAIT`
+      - Replace by :data:`~oracledb.POOL_GETMODE_WAIT`
+    * - Constant :data:`~oracledb.SPOOL_ATTRVAL_NOWAIT`
+      - Replace by :data:`~oracledb.POOL_GETMODE_NOWAIT`
+    * - Constant :data:`~oracledb.SPOOL_ATTRVAL_FORCEGET`
+      - Replace by :data:`~oracledb.POOL_GETMODE_FORCEGET`
+    * - Constant :data:`~oracledb.SPOOL_ATTRVAL_TIMEDWAIT`
+      - Replace by :data:`~oracledb.POOL_GETMODE_TIMEDWAIT`
+    * - Constant :data:`~oracledb.DEFAULT_AUTH`
+      - Replace by :data:`~oracledb.AUTH_MODE_DEFAULT`
+    * - Constant :data:`~oracledb.SYSASM`
+      - Replace by :data:`~oracledb.AUTH_MODE_SYSASM`
+    * - Constant :data:`~oracledb.SYSBKP`
+      - Replace by :data:`~oracledb.AUTH_MODE_SYSBKP`
+    * - Constant :data:`~oracledb.SYSDBA`
+      - Replace by :data:`~oracledb.AUTH_MODE_SYSDBA`
+    * - Constant :data:`~oracledb.SYSDGD`
+      - Replace by :data:`~oracledb.AUTH_MODE_SYSDGD`
+    * - Constant :data:`~oracledb.SYSKMT`
+      - Replace by :data:`~oracledb.AUTH_MODE_SYSKMT`
+    * - Constant :data:`~oracledb.SYSOPER`
+      - Replace by :data:`~oracledb.AUTH_MODE_SYSOPER`
+    * - Constant :data:`~oracledb.SYSRAC`
+      - Replace by :data:`~oracledb.AUTH_MODE_SYSRAC`
+    * - Constant :data:`~oracledb.PRELIM_AUTH`
+      - Replace by :data:`~oracledb.AUTH_MODE_PRELIM`
+    * - Constant :data:`~oracledb.SUBSCR_PROTO_OCI`
+      - Replace by :data:`~oracledb.SUBSCR_PROTO_CALLBACK`
+    * - Class name :ref:`objecttype`
+      - Replace by :ref:`dbobjecttype`
+    * - Class name :ref:`object`
+      - Replace by :ref:`dbobject`
 
 Many of the `usages deprecated in cx_Oracle
 <https://cx-oracle.readthedocs.io/en/latest/api_manual/deprecations.html#deprecations>`__
 are still supported by python-oracledb to ease migration.  However these
 previous cx_Oracle deprecation announcements remain in force for
-python-oracledb.  I.e. the relevant functionality may be removed in a future
+python-oracledb, that is the relevant functionality may be removed in a future
 version of python-oracledb.
 
 Some previous deprecations have been removed:

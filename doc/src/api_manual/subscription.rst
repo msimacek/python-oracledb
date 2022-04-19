@@ -1,13 +1,27 @@
 .. _subscrobj:
 
-*******************
-Subscription Object
-*******************
+*************************
+API: Subscription Object
+*************************
 
 .. note::
 
     This object is an extension the DB API.
 
+Methods
+=======
+
+.. method:: Subscription.registerquery(statement, [args])
+
+    Registers the query for subsequent notification when tables referenced by
+    the query are changed. This behaves similarly to cursor.execute() but only
+    queries are permitted and the args parameter must be a sequence or
+    dictionary.  If the qos parameter included the flag
+    oracledb.SUBSCR_QOS_QUERY when the subscription was created, then the ID
+    for the registered query is returned; otherwise, None is returned.
+
+Attributes
+==========
 
 .. attribute:: Subscription.callback
 
@@ -76,16 +90,6 @@ Subscription Object
 
     This read-only attribute returns the quality of service flags used to
     register the subscription when it was created.
-
-
-.. method:: Subscription.registerquery(statement, [args])
-
-    Registers the query for subsequent notification when tables referenced by
-    the query are changed. This behaves similarly to cursor.execute() but only
-    queries are permitted and the args parameter must be a sequence or
-    dictionary.  If the qos parameter included the flag
-    oracledb.SUBSCR_QOS_QUERY when the subscription was created, then the ID
-    for the registered query is returned; otherwise, None is returned.
 
 
 .. attribute:: Subscription.timeout

@@ -1,61 +1,67 @@
 .. _globalization:
 
-********************************
-Character Sets and Globalization
-********************************
+*********************************************
+Working with Character Sets and Globalization
+*********************************************
 
 Data fetched from, and sent to, Oracle Database will be mapped between the
 database character set and the "Oracle client" character set of the Oracle
-Client libraries used by python-oracledb.  If data cannot be correctly mapped between
+Client libraries used by python-oracledb. If data cannot be correctly mapped between
 client and server character sets, then it may be corrupted or queries may fail
-with :ref:`"codec can't decode byte" <codecerror>`. All database character sets are supported by 
-the python-oracledb Thick driver. The database does any required conversion for the Thin driver.
-For `national character sets <https://docs.oracle.com/en/database/oracle/oracle-database/21/nlspg/choosing-character-set.html#GUID-4E12D991-C286-4F1A-AFC6-F35040A5DE4F>`__:
+with :ref:`"codec can't decode byte" <codecerror>`. 
 
-    - AL16UTF16 is supported by both the Thin and Thick drivers
-    - UTF8 is not supported by the Thin driver
+All database character sets are supported by the python-oracledb Thick mode. 
+The database performs any required conversion for the python-oracledb Thin mode.
+For `national character sets <https://docs.oracle.com/en/database/oracle/oracle-database
+/21/nlspg/choosing-character-set.html#GUID-4E12D991-C286-4F1A-AFC6-F35040A5DE4F>`__:
 
-python-oracledb Thick uses Oracle’s National Language Support (NLS) to assist in
-globalizing applications. All NLS_* environment variables are ignored by the Thin driver.
+    - AL16UTF16 is supported by both the python-oracledb Thin and Thick modes
+    - UTF8 is not supported by the python-oracledb Thin mode
+
+python-oracledb Thick mode uses Oracle’s National Language Support (NLS) to assist in
+globalizing applications. 
+
+.. note::
+    
+    All NLS_* environment variables are ignored by the python-oracledb Thin mode.
 
 For more information, see the `Database Globalization Support Guide
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=NLSPG>`__.
 
-The following setting are changeable in the Thick driver with ALTER SESSION or
-via the initialization parameter file.
+You can change the following settings in the python-oracledb Thick mode with 
+``ALTER SESSION`` statement or by using the initialization parameter file.
 
-- NLS_CALENDAR - Calendar system
-- NLS_COMP - SQL, PL/SQL operator comparison
-- NLS_CURRENCY - Local currency symbol
-- NLS_DATE_FORMAT - Date format
-- NLS_DATE_LANGUAGE - Language for day and month names
-- NLS_DEBIT - Debit accounting symbol
-- NLS_DUAL_CURRENCY - Dual currency symbol
-- NLS_ISO_CURRENCY - ISO international currency symbol
-- NLS_LANGUGAGE - Language
-- NLS_LENGTH_SEMANTICS - How strings are treated
-- NLS_NCHAR_CONV_EXCP - Reports data loss during a character type conversion
-- NLS_NUMERIC_CHARACTERS - Decimal character and group separator
-- NLS_SORT - Collation
-- NLS_TERRITORY - Territory
-- NLS_TIMESTAMP_FORMAT - Timestamp
-- NLS_TIMESTAMP_TZ_FORMAT - Timestamp with time zone
+    - NLS_CALENDAR: Calendar system
+    - NLS_COMP: SQL, PL/SQL operator comparison
+    - NLS_CURRENCY: Local currency symbol
+    - NLS_DATE_FORMAT: Date format
+    - NLS_DATE_LANGUAGE: Language for day and month names
+    - NLS_DEBIT: Debit accounting symbol
+    - NLS_DUAL_CURRENCY: Dual currency symbol
+    - NLS_ISO_CURRENCY: ISO international currency symbol
+    - NLS_LANGUGAGE: Language
+    - NLS_LENGTH_SEMANTICS: How strings are treated
+    - NLS_NCHAR_CONV_EXCP: Reports data loss during a character type conversion
+    - NLS_NUMERIC_CHARACTERS: Decimal character and group separator
+    - NLS_SORT: Collation
+    - NLS_TERRITORY: Territory
+    - NLS_TIMESTAMP_FORMAT: Timestamp
+    - NLS_TIMESTAMP_TZ_FORMAT: Timestamp with time zone
 
-The following are settable only via environment variables, so therefore the
-Thin driver does not support them.
+The following settings can be defined only through environment variables
+and hence are not supported in the python-oracledb Thin mode.
 
-- NLS_LANG - Language, territory, character set
-- NLS_CREDIT - Credit accounting symbol
-- NLS_DEBIT - Debit accounting symbol
-- NLS_LIST_SEPARATOR - Character that separates items in a list
-- NLS_MONETARY_CHARACTERS - Monetary symbol for dollar and cents (or their equivalents)
-
+    - NLS_LANG: Language, territory, character set
+    - NLS_CREDIT: Credit accounting symbol
+    - NLS_DEBIT: Debit accounting symbol
+    - NLS_LIST_SEPARATOR: Character that separates items in a list
+    - NLS_MONETARY_CHARACTERS: Monetary symbol for dollar and cents (or their equivalents)
 
 
 Setting the Client Character Set
 ================================
 
-In cx_Oracle 8 the default encoding used for all character data changed to
+In cx_Oracle 8, the default encoding used for all character data changed to
 "UTF-8". This universal encoding is suitable for most applications.  If you
 have a special need, you can pass the ``encoding`` and ``nencoding`` parameters
 to the :meth:`oracledb.connect` and :meth:`oracledb.SessionPool` methods to
@@ -164,8 +170,8 @@ If these character sets do not match, characters transferred over Oracle Net
 will be mapped from one character set to another.  This may impact performance
 and may result in invalid data.
 
-Setting the Oracle Client Locale for python-oracledb Thick driver
-=================================================================
+Setting the Oracle Client Locale in python-oracledb Thick Mode
+==============================================================
 
 You can use the ``NLS_LANG`` environment variable to set the language and
 territory used by the Oracle Client libraries.  For example, on Linux you could
@@ -191,14 +197,14 @@ set to change the behavior of python-oracledb Thick, see `Setting NLS Parameters
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
 id=GUID-6475CA50-6476-4559-AD87-35D431276B20>`__.
 
-Setting Locale-aware Number and Date Conversions in python-oracledb Thin driver
+Setting Locale-aware Number and Date Conversions in python-oracledb Thin Mode
 ================================================================================
 
-With the Thick driver, Oracle NLS routines convert numbers and dates to strings
+In python-oracledb Thick mode, Oracle NLS routines convert numbers and dates to strings
 in the locale specific format.
 
-With the Thin driver, output type handlers can be used to perform similar
-conversions.  The examples below show a simple conversion and also how the
+In python-oracledb Thin mode, output type handlers can be used to perform similar
+conversions. The examples below show a simple conversion and also how the
 Python locale module can be used.
 
 To convert numbers:

@@ -1,8 +1,8 @@
 .. _txnmgmnt:
 
-**********************
-Transaction Management
-**********************
+**************************
+Working with Transactions
+**************************
 
 A database transaction is a grouping of SQL statements that make a logical data
 change to the database.

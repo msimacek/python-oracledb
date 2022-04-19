@@ -1,184 +1,33 @@
 .. _objecttype:
 
-*******************
-Object Type Objects
-*******************
+************************
+API: Object Type Object
+************************
 
 .. note::
 
-    This object is an extension to the DB API. It is returned by the
-    :meth:`Connection.gettype()` call and is available as the
-    :data:`Variable.type` for variables containing Oracle objects.
+    The ObjectType object is deprecated in the python-oracledb 1.0 release
+    and will be desupported in a future release. It is recommended to use
+    the equivalent :ref:`dbobjecttype` instead.
 
-
-.. method:: ObjectType([sequence])
-
-    The object type may be called directly and serves as an alternative way of
-    calling :meth:`~ObjectType.newobject()`.
-
-
-.. attribute:: ObjectType.attributes
-
-    This read-only attribute returns a list of the :ref:`attributes
-    <objectattr>` that make up the object type.
-
-
-.. attribute:: ObjectType.iscollection
-
-    This read-only attribute returns a boolean indicating if the object type
-    refers to a collection or not.
-
-
-.. attribute:: ObjectType.name
-
-    This read-only attribute returns the name of the type.
-
-
-.. attribute:: ObjectType.element_type
-
-    This read-only attribute returns the type of elements found in collections
-    of this type, if :attr:`~ObjectType.iscollection` is ``True``; otherwise,
-    it returns ``None``. If the collection contains objects, this will be
-    another object type; otherwise, it will be one of the
-    :ref:`database type constants <dbtypes>`.
-
-
-.. method:: ObjectType.newobject([sequence])
-
-    Returns a new Oracle object of the given type. This object can then be
-    modified by setting its attributes and then bound to a cursor for
-    interaction with Oracle. If the object type refers to a collection, a
-    sequence may be passed and the collection will be initialized with the
-    items in that sequence.
-
-
-.. attribute:: ObjectType.schema
-
-    This read-only attribute returns the name of the schema that owns the type.
-
+.. _object:
 
 Object Objects
---------------
+==============
 
 .. note::
 
-    This object is an extension to the DB API. It is returned by the
-    :meth:`ObjectType.newobject()` call and can be bound to variables of
-    type :data:`~cx_Oracle.OBJECT`. Attributes can be retrieved and set
-    directly.
-
-.. method:: Object.append(element)
-
-    Appends an element to the collection object. If no elements exist in the
-    collection, this creates an element at index 0; otherwise, it creates an
-    element immediately following the highest index available in the
-    collection.
-
-
-.. method:: Object.asdict()
-
-    Returns a dictionary where the collection's indexes are the keys and the
-    elements are its values.
-
-
-.. method:: Object.aslist()
-
-    Returns a list of each of the collection's elements in index order.
-
-
-.. method:: Object.copy()
-
-    Creates a copy of the object and return it.
-
-
-.. method:: Object.delete(index)
-
-    Deletes the element at the specified index of the collection. If the
-    element does not exist or is otherwise invalid, an error is raised. Note
-    that the indices of the remaining elements in the collection are not
-    changed. In other words, the delete operation creates holes in the
-    collection.
-
-
-.. method:: Object.exists(index)
-
-    Returns True or False indicating if an element exists in the collection at
-    the specified index.
-
-
-.. method:: Object.extend(sequence)
-
-    Appends all of the elements in the sequence to the collection. This is
-    the equivalent of performing :meth:`~Object.append()` for each element
-    found in the sequence.
-
-
-.. method:: Object.first()
-
-    Returns the index of the first element in the collection. If the collection
-    is empty, None is returned.
-
-
-.. method:: Object.getelement(index)
-
-    Returns the element at the specified index of the collection. If no element
-    exists at that index, an exception is raised.
-
-
-.. method:: Object.last()
-
-    Returns the index of the last element in the collection. If the collection
-    is empty, None is returned.
-
-
-.. method:: Object.next(index)
-
-    Returns the index of the next element in the collection following the
-    specified index. If there are no elements in the collection following the
-    specified index, None is returned.
-
-
-.. method:: Object.prev(index)
-
-    Returns the index of the element in the collection preceding the specified
-    index. If there are no elements in the collection preceding the
-    specified index, None is returned.
-
-
-.. method:: Object.setelement(index, value)
-
-    Sets the value in the collection at the specified index to the given value.
-
-
-.. method:: Object.size()
-
-    Returns the number of elements in the collection.
-
-
-.. method:: Object.trim(num)
-
-    Removes the specified number of elements from the end of the collection.
-
+    The Object object is deprecated in the python-oracledb 1.0 release
+    and will be desupported in a future release. It is recommended to use
+    the equivalent :ref:`dbobject` instead.
 
 .. _objectattr:
 
 Object Attribute Objects
-------------------------
+===========================
 
 .. note::
 
-    This object is an extension to the DB API. The elements of
-    :attr:`ObjectType.attributes` are instances of this type.
-
-
-.. attribute:: ObjectAttribute.name
-
-    This read-only attribute returns the name of the attribute.
-
-
-.. attribute:: ObjectAttribute.type
-
-    This read-only attribute returns the type of the attribute. This will be an
-    :ref:`Oracle Object Type <objecttype>` if the variable binds
-    Oracle objects; otherwise, it will be one of the
-    :ref:`database type constants <dbtypes>`.
+    The Object Attribute object is deprecated in the python-oracledb 1.0 release
+    and will be desupported in a future release. It is recommended to use
+    the equivalent :ref:`dbobjectattr` instead.
