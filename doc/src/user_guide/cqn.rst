@@ -1,8 +1,8 @@
 .. _cqn:
 
-***********************************
-Continuous Query Notification (CQN)
-***********************************
+************************************************
+Working with Continuous Query Notification (CQN)
+************************************************
 
 `Continuous Query Notification (CQN)
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
@@ -13,6 +13,12 @@ useful in many circumstances, such as near real-time monitoring, auditing
 applications, or for such purposes as mid-tier cache invalidation.  A cache
 might hold some values that depend on data in a table.  If the data in the
 table changes, the cached values must then be updated with the new information.
+
+.. note:: 
+
+    Continuous Query Notification (CQN) is not supported in python-oracledb Thin
+    mode. See :ref:`Appendix A <appendixa>` for a complete list of features
+    supported in python-oracledb Thin and Thick modes.
 
 CQN notification behavior is widely configurable.  Choices include specifying
 what types of SQL should trigger a notification, whether notifications should

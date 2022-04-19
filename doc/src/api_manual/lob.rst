@@ -1,8 +1,8 @@
 .. _lobobj:
 
-***********
-LOB Objects
-***********
+*****************
+API: LOB Objects
+*****************
 
 See :ref:`lobdata` for more information about using LOBs.
 
@@ -11,6 +11,8 @@ See :ref:`lobdata` for more information about using LOBs.
     This object is an extension the DB API. It is returned whenever Oracle
     :data:`CLOB`, :data:`BLOB` and :data:`BFILE` columns are fetched.
 
+Methods
+=======
 
 .. method:: LOB.close()
 
@@ -79,12 +81,6 @@ See :ref:`lobdata` for more information about using LOBs.
     Trims the LOB to the new size.
 
 
-.. attribute:: LOB.type
-
-    This read-only attribute returns the type of the LOB as one of the
-    :ref:`database type constants <dbtypes>`.
-
-
 .. method:: LOB.write(data, offset=1)
 
     Writes the data to the LOB object at the given offset. The offset is in
@@ -94,3 +90,11 @@ See :ref:`lobdata` for more information about using LOBs.
     offset will have to be chosen carefully to avoid splitting a character.
     Note that if you want to make the LOB value smaller, you must use the
     :meth:`~LOB.trim()` function.
+
+Attributes
+==========
+
+.. attribute:: LOB.type
+
+    This read-only attribute returns the type of the LOB as one of the
+    :ref:`database type constants <dbtypes>`.

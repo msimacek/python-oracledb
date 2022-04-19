@@ -405,8 +405,8 @@ cache.
 
 .. _clientresultcache:
 
-Client Result Caching
-=====================
+Client Result Caching (CRC)
+===========================
 
 python-oracledb applications can use Oracle Database's `Client Result Cache
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-35CB2592-7588-4C2D-9075-6F639F25425E>`__.
@@ -415,6 +415,12 @@ client memory for immediate use when the same query is re-executed.  This is
 useful for reducing the cost of queries for small, mostly static, lookup tables,
 such as for postal codes.  CRC reduces network :ref:`round-trips <roundtrips>`,
 and also reduces database server CPU usage.
+
+.. note::
+
+  Client Result Caching is not supported in python-oracledb Thin mode.
+  See :ref:`Appendix A <appendixa>` for a complete list of features
+  supported in python-oracledb Thin and Thick modes.
 
 The cache is at the application process level.  Access and invalidation is
 managed by the Oracle Client libraries.  This removes the need for extra

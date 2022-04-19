@@ -1,8 +1,8 @@
 .. _aq:
 
-*********************
-Advanced Queuing (AQ)
-*********************
+***************************
+API: Advanced Queuing (AQ)
+***************************
 
 See :ref:`aqusermanual` for more information about using AQ in python-oracledb.
 
@@ -12,18 +12,14 @@ See :ref:`aqusermanual` for more information about using AQ in python-oracledb.
 
 .. _queue:
 
-------
 Queues
-------
+======
 
 These objects are created using the :meth:`Connection.queue()` method and are
 used to enqueue and dequeue messages.
 
-.. attribute:: Queue.connection
-
-    This read-only attribute returns a reference to the connection object on
-    which the queue was created.
-
+Methods
+--------
 
 .. method:: Queue.deqmany(maxMessages)
 
@@ -44,15 +40,6 @@ used to enqueue and dequeue messages.
     For consistency and compliance with the PEP 8 naming style, the name of
     the method was changed from `deqOne()`. The old name will continue to
     work for a period of time.
-
-.. attribute:: Queue.deqoptions
-
-    This read-only attribute returns a reference to the :ref:`options
-    <deqoptions>` that will be used when dequeuing messages from the queue.
-
-    For consistency and compliance with the PEP 8 naming style, the name of
-    the attribute was changed from `deqOptions`. The old name will continue
-    to work for a period of time.
 
 .. method:: Queue.enqmany(messages)
 
@@ -86,6 +73,23 @@ used to enqueue and dequeue messages.
     the method was changed from `enqOne()`. The old name will continue
     to work for a period of time.
 
+Attributes
+----------
+
+.. attribute:: Queue.connection
+
+    This read-only attribute returns a reference to the connection object on
+    which the queue was created.
+
+.. attribute:: Queue.deqoptions
+
+    This read-only attribute returns a reference to the :ref:`options
+    <deqoptions>` that will be used when dequeuing messages from the queue.
+
+    For consistency and compliance with the PEP 8 naming style, the name of
+    the attribute was changed from `deqOptions`. The old name will continue
+    to work for a period of time.
+
 .. attribute:: Queue.enqoptions
 
     This read-only attribute returns a reference to the :ref:`options
@@ -95,11 +99,9 @@ used to enqueue and dequeue messages.
     the attribute was changed from `enqOptions`. The old name will continue
     to work for a period of time.
 
-
 .. attribute:: Queue.name
 
     This read-only attribute returns the name of the queue.
-
 
 .. attribute:: Queue.payload_type
 
@@ -113,9 +115,8 @@ used to enqueue and dequeue messages.
 
 .. _deqoptions:
 
----------------
 Dequeue Options
----------------
+===============
 
 .. note::
 
@@ -208,9 +209,8 @@ Dequeue Options
 
 .. _enqoptions:
 
----------------
 Enqueue Options
----------------
+===============
 
 .. note::
 
@@ -244,9 +244,8 @@ Enqueue Options
 
 .. _msgproperties:
 
-------------------
 Message Properties
-------------------
+==================
 
 .. note::
 
@@ -338,3 +337,16 @@ Message Properties
     the dequeue. It will be one of the values :data:`~oracledb.MSG_WAITING`,
     :data:`~oracledb.MSG_READY`, :data:`~oracledb.MSG_PROCESSED` or
     :data:`~oracledb.MSG_EXPIRED`.
+
+.. attribute:: Messageproperties.recipient
+
+    This read-write attribute specifies a list of recipient names that can be
+    associated with a message at the time of enqueuing the message. This allows a
+    limited set of recipients to dequeue each message. The recipient list associated 
+    with the message overrides the queue subscriber list, if there is one. The 
+    recipient names need not be in the subscriber list but can be, if desired.
+
+    To dequeue a message, the consumername attribute can be set to one of
+    the recipient names. The original message recipient list is not
+    available on dequeued messages. All recipients have to dequeue a
+    message before it gets removed from the queue.

@@ -1,8 +1,8 @@
 .. _connpool:
 
-**********************
-ConnectionPool Object
-**********************
+***************************
+API: ConnectionPool Object
+***************************
 
 .. note::
 
@@ -74,12 +74,6 @@ Methods
     shard to connect to.  The key values can be strings, numbers, bytes or
     dates.
 
-
-.. attribute:: ConnectionPool.busy
-
-    This read-only attribute returns the number of sessions currently acquired.
-
-
 .. method:: ConnectionPool.close(force=False)
 
     Closes the session pool now, rather than when the last reference to it is
@@ -125,6 +119,91 @@ Methods
 
     Drops the connection from the pool which is useful if the connection is no
     longer usable (such as when the session is killed).
+
+
+.. method:: ConnectionPool.reconfigure([min, max, increment, getmode, timeout, \
+        wait_timeout, max_lifetime_session, max_sessions_per_shard, \
+        soda_metadata_cache, stmtcachesize, ping_interval])
+
+    Reconfigures various parameters of a connection pool. The pool size can be
+    altered with ``reconfigure()`` by passing values for
+    :data:`~ConnectionPool.min`, :data:`~ConnectionPool.max` or
+    :data:`~ConnectionPool.increment`.  The :data:`~ConnectionPool.getmode`,
+    :data:`~ConnectionPool.timeout`, :data:`~ConnectionPool.wait_timeout`,
+    :data:`~ConnectionPool.max_lifetime_session`,
+    :data:`~ConnectionPool.max_sessions_per_shard`,
+    :data:`~ConnectionPool.soda_metadata_cache`, :data:`~ConnectionPool.stmtcachesize`
+    and :data:`~ConnectionPool.ping_interval` attributes can be set directly or
+    with ``reconfigure()``.
+
+    All parameters are optional. Unspecified parameters will leave those pool
+    attributes unchanged. The parameters are processed in two stages. After any
+    size change has been processed, reconfiguration on the other parameters is
+    done sequentially. If an error such as an invalid value occurs when changing
+    one attribute, then an exception will be generated but any already changed
+    attributes will retain their new values.
+
+    During reconfiguration of a pool's size, the behavior of
+    :meth:`ConnectionPool.acquire()` depends on the ``getmode`` in effect when
+    ``acquire()`` is called:
+
+    * With mode :data:`~oracledb.POOL_GETMODE_FORCEGET`, an ``acquire()`` call will 
+      wait until the pool has been reconfigured.
+
+    * With mode :data:`~oracledb.POOL_GETMODE_TIMEDWAIT`, an ``acquire()`` call will 
+      try to acquire a connection in the time specified by pool.wait_timeout and return 
+      an error if the time taken exceeds that value.
+
+    * With mode :data:`~oracledb.POOL_GETMODE_WAIT`, an ``acquire()`` call will wait 
+      until after the pool has been reconfigured and a connection is available.
+  
+    * With mode :data:`~oracledb.POOL_GETMODE_NOWAIT`, if the number of busy connections 
+      is less than the pool size, ``acquire()`` will return a new connection after pool 
+      reconfiguration is complete.
+
+    Closing connections with :meth:`ConnectionPool.release()` or
+    :meth:`Connection.close()` will wait until any pool size reconfiguration is
+    complete.
+
+    Closing the connection pool with :meth:`ConnectionPool.close()` will wait until
+    reconfiguration is complete.
+
+    See :ref:`Connection Pool Reconfiguration <poolreconfiguration>`.
+
+
+.. method:: ConnectionPool.release(connection, tag=None)
+
+    Releases the connection back to the pool now, rather than whenever __del__
+    is called. The connection will be unusable from this point forward; an
+    Error exception will be raised if any operation is attempted with the
+    connection. Any cursors or LOBs created by the connection will also be
+    marked unusable and an Error exception will be raised if any operation is
+    attempted with them.
+
+    Internally, references to the connection are held by cursor objects,
+    LOB objects, etc. Once all of these references are released, the connection
+    itself will be released back to the pool automatically. Either control
+    references to these related objects carefully or explicitly release
+    connections back to the pool in order to ensure sufficient resources are
+    available.
+
+    If the tag is not None, it is expected to be a string with name=value pairs
+    like "k1=v1;k2=v2" and will override the value in the property
+    :attr:`Connection.tag`. If either :attr:`Connection.tag` or the tag
+    parameter are not None, the connection will be retagged when it is released
+    back to the pool.
+
+.. method:: ConnectionPool._verify_open()
+
+    Verifies that the pool is open and able to perform its work.
+
+
+Attributes
+===========
+
+.. attribute:: ConnectionPool.busy
+
+    This read-only attribute returns the number of sessions currently acquired.
 
 
 .. attribute:: ConnectionPool.dsn
@@ -221,74 +300,6 @@ Methods
 
     Prior to cx_Oracle 8.2, the ping interval was fixed at 60 seconds.
 
-
-.. method:: ConnectionPool.reconfigure([min, max, increment, getmode, timeout, \
-        wait_timeout, max_lifetime_session, max_sessions_per_shard, \
-        soda_metadata_cache, stmtcachesize, ping_interval])
-
-    Reconfigures various parameters of a connection pool. The pool size can be
-    altered with ``reconfigure()`` by passing values for
-    :data:`~ConnectionPool.min`, :data:`~ConnectionPool.max` or
-    :data:`~ConnectionPool.increment`.  The :data:`~ConnectionPool.getmode`,
-    :data:`~ConnectionPool.timeout`, :data:`~ConnectionPool.wait_timeout`,
-    :data:`~ConnectionPool.max_lifetime_session`,
-    :data:`~ConnectionPool.max_sessions_per_shard`,
-    :data:`~ConnectionPool.soda_metadata_cache`, :data:`~ConnectionPool.stmtcachesize`
-    and :data:`~ConnectionPool.ping_interval` attributes can be set directly or
-    with ``reconfigure()``.
-
-    All parameters are optional. Unspecified parameters will leave those pool
-    attributes unchanged. The parameters are processed in two stages. After any
-    size change has been processed, reconfiguration on the other parameters is
-    done sequentially. If an error such as an invalid value occurs when changing
-    one attribute, then an exception will be generated but any already changed
-    attributes will retain their new values.
-
-    During reconfiguration of a pool's size, the behavior of
-    :meth:`ConnectionPool.acquire()` depends on the ``getmode`` in effect when
-    ``acquire()`` is called:
-
-    * With mode :data:`~oracledb.POOL_GETMODE_FORCEGET`, an ``acquire()`` call will wait until the pool has been reconfigured.
-
-    * With mode :data:`~oracledb.POOL_GETMODE_TIMEDWAIT`, an ``acquire()`` call will try to acquire a connection in the time specified by pool.wait_timeout and return an error if the time taken exceeds that value.
-
-    * With mode :data:`~oracledb.POOL_GETMODE_WAIT`, an ``acquire()`` call will wait until after the pool has been reconfigured and a connection is available.
-  
-    * With mode :data:`~oracledb.POOL_GETMODE_NOWAIT`, if the number of busy connections is less than the pool size, ``acquire()`` will return a new connection after pool reconfiguration is complete.
-
-    Closing connections with :meth:`ConnectionPool.release()` or
-    :meth:`Connection.close()` will wait until any pool size reconfiguration is
-    complete.
-
-    Closing the connection pool with :meth:`ConnectionPool.close()` will wait until
-    reconfiguration is complete.
-
-    See :ref:`Connection Pool Reconfiguration <poolreconfiguration>`.
-
-
-.. method:: ConnectionPool.release(connection, tag=None)
-
-    Releases the connection back to the pool now, rather than whenever __del__
-    is called. The connection will be unusable from this point forward; an
-    Error exception will be raised if any operation is attempted with the
-    connection. Any cursors or LOBs created by the connection will also be
-    marked unusable and an Error exception will be raised if any operation is
-    attempted with them.
-
-    Internally, references to the connection are held by cursor objects,
-    LOB objects, etc. Once all of these references are released, the connection
-    itself will be released back to the pool automatically. Either control
-    references to these related objects carefully or explicitly release
-    connections back to the pool in order to ensure sufficient resources are
-    available.
-
-    If the tag is not None, it is expected to be a string with name=value pairs
-    like "k1=v1;k2=v2" and will override the value in the property
-    :attr:`Connection.tag`. If either :attr:`Connection.tag` or the tag
-    parameter are not None, the connection will be retagged when it is released
-    back to the pool.
-
-
 .. attribute:: ConnectionPool.soda_metadata_cache
 
     This read-write boolean attribute returns whether the SODA metadata cache
@@ -344,7 +355,3 @@ Methods
     returning with an error. This value is only used if the getmode parameter
     to :meth:`oracledb.ConnectionPool()` was the value
     :data:`oracledb.POOL_GETMODE_TIMEDWAIT`.
-
-.. method:: ConnectionPool._verify_open()
-
-    Verifies that the pool is open and able to perform its work.

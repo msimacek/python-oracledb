@@ -1,7 +1,7 @@
 .. _batchstmnt:
 
 ******************************************
-Batch Statement Execution and Bulk Loading
+Executing Batch Statement and Bulk Loading
 ******************************************
 
 Inserting or updating multiple rows can be performed efficiently with

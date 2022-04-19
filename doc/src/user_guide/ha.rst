@@ -1,8 +1,8 @@
 .. _highavailability:
 
-**************************************
-High Availability with python-oracledb
-**************************************
+*********************************************
+Using High Availability with python-oracledb
+*********************************************
 
 Applications can utilize many features for high availability (HA) during planned and
 unplanned outages in order to:

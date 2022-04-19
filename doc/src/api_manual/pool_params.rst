@@ -1,8 +1,8 @@
 .. _poolparam:
 
-******************
-PoolParams Object
-******************
+***********************
+API: PoolParams Object
+***********************
 
 .. _poolparamsattr:
 

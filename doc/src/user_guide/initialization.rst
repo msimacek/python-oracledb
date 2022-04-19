@@ -1,9 +1,14 @@
 .. _initialization:
 
-********************************************
-python-oracledb Thick Mode Initialization
-********************************************
+***************************************
+Initializing python-oracledb Thick Mode
+***************************************
 
+The python-oracledb driver establishes the connection to the Oracle Database
+using either one of its two modes: the python-oracledb Thin mode, which connects to the 
+database directly, or, the python-oracledb Thick mode, which loads ODPI-C and Oracle Client
+libraries to connect to Oracle Database using the Oracle Call Interface (OCI) API.
+  
 If you intend to use the Thick mode, then you must call :func:`~oracledb.init_oracle_client()` 
 in the application before any standalone connection or pool is created.
 The python-oracledb Thick mode loads Oracle Client libraries which communicate over
@@ -210,6 +215,14 @@ These files affect connections and applications.  The common files are:
   <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
   id=GUID-19423B71-3F6C-430F-84CC-18145CC2A818>`__ for more information.
 
+  .. note::
+
+    The ``sqlnet.ora`` file is only supported in the python-oracledb Thick mode.
+    In python-oracledb Thin mode, many of the values can be defined using the
+    :ref:`ConnectParams Class <connparam>`. See :ref:`changingmodes` for 
+    information on how to change from one mode to the other.
+    
+
 The files should be in a directory accessible to Python, not on the database
 server host.
 
@@ -261,9 +274,15 @@ Optional Oracle Client Configuration Files
 
 When python-oracledb Thick uses Oracle Client libraries version 12.1, or later, an optional
 client parameter file called ``oraaccess.xml`` can be used to configure some
-behviors of those libraries, such as statement caching and prefetching. This can
+behaviors of those libraries, such as statement caching and prefetching. This can
 be useful if the application cannot be altered. The file is read from the same
 directory as the `Optional Oracle Net Configuration Files`_.
+
+.. note::
+
+  The ``oraaccess.xml`` is only supported in the python-oracledb Thick mode.
+  See :ref:`changingmodes` for information on how to change from one mode
+  to the other.
 
 A sample ``oraaccess.xml`` file that sets the Oracle client ‘prefetch’ value to
 1000 rows.  This value affects every SQL query in the application::
@@ -292,9 +311,9 @@ the application is not feasible.
 
 The `oraaccess.xml` file has other uses including:
 
-- Changing the value of Fast Application Notification :ref:`FAN <fan>` events which affects notifications and Runtime Load Balancing (RLB).
-- Configuring `Client Result Caching <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-D2FA7B29-301B-4AB8-8294-2B1B015899F9>`__ parameters
-- Turning on `Client Statement Cache Auto-tuning <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-6E21AA56-5BBE-422A-802C-197CAC8AAEA4>`__
+  - Changing the value of Fast Application Notification :ref:`FAN <fan>` events which affects notifications and Runtime Load Balancing (RLB).
+  - Configuring `Client Result Caching <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-D2FA7B29-301B-4AB8-8294-2B1B015899F9>`__ parameters
+  - Turning on `Client Statement Cache Auto-tuning <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&d=GUID-6E21AA56-5BBE-422A-802C-197CAC8AAEA4>`__
 
 Refer to the documentation on `oraaccess.xml
 <https://www.oracle.com/pls/topic/lookup?
@@ -412,3 +431,75 @@ The ``error_url`` string will be shown in the exception raised if
 applications that use python-oracledb to refer users to application-specific
 installation instructions.  If this value is not specified, then the
 :ref:`installation` URL is used.
+
+.. _changingmodes:
+
+Changing python-oracledb Modes
+==============================
+
+Once you have upgraded to or installed the python-oracledb driver in a specific
+mode (Thin or Thick), you are also provided with the ability to change from
+one mode to the other. The steps to change from one mode to another are detailed 
+in the subsequent sections.
+
+Changing from python-oracledb Thick Mode to python-oracledb Thin Mode
+----------------------------------------------------------------------
+
+The python-oracledb Thin mode is easy to install and provides high performance 
+in comparison to the performance of the python-oracledb Thick mode. This mode
+allows a direct connection to the database. The python-oracledb Thin mode 
+does not require additional Oracle Client libraries to be installed.
+
+To make use of the features available in the python-oracledb Thin mode, you can
+change from the python-oracledb Thick mode to the python-oracledb Thin mode by
+performing the following steps:
+
+1. Optionally remove Oracle Client libraries. For example, uninstall Oracle Instant Client.
+
+2. Remove all calls to :func:`~oracledb.init_oracle_client` in the application.
+
+3. Move any ``sqlnet.ora`` network connection properties to connection and pool creation 
+   calls arguments. Alternatively, you can set them in the Easy Connect String.
+
+You can validate the mode of connection by querying the ``CLIENT_DRIVER`` column of 
+``V$SESSION_CONNECT_INFO`` and verifying if the value of the column begins 
+with ``python-oracledb thn``. See :ref:`dbviews`. 
+
+Also, review the :ref:`functional differences <driverdiff>` between the python-oracledb
+Thick and Thin modes and make necessary adjustments.
+
+Changing from python-oracledb Thin Mode to python-oracledb Thick Mode
+----------------------------------------------------------------------
+
+The python-oracledb Thick mode dynamically loads ODPI-C and Oracle Client libraries
+to connect to Oracle Database using the Oracle Call Interface (OCI) API. This mode requires
+Oracle Client libraries and hence supports the advanced Oracle Database technologies that
+rely on the functionality provided by these libraries, some of which are listed below:
+
+  - Continuous Availability features including Application Continuity, 
+    Transparent Application Continuity, and Transparent Application Failover (TAF)
+  - Advanced Queuing
+  - Database Change Notification (DCN)
+  - Simple Oracle Document Access (SODA)
+
+To take advantage of the additional features available in the python-oracledb Thick mode, 
+you can change from the python-oracledb Thin mode to the python-oracledb Thick mode by
+performing the following steps:
+
+1. Make Oracle Client libraries available. For example, install Oracle Instant Client. 
+   See :ref:`installation` for detailed steps.
+
+2. Add a call to :func:`~oracledb.init_oracle_client()` in the application with or without
+   ``lib_dir``. This function must be called at least once. If repeated calls are made with
+   the same arguments, then these calls will be ignored. See :ref:`initialization`.
+
+3. Change any use of network connection properties set in :meth:`oracledb.defaults` using
+   ``ConnectParams()`` or in connection and pool creation calls. These need to be moved to
+   a ``sqlnet.ora`` file or set in an Easy Connect String.
+
+You can validate the mode of connection by querying the ``CLIENT_DRIVER`` column of
+``V$SESSION_CONNECT_INFO`` and verifying if the value of the column begins with
+``python-oracledb thk``. See :ref:`dbviews`.
+
+Also, review the :ref:`functional differences <driverdiff>` between the python-oracledb 
+Thick and Thin modes and make necessary adjustments.

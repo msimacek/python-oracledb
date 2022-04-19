@@ -1,8 +1,8 @@
 .. _connparam:
 
-********************
-ConnectParams Object
-********************
+**************************
+API: ConnectParams Object
+**************************
 
 .. note::
 
@@ -58,34 +58,6 @@ how to set the user as an attribute:
 Methods
 =======
 
-.. method:: ConnectParams._get_tnsnames_file()
-
-    Returns a tnsnames file, if one is present, or None if one is not. If
-    the file was previously loaded, the modification time is checked and,
-    if unchanged, the previous file is returned.
-
-.. method:: ConnectParams._parse_time_value(value)
-    
-    Parses a value that contains time with an optional unit of 
-    milliseconds (ms), seconds (sec), or minutes (min).
-
-.. method:: ConnectParams._set_by_keyword_args(keyword_args):
-    
-    Sets parameters provided as keyword arguments. If a keyword parameter is
-    supplied that is not a valid connection parameter, a TypeError
-    exception is raised.
-
-.. method:: ConnectParams._set_protocol(protocol):
-    
-    Sets the specified protocol. Only tcp and tcps protocols are supported
-    at this time.
-
-.. method:: ConnectParams._supports_oob():
-  
-    Returns a boolean indicating if the platform supports out-of-band urgent
-    data (all platforms besides Windows) and a configuration parameter
-    has not explicitly disabled it.
-
 .. method:: ConnectParams.copy()
 
   Creates a copy of the parameters and returns it.
@@ -107,17 +79,6 @@ Methods
   The connect string can be an Easy Connect string, name-value pairs, or a simple alias 
   which is looked up in tnsnames.ora. Any parameters found in the connect string override 
   any currently stored values. The connect string itself will also be retained.
-
-.. method:: ConnectParams.parse_dsn(dsn=None, parse_connect_string=False)
-
-  Parse a dsn (data source name) string supplied by the user. 
-  
-  This can be in the form `user/password@connect_string` or it can be the connect
-  string such as an Easy Connect string or a full connect descriptor by itself.
-
-  The user, password, and connect string that are parsed will be retained. If
-  the user is of the form ``user[proxy_user]``, then the proxy user will also be
-  retained.
 
 .. _connparamsattr:
 

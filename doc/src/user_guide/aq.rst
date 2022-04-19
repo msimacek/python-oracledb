@@ -1,8 +1,8 @@
 .. _aqusermanual:
 
-****************************
-Oracle Advanced Queuing (AQ)
-****************************
+***********************************
+Using Oracle Advanced Queuing (AQ)
+***********************************
 
 `Oracle Advanced Queuing
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=ADQUE>`__ is a highly
@@ -10,10 +10,14 @@ configurable and scalable messaging feature of Oracle Database.  It has
 interfaces in various languages, letting you integrate multiple tools in your
 architecture.
 
-cx_Oracle 7.2 introduced an updated interface for Oracle Advanced
-Queuing.
+.. note::
 
-.. mchaliha: the above sentence can be retained?
+    Oracle Advanced Queuing is only supported in the python-oracledb Thick mode.
+    See :ref:`changingmodes` for information on how to change from one mode to
+    the other.
+
+python-oracledb uses the updated interface for Oracle Advanced Queuing that
+was first introduced in cx_Oracle 7.2.
 
 There are Advanced Queuing examples in the `GitHub examples
 <https://github.com/oracle/python-oracledb/tree/main/samples>`__ directory.
@@ -134,6 +138,38 @@ Dequeuing is done like this:
     connection.commit()
     print(msg.payload.TITLE)        # will print Quick Brown Fox
 
+
+Using Recipient Lists
+=====================
+
+You can associate a list of recipient names with a message at the time of
+enqueuing the message. This feature limits the set of recipients that have
+to dequeue each message.
+
+The recipient list associated with a message overrides the queue subscriber 
+list, if it exists. It is not mandatory to include the recipient name in the 
+subscriber list and if desired, it can be included.
+
+To dequeue a message, the consumername attribute can be set to one of the
+recipient names. The original message recipient list is not available 
+on dequeued messages. All recipients have to dequeue a message
+before it gets removed from the queue.
+
+When subscribing to a queue, each subscriber can dequeue all the messages 
+placed into a specific queue and each recipient is a designated target of 
+a particular message.
+
+
+For example::
+
+    props = self.connection.msgproperties(payload=book,recipients=["sub2", "sub3"])
+    queue.enqone(props)
+
+Later, when dequeuing messages a specific recipient can be set to get messages intended 
+for that recipient::
+
+    queue.deqoptions.consumername = "sub3"
+    m = queue.deqone()
 
 Changing Queue and Message Options
 ==================================

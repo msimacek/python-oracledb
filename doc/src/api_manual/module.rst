@@ -2,21 +2,21 @@
 
 .. _module:
 
-****************
-Module Interface
-****************
+****************************
+API: python-oracledb Module
+****************************
 
 This section describes the various functions you can use to access the database and covers the following:
 
-    - :ref:`modfunc`
+    - :ref:`modmeth`
     - :ref:`constants`
     - :ref:`exceptions`
     - :ref:`exchandling`
 
-.. _modfunc:
+.. _modmeth:
 
-Functions
-=========
+Methods
+=======
 
 .. data:: __future__
 
@@ -28,11 +28,6 @@ Functions
     .. note::
 
         This method is an extension to the DB API definition.
-
-.. function:: _check_arg(name, value)
-
-    Checks the argument to ensure that it does not contain '(', ')' or '=' as these
-    characters are not permitted within connect strings.
 
 
 .. function:: Binary(string)
@@ -48,11 +43,16 @@ Functions
     
     .. note::
 
-        This function can only be called in python-oracledb Thick mode after :func:`oracledb.init_oracle_client()` has been called.
+        This function can only be called in python-oracledb Thick mode after 
+        :func:`oracledb.init_oracle_client()` has been called.
 
-    Oracle Client is not used in python-oracledb Thin mode.  If ``oracledb.clientversion()`` is called when in python-oracledb Thin mode, that is, if :func:`oracledb.init_oracle_client()` is not called first, then an exception will be thrown.
+    Oracle Client is not used in python-oracledb Thin mode.  
+    If ``oracledb.clientversion()`` is called when in python-oracledb Thin mode, 
+    that is, if :func:`oracledb.init_oracle_client()` is not called first, then 
+    an exception will be thrown.
 
-    Applications can reference ``oracledb.__version__`` to determine the version of python-oracledb.
+    Applications can reference ``oracledb.__version__`` to determine the version 
+    of python-oracledb.
 
     .. note::
 
@@ -76,7 +76,7 @@ Functions
     specified as keyword parameters.  See :ref:`connhandling` information about
     connections.
 
-    The dsn (data source name)` is the TNS entry (from the Oracle names server
+    The dsn (data source name) is the TNS entry (from the Oracle names server
     or tnsnames.ora file) or is a string like the one returned from
     :meth:`~oracledb.makedsn()`. If the user parameter is passed and the
     password and dsn parameters are not passed, the user parameter is assumed
@@ -84,37 +84,37 @@ Functions
     accepted by Oracle applications such as SQL\*Plus.  See :ref:`connstr` for
     more information.
 
-    If the `mode` is specified, it must be one of the
+    If the mode is specified, it must be one of the
     :ref:`connection authorization modes<connection-authorization-modes>`
     which are defined at the module level.
 
-    If the `handle` is specified, it must be of type OCISvcCtx\* and is only of
+    If the handle is specified, it must be of type OCISvcCtx\* and is only of
     use when embedding Python in an application (like PowerBuilder) which has
     already made the connection. The connection thus created should *never* be
     used after the source handle has been closed or destroyed.
 
-    The `pool` parameter is expected to be a :ref:`connpool` and 
+    The pool parameter is expected to be a :ref:`connpool` and 
     the use of this parameter is the equivalent of calling :meth:`ConnectionPool.acquire()`. 
     Parameters not accepted by that method are ignored.
 
-    The `threaded` parameter is expected to be a boolean expression which
+    The threaded parameter is expected to be a boolean expression which
     indicates whether or not Oracle should wrap accesses to connections with a
     mutex. This parameter is deprecated and is ignored in python-oracledb. 
-    Threaded Oracle Call Interface (OCI) is now always enabled in the python-oracledb 
-    Thick mode and is not relevant to the python-oracledb Thin mode.
+    Threaded Oracle Call Interface (OCI) is now always enabled in the Thick driver
+    and is not relevant to the Thin driver.
 
-    The `events` parameter is expected to be a boolean expression which indicates
+    The events parameter is expected to be a boolean expression which indicates
     whether or not to initialize Oracle in events mode. This is required for
     continuous query notification and high availability event notifications.
 
-    The `cclass` parameter is expected to be a string and defines the connection
+    The cclass parameter is expected to be a string and defines the connection
     class for database resident connection pooling (DRCP).
 
-    The `purity` parameter is expected to be one of
+    The purity parameter is expected to be one of
     :data:`~oracledb.ATTR_PURITY_NEW`, :data:`~oracledb.ATTR_PURITY_SELF`, or
     :data:`~oracledb.ATTR_PURITY_DEFAULT`.
 
-    The `newpassword` parameter is expected to be a string if specified and sets
+    The newpassword parameter is expected to be a string if specified and sets
     the password for the logon during the connection process.
 
     See the :ref:`globalization <globalization>` section for details on the
@@ -122,20 +122,20 @@ Functions
     values changed to "UTF-8" in cx_Oracle 8, and any character set in NLS_LANG
     is ignored. In a future release of python-oracledb, only UTF-8 will be supported.
 
-    The `edition` parameter is expected to be a string if specified and sets the
+    The edition parameter is expected to be a string if specified and sets the
     edition to use for the session. It is only relevant if both the client and
     the database are at least Oracle Database 11.2. If this parameter is used
     with the cclass parameter the exception "DPI-1058: edition not supported
     with connection class" will be raised.
 
-    The `appcontext` parameter is expected to be a list of 3-tuples, if specified,
+    The appcontext parameter is expected to be a list of 3-tuples, if specified,
     and sets the application context for the connection. Application context
     is available in the database by using the sys_context() PL/SQL method and
     can be used within a logon trigger as well as any other PL/SQL procedures.
     Each entry in the list is expected to contain three strings: the namespace,
     the name and the value.
 
-    The `tag` parameter, if specified, is expected to be a string and will limit
+    The tag parameter, if specified, is expected to be a string and will limit
     the sessions that can be returned from a session pool unless the
     matchanytag parameter is set to True. In that case sessions with the
     specified tag will be preferred over others, but if no such sessions are
@@ -144,12 +144,13 @@ Functions
     specified tag are available. Sessions are tagged when they are
     :meth:`released <ConnectionPool.release>` back to the pool.
 
-    The `shardingkey` and `supershardingkey` parameters, if specified, are expected
+    The shardingkey and supershardingkey parameters, if specified, are expected
     to be a sequence of values which will be used to identify the database
     shard to connect to. The key values can be strings, numbers, bytes or dates.
 
-    The `stmtcachesize` parameter, if specified, is expected to be an integer
+    The stmtcachesize parameter, if specified, is expected to be an integer
     which specifies the initial value of :data:`~Connection.stmtcachesize`.
+
 
 .. function:: ConnectionPool(dsn, pool_params, conn_params, **kwargs)
 
@@ -165,8 +166,6 @@ Functions
     The conn_params parameter is of type ConnectParams and contains connection parameters
     that will be used when creating connections to the database. If not specified, 
     a new instance will be created using the additional keyword arguments.
-    
-    See :ref:`connpooling` for more information.
 
     .. note::
 
@@ -198,7 +197,6 @@ Functions
     
     All the parameters are optional and must be specified as keyword parameters only.
 
-    For detailed information on the attributes, see :ref:`ConnectParams attributes <connparamsattr>`.
 
 .. function:: create_pool(dsn, pool_class, pool_params, conn_params, \
     min, max, increment, connectiontype, getmode, homogeneous, externalauth,timeout, \
@@ -227,10 +225,10 @@ Functions
 
     The conn_params parameter is of type ConnectParams and contains 
     connection parameters that will be used when creating connections
-    in the pool. If not specified, a new ConnectParams object will be created
-    using the additional keyword arguments. See :ref:`connparam` for more information.
-    If a dsn is supplied, it will modify the connection parameters to include the 
-    parameters supplied in the dsn.
+    in the pool. If not specified, a new ConnectParams object will be 
+    created  using the additional keyword arguments. See :ref:`connparam` 
+    for more information. If a dsn is supplied, it will modify the connection
+    parameters to include the parameters supplied in the dsn.
 
 .. function:: Cursor(connection)
 
@@ -249,18 +247,64 @@ Functions
 
 .. function:: DateFromTicks(ticks)
 
-    Constructs an object holding a date value from the given ticks value (number
-    of seconds since the epoch; see the documentation of the standard Python
-    time module for details).
+    Constructs an object holding a date value from the given ticks value 
+    (number of seconds since the epoch; see the documentation of the standard 
+    Python time module for details).
     
 .. function:: defaults(arraysize=100, stmtcachesize=20, config_dir=os.environ.get("TNS_ADMIN"), \ 
     fetch_lobs=True, fetch_decimals=False, prefetchrows=2)
 
-    A singleton that contains attributes that can be used to adjust the default behavior 
-    of the python-oracledb driver in the application. The attributes that are not supported
-    in a specific mode (python-oracledb Thick or python-oracledb Thin) will be ignored.
+    A singleton that contains attributes that can be used to adjust the 
+    default behavior of the python-oracledb driver in the application. 
+    The attributes that are not supported in a specific mode (python-oracledb Thick 
+    or python-oracledb Thin) will be ignored.
 
-    For detailed information on the attributes of the ``defaults`` singleton, see :ref:`defattr`.
+    The arraysize parameter is the default value for :attr:`Cursor.arraysize`. 
+    This parameter is supported in both the python-oracledb Thin and Thick modes 
+    and has an initial value of 100.
+
+    The stmtcachesize parameter is the default value for :attr:`Connection.stmtcachesize`, 
+    :attr:`ConnectionPool.stmtcachesize`, and :attr:`SessionPool.stmtcachesize`. This is a 
+    tuning attribute. This parameter is supported in both the python-oracledb Thin and Thick 
+    modes and has an initial value of 20.
+
+    The config_dir parameter is the directory in which configuration files such as 
+    tnsnames.ora are found by default. If the ``TNS_ADMIN`` environment variable is 
+    not set, then the default value is None in the python-oracledb Thin mode and no 
+    tnsnames.ora file will be usable until the attribute value is changed. If this 
+    parameter is None in the python-oracledb Thick mode, then the usual Oracle Client 
+    search path behavior for configuration files is used. This is described in the 
+    cx_Oracle documentation and the Oracle Client library documentation. This parameter 
+    is supported in both the python-oracledb Thick and Thin modes and has an 
+    initial value of ``os.environ.get("TNS_ADMIN")``.
+
+    When the value of the fetch_lobs parameter is True, then queries to LOB columns 
+    return LOB locators. When the value of this parameter is False, then strings or 
+    bytes are fetched. If LOBs are larger than 1 GB, then this parameter should be set 
+    to True and the LOBs should be streamed. An output type handler such as the one 
+    currently used in cx_Oracle (see `return_lobs_as_strings.py <https://github.com/
+    oracle/python-cx_Oracle/blob/main/samples/return_lobs_as_strings.py>`__) can 
+    alternatively be used to adjust the returned type. If a type handler exists and 
+    returns a variable (that is, `cursor.var(...)`), then that return variable is used. 
+    If the type handler returns None, then the value of ``oracledb.defaults.fetch_lobs`` 
+    is used. This parameter is supported in both the python-oracledb Thin and Thick modes 
+    and has an initial value of True.
+    
+    The fetch_decimals parameter identifies whether numbers should be fetched as 
+    ``decimal.Decimal`` values. This can help avoid issues with converting numbers from 
+    Oracle Database's decimal format to Python's binary format. An output type handler 
+    such as the one currently used in cx_Oracle (see `return_numbers_as_decimals.py 
+    <https://github.com/oracle/python-cx_Oracle/blob/main/samples/return_numbers_as_
+    decimals.py>`__) can alternatively be used to adjust the returned type. If a type 
+    handler exists and returns a variable (that is, `cursor.var(...)`), then that return 
+    variable is used. If the type handler returns None, then the value of 
+    ``oracledb.defaults.fetch_decimals`` is used. This parameter is supported in both 
+    the python-oracledb Thin and Thick modes and has an initial value of False.
+
+    The prefetchrows parameter is the default value for :attr:`Cursor.prefetchrow`. 
+    This parameter is supported in both the python-oracledb Thin and Thick modes 
+    and has an initial value of 2.
+
 
 .. function:: init_oracle_client(lib_dir=None, config_dir=None, \
         error_url=None, driver_name=None)
@@ -335,7 +379,9 @@ Functions
         session_callback=None, max_sessions_per_shard=0, \
         soda_metadata_cache=False, stmtcachesize=20, ping_interval=60)
 
-    This function is deprecated in python-oracledb 1.0. See :ref:`deprecations` for a complete list of deprecated features.
+    .. deprecated:: python-oracledb 1.0
+
+        See :ref:`deprecations` for a complete list of deprecated features.
     
     Creates and returns a :ref:`session pool object <sesspool>`.  Session pooling
     (also known as connection pooling) creates a pool of available connections
@@ -510,75 +556,341 @@ Functions
     (number of seconds since the epoch; see the documentation of the standard
     Python time module for details).
 
-.. _defattr:
 
-Attributes
-==========
+.. _connparameters:
 
-.. attribute:: defaults.arraysize
+ConnectParam Parameters
+------------------------
 
-    The default value for :attr:`Cursor.arraysize`. This is a query tuning attribute. 
-    The initial value of this attribute is 100.
+.. attribute:: ConnectParams.appcontext
 
-    This attribute is supported in both python-oracledb Thin and Thick modes.
+  This read-write attribute specifies the application context used by the connection. 
+  It is a list of 3-tuples. Each entry in the tuple is a string and makes up the 
+  namespace, the name, and the value. The value can be referenced in the database by using 
+  the PL/SQL method ``sys_context()`` within logon triggers or other PL/SQL procedures.
 
-.. attribute:: defaults.config_dir
+  This attribute is only supported in the python-oracledb Thick mode.
 
-    The directory in which configuration files such as tnsnames.ora are found by default. 
-    The initial value of this attribute is ``os.environ.get("TNS_ADMIN")``.
-    
-    If the ``TNS_ADMIN`` environment variable is not set, then the default value is None 
-    in the python-oracledb Thin mode and the tnsnames.ora file will not be usable until 
-    the attribute value is changed. 
-    
-    If this attribute is None in the python-oracledb Thick mode, then the usual Oracle Client 
-    search path behavior for configuration files is used. This is described in the 
-    cx_Oracle documentation and the Oracle Client library documentation.
+.. attribute:: ConnectParams.cclass
 
-    This attribute is supported both python-oracledb Thick and Thin modes.
+  This read-only attribute is a string that returns a specifies the connection class (class) 
+  to use for database resident connection pooling (DRCP).
+  
+  This attribute returns the cclass associated with each description in the
+  connect string. If the connect string contains multiple descriptions,
+  a list of cclass is returned in the order that they appear.
 
-.. attribute:: defaults.fetch_decimals
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
 
-    Identifies whether numbers should be fetched as ``decimal.Decimal`` values. This can help avoid 
-    issues with converting numbers from Oracle Database's decimal format to Python's binary format.
-    The initial value of this attribute is False.
-    
-    An output type handler such as the one currently used in cx_Oracle 
-    (see `return_numbers_as_decimals.py <https://github.com/oracle/python-cx_Oracle/blob/main/samples/return_numbers_as_decimals.py>`__) can alternatively be used to adjust the returned type. 
-    If a type handler exists and returns a variable (that is, `cursor.var(...)`), then that 
-    return variable is used. If the type handler returns None, then the value of 
-    ``oracledb.defaults.fetch_decimals`` is used.
+.. attribute:: ConnectParams.config_dir
 
-    This attribute is supported in both python-oracledb Thin and Thick modes.
+  This read-write attribute is a string that identifies the directory in which configuration files 
+  such as tnsnames.ora are found. The default value is :attr:`oracledb.defaults.config_dir`.
 
-.. attribute:: defaults.fetch_lobs
+  This attribute is supported only in the python-oracledb Thin mode.
 
-    When the value of this attribute is True, then queries to LOB columns return LOB locators. 
-    When the value of this attribute is False, then strings or bytes are fetched. If LOBs are 
-    larger than 1 GB, then this attribute should be set to True and the LOBs should be streamed.
-    The initial value of this attribute is True.
-    
-    An output type handler such as the one currently used in 
-    cx_Oracle (see `return_lobs_as_strings.py <https://github.com/oracle/python-cx_Oracle/blob/main/samples/return_lobs_as_strings.py>`__) can alternatively be used to adjust the returned type. If a type handler exists 
-    and returns a variable (that is, `cursor.var(...)`), then that return variable is used. 
-    If the type handler returns None, then the value of ``oracledb.defaults.fetch_lobs`` is used.
+.. attribute:: ConnectParams.disable_oob
 
-    This attribute is supported in both python-oracledb Thin and Thick modes.
+  This read-write attribute is a boolean that indicates whether out-of-band breaks should be disabled. 
+  The default value is False. Note that out-of-band breaks are not supported on Windows. 
 
-.. attribute:: defaults.prefetchrows
+  This attribute is supported only in the python-oracledb Thin mode.
 
-    The default value for :attr:`Cursor.prefetchrow`. This is a query tuning attribute.
-    The initial value of this attribute is 2.
+.. attribute:: ConnectParams.edition
 
-    This attribute is supported in both python-oracledb Thin and Thick modes.
+  This read-write attribute is a string that specifies the edition to use for the connection. This attribute cannot be
+  used simultaneously with the :attr:`ConnectParams.cclass` attribute.
 
-.. attribute:: defaults.stmtcachesize
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
 
-    The default value for :attr:`Connection.stmtcachesize`, :attr:`ConnectionPool.stmtcachesize`, 
-    and :attr:`SessionPool.stmtcachesize`. This is a tuning attribute.
-    The initial value of this attribute is 20.
+.. attribute:: ConnectParams.events
 
-    This attribute is supported in both python-oracledb Thin and Thick modes.
+  This read-write attribute is a boolean that specifies whether the events mode should be enabled. 
+  
+  This attribute is needed for continuous query notification (CQN) and high availability event notifications. 
+  The default value is False.
+
+  This attribute is supported only in the python-oracledb Thick mode.
+
+.. attribute:: ConnectParams.expire_time
+
+  This read-only attribute is an integer that returns the number of minutes between the sending of keepalive probes. 
+  If this parameter is set to a value greater than zero it enables keepalive.
+  The default value is 0.
+
+  This attribute returns the expire_time associated with each description in the
+  connect string. If the connect string contains multiple descriptions,
+  a list of expire_times is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.handle
+
+  This read-write attribute is an integer that representsa pointer to a valid service context
+  handle. This attribute must be used with extreme caution.
+  The default value is 0.
+
+  This attribute is supported only in the python-oracledb Thick mode.
+
+.. attribute:: ConnectParams.host
+
+  This read-only attribute is a string that returns the name or IP address of the machine
+  hosting the listener, which handles the initial connection to the database.
+
+  This attribute returns the host associated with the address in the connect string.
+  If the connect string contains multiple addresses, a list of hosts
+  is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.https_proxy
+
+  This read-only attribute is a string that returns the name or IP address of a proxy host 
+  that is to be used for tunneling secure connections.
+
+  This attribute returns the proxy host associated with the address in the connect
+  string. If the connect string contains multiple addresses, a list of
+  proxy hosts is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.https_proxy_port
+
+  This read-only attribute is an integer that returns the port to be used to communicate with the proxy host.
+
+  This attribute returns the proxy host port associated with the address in the connect
+  string. If the connect string contains multiple addresses, a list of
+  proxy host ports is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.matchanytag
+
+  This read-write attribute is a boolean that specifies whether any tag can be used when acquiring a connection 
+  from the pool. This attribute is only relevant when acquiring a connection from a pool.
+  The default value is False.
+
+  This attribute is supported only in the python-oracledb Thick mode.
+
+.. attribute:: ConnectParams.mode
+
+  This read-write attribute is an integer that specifies the authorization mode to use.
+  The default value is :data:`~oracledb.AUTH_MODE_DEFAULT`.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.newpassword
+
+  This attribute is a string and specifies the new password for the user.
+  The new password takes effect immediately upon a successful connection to
+  the database.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.password
+
+  This attribute is a string and specifies the password for the user.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.port
+
+  This read-only attribute is an integer that returns the port number on which 
+  the listener is listening. The default value is 1521.
+
+  This attribute returns the port associated with the address in the connect
+  string. If the connect string contains multiple addresses, a list of
+  ports is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.protocol
+
+  This read-only attribute is a string that indicates whether unencrypted network traffic 
+  or encrypted network traffic (TLS) is used and it can have the value tcp or tcps. 
+  The default value is tcp.
+
+  This attribute returns the protocol associated with the address in the connect
+  string. If the connect string contains multiple addresses, a list of
+  protocols is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.proxy_user
+
+  This read-write attribute is a string that specifies the name of the proxy user to connect to.
+  If this value is not specified, then it will be parsed out of the user if the user attribute
+  is in the form "user{proxy_user]".
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+
+.. attribute:: ConnectParams.purity
+
+  This read-only attribute is an integer that returns the purity used for DRCP.
+  The default value is :data:`~oracledb.PURITY_DEFAULT`.
+
+  This attribute returns the purity associated with each description in the connect
+  string. If the connect string contains multiple descriptions, a list
+  of purity is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.retry_count
+
+  This read-only attribute is an integer that returns the number of times that a connection attempt
+  should be made before the attempt is terminated. The default value is 0.
+
+  This attribute returns the retry_counts associated with each description in the
+  connect string. If the connect string contains multiple descriptions,
+  a list of retry_counts is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.retry_delay
+
+  This read-only attribute is an integer that returns the number of seconds to wait before making a new
+  connection attempt. The default value is 0.
+
+  This attribute returns the retry_delays associated with each description in the
+  connect string. If the connect string contains multiple descriptions,
+  a list of retry_delays is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.server_type
+
+  This read-only attribute is a string that returns the type of server connection that should be established.
+  If specified, it should be one of `dedicated`, `shared`, or `pooled`.
+
+  This attribute returns the type of server connection that should be established. If
+  the connect string contains multiple descriptions, a list of
+  server_types is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.service_name
+
+  This read-only attribute is a string that returns the service name of the database.
+
+  This attribute returns the service_names associated with each description in the
+  connect string. If the connect string contains multiple descriptions,
+  a list of service_names is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.shardingkey
+
+  This read-write attribute is a list that specifies a sequence of strings, numbers, bytes, or dates that
+  identify the database shard to connect to. 
+
+  This attribute is only supported in the python-oracledb Thick mode.
+
+.. attribute:: ConnectParams.sid
+
+  This read-only attribute is a string that returns the SID of the database. Use the service_name instead.
+
+  This attribute returns the sid associated with each description in the connect
+  string. If the connect string contains multiple descriptions, a list
+  of sid is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.ssl_server_cert_dn
+
+  This read-only attribute is a string that returns the distinguished name (DN) which should be matched
+  with the server. This value is ignored if the :attr:`~ConnectParams.ssl_server_dn_match`
+  attribute is not set to the value True. If this value is specified, then it is used
+  for any verification. Otherwise, the hostname will be used.
+
+  This attribute returns the ssl_server_cert_dn associated with each description in
+  the connect string. If the connect string contains multiple descriptions, a list 
+  of ssl_server_cert_dn is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.ssl_server_dn_match
+
+  This read-only attribute is a boolean that indicates whether the server certificate
+  distinguished name (DN) should be matched in addition to the regular
+  certificate verification that is performed. The default value is True.
+
+  Note that if the :attr:`~ConnectParams.ssl_server_cert_dn` attribute is not specified, 
+  then no matching is done regardless of the value of this parameter.
+
+  This attribute returns the ssl_server_dn_match associated with each description in
+  the connect string. If the connect string contains multiple descriptions, a list of 
+  ssl_server_dn_match is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.stmtcachesize
+
+  This read-write attribute is an integer that identifies the initial size of the statement cache. 
+  The default value is :attr:`oracledb.defaults.stmtcachesize`.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.supershardingkey
+
+  This read-write attribute is a list that specifies a sequence of strings, numbers, bytes, or dates 
+  that identify the database shard to connect to.
+
+  This attribute is only supported in python-oracledb Thick mode.
+
+.. attribute:: ConnectParams.tag
+
+  This read-write attribute is a string that identifies the type of connection that should be returned 
+  from a pool. Only a connection with the requested tag or a connection without
+  any tag will be returned unless the :attr:`~ConnectParams.matchanytag` attribute is True. 
+  If the :attr:`~ConnectParams.matchanytag` attribute is True, then a connection 
+  with any tag or no tag will be returned if no connections with the requested tag
+  are currently available. Connections are tagged when they are released back to the
+  pool.
+
+  This attribute is only supported in python-oracledb Thick mode.
+
+.. attribute:: ConnectParams.tcp_connect_timeout
+
+  This read-only attribute is a float that indicates the maximum number of seconds to wait for 
+  a connection to be estbalished to the database host.
+  The default value is 60.0.
+
+  This attribute  returns the tcp_connect_timeout associated with each description in
+  the connect string. If the connect string contains multiple descriptions, a list 
+  of tcp_connect_timeout is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.user
+
+  This read-write attribute is a string that specifies the name of the user to connect to.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+
+.. attribute:: ConnectParams.wallet_location
+
+  This read-only attribute is a string that specifies the location where the PEM-encoded wallet file
+  ewallet.pem can be found. If this parameter is not set, one-way TLS authentication 
+  will take place instead.
+
+  This attribute returns the wallet_location associated with each description in
+  the connect string. If the connect string contains multiple descriptions, a list of
+  wallet_location is returned in the order that they appear.
+
+  This attribute is supported in both the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.wallet_password
+
+  This attribute is a string that specifies the password used to decrypt the contents of the 
+  Privacy Enhanced Mail (PEM) encoded wallet file, if applicable.
+
+  This attribute returns the wallet_password associated with each description in
+  the connect string. If the connect string contains multiple descriptions, a list of
+  wallet_password is returned in the order that they appear.
+
+  This attribute is supported only in the python-oracledb Thin mode.
 
 .. _constants:
 
@@ -864,84 +1176,118 @@ These constants are extensions to the DB API definition. They are possible
 values for the mode parameter of the :meth:`connect()` method.
 
 
+.. data:: AUTH_MODE_DEFAULT
+
+    This constant is used to specify that default authentication is to take
+    place. This is the default value if no mode is passed at all.
+
+
+.. data:: AUTH_MODE_SYSASM
+
+    This constant is used to specify that SYSASM access is to be acquired.
+
+.. data:: AUTH_MODE_SYSBKP
+
+    This constant is used to specify that SYSBACKUP access is to be acquired.
+
+.. data:: AUTH_MODE_SYSDBA
+
+    This constant is used to specify that SYSDBA access is to be acquired.
+
+.. data:: AUTH_MODE_SYSDGD
+
+    This constant is used to specify that SYSDG access is to be acquired.
+
+.. data:: AUTH_MODE_SYSKMT
+
+    This constant is used to specify that SYSKM access is to be acquired.
+
+.. data:: AUTH_MODE_SYSOPER
+
+    This constant is used to specify that SYSOPER access is to be acquired.
+
+.. data:: AUTH_MODE_SYSRAC
+
+    This constant is used to specify that SYSRAC access is to be acquired.
+
+.. data:: AUTH_MODE_PRELIM
+
+    This constant is used to specify that preliminary authentication is to be
+    used. This is needed for performing database startup and shutdown.
+
 .. data:: DEFAULT_AUTH
 
     This constant is used to specify that default authentication is to take
     place. This is the default value if no mode is passed at all.
+
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.AUTH_MODE_DEFAULT` instead.
 
 .. data:: PRELIM_AUTH
 
     This constant is used to specify that preliminary authentication is to be
     used. This is needed for performing database startup and shutdown.
 
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.AUTH_MODE_PRELIM` instead.
 
 .. data:: SYSASM
 
     This constant is used to specify that SYSASM access is to be acquired.
 
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.AUTH_MODE_SYSASM` instead.
 
 .. data:: SYSBKP
 
     This constant is used to specify that SYSBACKUP access is to be acquired.
 
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.AUTH_MODE_SYSBKP` instead.
 
 .. data:: SYSDBA
 
     This constant is used to specify that SYSDBA access is to be acquired.
 
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.AUTH_MODE_SYSDBA` instead.
 
 .. data:: SYSDGD
 
     This constant is used to specify that SYSDG access is to be acquired.
 
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.AUTH_MODE_SYSDGD` instead.
 
 .. data:: SYSKMT
 
     This constant is used to specify that SYSKM access is to be acquired.
 
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.AUTH_MODE_SYSKMT` instead.
 
 .. data:: SYSOPER
 
     This constant is used to specify that SYSOPER access is to be acquired.
 
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.AUTH_MODE_SYSOPER` instead.
 
 .. data:: SYSRAC
 
     This constant is used to specify that SYSRAC access is to be acquired.
 
+    .. deprecated:: python-oracledb 1.0
 
-.. _connpoolmodes:
-
-Connection Pool Get Modes
--------------------------
-
-These constants are extensions to the DB API definition. They are possible
-values for the getmode parameter of the :meth:`ConnectionPool()` method.
-
-.. data:: POOL_GETMODE_FORCEGET
-
-    This constant is used to specify that a new connection will be returned if
-    there are no free sessions available in the pool.
-
-
-.. data:: POOL_GETMODE_NOWAIT
-
-    This constant is used to specify that an exception should be raised if
-    there are no free sessions available in the pool. This is the default
-    value.
-
-
-.. data:: POOL_GETMODE_WAIT
-
-    This constant is used to specify that the caller should wait until a
-    session is available if there are no free sessions available in the pool.
-
-
-.. data:: POOL_GETMODE_TIMEDWAIT
-
-    This constant is used to specify that the caller should wait for a period
-    of time (defined by the wait_timeout parameter) for a session to become
-    available before returning with an error.
+        Use :data:`~oracledb.AUTH_MODE_SYSRAC` instead.
 
 Database Shutdown Modes
 -----------------------
@@ -1111,6 +1457,10 @@ values for the getmode parameter of the :meth:`ConnectionPool()` method.
     This constant is used to specify that a new connection will be returned if
     there are no free sessions available in the pool.
 
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.POOL_GETMODE_FORCEGET` instead.
+
 
 .. data:: SPOOL_ATTRVAL_NOWAIT
 
@@ -1118,11 +1468,19 @@ values for the getmode parameter of the :meth:`ConnectionPool()` method.
     there are no free sessions available in the pool. This is the default
     value.
 
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.POOL_GETMODE_NOWAIT` instead.
+
 
 .. data:: SPOOL_ATTRVAL_WAIT
 
     This constant is used to specify that the caller should wait until a
     session is available if there are no free sessions available in the pool.
+
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.POOL_GETMODE_WAIT` instead.
 
 
 .. data:: SPOOL_ATTRVAL_TIMEDWAIT
@@ -1130,6 +1488,10 @@ values for the getmode parameter of the :meth:`ConnectionPool()` method.
     This constant is used to specify that the caller should wait for a period
     of time (defined by the wait_timeout parameter) for a session to become
     available before returning with an error.
+
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.POOL_GETMODE_TIMEDWAIT` instead.
 
 
 Session Pool Purity
@@ -1146,11 +1508,19 @@ in database resident connection pooling (DRCP).
     default value identified by Oracle (see Oracle's documentation for more
     information). This is the default value.
 
+    .. deprecated:: python-oracledb 1.0
+        
+        Use :data:`~oracledb.PURITY_DEFAULT` instead.
+
 
 .. data:: ATTR_PURITY_NEW
 
     This constant is used to specify that the session acquired from the pool
     should be new and not have any prior session state.
+
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.PURITY_NEW` instead.
 
 
 .. data:: ATTR_PURITY_SELF
@@ -1158,6 +1528,66 @@ in database resident connection pooling (DRCP).
     This constant is used to specify that the session acquired from the pool
     need not be new and may have prior session state.
 
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.PURITY_ANY` instead.
+
+.. _connpoolmodes:
+
+Connection Pool Get Modes
+-------------------------
+
+These constants are extensions to the DB API definition. They are possible
+values for the getmode parameter of the :meth:`ConnectionPool()` method.
+
+.. data:: POOL_GETMODE_FORCEGET
+
+    This constant is used to specify that a new connection will be returned if
+    there are no free sessions available in the pool.
+
+
+.. data:: POOL_GETMODE_NOWAIT
+
+    This constant is used to specify that an exception should be raised if
+    there are no free sessions available in the pool. This is the default
+    value.
+
+
+.. data:: POOL_GETMODE_WAIT
+
+    This constant is used to specify that the caller should wait until a
+    session is available if there are no free sessions available in the pool.
+
+
+.. data:: POOL_GETMODE_TIMEDWAIT
+
+    This constant is used to specify that the caller should wait for a period
+    of time (defined by the wait_timeout parameter) for a session to become
+    available before returning with an error.
+
+Connection Pool Purity
+-----------------------
+
+These constants are extensions to the DB API definition. They are possible
+values for the purity parameter of the :meth:`connect()` method, which is used
+in database resident connection pooling (DRCP).
+
+.. data:: PURITY_DEFAULT
+
+    This constant is used to specify that the purity of the session is the
+    default value identified by Oracle (see Oracle's documentation for more
+    information). This is the default value.
+
+.. data:: PURITY_NEW
+
+    This constant is used to specify that the session acquired from the pool
+    should be new and not have any prior session state.
+
+
+.. data:: PURITY_ANY
+
+    This constant is used to specify that the session acquired from the pool
+    need not be new and may have prior session state.
 
 Subscription Grouping Classes
 -----------------------------
@@ -1220,6 +1650,12 @@ Subscription Protocols
 These constants are extensions to the DB API definition. They are possible
 values for the protocol parameter of the :meth:`Connection.subscribe()` method.
 
+.. data:: SUBSCR_PROTO_CALLBACK
+
+    This constant is used to specify that notifications will be sent to the
+    callback routine identified when the subscription was created. It is the
+    default value and the only value currently supported.
+
 
 .. data:: SUBSCR_PROTO_HTTP
 
@@ -1240,6 +1676,10 @@ values for the protocol parameter of the :meth:`Connection.subscribe()` method.
     This constant is used to specify that notifications will be sent to the
     callback routine identified when the subscription was created. It is the
     default value and the only value currently supported.
+
+    .. deprecated:: python-oracledb 1.0
+
+        Use :data:`~oracledb.SUBSCR_PROTO_CALLBACK` instead.
 
 
 .. data:: SUBSCR_PROTO_SERVER
@@ -1794,6 +2234,11 @@ Exception handling
 
     Integer attribute representing the error offset when applicable.
 
+.. attribute:: _Error.full_code
+
+    String attribute representing the top-level error prefix and the
+    code that is shown in the :attr:`_Error.message`.
+
 .. attribute:: _Error.message
 
     String attribute representing the Oracle message of the error. This
@@ -1824,4 +2269,11 @@ This allows you to use the exceptions for example in the following way:
     except oracledb.DatabaseError as exc:
         error, = exc.args
         print("Oracle-Error-Code:", error.code)
+        print("Oracle-Error-Full-Code:", error.full_code)
         print("Oracle-Error-Message:", error.message)
+
+This will print::
+
+    Oracle-Error-Code: 1476
+    Oracle-Error-Full-Code: ORA-01476
+    Oracle-Error-Message: ORA-01476: divisor is equal to zero

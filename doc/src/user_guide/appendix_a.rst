@@ -277,7 +277,7 @@ The following table describes the Oracle Database and Oracle Client features sup
       - Yes
       - Yes 
     * - Dataguard (DG) & ADG
-      - No
+      - Yes
       - Yes
       - Yes 
     * - Application Continuity (AC and TAC)

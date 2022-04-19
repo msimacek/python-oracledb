@@ -1,8 +1,8 @@
 .. _cursorobj:
 
-*************
-Cursor Object
-*************
+*******************
+API: Cursor Object
+*******************
 
 Methods
 ========

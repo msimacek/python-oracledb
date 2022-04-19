@@ -1,10 +1,13 @@
 Welcome to python-oracledb's documentation!
 ===========================================
 
-**python-oracledb** is a module that enables access to Oracle Database and conforms
-to the Python database API specification. This module is currently tested
-against Oracle Client 21c, 19c, 18c, 12c, and 11.2, and Python 3.6, 3.7, 3.8
-and 3.9.
+**python-oracledb** is the new and upgraded release of cx_Oracle. 
+This module supersedes the cx_Oracle module.
+
+**python-oracledb** is a module that enables Python programs to access 
+Oracle Database and conforms to the Python database API specification.
+This module is currently tested against Oracle Client 21c, 19c, 18c, 12c, 
+and 11.2, and Python 3.6, 3.7, 3.8, and 3.9.
 
 **python-oracledb** is distributed under an open-source :ref:`license <license>`
 (the BSD license). A detailed description of python-oracledb changes can be found in
@@ -21,9 +24,7 @@ User Guide
 
     user_guide/introduction.rst
     user_guide/installation.rst
-    user_guide/migration.rst
-    user_guide/frameworks.rst
-    user_guide/changing_modes.rst
+    user_guide/upgrading.rst
     user_guide/initialization.rst
     user_guide/connection_handling.rst
     user_guide/sql_execution.rst
@@ -60,14 +61,16 @@ API Manual
     api_manual/connect_param.rst
     api_manual/pool_params.rst
     api_manual/connection_pool.rst
-    api_manual/object_type.rst
-    api_manual/session_pool.rst
+    api_manual/defaults.rst
+    api_manual/dbobject_type.rst
     api_manual/subscription.rst
     api_manual/variable.rst
     api_manual/aq.rst
     api_manual/soda.rst
+    api_manual/object_type.rst
+    api_manual/session_pool.rst
     api_manual/additional_features.rst
-    api_manual/driver_difference.rst
+    api_manual/mode_differences.rst
     api_manual/connections_config.rst
     api_manual/cxOracle_compatibility.rst
     api_manual/deprecations.rst

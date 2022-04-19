@@ -1,8 +1,8 @@
 .. _connobj:
 
-*****************
-Connection Object
-*****************
+***********************
+API: Connection Object
+***********************
 
 .. note::
 
@@ -131,7 +131,7 @@ Methods
     object can be created using :meth:`~Connection.deqoptions()` and the
     msgproperties object can be created using
     :meth:`~Connection.msgproperties()`. The payload must be an object created
-    using :meth:`ObjectType.newobject()`.
+    using :meth:`DbObjectType.newobject()`.
 
     .. deprecated:: cx_Oracle 7.2
 
@@ -161,7 +161,7 @@ Methods
     object can be created using :meth:`~Connection.enqoptions()` and the
     msgproperties object can be created using
     :meth:`~Connection.msgproperties()`. The payload must be an object created
-    using :meth:`ObjectType.newobject()`.
+    using :meth:`DbObjectType.newobject()`.
 
     .. deprecated:: cx_Oracle 7.2
 
@@ -202,7 +202,7 @@ Methods
 
 .. method:: Connection.gettype(name)
 
-    Return a :ref:`type object <objecttype>` given its name. This can then be
+    Return a :ref:`type object <dbobjecttype>` given its name. This can then be
     used to create objects which can be bound to cursors created by this
     connection.
 
@@ -275,7 +275,7 @@ Methods
     which messages are to be enqueued or dequeued.
 
     The payload_type parameter, if specified, is expected to be an
-    :ref:`object type <objecttype>` that identifies the type of payload the
+    :ref:`object type <dbobjecttype>` that identifies the type of payload the
     queue expects. If not specified, RAW data is enqueued and dequeued.
 
     For consistency and compliance with the PEP 8 naming style, the

@@ -48,8 +48,7 @@ enabling :ref:`network encryption <netencrypt>`.
     userpwd = ". . ." # Obtain password string from a user prompt or environment variable
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orclpdb1",
-                                   encoding="UTF-8")
+                                   dsn="dbhost.example.com/orclpdb1")
 
 python-oracledb also supports :ref:`external authentication <extauth>` so
 passwords do not need to be in the application.
@@ -67,8 +66,7 @@ the use of a "with" block, for example:
 .. code-block:: python
 
     with oracledb.connect(user=user, password=password,
-                           dsn="dbhost.example.com/orclpdb1",
-                           encoding="UTF-8") as connection:
+                           dsn="dbhost.example.com/orclpdb1") as connection:
         cursor = connection.cursor()
         cursor.execute("insert into SomeTable values (:1, :2)",
                        (1, "Some string"))
@@ -114,19 +112,20 @@ Database port 1521, use:
 .. code-block:: python
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orclpdb1",
-                                   encoding="UTF-8")
+                                   dsn="dbhost.example.com/orclpdb1")
 
 If the database is using a non-default port, it must be specified:
 
 .. code-block:: python
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com:1984/orclpdb1",
-                                   encoding="UTF-8")
+                                   dsn="dbhost.example.com:1984/orclpdb1")
 
 The Easy Connect syntax supports Oracle Database service names.  It cannot be
 used with the older System Identifiers (SID).
+
+In python-oracledb Thin mode, the unknown settings are ignored and are not
+passed to the database.
 
 The Easy Connect syntax has been extended in recent versions of Oracle Database
 client since its introduction in 10g.  Check the Easy Connect Naming method in
@@ -160,8 +159,7 @@ Database port 1521, use:
 .. code-block:: python
 
     dsn = oracledb.makedsn("dbhost.example.com", 1521, service_name="orclpdb1")
-    connection = oracledb.connect(user="hr", password=userpwd, dsn=dsn,
-                                   encoding="UTF-8")
+    connection = oracledb.connect(user="hr", password=userpwd, dsn=dsn)
 
 Note the use of the named argument ``service_name``.  By default, the third
 parameter of :meth:`~oracledb.makedsn()` is a database System Identifier (SID),
@@ -184,8 +182,7 @@ embedded directly in the application:
                    (ADDRESS=(PROTOCOL=tcp)(HOST=sales2-svr)(PORT=1521)))
                  (CONNECT_DATA=(SERVICE_NAME=sales.example.com)))"""
 
-    connection = oracledb.connect(user="hr", password=userpwd, dsn=dsn,
-                                   encoding="UTF-8")
+    connection = oracledb.connect(user="hr", password=userpwd, dsn=dsn)
 
 .. _netservice:
 
@@ -211,8 +208,7 @@ then you could connect using the following code:
 
 .. code-block:: python
 
-    connection = oracledb.connect(user="hr", password=userpwd, dsn="orclpdb1",
-                                   encoding="UTF-8")
+    connection = oracledb.connect(user="hr", password=userpwd, dsn="orclpdb1")
 
 For more information about Net Service Names, see
 `Database Net Services Reference
@@ -236,8 +232,7 @@ then use Oracle's Easy Connect syntax in python-oracledb:
 .. code-block:: python
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com:1521/orclpdb1",
-                                   encoding="UTF-8")
+                                   dsn="dbhost.example.com:1521/orclpdb1")
 
 Alternatively, if a JDBC connection string uses an old-style Oracle SID "system
 identifier", and the database does not have a service name::
@@ -254,8 +249,7 @@ application:
 .. code-block:: python
 
     dsn = oracledb.makedsn("dbhost.example.com", 1521, sid="orcl")
-    connection = oracledb.connect(user="hr", password=userpwd, dsn=dsn,
-                                   encoding="UTF-8")
+    connection = oracledb.connect(user="hr", password=userpwd, dsn=dsn)
 
 Alternatively, create a ``tnsnames.ora`` (see :ref:`optnetfiles`) entry, for
 example::
@@ -272,8 +266,7 @@ This can be referenced in python-oracledb:
 
 .. code-block:: python
 
-    connection = oracledb.connect(user="hr", password=userpwd, dsn="finance",
-                                   encoding="UTF-8")
+    connection = oracledb.connect(user="hr", password=userpwd, dsn="finance")
 
 
 Using ConnectParams Class Object
@@ -371,7 +364,7 @@ connection pool:
     # Create the connection pool
     pool = oracledb.create_pool(user="hr", password=userpwd,
                                  dsn="dbhost.example.com/orclpdb1", min=2,
-                                 max=5, increment=1, encoding="UTF-8")
+                                 max=5, increment=1)
 
     # Acquire a connection from the pool
     connection = pool.acquire()
@@ -398,8 +391,7 @@ example:
     pool = oracledb.create_pool(user="hr", password=userpwd,
                                  dsn="dbhost.example.com/orclpdb1", min=2,
                                  max=5, increment=1,
-                                 getmode=oracledb.SPOOL_ATTRVAL_WAIT,
-                                 encoding="UTF-8")
+                                 getmode=oracledb.SPOOL_ATTRVAL_WAIT)
 
 See `ConnectionPool.py
 <https://github.com/oracle/oracledb/tree/main/samples/ConnectionPool.py>`__
@@ -552,8 +544,7 @@ An example is:
 
     # Create the pool with session callback defined
     pool = oracledb.create_pool(user="hr", password=userpwd, dsn="orclpdb1",
-                                 session_callback=init_session,
-                                 encoding="UTF-8")
+                                 session_callback=init_session)
 
     # Acquire a connection from the pool (will always have the new date format)
     connection = pool.acquire()
@@ -587,6 +578,12 @@ Connection tagging is used when connections in a pool should have differing
 session states.  In order to retrieve a connection with a desired state, the
 ``tag`` attribute in :meth:`~ConnectionPool.acquire()` needs to be set.
 
+.. note::
+
+    Connection tagging is only supported in the python-oracledb Thick 
+    mode. See :ref:`changingmodes` for information on how to change
+    from one mode to the other.
+
 When python-oracledb is using Oracle Client libraries 12.2 or later, then python-oracledb
 uses 'multi-property tags' and the tag string must be of the form of one or
 more "name=value" pairs separated by a semi-colon, for example
@@ -615,8 +612,7 @@ The example below demonstrates connection tagging:
         connection.tag = requested_tag
 
     pool = oracledb.create_pool(user="hr", password=userpwd, dsn="orclpdb1",
-                                 session_callback=init_session,
-                                 encoding="UTF-8")
+                                 session_callback=init_session)
 
     # Two connections with different session state:
     connection1 = pool.acquire(tag="NLS_DATE_FORMAT=SIMPLE")
@@ -663,8 +659,7 @@ example:
 
     pool = oracledb.create_pool(user="hr", password=userpwd,
                                  dsn="dbhost.example.com/orclpdb1:pooled",
-                                 session_callback="MyPlsqlCallback",
-                                 encoding="UTF-8")
+                                 session_callback="MyPlsqlCallback")
 
     connection = pool.acquire(tag="NLS_DATE_FORMAT=SIMPLE",
                               # DRCP options, if you are using DRCP
@@ -695,8 +690,14 @@ may be passed to :meth:`~ConnectionPool.acquire()` as shown in this example:
 .. code-block:: python
 
     pool = oracledb.create_pool(dsn="dbhost.example.com/orclpdb1",
-                                 homogeneous=False, encoding="UTF-8")
+                                 homogeneous=False)
     connection = pool.acquire(user="hr", password=userpwd)
+
+.. note::
+
+    Heterogeneous connection pools are only supported in the python-oracledb Thick 
+    mode. See :ref:`changingmodes` for information on how to change from one mode to 
+    the other.
 
 .. _drcp:
 
@@ -824,15 +825,14 @@ Using Oracle’s Easy Connect syntax, the connection would look like:
 .. code-block:: python
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orcl:pooled",
-                                   encoding="UTF-8")
+                                   dsn="dbhost.example.com/orcl:pooled")
 
 Or if you connect using a Net Service Name named ``customerpool``:
 
 .. code-block:: python
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="customerpool", encoding="UTF-8")
+                                   dsn="customerpool")
 
 Then only the Oracle Network configuration file ``tnsnames.ora`` needs
 to be modified::
@@ -860,8 +860,7 @@ Resident Connection Pooling:
     connection = oracledb.connect(user="hr", password=userpwd,
                                    dsn="dbhost.example.com/orcl:pooled",
                                    cclass="MYCLASS",
-                                   purity=oracledb.ATTR_PURITY_SELF,
-                                   encoding="UTF-8")
+                                   purity=oracledb.ATTR_PURITY_SELF)
 
 The example below shows connecting to Oracle Database using DRCP and
 python-oracledb's connection pooling:
@@ -869,8 +868,7 @@ python-oracledb's connection pooling:
 .. code-block:: python
 
     mypool = oracledb.create_pool(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orcl:pooled",
-                                   encoding="UTF-8")
+                                   dsn="dbhost.example.com/orcl:pooled")
     connection = mypool.acquire(cclass="MYCLASS",
                                 purity=oracledb.ATTR_PURITY_SELF)
 
@@ -1003,6 +1001,12 @@ more information about proxy authentication, see the `Oracle documentation
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
 id=GUID-D77D0D4A-7483-423A-9767-CBB5854A15CC>`__.
 
+.. note::
+
+    Connecting to Oracle Database using proxy authentication is only supported 
+    in the python-oracledb Thick mode. See :ref:`changingmodes` for information 
+    on how to change from one mode to the other.
+
 An alternative to using proxy users is to set
 :attr:`Connection.client_identifier` after connecting and use its value in
 statements and in the database, for example for :ref:`monitoring
@@ -1037,16 +1041,14 @@ Standalone connection examples:
     # Basic Authentication without a proxy
     connection = oracledb.connect(user="myproxyuser",
                                    password="myproxyuserpw",
-                                   dsn="dbhost.example.com/orclpdb1",
-                                   encoding="UTF-8")
+                                   dsn="dbhost.example.com/orclpdb1")
     # PROXY_USER:   None
     # SESSION_USER: MYPROXYUSER
 
     # Basic Authentication with a proxy
     connection = oracledb.connect(user="myproxyuser[mysessionuser]",
                                    password="myproxyuserpw",
-                                   dsn="dbhost.example.com/orclpdb1",
-                                   encoding="UTF-8")
+                                   dsn="dbhost.example.com/orclpdb1")
     # PROXY_USER:   MYPROXYUSER
     # SESSION_USER: MYSESSIONUSER
 
@@ -1056,8 +1058,7 @@ Pooled connection examples:
 
     # Basic Authentication without a proxy
     pool = oracledb.create_pool(user="myproxyuser", password="myproxyuser",
-                                 dsn="dbhost.example.com/orclpdb1",
-                                 encoding="UTF-8")
+                                 dsn="dbhost.example.com/orclpdb1")
     connection = pool.acquire()
     # PROXY_USER:   None
     # SESSION_USER: MYPROXYUSER
@@ -1066,7 +1067,7 @@ Pooled connection examples:
     pool = oracledb.create_pool(user="myproxyuser[mysessionuser]",
                                  password="myproxyuser",
                                  dsn="dbhost.example.com/orclpdb1",
-                                 homogeneous=False, encoding="UTF-8")
+                                 homogeneous=False)
     connection = pool.acquire()
     # PROXY_USER:   MYPROXYUSER
     # SESSION_USER: MYSESSIONUSER
@@ -1084,6 +1085,12 @@ environment variables, database access can be authenticated by an outside
 system.  External Authentication allows applications to validate user access by
 an external password store (such as an Oracle Wallet), by the operating system,
 or with an external authentication service.
+
+.. note::
+
+    Connecting to Oracle Database using external authentication is only supported 
+    in the python-oracledb Thick mode. See :ref:`changingmodes` for information on 
+    how to change from one mode to the other.
 
 Using an Oracle Wallet for External Authentication
 --------------------------------------------------
@@ -1165,14 +1172,14 @@ can connect using:
 
 .. code-block:: python
 
-    connection = oracledb.connect(dsn="mynetalias", encoding="UTF-8")
+    connection = oracledb.connect(dsn="mynetalias")
 
 or:
 
 .. code-block:: python
 
     pool = oracledb.create_pool(externalauth=True, homogeneous=False,
-                                 dsn="mynetalias", encoding="UTF-8")
+                                 dsn="mynetalias")
     pool.acquire()
 
 The ``dsn`` must match the one used in the wallet.
@@ -1212,8 +1219,7 @@ Standalone connection example:
 .. code-block:: python
 
     # External Authentication with proxy
-    connection = oracledb.connect(user="[mysessionuser]", dsn="mynetalias",
-                                   encoding="UTF-8")
+    connection = oracledb.connect(user="[mysessionuser]", dsn="mynetalias")
     # PROXY_USER:   MYUSER
     # SESSION_USER: MYSESSIONUSER
 
@@ -1223,7 +1229,7 @@ Pooled connection example:
 
     # External Authentication with proxy
     pool = oracledb.create_pool(externalauth=True, homogeneous=False,
-                                 dsn="mynetalias", encoding="UTF-8")
+                                 dsn="mynetalias")
     pool.acquire(user="[mysessionuser]")
     # PROXY_USER:   MYUSER
     # SESSION_USER: MYSESSIONUSER
@@ -1233,8 +1239,7 @@ The following usage is not supported:
 .. code-block:: python
 
     pool = oracledb.create_pool(user="[mysessionuser]", externalauth=True,
-                                 homogeneous=False, dsn="mynetalias",
-                                 encoding="UTF-8")
+                                 homogeneous=False, dsn="mynetalias")
     pool.acquire()
 
 
@@ -1269,7 +1274,7 @@ In Python, connect using the following code:
 
 .. code-block:: python
 
-       connection = oracledb.connect(dsn="mynetalias", encoding="UTF-8")
+       connection = oracledb.connect(dsn="mynetalias")
 
 Your session user will be ``OPS$ORACLE``.
 
@@ -1294,7 +1299,7 @@ The example below shows how to connect to Oracle Database as SYSDBA:
 
     connection = oracledb.connect(user="sys", password=syspwd,
                                    dsn="dbhost.example.com/orclpdb1",
-                                   mode=oracledb.SYSDBA, encoding="UTF-8")
+                                   mode=oracledb.SYSDBA)
 
     cursor = con.cursor()
     sql = "GRANT SYSOPER TO hr"
@@ -1318,6 +1323,12 @@ Client libraries used by python-oracledb so that unauthorized parties are not ab
 view plain text values as the data passes over the network.  The easiest
 configuration is Oracle’s native network encryption.  The standard SSL protocol
 can also be used if you have a PKI, but setup is necessarily more involved.
+
+.. note::
+    
+    Native network encryption is only supported in the python-oracledb Thick 
+    mode. See :ref:`changingmodes` for information on how to change
+    from one mode to the other.
 
 With native network encryption, the client and database server negotiate a key
 using Diffie-Hellman key exchange.  This provides protection against
@@ -1398,7 +1409,7 @@ of the function :meth:`oracledb.connect()` constructor:
 
     connection = oracledb.connect(user=username, password=oldpwd,
                                    dsn="dbhost.example.com/orclpdb1",
-                                   newpassword=newpwd, encoding="UTF-8")
+                                   newpassword=newpwd)
 
 .. _autonomousdb:
 
@@ -1409,7 +1420,6 @@ Python applications can connect to Oracle Autonomous Database (ADB) in Oracle Cl
 one-way TLS (Transport Layer Security) or mutual TLS. One-way TLS and mutual TLS provide enhanced 
 security for authentication and encryption. A database username and password is still required 
 for your application connections.
-
 
 python-oracledb needs to be configured to use TLS. Users have to use OS level controls to limit 
 Transport Layer Security (TLS) versions. For example, 
@@ -1509,7 +1519,7 @@ a net service name, for example:
 .. code-block:: python
 
     connection = oracledb.connect(user="scott", password=userpwd,
-                                   dsn="cjdb1_high", encoding="UTF-8")
+                                   dsn="cjdb1_high")
 
 Once you have set optional Oracle environment variables used by your
 application, such as ``TNS_ADMIN``, you can start your application.
@@ -1569,8 +1579,7 @@ Then your applications can connect using the connection string:
   .. code-block:: python
 
     dsn = "tcps://adb.ap-sydney-1.oraclecloud.com:1522/abc_cjjson_high.adb.oraclecloud.com?wallet_location=/Users/cjones/Cloud/CJJSON&retry_count=20&retry_delay=3"
-    connection = oracledb.connect(user="hr", password=userpwd, dsn=dsn,
-                                   encoding="UTF-8")
+    connection = oracledb.connect(user="hr", password=userpwd, dsn=dsn)
 
 The ``wallet_location`` parameter needs to be set to the directory containing
 the ``cwallet.sso`` file from the wallet ZIP.  The other wallet files,
@@ -1658,6 +1667,12 @@ Sharding is configured in Oracle Database, see the `Oracle Sharding
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=SHARD>`__ manual.
 Sharding requires Oracle Database and Oracle Client libraries 12.2, or later.
 
+.. note:: 
+
+    Sharding is only supported in the python-oracledb Thick mode. See 
+    :ref:`changingmodes` for information on how to change from one mode 
+    to the other.
+
 The :meth:`oracledb.connect()` and :meth:`ConnectionPool.acquire()` functions
 accept ``shardingkey`` and ``supershardingkey`` parameters that are a sequence
 of values used to route the connection directly to a given shard.  A sharding
@@ -1700,7 +1715,7 @@ then direct connection to a shard can be made by passing a single sharding key:
 
     connection = oracledb.connect(user="hr", password=userpwd,
                                    dsn="dbhost.example.com/orclpdb1",
-                                   encoding="UTF-8", shardingkey=["SCOTT"])
+                                   shardingkey=["SCOTT"])
 
 Numbers keys can be used in a similar way:
 
@@ -1708,7 +1723,7 @@ Numbers keys can be used in a similar way:
 
     connection = oracledb.connect(user="hr", password=userpwd,
                                    dsn="dbhost.example.com/orclpdb1",
-                                   encoding="UTF-8", shardingkey=[110])
+                                   shardingkey=[110])
 
 When sharding by DATE, you can connect like:
 
@@ -1720,7 +1735,7 @@ When sharding by DATE, you can connect like:
 
     connection = oracledb.connect(user="hr", password=userpwd,
                                    dsn="dbhost.example.com/orclpdb1",
-                                   encoding="UTF-8", shardingkey=[d])
+                                   shardingkey=[d])
 
 When sharding by RAW, you can connect like:
 
@@ -1730,7 +1745,7 @@ When sharding by RAW, you can connect like:
 
     connection = oracledb.connect(user="hr", password=userpwd,
                                    dsn="dbhost.example.com/orclpdb1",
-                                   encoding="UTF-8", shardingkey=[b])
+                                   shardingkey=[b])
 
 Multiple keys can be specified, for example:
 
@@ -1740,7 +1755,7 @@ Multiple keys can be specified, for example:
 
     connection = oracledb.connect(user="hr", password=userpwd,
                                    dsn="dbhost.example.com/orclpdb1",
-                                   encoding="UTF-8", shardingkey=key_list)
+                                   shardingkey=key_list)
 
 A super sharding key example is:
 
@@ -1748,6 +1763,5 @@ A super sharding key example is:
 
     connection = oracledb.connect(user="hr", password=userpwd,
                                    dsn="dbhost.example.com/orclpdb1",
-                                   encoding="UTF-8",
                                    supershardingkey=["goldclass"],
                                    shardingkey=["SCOTT"])
