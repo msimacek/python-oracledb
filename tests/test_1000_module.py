@@ -77,5 +77,61 @@ class TestCase(test_env.BaseTestCase):
                                oracledb.makedsn, host="host", port=1521,
                                super_sharding_key="(invalid)")
 
+    def test_1006_aliases(self):
+        "1006 - test aliases match"
+
+        # database type aliases
+        self.assertIs(oracledb.BFILE, oracledb.DB_TYPE_BFILE)
+        self.assertIs(oracledb.BLOB, oracledb.DB_TYPE_BLOB)
+        self.assertIs(oracledb.BOOLEAN, oracledb.DB_TYPE_BOOLEAN)
+        self.assertIs(oracledb.CLOB, oracledb.DB_TYPE_CLOB)
+        self.assertIs(oracledb.CURSOR, oracledb.DB_TYPE_CURSOR)
+        self.assertIs(oracledb.FIXED_CHAR, oracledb.DB_TYPE_CHAR)
+        self.assertIs(oracledb.FIXED_NCHAR, oracledb.DB_TYPE_NCHAR)
+        self.assertIs(oracledb.INTERVAL, oracledb.DB_TYPE_INTERVAL_DS)
+        self.assertIs(oracledb.LONG_BINARY, oracledb.DB_TYPE_LONG_RAW)
+        self.assertIs(oracledb.LONG_STRING, oracledb.DB_TYPE_LONG)
+        self.assertIs(oracledb.NATIVE_INT, oracledb.DB_TYPE_BINARY_INTEGER)
+        self.assertIs(oracledb.NATIVE_FLOAT, oracledb.DB_TYPE_BINARY_DOUBLE)
+        self.assertIs(oracledb.NCHAR, oracledb.DB_TYPE_NVARCHAR)
+        self.assertIs(oracledb.NCLOB, oracledb.DB_TYPE_NCLOB)
+        self.assertIs(oracledb.OBJECT, oracledb.DB_TYPE_OBJECT)
+        self.assertIs(oracledb.TIMESTAMP, oracledb.DB_TYPE_TIMESTAMP)
+
+        # type aliases
+        self.assertIs(oracledb.ObjectType, oracledb.DbObjectType)
+        self.assertIs(oracledb.Object, oracledb.DbObject)
+        self.assertIs(oracledb.SessionPool, oracledb.ConnectionPool)
+
+        # authentication mode aliases
+        self.assertIs(oracledb.DEFAULT_AUTH, oracledb.AUTH_MODE_DEFAULT)
+        self.assertIs(oracledb.SYSASM, oracledb.AUTH_MODE_SYSASM)
+        self.assertIs(oracledb.SYSBKP, oracledb.AUTH_MODE_SYSBKP)
+        self.assertIs(oracledb.SYSDBA, oracledb.AUTH_MODE_SYSDBA)
+        self.assertIs(oracledb.SYSDGD, oracledb.AUTH_MODE_SYSDGD)
+        self.assertIs(oracledb.SYSKMT, oracledb.AUTH_MODE_SYSKMT)
+        self.assertIs(oracledb.SYSOPER, oracledb.AUTH_MODE_SYSOPER)
+        self.assertIs(oracledb.SYSRAC, oracledb.AUTH_MODE_SYSRAC)
+        self.assertIs(oracledb.PRELIM_AUTH, oracledb.AUTH_MODE_PRELIM)
+
+        # pool "get" mode aliases
+        self.assertIs(oracledb.SPOOL_ATTRVAL_WAIT, oracledb.POOL_GETMODE_WAIT)
+        self.assertIs(oracledb.SPOOL_ATTRVAL_NOWAIT,
+                      oracledb.POOL_GETMODE_NOWAIT)
+        self.assertIs(oracledb.SPOOL_ATTRVAL_FORCEGET,
+                      oracledb.POOL_GETMODE_FORCEGET)
+        self.assertIs(oracledb.SPOOL_ATTRVAL_TIMEDWAIT,
+                      oracledb.POOL_GETMODE_TIMEDWAIT)
+
+        # purity aliases
+        self.assertIs(oracledb.ATTR_PURITY_DEFAULT, oracledb.PURITY_DEFAULT)
+        self.assertIs(oracledb.ATTR_PURITY_NEW, oracledb.PURITY_NEW)
+        self.assertIs(oracledb.ATTR_PURITY_SELF, oracledb.PURITY_ANY)
+
+        # other aliases
+        self.assertIs(oracledb.SUBSCR_PROTO_OCI,
+                      oracledb.SUBSCR_PROTO_CALLBACK)
+        self.assertIs(oracledb.version, oracledb.__version__)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
