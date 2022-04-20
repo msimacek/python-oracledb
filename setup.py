@@ -1,5 +1,12 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates.
+# This program is free software: you can modify it and/or redistribute it
+# under the terms of:
+#
+# (i)  the Universal Permissive License v 1.0 or at your option, any
+#      later version (http://oss.oracle.com/licenses/upl); and/or
+#
+# (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
 #------------------------------------------------------------------------------
 
 import os
@@ -15,7 +22,7 @@ base_depends = [os.path.join(impl_dir, n) \
 base_pxd = os.path.join(source_dir, "base_impl.pxd")
 base_depends.append(base_pxd)
 
-# determine the thick implementation dependent source files (included)
+# determine the thick mode dependent source files (included)
 impl_dir = os.path.join(source_dir, "impl", "thick")
 source_dirs = [
         os.path.join(impl_dir, "odpi", "src"),
@@ -30,7 +37,7 @@ thick_depends.extend(os.path.join(impl_dir, n) \
                      if n.endswith(".pyx") or n.endswith(".pxd"))
 thick_depends.append(base_pxd)
 
-# determine the thin driver dependent source files (included)
+# determine the thin mode dependent source files (included)
 impl_dir = os.path.join(source_dir, "impl", "thin")
 thin_depends = [os.path.join(impl_dir, n) \
                 for n in sorted(os.listdir(impl_dir))
