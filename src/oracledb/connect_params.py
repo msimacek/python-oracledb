@@ -60,7 +60,7 @@ class ConnectParams:
                  ssl_server_cert_dn: str=None,
                  wallet_location: str=None,
                  events: bool=False,
-                 mode: int=0,
+                 mode: int=oracledb.AUTH_MODE_DEFAULT,
                  disable_oob: bool=False,
                  stmtcachesize: int=oracledb.defaults.stmtcachesize,
                  edition: str=None,
@@ -161,7 +161,7 @@ class ConnectParams:
           (default: False)
 
         - mode: authorization mode to use. For example
-          constants.AUTH_MODE_SYSDBA (default: 0)
+          constants.AUTH_MODE_SYSDBA (default: oracledb.AUTH_MODE_DEFAULT)
 
         - disable_oob: boolean indicating whether out-of-band breaks should be
           disabled. This value is only used in thin mode. It has no effect on
