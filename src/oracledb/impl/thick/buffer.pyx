@@ -32,11 +32,11 @@ cdef class StringBuffer:
             self.length = self.size_in_chars = 0
             return 0
         elif isinstance(value, str):
-            self.obj = value.encode()
-            self.size_in_chars = <uint32_t> len(value)
+            self.obj = (<str> value).encode()
+            self.size_in_chars = <uint32_t> len(<str> value)
         elif isinstance(value, bytes):
             self.obj = value
-            self.size_in_chars = <uint32_t> len(value)
+            self.size_in_chars = <uint32_t> len(<bytes> value)
         else:
             raise TypeError("expecting string or bytes")
         self.ptr = self.obj

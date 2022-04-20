@@ -47,6 +47,10 @@ from libc.string cimport memchr, memset
 
 include "impl/thick/odpi.pxd"
 
+cdef type PY_TYPE_DATE = datetime.date
+cdef type PY_TYPE_DATETIME = datetime.datetime
+cdef type PY_TYPE_DECIMAL = decimal.Decimal
+
 cdef dpiContext *driver_context = NULL
 
 driver_context_params = None

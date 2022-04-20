@@ -20,8 +20,8 @@ cdef object _convert_from_json_node(dpiJsonNode *node):
         dpiTimestamp *as_timestamp
         dpiIntervalDS *as_interval
         dpiJsonArray *array
+        dpiBytes *as_bytes
         dpiJsonObject *obj
-        bytes temp_bytes
         dict dict_value
         list list_value
         int32_t seconds
@@ -32,11 +32,11 @@ cdef object _convert_from_json_node(dpiJsonNode *node):
     elif node.oracleTypeNum == DPI_ORACLE_TYPE_NUMBER:
         if node.nativeTypeNum == DPI_NATIVE_TYPE_DOUBLE:
             return node.value.asDouble
-        temp_bytes = node.value.asBytes.ptr[:node.value.asBytes.length]
-        return decimal.Decimal(temp_bytes.decode())
+        as_bytes = &node.value.asBytes
+        return PY_TYPE_DECIMAL(as_bytes.ptr[:as_bytes.length].decode())
     elif node.oracleTypeNum == DPI_ORACLE_TYPE_VARCHAR:
-        temp_bytes = node.value.asBytes.ptr[:node.value.asBytes.length]
-        return temp_bytes.decode()
+        as_bytes = &node.value.asBytes
+        return as_bytes.ptr[:as_bytes.length].decode()
     elif node.oracleTypeNum == DPI_ORACLE_TYPE_RAW:
         return node.value.asBytes.ptr[:node.value.asBytes.length]
     elif node.oracleTypeNum == DPI_ORACLE_TYPE_DATE \
@@ -90,8 +90,8 @@ cdef int _convert_from_python(object value, DbType dbtype,
                 buf.set_value("1")
             else:
                 buf.set_value("0")
-        elif isinstance(value, (int, float, decimal.Decimal)):
-            buf.set_value(str(value))
+        elif isinstance(value, (int, float, PY_TYPE_DECIMAL)):
+            buf.set_value((<str> cpython.PyObject_Str(value)).encode())
         else:
             message = f"expecting number, got {type(value)}"
             raise TypeError(message)
@@ -99,7 +99,7 @@ cdef int _convert_from_python(object value, DbType dbtype,
         dbvalue.asBytes.length = buf.length
     elif oracle_type == DPI_ORACLE_TYPE_NATIVE_DOUBLE \
             or oracle_type == DPI_ORACLE_TYPE_NATIVE_FLOAT:
-        if not isinstance(value, (float, int, decimal.Decimal)):
+        if not isinstance(value, (float, int, PY_TYPE_DECIMAL)):
             raise TypeError("expecting number")
         if oracle_type == DPI_ORACLE_TYPE_NATIVE_DOUBLE:
             dbvalue.asDouble = <double> value
@@ -128,7 +128,7 @@ cdef int _convert_from_python(object value, DbType dbtype,
             or oracle_type == DPI_ORACLE_TYPE_TIMESTAMP_TZ:
         memset(&dbvalue.asTimestamp, 0, sizeof(dbvalue.asTimestamp))
         timestamp = &dbvalue.asTimestamp
-        if isinstance(value, datetime.datetime):
+        if isinstance(value, PY_TYPE_DATETIME):
             timestamp.year = cydatetime.datetime_year(value)
             timestamp.month = cydatetime.datetime_month(value)
             timestamp.day = cydatetime.datetime_day(value)
@@ -136,7 +136,7 @@ cdef int _convert_from_python(object value, DbType dbtype,
             timestamp.minute = cydatetime.datetime_minute(value)
             timestamp.second = cydatetime.datetime_second(value)
             timestamp.fsecond = cydatetime.datetime_microsecond(value) * 1000
-        elif isinstance(value, datetime.date):
+        elif isinstance(value, PY_TYPE_DATE):
             timestamp.year = cydatetime.date_year(value)
             timestamp.month = cydatetime.date_month(value)
             timestamp.day = cydatetime.date_day(value)
@@ -284,7 +284,7 @@ cdef object _convert_to_python(ThickConnImpl conn_impl, DbType dbtype,
                 and memchr(as_bytes.ptr, b'.', as_bytes.length) == NULL:
             return int(as_bytes.ptr[:as_bytes.length])
         elif preferred_num_type == NUM_TYPE_DECIMAL:
-            return decimal.Decimal(as_bytes.ptr[:as_bytes.length].decode())
+            return PY_TYPE_DECIMAL(as_bytes.ptr[:as_bytes.length].decode())
         return float(as_bytes.ptr[:as_bytes.length])
     elif oracle_type == DPI_ORACLE_TYPE_RAW \
             or oracle_type == DPI_ORACLE_TYPE_LONG_RAW:

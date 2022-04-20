@@ -102,7 +102,7 @@ cdef class JsonBuffer:
             node.oracleTypeNum = DPI_ORACLE_TYPE_BOOLEAN
             node.nativeTypeNum = DPI_NATIVE_TYPE_BOOLEAN
             node.value.asBoolean = <bint> value
-        elif isinstance(value, (int, decimal.Decimal)):
+        elif isinstance(value, (int, PY_TYPE_DECIMAL)):
             node.oracleTypeNum = DPI_ORACLE_TYPE_NUMBER
             node.nativeTypeNum = DPI_NATIVE_TYPE_BYTES
             self._add_buf(str(value), &node.value.asBytes.ptr,
@@ -111,7 +111,7 @@ cdef class JsonBuffer:
             node.oracleTypeNum = DPI_ORACLE_TYPE_NUMBER
             node.nativeTypeNum = DPI_NATIVE_TYPE_DOUBLE
             node.value.asDouble = <double> value
-        elif isinstance(value, datetime.datetime):
+        elif isinstance(value, PY_TYPE_DATETIME):
             node.oracleTypeNum = DPI_ORACLE_TYPE_TIMESTAMP
             node.nativeTypeNum = DPI_NATIVE_TYPE_TIMESTAMP
             memset(&node.value.asTimestamp, 0, sizeof(node.value.asTimestamp))
@@ -123,7 +123,7 @@ cdef class JsonBuffer:
             timestamp.minute = cydatetime.datetime_minute(value)
             timestamp.second = cydatetime.datetime_second(value)
             timestamp.fsecond = cydatetime.datetime_microsecond(value) * 1000
-        elif isinstance(value, datetime.date):
+        elif isinstance(value, PY_TYPE_DATE):
             node.oracleTypeNum = DPI_ORACLE_TYPE_DATE
             node.nativeTypeNum = DPI_NATIVE_TYPE_TIMESTAMP
             memset(&node.value.asTimestamp, 0, sizeof(node.value.asTimestamp))

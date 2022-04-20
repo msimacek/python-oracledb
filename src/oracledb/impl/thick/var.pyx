@@ -167,7 +167,7 @@ cdef class ThickVarImpl(BaseVarImpl):
                     dbvalue = &temp_dbvalue
                 else:
                     dbvalue = &data.value
-                buf = StringBuffer()
+                buf = StringBuffer.__new__(StringBuffer)
                 _convert_from_python(value, self.dbtype, self.objtype, dbvalue,
                                      buf, self, pos)
                 if needs_set:
