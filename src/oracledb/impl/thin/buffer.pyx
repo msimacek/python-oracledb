@@ -245,6 +245,7 @@ cdef class ReadBuffer:
         char_type[:] _data_view
         Capabilities _caps
         object _socket
+        Message _message
 
     def __cinit__(self, object sock, ssize_t max_packet_size,
                   Capabilities caps):
@@ -348,6 +349,12 @@ cdef class ReadBuffer:
             self.receive_packet(&packet_type)
             self.skip_raw_bytes(2)          # skip data flags
 
+            # if the packet is a control packet, process it and continue
+            # to receive the next packet
+            if packet_type == TNS_PACKET_TYPE_CONTROL:
+                self._process_control_packet()
+                continue
+
             # copy data into the chunked buffer or split buffer, as appropriate
             source_ptr = &self._data[self._offset]
             num_bytes_split = min(num_bytes, self._size - self._offset)
@@ -363,6 +370,21 @@ cdef class ReadBuffer:
         # return the split buffer unconditionally; if performing a chunked read
         # the return value is ignored anyway
         return self._split_data
+
+    cdef int _process_control_packet(self) except -1:
+        """
+        Process a control packed received in between data packets.
+        """
+        cdef uint16_t control_type, error_num
+        self.read_uint16(&control_type)
+        if control_type == TNS_CONTROL_TYPE_INBAND_NOTIFICATION:
+            self.read_uint16(&control_type)
+            self.skip_raw_bytes(6)           # skip flags
+            self.read_uint16(&error_num)
+            self.skip_raw_bytes(4)
+            if error_num == TNS_ERR_SESSION_SHUTDOWN \
+                    or error_num == TNS_ERR_INBAND_MESSAGE:
+                self._message.session_needs_to_be_closed = True
 
     cdef int _skip_int(self, uint8_t max_length, bint *is_negative) except -1:
         """

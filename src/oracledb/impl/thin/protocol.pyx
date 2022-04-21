@@ -226,6 +226,8 @@ cdef class Protocol:
             message.send(self._write_buf)
             self._receive_packet(message)
             message.process(self._read_buf)
+            if message.session_needs_to_be_closed:
+                self._session_needs_to_be_closed = True
         except socket.timeout:
             try:
                 self._break_external()
@@ -293,6 +295,7 @@ cdef class Protocol:
     cdef int _receive_packet(self, Message message) except -1:
         cdef ReadBuffer buf = self._read_buf
         buf.receive_packet(&message.packet_type)
+        buf._message = message
         if message.packet_type == TNS_PACKET_TYPE_MARKER:
             self._reset(message)
             message.error_occurred = True
