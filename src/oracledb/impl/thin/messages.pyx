@@ -42,7 +42,6 @@ cdef class Message:
         bint flush_out_binds
         bint processed_error
         bint resend
-        bint session_needs_to_be_closed
 
     cdef bint _has_more_data(self, ReadBuffer buf):
         return buf.bytes_left() > 0 and not self.flush_out_binds

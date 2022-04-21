@@ -28,7 +28,6 @@ cdef class Protocol:
         bint _in_connect
         bint _txn_in_progress
         bint _break_in_progress
-        bint _session_needs_to_be_closed
 
     def __init__(self, sock):
         self._caps = Capabilities()
@@ -77,7 +76,8 @@ cdef class Protocol:
 
             # if the session was marked as needing to be closed, force it
             # closed immediately (unless it was already closed)
-            if self._session_needs_to_be_closed and self._socket is not None:
+            if self._read_buf._session_needs_to_be_closed \
+                    and self._socket is not None:
                 self._force_close()
 
             # rollback any open transaction and release the DRCP session, if
@@ -211,23 +211,12 @@ cdef class Protocol:
         buf.read_uint16(&control_type)
         if control_type == TNS_CONTROL_TYPE_RESET_OOB:
             self._caps.supports_oob = False
-        elif control_type == TNS_CONTROL_TYPE_INBAND_NOTIFICATION:
-            buf.skip_raw_bytes(6)           # skip flags
-            buf.read_uint16(&error_num)
-            if error_num == TNS_ERR_SESSION_SHUTDOWN \
-                    or error_num == TNS_ERR_INBAND_MESSAGE:
-                self._session_needs_to_be_closed = True
-            else:
-                errors._raise_err(errors.ERR_UNSUPPORTED_INBAND_NOTIFICATION,
-                                  error_num)
 
     cdef int _process_message(self, Message message) except -1:
         try:
             message.send(self._write_buf)
             self._receive_packet(message)
             message.process(self._read_buf)
-            if message.session_needs_to_be_closed:
-                self._session_needs_to_be_closed = True
         except socket.timeout:
             try:
                 self._break_external()
@@ -295,7 +284,6 @@ cdef class Protocol:
     cdef int _receive_packet(self, Message message) except -1:
         cdef ReadBuffer buf = self._read_buf
         buf.receive_packet(&message.packet_type)
-        buf._message = message
         if message.packet_type == TNS_PACKET_TYPE_MARKER:
             self._reset(message)
             message.error_occurred = True

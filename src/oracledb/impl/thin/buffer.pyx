@@ -245,7 +245,7 @@ cdef class ReadBuffer:
         char_type[:] _data_view
         Capabilities _caps
         object _socket
-        Message _message
+        bint _session_needs_to_be_closed
 
     def __cinit__(self, object sock, ssize_t max_packet_size,
                   Capabilities caps):
@@ -384,7 +384,10 @@ cdef class ReadBuffer:
             self.skip_raw_bytes(4)
             if error_num == TNS_ERR_SESSION_SHUTDOWN \
                     or error_num == TNS_ERR_INBAND_MESSAGE:
-                self._message.session_needs_to_be_closed = True
+                self._session_needs_to_be_closed = True
+            else:
+                errors._raise_err(errors.ERR_UNSUPPORTED_INBAND_NOTIFICATION,
+                                  error_num)
 
     cdef int _skip_int(self, uint8_t max_length, bint *is_negative) except -1:
         """
