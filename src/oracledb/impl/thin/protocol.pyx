@@ -206,12 +206,6 @@ cdef class Protocol:
         sock.shutdown(socket.SHUT_RDWR)
         sock.close()
 
-    cdef int _process_control_packet(self, ReadBuffer buf) except -1:
-        cdef uint16_t control_type, error_num
-        buf.read_uint16(&control_type)
-        if control_type == TNS_CONTROL_TYPE_RESET_OOB:
-            self._caps.supports_oob = False
-
     cdef int _process_message(self, Message message) except -1:
         try:
             message.send(self._write_buf)
@@ -287,9 +281,6 @@ cdef class Protocol:
         if message.packet_type == TNS_PACKET_TYPE_MARKER:
             self._reset(message)
             message.error_occurred = True
-        elif message.packet_type == TNS_PACKET_TYPE_CONTROL:
-            self._process_control_packet(buf)
-            buf.receive_packet(&message.packet_type)
         elif message.packet_type == TNS_PACKET_TYPE_REFUSE:
             self._write_buf._packet_sent = False
             buf.skip_raw_bytes(3)

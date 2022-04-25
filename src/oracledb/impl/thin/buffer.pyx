@@ -377,7 +377,9 @@ cdef class ReadBuffer:
         """
         cdef uint16_t control_type, error_num
         self.read_uint16(&control_type)
-        if control_type == TNS_CONTROL_TYPE_INBAND_NOTIFICATION:
+        if control_type == TNS_CONTROL_TYPE_RESET_OOB:
+            self._caps.supports_oob = False
+        elif control_type == TNS_CONTROL_TYPE_INBAND_NOTIFICATION:
             self.read_uint16(&control_type)
             self.skip_raw_bytes(6)           # skip flags
             self.read_uint16(&error_num)
