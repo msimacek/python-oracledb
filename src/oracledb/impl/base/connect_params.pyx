@@ -120,6 +120,7 @@ cdef class ConnectParamsImpl:
         self._default_address = Address()
         self.description_list = DescriptionList()
         self.description_list.descriptions.append(self._default_description)
+        self.debug_jdwp = os.getenv("ORA_DEBUG_JDWP")
         address_list = AddressList()
         address_list.addresses.append(self._default_address)
         self._default_description.address_lists.append(address_list)
@@ -144,6 +145,7 @@ cdef class ConnectParamsImpl:
         _set_bool_param(args, "matchanytag", &self.matchanytag)
         _set_uint_param(args, "stmtcachesize", &self.stmtcachesize)
         _set_bool_param(args, "disable_oob", &self.disable_oob)
+        _set_str_param(args, "debug_jdwp", self)
         _set_str_param(args, "config_dir", self)
         self.appcontext = args.get("appcontext")
         self.shardingkey = args.get("shardingkey")
@@ -229,6 +231,7 @@ cdef class ConnectParamsImpl:
         self.supershardingkey = other_params.supershardingkey
         self.stmtcachesize = other_params.stmtcachesize
         self.disable_oob = other_params.disable_oob
+        self.debug_jdwp = other_params.debug_jdwp
         self.description_list = other_params.description_list
         self.connect_string = other_params.connect_string
         self._external_handle = other_params._external_handle

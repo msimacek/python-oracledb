@@ -83,6 +83,7 @@ class ConnectParams:
                  appcontext: list=None,
                  shardingkey: list=None,
                  supershardingkey: list=None,
+                 debug_jdwp: str=None,
                  handle: int=0,
                  threaded: bool=True,
                  encoding: str=None,
@@ -211,6 +212,10 @@ class ConnectParams:
           identify the database shard to connect to. This value is only used in
           thick mode (default: None)
 
+        - debug_jdwp: a string with the format "host=<host>;port=<port>" that
+          specifies the host and port of the PL/SQL debugger. This value is
+          only used in thin mode (default: None)
+
         - handle: an integer representing a pointer to a valid service context
           handle. This value is only used in thick mode. It should be used with
           extreme caution (default: 0)
@@ -248,7 +253,8 @@ class ConnectParams:
                f", config_dir={self.config_dir!r}" + \
                f", appcontext={self.appcontext!r}" + \
                f", shardingkey={self.shardingkey!r}" + \
-               f", supershardingkey={self.supershardingkey!r})"
+               f", supershardingkey={self.supershardingkey!r}" + \
+               f", debug_jdwp={self.debug_jdwp!r})"
 
     def _address_attr(f):
         """
@@ -300,6 +306,15 @@ class ConnectParams:
         config_dir parameter of init_oracle_client().
         """
         return self._impl.config_dir
+
+    @property
+    def debug_jdwp(self) -> str:
+        """
+        A string with the format "host=<host>;port=<port>" that specifies the
+        host and port of the PL/SQL debugger. This value is only used in thin
+        mode.
+        """
+        return self._impl.debug_jdwp
 
     @property
     def disable_oob(self) -> bool:
@@ -593,6 +608,7 @@ class ConnectParams:
             appcontext: list=None,
             shardingkey: list=None,
             supershardingkey: list=None,
+            debug_jdwp: str=None,
             handle: int=None,
             threaded: bool=None,
             encoding: str=None,
@@ -711,6 +727,10 @@ class ConnectParams:
         - supershardingkey: a list of strings, numbers, bytes or dates that
           identify the database shard to connect to. This value is only used in
           thick mode
+
+        - debug_jdwp: a string with the format "host=<host>;port=<port>" that
+          specifies the host and port of the PL/SQL debugger. This value is
+          only used in thin mode
 
         - handle: an integer representing a pointer to a valid service context
           handle. This value is only used in thick mode. It should be used with

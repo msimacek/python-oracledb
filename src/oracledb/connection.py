@@ -1036,6 +1036,7 @@ def connect(dsn: str=None, *,
             appcontext: list=None,
             shardingkey: list=None,
             supershardingkey: list=None,
+            debug_jdwp: str=None,
             handle: int=None,
 
             # deprecated (ignored) parameters

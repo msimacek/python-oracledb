@@ -579,6 +579,7 @@ def create_pool(dsn: str=None, *,
                 appcontext: list=None,
                 shardingkey: list=None,
                 supershardingkey: list=None,
+                debug_jdwp: str=None,
                 handle: int=None,
 
                 # deprecated parameters

@@ -48,9 +48,10 @@ def decrypt_cbc(key, encrypted_text):
     return decryptor.update(encrypted_text)
 
 
-def encrypt_cbc(key, plain_text):
+def encrypt_cbc(key, plain_text, zeros=False):
     """
-    Encrypt the given text using the given key.
+    Encrypt the given text using the given key. If the zeros flag is set, use
+    zero padding if required. Otherwise, use number padding.
     """
     block_size = 16
     iv = bytes(block_size)
@@ -59,7 +60,10 @@ def encrypt_cbc(key, plain_text):
     encryptor = cipher.encryptor()
     n = block_size - len(plain_text) % block_size
     if n:
-        plain_text += (bytes([n]) * n)
+        if zeros:
+            plain_text += bytes(n)
+        else:
+            plain_text += (bytes([n]) * n)
     return encryptor.update(plain_text) + encryptor.finalize()
 
 

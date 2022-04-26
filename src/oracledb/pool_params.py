@@ -98,6 +98,7 @@ class PoolParams(ConnectParams):
                  appcontext: list=None,
                  shardingkey: list=None,
                  supershardingkey: list=None,
+                 debug_jdwp: str=None,
                  handle: int=0,
                  threaded: bool=True,
                  encoding: str=None,
@@ -280,6 +281,10 @@ class PoolParams(ConnectParams):
           identify the database shard to connect to. This value is only used in
           thick mode (default: None)
 
+        - debug_jdwp: a string with the format "host=<host>;port=<port>" that
+          specifies the host and port of the PL/SQL debugger. This value is
+          only used in thin mode (default: None)
+
         - handle: an integer representing a pointer to a valid service context
           handle. This value is only used in thick mode. It should be used with
           extreme caution (default: 0)
@@ -331,7 +336,8 @@ class PoolParams(ConnectParams):
                f", config_dir={self.config_dir!r}" + \
                f", appcontext={self.appcontext!r}" + \
                f", shardingkey={self.shardingkey!r}" + \
-               f", supershardingkey={self.supershardingkey!r})"
+               f", supershardingkey={self.supershardingkey!r}" + \
+               f", debug_jdwp={self.debug_jdwp!r})"
 
     @property
     def connectiontype(self) -> Type["oracledb.Connection"]:
@@ -507,6 +513,7 @@ class PoolParams(ConnectParams):
             appcontext: list=None,
             shardingkey: list=None,
             supershardingkey: list=None,
+            debug_jdwp: str=None,
             handle: int=None,
             threaded: bool=None,
             encoding: str=None,
@@ -675,6 +682,10 @@ class PoolParams(ConnectParams):
         - supershardingkey: a list of strings, numbers, bytes or dates that
           identify the database shard to connect to. This value is only used in
           thick mode
+
+        - debug_jdwp: a string with the format "host=<host>;port=<port>" that
+          specifies the host and port of the PL/SQL debugger. This value is
+          only used in thin mode
 
         - handle: an integer representing a pointer to a valid service context
           handle. This value is only used in thick mode. It should be used with
