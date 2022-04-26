@@ -65,7 +65,7 @@ See [CONTRIBUTING](https://github.com/oracle/python-oracledb/blob/main/CONTRIBUT
 
 ## License
 
-See [LICENSE][license]
+See [LICENSE][license], [THIRD_PARTY_LICENSES][tplicense], and [NOTICE][notice].
 
 [python]: https://www.python.org/
 [oracledb]: https://www.oracle.com/database/
@@ -74,6 +74,8 @@ See [LICENSE][license]
 [documentation]: http://python-oracledb.readthedocs.io
 [relnotes]: https://python-oracledb.readthedocs.io/en/latest/release_notes.html
 [license]: https://github.com/oracle/python-oracledb/blob/main/LICENSE.txt
+[tplicense]: https://github.com/oracle/python-oracledb/blob/main/THIRD_PARTY_LICENSES.txt
+[notice]: https://github.com/oracle/python-oracledb/blob/main/NOTICE.txt
 [tutorial]: https://github.com/oracle/python-oracledb/tree/main/samples/tutorial
 [ghdiscussions]: https://github.com/oracle/python-oracledb/discussions
 [ghissues]: https://github.com/oracle/python-oracledb/issues

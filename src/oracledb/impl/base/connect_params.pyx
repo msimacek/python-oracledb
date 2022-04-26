@@ -1,12 +1,25 @@
 #------------------------------------------------------------------------------
 # Copyright (c) 2022, Oracle and/or its affiliates.
-# This program is free software: you can modify it and/or redistribute it
-# under the terms of:
 #
-# (i)  the Universal Permissive License v 1.0 or at your option, any
-#      later version (http://oss.oracle.com/licenses/upl); and/or
+# This software is dual-licensed to you under the Universal Permissive License
+# (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
+# 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose
+# either license.
 #
-# (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
+# If you elect to accept the software under the Apache License, Version 2.0,
+# the following applies:
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -107,6 +120,7 @@ cdef class ConnectParamsImpl:
         self._default_address = Address()
         self.description_list = DescriptionList()
         self.description_list.descriptions.append(self._default_description)
+        self.debug_jdwp = os.getenv("ORA_DEBUG_JDWP")
         address_list = AddressList()
         address_list.addresses.append(self._default_address)
         self._default_description.address_lists.append(address_list)
@@ -131,6 +145,7 @@ cdef class ConnectParamsImpl:
         _set_bool_param(args, "matchanytag", &self.matchanytag)
         _set_uint_param(args, "stmtcachesize", &self.stmtcachesize)
         _set_bool_param(args, "disable_oob", &self.disable_oob)
+        _set_str_param(args, "debug_jdwp", self)
         _set_str_param(args, "config_dir", self)
         self.appcontext = args.get("appcontext")
         self.shardingkey = args.get("shardingkey")
@@ -216,6 +231,7 @@ cdef class ConnectParamsImpl:
         self.supershardingkey = other_params.supershardingkey
         self.stmtcachesize = other_params.stmtcachesize
         self.disable_oob = other_params.disable_oob
+        self.debug_jdwp = other_params.debug_jdwp
         self.description_list = other_params.description_list
         self.connect_string = other_params.connect_string
         self._external_handle = other_params._external_handle

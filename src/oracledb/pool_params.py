@@ -1,12 +1,25 @@
 #------------------------------------------------------------------------------
 # Copyright (c) 2022, Oracle and/or its affiliates.
-# This program is free software: you can modify it and/or redistribute it
-# under the terms of:
 #
-# (i)  the Universal Permissive License v 1.0 or at your option, any
-#      later version (http://oss.oracle.com/licenses/upl); and/or
+# This software is dual-licensed to you under the Universal Permissive License
+# (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
+# 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose
+# either license.
 #
-# (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
+# If you elect to accept the software under the Apache License, Version 2.0,
+# the following applies:
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -85,6 +98,7 @@ class PoolParams(ConnectParams):
                  appcontext: list=None,
                  shardingkey: list=None,
                  supershardingkey: list=None,
+                 debug_jdwp: str=None,
                  handle: int=0,
                  threaded: bool=True,
                  encoding: str=None,
@@ -267,6 +281,10 @@ class PoolParams(ConnectParams):
           identify the database shard to connect to. This value is only used in
           thick mode (default: None)
 
+        - debug_jdwp: a string with the format "host=<host>;port=<port>" that
+          specifies the host and port of the PL/SQL debugger. This value is
+          only used in thin mode (default: None)
+
         - handle: an integer representing a pointer to a valid service context
           handle. This value is only used in thick mode. It should be used with
           extreme caution (default: 0)
@@ -318,7 +336,8 @@ class PoolParams(ConnectParams):
                f", config_dir={self.config_dir!r}" + \
                f", appcontext={self.appcontext!r}" + \
                f", shardingkey={self.shardingkey!r}" + \
-               f", supershardingkey={self.supershardingkey!r})"
+               f", supershardingkey={self.supershardingkey!r}" + \
+               f", debug_jdwp={self.debug_jdwp!r})"
 
     @property
     def connectiontype(self) -> Type["oracledb.Connection"]:
@@ -494,6 +513,7 @@ class PoolParams(ConnectParams):
             appcontext: list=None,
             shardingkey: list=None,
             supershardingkey: list=None,
+            debug_jdwp: str=None,
             handle: int=None,
             threaded: bool=None,
             encoding: str=None,
@@ -662,6 +682,10 @@ class PoolParams(ConnectParams):
         - supershardingkey: a list of strings, numbers, bytes or dates that
           identify the database shard to connect to. This value is only used in
           thick mode
+
+        - debug_jdwp: a string with the format "host=<host>;port=<port>" that
+          specifies the host and port of the PL/SQL debugger. This value is
+          only used in thin mode
 
         - handle: an integer representing a pointer to a valid service context
           handle. This value is only used in thick mode. It should be used with

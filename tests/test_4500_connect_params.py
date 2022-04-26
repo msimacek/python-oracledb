@@ -1,12 +1,25 @@
 #------------------------------------------------------------------------------
 # Copyright (c) 2021, 2022, Oracle and/or its affiliates.
-# This program is free software: you can modify it and/or redistribute it
-# under the terms of:
 #
-# (i)  the Universal Permissive License v 1.0 or at your option, any
-#      later version (http://oss.oracle.com/licenses/upl); and/or
+# This software is dual-licensed to you under the Universal Permissive License
+# (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
+# 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose
+# either license.
 #
-# (ii) the Apache License v 2.0. (http://www.apache.org/licenses/LICENSE-2.0)
+# If you elect to accept the software under the Apache License, Version 2.0,
+# the following applies:
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #------------------------------------------------------------------------------
 
 """
@@ -446,6 +459,7 @@ class TestCase(test_env.BaseTestCase):
         self.__test_writable_parameter("stmtcachesize", 25)
         self.__test_writable_parameter("supershardingkey", [1, 2, 3])
         self.__test_writable_parameter("tag", "tag_4530")
+        self.__test_writable_parameter("debug_jdwp", "host=host;port=4530")
 
     def test_4531_build_connect_string_with_tcp_connect_timeout(self):
         "4531 - test building connect string with TCP connect timeout"
