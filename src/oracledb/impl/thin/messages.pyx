@@ -1222,6 +1222,8 @@ cdef class AuthMessage(Message):
         bytes password
         bytes newpassword
         str encoded_newpassword
+        str encoded_jdwp_data
+        str debug_jdwp
         str session_key
         str speedy_key
         str cclass
@@ -1237,6 +1239,7 @@ cdef class AuthMessage(Message):
         """
         Generate the multi-round verifier.
         """
+        cdef bytes jdwp_data
 
         # create password hash
         verifier_data = bytes.fromhex(self.session_data['AUTH_VFR_DATA'])
@@ -1290,6 +1293,15 @@ cdef class AuthMessage(Message):
             encrypted_newpassword = encrypt_cbc(session_key,
                                                 newpassword_with_salt)
             self.encoded_newpassword = encrypted_newpassword.hex().upper()
+
+        # check if debug_jdwp is set. if set, encode the data using the
+        # combo session key with zeros padding
+        if self.debug_jdwp is not None:
+            jdwp_data = self.debug_jdwp.encode()
+            encrypted_jdwp_data = encrypt_cbc(session_key, jdwp_data, zeros=True)
+            # Add a "01" at the end of the hex encrypted data to indicate the
+            # use of AES encryption
+            self.encoded_jdwp_data = encrypted_jdwp_data.hex().upper() + "01"
 
     cdef tuple _get_version_tuple(self, ReadBuffer buf):
         """
@@ -1362,6 +1374,7 @@ cdef class AuthMessage(Message):
         self.cclass = description.cclass
         self.purity = description.purity
         self.proxy_user = params.proxy_user
+        self.debug_jdwp = params.debug_jdwp
         if params._new_password is None:
             self.auth_mode = TNS_AUTH_MODE_LOGON
         if params.mode & constants.AUTH_MODE_SYSDBA:
@@ -1434,6 +1447,8 @@ cdef class AuthMessage(Message):
             else:
                 num_pairs += 1
             self._generate_verifier(verifier_11g)
+            if self.encoded_jdwp_data is not None:
+                num_pairs += 1
             buf.write_ub4(self.auth_mode)   # authentication mode
             buf.write_uint8(1)              # pointer (authivl)
             buf.write_ub4(num_pairs)        # number of key/value pairs
@@ -1463,6 +1478,9 @@ cdef class AuthMessage(Message):
             if self.purity != 0:
                 self._write_key_value(buf, "AUTH_KPPL_PURITY",
                                       str(self.purity), 1)
+            if self.encoded_jdwp_data is not None:
+                self._write_key_value(buf, "AUTH_ORA_DEBUG_JDWP",
+                                      self.encoded_jdwp_data)
 
 
 @cython.final

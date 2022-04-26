@@ -168,6 +168,7 @@ cdef class ConnectParamsImpl:
         public DescriptionList description_list
         public str connect_string
         uint64_t _external_handle
+        public str debug_jdwp
         Description _default_description
         Address _default_address
         bytearray _password
