@@ -1051,12 +1051,12 @@ cdef class ReadBuffer:
         control packet is received, it is processed and the next packet is
         received.
         """
-        while(True):
+        while True:
             self._receive_packet_helper(packet_type)
-            if packet_type[0] != TNS_PACKET_TYPE_CONTROL:
-                break
-            # if a control packet is received, process it and continue
-            self._process_control_packet()
+            if packet_type[0] == TNS_PACKET_TYPE_CONTROL:
+                self._process_control_packet()
+                continue
+            break
 
     cdef int skip_raw_bytes(self, ssize_t num_bytes) except -1:
         """
