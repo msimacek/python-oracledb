@@ -362,12 +362,6 @@ cdef class ReadBuffer:
             self.receive_packet(&packet_type)
             self.skip_raw_bytes(2)          # skip data flags
 
-            # if the packet is a control packet, process it and continue
-            # to receive the next packet
-            if packet_type == TNS_PACKET_TYPE_CONTROL:
-                self._process_control_packet()
-                continue
-
             # copy data into the chunked buffer or split buffer, as appropriate
             source_ptr = &self._data[self._offset]
             num_bytes_split = min(num_bytes, self._size - self._offset)
@@ -393,7 +387,6 @@ cdef class ReadBuffer:
         if control_type == TNS_CONTROL_TYPE_RESET_OOB:
             self._caps.supports_oob = False
         elif control_type == TNS_CONTROL_TYPE_INBAND_NOTIFICATION:
-            self.read_uint16(&control_type)
             self.skip_raw_bytes(6)           # skip flags
             self.read_uint16(&error_num)
             self.skip_raw_bytes(4)
@@ -402,7 +395,85 @@ cdef class ReadBuffer:
                 self._session_needs_to_be_closed = True
             else:
                 errors._raise_err(errors.ERR_UNSUPPORTED_INBAND_NOTIFICATION,
-                                  error_num)
+                                  err_num=error_num)
+
+    cdef int _receive_packet_helper(self, uint8_t *packet_type) except -1:
+        """
+        Receives a packet and updates the pointers appropriately. Note that
+        multiple packets may be received if they are small enough or a portion
+        of a second packet may be received so the buffer needs to be adjusted
+        as needed. This is also why room is available in the buffer for up to
+        two complete packets.
+        """
+        cdef:
+            ssize_t offset, bytes_to_read, bytes_read = 0
+            uint32_t packet_size
+            uint16_t temp16
+
+        # if no bytes are left over from a previous read, perform a read of the
+        # maximum packet size and reset the offset to 0
+        if self._bytes_to_process == 0:
+            self._packet_start_offset = 0
+            self._offset = 0
+            self._get_data_from_socket(self._data_obj, self._max_packet_size,
+                                       &bytes_read)
+
+        # otherwise, set the offset to the end of the previous packet and
+        # ensure that there are at least enough bytes available to cover the
+        # contents of the packet header
+        else:
+            self._packet_start_offset = self._size
+            self._offset = self._size
+            if self._bytes_to_process < PACKET_HEADER_SIZE:
+                offset = self._size + self._bytes_to_process
+                bytes_to_read = PACKET_HEADER_SIZE - self._bytes_to_process
+                self._get_data_from_socket(self._data_view[offset:],
+                                           bytes_to_read, &bytes_read)
+
+        # if no bytes were read this means the server closed the connection
+        if self._bytes_to_process < PACKET_HEADER_SIZE:
+            if bytes_read == 0:
+                if self._socket is not None:
+                    try:
+                        self._socket.shutdown(socket.SHUT_RDWR)
+                    except OSError:
+                        pass
+                    self._socket.close()
+                    self._socket = None
+                errors._raise_err(errors.ERR_CONNECTION_CLOSED)
+            self._bytes_to_process += bytes_read
+
+        # determine the packet length and ensure that all of the bytes for the
+        # packet are available; note that as of version 12.2 the packet size is
+        # 32 bits in size instead of 16 bits, but this doesn't take effect
+        # until it is known that the server is capable of that as well
+        if self._caps.protocol_version >= TNS_VERSION_MIN_LARGE_SDU:
+            self._size += 4
+            self.read_uint32(&packet_size)
+        else:
+            self._size += 2
+            self.read_uint16(&temp16)
+            packet_size = temp16
+        while self._bytes_to_process < packet_size:
+            offset = self._packet_start_offset + self._bytes_to_process
+            bytes_to_read = packet_size - self._bytes_to_process
+            self._get_data_from_socket(self._data_view[offset:], bytes_to_read,
+                                       &bytes_read)
+            self._bytes_to_process += bytes_read
+
+        # process remainder of packet header and set size to the new packet
+        self._size = self._packet_start_offset + packet_size
+        self._bytes_to_process -= packet_size
+        if self._caps.protocol_version < TNS_VERSION_MIN_LARGE_SDU:
+            self.skip_raw_bytes(2)      # skip packet checksum
+        self.read_ub1(packet_type)
+        self.skip_raw_bytes(3)          # skip reserved byte, header checksum
+
+        # display packet if requested
+        if DEBUG_PACKETS:
+            offset = self._packet_start_offset
+            _print_packet("Receiving packet:", self._socket.fileno(),
+                          self._data_view[offset:self._size])
 
     cdef int _skip_int(self, uint8_t max_length, bint *is_negative) except -1:
         """
@@ -976,81 +1047,16 @@ cdef class ReadBuffer:
 
     cdef int receive_packet(self, uint8_t *packet_type) except -1:
         """
-        Receives a packet and updates the pointers appropriately. Note that
-        multiple packets may be received if they are small enough or a portion
-        of a second packet may be received so the buffer needs to be adjusted
-        as needed. This is also why room is available in the buffer for up to
-        two complete packets.
+        Calls _receive_packet_helper() and checks the packet type. If a
+        control packet is received, it is processed and the next packet is
+        received.
         """
-        cdef:
-            ssize_t offset, bytes_to_read, bytes_read = 0
-            uint32_t packet_size
-            uint16_t temp16
-
-        # if no bytes are left over from a previous read, perform a read of the
-        # maximum packet size and reset the offset to 0
-        if self._bytes_to_process == 0:
-            self._packet_start_offset = 0
-            self._offset = 0
-            self._get_data_from_socket(self._data_obj, self._max_packet_size,
-                                       &bytes_read)
-
-        # otherwise, set the offset to the end of the previous packet and
-        # ensure that there are at least enough bytes available to cover the
-        # contents of the packet header
-        else:
-            self._packet_start_offset = self._size
-            self._offset = self._size
-            if self._bytes_to_process < PACKET_HEADER_SIZE:
-                offset = self._size + self._bytes_to_process
-                bytes_to_read = PACKET_HEADER_SIZE - self._bytes_to_process
-                self._get_data_from_socket(self._data_view[offset:],
-                                           bytes_to_read, &bytes_read)
-
-        # if no bytes were read this means the server closed the connection
-        if self._bytes_to_process < PACKET_HEADER_SIZE:
-            if bytes_read == 0:
-                if self._socket is not None:
-                    try:
-                        self._socket.shutdown(socket.SHUT_RDWR)
-                    except OSError:
-                        pass
-                    self._socket.close()
-                    self._socket = None
-                errors._raise_err(errors.ERR_CONNECTION_CLOSED)
-            self._bytes_to_process += bytes_read
-
-        # determine the packet length and ensure that all of the bytes for the
-        # packet are available; note that as of version 12.2 the packet size is
-        # 32 bits in size instead of 16 bits, but this doesn't take effect
-        # until it is known that the server is capable of that as well
-        if self._caps.protocol_version >= TNS_VERSION_MIN_LARGE_SDU:
-            self._size += 4
-            self.read_uint32(&packet_size)
-        else:
-            self._size += 2
-            self.read_uint16(&temp16)
-            packet_size = temp16
-        while self._bytes_to_process < packet_size:
-            offset = self._packet_start_offset + self._bytes_to_process
-            bytes_to_read = packet_size - self._bytes_to_process
-            self._get_data_from_socket(self._data_view[offset:], bytes_to_read,
-                                       &bytes_read)
-            self._bytes_to_process += bytes_read
-
-        # process remainder of packet header and set size to the new packet
-        self._size = self._packet_start_offset + packet_size
-        self._bytes_to_process -= packet_size
-        if self._caps.protocol_version < TNS_VERSION_MIN_LARGE_SDU:
-            self.skip_raw_bytes(2)      # skip packet checksum
-        self.read_ub1(packet_type)
-        self.skip_raw_bytes(3)          # skip reserved byte, header checksum
-
-        # display packet if requested
-        if DEBUG_PACKETS:
-            offset = self._packet_start_offset
-            _print_packet("Receiving packet:", self._socket.fileno(),
-                          self._data_view[offset:self._size])
+        while(True):
+            self._receive_packet_helper(packet_type)
+            if packet_type[0] != TNS_PACKET_TYPE_CONTROL:
+                break
+            # if a control packet is received, process it and continue
+            self._process_control_packet()
 
     cdef int skip_raw_bytes(self, ssize_t num_bytes) except -1:
         """
