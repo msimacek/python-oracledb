@@ -660,7 +660,6 @@ cdef class Description:
         _set_bool_param(args, "ssl_server_dn_match", &self.ssl_server_dn_match)
         _set_str_param(args, "ssl_server_cert_dn", self)
         _set_str_param(args, "wallet_location", self)
-        _set_str_param(args, "wallet_password", self)
 
 
 cdef class DescriptionList:
