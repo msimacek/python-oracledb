@@ -109,7 +109,9 @@ cdef class Protocol:
 
             # otherwise, send the logoff message and final close
             elif self._socket is not None:
-                self._process_message(conn_impl._create_message(LogoffMessage))
+                if not conn_impl._drcp_enabled:
+                    message = conn_impl._create_message(LogoffMessage)
+                    self._process_message(message)
                 self._final_close(self._write_buf)
 
     cdef ConnectParamsImpl _connect(self, ThinConnImpl conn_impl,
