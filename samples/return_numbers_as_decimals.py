@@ -39,7 +39,7 @@ import sample_env
 
 # determine whether to use python-oracledb thin mode or thick mode
 if not sample_env.get_is_thin():
-    oracledb.init_oracle_client()
+    oracledb.init_oracle_client(lib_dir=sample_env.get_oracle_client())
 
 # indicate that numbers should be fetched as decimals
 oracledb.defaults.fetch_decimals = True

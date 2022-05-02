@@ -23,9 +23,9 @@
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# Sets the environment used by the oracledb test suite. Production applications
-# should consider using External Authentication to avoid hard coded
-# credentials.
+# Sets the environment used by the python-oracledb test suite. Production
+# applications should consider using External Authentication to avoid hard
+# coded credentials.
 #
 # You can set values in environment variables to bypass having the test suite
 # request the information it requires.
@@ -179,7 +179,7 @@ def run_sql_script(conn, script_name, **kwargs):
     replace_values = [("&" + k + ".", v) for k, v in kwargs.items()] + \
                      [("&" + k, v) for k, v in kwargs.items()]
     script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-    file_name = os.path.join(script_dir, "sql", script_name + "_exec.sql")
+    file_name = os.path.join(script_dir, "sql", script_name + ".sql")
     for line in open(file_name):
         if line.strip() == "/":
             statement = "".join(statement_parts).strip()

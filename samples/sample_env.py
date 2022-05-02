@@ -23,9 +23,9 @@
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# Sets the environment used by the sample scripts. Production applications
-# should consider using External Authentication to avoid hard coded
-# credentials.
+# Sets the environment used by the python-oracledb sample scripts. Production
+# applications should consider using External Authentication to avoid hard
+# coded credentials.
 #
 # You can set values in environment variables to bypass the sample requesting
 # the information it requires.
@@ -40,6 +40,11 @@
 #     PYO_SAMPLES_ADMIN_USER: admin user for setting up samples
 #     PYO_SAMPLES_ADMIN_PASSWORD: admin password for setting up samples
 #     PYO_SAMPLES_DRIVER_MODE: python-oracledb mode (thick or thin) to use
+#     PYO_SAMPLES_ORACLE_CLIENT_PATH: path to your Instant Client libraries
+#
+# On macOS and Windows, set PYO_SAMPLES_ORACLE_CLIENT_PATH if you are currently
+# calling init_oracle_client() in your application. On Linux do not set this;
+# instead set LD_LIBRARY_PATH or configure ldconfig before running Python.
 #
 # PYO_SAMPLES_CONNECT_STRING can be set to an Easy Connect string, or a
 # Net Service Name from a tnsnames.ora file or external naming service,
@@ -78,17 +83,17 @@ DEFAULT_DRCP_CONNECT_STRING = "localhost/orclpdb1:pooled"
 # directly) and then stored so that a value is not requested more than once
 PARAMETERS = {}
 
-def get_value(name, label, default_value=""):
+def get_value(name, label, default_value=None, password=False):
     value = PARAMETERS.get(name)
     if value is not None:
         return value
     env_name = "PYO_SAMPLES_" + name
     value = os.environ.get(env_name)
     if value is None:
-        if default_value:
+        if default_value is not None:
             label += " [%s]" % default_value
         label += ": "
-        if default_value:
+        if not password:
             value = input(label).strip()
         else:
             value = getpass.getpass(label)
@@ -101,14 +106,15 @@ def get_main_user():
     return get_value("MAIN_USER", "Main User Name", DEFAULT_MAIN_USER)
 
 def get_main_password():
-    return get_value("MAIN_PASSWORD", "Password for %s" % get_main_user())
+    return get_value("MAIN_PASSWORD", "Password for %s" % get_main_user(),
+                     password=True)
 
 def get_edition_user():
     return get_value("EDITION_USER", "Edition User Name", DEFAULT_EDITION_USER)
 
 def get_edition_password():
     return get_value("EDITION_PASSWORD",
-                     "Password for %s" % get_edition_user())
+                     "Password for %s" % get_edition_user(), password=True)
 
 def get_edition_name():
     return get_value("EDITION_NAME", "Edition Name", DEFAULT_EDITION_NAME)
@@ -139,8 +145,12 @@ def get_edition_connect_string():
 
 def get_admin_connect_string():
     admin_user = get_value("ADMIN_USER", "Administrative user", "admin")
-    admin_password = get_value("ADMIN_PASSWORD", f"Password for {admin_user}")
+    admin_password = get_value("ADMIN_PASSWORD", f"Password for {admin_user}", password=True)
     return "%s/%s@%s" % (admin_user, admin_password, get_connect_string())
+
+def get_oracle_client():
+    if sys.platform in ("darwin", "win32"):
+        return get_value("ORACLE_CLIENT_PATH", "Oracle Instant Client Path")
 
 def run_sql_script(conn, script_name, **kwargs):
     statement_parts = []
@@ -148,7 +158,7 @@ def run_sql_script(conn, script_name, **kwargs):
     replace_values = [("&" + k + ".", v) for k, v in kwargs.items()] + \
                      [("&" + k, v) for k, v in kwargs.items()]
     script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-    file_name = os.path.join(script_dir, "sql", script_name + "_exec.sql")
+    file_name = os.path.join(script_dir, "sql", script_name + ".sql")
     for line in open(file_name):
         if line.strip() == "/":
             statement = "".join(statement_parts).strip()

@@ -1,5 +1,5 @@
 /*-----------------------------------------------------------------------------
- * Copyright 2017, 2022, Oracle and/or its affiliates.
+ * Copyright 2017, 2022, Oracle and/or its affiliates. 
  *
  * This software is dual-licensed to you under the Universal Permissive License
  * (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
@@ -23,32 +23,30 @@
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
- * setup_samples.sql
+ * sample_drop.sql
  *
- * Creates and populates schemas with the database objects used by the
- * python-oracledb samples. An edition is also created for the demonstration of
- * PL/SQL editioning.
- *
- * Run this like:
- *     sqlplus sys/syspassword@hostname/servicename as sysdba @setup_samples
+ * Performs the actual work of dropping the database schemas and edition used
+ * by the python-oracledb samples. It is executed by the Python script
+ * sample_drop.py.
  *---------------------------------------------------------------------------*/
 
-whenever sqlerror exit failure
+begin
 
--- get parameters
-set echo off termout on feedback off verify off
-accept main_user char default pythondemo -
-        prompt "Name of main schema [pythondemo]: "
-accept main_password char prompt "Password for &main_user: " HIDE
-accept edition_user char default pythoneditions -
-        prompt "Name of edition schema [pythoneditions]: "
-accept edition_password char prompt "Password for &edition_user: " HIDE
-accept edition_name char default python_e1 -
-        prompt "Name of edition [python_e1]: "
-set feedback on
+    for r in
+            ( select username
+              from dba_users
+              where username in (upper('&main_user'), upper('&edition_user'))
+            ) loop
+        execute immediate 'drop user ' || r.username || ' cascade';
+    end loop;
 
--- perform work
-@@drop_samples_exec.sql
-@@setup_samples_exec.sql
+    for r in
+            ( select edition_name
+              from dba_editions
+              where edition_name in (upper('&edition_name'))
+            ) loop
+        execute immediate 'drop edition ' || r.edition_name || ' cascade';
+    end loop;
 
-exit
+end;
+/

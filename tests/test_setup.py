@@ -23,21 +23,28 @@
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# drop_test.py
+# test_setup.py
 #
-# Drops the database objects used by the test suite.
+# Creates users and populates their schemas with the tables and packages
+# necessary for running the python-oracledb test suite.
 #------------------------------------------------------------------------------
 
 import oracledb
+
+import test_drop
 import test_env
 
-def drop_tests(conn):
-    print("Dropping test schemas...")
-    test_env.run_sql_script(conn, "drop_test",
-                            main_user=test_env.get_main_user(),
-                            proxy_user=test_env.get_proxy_user())
+# connect as administrative user (usually SYSTEM or ADMIN)
+conn = oracledb.connect(test_env.get_admin_connect_string())
 
-if __name__ == "__main__":
-    conn = oracledb.connect(test_env.get_admin_connect_string())
-    drop_tests(conn)
-    print("Done.")
+# drop existing users and editions, if applicable
+test_drop.drop_tests(conn)
+
+# create test schemas
+print("Creating test schemas...")
+test_env.run_sql_script(conn, "test_setup",
+                        main_user=test_env.get_main_user(),
+                        main_password=test_env.get_main_password(),
+                        proxy_user=test_env.get_proxy_user(),
+                        proxy_password=test_env.get_proxy_password())
+print("Done.")

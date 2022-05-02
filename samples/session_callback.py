@@ -41,7 +41,7 @@ import oracledb
 import sample_env
 
 # this script is currently only supported in python-oracledb thick mode
-oracledb.init_oracle_client()
+oracledb.init_oracle_client(lib_dir=sample_env.get_oracle_client())
 
 # define a dictionary of NLS_DATE_FORMAT formats supported by this sample
 SUPPORTED_FORMATS = {
