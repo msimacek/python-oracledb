@@ -23,12 +23,11 @@
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
- * setup_test_exec.sql
+ * test_setup.sql
  *
  * Performs the actual work of creating and populating the schemas with the
- * database objects used by the python-oracledb test suite. It is called by the
- * setup_test.sql script after acquiring the necessary parameters and also
- * by the Python script setup_test.py.
+ * database objects used by the python-oracledb test suite. It is executed by
+ * the Python script test_setup.py.
  *---------------------------------------------------------------------------*/
 
 alter session set nls_date_format = 'YYYY-MM-DD HH24:MI:SS'

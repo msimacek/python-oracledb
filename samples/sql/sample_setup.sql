@@ -23,13 +23,12 @@
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
- * setup_samples_exec.sql
+ * sample_setup.sql
  *
  * Performs the actual work of creating and populating the schemas with the
- * database objects used by the sample scripts. An edition is also created for
- * the demonstration of PL/SQL editioning. It is called by the
- * setup_samples.sql script after acquiring the necessary parameters and also
- * by the Python script setup_samples.py.
+ * database objects used by the python-oracledb samples. An edition is also
+ * created for the demonstration of PL/SQL editioning. It is executed by the
+ * Python script sample_setup.py.
  *---------------------------------------------------------------------------*/
 
 alter session set nls_date_format = 'YYYY-MM-DD HH24:MI:SS'

@@ -54,7 +54,7 @@ PAYLOAD_DATA = [
 ]
 
 # this script is currently only supported in python-oracledb thick mode
-oracledb.init_oracle_client()
+oracledb.init_oracle_client(lib_dir=sample_env.get_oracle_client())
 
 # connect to database
 connection = oracledb.connect(sample_env.get_main_connect_string())
