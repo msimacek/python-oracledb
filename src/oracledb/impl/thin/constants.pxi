@@ -616,3 +616,8 @@ DEF TNS_BASE64_ALPHABET = \
         b'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 cdef bytearray TNS_BASE64_ALPHABET_ARRAY = \
         bytearray(TNS_BASE64_ALPHABET)
+
+# purity types
+DEF PURITY_DEFAULT = 0
+DEF PURITY_NEW = 1
+DEF PURITY_ANY = 2

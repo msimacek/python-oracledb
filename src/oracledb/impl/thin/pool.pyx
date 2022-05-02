@@ -87,8 +87,8 @@ cdef class ThinPoolImpl(BasePoolImpl):
         conn_impl = ThinConnImpl(self._connect_params)
         if params is not None:
             conn_impl._cclass = params._default_description.cclass
-        conn_impl.connect(self._connect_params)
         conn_impl._pool = self
+        conn_impl.connect(self._connect_params)
         return conn_impl
 
     def _bg_thread_func(self):
@@ -205,7 +205,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
         # if a free used connection is available and the purity and
         # cclass allow the use of such a connection, it can be used directly
         if self._free_used_conn_impls:
-            if cclass is not None and purity != constants.PURITY_NEW:
+            if cclass is not None and purity != PURITY_NEW:
                 for i, conn_impl in enumerate(self._free_used_conn_impls):
                     if conn_impl._cclass == cclass:
                         self._free_used_conn_impls.pop(i)
@@ -222,7 +222,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
                 self._busy_conn_impls.append(conn_impl)
             else:
                 conn_impl = self._free_used_conn_impls.pop(0)
-                if purity == constants.PURITY_NEW:
+                if purity == PURITY_NEW:
                     self._close_connection(conn_impl)
                     conn_impl = self._create_conn_impl(params=params)
                 self._busy_conn_impls.append(conn_impl)
@@ -280,7 +280,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
             return True
         open_count = self.get_open_count()
         if self._free_used_conn_impls:
-            if purity != constants.PURITY_NEW or open_count == self.max:
+            if purity != PURITY_NEW or open_count == self.max:
                 return True
         if open_count < self.max:
             with self._bg_thread_condition:
