@@ -23,21 +23,21 @@
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# drop_samples.py
+# sample_drop.py
 #
-# Drops the database objects used for the python-oracledb samples.
+# Drops the database objects used by the python-oracledb samples.
+#
+# This script is also executed by the Python script sample_setup.py for
+# dropping the existing users and editions, if applicable, before creating the
+# sample schemas and editions.
 #------------------------------------------------------------------------------
 
 import oracledb
 import sample_env
 
-# determine whether to use python-oracledb thin mode or thick mode
-if not sample_env.get_is_thin():
-    oracledb.init_oracle_client()
-
 def drop_samples(conn):
     print("Dropping sample schemas and edition...")
-    sample_env.run_sql_script(conn, "drop_samples",
+    sample_env.run_sql_script(conn, "sample_drop",
                               main_user=sample_env.get_main_user(),
                               edition_user=sample_env.get_edition_user(),
                               edition_name=sample_env.get_edition_name())

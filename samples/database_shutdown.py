@@ -35,9 +35,10 @@
 #------------------------------------------------------------------------------
 
 import oracledb
+import sample_env
 
 # this script is currently only supported in python-oracledb thick mode
-oracledb.init_oracle_client()
+oracledb.init_oracle_client(lib_dir=sample_env.get_oracle_client())
 
 # need to connect as SYSDBA or SYSOPER
 connection = oracledb.connect(mode=oracledb.SYSDBA)

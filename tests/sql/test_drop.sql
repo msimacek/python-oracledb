@@ -1,5 +1,5 @@
 /*-----------------------------------------------------------------------------
- * Copyright 2020, 2022, Oracle and/or its affiliates.
+ * Copyright (c) 2020, 2022, Oracle and/or its affiliates.
  *
  * This software is dual-licensed to you under the Universal Permissive License
  * (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
@@ -23,25 +23,22 @@
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
- * drop_test.sql
+ * test_drop.sql
  *
- * Drops database objects used for python-oracledb tests.
- *
- * Run this like:
- *     sqlplus sys/syspassword@hostname/servicename as sysdba @drop_test
+ * Performs the actual work of dropping the database schemas used by the
+ * python-oracledb test suite. It is executed by the Python script
+ * test_drop.py.
  *---------------------------------------------------------------------------*/
 
-whenever sqlerror exit failure
+begin
 
--- get parameters
-set echo off termout on feedback off verify off
-accept main_user char default pythontest -
-        prompt "Name of main schema [pythontest]: "
-accept proxy_user char default pythontestproxy -
-        prompt "Name of proxy schema [pythontestproxy]: "
-set feedback on
+    for r in
+            ( select username
+              from dba_users
+              where username in (upper('&main_user'), upper('&proxy_user'))
+            ) loop
+        execute immediate 'drop user ' || r.username || ' cascade';
+    end loop;
 
--- perform work
-@@drop_test_exec.sql
-
-exit
+end;
+/
