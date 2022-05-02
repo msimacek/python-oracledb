@@ -64,6 +64,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         list _temp_lobs_to_close
         uint32_t _temp_lobs_total_size
         uint32_t _call_timeout
+        str _cclass
 
     cdef int _add_cursor_to_close(self, Statement stmt) except -1:
         if self._num_cursors_to_close == TNS_MAX_CURSORS_TO_CLOSE:
@@ -162,6 +163,8 @@ cdef class ThinConnImpl(BaseConnImpl):
         if address.protocol == "tcps":
             sock = get_ssl_socket(sock, params, description, address)
         self._drcp_enabled = description.server_type == "pooled"
+        if self._cclass is None:
+            self._cclass = description.cclass
         self._protocol = Protocol(sock)
         return self._protocol._connect(self, params, description, address)
 
