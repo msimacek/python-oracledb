@@ -1370,7 +1370,19 @@ cdef class AuthMessage(Message):
         """
         self.password = params._get_password()
         self.newpassword = params._get_new_password()
-        self.purity = description.purity
+
+        # if drcp is used, use purity = NEW as the default purity for
+        # standalone connections and purity = ANY for connections that belong
+        # to a pool
+        if description.purity == PURITY_DEFAULT \
+                and self.conn_impl._drcp_enabled:
+            if self.conn_impl._pool is None:
+                self.purity = PURITY_NEW
+            else:
+                self.purity = PURITY_ANY
+        else:
+            self.purity = description.purity
+
         self.proxy_user = params.proxy_user
         self.debug_jdwp = params.debug_jdwp
         if params._new_password is None:
