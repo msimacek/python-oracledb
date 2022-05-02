@@ -2040,7 +2040,7 @@ cdef class ProtocolMessage(Message):
             while True:                     # skip server banner
                 buf.read_ub1(&c)
                 if c == 0:
-                    break;
+                    break
             buf.read_uint16(&charset_id, BYTE_ORDER_LSB)
             buf._caps.char_conversion = charset_id != TNS_CHARSET_UTF8
             buf.skip_ub1()                  # skip server flags
