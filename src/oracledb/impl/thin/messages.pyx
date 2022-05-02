@@ -1226,7 +1226,6 @@ cdef class AuthMessage(Message):
         str debug_jdwp
         str session_key
         str speedy_key
-        str cclass
         str proxy_user
         uint8_t purity
         ssize_t user_bytes_len
@@ -1371,7 +1370,6 @@ cdef class AuthMessage(Message):
         """
         self.password = params._get_password()
         self.newpassword = params._get_new_password()
-        self.cclass = description.cclass
         self.purity = description.purity
         self.proxy_user = params.proxy_user
         self.debug_jdwp = params.debug_jdwp
@@ -1436,7 +1434,7 @@ cdef class AuthMessage(Message):
                 self.auth_mode |= TNS_AUTH_MODE_CHANGE_PASSWORD
             if self.proxy_user is not None:
                 num_pairs += 1
-            if self.cclass is not None:
+            if self.conn_impl._cclass is not None:
                 num_pairs += 1
             if self.purity != 0:
                 num_pairs += 1
@@ -1472,9 +1470,9 @@ cdef class AuthMessage(Message):
                                   driver_name)
             self._write_key_value(buf, "SESSION_CLIENT_VERSION",
                                   str(_connect_constants.full_version_num))
-            if self.cclass is not None:
+            if self.conn_impl._cclass is not None:
                 self._write_key_value(buf, "AUTH_KPPL_CONN_CLASS",
-                                      self.cclass)
+                                      self.conn_impl._cclass)
             if self.purity != 0:
                 self._write_key_value(buf, "AUTH_KPPL_PURITY",
                                       str(self.purity), 1)
