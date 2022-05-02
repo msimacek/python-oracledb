@@ -216,7 +216,7 @@ cdef class ThickDbObjectImpl(BaseDbObjectImpl):
                                   buf)
         native_type_num = attr._native_type_num
         if native_type_num == DPI_NATIVE_TYPE_LOB \
-                and not isinstance(value, LOB):
+                and not isinstance(value, PY_TYPE_LOB):
             native_type_num = DPI_NATIVE_TYPE_BYTES
         if dpiObject_setAttributeValue(self._handle, attr._handle,
                                        native_type_num, &data) < 0:
@@ -237,7 +237,7 @@ cdef class ThickDbObjectImpl(BaseDbObjectImpl):
                                   objtype.element_objtype, &data, buf)
         native_type_num = objtype._element_native_type_num
         if native_type_num == DPI_NATIVE_TYPE_LOB \
-                and not isinstance(value, LOB):
+                and not isinstance(value, PY_TYPE_LOB):
             native_typeNum = DPI_NATIVE_TYPE_BYTES
         if dpiObject_setElementValueByIndex(self._handle, index,
                                             native_type_num, &data) < 0:

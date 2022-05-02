@@ -41,9 +41,6 @@ cydatetime.import_datetime()
 
 from . import constants, driver_mode, errors, exceptions
 from .subscr import Message, MessageQuery, MessageRow, MessageTable
-from .lob import LOB
-from .dbobject import DbObject, DbObjectType
-from .var import Var
 from .defaults import defaults
 
 from .base_impl cimport get_exception_class
@@ -63,6 +60,9 @@ include "impl/thick/odpi.pxd"
 cdef type PY_TYPE_DATE = datetime.date
 cdef type PY_TYPE_DATETIME = datetime.datetime
 cdef type PY_TYPE_DECIMAL = decimal.Decimal
+cdef type PY_TYPE_DB_OBJECT
+cdef type PY_TYPE_LOB
+cdef type PY_TYPE_TIMEDELTA = datetime.timedelta
 
 cdef dpiContext *driver_context = NULL
 

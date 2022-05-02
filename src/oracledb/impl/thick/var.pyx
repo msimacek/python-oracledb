@@ -175,7 +175,7 @@ cdef class ThickVarImpl(BaseVarImpl):
             else:
                 needs_set = self._native_type_num == DPI_NATIVE_TYPE_BYTES \
                         or (self._native_type_num == DPI_NATIVE_TYPE_LOB and \
-                                not isinstance(value, LOB))
+                                not isinstance(value, PY_TYPE_LOB))
                 if needs_set:
                     dbvalue = &temp_dbvalue
                 else:

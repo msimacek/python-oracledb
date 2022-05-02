@@ -163,7 +163,7 @@ cdef int _convert_from_python(object value, DbType dbtype,
         else:
             dbvalue.asInt64 = <int64_t> value
     elif oracle_type == DPI_ORACLE_TYPE_INTERVAL_DS:
-        if not isinstance(value, datetime.timedelta):
+        if not isinstance(value, PY_TYPE_TIMEDELTA):
             raise TypeError("expecting datetime.timedelta")
         seconds = cydatetime.timedelta_seconds(value)
         dbvalue.asIntervalDS.days = cydatetime.timedelta_days(value)
@@ -174,7 +174,7 @@ cdef int _convert_from_python(object value, DbType dbtype,
         dbvalue.asIntervalDS.fseconds = \
                 cydatetime.timedelta_microseconds(value) * 1000
     elif oracle_type == DPI_ORACLE_TYPE_OBJECT:
-        if not isinstance(value, DbObject):
+        if not isinstance(value, PY_TYPE_DB_OBJECT):
             raise TypeError("expecting DbObject")
         obj_impl = <ThickDbObjectImpl> value._impl
         if var_impl is not None:
@@ -186,7 +186,7 @@ cdef int _convert_from_python(object value, DbType dbtype,
     elif oracle_type == DPI_ORACLE_TYPE_CLOB \
             or oracle_type == DPI_ORACLE_TYPE_BLOB \
             or oracle_type == DPI_ORACLE_TYPE_NCLOB:
-        if isinstance(value, LOB):
+        if isinstance(value, PY_TYPE_LOB):
             lob_impl = value._impl
             if var_impl is not None:
                 if dpiVar_setFromLob(var_impl._handle, pos,
@@ -330,14 +330,14 @@ cdef object _convert_to_python(ThickConnImpl conn_impl, DbType dbtype,
             or oracle_type == DPI_ORACLE_TYPE_NCLOB \
             or oracle_type == DPI_ORACLE_TYPE_BFILE:
         lob_impl = ThickLobImpl._create(conn_impl, dbtype, dbvalue.asLOB)
-        return LOB._from_impl(lob_impl)
+        return PY_TYPE_LOB._from_impl(lob_impl)
     elif oracle_type == DPI_ORACLE_TYPE_OBJECT:
         obj_impl = ThickDbObjectImpl.__new__(ThickDbObjectImpl)
         obj_impl.type = obj_type_impl
         if dpiObject_addRef(dbvalue.asObject) < 0:
             _raise_from_odpi()
         obj_impl._handle = dbvalue.asObject
-        return DbObject._from_impl(obj_impl)
+        return PY_TYPE_DB_OBJECT._from_impl(obj_impl)
     elif oracle_type == DPI_ORACLE_TYPE_INTERVAL_DS:
         seconds = dbvalue.asIntervalDS.hours * 60 * 60 + \
                 dbvalue.asIntervalDS.minutes * 60 + \
@@ -489,3 +489,13 @@ def init_oracle_client(lib_dir=None, config_dir=None, error_url=None,
                                    &params, &driver_context, &error_info) < 0:
         _raise_from_info(&error_info)
     driver_context_params = params_tuple
+
+
+def init_thick_impl(package):
+    """
+    Initializes globals after the package has been completely initialized. This
+    is to avoid circular imports and eliminate the need for global lookups.
+    """
+    global PY_TYPE_DB_OBJECT, PY_TYPE_LOB
+    PY_TYPE_DB_OBJECT = package.DbObject
+    PY_TYPE_LOB = package.LOB

@@ -411,7 +411,7 @@ cdef class ThickMsgPropsImpl(BaseMsgPropsImpl):
             if dpiObject_addRef(payload_obj_handle) < 0:
                 _raise_from_odpi()
             obj_impl._handle = payload_obj_handle
-            self.payload = DbObject._from_impl(obj_impl)
+            self.payload = PY_TYPE_DB_OBJECT._from_impl(obj_impl)
         else:
             self.payload = payload_ptr[:payload_len]
 

@@ -193,10 +193,11 @@ cdef int _set_str_param(dict args, str name, object target) except -1:
     if in_val is not None:
         setattr(target, name, str(in_val))
 
-def initialize_base_impl(package):
+
+def init_base_impl(package):
     """
     Initializes globals after the package has been completely initialized. This
-    is to avoid circular imports.
+    is to avoid circular imports and eliminate the need for global lookups.
     """
     global PY_TYPE_CURSOR, PY_TYPE_DB_OBJECT, PY_TYPE_DB_OBJECT_TYPE
     global PY_TYPE_LOB, PY_TYPE_VAR

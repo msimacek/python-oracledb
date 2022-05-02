@@ -49,7 +49,10 @@ from .dsn import makedsn
 from .base_impl import *
 from .thick_impl import clientversion, init_oracle_client
 
-initialize_base_impl(sys.modules[constants.MODULE_NAME])
+package = sys.modules[constants.MODULE_NAME]
+init_base_impl(package)
+thick_impl.init_thick_impl(package)
+del package
 
 # future object used for managing backwards incompatible changes
 class Future:
