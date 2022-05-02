@@ -97,19 +97,18 @@ def get_ssl_socket(sock, ConnectParamsImpl params, Description description,
     """
     ssl_context = ssl.create_default_context()
 
-    # if the platform is macOS, and one-way TLS is being used, check if the
-    # certifi package is installed. If certifi is not installed, load the
-    # certificates from the macOS keychain in PEM format.
-    if description.wallet_location is None:
-        if sys.platform == "darwin" and certifi is None:
-            global macos_certs
-            if macos_certs is None:
-                certs = subprocess.run(["security", "find-certificate",
-                                        "-a", "-p"],
-                                        stdout=subprocess.PIPE).stdout
-                macos_certs = certs.decode("utf-8")
-            ssl_context.load_verify_locations(cadata=macos_certs)
-    else:
+    # if the platform is macOS, and one-way TLS or mTLS is being used, check
+    # if the certifi package is installed. If certifi is not installed, load
+    # the certificates from the macOS keychain in PEM format.
+    if sys.platform == "darwin" and certifi is None:
+        global macos_certs
+        if macos_certs is None:
+            certs = subprocess.run(["security", "find-certificate",
+                                    "-a", "-p"],
+                                    stdout=subprocess.PIPE).stdout
+            macos_certs = certs.decode("utf-8")
+        ssl_context.load_verify_locations(cadata=macos_certs)
+    if description.wallet_location is not None:
         pem_file_name = os.path.join(description.wallet_location,
                                      PEM_WALLET_FILE_NAME)
         if not os.path.exists(pem_file_name):
