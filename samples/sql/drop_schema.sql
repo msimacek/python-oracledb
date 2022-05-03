@@ -1,5 +1,5 @@
 /*-----------------------------------------------------------------------------
- * Copyright 2017, 2022, Oracle and/or its affiliates. 
+ * Copyright 2017, 2022, Oracle and/or its affiliates.
  *
  * This software is dual-licensed to you under the Universal Permissive License
  * (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
@@ -23,11 +23,11 @@
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
- * sample_drop.sql
+ * drop_schema.sql
  *
  * Performs the actual work of dropping the database schemas and edition used
  * by the python-oracledb samples. It is executed by the Python script
- * sample_drop.py.
+ * drop_schema.py.
  *---------------------------------------------------------------------------*/
 
 begin

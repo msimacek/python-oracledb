@@ -23,7 +23,7 @@
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# sample_drop.py
+# drop_schema.py
 #
 # Drops the database objects used by the python-oracledb samples.
 #
@@ -35,14 +35,14 @@
 import oracledb
 import sample_env
 
-def drop_samples(conn):
+def drop_schema(conn):
     print("Dropping sample schemas and edition...")
-    sample_env.run_sql_script(conn, "sample_drop",
+    sample_env.run_sql_script(conn, "drop_schema",
                               main_user=sample_env.get_main_user(),
                               edition_user=sample_env.get_edition_user(),
                               edition_name=sample_env.get_edition_name())
 
 if __name__ == "__main__":
     conn = oracledb.connect(sample_env.get_admin_connect_string())
-    drop_samples(conn)
+    drop_schema(conn)
     print("Done.")

@@ -23,25 +23,25 @@
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# test_drop.py
+# drop_schema.py
 #
 # Drops the database objects used by the python-oracledb test suite.
-# 
-# This script is also executed by the Python script test_setup.py for dropping
-# the existing users and editions, if applicable, before creating the test
-# schemas.
+#
+# This script is also executed by the Python script create_schema.py for
+# dropping the existing users and editions, if applicable, before creating the
+# test schemas.
 #------------------------------------------------------------------------------
 
 import oracledb
 import test_env
 
-def drop_tests(conn):
+def drop_schema(conn):
     print("Dropping test schemas...")
-    test_env.run_sql_script(conn, "test_drop",
+    test_env.run_sql_script(conn, "drop_schema",
                             main_user=test_env.get_main_user(),
                             proxy_user=test_env.get_proxy_user())
 
 if __name__ == "__main__":
     conn = oracledb.connect(test_env.get_admin_connect_string())
-    drop_tests(conn)
+    drop_schema(conn)
     print("Done.")

@@ -23,30 +23,28 @@
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# sample_setup.py
+# create_schema.py
 #
 # Creates users and populates their schemas with the tables and packages
-# necessary for running the python-oracledb sample scripts. An edition is also
-# created for the demonstration of PL/SQL editioning.
+# necessary for running the python-oracledb test suite.
 #------------------------------------------------------------------------------
 
 import oracledb
 
-import sample_drop
-import sample_env
+import drop_schema
+import test_env
 
 # connect as administrative user (usually SYSTEM or ADMIN)
-conn = oracledb.connect(sample_env.get_admin_connect_string())
+conn = oracledb.connect(test_env.get_admin_connect_string())
 
 # drop existing users and editions, if applicable
-sample_drop.drop_samples(conn)
+drop_schema.drop_schema(conn)
 
-# create sample schema and edition
-print("Creating sample schemas and edition...")
-sample_env.run_sql_script(conn, "sample_setup",
-                          main_user=sample_env.get_main_user(),
-                          main_password=sample_env.get_main_password(),
-                          edition_user=sample_env.get_edition_user(),
-                          edition_password=sample_env.get_edition_password(),
-                          edition_name=sample_env.get_edition_name())
+# create test schemas
+print("Creating test schemas...")
+test_env.run_sql_script(conn, "create_schema",
+                        main_user=test_env.get_main_user(),
+                        main_password=test_env.get_main_password(),
+                        proxy_user=test_env.get_proxy_user(),
+                        proxy_password=test_env.get_proxy_password())
 print("Done.")

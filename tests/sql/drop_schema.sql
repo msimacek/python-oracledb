@@ -23,11 +23,11 @@
  *---------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
- * test_drop.sql
+ * drop_schema.sql
  *
  * Performs the actual work of dropping the database schemas used by the
  * python-oracledb test suite. It is executed by the Python script
- * test_drop.py.
+ * drop_schema.py.
  *---------------------------------------------------------------------------*/
 
 begin
