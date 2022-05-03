@@ -684,5 +684,17 @@ class TestCase(test_env.BaseTestCase):
             conn.close()
         self.assertEqual(pool.opened, 2)
 
+    def test_2428_create_from_params(self):
+        "2427 - create a pool using an instance of PoolParams"
+        params = oracledb.PoolParams(user=test_env.get_main_user(),
+                                     password=test_env.get_main_password())
+        params.parse_connect_string(test_env.get_connect_string())
+        pool = oracledb.create_pool(params=params)
+        with pool.acquire() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("select user from dual")
+                result, = cursor.fetchone()
+                self.assertEqual(result, test_env.get_main_user().upper())
+
 if __name__ == "__main__":
     test_env.run_test_cases()
