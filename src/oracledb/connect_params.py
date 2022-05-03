@@ -214,7 +214,8 @@ class ConnectParams:
 
         - debug_jdwp: a string with the format "host=<host>;port=<port>" that
           specifies the host and port of the PL/SQL debugger. This value is
-          only used in thin mode (default: None)
+          only used in thin mode. For thick mode set the ORA_DEBUG_JDWP
+          environment variable (default: None)
 
         - handle: an integer representing a pointer to a valid service context
           handle. This value is only used in thick mode. It should be used with
@@ -312,7 +313,7 @@ class ConnectParams:
         """
         A string with the format "host=<host>;port=<port>" that specifies the
         host and port of the PL/SQL debugger. This value is only used in thin
-        mode.
+        mode. For thick mode set the ORA_DEBUG_JDWP environment variable.
         """
         return self._impl.debug_jdwp
 
@@ -730,7 +731,8 @@ class ConnectParams:
 
         - debug_jdwp: a string with the format "host=<host>;port=<port>" that
           specifies the host and port of the PL/SQL debugger. This value is
-          only used in thin mode
+          only used in thin mode. For thick mode set the ORA_DEBUG_JDWP
+          environment variable
 
         - handle: an integer representing a pointer to a valid service context
           handle. This value is only used in thick mode. It should be used with
