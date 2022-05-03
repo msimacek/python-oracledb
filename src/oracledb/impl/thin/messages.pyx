@@ -2003,7 +2003,28 @@ cdef class NetworkServicesMessage(Message):
             service.write_data(buf)
 
     cdef int process(self, ReadBuffer buf) except -1:
-        pass
+        cdef:
+            uint16_t num_services, num_subpackets, i, j, data_length
+            uint32_t temp32
+        buf.skip_raw_bytes(2)               # data flags
+        buf.read_uint32(&temp32)            # network magic num
+        if temp32 != TNS_NETWORK_MAGIC:
+            errors._raise_err(errors.ERR_UNEXPECTED_DATA, data=hex(temp32))
+        buf.skip_raw_bytes(2)               # length of packet
+        buf.skip_raw_bytes(4)               # version
+        buf.read_uint16(&num_services)
+        buf.skip_raw_bytes(1)               # error flags
+        for i in range(num_services):
+            buf.skip_raw_bytes(2)           # service num
+            buf.read_uint16(&num_subpackets)
+            buf.read_uint32(&temp32)        # error num
+            if temp32 != 0:
+                errors._raise_err(errors.ERR_LISTENER_REFUSED_CONNECTION,
+                                  error_code=temp32)
+            for j in range(num_subpackets):
+                buf.read_uint16(&data_length)
+                buf.skip_raw_bytes(2)       # data type
+                buf.skip_raw_bytes(data_length)
 
 
 @cython.final

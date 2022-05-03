@@ -201,6 +201,7 @@ ERR_MESSAGE_TYPE_UNKNOWN = 5000
 ERR_BUFFER_LENGTH_INSUFFICIENT = 5001
 ERR_INTEGER_TOO_LARGE = 5002
 ERR_UNEXPECTED_NEGATIVE_INTEGER = 5003
+ERR_UNEXPECTED_DATA = 5004
 
 # error numbers that result in OperationalError
 ERR_LISTENER_REFUSED_CONNECTION = 6000
@@ -405,6 +406,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_TNS_NAMES_FILE_MISSING:
             'cannot connect to database. File tnsnames.ora not found in '
             '{config_dir}',
+    ERR_UNEXPECTED_DATA:
+            'unexpected data received: {data}',
     ERR_UNEXPECTED_NEGATIVE_INTEGER:
             'internal error: read a negative integer when expecting a '
             'positive integer',
