@@ -56,7 +56,7 @@ POOL_GETMODE_TIMEDWAIT = 3
 # purity values
 PURITY_DEFAULT = 0
 PURITY_NEW = 1
-PURITY_ANY = 2
+PURITY_SELF = 2
 
 # AQ delivery modes
 MSG_BUFFERED =  2

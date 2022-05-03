@@ -154,12 +154,12 @@ cdef int _set_purity_param(dict args, str name, uint32_t* out_val) except -1:
             if in_val == "new":
                 out_val[0] = constants.PURITY_NEW
             elif in_val == "self":
-                out_val[0] = constants.PURITY_ANY
+                out_val[0] = constants.PURITY_SELF
             else:
                 errors._raise_err(errors.ERR_INVALID_POOL_PURITY,
                                   purity=in_val)
         else:
-            if in_val not in (constants.PURITY_ANY, constants.PURITY_NEW,
+            if in_val not in (constants.PURITY_SELF, constants.PURITY_NEW,
                               constants.PURITY_DEFAULT):
                 errors._raise_err(errors.ERR_INVALID_POOL_PURITY,
                                   purity=in_val)

@@ -113,7 +113,7 @@ SPOOL_ATTRVAL_TIMEDWAIT = POOL_GETMODE_TIMEDWAIT
 # aliases for purity (for backwards compatibility)
 ATTR_PURITY_DEFAULT = PURITY_DEFAULT
 ATTR_PURITY_NEW = PURITY_NEW
-ATTR_PURITY_SELF = PURITY_ANY
+ATTR_PURITY_SELF = PURITY_SELF
 
 # aliases for subscription protocols (for backwards compatibility)
 SUBSCR_PROTO_OCI = SUBSCR_PROTO_CALLBACK

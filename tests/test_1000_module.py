@@ -139,7 +139,7 @@ class TestCase(test_env.BaseTestCase):
         # purity aliases
         self.assertIs(oracledb.ATTR_PURITY_DEFAULT, oracledb.PURITY_DEFAULT)
         self.assertIs(oracledb.ATTR_PURITY_NEW, oracledb.PURITY_NEW)
-        self.assertIs(oracledb.ATTR_PURITY_SELF, oracledb.PURITY_ANY)
+        self.assertIs(oracledb.ATTR_PURITY_SELF, oracledb.PURITY_SELF)
 
         # other aliases
         self.assertIs(oracledb.SUBSCR_PROTO_OCI,

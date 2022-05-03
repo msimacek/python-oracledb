@@ -39,7 +39,7 @@ if applicable. The most recent deprecations are listed first.
     * - Constant :data:`~oracledb.ATTR_PURITY_NEW`
       - Replace by :data:`~oracledb.PURITY_NEW`
     * - Constant :data:`~oracledb.ATTR_PURITY_SELF`
-      - Replace by :data:`~oracledb.PURITY_ANY`
+      - Replace by :data:`~oracledb.PURITY_SELF`
     * - Constant :data:`~oracledb.SPOOL_ATTRVAL_WAIT`
       - Replace by :data:`~oracledb.POOL_GETMODE_WAIT`
     * - Constant :data:`~oracledb.SPOOL_ATTRVAL_NOWAIT`

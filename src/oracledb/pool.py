@@ -107,7 +107,7 @@ class ConnectionPool:
         the connection class for database resident connection pooling (DRCP).
 
         The purity parameter is expected to be one of PURITY_DEFAULT,
-        PURITY_NEW, or PURITY_ANY.
+        PURITY_NEW, or PURITY_SELF.
 
         The tag parameter, if specified, is expected to be a string with
         name=value pairs like “k1=v1;k2=v2” and will limit the connections that

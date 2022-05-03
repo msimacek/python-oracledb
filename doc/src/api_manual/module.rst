@@ -1509,7 +1509,7 @@ in database resident connection pooling (DRCP).
     information). This is the default value.
 
     .. deprecated:: python-oracledb 1.0
-        
+
         Use :data:`~oracledb.PURITY_DEFAULT` instead.
 
 
@@ -1530,7 +1530,7 @@ in database resident connection pooling (DRCP).
 
     .. deprecated:: python-oracledb 1.0
 
-        Use :data:`~oracledb.PURITY_ANY` instead.
+        Use :data:`~oracledb.PURITY_SELF` instead.
 
 .. _connpoolmodes:
 
@@ -1584,7 +1584,7 @@ in database resident connection pooling (DRCP).
     should be new and not have any prior session state.
 
 
-.. data:: PURITY_ANY
+.. data:: PURITY_SELF
 
     This constant is used to specify that the session acquired from the pool
     need not be new and may have prior session state.

@@ -1379,7 +1379,7 @@ cdef class AuthMessage(Message):
             if self.conn_impl._pool is None:
                 self.purity = PURITY_NEW
             else:
-                self.purity = PURITY_ANY
+                self.purity = PURITY_SELF
         else:
             self.purity = description.purity
 

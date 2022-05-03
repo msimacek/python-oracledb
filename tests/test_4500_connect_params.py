@@ -156,7 +156,7 @@ class TestCase(test_env.BaseTestCase):
         params = oracledb.ConnectParams()
         params.parse_connect_string(connect_string)
         self.assertEqual(params.cclass, "cclass_12")
-        self.assertEqual(params.purity, oracledb.PURITY_ANY)
+        self.assertEqual(params.purity, oracledb.PURITY_SELF)
         connect_string = connect_string.replace("SELF", "NEW")
         params.parse_connect_string(connect_string)
         self.assertEqual(params.purity, oracledb.PURITY_NEW)
