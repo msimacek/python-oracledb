@@ -116,7 +116,7 @@
     <ul>
     <li>13.1 Input type handlers with named objects</li>
     <li>13.2 Output type handlers with named objects</li>
-    </ul>   
+    </ul>
     <li><a href="#aq">Advanced Queuing</a>
       <ul>
         <li>14.1 Message passing with Oracle Advanced Queuing</li>
@@ -156,7 +156,19 @@
   <ul>
 
     <li><h4 id="installsw">Install software</h4>
-<p>Ensure that you have installed <a href="https://www.python.org/">Python</a> 3.6 (or later), <a href="https://pypi.org/project/python-oracledb/">python-oracledb</a>'s latest version, and access to Oracle Database.</p>
+
+      <p>Install Python 3 if not already available.  It can be obtained from
+      your operating system package library or from <a
+      href="https://www.python.org/">python.org</a>.  On Windows use Python 3.7
+      or later.  On macOS use Python 3.8 or later.  On Linux use Python 3.6 or
+      later.</p>
+	  
+      <p>Install <a
+      href="https://pypi.org/project/python-oracledb/">python-oracledb</a> with
+      a command like <code>pip install oracledb --upgrade</code></p>
+
+      <p>Ensure you can access an Oracle Database.</p>
+	  
 <!--
       <p>To get going, follow either of the quick start instructions:</p>
 
@@ -167,7 +179,8 @@
           href="https://www.oracle.com/database/technologies/appdev/python/quickstartpython.html"
           >Quick Start: Developing Python Applications for Oracle Autonomous Database</a></p></li>
       </ul>
---></li>
+-->
+    </li>
 
       <li>
         <h4 id="downloadscripts">Download the tutorial scripts</h4>
@@ -177,7 +190,7 @@
         <p>Download a zip file of the repository from <a href="https://github.com/oracle/python-oracledb/archive/main.zip" >here</a> and unzip it. Alternatively you can use 'git' to clone the repository.</p>
 <p><code>git clone https://github.com/oracle/python-oracledb.git</code></p>
 
-        <p>The <code>samples/tutorial</code> directory has scripts to run and modify. The <code>samples/tutorial/solutions</code> directory has scripts with suggested code changes. The <code>samples/tutorial/sql</code> directory will have all the sql scripts used by the python files to create database table and other objects.</p>
+        <p>The <code>samples/tutorial</code> directory has scripts to run and modify. The <code>samples/tutorial/solutions</code> directory has scripts with suggested code changes. The <code>samples/tutorial/sql</code> directory has all the SQL scripts used by the python files to create database tables and other objects.</p>
 
       </li>
       <li>
@@ -475,7 +488,7 @@ params = oracledb.ConnectParams(host="localhost", port=1521, service_name="orclp
 con = oracledb.connect(user=db_config.user, password=db_config.pw, params=params)
 print("Database version:", con.version)</pre>
         When the script is run (<code><strong>python connect_params2.py</strong></code>), it will display:
-        <pre>Database version: 19.3.0.0.</pre>       
+        <pre>Database version: 19.3.0.0.</pre>
         </p>
         The use of <code>ConnectParams()</code> is optional. Users can continue to use previous approaches. The list of parameters for the <code>ConnectParams</code> class is available in the python-oracledb documentation.<br />
         Notes:
@@ -2709,8 +2722,8 @@ import sys</pre>
 <h2>License</h2>
 <p>Copyright &copy; 2017, 2022, Oracle and/or its affiliates. </p>
 
-<p>This software is dual-licensed to you under the Universal Permissive License 
-(UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License 
+<p>This software is dual-licensed to you under the Universal Permissive License
+(UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose
 either license. </p>
 <p>If you elect to accept the software under the Apache License, Version 2.0,
