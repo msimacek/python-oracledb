@@ -32,7 +32,6 @@
 cdef class ThinPoolImpl(BasePoolImpl):
 
     cdef:
-        ConnectParamsImpl _connect_params
         list _free_new_conn_impls
         list _free_used_conn_impls
         list _busy_conn_impls
@@ -54,7 +53,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
     def __init__(self, PoolParamsImpl params):
         if params._password is None:
             errors._raise_err(errors.ERR_NO_PASSWORD)
-        self._connect_params = params.copy()
+        self.connect_params = params.copy()
         self.username = params.user
         self.dsn = params.connect_string
         self.min = params.min
@@ -84,11 +83,11 @@ cdef class ThinPoolImpl(BasePoolImpl):
         as when the pool is full and POOL_GETMODE_FORCEGET is being used).
         """
         cdef ThinConnImpl conn_impl
-        conn_impl = ThinConnImpl(self._connect_params)
+        conn_impl = ThinConnImpl(self.connect_params)
         if params is not None:
             conn_impl._cclass = params._default_description.cclass
         conn_impl._pool = self
-        conn_impl.connect(self._connect_params)
+        conn_impl.connect(self.connect_params)
         return conn_impl
 
     def _bg_thread_func(self):
@@ -186,7 +185,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
     cdef ThinConnImpl _get_connection(self, ConnectParamsImpl params):
         cdef:
             ThinConnImpl conn_impl
-            ConnectParamsImpl creation_params = self._connect_params
+            ConnectParamsImpl creation_params = self.connect_params
             str pool_cclass =  creation_params._default_description.cclass
             str cclass = params._default_description.cclass
             uint32_t purity = params._default_description.purity

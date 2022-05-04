@@ -46,6 +46,7 @@ cdef class ThickPoolImpl(BasePoolImpl):
             int status
 
         # save parameters
+        self.connect_params = params.copy()
         self.username = params.user
         self.dsn = params.get_connect_string()
         self.min = params.min
