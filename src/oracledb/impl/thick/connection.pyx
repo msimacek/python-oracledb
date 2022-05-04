@@ -260,6 +260,12 @@ cdef class ThickConnImpl(BaseConnImpl):
             ConnectionParams params
             str full_user
             int status
+            str cclass
+            ConnectParamsImpl pool_params
+
+        # if the connection is part of the pool, get the pool creation params
+        if pool_impl is not None:
+            pool_params = pool_impl.connect_params
 
         # set up connection parameters
         params = ConnectionParams()
@@ -278,8 +284,13 @@ cdef class ThickConnImpl(BaseConnImpl):
             params.dsn = self.dsn.encode()
             params.dsn_ptr = params.dsn
             params.dsn_len = <uint32_t> len(params.dsn)
-        if user_params._default_description.cclass is not None:
-            params.cclass = user_params._default_description.cclass.encode()
+        if pool_impl is None \
+                or user_params._default_description.cclass is not None:
+            cclass = user_params._default_description.cclass
+        else:
+            cclass = pool_params._default_description.cclass
+        if cclass is not None:
+            params.cclass = cclass.encode()
             params.cclass_ptr = params.cclass
             params.cclass_len = <uint32_t> len(params.cclass)
         if new_password_bytes is not None:
@@ -313,7 +324,7 @@ cdef class ThickConnImpl(BaseConnImpl):
             _raise_from_odpi()
         if params.username_len == 0 and params.password_len == 0:
             conn_params.externalAuth = 1
-        if user_params._default_description.cclass is not None:
+        if params.cclass is not None:
             conn_params.connectionClass = params.cclass_ptr
             conn_params.connectionClassLength = params.cclass_len
         if new_password_bytes is not None:
@@ -333,7 +344,10 @@ cdef class ThickConnImpl(BaseConnImpl):
         common_params.stmtCacheSize = user_params.stmtcachesize
         conn_params.authMode = user_params.mode
         conn_params.matchAnyTag = user_params.matchanytag
-        conn_params.purity = user_params._default_description.purity
+        if user_params._default_description.purity != constants.PURITY_DEFAULT:
+            conn_params.purity = user_params._default_description.purity
+        elif pool_impl is not None:
+            conn_params.purity = pool_params._default_description.purity
 
         # perform connection
         with nogil:

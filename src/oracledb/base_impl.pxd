@@ -232,6 +232,7 @@ cdef class BasePoolImpl:
         readonly uint32_t max
         readonly str username
         readonly str name
+        ConnectParamsImpl connect_params
 
 
 cdef class BaseCursorImpl:
