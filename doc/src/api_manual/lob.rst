@@ -71,7 +71,7 @@ Methods
 .. method:: LOB.size()
 
     Returns the size of the data in the LOB object. For BLOB and BFILE type
-    LOBs this is the number of bytes. For CLOB and NCLOB type LOBs this is the
+    LOBs, this is the number of bytes. For CLOB and NCLOB type LOBs, this is the
     number of UCS-2 code points. UCS-2 code points are equivalent to characters
     for all but supplemental characters.
 

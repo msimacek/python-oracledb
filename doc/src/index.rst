@@ -67,8 +67,6 @@ API Manual
     api_manual/variable.rst
     api_manual/aq.rst
     api_manual/soda.rst
-    api_manual/object_type.rst
-    api_manual/session_pool.rst
     api_manual/additional_features.rst
     api_manual/mode_differences.rst
     api_manual/connections_config.rst

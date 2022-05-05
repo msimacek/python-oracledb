@@ -259,7 +259,7 @@ Some general tips for reducing round-trips are:
 * Make use of PL/SQL procedures which execute multiple SQL statements instead of executing them individually from python-oracledb.
 * Use scalar types instead of Oracle Database object types.
 * Avoid overuse of :meth:`Connection.ping()`.
-* Avoid setting :data:`SessionPool.ping_interval` to 0 or a small value.
+* Avoid setting :attr:`ConnectionPool.ping_interval` to 0 or a small value.
 * When using SODA, use pooled connections and enable the :ref:`SODA metadata cache <sodametadatacache>`.
 
 Finding the Number of Round-Trips
@@ -418,9 +418,9 @@ and also reduces database server CPU usage.
 
 .. note::
 
-  Client Result Caching is not supported in python-oracledb Thin mode.
-  See :ref:`Appendix A <appendixa>` for a complete list of features
-  supported in python-oracledb Thin and Thick modes.
+  Client Result Caching is only supported in the python-oracledb Thick mode.
+  For information on how to change from one mode to the other, see 
+  :ref:`changingmodes`.
 
 The cache is at the application process level.  Access and invalidation is
 managed by the Oracle Client libraries.  This removes the need for extra

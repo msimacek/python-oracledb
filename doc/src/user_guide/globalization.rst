@@ -64,7 +64,7 @@ Setting the Client Character Set
 In cx_Oracle 8, the default encoding used for all character data changed to
 "UTF-8". This universal encoding is suitable for most applications.  If you
 have a special need, you can pass the ``encoding`` and ``nencoding`` parameters
-to the :meth:`oracledb.connect` and :meth:`oracledb.SessionPool` methods to
+to the :meth:`oracledb.connect` and :meth:`oracledb.create_pool` methods to
 specify different Oracle Client character sets. For example:
 
 .. code-block:: python

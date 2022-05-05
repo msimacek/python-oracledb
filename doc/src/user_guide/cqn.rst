@@ -16,9 +16,9 @@ table changes, the cached values must then be updated with the new information.
 
 .. note:: 
 
-    Continuous Query Notification (CQN) is not supported in python-oracledb Thin
-    mode. See :ref:`Appendix A <appendixa>` for a complete list of features
-    supported in python-oracledb Thin and Thick modes.
+    Continuous Query Notification (CQN) is only supported in the python-oracledb 
+    Thick mode. For information on how to change from one mode to the other, see 
+    :ref:`changingmodes`.
 
 CQN notification behavior is widely configurable.  Choices include specifying
 what types of SQL should trigger a notification, whether notifications should

@@ -13,14 +13,15 @@ Database Views
 ----------------------------
 
 The following table lists sample values for `V$SESSION_CONNECT_INFO
-<https://docs.oracle.com/en/database/oracle/oracle-database/21/refrn/V-SESSION_CONNECT_INFO.html#GUID-9F0DCAEA-A67E-4183-89E7-B1555DC591CE>`__
-for the thick and thin modes:
+<https://docs.oracle.com/en/database/oracle/oracle-database/21/refrn/V-
+SESSION_CONNECT_INFO.html#GUID-9F0DCAEA-A67E-4183-89E7-B1555DC591CE>`__
+for the python-oracledb Thick and Thin modes:
 
 .. list-table-with-summary:: V$SESSION_CONNECT_INFO column values
     :header-rows: 1
     :widths: 15 10 10
     :name: V$SESSION_CONNECT_INFO
-    :summary: The first column is the name of V$SESSION_CONNECT_INFO view's column. The second column lists the Thick mode value. The third column is the Thin mode value.
+    :summary: The first column is the name of V$SESSION_CONNECT_INFO view's column. The second column lists the python-oracledb Thick mode value. The third column is the python-oracledb Thin mode value.
 
     * - Column
       - Thick value
@@ -65,7 +66,21 @@ for the thick and thin modes:
       - 0
       - 0
 
-The driver name [CLIENT_DRIVER] is configurable in the Thick mode with ``init_oracle_client(driver_name='abc')``. Note that the ``CLIENT_DRIVER`` length field was fixed to allow 30 characters in 12.1.0.2 & 12.2. This is not configurable in the Thin mode.
+For example, to see which driver mode is in use you can execute:
+
+.. code-block:: python
+
+    with connection.cursor() as cursor:
+        sql = """SELECT UNIQUE CLIENT_DRIVER
+                 FROM V$SESSION_CONNECT_INFO
+                 WHERE SID = SYS_CONTEXT('USERENV', 'SID')"""
+        for r, in cursor.execute(sql):
+            print(r)
+
+The driver name [CLIENT_DRIVER] is configurable in the python-oracledb
+Thick mode with ``init_oracle_client(driver_name='abc')``. Note that the
+``CLIENT_DRIVER`` length field was fixed to allow 30 characters in
+12.1.0.2 & 12.2. This is not configurable in the python-oracledb Thin mode.
 
 ``V$SESSION``
 -------------
@@ -76,7 +91,7 @@ The following table list sample values for columns with differences in `V$SESSIO
     :header-rows: 1
     :widths: 15 10 10
     :name: V$SESSION_COLUMN_VALUES
-    :summary: The first column is the name of the column. The second column lists the Thick mode value. The third column is the Thin mode value.
+    :summary: The first column is the name of the column. The second column lists the python-oracledb Thick mode value. The third column is the python-oracledb Thin mode value.
 
     * - Column
       - Thick value
@@ -91,39 +106,64 @@ The following table list sample values for columns with differences in `V$SESSIO
       - similar to `python@cjones-mac2 (TNS V1-V3)`
       - the contents of Python's ``sys.executable``, such as `/Users/cjones/.pyenv/versions/3.9.6/bin/python`
 
+.. _applntracing:
+
 Application Tracing
 ====================
 
-- End-to-end database tracing attributes such as :attr:`Connection.action` and :attr:`Connection.module` are supported in Thin and Thick modes, similar to cx_Oracle.
+- End-to-end database tracing attributes such as :attr:`Connection.action`
+  and :attr:`Connection.module` are supported in the python-oracledb Thin and
+  Thick modes, similar to cx_Oracle.
 
-- Users can subclass python-oracledb and implement their own driver API call tracing and logging. Also, they can use standard `Python tracing capabilities <https://docs.python.org/3/library/trace.html>`__.
+- Users can subclass python-oracledb and implement their own driver API call
+  tracing and logging. Also, they can use standard `Python tracing capabilities
+  <https://docs.python.org/3/library/trace.html>`__.
 
-- To identify which Oracle Net connect descriptor parameters are used or ignored in Thin mode, create a :ref:`ConnectParams Class <connparam>` object with the desired connect string. If the attributes are not shown in the object, then they have been ignored. Note that even if values are parsed and stored in the ConnectParams object, these values may be ignored at connection time based on whether a connection is created in Thin or Thick mode.
+- To identify which Oracle Net connect descriptor parameters are used or
+  ignored in the python-oracledb Thin mode, create a :ref:`ConnectParams Class
+  <connparam>` object with the desired connect string. If the attributes are not
+  shown in the object, then they have been ignored. Note that even if values are
+  parsed and stored in the ConnectParams object, these values may be ignored at
+  connection time based on whether a connection is created in the python-oracledb
+  Thin or Thick mode.
 
-- For the Thin mode, packets can be traced by setting the environment variable::
+- For the python-oracledb Thin mode, packets can be traced by setting the
+  environment variable::
 
       PYO_DEBUG_PACKETS=1
 
-  Output goes to stdout. The logging is similar to a SQL*Net trace (level=16) and is intended solely for debugging.
+  Output goes to stdout. The logging is similar to a SQL*Net trace (level=16)
+  and is intended solely for debugging.
 
-- The Thick mode can be traced using:
+- The python-oracledb Thick mode can be traced using:
 
-    -  DPI_DEBUG_LEVEL as documented in `ODPI-C Debugging <https://oracle.github.io/odpi/doc/user_guide/debugging.html>`__.
+    -  DPI_DEBUG_LEVEL as documented in `ODPI-C Debugging
+       <https://oracle.github.io/odpi/doc/user_guide/debugging.html>`__.
 
     -  Oracle Call Interface (OCI) tracing
 
-    -  Oracle Net Services tracing as documented in `Oracle Net Services tracing parameters <https://docs.oracle.com/en/database/oracle/oracle-database/21/netrf/parameters-for-the-sqlnet.ora.html>`__
+    -  Oracle Net Services tracing as documented in `Oracle Net Services
+       tracing parameters <https://docs.oracle.com/en/database/oracle/oracle-database/21/
+       netrf/parameters-for-the-sqlnet.ora.html>`__
 
-- Oracle Debugger Wire Protocol (``ORA_DEBUG_JDWP``)
-  
-  See `DBMS_DEBUG_JDWP <https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_DEBUG_JDWP.html>`_ and `Debugging PL/SQL from ASP.NET and Visual Studio <http://cshay.blogspot.com/2006/10/debugging-plsql-from-aspnet-and-visual.html>`_. 
-  
-  The ``ORA_DEBUG_JDWP`` environment variable can be set for the Thick mode. The syntax is ``host=hostname;port=portnum``.
-  
-  The Thin mode does not support the environment variable, but applications can start the debugger listener with a PL/SQL call such as::
-    
-    CALL DBMS_DEBUG_JDWP.CONNECT_TCP('127.0.0.1','65000')
-    
+- Java Wire Debug Protocol (JWDP) for debugging PL/SQL
+
+  The python-oracledb applications that call PL/SQL can step through that PL/SQL code
+  using JDWP in a debugger. This allows Python and PL/SQL code to be debugged in the
+  same debugger environment. You can enable PL/SQL debugging in the python-oracledb
+  modes as follows:
+
+    - If you are using python-oracledb Thick mode, set the ``ORA_DEBUG_JDWP`` environment
+      variable to `host=hostname;port=portnum` indicating where the PL/SQL debugger
+      is running.
+
+    - In the python-oracledb Thin mode, you can additionally set the connection
+      parameter ``debug_jdwp``. This variable defaults to the value of the
+      ``ORA_DEBUG_JDWP`` environment variable.
+
+  See `DBMS_DEBUG_JDWP <https://docs.oracle.com/en/database/oracle/oracle-database/
+  19/arpls/DBMS_DEBUG_JDWP.html>`_ and `Debugging PL/SQL from ASP.NET and Visual
+  Studio <http://cshay.blogspot.com/2006/10/debugging-plsql-from-aspnet-and-visual.html>`_.
 
 Subclass Connections
 ====================

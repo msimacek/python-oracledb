@@ -19,7 +19,7 @@ If you want to change the mode you are currently using to take advantage of the 
 Connection Syntax
 =================
 
-The :func:`oracledb.connect()`, :func:`oracledb.ConnectionPool()`, and :func:`oracledb.SessionPool()` functions support several ways of passing parameters which are listed below.
+The :func:`oracledb.connect()`, :func:`oracledb.ConnectionPool()`, and :func:`oracledb.create_pool()` functions support several ways of passing parameters which are listed below.
 
 * Using the ConnectParams Class object:
 
@@ -48,7 +48,7 @@ The :func:`oracledb.connect()`, :func:`oracledb.ConnectionPool()`, and :func:`or
 
     conn = oracledb.connect(user="my_user", password="my_password", host="my_host", port=my_port, service_name="my_service_name")
 
-  Any of the parameters to :func:`oracledb.ConnectParams()` may be also be passed to :func:`oracledb.connect()`, :func:`oracledb.ConnectionPool()`, and :func:`oracledb.SessionPool()`. Note that some parameters may be ignored at connection time, based on whether python-oracledb is in Thin or Thick mode.
+  Any of the parameters to :func:`oracledb.ConnectParams()` may be also be passed to :func:`oracledb.connect()`, :func:`oracledb.ConnectionPool()`, and :func:`oracledb.create_pool()`. Note that some parameters may be ignored at connection time, based on whether python-oracledb is in Thin or Thick mode.
 
 * Using the the dsn parameter which contains a string representation of the connection parameters which is an alternative method suggested by the Python Database API:
 
@@ -78,7 +78,7 @@ In Thick mode, all of the above have similar behavior to cx_Oracle and other Ora
 Connection Migration
 ====================
 
-The parameters of the :func:`oracledb.connect()` and :func:`oracledb.SessionPool()` are now keyword and not positional. This change makes the python-oracledb driver compliant with the Python Database API spec PEP 249.
+The parameters of the :func:`oracledb.connect()` and :func:`oracledb.create_pool()` are now keyword and not positional. This change makes the python-oracledb driver compliant with the Python Database API spec PEP 249.
 
 .. _sqlnetclientconfig:
 
@@ -167,7 +167,7 @@ The following table lists the parameters that are recognized in Thin mode either
   
 Note that the :ref:`ConnectParams class <connparam>` allows other values to be set for the python-oracledb Thin mode.
 
-In python-oracledb Thin mode, using the ``POOL_CONNECTION_CLASS`` or ``POOL_PURITY`` parameters in a connect descriptor or Easy Connect string is similar to setting the attributes in the :func:`oracledb.Connection()` or :meth:`ConnectionPool.aquire()`.
+In python-oracledb Thin mode, using the ``POOL_CONNECTION_CLASS`` or ``POOL_PURITY`` parameters in a connect descriptor or Easy Connect string is similar to setting the attributes in the :func:`oracledb.Connection()` or :meth:`ConnectionPool.acquire()`.
 In python-oracledb Thick mode, the ``POOL_CONNECTION_CLASS`` or ``POOL_PURITY`` values will only work when connected to Oracle Database 21c. If ``POOL_PURITY=SELF`` is used in a connect string, then the python-oracledb Thick mode applications will ignore the action to drop the session which removes unusable connections from a pool in some error cases. It is recommended to avoid using ``POOL_PURITY=SELF`` in a connect string with python-oracledb Thick mode. Instead, code the python-oracledb Thick mode or cx_Oracle application to explicitly specify the purity and connection class as attributes.
 
 The ``ENABLE=BROKEN`` connect descriptor option is not supported in python-oracledb Thin mode. Instead, use ``expire_time``.

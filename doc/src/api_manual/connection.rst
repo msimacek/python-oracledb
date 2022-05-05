@@ -30,34 +30,10 @@ Methods
 
         This method is an extension to the DB API definition.
 
-.. method:: Connection._get_oci_attr(handle_type, attr_num, attr_type)
-    
-    Returns the value of the specified Oracle Call Interface (OCI) attribute from the internal
-    handle.
-
-    .. note::
-
-        This method is only supported in python-oracledb Thick mode and should only be used as directed by Oracle.
-
-.. method:: Connection.__set_oci_attr(handle_type, attr_num, attr_type, value)
-    
-    Sets the value of the specified OCI attribute on the internal handle.
-
-    .. note::
-
-        This method is only supported in python-oracledb Thick mode and should only be used as directed by Oracle.
-
-.. method:: Connection._verify_connected()
-
-    Verifies that the connection is connected to the database. If it is not, an exception is raised.
-
-.. method:: Connection._verify_xid(xid)
-
-    Verifies that the supplied xid is of the correct type.
 
 .. method:: Connection.begin([formatId, transactionId, branchId])
 
-    Explicitly begin a new transaction. Without parameters, this explicitly
+    Explicitly begins a new transaction. Without parameters, this explicitly
     begins a local transaction; otherwise, this explicitly begins a distributed
     (global) transaction with the given parameters. See the Oracle
     documentation for more details.
@@ -76,7 +52,7 @@ Methods
 
 .. method:: Connection.cancel()
 
-    Break a long-running transaction.
+    Breaks a long-running transaction.
 
     .. note::
 
@@ -85,7 +61,8 @@ Methods
 
 .. method:: Connection.changepassword(oldpassword, newpassword)
 
-    Change the password of the logon.
+    Changes the password for the user to which the connection is
+    connected.
 
     .. note::
 
@@ -93,9 +70,9 @@ Methods
 
 .. method:: Connection.close()
 
-    Close the connection now, rather than whenever __del__ is called. The
-    connection will be unusable from this point forward; an Error exception
-    will be raised if any operation is attempted with the connection.
+    Closes the connection now and makes it unusable for further operations.
+    An Error exception will be raised if any operation is attempted with this 
+    connection after this method is completed successfully.
 
     All open cursors and LOBs created by the connection will be closed and will
     also no longer be usable.
@@ -108,11 +85,11 @@ Methods
 
 .. method:: Connection.commit()
 
-    Commit any pending transactions to the database.
+    Commits any pending transactions to the database.
 
 .. method:: Connection.createlob(lobType)
 
-    Create and return a new temporary :ref:`LOB object <lobobj>` of the
+    Creates and returns a new temporary :ref:`LOB object <lobobj>` of the
     specified type. The lobType parameter should be one of
     :data:`oracledb.CLOB`, :data:`oracledb.BLOB` or :data:`oracledb.NCLOB`.
 
@@ -122,73 +99,11 @@ Methods
 
 .. method:: Connection.cursor()
 
-    Return a new :ref:`cursor object <cursorobj>` using the connection.
-
-
-.. method:: Connection.deq(name, options, msgproperties, payload)
-
-    Returns a message id after successfully dequeuing a message. The options
-    object can be created using :meth:`~Connection.deqoptions()` and the
-    msgproperties object can be created using
-    :meth:`~Connection.msgproperties()`. The payload must be an object created
-    using :meth:`DbObjectType.newobject()`.
-
-    .. deprecated:: cx_Oracle 7.2
-
-        Use the methods :meth:`Queue.deqone()` or :meth:`Queue.deqmany()`
-        instead.
-
-    .. note::
-
-        This method is an extension to the DB API definition.
-
-.. method:: Connection.deqoptions()
-
-    Returns an object specifying the options to use when dequeuing messages.
-    See :ref:`deqoptions` for more information.
-
-    .. deprecated:: cx_Oracle 7.2
-
-        Use the attribute :attr:`Queue.deqoptions` instead.
-
-    .. note::
-
-        This method is an extension to the DB API definition.
-
-.. method:: Connection.enq(name, options, msgproperties, payload)
-
-    Returns a message id after successfully enqueuing a message. The options
-    object can be created using :meth:`~Connection.enqoptions()` and the
-    msgproperties object can be created using
-    :meth:`~Connection.msgproperties()`. The payload must be an object created
-    using :meth:`DbObjectType.newobject()`.
-
-    .. deprecated:: cx_Oracle 7.2
-
-        Use the methods :meth:`Queue.enqone()` or :meth:`Queue.enqmany()`
-        instead.
-
-    .. note::
-
-        This method is an extension to the DB API definition.
-
-
-.. method:: Connection.enqoptions()
-
-    Returns an object specifying the options to use when enqueuing messages.
-    See :ref:`enqoptions` for more information.
-
-    .. deprecated:: cx_Oracle 7.2
-
-        Use the attribute :attr:`Queue.enqoptions` instead.
-
-    .. note::
-
-        This method is an extension to the DB API definition.
+    Returns a new :ref:`cursor object <cursorobj>` using the connection.
 
 .. method:: Connection.getSodaDatabase()
 
-    Return a :ref:`SodaDatabase <sodadb>` object for Simple Oracle Document
+    Returns a :ref:`SodaDatabase <sodadb>` object for Simple Oracle Document
     Access (SODA). All SODA operations are performed either on the returned
     SodaDatabase object or from objects created by the returned SodaDatabase
     object. See `here <https://www.oracle.com/pls/topic/lookup?
@@ -202,7 +117,7 @@ Methods
 
 .. method:: Connection.gettype(name)
 
-    Return a :ref:`type object <dbobjecttype>` given its name. This can then be
+    Returns a :ref:`type object <dbobjecttype>` given its name. This can then be
     used to create objects which can be bound to cursors created by this
     connection.
 
@@ -226,8 +141,8 @@ Methods
     If this function returns False, the connection should be not be used by the
     application and a new connection should be established instead.
 
-    This function performs a local check.  To fully check a connection's health,
-    use ``Connection.ping()`` which performs a round-trip to the database.
+    This function performs a local check. To fully check a connection's health,
+    use :meth:`Connection.ping()` which performs a round-trip to the database.
 
 .. method:: Connection.msgproperties(payload, correlation, delay, exceptionq, expiration, priority)
 
@@ -243,8 +158,7 @@ Methods
 
 .. method:: Connection.ping()
 
-    Ping the server which can be used to test if the connection is still
-    active.
+    Pings the database to verify if the connection is valid.
 
     .. note::
 
@@ -253,7 +167,7 @@ Methods
 
 .. method:: Connection.prepare()
 
-    Prepare the distributed (global) transaction for commit. Return a boolean
+    Prepares the distributed (global) transaction for commit. Return a boolean
     indicating if a transaction was actually prepared in order to avoid the
     error ORA-24756 (transaction does not exist).
 
@@ -289,12 +203,12 @@ Methods
 
 .. method:: Connection.rollback()
 
-    Rollback any pending transactions.
+    Rolls back any pending transactions.
 
 
 .. method:: Connection.shutdown([mode])
 
-    Shutdown the database. In order to do this the connection must be connected
+    Shuts down the database. In order to do this the connection must be connected
     as :data:`~oracledb.SYSDBA` or :data:`~oracledb.SYSOPER`. Two calls must
     be made unless the mode specified is :data:`~oracledb.DBSHUTDOWN_ABORT`.
     An example is shown below:
@@ -317,7 +231,7 @@ Methods
 
 .. method:: Connection.startup(force=False, restrict=False, pfile=None)
 
-    Startup the database. This is equivalent to the SQL\*Plus command "startup
+    Starts up the database. This is equivalent to the SQL\*Plus command "startup
     nomount". The connection must be connected as :data:`~oracledb.SYSDBA` or
     :data:`~oracledb.SYSOPER` with the :data:`~oracledb.PRELIM_AUTH` option
     specified for this to work.
@@ -344,9 +258,13 @@ Methods
 
         This method is an extension to the DB API definition.
 
-.. method:: Connection.subscribe(namespace=oracledb.SUBSCR_NAMESPACE_DBCHANGE, protocol=oracledb.SUBSCR_PROTO_OCI, callback=None, timeout=0, operations=OPCODE_ALLOPS, port=0, qos=0, ip_address=None, grouping_class=0, grouping_value=0, grouping_type=oracledb.SUBSCR_GROUPING_TYPE_SUMMARY, name=None, client_initiated=False)
+.. method:: Connection.subscribe(namespace=oracledb.SUBSCR_NAMESPACE_DBCHANGE, \ 
+                protocol=oracledb.SUBSCR_PROTO_OCI, callback=None, timeout=0, \
+                operations=OPCODE_ALLOPS, port=0, qos=0, ip_address=None, grouping_class=0, \
+                grouping_value=0, grouping_type=oracledb.SUBSCR_GROUPING_TYPE_SUMMARY, \
+                name=None, client_initiated=False)
 
-    Return a new :ref:`subscription object <subscrobj>` that receives
+    Returns a new :ref:`subscription object <subscrobj>` that receives
     notifications for events that take place in the database that match the
     given parameters.
 
@@ -432,12 +350,15 @@ Methods
 
 .. method:: Connection.tpc_begin(xid, flags)
 
-    Begins a Two-Phase Commit (TPC) on a global transaction using the specified transaction
-    identifier (xid).
+    Begins a Two-Phase Commit (TPC) on a global transaction using the specified 
+    transaction identifier (xid).
 
-    The `xid` parameter should be an object returned by the :meth:`~Connection.xid()` function.
+    The xid parameter should be an object returned by the :meth:`~Connection.xid()` 
+    method.
 
-    The `flags` parameter is one of the constants :data:`oracledb.TPC_BEGIN_JOIN`, :data:`oracledb.TPC_BEGIN_NEW`, :data:`oracledb.TPC_BEGIN_PROMOTE`, or :data:`oracledb.TPC_BEGIN_RESUME`. The default is :data:`oracledb.TPC_BEGIN_NEW`.
+    The flags parameter is one of the constants :data:`oracledb.TPC_BEGIN_JOIN`, 
+    :data:`oracledb.TPC_BEGIN_NEW`, :data:`oracledb.TPC_BEGIN_PROMOTE`, or 
+    :data:`oracledb.TPC_BEGIN_RESUME`. The default is :data:`oracledb.TPC_BEGIN_NEW`.
 
     The following code sample demonstrates the ``tpc_begin()`` function::
 
@@ -448,19 +369,22 @@ Methods
 
 .. method:: Connection.tpc_commit(xid, one_phase)
 
-    Commits a global transaction. When called with no arguments, this method commits a transaction previously
-    prepared with :meth:`~Connection.tpc_begin()` and optionally
-    prepared with :meth:`~Connection.tpc_prepare()`. If :meth:`~Connection.tpc_prepare()` is not called, a single
-    phase commit is performed. A transaction manager may choose to do this
-    if only a single resource is participating in the global transaction.
+    Commits a global transaction. When called with no arguments, this method commits 
+    a transaction previously prepared with :meth:`~Connection.tpc_begin()` and optionally
+    prepared with :meth:`~Connection.tpc_prepare()`. If :meth:`~Connection.tpc_prepare()` 
+    is not called, a single phase commit is performed. A transaction manager may choose 
+    to do this if only a single resource is participating in the global transaction.
 
-    If an `xid` parameter is passed, then an object should be returned by the :meth:`~Connection.xid()` function. This form should be called outside of a transaction and is intended for use in recovery.
+    If an xid parameter is passed, then an object should be returned by the 
+    :meth:`~Connection.xid()` function. This form should be called outside of a 
+    transaction and is intended for use in recovery.
 
-    The `one_phase` parameter is a boolean identifying whether to
-    perform a one-phase or two-phase commit. If `one_phase` is true, a single-phase commit is performed.
-    The default value is false. This parameter is only examined if a value is provided for the `xid` parameter. 
-    Otherwise, the driver already knows whether :meth:`~Connection.tpc_prepare()` was called 
-    for the transaction and whether a one-phase or two-phase commit is required.
+    The one_phase parameter is a boolean identifying whether to perform a one-phase 
+    or two-phase commit. If one_phase parameter is True, a single-phase commit is performed.
+    The default value is False. This parameter is only examined if a value is provided 
+    for the xid parameter. Otherwise, the driver already knows whether 
+    :meth:`~Connection.tpc_prepare()` was called for the transaction and whether a 
+    one-phase or two-phase commit is required.
 
     The following code sample demonstrates the ``tpc_commit()`` function::
 
@@ -471,13 +395,19 @@ Methods
 
 .. method:: Connection.tpc_end(xid, flags)
 
-    Ends or suspends work on a global transaction. This function is only intended for use by transaction managers.
+    Ends or suspends work on a global transaction. This function is only intended 
+    for use by transaction managers.
 
-    If an `xid` parameter is passed, then an object should be returned by the :meth:`~Connection.xid()` function. If no `xid` parameter is passed, then the transaction identifier used by the previous :meth:`~Connection.tpc_begin()` is used.
+    If an xid parameter is passed, then an object should be returned by the 
+    :meth:`~Connection.xid()` function. If no xid parameter is passed, then the 
+    transaction identifier used by the previous :meth:`~Connection.tpc_begin()` is used.
 
-    The flags is one of the constants :data:`oracledb.TPC_END_NORMAL` or :data:`oracledb.TPC_END_SUSPEND`. The default is :data:`oracledb.TPC_END_NORMAL`.
+    The flags is one of the constants :data:`oracledb.TPC_END_NORMAL` or 
+    :data:`oracledb.TPC_END_SUSPEND`. The default is :data:`oracledb.TPC_END_NORMAL`.
 
-    If the flag is :data:`oracledb.TPC_END_SUSPEND` then the transaction may be resumed later by calling :meth:`Connection.tpc_begin()` with the flag :data:`oracledb.TPC_BEGIN_RESUME`.
+    If the flag is :data:`oracledb.TPC_END_SUSPEND` then the transaction may be 
+    resumed later by calling :meth:`Connection.tpc_begin()` with the flag 
+    :data:`oracledb.TPC_BEGIN_RESUME`.
 
     The following code sample demonstrates the ``tpc_end()`` function::
 
@@ -488,9 +418,11 @@ Methods
 
 .. method:: Connection.tpc_forget(xid)
 
-    Causes the database to forget a heuristically completed TPC transaction. This function is only intended to be called by transaction managers.
+    Causes the database to forget a heuristically completed TPC transaction. This 
+    function is only intended to be called by transaction managers.
     
-    The `xid` parameter is mandatory and should be an object should be returned by the :meth:`~Connection.xid()` function. 
+    The xid parameter is mandatory and should be an object should be returned by 
+    the :meth:`~Connection.xid()` function. 
 
     The following code sample demonstrates the ``tpc_forget()`` function::
 
@@ -503,11 +435,16 @@ Methods
 
     Prepares a two-phase transaction for commit. After this function is called,
     no further activity should take place on this connection until either
-    :meth:`~Connection.tpc_commit()` or :meth:`~Connection.tpc_rollback()` have been called.
+    :meth:`~Connection.tpc_commit()` or :meth:`~Connection.tpc_rollback()` have 
+    been called.
 
-    Returns a boolean indicating whether a commit is needed or not. If you attempt to commit when not needed, then it results in the error ``ORA-24756: transaction does not exist``.
+    Returns a boolean indicating whether a commit is needed or not. If you attempt to 
+    commit when not needed, then it results in the error ``ORA-24756: transaction does not 
+    exist``.
 
-    If an `xid` parameter is passed, then an object should be returned by the :meth:`~Connection.xid()` function. If an `xid` parameter is not passed, then the transaction identifier used by the previous :meth:`~Connection.tpc_begin()` is used.
+    If an xid parameter is passed, then an object should be returned by the 
+    :meth:`~Connection.xid()` function. If an xid parameter is not passed, then the 
+    transaction identifier used by the previous :meth:`~Connection.tpc_begin()` is used.
 
     The following code sample demonstrates the ``tpc_prepare()`` function::
 
@@ -518,9 +455,13 @@ Methods
 
 .. method:: Connection.tpc_recover()
 
-    Returns a list of pending transaction identifiers that require recovery. Objects of type `Xid` (as returned by the :meth:`~Connection.xid()` function) are returned and these can be passed to :meth:`~Connection.tpc_commit()` or :meth:`~Connection.tpc_rollback()` as needed.
+    Returns a list of pending transaction identifiers that require recovery. Objects of 
+    type ``Xid`` (as returned by the :meth:`~Connection.xid()` function) are returned and 
+    these can be passed to :meth:`~Connection.tpc_commit()` or :meth:`~Connection.tpc_rollback()` 
+    as needed.
 
-    This function queries the view ``DBA_PENDING_TRANSACTIONS`` and requires ``SELECT`` privilege on that view.
+    This function queries the view ``DBA_PENDING_TRANSACTIONS`` and requires ``SELECT`` 
+    privilege on that view.
 
     The following code sample demonstrates the ``tpc_recover()`` function::
 
@@ -533,9 +474,12 @@ Methods
 
     Rolls back a global transaction.
     
-    If `xid` is not passed, then it rolls back the transaction that was previously started with :meth:`~Connection.tpc_begin()`.
+    If an xid parameter is not passed, then it rolls back the transaction that was previously 
+    started with :meth:`~Connection.tpc_begin()`.
 
-    If `xid` is passed, then an object should be returned by :meth:`~Connection.xid()` and the specified transaction is rolled back. This form should be called outside of a transaction and is intended for use in recovery.
+    If an xid parameter is passed, then an object should be returned by 
+    :meth:`~Connection.xid()` and the specified transaction is rolled back. This form 
+    should be called outside of a transaction and is intended for use in recovery.
 
     The following code sample demonstrates the ``tpc_rollback()`` function::
 
@@ -553,14 +497,21 @@ Methods
 
 .. method:: Connection.xid (format_id, global_transaction_id, branch_qualifier)
 
-    Returns a global transaction identifier (xid) that can be used with the Two-Phase Commit (TPC) functions.
+    Returns a global transaction identifier (xid) that can be used with the 
+    Two-Phase Commit (TPC) functions.
 
-    The xid contains a format identifier, a global transaction identifier, and a branch identifier. There are no checks performed at the Python level. The values are checked by ODPI-C when they are passed to the relevant functions.
+    The xid contains a format identifier, a global transaction identifier, and 
+    a branch identifier. There are no checks performed at the Python level. The 
+    values are checked by ODPI-C when they are passed to the relevant functions.
     .. When this functionality is also supported in the thin driver the checks will be performed at the Python level as well.
 
-    The format_id parameter should be a positive 32-bit integer. This value identifies the format of the `global_transaction_id` and `branch_qualifier` parameters and the value is determined by the Transaction Manager (TM), if one is in use. 
+    The format_id parameter should be a positive 32-bit integer. This value identifies 
+    the format of the global_transaction_id and branch_qualifier parameters and the 
+    value is determined by the Transaction Manager (TM), if one is in use. 
     
-    The `global_transaction_id` and `branch_qualifier` parameters should be of type `bytes` or `str`. If a value of type `str` is passed, then this value will be UTF-8 encoded to `bytes`. The values cannot exceed 64 bytes in length.
+    The global_transaction_id and branch_qualifier parameters should be of type 
+    bytes or string. If a value of type string is passed, then this value will be 
+    UTF-8 encoded to bytes. The values cannot exceed 64 bytes in length.
 
     The following code sample demonstrates the ``xid()`` function::
 
@@ -635,7 +586,7 @@ Attributes
 
     This read-write attribute sets the current schema attribute for the
     session. Setting this value is the same as executing the SQL statement
-    "ALTER SESSION SET CURRENT_SCHEMA". The attribute is set (and verified) on
+    ``ALTER SESSION SET CURRENT_SCHEMA``. The attribute is set (and verified) on
     the next call that does a round trip to the server. The value is placed
     before unqualified database objects in SQL statements you then execute.
 
@@ -646,8 +597,8 @@ Attributes
 .. attribute:: Connection.dbop
 
     This write-only attribute sets the database operation that is to be
-    monitored. This can be viewed in the DBOP_NAME column of the V$SQL_MONITOR
-    table.
+    monitored. This can be viewed in the ``DBOP_NAME`` column of the 
+    ``V$SQL_MONITOR`` table.
 
     .. note::
 
@@ -664,8 +615,9 @@ Attributes
 
 .. attribute:: Connection.econtext_id
 
-    This write-only attribute specifies the execution context id. This value can be found as ecid in
-    the v$session table and econtext_id in the auditing tables. The maximum length is 64 bytes.
+    This write-only attribute specifies the execution context id. This 
+    value can be found as ecid in the v$session table and econtext_id in the 
+    auditing tables. The maximum length is 64 bytes.
 
 .. attribute:: Connection.edition
 
@@ -680,7 +632,8 @@ Attributes
 .. attribute:: Connection.encoding
 
     This read-only attribute returns the IANA character set name of the
-    character set in use by the Oracle client for regular strings.
+    character set in use by the Oracle client for regular strings. The
+    encodings in use are always UTF-8.
 
     .. deprecated:: cx_Oracle 8.2
 
@@ -815,7 +768,7 @@ Attributes
 .. attribute:: Connection.tag
 
     This read-write attribute initially contains the actual tag of the session
-    that was acquired from a pool by :meth:`SessionPool.acquire()`. If the
+    that was acquired from a pool by :meth:`ConnectionPool.acquire()`. If the
     connection was not acquired from a pool or no tagging parameters were
     specified (tag and matchanytag) when the connection was acquired from the
     pool, this value will be None. If the value is changed, it must be a string
@@ -823,7 +776,7 @@ Attributes
 
     If this value is not None when the connection is released back to the pool
     it will be used to retag the session. This value can be overridden in the
-    call to :meth:`SessionPool.release()`.
+    call to :meth:`ConnectionPool.release()`.
 
     .. note::
 

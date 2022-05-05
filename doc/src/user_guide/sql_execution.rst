@@ -419,9 +419,9 @@ cursors are restricted to moving forward.
 
 .. note::
 
-  Scrollable cursors are not supported in python-oracledb Thin mode.
-  See :ref:`Appendix A <appendixa>` for a complete list of features
-  supported in python-oracledb Thin and Thick modes.
+  Scrollable cursors are only supported in the python-oracledb Thick mode. 
+  For information on how to change from one mode to the other, see 
+  :ref:`changingmodes`.
 
 A scrollable cursor is created by setting the parameter ``scrollable=True``
 when creating the cursor. The method :meth:`Cursor.scroll()` is used to move to
@@ -627,9 +627,9 @@ and also reduces database server CPU usage.
 
 .. note::
 
-  Client Result Caching is not supported in python-oracledb Thin mode.
-  See :ref:`Appendix A <appendixa>` for a complete list of features
-  supported in python-oracledb Thin and Thick modes.
+  Client Result Caching is only supported in python-oracledb Thick mode.
+  For information on how to change from one mode to the other, see 
+  :ref:`changingmodes`.
 
 The cache is at the application process level.  Access and invalidation is
 managed by the Oracle Client libraries.  This removes the need for extra

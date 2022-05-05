@@ -63,7 +63,7 @@ Client, a ``tnsnames.ora`` connect descriptor option `ENABLE=BROKEN
 can be used instead of ``EXPIRE_TIME``.  These settings can also aid detection
 of a terminated remote database server.
 
-When python-oracledb uses :ref:`Oracle Client libraries 19c <archfig>`, then the
+When python-oracledb uses :ref:`Oracle Client libraries 19c <thickarchfig>`, then the
 :ref:`Easy Connect Plus syntax <easyconnect>` syntax enables some options to be
 used without needing a ``sqlnet.ora`` file.  For example, if your firewall times
 out every 4 minutes, and you cannot alter the firewall settings, then you may
@@ -83,15 +83,20 @@ must connect to a FAN-enabled database service.  The application should have
 ``events`` set to True when connecting.  This value can also be changed via
 :ref:`Oracle Client Configuration <optclientfiles>`.
 
-FAN support is useful for planned and unplanned outages.  It provides immediate
+.. note::
+
+    FAN is only supported in the python-oracledb Thick mode. For information on 
+    how to change from one mode to the other, see :ref:`changingmodes`.
+
+FAN support is useful for planned and unplanned outages. It provides immediate
 notification to python-oracledb following outages related to the database, computers,
-and networks.  Without FAN, python-oracledb can hang until a TCP timeout occurs and an
+and networks. Without FAN, python-oracledb can hang until a TCP timeout occurs and an
 error is returned, which might be several minutes.
 
 FAN allows python-oracledb to provide high availability features without the
 application being aware of an outage.  Unused, idle connections in a
 :ref:`connection pool <connpooling>` will be automatically cleaned up.  A future
-:meth:`SessionPool.acquire()` call will establish a fresh connection to a
+:meth:`ConnectionPool.acquire()` call will establish a fresh connection to a
 surviving database instance without the application being aware of any service
 disruption.
 
@@ -115,11 +120,18 @@ Notification
 Application Continuity (AC)
 ---------------------------
 
-Oracle Application Continuity and Transparent Application Continuity are Oracle
-Database technologies that record application interaction with the database and,
-in the event of a database instance outage, attempt to replay the interaction on
-a surviving database instance.  If successful, users will be unaware of any
-database issue.  AC and TAC are best suited for OLTP applications.
+Oracle Application Continuity (AC) and Transparent Application Continuity (TAC) 
+are Oracle Database technologies that record application interaction with the 
+database and, in the event of a database instance outage, attempt to replay 
+the interaction on a surviving database instance. If successful, users will 
+be unaware of any database issue. AC and TAC are best suited for OLTP 
+applications.
+
+.. note::
+
+    Oracle AC and TAC functionalities are only supported in the 
+    python-oracledb Thick mode. For information on how to change from
+    one mode to the other, see :ref:`changingmodes`.
 
 When AC or TAC are configured on the database service, they are transparently
 available to python-oracledb applications.
@@ -142,6 +154,12 @@ id=GUID-A675AF7B-6FF0-460D-A6E6-C15E7C328C8F>`__ which enables Python
 application to verify the success or failure of the last transaction in the
 event of an unplanned outage. This feature is available when both client and
 database are 12.1 or higher.
+
+.. note::
+
+    The Transaction Guard feature is only supported in the python-oracledb 
+    Thick mode. For information on how to change from one mode to the other, 
+    see :ref:`changingmodes`.
 
 Using Transaction Guard helps to:
 

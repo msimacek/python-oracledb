@@ -35,10 +35,19 @@ The :func:`oracledb.connect()` function in python-oracledb differs from cx_Oracl
 in the following ways:
 
     - Parameters are keyword, not positional. See :ref:`connmig`.
-    - Parameters encoding and nencoding are deprecated and ignored. The encodings in use are always UTF-8.
+    - Parameters encoding and nencoding are deprecated and ignored. The encodings in 
+      use are always UTF-8.
     - New optional parameter params. See the :ref:`ConnectParams Class section <connparam>`.
-    - New keyword arguments that match the new :ref:`ConnectParams Class <connparam>` ConnectParams() arguments. These will be used internally to create a ConnectParams Class object before creating the connection.
-    - The parameter threaded is deprecated. This parameter was used to allow the Oracle Client libraries to support threaded applications. This parameter value is ignored in python-oracledb: threaded Oracle Call Interface (OCI) is now always enabled in Thick, and the option is not relevant to Thin.
+    - New keyword arguments that match the new :ref:`ConnectParams Class <connparam>` 
+      ConnectParams() arguments. These will be used internally to create a ConnectParams 
+      Class object before creating the connection.
+    - The parameter threaded is deprecated. This parameter was used to allow the Oracle 
+      Client libraries to support threaded applications. This parameter value is ignored 
+      in python-oracledb: threaded Oracle Call Interface (OCI) is now always enabled in 
+      Thick, and the option is not relevant to Thin.
+
+The use of the class constructor method ``Oracledb.Connection()`` is no longer
+recommended for creating connections.
 
 Connection object
 =================
@@ -81,11 +90,20 @@ Cursor.executemanyprepared()
 and has been removed in python-oracledb. Instead, use :meth:`Cursor.executemany()`, 
 by passing None for the statement argument and an integer for the parameters argument.
 
+Cursor.bindarraysize
+====================
+
+The Cursor.bindarraysize attribute is deprecated and removed in python-oracledb. It is
+not needed in the application code.
+
 Cursor.rowcount
 ===============
 
-After execute() or executemany() with PL/SQL statements, :attr:`Cursor.rowcount` 
-will return 0.
+After :meth:`Cursor.execute()` or :meth:`Cursor.executemany()` with PL/SQL statements, 
+:attr:`Cursor.rowcount` will return 0.
+
+If the cursor or connection are not open, then the value -1 will be returned as required
+by the Python Database API.
 
 Advanced Queueing (AQ)
 ======================
@@ -103,34 +121,41 @@ Replace:
 Pooling
 =======
 
-Using the new :ref:`ConnectionPool Class <connpool>` is now recommended instead of the 
-equivalent SessionPool. The SessionPool class and function ``Oracledb.SessionPool()`` 
-are deprecated in python-oracledb.
+It is recommended to use the new equivalent :ref:`ConnectionPool Class <connpool>` 
+instead of the SessionPool class, which is deprecated. To create a connection pool,
+use :meth:`oracledb.create_pool()`, which is equivalent to calling `cx_Oracle.SessionPool 
+<https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`__.
 
-Oracledb.SessionPool()
--------------------------
+oracledb.SessionPool()
+----------------------
 
-Oracledb.ConnectionPool() in python-oracledb differs from Oracledb.SessionPool() in cx_Oracle as follows:
+The ``oracledb.SessionPool`` method which is an alias of the :func:`oracledb.create_pool()`
+method in python-oracledb differs from `cx_Oracle.SessionPool() 
+<https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_ 
+as follows:
 
     - Parameters are keyword, not positional. See :ref:`connmig`.
     - Passing a value to the dsn parameter that contains the user name and password is now supported in the same way as :func:`oracledb.connect()`. For example ``dsn="un/pw@cs"`` can be used.
-    - Parameters encoding and nencoding are deprecrated and ignored. The encodings in use are always UTF-8.
+    - Parameters ``encoding`` and ``nencoding`` are deprecrated and ignored. The encodings in use are always UTF-8.
     - The default mode is :data:`~oracledb.POOL_GETMODE_WAIT` instead of :data:`~oracledb.POOL_GETMODE_NOWAIT`. If the mode :data:`~oracledb.POOL_GETMODE_NOWAIT` is truly desired, modify any pool creation code to specify this value instead.
-    - New optional parameter ``params``. See the :ref:`ConnectParams Class section <connparam>`.
-    - New keyword arguments that match the new :ref:`ConnectParams Class <connparam>` ``ConnectParams()`` arguments. These will be used internally to create a ConnectParams Class object before creating the pool.
+    - New optional parameter ``params``. See the :ref:`PoolParams Class <poolparam>` section.
+    - New keyword arguments that match the new :ref:`PoolParams Class <poolparam>` ``PoolParams()`` arguments. These will be used internally to create a PoolParams Class object before creating the pool.
     - A Python type() will show the class as ``oracledb.ConnectionPool`` instead of ``cx_Oracle.SessionPool``.
 
 SessionPool Object
----------------------
+------------------
 
-The SessionPool object (an alias for ConnectionPool) in python-oracledb has a new boolean 
-attribute :attr:`SessionPool.thin`. This attribute is True if the connections within it use 
-the python-oracledb Thin mode. Otherwise, this attribute is false.
+The SessionPool object which is an alias of the ConnectionPool 
+object in python-oracledb has a new boolean attribute ``SessionPool.thin``. 
+If the connections within it use the python-oracledb Thin mode, then the
+value of this attribute is True. Otherwise, the value of this attribute is False.
 
 Dead Connection Detection Messages
 ===================================
 
-The application code which detects dead connections will need to check for new error numbers. The scenarios detailed below show the various dead connection detection messages that are displayed for the python-oracledb Thin and Thick modes and the cx_Oracle 8.3 driver.
+The application code which detects dead connections will need to check for new error 
+numbers. The scenarios detailed below show the various dead connection detection messages 
+that are displayed for the python-oracledb Thin and Thick modes and the cx_Oracle 8.3 driver.
 
   * Scenario 1: An already closed or dead connection was attempted to be used.
 
