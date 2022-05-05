@@ -33,7 +33,7 @@ cdef class ThickPoolImpl(BasePoolImpl):
     cdef:
         dpiPool *_handle
 
-    def __init__(self, PoolParamsImpl params):
+    def __init__(self, str dsn, PoolParamsImpl params):
         cdef:
             bytes edition_bytes, user_bytes, password_bytes, dsn_bytes
             uint32_t password_len = 0, user_len = 0, dsn_len = 0
@@ -46,9 +46,9 @@ cdef class ThickPoolImpl(BasePoolImpl):
             int status
 
         # save parameters
-        self.connect_params = params.copy()
+        self.connect_params = params
         self.username = params.user
-        self.dsn = params.get_connect_string()
+        self.dsn = dsn
         self.min = params.min
         self.max = params.max
         self.increment = params.increment

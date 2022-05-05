@@ -66,18 +66,20 @@ class ConnectionPool:
         elif not isinstance(params, PoolParams):
             errors._raise_err(errors.ERR_INVALID_POOL_PARAMS)
         else:
-            params_impl = params._impl
+            params_impl = params._impl.copy()
         if kwargs:
             params_impl.set(kwargs)
         self._connection_type = \
                 params_impl.connectiontype or connection_module.Connection
         thin = driver_mode.check_and_return_mode()
         if dsn is not None:
-            params_impl.parse_dsn(dsn, thin)
+            dsn = params_impl.parse_dsn(dsn, thin)
+        if dsn is None:
+            dsn = params_impl.get_connect_string()
         if thin:
-            impl = thin_impl.ThinPoolImpl(params_impl)
+            impl = thin_impl.ThinPoolImpl(dsn, params_impl)
         else:
-            impl = thick_impl.ThickPoolImpl(params_impl)
+            impl = thick_impl.ThickPoolImpl(dsn, params_impl)
         self._impl = impl
         self.session_callback = params_impl.session_callback
 

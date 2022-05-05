@@ -95,11 +95,13 @@ class Connection:
         elif not isinstance(params, ConnectParams):
             errors._raise_err(errors.ERR_INVALID_CONNECT_PARAMS)
         else:
-            params_impl = params._impl
+            params_impl = params._impl.copy()
         if kwargs:
             params_impl.set(kwargs)
         if dsn is not None:
-            params_impl.parse_dsn(dsn, thin)
+            dsn = params_impl.parse_dsn(dsn, thin)
+        if dsn is None:
+            dsn = params_impl.get_connect_string()
 
         # see if connection is being acquired from a pool
         if pool is None:
@@ -116,10 +118,10 @@ class Connection:
             if pool is not None:
                 impl = pool_impl.acquire(params_impl)
             else:
-                impl = thin_impl.ThinConnImpl(params_impl)
+                impl = thin_impl.ThinConnImpl(dsn, params_impl)
                 impl.connect(params_impl)
         else:
-            impl = thick_impl.ThickConnImpl(params_impl)
+            impl = thick_impl.ThickConnImpl(dsn, params_impl)
             impl.connect(params_impl, pool_impl)
         self._impl = impl
         self._version = None

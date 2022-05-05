@@ -475,8 +475,12 @@ class TestCase(test_env.BaseTestCase):
             params = oracledb.ConnectParams(host=host,
                                             service_name=service_name,
                                             tcp_connect_timeout=in_val)
-            connect_string = f"tcp://{host}:1521/{service_name}" + \
-                             f"?transport_connect_timeout={out_val}"
+            tcp_timeout_val = f"(TRANSPORT_CONNECT_TIMEOUT={out_val})"
+            connect_string = f"(DESCRIPTION={tcp_timeout_val}" + \
+                             f"(ADDRESS_LIST=(ADDRESS=(PROTOCOL=tcp)" + \
+                             f"(HOST={host})(PORT=1521)))(CONNECT_DATA=" + \
+                             f"(SERVICE_NAME={service_name}))" + \
+                             f"(SECURITY=(SSL_SERVER_DN_MATCH=True)))"
             self.assertEqual(params.get_connect_string(), connect_string)
 
 if __name__ == "__main__":

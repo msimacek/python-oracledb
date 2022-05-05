@@ -109,12 +109,16 @@ cdef class Address:
         public str https_proxy
         public uint32_t https_proxy_port
 
+    cdef str build_connect_string(self)
+
 
 cdef class AddressList:
     cdef:
         public list addresses
         bint load_balance
         int lru_index
+
+    cdef str build_connect_string(self)
 
 
 cdef class Description:
@@ -135,12 +139,17 @@ cdef class Description:
         public str ssl_server_cert_dn
         public str wallet_location
 
+    cdef str _build_duration_str(self, double value)
+    cdef str build_connect_string(self)
+
 
 cdef class DescriptionList:
     cdef:
         public list descriptions
         bint load_balance
         int lru_index
+
+    cdef str build_connect_string(self)
 
 
 cdef class TnsnamesFile:
@@ -166,7 +175,6 @@ cdef class ConnectParamsImpl:
         public uint32_t stmtcachesize
         public bint disable_oob
         public DescriptionList description_list
-        public str connect_string
         uint64_t _external_handle
         public str debug_jdwp
         Description _default_description
@@ -178,8 +186,6 @@ cdef class ConnectParamsImpl:
         bytearray _wallet_password
         bytearray _wallet_password_obfuscator
 
-    cdef str _build_connect_string(self)
-    cdef str _build_tcp_connect_timeout_str(self, double value)
     cdef int _copy(self, ConnectParamsImpl other_params) except -1
     cdef bytes _get_new_password(self)
     cdef bytearray _get_obfuscator(self, str password)

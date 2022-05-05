@@ -155,65 +155,6 @@ cdef class ConnectParamsImpl:
         self._default_description.set_from_security_args(args)
         self._default_address.set_from_args(args)
 
-    cdef str _build_connect_string(self):
-        """
-        Builds a connect string from the components and returns it. Since
-        currently the only way that a list of descriptions and/or addresses can
-        be created is via parsing a connect string, this method can simply
-        return an Easy Connect string using the default address and
-        description (since that is all that are created when building from
-        components).
-        """
-        cdef:
-            Description description = self._default_description
-            Address address = self._default_address
-            double tcp_connect_timeout
-            str connect_string, temp
-            list args = []
-        connect_string = \
-                f"{address.protocol}://{address.host}:{address.port}/" \
-                f"{description.service_name}"
-        if description.server_type is not None:
-            connect_string += f":{description.server_type}"
-        if address.https_proxy is not None:
-            args.append(f"https_proxy={address.https_proxy}")
-        if address.https_proxy_port != 0:
-            args.append(f"https_proxy_port={address.https_proxy_port}")
-        if description.expire_time != 0:
-            args.append(f"expire_time={description.expire_time}")
-        if description.retry_count != 0:
-            args.append(f"retry_count={description.retry_count}")
-        if description.retry_delay != 0:
-            args.append(f"retry_delay={description.retry_delay}")
-        if description.tcp_connect_timeout != DEFAULT_TCP_CONNECT_TIMEOUT:
-            tcp_connect_timeout = description.tcp_connect_timeout
-            temp = self._build_tcp_connect_timeout_str(tcp_connect_timeout)
-            args.append(f"transport_connect_timeout={temp}")
-        if not description.ssl_server_dn_match:
-            a = f"ssl_server_dn_match={description.ssl_server_dn_match}"
-            args.append(a)
-        if description.ssl_server_cert_dn is not None:
-            args.append(f"ssl_server_cert_dn={description.ssl_server_cert_dn}")
-        if description.wallet_location is not None:
-            args.append(f"wallet_location={description.wallet_location}")
-        if args:
-            connect_string += "?" + "&".join(args)
-        return connect_string
-
-    cdef str _build_tcp_connect_timeout_str(self, double value):
-        """
-        Build up the value to display for the TCP connect timeout in the
-        connect string. This must be an integer with the units following it.
-        """
-        cdef int value_int, value_minutes
-        value_int = <int> value
-        if value != value_int:
-            return f"{int(value * 1000)}ms"
-        value_minutes = (value_int // 60)
-        if value_minutes * 60 == value_int:
-            return f"{value_minutes}min"
-        return f"{value_int}"
-
     cdef int _copy(self, ConnectParamsImpl other_params) except -1:
         """
         Internal method for copying attributes from another set of parameters.
@@ -233,7 +174,6 @@ cdef class ConnectParamsImpl:
         self.disable_oob = other_params.disable_oob
         self.debug_jdwp = other_params.debug_jdwp
         self.description_list = other_params.description_list
-        self.connect_string = other_params.connect_string
         self._external_handle = other_params._external_handle
         self._default_description = other_params._default_description
         self._default_address = other_params._default_address
@@ -469,9 +409,7 @@ cdef class ConnectParamsImpl:
         will be a connect string built up from the components supplied when the
         object was built.
         """
-        if self.connect_string is None:
-            self.connect_string = self._build_connect_string()
-        return self.connect_string
+        return self.description_list.build_connect_string()
 
     def get_full_user(self):
         """
@@ -495,7 +433,6 @@ cdef class ConnectParamsImpl:
         except Exception as e:
             errors._raise_err(errors.ERR_CANNOT_PARSE_CONNECT_STRING, cause=e,
                               data=connect_string)
-        self.connect_string = connect_string
 
     def parse_dsn(self, str dsn, bint parse_connect_string):
         """
@@ -518,8 +455,7 @@ cdef class ConnectParamsImpl:
             self.parse_user(user)
         if parse_connect_string:
             self.parse_connect_string(connect_string)
-        else:
-            self.connect_string = connect_string
+        return connect_string
 
     def parse_user(self, str user):
         """
@@ -544,6 +480,19 @@ cdef class Address:
     def __init__(self):
         self.protocol = DEFAULT_PROTOCOL
         self.port = DEFAULT_PORT
+
+    cdef str build_connect_string(self):
+        """
+        Build a connect string from the components.
+        """
+        parts = [f"(PROTOCOL={self.protocol})",
+                 f"(HOST={self.host})",
+                 f"(PORT={self.port})"]
+        if self.https_proxy is not None:
+            parts.append(f"(HTTPS_PROXY={self.https_proxy})")
+        if self.https_proxy_port != 0:
+            parts.append(f"(HTTPS_PROXY_PORT={self.https_proxy_port})")
+        return f'(ADDRESS={"".join(parts)})'
 
     def copy(self):
         """
@@ -588,6 +537,14 @@ cdef class AddressList:
     def __init__(self):
         self.addresses = []
 
+    cdef str build_connect_string(self):
+        """
+        Build a connect string from the components.
+        """
+        cdef Address a
+        parts = [a.build_connect_string() for a in self.addresses]
+        return f'(ADDRESS_LIST={"".join(parts)})'
+
     def set_from_args(self, dict args):
         """
         Set paramter values from an argument dictionary or an (ADDRESS_LIST)
@@ -605,6 +562,70 @@ cdef class Description:
         self.address_lists = []
         self.tcp_connect_timeout = DEFAULT_TCP_CONNECT_TIMEOUT
         self.ssl_server_dn_match = True
+
+    cdef str _build_duration_str(self, double value):
+        """
+        Build up the value to display for a duration in the connect string.
+        This must be an integer with the units following it.
+        """
+        cdef int value_int, value_minutes
+        value_int = <int> value
+        if value != value_int:
+            return f"{int(value * 1000)}ms"
+        value_minutes = (value_int // 60)
+        if value_minutes * 60 == value_int:
+            return f"{value_minutes}min"
+        return f"{value_int}"
+
+    cdef str build_connect_string(self):
+        """
+        Build a connect string from the components.
+        """
+        cdef:
+            str connect_data, security, temp
+            list parts, address_lists
+            AddressList a
+
+        # build connect data segment
+        parts = []
+        if self.service_name is not None:
+            parts.append(f"(SERVICE_NAME={self.service_name})")
+        elif self.sid is not None:
+            parts.append(f"(SID={self.sid})")
+        if self.server_type is not None:
+            parts.append(f"(SERVER={self.server_type})")
+        if self.cclass is not None:
+            parts.append(f"(POOL_CONNECTION_CLASS={self.cclass})")
+        if self.purity != 0:
+            parts.append(f"(POOL_PURITY={self.purity})")
+        connect_data = f'(CONNECT_DATA={"".join(parts)})'
+
+        # build security segment, if applicable
+        parts = [f"(SSL_SERVER_DN_MATCH={self.ssl_server_dn_match})"]
+        if self.ssl_server_cert_dn is not None:
+            parts.append(f"(SSL_SERVER_CERT_DN={self.ssl_server_cert_dn})")
+        if self.wallet_location is not None:
+            parts.append(f"(MY_WALLET_DIRECTORY={self.wallet_location})")
+        security = f'(SECURITY={"".join(parts)})'
+
+        # build connect string
+        parts = []
+        if self.load_balance:
+            parts.append("(LOAD_BALANCE=ON)")
+        if self.retry_count != 0:
+            parts.append(f"(RETRY_COUNT={self.retry_count})")
+        if self.retry_delay != 0:
+            parts.append(f"(RETRY_DELAY={self.retry_delay})")
+        if self.expire_time != 0:
+            parts.append(f"(EXPIRE_TIME={self.expire_time})")
+        if self.tcp_connect_timeout != DEFAULT_TCP_CONNECT_TIMEOUT:
+            temp = self._build_duration_str(self.tcp_connect_timeout)
+            parts.append(f"(TRANSPORT_CONNECT_TIMEOUT={temp})")
+        address_lists = [a.build_connect_string() for a in self.address_lists]
+        parts.extend(address_lists)
+        parts.append(connect_data)
+        parts.append(security)
+        return f'(DESCRIPTION={"".join(parts)})'
 
     def copy(self):
         """
@@ -670,6 +691,18 @@ cdef class DescriptionList:
 
     def __init__(self):
         self.descriptions = []
+
+    cdef str build_connect_string(self):
+        """
+        Build a connect string from the components.
+        """
+        cdef:
+            Description d
+            list parts
+        parts = [d.build_connect_string() for d in self.descriptions]
+        if len(parts) == 1:
+            return parts[0]
+        return f'(DESCIPTION_LIST={"".join(parts)})'
 
     def set_from_args(self, dict args):
         """

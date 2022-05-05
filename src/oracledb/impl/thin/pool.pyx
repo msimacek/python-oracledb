@@ -50,12 +50,12 @@ cdef class ThinPoolImpl(BasePoolImpl):
         object _condition
         bint _open
 
-    def __init__(self, PoolParamsImpl params):
+    def __init__(self, str dsn, PoolParamsImpl params):
         if params._password is None:
             errors._raise_err(errors.ERR_NO_PASSWORD)
-        self.connect_params = params.copy()
+        self.connect_params = params
         self.username = params.user
-        self.dsn = params.connect_string
+        self.dsn = dsn
         self.min = params.min
         self.max = params.max
         self.increment = params.increment
@@ -83,7 +83,7 @@ cdef class ThinPoolImpl(BasePoolImpl):
         as when the pool is full and POOL_GETMODE_FORCEGET is being used).
         """
         cdef ThinConnImpl conn_impl
-        conn_impl = ThinConnImpl(self.connect_params)
+        conn_impl = ThinConnImpl(self.dsn, self.connect_params)
         if params is not None:
             conn_impl._cclass = params._default_description.cclass
         conn_impl._pool = self
