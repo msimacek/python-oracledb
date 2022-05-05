@@ -114,6 +114,7 @@ def get_ssl_socket(sock, ConnectParamsImpl params, Description description,
         if not os.path.exists(pem_file_name):
             errors._raise_err(errors.ERR_WALLET_FILE_MISSING,
                               name=pem_file_name)
+        ssl_context.load_verify_locations(pem_file_name)
         ssl_context.load_cert_chain(pem_file_name,
                                     password=params._get_wallet_password())
     if description.ssl_server_dn_match \
