@@ -18,22 +18,24 @@ if applicable. The most recent deprecations are listed first.
 
     * - Name
       - Comments
-    * - The :ref:`sesspool` and function :meth:`~oracledb.SessionPool()`
-      - Replace by :ref:`connpool` and function  :meth:`~oracledb.ConnectionPool()`
+    * - The `SessionPool class <https://cx-oracle.readthedocs.io/en/latest/api_manual/session_pool.html#sessionpool-object>`_ and `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_ function
+      - Replace by the equivalent :ref:`connpool` and function  :meth:`~oracledb.ConnectionPool()`
     * - :meth:`Connection.begin()`
       - Replace by the new :ref:`tcp` functionality
     * - :meth:`Connection.prepare()`
       - Replace by the new :ref:`tcp` functionality
-    * - The ``Oracledb.connect()`` and ``Oracledb.SessionPool()`` parameters ``encoding`` and ``nencoding``
+    * - The :func:`oracledb.connect()` and ``Oracledb.SessionPool()`` parameters ``encoding`` and ``nencoding``
       - The encodings in use are always UTF-8.
-    * - ``Oracledb.connect()`` parameter ``threaded``
-      -  This was  used to allow the Oracle Client libraries to support threaded applications. The value is ignored in python-oracledb: threaded OCI is now always enabled  in Thick, and the option is not relevant to Thin. The equivalent parameter was already deprecated for ``Oracledb.SessionPool()`` in cx_Oracle 8.2
-    * - The attribute ``connection.maxBytesPerCharacter`` of the Connection object
+    * - :meth:`oracledb.connect()` parameter ``threaded``
+      -  This was  used to allow the Oracle Client libraries to support threaded applications. This value is ignored in python-oracledb because the threaded OCI is always enabled in Thick mode, and the option is not relevant to the Thin mode. The equivalent parameter was already deprecated for `oracledb.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_ functio in cx_Oracle 8.2
+    * - The attribute :attr:`Connection.maxBytesPerCharacter` of the Connection object
       - This will return a constant value of 4 since encodings are always UTF-8.
     * - The size argument, ``numRows`` of the :meth:`Cursor.fetchmany()` method
       - Renamed ``size``
-    * - :meth:`cx_Oracle.makedsn`
+    * - `cx_Oracle.makedsn() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.makedsn>`_
       - Use :ref:`ConnectParams Class <connparam>`
+    * - The attribute ``Cursor.bindarraysize`` 
+      - Remove this attribute since it is no longer needed.
     * - Constant :data:`~oracledb.ATTR_PURITY_DEFAULT`
       - Replace by :data:`~oracledb.PURITY_DEFAULT`
     * - Constant :data:`~oracledb.ATTR_PURITY_NEW`
@@ -68,29 +70,47 @@ if applicable. The most recent deprecations are listed first.
       - Replace by :data:`~oracledb.AUTH_MODE_PRELIM`
     * - Constant :data:`~oracledb.SUBSCR_PROTO_OCI`
       - Replace by :data:`~oracledb.SUBSCR_PROTO_CALLBACK`
-    * - Class name :ref:`objecttype`
-      - Replace by :ref:`dbobjecttype`
-    * - Class name :ref:`object`
-      - Replace by :ref:`dbobject`
+    * - Class name `ObjectType <https://cx-oracle.readthedocs.io/en/latest/api_manual/object_type.html#object-type-objects>`_
+      - Replace by the equivalent :ref:`dbobjecttype`
+    * - Class name `Object <https://cx-oracle.readthedocs.io/en/latest/api_manual/object_type.html#object-objects>`_
+      - Replace by the equivalent :ref:`dbobject`
 
 Many of the `usages deprecated in cx_Oracle
 <https://cx-oracle.readthedocs.io/en/latest/api_manual/deprecations.html#deprecations>`__
-are still supported by python-oracledb to ease migration.  However these
+are still supported by python-oracledb to ease migration.  However, these
 previous cx_Oracle deprecation announcements remain in force for
 python-oracledb, that is the relevant functionality may be removed in a future
 version of python-oracledb.
 
-Some previous deprecations have been removed:
+Some of the previous deprecations that have been removed and are not available in 
+python-oracledb are listed below:
 
-- The previously deprecated function ``Cursor.fetchraw()`` has been removed in
-  python-oracledb.  Use one of the other fetch methods such as
-  `Cursor.fetchmany()` instead.
+- The previously deprecated function :meth:`Cursor.fetchraw()` has been removed in
+  python-oracledb. Use one of the other fetch methods such as :meth:`Cursor.fetchmany()` 
+  instead.
+
+- The previously deprecated function :meth:`Cursor.executemanyprepared()` has been removed
+  in python-oracledb. Use :meth:`Cursor.executemany()` instead.
+
+- The previously deprecated function :meth:`Cursor.rowcount()` has been removed
+  in python-oracledb. Use :meth:`Cursor.executemany()` instead.
+
+- The previously deprecated function :meth:`Connection.deq()` has been removed
+  in python-oracledb. Use :meth:`Queue.deqone()` or :meth:`Queue.deqmany()` instead.
+
+- The previously deprecated function :meth:`Connection.deqoptions()` has been removed
+  in python-oracledb. Use :meth:`Queue.deqoptions()` instead.
+
+- The previously deprecated function :meth:`Connection.enq()` has been removed
+  in python-oracledb. Use :meth:`Queue.enqone()` or :meth:`Queue.enqmany()` instead.
+
+- The previously deprecated function :meth:`Connection.enqoptions()` has been removed
+  in python-oracledb. Use :meth:`Queue.enqoptions()` instead.
 
 - The previously deprecated AQ API has been removed in python-oracledb.  Use
   the new `Advanced Queuing (AQ)
   <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html>`__ shown in
-  the cx_Oracle documentation.  AQ is only available in the Thick driver.
-
+  the cx_Oracle documentation. AQ is only available in the python-oracledb Thick mode.
 
 .. list-table-with-summary:: Deprecated in cx_Oracle 8.2
     :header-rows: 1

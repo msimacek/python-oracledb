@@ -25,30 +25,9 @@ Methods
         This method is an extension to the DB API definition.
 
 
-.. method:: Cursor._get_oci_attr(attr_num, attr_type)
-    
-    Returns the value of the specified OCI attribute from the internal
-    handle. This is only supported in the python-oracledb Thick mode and 
-    should only be used as directed by Oracle.
-
-.. method:: Cursor._set_oci_attr(attr_num, attr_type, value)
-    
-    Sets the value of the specified OCI attribute on the internal handle.
-    This is only supported in the python-oracledb Thick mode and should 
-    be used as directed by Oracle.
-
-.. method:: Cursor._verify_fetch()
-    
-    Verifies that fetching is possible from this cursor.
-
-.. method:: Cursor._verify_open()
-    
-    Verifies that the cursor is open and the associated connection is
-    connected. If either condition is false an exception is raised.
-
 .. method:: Cursor.arrayvar(typ, value, [size])
 
-    Create an array variable associated with the cursor of the given type and
+    Creates an array variable associated with the cursor of the given type and
     size and return a :ref:`variable object <varobj>`. The value is either an
     integer specifying the number of elements to allocate or it is a list and
     the number of elements allocated is drawn from the size of the list. If the
@@ -71,7 +50,7 @@ Methods
 
 .. method:: Cursor.bindnames()
 
-    Return the list of bind variable names bound to the statement. Note that a
+    Returns the list of bind variable names bound to the statement. Note that a
     statement must have been prepared first.
 
     .. note::
@@ -81,7 +60,7 @@ Methods
 .. method:: Cursor.callfunc(name, returnType, parameters=[], \
         keyword_parameters={})
 
-    Call a function with the given name. The return type is specified in the
+    Calls a function with the given name. The return type is specified in the
     same notation as is required by :meth:`~Cursor.setinputsizes()`. The
     sequence of parameters must contain one entry for each parameter that the
     function expects. Any keyword parameters will be included after the
@@ -108,7 +87,7 @@ Methods
 
 .. method:: Cursor.callproc(name, parameters=[], keyword_parameters={})
 
-    Call a procedure with the given name. The sequence of parameters must
+    Calls a procedure with the given name. The sequence of parameters must
     contain one entry for each parameter that the procedure expects. The result
     of the call is a modified copy of the input sequence. Input parameters are
     left untouched; output and input/output parameters are replaced with
@@ -128,13 +107,13 @@ Methods
 
 .. method:: Cursor.close()
 
-    Close the cursor now, rather than whenever __del__ is called. The cursor
+    Closes the cursor now, rather than whenever __del__ is called. The cursor
     will be unusable from this point forward; an Error exception will be raised
     if any operation is attempted with the cursor.
 
 .. method:: Cursor.execute(statement, parameters=[], ** keyword_parameters)
 
-    Execute a statement against the database.  See :ref:`sqlexecution`.
+    Executes a statement against the database. See :ref:`sqlexecution`.
 
     Parameters may be passed as a dictionary or sequence or as keyword
     parameters. If the parameters are a dictionary, the values will be bound by
@@ -175,7 +154,7 @@ Methods
 .. method:: Cursor.executemany(statement, parameters, batcherrors=False, \
         arraydmlrowcounts=False)
 
-    Prepare a statement for execution against a database and then execute it
+    Prepares a statement for execution against a database and then execute it
     against all parameter mappings or sequences found in the sequence
     parameters. See :ref:`batchstmnt`.
 
@@ -190,12 +169,12 @@ Methods
     number of iterations can be specified as an integer instead of needing to
     provide a list of empty mappings or sequences.
 
-    When true, the batcherrors parameter enables batch error support within
+    When True, the batcherrors parameter enables batch error support within
     Oracle and ensures that the call succeeds even if an exception takes place
     in one or more of the sequence of parameters. The errors can then be
     retrieved using :meth:`~Cursor.getbatcherrors()`.
 
-    When true, the arraydmlrowcounts parameter enables DML row counts to be
+    When True, the arraydmlrowcounts parameter enables DML row counts to be
     retrieved from Oracle after the method has completed. The row counts can
     then be retrieved using :meth:`~Cursor.getarraydmlrowcounts()`.
 
@@ -210,27 +189,9 @@ Methods
     a TypeError exception.
 
 
-.. method:: Cursor.executemanyprepared(num_iters)
-
-    Execute the previously prepared and bound statement the given number of
-    times.  The variables that are bound must have already been set to their
-    desired value before this call is made.  This method was designed for the
-    case where optimal performance is required as it comes at the expense of
-    compatibility with the DB API.
-
-    .. note::
-
-        The DB API definition does not define this method.
-
-    .. deprecated:: cx_Oracle 6.4
-        
-        Use :meth:`~Cursor.executemany()` instead with None for the statement
-        argument and an integer for the parameters argument.
-
-
 .. method:: Cursor.fetchall()
 
-    Fetch all (remaining) rows of a query result, returning them as a list of
+    Fetches all (remaining) rows of a query result, returning them as a list of
     tuples. An empty list is returned if no more rows are available. Note that
     the cursor's arraysize attribute can affect the performance of this
     operation, as internally reads from the database are done in batches
@@ -244,7 +205,7 @@ Methods
 
 .. method:: Cursor.fetchmany(size=cursor.arraysize)
 
-    Fetch the next set of rows of a query result, returning a list of tuples.
+    Fetches the next set of rows of a query result, returning a list of tuples.
     An empty list is returned if no more rows are available. Note that the
     cursor's arraysize attribute can affect the performance of this operation.
 
@@ -260,7 +221,7 @@ Methods
 
 .. method:: Cursor.fetchone()
 
-    Fetch the next row of a query result set, returning a single tuple or None
+    Fetches the next row of a query result set, returning a single tuple or None
     when no more data is available.
 
     An exception is raised if the previous call to :meth:`~Cursor.execute()`
@@ -268,27 +229,10 @@ Methods
 
     See :ref:`fetching` for an example.
 
-.. method:: Cursor.fetchraw(num_rows=cursor.arraysize)
-
-    Fetch the next set of rows of a query result into the internal buffers of
-    the defined variables for the cursor. The number of rows actually fetched
-    is returned.
-
-    An exception is raised if the previous call to :meth:`~Cursor.execute()`
-    did not produce any result set or no call was issued yet.
-
-    .. deprecated:: cx_Oracle 8.2
-
-        Use :meth:`Cursor.fetchmany()` instead.
-
-    .. note::
-
-        The DB API definition does not define this method.
-
 
 .. method:: Cursor.getarraydmlrowcounts()
 
-    Retrieve the DML row counts after a call to :meth:`~Cursor.executemany()`
+    Retrieves the DML row counts after a call to :meth:`~Cursor.executemany()`
     with arraydmlrowcounts enabled. This will return a list of integers
     corresponding to the number of rows affected by the DML statement for each
     element of the array passed to :meth:`~Cursor.executemany()`.
@@ -301,7 +245,7 @@ Methods
 
 .. method:: Cursor.getbatcherrors()
 
-    Retrieve the exceptions that took place after a call to
+    Retrieves the exceptions that took place after a call to
     :meth:`~Cursor.executemany()` with batcherrors enabled. This will return a
     list of Error objects, one error for each iteration that failed. The offset
     can be determined by looking at the offset attribute of the error object.
@@ -313,7 +257,7 @@ Methods
 
 .. method:: Cursor.getimplicitresults()
 
-    Return a list of cursors which correspond to implicit results made
+    Returns a list of cursors which correspond to implicit results made
     available from a PL/SQL block or procedure without the use of OUT ref
     cursor parameters. The PL/SQL block or procedure opens the cursors and
     marks them for return to the client using the procedure
@@ -362,11 +306,11 @@ Methods
     This can be used before a call to :meth:`~Cursor.execute()` to define the
     statement that will be executed. When this is done, the prepare phase will
     not be performed when the call to :meth:`~Cursor.execute()` is made with
-    None or the same string object as the statement.  If the tag parameter is specified 
-    and the cache_statement parameter is True, the statement will be returned
-    to the statement cache with the given tag. If the cache_statement parameter 
-    is False, the statement will be removed from the statement cache (if it was found there)
-    or will simply not be cached.
+    None or the same string object as the statement. If the tag parameter is 
+    specified and the cache_statement parameter is True, the statement will be 
+    returned to the statement cache with the given tag. If the cache_statement 
+    parameter is False, the statement will be removed from the statement cache 
+    (if it was found there) or will simply not be cached.
 
     See :ref:`Statement Caching <stmtcache>` for more information.
 
@@ -377,7 +321,7 @@ Methods
 
 .. method:: Cursor.scroll(value=0, mode="relative")
 
-    Scroll the cursor in the result set to a new position according to the
+    Scrolls the cursor in the result set to a new position according to the
     mode.
 
     If mode is "relative" (the default value), the value is taken as an offset
@@ -423,7 +367,7 @@ Methods
 .. method:: Cursor.var(typ, [size, arraysize, inconverter, outconverter, \
         typename, encoding_errors, bypass_decode])
 
-    Create a variable with the specified characteristics. This method was
+    Creates a variable with the specified characteristics. This method was
     designed for use with PL/SQL in/out variables where the length or type
     cannot be determined automatically from the Python object passed in or for
     use in input and output type handlers defined on cursors or connections.
@@ -518,17 +462,6 @@ Attributes
 
     See :ref:`Tuning Fetch Performance <tuningfetch>` for more information.
 
-.. attribute:: Cursor.bindarraysize
-
-    This read-write attribute specifies the number of rows to bind at a time
-    and is used when creating variables via :meth:`~Cursor.setinputsizes()` or
-    :meth:`~Cursor.var()`. It defaults to 1 meaning to bind a single row at a
-    time.
-
-    .. note::
-
-        The DB API definition does not define this attribute.
-
 .. attribute:: Cursor.bindvars
 
     This read-only attribute provides the bind variables used for the last
@@ -580,8 +513,8 @@ Attributes
     with the same name on the connection if specified. The method signature is
     handler(cursor, value, arraysize) and the return value is expected to be a
     variable object or None in which case a default variable object will be
-    created. If this attribute is None, the value of the attribute with the
-    same name on the connection is used.
+    created. If this attribute is None, the default behavior will take place
+    for all values bound to the statements.
 
     .. note::
 
@@ -600,8 +533,8 @@ Attributes
     to be fetched from this cursor. The method signature is
     handler(cursor, name, defaultType, length, precision, scale) and the return
     value is expected to be a variable object or None in which case a default
-    variable object will be created. If this attribute is None, the value of
-    the attribute with the same name on the connection is used instead.
+    variable object will be created. If this attribute is None, then the default
+    behavior will take place for all columns fetched from this cursor.
 
     See :ref:`outputtypehandlers`.
 
@@ -635,7 +568,7 @@ Attributes
 .. attribute:: Cursor.rowfactory
 
     This read-write attribute specifies a method to call for each row that is
-    retrieved from the database. Ordinarily a tuple is returned for each row
+    retrieved from the database. Ordinarily, a tuple is returned for each row
     but if this attribute is set, the method is called with the tuple that
     would normally be returned, and the result of the method is returned
     instead.

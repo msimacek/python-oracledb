@@ -290,7 +290,7 @@ Different versions of the database objects are associated with an "edition".
     For information on changing from one mode to the other, see :ref:`changingmodes`.
 
 The simplest way to set an edition is to pass the ``edition`` parameter to
-:meth:`oracledb.connect()` or :meth:`oracledb.SessionPool()`:
+:meth:`oracledb.connect()` or :meth:`oracledb.create_pool()`:
 
 .. code-block:: python
 

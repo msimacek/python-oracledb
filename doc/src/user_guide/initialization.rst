@@ -219,8 +219,8 @@ These files affect connections and applications.  The common files are:
 
     The ``sqlnet.ora`` file is only supported in the python-oracledb Thick mode.
     In python-oracledb Thin mode, many of the values can be defined using the
-    :ref:`ConnectParams Class <connparam>`. See :ref:`changingmodes` for 
-    information on how to change from one mode to the other.
+    :ref:`ConnectParams Class <connparam>`. For information on how to change 
+    from one mode to the other, see :ref:`changingmodes`.
     
 
 The files should be in a directory accessible to Python, not on the database
@@ -281,8 +281,8 @@ directory as the `Optional Oracle Net Configuration Files`_.
 .. note::
 
   The ``oraaccess.xml`` is only supported in the python-oracledb Thick mode.
-  See :ref:`changingmodes` for information on how to change from one mode
-  to the other.
+  For information on how to change from one mode to the other, see 
+  :ref:`changingmodes`.
 
 A sample ``oraaccess.xml`` file that sets the Oracle client ‘prefetch’ value to
 1000 rows.  This value affects every SQL query in the application::

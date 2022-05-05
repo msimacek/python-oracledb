@@ -127,24 +127,24 @@ Dequeue Options
 
 .. attribute:: DeqOptions.condition
 
-    This attribute specifies a boolean expression similar to the where clause
-    of a SQL query. The boolean expression can include conditions on message
+    This read-write attribute specifies a boolean expression similar to the where
+    clause of a SQL query. The boolean expression can include conditions on message
     properties, user data properties and PL/SQL or SQL functions. The default
     is to have no condition specified.
 
 
 .. attribute:: DeqOptions.consumername
 
-    This attribute specifies the name of the consumer. Only messages matching
-    the consumer name will be accessed. If the queue is not set up for multiple
-    consumers this attribute should not be set. The default is to have no
-    consumer name specified.
+    This read-write attribute specifies the name of the consumer. Only messages 
+    matching the consumer name will be accessed. If the queue is not set up for 
+    multiple consumers this attribute should not be set. The default is to have 
+    no consumer name specified.
 
 
 .. attribute:: DeqOptions.correlation
 
-    This attribute specifies the correlation identifier of the message to be
-    dequeued. Special pattern-matching characters, such as the percent sign (%)
+    This read-write attribute specifies the correlation identifier of the message 
+    to be dequeued. Special pattern-matching characters, such as the percent sign (%)
     and the underscore (_), can be used. If multiple messages satisfy the
     pattern, the order of dequeuing is indeterminate. The default is to have no
     correlation specified.
@@ -160,8 +160,9 @@ Dequeue Options
 
 .. attribute:: DeqOptions.mode
 
-    This attribute specifies the locking behaviour associated with the dequeue
-    operation. It should be one of the values :data:`~oracledb.DEQ_BROWSE`,
+    This read-write attribute specifies the locking behaviour associated 
+    with the dequeue operation. It should be one of the values 
+    :data:`~oracledb.DEQ_BROWSE`,
     :data:`~oracledb.DEQ_LOCKED`,
     :data:`~oracledb.DEQ_REMOVE` (default), or
     :data:`~oracledb.DEQ_REMOVE_NODATA`.
@@ -169,30 +170,30 @@ Dequeue Options
 
 .. attribute:: DeqOptions.msgid
 
-    This attribute specifies the identifier of the message to be dequeued. The
-    default is to have no message identifier specified.
+    This read-write attribute specifies the identifier of the message to be 
+    dequeued. The default is to have no message identifier specified.
 
 
 .. attribute:: DeqOptions.navigation
 
-    This attribute specifies the position of the message that is retrieved. It
-    should be one of the values :data:`~oracledb.DEQ_FIRST_MSG`,
+    This read-write attribute specifies the position of the message that 
+    is retrieved. It should be one of the values :data:`~oracledb.DEQ_FIRST_MSG`,
     :data:`~oracledb.DEQ_NEXT_MSG` (default), or
     :data:`~oracledb.DEQ_NEXT_TRANSACTION`.
 
 
 .. attribute:: DeqOptions.transformation
 
-    This attribute specifies the name of the transformation that must be
-    applied after the message is dequeued from the database but before it is
+    This read-write attribute specifies the name of the transformation that must 
+    be applied after the message is dequeued from the database but before it is
     returned to the calling application. The transformation must be created
     using dbms_transform. The default is to have no transformation specified.
 
 
 .. attribute:: DeqOptions.visibility
 
-    This attribute specifies the transactional behavior of the dequeue request.
-    It should be one of the values :data:`~oracledb.DEQ_ON_COMMIT` (default)
+    This read-write attribute specifies the transactional behavior of the dequeue 
+    request. It should be one of the values :data:`~oracledb.DEQ_ON_COMMIT` (default)
     or :data:`~oracledb.DEQ_IMMEDIATE`. This attribute is ignored when using
     the :data:`~oracledb.DEQ_BROWSE` mode. Note the value of
     :attr:`~Connection.autocommit` is always ignored.
@@ -200,7 +201,7 @@ Dequeue Options
 
 .. attribute:: DeqOptions.wait
 
-    This attribute specifies the time to wait, in seconds, for a message
+    This read-write attribute specifies the time to wait, in seconds, for a message
     matching the search criteria to become available for dequeuing. One of the
     values :data:`~oracledb.DEQ_NO_WAIT` or
     :data:`~oracledb.DEQ_WAIT_FOREVER` can also be used. The default is
@@ -228,16 +229,16 @@ Enqueue Options
 
 .. attribute:: EnqOptions.transformation
 
-    This attribute specifies the name of the transformation that must be
-    applied before the message is enqueued into the database. The
+    This read-write attribute specifies the name of the transformation that 
+    must be applied before the message is enqueued into the database. The
     transformation must be created using dbms_transform. The default is to have
     no transformation specified.
 
 
 .. attribute:: EnqOptions.visibility
 
-    This attribute specifies the transactional behavior of the enqueue request.
-    It should be one of the values :data:`~oracledb.ENQ_ON_COMMIT` (default)
+    This read-write attribute specifies the transactional behavior of the enqueue 
+    request. It should be one of the values :data:`~oracledb.ENQ_ON_COMMIT` (default)
     or :data:`~oracledb.ENQ_IMMEDIATE`. Note the value of
     :attr:`~Connection.autocommit` is ignored.
 
@@ -264,14 +265,14 @@ Message Properties
 
 .. attribute:: MessageProperties.correlation
 
-    This attribute specifies the correlation used when the message was
-    enqueued.
+    This read-write attribute specifies the correlation used when the message 
+    was enqueued.
 
 
 .. attribute:: MessageProperties.delay
 
-    This attribute specifies the number of seconds to delay an enqueued
-    message. Any integer is acceptable but the constant
+    This read-write attribute specifies the number of seconds to delay an 
+    enqueued message. Any integer is acceptable but the constant
     :data:`~oracledb.MSG_NO_DELAY` can also be used indicating that the
     message is available for immediate dequeuing.
 
@@ -290,8 +291,8 @@ Message Properties
 
 .. attribute:: MessageProperties.exceptionq
 
-    This attribute specifies the name of the queue to which the message is
-    moved if it cannot be processed successfully. Messages are moved if the
+    This read-write attribute specifies the name of the queue to which the message 
+    is moved if it cannot be processed successfully. Messages are moved if the
     number of unsuccessful dequeue attempts has exceeded the maximum number of
     retries or if the message has expired. All messages in the exception queue
     are in the :data:`~oracledb.MSG_EXPIRED` state. The default value is the
@@ -300,9 +301,9 @@ Message Properties
 
 .. attribute:: MessageProperties.expiration
 
-    This attribute specifies, in seconds, how long the message is available for
-    dequeuing. This attribute is an offset from the delay attribute. Expiration
-    processing requires the queue monitor to be running. Any integer is
+    This read-write attribute specifies, in seconds, how long the message is 
+    available for dequeuing. This attribute is an offset from the delay attribute. 
+    Expiration processing requires the queue monitor to be running. Any integer is
     accepted but the constant :data:`~oracledb.MSG_NO_EXPIRATION` can also be
     used indicating that the message never expires.
 
@@ -316,9 +317,9 @@ Message Properties
 
 .. attribute:: MessageProperties.payload
 
-    This attribute identifies the payload that will be enqueued or the payload
-    that was dequeued when using a :ref:`queue <queue>`. When enqueuing, the
-    value is checked to ensure that it conforms to the type expected by that
+    This read-write attribute identifies the payload that will be enqueued or the 
+    payload that was dequeued when using a :ref:`queue <queue>`. When enqueuing, 
+    the value is checked to ensure that it conforms to the type expected by that
     queue. For RAW queues, the value can be a bytes object or a string. If the
     value is a string it will first be converted to bytes by encoding in the
     encoding identified by the attribute :attr:`Connection.encoding`.
@@ -326,8 +327,8 @@ Message Properties
 
 .. attribute:: MessageProperties.priority
 
-    This attribute specifies the priority of the message. A smaller number
-    indicates a higher priority. The priority can be any integer, including
+    This read-write attribute specifies the priority of the message. A smaller 
+    number indicates a higher priority. The priority can be any integer, including
     negative numbers. The default value is zero.
 
 

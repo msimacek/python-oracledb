@@ -158,8 +158,7 @@ cx_Oracle 8.0.1 (August 2020)
 cx_Oracle 8.0 (June 2020)
 -------------------------
 
-#)  Dropped support for Python 2. For those still requiring Python 2, see
-    :ref:`python2`.
+#)  Dropped support for Python 2.
 #)  Updated embedded ODPI-C to `version 4.0.1
     <https://oracle.github.io/odpi/doc/releasenotes.html#
     version-4-0-1-june-26-2020>`__.
@@ -184,10 +183,9 @@ cx_Oracle 8.0 (June 2020)
       new database type constants if the variable does not contain objects
       (previously it was None in that case).
     - The attribute :data:`~LOB.type` was added to LOB values.
-    - The attribute :data:`~ObjectAttribute.type` was added to attributes of
-      object types.
-    - The attribute :data:`~ObjectType.element_type` was added to object types.
-    - :ref:`Object types <objecttype>` now compare equal if they were created
+    - The attribute `type <https://cx-oracle.readthedocs.io/en/latest/api_manual/object_type.html#ObjectAttribute.type>`_ was added to attributes of object types.
+    - The attribute `element_type <https://cx-oracle.readthedocs.io/en/latest/api_manual/object_type.html#ObjectType.element_type>`_ was added to object types.
+    - `Object types <https://cx-oracle.readthedocs.io/en/latest/api_manual/object_type.html#object-type-objects>`_ now compare equal if they were created
       by the same connection or session pool and their schemas and names match.
     - All variables are now instances of the same class (previously each type
       was an instance of a separate variable type). The attribute

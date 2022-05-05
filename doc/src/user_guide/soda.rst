@@ -14,6 +14,11 @@ be any data at all (including video, images, sounds, or other binary content).
 Documents can be fetched from the database by key lookup or by using
 query-by-example (QBE) pattern-matching.
 
+.. note::
+
+    SODA is only supported in the python-oracledb Thick mode. For information on 
+    how to change from one mode to the other, see :ref:`changingmodes`.
+
 SODA uses a SQL schema to store documents but you do not need to know SQL or
 how the documents are stored. However, access via SQL does allow use of
 advanced Oracle Database functionality such as analytics for reporting.
@@ -132,13 +137,13 @@ SODA metadata can be cached to improve the performance of
 later). The feature is also available in Oracle Client 19 from 19.11 onwards.
 
 The metadata cache can be turned on when creating a connection pool with
-:meth:`oracledb.SessionPool()`. Each pool has its own cache:
+:meth:`oracledb.create_pool()`. Each pool has its own cache:
 
 .. code-block:: python
 
-    # Create the session pool
-    pool = oracledb.SessionPool(user="hr", password=userpwd,
-                                 dsn="dbhost.example.com/orclpdb1",
+    # Create the connection pool
+    pool = oracledb.create_pool(user="hr", password=userpwd,
+                                 dsn="dbhost.example.com/orclpdb",
                                  soda_metadata_cache=True)
 
 The cache is not available for standalone connections. Applications using these
@@ -168,8 +173,8 @@ you will find it more efficient to use logic similar to:
 
 If collection metadata changes are made externally, the cache can become
 invalid. If this happens, the cache can be cleared by calling
-:meth:`SessionPool.reconfigure()` with ``soda_metadata_cache`` set to `False`,
-or by setting the attribute :attr:`SessionPool.soda_metadata_cache` to `False`.
+:meth:`ConnectionPool.reconfigure()` with ``soda_metadata_cache`` set to `False`,
+or by setting the attribute :attr:`ConnectionPool.soda_metadata_cache` to `False`.
 Use a second call to ``reconfigure()`` or set ``soda_metadata_cache`` to
 re-enable the cache.
 

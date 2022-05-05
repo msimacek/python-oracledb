@@ -7,6 +7,12 @@ Starting and Stopping Oracle Database
 This chapter covers how to start up and shutdown Oracle Database using
 python-oracledb.
 
+.. note::
+
+    The database start up and shut down functionality is only supported in 
+    the python-oracledb Thick mode. For information on how to change from
+    one mode to the other, see :ref:`changingmodes`.
+
 ===========================
 Starting Oracle Database Up
 ===========================

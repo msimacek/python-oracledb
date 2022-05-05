@@ -47,57 +47,102 @@ stored in that column.
 
 The older syntax can still be used in Oracle Database 21, however the
 recommendation is to move to the new JSON type.  With the old syntax, the
-storage can be BLOB, CLOB or VARCHAR2.  Of these, BLOB is preferred to avoid
+storage can be BLOB, CLOB, or VARCHAR2.  Of these, BLOB is preferred to avoid
 character set conversion overheads.
 
-Using Oracle Database 21 and Oracle Client 21 with python-oracledb,
-you can insert by binding as shown below:
+Using Oracle Database 21c and python-oracledb Thin Mode
+=========================================================
 
-.. code-block:: python
+For python-oracledb Thin mode, a type handler is required to fetch 
+the Oracle 21c JSON datatype. This type handler is not required when
+you use the python-oracledb Thick mode and Oracle Database 21c and later. 
+If a type handler is used in the python-oracledb Thick mode, then the
+behavior is same in both the python-oracledb modes. The following example 
+shows a type handler:
 
-    import datetime
+.. code:: python
 
-    json_data = [
-        2.78,
-        True,
-        'Ocean Beach',
-        b'Some bytes',
-        {'keyA': 1, 'KeyB': 'Melbourne'},
-        datetime.date.today()
-    ]
+  def type_handler(cursor, name, default_type, size, precision, scale):
+    
+    # to fetch the 21c JSON datatype when using python-oracledb thin mode
+    
+    if default_type == oracledb.DB_TYPE_JSON:
+        return cursor.var(str, arraysize=cursor.arraysize,
+                          outconverter=json.loads)
 
-    var = cursor.var(oracledb.DB_TYPE_JSON)
-    var.setvalue(0, json_data)
-    cursor.execute("insert into customers values (:1, :2)", [123, var])
+Using python-oracledb Thin mode with Oracle 21c, you can insert as shown 
+below:
 
-    # or these two lines can replace the three previous lines
+.. code:: python
+
+  data = [
+    (1, dict(name="Rod", dept="Sales", location="Germany")),
+    (2, dict(name="George", dept="Marketing", location="Bangalore")),
+    (3, dict(name="Sam", dept="Sales", location="Mumbai")),
+    (4, dict(name="Jill", dept="Marketing", location="Germany"))
+  ]
+
+  insert_sql = "insert into CustomersAsJson values (:1, :2)"
+
+  if not conn.thin and client_version >= 21:
+    # Take advantage of direct binding
     cursor.setinputsizes(None, oracledb.DB_TYPE_JSON)
-    cursor.execute("insert into customers values (:1, :2)", [123, json_data])
+    cursor.executemany(insert_sql, data)
 
-Fetching with:
+  else:
+    # Insert the data as a JSON string
+    cursor.executemany(insert_sql, [(i, json.dumps(j)) for i, j in data])
+
+To fetch JSON type, use:
+
+.. code:: python
+
+ for row in cursor.execute("select * from CustomersAsJson"):
+      print(row)
+
+
+Using Oracle Database 21c and python-oracledb Thick Mode
+=========================================================
+
+Using python-oracledb Thick mode with Oracle Database 21c and 
+Oracle Client 21, you can insert by binding as shown below:
+
+.. code-block:: python
+  
+  data = dict(name="Rod", dept="Sales", location="Germany")
+  inssql = "insert into CustomersAsJson values (:1, :2)"
+
+  cursor.setinputsizes(None, oracledb.DB_TYPE_JSON)
+  cursor.execute(inssql, [1, data])
+
+To fetch JSON type, use:
 
 .. code-block:: python
 
-    for row in cursor.execute("SELECT c.json_data FROM customers c"):
-        print(row)
+    for j, in cursor.execute(sql):
+        print(j)
 
-gives output like::
-
-    ([Decimal('2.78'), True, 'Ocean Beach',
-        b'Some bytes',
-        {'keyA': Decimal('1'), 'KeyB': 'Melbourne'},
-        datetime.datetime(2020, 12, 2, 0, 0)],)
+Using Oracle 19c and earlier
+============================
 
 With the older BLOB storage, or to insert JSON strings, use:
 
 .. code-block:: python
+  
+  data = dict(name="Rod", dept="Sales", location="Germany")
+  inssql = "insert into CustomersAsBlob values (:1, :2)"
 
-    import json
+  cursor.execute(inssql, [1, json.dumps(data)])
 
-    customer_data = dict(name="Rod", dept="Sales", location="Germany")
-    cursor.execute("insert into customers (id, json_data) values (:1, :2)",
-                   [1, json.dumps(customer_data)])
+To fetch JSON strings, use:
 
+.. code-block:: python
+
+  sql = """SELECT JSON_VALUE(json_data, '$.location')
+         FROM CustomersAsBlob
+         OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY"""
+  for r in cursor.execute(sql):
+    print(r)
 
 IN Bind Type Mapping
 ====================

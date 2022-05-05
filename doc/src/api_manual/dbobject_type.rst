@@ -71,6 +71,9 @@ DbObject Objects
     type :data:`~oracledb.OBJECT`. Attributes can be retrieved and set
     directly.
 
+Methods
+-------
+
 .. method:: DbObject.append(element)
 
     Appends an element to the collection object. If no elements exist in the
@@ -92,7 +95,7 @@ DbObject Objects
 
 .. method:: DbObject.copy()
 
-    Creates a copy of the object and return it.
+    Creates a copy of the object and returns it.
 
 
 .. method:: DbObject.delete(index)
@@ -162,6 +165,14 @@ DbObject Objects
 .. method:: DbObject.trim(num)
 
     Removes the specified number of elements from the end of the collection.
+
+Attributes
+----------
+
+.. attribute:: DbObject.Type
+
+    This read-only attribute returns an ObjectType corresponding to the type
+    of object.
 
 
 .. _dbobjectattr:

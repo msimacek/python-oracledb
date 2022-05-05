@@ -13,8 +13,8 @@ architecture.
 .. note::
 
     Oracle Advanced Queuing is only supported in the python-oracledb Thick mode.
-    See :ref:`changingmodes` for information on how to change from one mode to
-    the other.
+    For information on how to change from one mode to the other, see 
+    :ref:`changingmodes`.
 
 python-oracledb uses the updated interface for Oracle Advanced Queuing that
 was first introduced in cx_Oracle 7.2.

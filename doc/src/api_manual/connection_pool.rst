@@ -44,42 +44,42 @@ Methods
 =======
 
 .. method:: ConnectionPool.acquire(user=None, password=None, cclass=None, \
-        purity=oracledb.ATTR_PURITY_DEFAULT, tag=None, matchanytag=False, \
+        purity=oracledb.PURITY_DEFAULT, tag=None, matchanytag=False, \
         shardingkey=[], supershardingkey=[])
 
-    Acquire a connection from the session pool and return a
+    Acquires a connection from the session pool and returns a
     :ref:`connection object <connobj>`.
 
-    If the `pool` is homogeneous, the user and password parameters cannot be
+    If the pool is homogeneous, the user and password parameters cannot be
     specified. If they are, an exception will be raised.
 
-    The `cclass` parameter, if specified, should be a string corresponding to the
+    The cclass parameter, if specified, should be a string corresponding to the
     connection class for database resident connection pooling (DRCP).
 
     The purity parameter is expected to be one of
-    :data:`~oracledb.ATTR_PURITY_NEW`, :data:`~oracledb.ATTR_PURITY_SELF`, or
-    :data:`~oracledb.ATTR_PURITY_DEFAULT`.
+    :data:`~oracledb.PURITY_NEW`, :data:`~oracledb.PURITY_ANY`, or
+    :data:`~oracledb.PURITY_DEFAULT`.
 
-    The `tag` parameter, if specified, is expected to be a string with name=value
-    pairs like "k1=v1;k2=v2" and will limit the sessions that can be returned
-    from a session pool unless the `matchanytag` parameter is set to True. In
-    that case sessions with the specified tag will be preferred over others,
-    but if no such sessions are available a session with a different tag may be
-    returned instead. In any case, untagged sessions will always be returned if
-    no sessions with the specified tag are available.  Sessions are tagged when
+    The tag parameter, if specified, is expected to be a string with name=value
+    pairs like "k1=v1;k2=v2" and will limit the connections that can be returned
+    from a connection pool unless the matchanytag parameter is set to True. In
+    that case, connections with the specified tag will be preferred over others,
+    but if no such connections are available, then a connection with a different tag 
+    may be returned instead. In any case, untagged connections will always be returned
+    if no connections with the specified tag are available. Connections are tagged when
     they are :meth:`released <ConnectionPool.release>` back to the pool.
 
-    The `shardingkey` and `supershardingkey` parameters, if specified, are expected
+    The shardingkey and supershardingkey parameters, if specified, are expected
     to be a sequence of values which will be used to identify the database
-    shard to connect to.  The key values can be strings, numbers, bytes or
+    shard to connect to. The key values can be strings, numbers, bytes or
     dates.
 
 .. method:: ConnectionPool.close(force=False)
 
-    Closes the session pool now, rather than when the last reference to it is
+    Closes the pool now, rather than when the last reference to it is
     released, which makes it unusable for further work.
 
-    If any connections have been acquired and not released back to the pool
+    If any connections have been acquired and not released back to the pool,
     this method will fail unless the force parameter is set to True.
 
 .. method:: ConnectionPool.create_pool(dsn, pool_class, pool_params, conn_params, \
@@ -193,17 +193,13 @@ Methods
     parameter are not None, the connection will be retagged when it is released
     back to the pool.
 
-.. method:: ConnectionPool._verify_open()
-
-    Verifies that the pool is open and able to perform its work.
-
 
 Attributes
 ===========
 
 .. attribute:: ConnectionPool.busy
 
-    This read-only attribute returns the number of sessions currently acquired.
+    This read-only attribute returns the number of connections currently acquired.
 
 
 .. attribute:: ConnectionPool.dsn
@@ -215,45 +211,44 @@ Attributes
 .. attribute:: ConnectionPool.getmode
 
     This read-write attribute determines how connections are returned from the
-    pool. If :data:`~oracledb.SPOOL_ATTRVAL_FORCEGET` is specified, a new
-    connection will be returned even if there are no free sessions in the pool.
-    :data:`~oracledb.SPOOL_ATTRVAL_NOWAIT` will raise an exception if there
-    are no free sessions are available in the pool. If
-    :data:`~oracledb.SPOOL_ATTRVAL_WAIT` is specified and there are no free
-    sessions in the pool, the caller will wait until a free session is
-    available.  :data:`~oracledb.SPOOL_ATTRVAL_TIMEDWAIT` uses the value of
+    pool. If :data:`~oracledb.POOL_GETMODE_FORCEGET` is specified, a new
+    connection will be returned even if there are no free connections in the pool.
+    :data:`~oracledb.POOL_GETMODE_NOWAIT` will raise an exception if there
+    are no free connections are available in the pool. If
+    :data:`~oracledb.POOL_GETMODE_WAIT` is specified and there are no free
+    connections in the pool, the caller will wait until a free connection is
+    available. :data:`~oracledb.POOL_GETMODE_TIMEDWAIT` uses the value of
     :data:`~ConnectionPool.wait_timeout` to determine how long the caller should
-    wait for a session to become available before returning an error.
-
+    wait for a connection to become available before returning an error.
 
 .. attribute:: ConnectionPool.homogeneous
 
     This read-write boolean attribute indicates whether the pool is considered
-    homogeneous or not. If the pool is not homogeneous different authentication
+    homogeneous or not. If the pool is not homogeneous, different authentication
     can be used for each connection acquired from the pool.
 
 
 .. attribute:: ConnectionPool.increment
 
-    This read-only attribute returns the number of sessions that will be
-    established when additional sessions need to be created.
+    This read-only attribute returns the number of connections that will be
+    established when additional connections need to be created.
 
 
 .. attribute:: ConnectionPool.max
 
-    This read-only attribute returns the maximum number of sessions that the
-    session pool can control.
+    This read-only attribute returns the maximum number of connections that the
+    pool can control.
 
 
 .. attribute:: ConnectionPool.max_lifetime_session
 
     This read-write attribute returns the maximum length of time (in seconds)
-    that a pooled session may exist. Sessions that are in use will not be
+    that a pooled connection may exist. Connections that are in use will not be
     closed. They become candidates for termination only when they are released
     back to the pool and have existed for longer than max_lifetime_session
     seconds. Note that termination only occurs when the pool is accessed. A
     value of 0 means that there is no maximum length of time that a pooled
-    session may exist. This attribute is only available in Oracle Database
+    connection may exist. This attribute is only available in Oracle Database
     12.1.
 
 .. attribute:: ConnectionPool.max_sessions_per_shard
@@ -269,21 +264,20 @@ Attributes
 
 .. attribute:: ConnectionPool.min
 
-    This read-only attribute returns the number of sessions with which the
-    session pool was created and the minimum number of sessions that will be
-    controlled by the session pool.
+    This read-only attribute returns the number of connections with which the
+    connection pool was created and the minimum number of connections that will be
+    controlled by the connection pool.
 
 
 .. attribute:: ConnectionPool.name
 
-    This read-only attribute returns the name assigned to the session pool by
-    Oracle.
+    This read-only attribute returns the name assigned to the pool by Oracle.
 
 
 .. attribute:: ConnectionPool.opened
 
-    This read-only attribute returns the number of sessions currently opened by
-    the session pool.
+    This read-only attribute returns the number of connections currently opened by
+    the pool.
 
 
 .. attribute:: ConnectionPool.ping_interval
@@ -296,7 +290,7 @@ Attributes
     unusable, it is discarded and a different connection is selected to be
     returned by :meth:`ConnectionPool.acquire()`.  Setting ``ping_interval`` to a
     negative value disables pinging.  Setting it to 0 forces a ping for every
-    ``aquire()`` and is not recommended.
+    :meth:`ConnectionPool.acquire()` and is not recommended.
 
     Prior to cx_Oracle 8.2, the ping interval was fixed at 60 seconds.
 
@@ -322,15 +316,19 @@ Attributes
 
 .. attribute:: ConnectionPool.thin
 
-    This attribute returns a boolean indicating if the pool was created with 
-    the Thin driver (True) or Thick driver (False).
+    This attribute returns a boolean which indicates the python-oracledb mode
+    in which the pool was created. If the value of this attribute is True, it
+    indicates that the pool was created in the python-oracledb Thin mode. If
+    the value of this attribute is False, it indicates that the pool was created
+    in the python-oracledb Thick mode.
 
 .. attribute:: ConnectionPool.timeout
 
     This read-write attribute specifies the time (in seconds) after which idle
-    sessions will be terminated in order to maintain an optimum number of open
-    sessions. Note that termination only occurs when the pool is accessed. A
-    value of 0 means that no idle sessions are terminated.
+    connections will be terminated in order to maintain an optimum number of open
+    connections. A value of 0 means that no idle connections are terminated. Note 
+    that in python-oracledb Thick mode with older Oracle Client Libraries, the 
+    termination only occurs when the pool is accessed. 
 
 .. attribute:: ConnectionPool.tnsentry
 
@@ -351,7 +349,7 @@ Attributes
 .. attribute:: ConnectionPool.wait_timeout
 
     This read-write attribute specifies the time (in milliseconds) that the
-    caller should wait for a session to become available in the pool before
+    caller should wait for a connection to become available in the pool before
     returning with an error. This value is only used if the getmode parameter
-    to :meth:`oracledb.ConnectionPool()` was the value
+    to :meth:`oracledb.create_pool()` was the value
     :data:`oracledb.POOL_GETMODE_TIMEDWAIT`.
