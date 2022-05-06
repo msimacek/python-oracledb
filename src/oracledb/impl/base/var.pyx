@@ -212,9 +212,9 @@ cdef class BaseVarImpl:
             dbtype = DB_TYPE_RAW
         elif isinstance(value, (int, float, PY_TYPE_DECIMAL)):
             dbtype = DB_TYPE_NUMBER
-        elif isinstance(value, (datetime.date, datetime.datetime)):
+        elif isinstance(value, (PY_TYPE_DATE, PY_TYPE_DATETIME)):
             dbtype = DB_TYPE_DATE
-        elif isinstance(value, datetime.timedelta):
+        elif isinstance(value, PY_TYPE_TIMEDELTA):
             dbtype = DB_TYPE_INTERVAL_DS
         elif isinstance(value, PY_TYPE_DB_OBJECT):
             dbtype = DB_TYPE_OBJECT
