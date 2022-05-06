@@ -44,7 +44,7 @@ class ConnectParams:
     Contains all parameters used for establishing a connection to the
     database.
     """
-    __module__ = constants.MODULE_NAME
+    __module__ = oracledb.__name__
     __slots__ = ["_impl"]
     _impl_class = base_impl.ConnectParamsImpl
 
@@ -175,7 +175,7 @@ class ConnectParams:
           (default: False)
 
         - mode: authorization mode to use. For example
-          constants.AUTH_MODE_SYSDBA (default: oracledb.AUTH_MODE_DEFAULT)
+          oracledb.AUTH_MODE_SYSDBA (default: oracledb.AUTH_MODE_DEFAULT)
 
         - disable_oob: boolean indicating whether out-of-band breaks should be
           disabled. This value is only used in thin mode. It has no effect on
@@ -390,7 +390,7 @@ class ConnectParams:
     @property
     def mode(self) -> int:
         """
-        Authorization mode to use. For example constants.AUTH_MODE_SYSDBA.
+        Authorization mode to use. For example oracledb.AUTH_MODE_SYSDBA.
         """
         return self._impl.mode
 
@@ -695,7 +695,7 @@ class ConnectParams:
           query notification and high availability event notifications
 
         - mode: authorization mode to use. For example
-          constants.AUTH_MODE_SYSDBA
+          oracledb.AUTH_MODE_SYSDBA
 
         - disable_oob: boolean indicating whether out-of-band breaks should be
           disabled. This value is only used in thin mode. It has no effect on

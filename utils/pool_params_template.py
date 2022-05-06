@@ -43,7 +43,7 @@ class PoolParams(ConnectParams):
     """
     Contains all parameters used for creating a connection pool.
     """
-    __module__ = constants.MODULE_NAME
+    __module__ = oracledb.__name__
     __slots__ = ["_impl"]
     _impl_class = base_impl.PoolParamsImpl
 

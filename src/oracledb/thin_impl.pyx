@@ -66,6 +66,8 @@ macos_certs = None
 
 cydatetime.import_datetime()
 
+from . import __version__ as VERSION
+
 from . import constants, errors, exceptions
 from .defaults import defaults
 

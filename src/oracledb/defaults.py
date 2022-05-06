@@ -31,13 +31,13 @@
 
 import os
 
-from . import constants
+from . import __name__ as MODULE_NAME
 
 class Defaults:
     """
     Identifies the default values used by the driver.
     """
-    __module__ = constants.MODULE_NAME
+    __module__ = MODULE_NAME
 
     def __init__(self) -> None:
         self.arraysize = 100

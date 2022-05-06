@@ -30,7 +30,10 @@
 #------------------------------------------------------------------------------
 
 from typing import Callable, Type
-from . import constants, errors, exceptions, utils
+
+import oracledb
+
+from . import errors, exceptions, utils
 from . import base_impl, thick_impl, thin_impl
 from . import connection as connection_module
 from . import driver_mode
@@ -39,7 +42,7 @@ from .pool_params import PoolParams
 from .defaults import defaults
 
 class ConnectionPool:
-    __module__ = constants.MODULE_NAME
+    __module__ = oracledb.__name__
 
     def __init__(self, dsn: str=None, *,
                  params: PoolParams=None,
@@ -94,7 +97,7 @@ class ConnectionPool:
                 user: str=None,
                 password: str=None,
                 cclass: str=None,
-                purity: int=constants.PURITY_DEFAULT,
+                purity: int=oracledb.PURITY_DEFAULT,
                 tag: str=None,
                 matchanytag: bool=False,
                 shardingkey: list=None,

@@ -43,6 +43,8 @@ from . import constants, driver_mode, errors, exceptions
 from .subscr import Message, MessageQuery, MessageRow, MessageTable
 from .defaults import defaults
 
+from . import __version__ as VERSION
+
 from .base_impl cimport get_exception_class
 from .base_impl cimport BaseConnImpl, BaseCursorImpl, BaseVarImpl, DbType
 from .base_impl cimport BaseDbObjectTypeImpl, BaseDbObjectAttrImpl

@@ -28,9 +28,6 @@
 # Contains the constants defined by the package.
 #------------------------------------------------------------------------------
 
-from . import __version__ as VERSION
-from . import __name__ as MODULE_NAME
-
 # mandated DB API constants
 apilevel = "2.0"
 threadsafety = 2

@@ -31,6 +31,8 @@
 
 import collections
 
+from . import __name__ as MODULE_NAME
+
 from typing import Any, Callable, Type, Union
 from . import constants, driver_mode, errors, exceptions, utils
 from . import base_impl, thick_impl, thin_impl
@@ -51,7 +53,7 @@ Xid = collections.namedtuple("Xid",
                               "branch_qualifier"])
 
 class Connection:
-    __module__ = constants.MODULE_NAME
+    __module__ = MODULE_NAME
 
     def __init__(self,
                  dsn: str=None, *,

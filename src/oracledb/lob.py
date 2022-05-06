@@ -30,10 +30,11 @@
 
 from typing import Union
 
-from . import constants, errors
+from . import __name__ as MODULE_NAME
+from . import errors
 
 class LOB:
-    __module__ = constants.MODULE_NAME
+    __module__ = MODULE_NAME
 
     def __del__(self):
         self._impl.free_lob()

@@ -49,7 +49,7 @@ from .dsn import makedsn
 from .base_impl import *
 from .thick_impl import clientversion, init_oracle_client
 
-package = sys.modules[constants.MODULE_NAME]
+package = sys.modules[__name__]
 init_base_impl(package)
 thick_impl.init_thick_impl(package)
 del package

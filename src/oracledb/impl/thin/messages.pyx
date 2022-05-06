@@ -1477,7 +1477,7 @@ cdef class AuthMessage(Message):
                 self._write_key_value(buf, "AUTH_PBKDF2_SPEEDY_KEY",
                                       self.speedy_key)
             self._write_key_value(buf, "SESSION_CLIENT_CHARSET", "873")
-            driver_name = f"{constants.DRIVER_NAME} thn : {constants.VERSION}"
+            driver_name = f"{constants.DRIVER_NAME} thn : {VERSION}"
             self._write_key_value(buf, "SESSION_CLIENT_DRIVER_NAME",
                                   driver_name)
             self._write_key_value(buf, "SESSION_CLIENT_VERSION",
