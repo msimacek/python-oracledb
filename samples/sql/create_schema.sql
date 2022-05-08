@@ -44,6 +44,7 @@ grant
     create table,
     create procedure,
     create type,
+    create sequence,
     select any dictionary,
     change notification,
     unlimited tablespace

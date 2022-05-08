@@ -30,21 +30,22 @@
 # You can set values in environment variables to bypass the sample requesting
 # the information it requires.
 #
-#     PYO_SAMPLES_MAIN_USER: user used for most samples
-#     PYO_SAMPLES_MAIN_PASSWORD: password of user used for most samples
-#     PYO_SAMPLES_EDITION_USER: user for editioning
-#     PYO_SAMPLES_EDITION_PASSWORD: password of user for editioning
-#     PYO_SAMPLES_EDITION_NAME: name of edition for editioning
-#     PYO_SAMPLES_CONNECT_STRING: connect string
-#     PYO_SAMPLES_DRCP_CONNECT_STRING: DRCP connect string
-#     PYO_SAMPLES_ADMIN_USER: admin user for setting up samples
-#     PYO_SAMPLES_ADMIN_PASSWORD: admin password for setting up samples
-#     PYO_SAMPLES_DRIVER_MODE: python-oracledb mode (thick or thin) to use
-#     PYO_SAMPLES_ORACLE_CLIENT_PATH: path to your Instant Client libraries
+#   PYO_SAMPLES_MAIN_USER: user used for most samples
+#   PYO_SAMPLES_MAIN_PASSWORD: password of user used for most samples
+#   PYO_SAMPLES_EDITION_USER: user for editioning
+#   PYO_SAMPLES_EDITION_PASSWORD: password of user for editioning
+#   PYO_SAMPLES_EDITION_NAME: name of edition for editioning
+#   PYO_SAMPLES_CONNECT_STRING: connect string
+#   PYO_SAMPLES_DRCP_CONNECT_STRING: DRCP connect string
+#   PYO_SAMPLES_ADMIN_USER: admin user for setting up samples
+#   PYO_SAMPLES_ADMIN_PASSWORD: admin password for setting up samples
+#   PYO_SAMPLES_DRIVER_MODE: python-oracledb mode (thick or thin) to use
+#   PYO_SAMPLES_ORACLE_CLIENT_PATH: Oracle Client or Instant Client library dir
 #
-# On macOS and Windows, set PYO_SAMPLES_ORACLE_CLIENT_PATH if you are currently
-# calling init_oracle_client() in your application. On Linux do not set this;
-# instead set LD_LIBRARY_PATH or configure ldconfig before running Python.
+# On Windows set PYO_SAMPLES_ORACLE_CLIENT_PATH if Oracle libraries are not in
+# PATH.  On macOS set the variable to the Instant Client directory.  On Linux
+# do not set the variable; instead set LD_LIBRARY_PATH or configure ldconfig
+# before running Python.
 #
 # PYO_SAMPLES_CONNECT_STRING can be set to an Easy Connect string, or a
 # Net Service Name from a tnsnames.ora file or external naming service,
