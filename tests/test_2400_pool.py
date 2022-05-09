@@ -685,7 +685,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(pool.opened, 2)
 
     def test_2428_create_from_params(self):
-        "2427 - create a pool using an instance of PoolParams"
+        "2428 - create a pool using an instance of PoolParams"
         params = oracledb.PoolParams(user=test_env.get_main_user(),
                                      password=test_env.get_main_password())
         params.parse_connect_string(test_env.get_connect_string())
