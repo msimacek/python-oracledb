@@ -23,7 +23,7 @@
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# flask.py
+# connection_pool.py
 #
 # Demonstrates the use of connection pooling using a Flask web application.
 #
@@ -76,7 +76,7 @@ def start_pool():
                                 min=pool_min,
                                 max=pool_max,
                                 increment=pool_inc,
-                                sessionCallback=init_session)
+                                session_callback=init_session)
 
     return pool
 
@@ -146,7 +146,7 @@ def post(username):
                 insert into demo (username)
                 values (:unbv)
                 returning id into :idbv""", [username, idbv])
-            return 'Inserted {} with id {}'.format(username, idbv.getvalue()[0])
+            return f'Inserted {username} with id {idbv.getvalue()[0]}'
 
 # Show the username for a given id
 @app.route('/user/<int:id>')
@@ -155,7 +155,7 @@ def show_username(id):
         with connection.cursor() as cursor:
             cursor.execute("select username from demo where id = :idbv", [id])
             r = cursor.fetchone()
-            return (r[0] if r else "Unknown user id")
+            return r[0] if r is not None else "Unknown user id"
 
 #------------------------------------------------------------------------------
 
