@@ -118,7 +118,7 @@ def _print_packet(operation, socket_fileno, data):
     hex_data = memoryview(data).hex().upper()
     current_date = datetime.datetime.now().isoformat(sep=" ",
                                                      timespec="milliseconds")
-    print(current_date, f"[socket: {socket_fileno}]", operation)
+    output_lines = [f"{current_date} [socket: {socket_fileno}] {operation}"]
     while hex_data:
         line_hex_data = hex_data[:16]
         hex_data = hex_data[16:]
@@ -137,7 +137,8 @@ def _print_packet(operation, socket_fileno, data):
         while len(hex_dump_values) < 8:
             hex_dump_values.append("  ")
             printable_values.append(" ")
-        print("%.4d : %s  |%s|" % (offset, " ".join(hex_dump_values),
-                "".join(printable_values)))
+        output_lines.append(f'{offset:04} : {" ".join(hex_dump_values)} ' + \
+                            f'|{"".join(printable_values)}|')
         offset += 8
-    print()
+    output_lines.append("")
+    print("\n".join(output_lines))
