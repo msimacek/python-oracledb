@@ -86,6 +86,11 @@ class ConnectionPool:
         self._impl = impl
         self.session_callback = params_impl.session_callback
 
+    def __del__(self):
+        if self._impl is not None:
+            self._impl.close(True)
+            self._impl = None
+
     def _verify_open(self) -> None:
         """
         Verifies that the pool is open and able to perform its work.

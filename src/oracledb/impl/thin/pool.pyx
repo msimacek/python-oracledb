@@ -123,10 +123,10 @@ cdef class ThinPoolImpl(BasePoolImpl):
                     self._bg_thread_condition.wait()
 
             # perform work of creating/destroying connections
-            with self._condition:
-                open_count = self.get_open_count()
-                num_conns = min(self.increment, self.max - open_count)
-            if self._open:
+            if self._open and self._num_pending_requests > 0:
+                with self._condition:
+                    open_count = self.get_open_count()
+                    num_conns = min(self.increment, self.max - open_count)
                 self._create_conn_impls_helper(num_conns)
             self._close_conn_impls_helper()
             if not self._open:
@@ -175,7 +175,11 @@ cdef class ThinPoolImpl(BasePoolImpl):
                 exc = e
             with self._condition:
                 if conn_impl is not None:
-                    self._free_new_conn_impls.append(conn_impl)
+                    if self._open:
+                        self._free_new_conn_impls.append(conn_impl)
+                    else:
+                        conn_impl._force_close()
+                        break
                 else:
                     self._bg_exc = exc
                 self._condition.notify()
@@ -380,6 +384,9 @@ cdef class ThinPoolImpl(BasePoolImpl):
                 lst.clear()
             with self._bg_thread_condition:
                 self._bg_thread_condition.notify()
+
+        # wait for background thread to complete its tasks
+        self._bg_thread.join()
 
     def drop(self, ThinConnImpl conn_impl):
         """
