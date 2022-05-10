@@ -1334,7 +1334,8 @@ cdef class WriteBuffer:
             else:
                 pack_uint32(&buf[7], fsecond, BYTE_ORDER_MSB)
         if length > 11:
-            pack_uint16(&buf[11], 0, BYTE_ORDER_MSB)
+            buf[11] = TZ_HOUR_OFFSET
+            buf[12] = TZ_MINUTE_OFFSET
         self.write_uint8(length)
         self.write_raw(buf, length)
 
