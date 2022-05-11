@@ -49,12 +49,7 @@ if platform.system() == "Darwin":
     instant_client_dir = os.environ.get("HOME")+"/Downloads/instantclient_19_8"
 
 # You must always call init_oracle_client() to use thick mode in any platform
-# For Linux and UNIX systems
-if instant_client_dir is None:
-    oracledb.init_oracle_client()
-# For Windows and macOS(Intel x86) platforms
-else:
-    oracledb.init_oracle_client(lib_dir=instant_client_dir)
+oracledb.init_oracle_client(lib_dir=instant_client_dir)
 
 ######################################################################
 
