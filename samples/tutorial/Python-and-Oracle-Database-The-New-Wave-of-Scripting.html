@@ -97,26 +97,30 @@
       <ul>
         <li>9.1 Subclassing connections</li>
         <li>9.2 Subclassing cursors</li>
-      </ul></li>
-    <li><a href="#thick"> Python-oracledb Thick mode</a></li>
-      <ul>
-      <li>10.1 Review the configuration files for thick mode</li>
-      <li>10.2 Review the Oracle Client library path</li>
       </ul>
-    <li><a href="#scrollable">Scrollable cursors</a></li>
-    <ul>
-    <li>11.1 Working with scrollable cursors</li>
-    </ul>
-    <li><a href="#bindnamedobj">Binding named objects</a>
-    <ul>
-    <li>12.1 How to bind named objects</li>
-    </ul></li>
-    <li><a href="#typehandlers">Input and Output Type Handlers with named objects</a>
     </li>
-    <ul>
-    <li>13.1 Input type handlers with named objects</li>
-    <li>13.2 Output type handlers with named objects</li>
-    </ul>
+    <li><a href="#thick">Python-oracledb Thick mode</a>
+      <ul>
+      <li>10.1 Review the Oracle Client library path</li>
+      <li>10.2 Review the configuration files for thick mode</li>
+      </ul>
+    </li>
+    <li><a href="#scrollable">Scrollable cursors</a>
+      <ul>
+      <li>11.1 Working with scrollable cursors</li>
+      </ul>
+    </li>
+    <li><a href="#bindnamedobj">Binding named objects</a>
+      <ul>
+      <li>12.1 How to bind named objects</li>
+      </ul>
+    </li>
+    <li><a href="#typehandlers">Input and Output Type Handlers with named objects</a>
+      <ul>
+      <li>13.1 Input type handlers with named objects</li>
+      <li>13.2 Output type handlers with named objects</li>
+      </ul>
+    </li>
     <li><a href="#aq">Advanced Queuing</a>
       <ul>
         <li>14.1 Message passing with Oracle Advanced Queuing</li>
@@ -137,7 +141,9 @@
 
   <p>This tutorial is a primary guide on using Python with Oracle Database. It contains both beginner and advanced materials. Choose the content that interests you and your skill level. The tutorial has scripts to run and modify, and has suggested solutions.</p>
 
-  <p>Python is a popular general purpose dynamic scripting language. The latest python-oracledb interface provides Python APIs to access Oracle Database. It is an upgrade for the hugely popular <a href="http://cx-oracle.readthedocs.org/en/latest/index.html">cx_Oracle</a> interface.  The python-oracledb interface provides the user the option of using a &quot;thin&quot; mode, which takes up a smaller footprint, provides easy install (no Oracle Client libraries) and integrates more tightly with the Python ecosystem.</p>
+<p>Python is a popular general purpose dynamic scripting language. The python-oracledb driver provides Python APIs to access Oracle Database. It is an upgrade for the hugely popular <a href="https://oracle.github.io/python-cx_Oracle/">cx_Oracle</a> interface.
+</p>
+
 
   <p>If you are new to Python, review the <a href="#primer">Appendix: Python Primer</a> to gain an understanding of the language. </p>
 <p>When you have finished this tutorial, we recommend reviewing the <a href="http://python-oracledb.readthedocs.org/en/latest/index.html" >python-oracledb documentation</a>.</p>
@@ -148,7 +154,16 @@
 
 <h3><a name="architecture">Python-oracledb Architecture</a></h3>
 
-<p>Python programs call python-oracledb functions. Python-oracledb interface contains both  &quot;thin&quot; and &quot;thick&quot; modes.  The thin mode uses Oracle Database's communication protocol to interact with the Oracle Database. The thick mode  makes use of Oracle client libraries. The thin or thick behavior is controlled via an application script runtime option. The default is thin. The thick mode supports  additional Oracle Database advanced features not yet available in thin mode.</p>
+<p>The python-oracledb driver enables access to Oracle Database using either
+one of two modes.  Both modes have comprehensive functionality supporting the
+Python Database API v2.0 Specification.  By default, python-oracledb runs in a
+&quot;thin&quot; mode, which connects directly to Oracle Database.  This mode
+does not need Oracle Client libraries. However, some additional features are
+available when python-oracledb uses them.  Python-oracledb applications that
+load the Oracle Client libraries via an application script runtime option are
+said to be in &quot;thick&quot; mode.  This tutorial has examples in both
+modes.</p>
+
 <p><img src="resources/python-oracledb-arch.svg" alt="Python python-oracledb architecture" width=800/></p>
 <p>The database can be on the same machine as Python, or it can be remote.</p>
 <h2><a name="preface">Setup</a></h2>
@@ -159,16 +174,16 @@
 
       <p>Install Python 3 if not already available.  It can be obtained from
       your operating system package library or from <a
-      href="https://www.python.org/">python.org</a>.  On Windows use Python 3.7
-      or later.  On macOS use Python 3.8 or later.  On Linux use Python 3.6 or
+      href="https://www.python.org/">python.org</a>.  On Windows, use Python 3.7
+      or later.  On macOS, use Python 3.8 or later.  On Linux, use Python 3.6 or
       later.</p>
-	  
+
       <p>Install <a
       href="https://pypi.org/project/python-oracledb/">python-oracledb</a> with
       a command like <code>pip install oracledb --upgrade</code></p>
 
       <p>Ensure you can access an Oracle Database.</p>
-	  
+
 <!--
       <p>To get going, follow either of the quick start instructions:</p>
 
@@ -185,20 +200,20 @@
       <li>
         <h4 id="downloadscripts">Download the tutorial scripts</h4>
 
-        <p>The Python scripts used in this example are in the <a href="https://github.com/oracle/python-cx_Oracle/tree/main/samples/tutorial" >python-oracledb GitHub repository</a>.</p>
+        <p>The Python scripts used in this example are in the <a href="https://github.com/oracle/python-oracledb/tree/main/samples/tutorial" >python-oracledb GitHub repository</a>.</p>
 
         <p>Download a zip file of the repository from <a href="https://github.com/oracle/python-oracledb/archive/main.zip" >here</a> and unzip it. Alternatively you can use 'git' to clone the repository.</p>
 <p><code>git clone https://github.com/oracle/python-oracledb.git</code></p>
 
-        <p>The <code>samples/tutorial</code> directory has scripts to run and modify. The <code>samples/tutorial/solutions</code> directory has scripts with suggested code changes. The <code>samples/tutorial/sql</code> directory has all the SQL scripts used by the python files to create database tables and other objects.</p>
+        <p>The <code>samples/tutorial</code> directory has scripts to run and modify. The <code>samples/tutorial/solutions</code> directory has scripts with suggested code changes. The <code>samples/tutorial/sql</code> directory has all the SQL scripts used by the Python files to create database tables and other objects.</p>
 
       </li>
       <li>
-          <h4>Review the system connection credentials used for creating and deleting the users and schemas</h4>
+          <h4>Review the privileged database credentials used for creating the schema</h4>
 
-          <p>Review <code>db_config_sys.py</code> in the <code>tutorial</code> directory. This file is included in other Python files for creating and dropping users.</p>
+          <p>Review <code>db_config_sys.py</code> in the <code>tutorial</code> directory. This file is included in other Python files for creating and dropping the tutorial user.</p>
 
-          <p>Edit <code>db_config_sys.py</code> file and change the default values to match the system connection information for your environment.  Alternatively,you can set the given environment variables in your terminal window. For example, the default username is "<em>SYSTEM</em>" unless the environment variable "<em>PYTHON_SYSUSER</em>" contains a different username. The default system connection string is for the '<em>orclpdb</em>' database service on the same machine as Python. In Python Database API terminology, the connection string parameter is called the "data source name", or "dsn".  Using environment variables is convenient because you will not be asked to re-enter the password when you run scripts:</p>
+          <p>Edit <code>db_config_sys.py</code> file and change the default values to match the system connection information for your environment.  Alternatively, you can set the given environment variables in your terminal window. For example, the default username is "<em>SYSTEM</em>" unless the environment variable "<em>PYTHON_SYSUSER</em>" contains a different username. The default system connection string is for the "<em>orclpdb</em>" database service on the same machine as Python. In Python Database API terminology, the connection string parameter is called the "data source name", or "dsn".  Using environment variables is convenient because you will not be asked to re-enter the password when you run scripts:</p>
 
 <pre>
 user = os.environ.get("PYTHON_SYSUSER", "SYSTEM")
@@ -217,7 +232,7 @@ if pw is None:
 
           <p>If you have an existing user, you may be able to use it for most examples (some examples may require extra permissions).</p>
 
-          <p>If you need to create a new user  for this tutorial, review the grants created in <code>samples/tutorial/sql/create_user.sql</code> by opening it in your favorite text editor. Then open a terminal window and run  <code>create_user.py</code>  to execute the <code>create_user.sql</code> script and create the sample user, <code>pythondemo</code> in this case:</p>
+          <p>If you need to create a new user  for this tutorial, review the grants created in <code>samples/tutorial/sql/create_user.sql</code> by opening it in your favorite text editor. Then open a terminal window and run  <code>create_user.py</code>  to execute the <code>create_user.sql</code> script and create the sample user. This tutorial uses the name <code>pythondemo</code>:</p>
 <pre>
 <strong>python create_user.py</strong></pre>
 
@@ -229,7 +244,7 @@ Creating user...
 SQL File Name:  D:\python-oracledb\samples\tutorial\sql\create_user.sql
 Done.</pre>
 <p> The new user <em>pythondemo</em> is created.</p>
-<p>When the tutorial is finished, ensure that all the database sessions connected to the tutorial user <em>pythondemo</em> are closed and then run <code><strong>drop_user.py</strong></code> to remove the tutorial user.</p>
+<p>When the tutorial is finished, ensure that all the database sessions connected to the tutorial user <em>pythondemo</em> are closed and then run <code>drop_user.py</code> to remove the tutorial user.</p>
       </li>
 
     <li>
@@ -251,7 +266,7 @@ Done.</pre>
 
           <p>Review <code>db_config.py</code> (thin mode), and <code>db_config.sql</code> files in the <code>tutorial</code> and <code>tutorial/sql </code>directories respectively. These are included in other Python and SQL files for setting up the database connection.</p>
 
-          <p>Edit <code>db_config.py</code> file and change the default values to match the connection information for your environment.  Alternatively,you can set the given environment variables in your terminal window. For example, the default username is "<em>pythondemo</em>" unless the environment variable "<em>PYTHON_USER</em>" contains a different username. The default connection string is for the '<em>orclpdb</em>' database service on the same machine as Python. In Python Database API terminology, the connection string parameter is called the "data source name", or "dsn".  Using environment variables is convenient because you will not be asked to re-enter the password when you run scripts:</p>
+          <p>Edit <code>db_config.py</code> file and change the default values to match the connection information for your environment.  Alternatively, you can set the given environment variables in your terminal window. For example, the default username is "<em>pythondemo</em>" unless the environment variable "<em>PYTHON_USER</em>" contains a different username. The default connection string is for the '<em>orclpdb</em>' database service on the same machine as Python. In Python Database API terminology, the connection string parameter is called the "data source name", or "dsn".  Using environment variables is convenient because you will not be asked to re-enter the password when you run scripts:</p>
 
 <pre>
 user = os.environ.get("PYTHON_USER", "pythondemo")
@@ -263,7 +278,7 @@ if pw is None:
     pw = getpass.getpass("Enter password for %s: " % user)
 </pre>
 
-<p>Also, change the default username and connection string in the SQL configuration file <code>db_config.sql</code> based on your environment settings:</p>
+<p>Also, change the database username and connection string in the SQL configuration file <code>db_config.sql</code> based on your environment settings:</p>
 
 <pre>
 -- Default database username
@@ -273,14 +288,18 @@ def user = "<strong>pythondemo</strong>"
 def connect_string = "<strong>localhost/orclpdb</strong>"
 
 -- Prompt for the password
-accept pw char prompt 'Enter database password for &user: ' hide
+accept pw char prompt 'Enter database password for &amp;user: ' hide
 </pre>
 
           <p>The tutorial instructions may need adjusting, depending on how you have set up your environment.</p>
-    </li>
+     </li>
+     
         <li><h4> Runtime Naming</h4>
-        <p>At runtime, the module name of the python-oracledb package will be <code>oracledb</code>.
-        <pre>import oracledb</pre></p></li>
+
+	  <p>At runtime, the module name of the python-oracledb package is <code>oracledb</code>:</p>
+	  
+        <pre>import oracledb</pre></li>
+
          <li><h4>Python-oracledb defaults</h4>
         <p>A singleton <code>oracledb.defaults</code> contains attributes that can be used to adjust the default behavior of python-oracledb. Attributes not supported in a mode (<em>thin</em> or <em>thick</em>) will be ignored in that mode.</p>
         <p>Open <code>defaults.py</code> in an editor. This will look like:</p>
@@ -289,10 +308,10 @@ accept pw char prompt 'Enter database password for &user: ' hide
 print("Default array size:", <strong>oracledb.defaults.arraysize</strong>)</pre>
 Run the script:
 <pre><strong>python defaults.py</strong></pre>
-It will display:
+It displays:
 <pre>Default array size: 100</pre>
-<p> This will give the default  array size tuning parameter that will be useful in Section 3.4 of this tutorial.</p>
-<p>The default values can also be edited using the <code>defaults</code> attribute. All the default values that can be set and read with <code>defaults</code> attribute are available in the <a href="http://python-oracledb.readthedocs.io/en/latest/index.html">python-oracledb documentation</a> along with the modes (<em>thin</em> or <em>thick</em>) support.</p></li>
+<p> This gives the default array size tuning parameter that will be useful in Section 3.4 of this tutorial.</p>
+<p>The default values can also be edited using the <code>defaults</code> attribute. All the default values that can be set and read with <code>defaults</code> attribute are available in the <a href="http://python-oracledb.readthedocs.io/en/latest/index.html">python-oracledb documentation</a>.</p></li>
 </ul>
 
 <h2><a name="connecting">1. Connecting to Oracle</a></h2>
@@ -313,10 +332,10 @@ con = oracledb.connect(user=db_config.user, password=db_config.pw, dsn=db_config
 print("Database version:", con.version)
 </pre>
 
-          <p>The python-oracledb module is imported to provide the API for accessing the Oracle database. Many inbuilt and third party modules can be included in Python scripts this way.</p>
+          <p>The python-oracledb module is imported to provide the API for accessing the Oracle database. Many inbuilt and third-party modules can be included in Python scripts this way.</p>
 
           <p> The username, the password and the connection string that you configured in the
-<code>db_config.py</code> module is passed to the <code>connect()</code> method. In this case, Oracle's Easy Connect connection string syntax is used. It consists of the hostname of your machine, <code>localhost</code>, and the database service name <code>orclpdb</code>. (In Python Database API terminology, the connection string parameter is called the "data source name", or "dsn").</p>
+<code>db_config.py</code> module is passed to the <code>connect()</code> method. By default, Oracle's Easy Connect connection string syntax is used. It consists of the hostname of your machine, <code>localhost</code>, and the database service name <code>orclpdb</code>. (In Python Database API terminology, the connection string parameter is called the "data source name", or "dsn").</p>
 
           <p>Open a command terminal and change to the <code>tutorial</code> directory:</p>
 
@@ -326,7 +345,7 @@ print("Database version:", con.version)
 
           <pre><strong>python connect.py</strong></pre>
 
-          <p>The version number of the database should be displayed. An exception is raised if the connection fails. Adjust the username, password or connection string parameters to invalid values to see the exception.</p>
+          <p>The version number of the database should be displayed. An exception is raised if the connection fails. Adjust the username, password, or connection string parameters to invalid values to see the exception.</p>
 
           <p>Python-oracledb also supports "<em>external authentication</em>", which allows connections without needing usernames and passwords to be embedded in the code. Authentication would then be performed by, for
  example, LDAP or Oracle Wallets.</p>
@@ -336,7 +355,7 @@ print("Database version:", con.version)
         <li>
           <h4>1.2 Indentation indicates code structure</h4>
 
-          <p>In Python, there are no statement terminators or begin/end keywords or braces to indicate blocks of code.</p>
+          <p>In Python, there are no statement terminators, begin/end keywords, or braces to indicate code blocks.</p>
 
           <p>Open <code>connect.py</code> in an editor. Indent the print statement with some spaces:</p>
 
@@ -450,7 +469,7 @@ print(oracledb.__version__) # two underscores before and after the version</pre>
 
           <p>This gives the version of the python-oracledb interface.</p>
 
-          <p>Edit the file to print the version of the database, and of the Oracle client libraries used by python-oracledb:</p>
+          <p>Edit the file to print the version of the database, and the Oracle client libraries used by python-oracledb:</p>
 
           <pre>
 import oracledb
@@ -477,10 +496,10 @@ Database version: 19.3.0.0.0</pre>
         <li>
         <h4>1.6 Using the ConnectParams builder class</h4>
         <p>
-        A connection property builder function <code>oracledb.ConnectParams()</code> has been added. It returns a new <em>ConnectParams</em> object. The object can be passed to <code>oracledb.connect()</code>,
-<code>oracledb.ConnectionPool()</code>, or <code>oracledb.SessionPool()</code>.</p>
+        A connection property builder function <code>oracledb.ConnectParams()</code> has been added. It returns a new <em>ConnectParams</em> object. The object can be passed to <code>oracledb.connect()</code> or
+<code>oracledb.create_pool()</code>.</p>
 
-        <p>Open <code>connect_params2.py</code> in a text editor. It looks like:
+        <p>Open <code>connect_params2.py</code> in a text editor. It looks like:</p>
         <pre>import oracledb
 import db_config
 
@@ -489,9 +508,9 @@ con = oracledb.connect(user=db_config.user, password=db_config.pw, params=params
 print("Database version:", con.version)</pre>
         When the script is run (<code><strong>python connect_params2.py</strong></code>), it will display:
         <pre>Database version: 19.3.0.0.</pre>
-        </p>
-        The use of <code>ConnectParams()</code> is optional. Users can continue to use previous approaches. The list of parameters for the <code>ConnectParams</code> class is available in the python-oracledb documentation.<br />
-        Notes:
+        <p>
+        The use of <code>ConnectParams()</code> is optional. Users can continue to use previous approaches. The list of parameters for the <code>ConnectParams</code> class is available in the python-oracledb documentation.</p>
+        <p>Notes:</p>
         <ul>
           <li>If the <code>params</code> parameter is specified and keyword parameters are also specified, then the <code>params</code> parameter is updated with the values from the keyword parameters before being used to create the connection. </li>
           <li>If the <code>dsn</code> parameter is specified and the <code>params</code> parameter is specified, then the <code>params</code> parameter is updated with the contents of the <code>dsn</code> parameter before being used to create the connection.</li>
@@ -502,7 +521,7 @@ print("Database version:", con.version)</pre>
      <p>The function <code>Connection.is_healthy()</code> checks the usability of a database connection locally. This function returns a boolean value indicating the health status of a connection.</p>
 <p>Connections may become unusable in several cases, such as if the network socket is broken, if an Oracle error indicates the connection is unusable or after receiving a planned down notification from the database.
 This function is best used before starting a new database request on an existing standalone connection. Pooled connections internally perform this check before returning a connection to the application. If this function returns <code>False</code>, the connection should be not be used by the application and a new connection should be established instead.</p>
-<p>Open <code>connect_health.py</code> in a text editor. It looks like:
+<p>Open <code>connect_health.py</code> in a text editor. It looks like:</p>
        <pre>import oracledb
 import db_config
 
@@ -511,9 +530,9 @@ if con.is_healthy():
     print("Healthy connection!")
 else:
     print("Unusable connection. Please check the database and network settings.")</pre>
-When the script is run (<code><strong>python connect_health.py</strong></code>), it will display (when the connection is OK):
+<p>When the script is run (<code><strong>python connect_health.py</strong></code>), it will display (when the connection is OK):</p>
         <pre>Healthy Connection!</pre>
-To fully check a connection's health, use <code>Connection.ping()</code> which performs a round-trip to the database.</li>
+<p>To fully check a connection's health, use <code>Connection.ping()</code> which performs a round-trip to the database.</p></li>
    </ul>
     <h2><a name="pooling">2. Connection Pooling</a></h2>
 
@@ -530,8 +549,8 @@ import oracledb
 import threading
 import db_config
 
-pool = oracledb.<strong>ConnectionPool</strong>(user=db_config.user, password=db_config.pw, dsn=db_config.dsn,
-                               min=2, max=5, increment=1, getmode=oracledb.POOL_GETMODE_WAIT)
+pool = oracledb.<strong>create_pool</strong>(user=db_config.user, password=db_config.pw, dsn=db_config.dsn,
+                            min=2, max=5, increment=1, getmode=oracledb.POOL_GETMODE_WAIT)
 
 def Query():
     con = pool.<strong>acquire</strong>()
@@ -553,7 +572,7 @@ thread2.join()
 print("All done!")
 </pre>
 
-          <p>The <code>ConnectionPool()</code> function creates a pool of Oracle connections for the user.  Connections in the pool can be used by python-oracledb by calling <code>pool.acquire()</code>.
+          <p>The <code>create_pool()</code> function creates a pool of Oracle connections for the user.  Connections in the pool can be used by python-oracledb by calling <code>pool.acquire()</code>.
           The initial pool size is 2 connections.  The maximum size is 5 connections. When the pool needs to grow, then a single new connection will be created at a time based on the <code>increment</code> parameter. The pool can shrink back to the minimum size of 2 when the connections are no longer in use.</p>
 
           <p>The <code>def Query():</code> line creates a method that is called by each thread.</p>
@@ -585,8 +604,8 @@ import oracledb
 import threading
 import db_config
 
-pool = oracledb.ConnectionPool(user=db_config.user, password=db_config.pw, dsn=db_config.dsn,
-                             min=2, max=5, increment=1, getmode=oracledb.POOL_GETMODE_WAIT)
+pool = oracledb.create_pool(user=db_config.user, password=db_config.pw, dsn=db_config.dsn,
+                            min=2, max=5, increment=1, getmode=oracledb.POOL_GETMODE_WAIT)
 
 def Query():
     con = pool.acquire()
@@ -635,8 +654,7 @@ recommended as a best practice for the optimum performance. Pools with such conf
   <p>Database Resident Connection Pooling allows multiple Python processes on multiple machines to share a small pool of database server processes.</p>
 
   <p>Below left is a diagram without DRCP. Every application standalone connection (or python-oracledb connection-pool connection) has its own database server process. Standalone application <code>connect()</code> and close calls require the expensive create and destroy of those database server processes.
-  Python-oracledb connection pools reduce these costs by keeping database server processes open, but every python-oracledb connection pool will requires its own set
-  of database server processes, even if they are not doing database work: these idle server processes consumes database host resources. Below right is a diagram with DRCP.  Scripts and Python processes can share database servers from a pre-created pool of servers and return them when they are not in use.
+  Python-oracledb connection pools reduce these costs by keeping database server processes open, but every python-oracledb connection pool will require its own set of database server processes, even if they are not doing database work: these idle server processes consume database host resources. Below right is a diagram with DRCP.  Scripts and Python processes can share database servers from a pre-created pool of servers and return them when they are not in use.
   </p>
 
   <table cellspacing="0" cellpadding="30" border="0" >
@@ -653,7 +671,7 @@ recommended as a best practice for the optimum performance. Pools with such conf
   </table>
 
   <p>DRCP is useful when the database host machine does not have enough memory to handle the number of database server processes required. If DRCP is enabled, it is best used in conjunction with python-oracledb's connection pooling.
-  However, if the database host memory is large enough, then the default, 'dedicated' server process model is generally recommended. This can be with or without a python-oracledb connection pool, depending on the connection rate.</p>
+  However, the default 'dedicated' server process model is generally recommended if the database host memory is large enough. This can be with or without a python-oracledb connection pool, depending on the connection rate.</p>
 
   <p>Batch scripts doing long running jobs should generally use dedicated connections. Both dedicated and DRCP servers can be used together in the same application or database.</p>
   <h4 id="startdrcp">Start the Database Resident Connection Pool (DRCP)</h4>
@@ -684,7 +702,7 @@ import oracledb
 import db_config
 
 con = oracledb.connect(user=db_config.user, password=db_config.pw, dsn=db_config.dsn + "<strong>:pooled</strong>",
-                       cclass=&quot;PYTHONDEMO&quot;, purity=oracledb.ATTR_PURITY_SELF)
+                       cclass=&quot;PYTHONDEMO&quot;, purity=oracledb.PURITY_SELF)
 print("Database version:", con.version)
 </pre>
 
@@ -694,9 +712,9 @@ print("Database version:", con.version)
   href="https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/connect-drcp.html#GUID-E1337EC6-4A78-4199-84F0-A2739055F3FA"
   >ADB documentation</a>. </p>
 
-  <p> The &quot;purity&quot; of the connection is defined as the <code>ATTR_PURITY_SELF</code> constant, meaning the session state (such as the default date format) might be retained between connection calls, giving performance benefits. Session information will be discarded if a pooled server is later reused by an  application with a different connection class name.</p>
+  <p> The &quot;purity&quot; of the connection is defined as the <code>PURITY_SELF</code> constant, meaning the session state (such as the default date format) might be retained between connection calls, giving performance benefits. Session information will be discarded if a pooled server is later reused by an  application with a different connection class name.</p>
 
-  <p>Applications that should never share session information should use a different connection class and/or use <code>ATTR_PURITY_NEW</code> to force creation of a new session. This reduces overall scalability but prevents applications from misusing the session information.</p>
+  <p>Applications that should never share session information should use a different connection class and/or use <code>PURITY_NEW</code> to force creation of a new session. This reduces overall scalability but prevents applications from misusing the session information.  The default purity for connections created with <code>connect()</code> is <code>PURITY_NEW</code>.</p>
 
   <p>Run <code>connect_drcp.py </code>in a terminal window.</p>
 
@@ -709,7 +727,8 @@ print("Database version:", con.version)
     <li>
       <h4>2.4 Connection pooling and DRCP</h4>
 
-      <p>DRCP works well with python-oracledb's connection pooling.</p>
+      <p>DRCP works well with python-oracledb's connection pooling.  The
+      default purity for pooled connections is <code>PURITY_SELF</code>.</p>
 
   <p>Edit <code>connect_pool2.py</code>, reset any changed pool options, and modify it to use DRCP:</p>
   <pre>
@@ -717,11 +736,12 @@ import oracledb
 import threading
 import db_config
 
-pool = oracledb.ConnectionPool(user=db_config.user, password=db_config.pw, dsn=db_config.dsn <strong>+ ":pooled"</strong>,
-                             min=2, max=5, increment=1, getmode=oracledb.POOL_GETMODE_WAIT)
+pool = oracledb.create_pool(user=db_config.user, password=db_config.pw, dsn=db_config.dsn <strong>+ ":pooled"</strong>,
+                            min=2, max=5, increment=1, getmode=oracledb.POOL_GETMODE_WAIT,
+                            <strong>cclass="PYTHONDEMO", purity=oracledb.PURITY_SELF</strong>)
 
 def Query():
-    con = pool.acquire(<strong>cclass="PYTHONDEMO", purity=oracledb.ATTR_PURITY_SELF</strong>)
+    con = pool.acquire()
     cur = conn.cursor()
     for i in range(4):
         cur.execute("select myseq.nextval from dual")
@@ -753,10 +773,10 @@ print("All done!")
 
       <pre><strong>python drcp_query.py</strong></pre>
 
-      <p>This will prompt for the SYSTEM/ADMIN user, SYSTEM/ADMIN password and the database connection string. For running the file, you will need to connect to the container database in Oracle Database v19 or lower.  From Oracle Database 21c onwards, you can enable DRCP in pluggable databases.</p>
+      <p>This will prompt for the SYSTEM (or ADMIN user), the password, and the database connection string. For running the file, you will need to connect to the container database in Oracle Database v19 or lower.  From Oracle Database 21c onwards, you can enable DRCP in pluggable databases.</p>
 
-      <p>Note that with ADB, this view does not contain  rows, so running this script is not useful. For other Oracle Databases, the script shows the number of connection requests made to the pool since the database was started ("NUM_REQUESTS"), how many of those reused a pooled server's session ("NUM_HITS"), and how many had to create new sessions ("NUM_MISSES"). Typically the goal is a low number of misses.</p>
-      <p> If the file is run successfully, you should see something like:
+      <p>Note that with ADB, this view does not contain rows, so running this script is not useful. For other Oracle Databases, the script shows the number of connection requests made to the pool since the database was started ("NUM_REQUESTS"), how many of those reused a pooled server's session ("NUM_HITS"), and how many had to create new sessions ("NUM_MISSES"). Typically the goal is a low number of misses.</p>
+      <p> If the file is run successfully, you should see something like </p>
       <pre>Looking at DRCP Pool stats...
 
 (CCLASS_NAME, NUM_REQUESTS, NUM_HITS, NUM_MISSES)
@@ -764,14 +784,14 @@ print("All done!")
 ('PYTHONDEMO.SHARED', 5, 0, 5)
 ('PYTHONDEMO.PYTHONDEMO', 4, 2, 2)
 ('SYSTEM.SHARED', 11, 0, 11)
-Done.</pre></p>
+Done.</pre>
       <p>To see the pool configuration, you can query DBA_CPOOL_INFO.</p>
     </li>
 
     <li>
       <h4>2.5 More DRCP investigation</h4>
 
-      <p>To explore the behaviors of python-oracledb connection pooling and DRCP pooling futher, you could try changing the purity to <code>oracledb.ATTR_PURITY_NEW</code> to see the effect on the DRCP NUM_MISSES statistic.</p>
+      <p>To further explore the behaviors of python-oracledb connection pooling and DRCP pooling, you could try changing the purity to <code>oracledb.PURITY_NEW</code> to see the effect on the DRCP NUM_MISSES statistic.</p>
 
       <p>Another experiement is to include the <code>time</code> module at the file
       top:</p>
@@ -796,7 +816,7 @@ import time</pre>
   <ul>
   <li><h4>3.1 A simple query</h4>
 
-  <p>There are a number of functions you can use to query an Oracle database, but the basics of querying are always the same:</p>
+  <p>There are several functions you can use to query an Oracle database, but the basics of querying are always the same:</p>
 
   <p>1. Execute the statement.<br />
   2. Bind data values (optional).<br />
@@ -918,7 +938,7 @@ print(res)
 
   <p>This section demonstrates a way to improve query performance by increasing the number of rows returned in each batch from Oracle to the Python program.</p>
 
-  <p>Row prefetching and array fetching are both internal buffering techniques to reduce round-trips to the database. The difference is the code layer that is doing the buffering, and when the buffering occurs.</p>
+  <p>Row prefetching and array fetching are internal buffering techniques to reduce round-trips to the database. The difference is the code layer that is doing the buffering, and when the buffering occurs.</p>
 
   <p>The <a href="#installsampleenv">environment setup file</a> has already created the <em>bigtab</em> table with a large number of rows (to be used by the <code>query_arraysize.py</code> file) by internally running the sql script below:</p>
   <pre>create table bigtab (mycol varchar2(20));
@@ -954,7 +974,7 @@ elapsed = (time.time() - start)
 print(elapsed, "seconds")
 </pre>
 
-    <p>This uses the 'time' module to measure elapsed time of the query. The <em>prefetchrows</em> and <em>arraysize</em> values are 100.  This causes batches of 100 records at a time to be returned from the database to a cache in Python.
+    <p>This uses the 'time' module to measure elapsed time of the query. The <em>prefetchrows</em> and <em>arraysize</em> values are 100. This causes batches of 100 records at a time to be returned from the database to a cache in Python.
     These values can be tuned to reduce the number of &quot;round-trips&quot;
     made to the database, often reducing network load and reducing the number of context switches on the database server. The <code>fetchone()</code>,
     <code>fetchmany()</code> and <code>fetchall()</code> methods will read from the cache before requesting more data from the database.</p>
@@ -977,7 +997,7 @@ print(elapsed, "seconds")
 
     <p>There is a time/space tradeoff for increasing the values. Larger values will require more memory in Python for buffering the records.</p>
 
-    <p>If you know the query returns a fixed number of rows, for example 20 rows, then set arraysize to 20 and prefetchrows to 21.  The addition of one extra row for prefetchrows prevents a round-trip to check for end-of-fetch. The statement execution and fetch will take a total of one round-trip.  This minimizes load on the database.</p>
+    <p>If you know the query returns a fixed number of rows, for example, 20 rows, then set arraysize to 20 and prefetchrows to 21.  The addition of one extra row for prefetchrows prevents a round-trip to check for end-of-fetch. The statement execution and fetch will take a total of one round-trip.  This minimizes the load on the database.</p>
 
     <p>If you know a query only returns a few records,
     decrease the arraysize from the default to reduce memory usage.</p>
@@ -1033,7 +1053,7 @@ print(res)
 
       <p>To bind a database NULL, use the Python value <code>None</code>.</p>
 
-      <p>python-oracledb uses Oracle Database's Statement Cache.  As long as the statement you pass to <code>execute()</code> is in that cache, you can use different bind values and still avoid a full statement parse.  The statement cache size is configurable for each connection. To see the default statement cache size, edit <code>bind_query.py</code> and add a line at the end:</p>
+      <p>python-oracledb uses a cache of executed statements.  As long as the statement you pass to <code>execute()</code> is in that cache, you can use different bind values and still avoid a full statement parse.  The statement cache size is configurable for each connection. To see the default statement cache size, edit <code>bind_query.py</code> and add a line at the end:</p>
 
 <pre>
 print(con.stmtcachesize)
@@ -1041,8 +1061,8 @@ print(con.stmtcachesize)
 
       <p>Re-run the file.</p>
 
-      <p>In your applications you would set the statement cache size to the
-      number of unique statements commonly executed.</p>
+      <p> You would set the statement cache size to the
+      number of unique statements commonly executed in your applications.</p>
 
     </li>
 
@@ -1085,7 +1105,7 @@ print(res)</pre>
       <pre><strong>python bind_insert.py</strong></pre>
 
       <p>The new results are automatically rolled back at the end of
-      the script so re-running it will always show the same number of
+      the script. So, re-running the script will always show the same number of
       rows in the table.</p>
 
     </li>
@@ -1263,12 +1283,12 @@ href="https://python-oracledb.readthedocs.io/en/latest/user_guide/bind.html#chan
       <p>Output type handlers enable applications to change how data
       is fetched from the database.  For example, numbers can be
       returned as strings or decimal objects.  LOBs can be returned as
-      string or bytes.</p>
+      strings or bytes.</p>
 
       <p>A type handler is enabled by setting the
       <code>outputtypehandler</code> attribute on either a cursor or
-      the connection. If set on a cursor it only affects queries executed
-      by that cursor. If set on a connection it affects all queries executed
+      the connection. If set on a cursor, it only affects queries executed
+      by that cursor. If set on a connection, it affects all queries executed
       on cursors created by that connection.</p>
 
       <p>Review the code contained in <code>type_output.py</code>:</p>
@@ -1307,7 +1327,7 @@ for row in cur.execute("select * from dept"):
 </pre>
 
       <p>This type handler converts any number columns to strings with
-      maxium size 9.</p>
+      maximum size 9.</p>
 
       <p>Run the script again:</p>
 
@@ -1379,19 +1399,20 @@ for value, in cur.execute("select 0.1 from dual"):
 
       <pre>Value: 0.1 * 3 = 0.3</pre>
 
-      <p>Although the code demonstrates the use of outconverter, in this particular case, the variable can be created simply by using the following code to replace the <em>outputtypehandler</em> function defined above:</p>
+      <p>The code above demonstrates the use of outconverter, but in this particular case, python-oracledb offers a simple convenience attribute to do the same conversion:</p>
 
 <pre>
-def ReturnNumbersAsDecimal(cursor, name, defaultType, size, precision, scale):
-    if defaultType == oracledb.NUMBER:
-        return cursor.var(decimal.Decimal, arraysize=cursor.arraysize)</pre></li>
+import oracledb
+
+oracledb.defaults.fetch_decimals = True
+</pre></li>
 
     <li>
       <h4>6.3 Input type handlers</h4>
 
       <p>Input type handlers enable applications to change how data is bound to statements, or to enable new types to be bound directly without having to be converted individually.</p>
 
-      <p>Review <code>type_input.py</code>, with the      addition of a new class and converter (shown in bold):</p>
+      <p>Review <code>type_input.py</code>, with the addition of a new class and converter (shown in bold):</p>
 
 <pre>
 import oracledb
@@ -1406,7 +1427,7 @@ cur = con.cursor()
 cur.execute("""begin
                  execute immediate 'drop table BuildingTable';
                  exception when others then
-                   if sqlcode <> -942 then
+                   if sqlcode &lt;&gt; -942 then
                      raise;
                    end if;
                end;""")
@@ -1424,7 +1445,7 @@ cur.execute("""create table BuildingTable (
         self.num_floors = num_floors
 
     def __repr__(self):
-        return "<Building %s: %s>" % (self.building_id, self.description)
+        return "&lt;Building %s: %s&gt;" % (self.building_id, self.description)
 
     def __eq__(self, other):
         if isinstance(other, Building):
@@ -1474,7 +1495,7 @@ The <code>Building</code> class is used lower in the code to create a Python ins
 <pre>
 building = Building(1, &quot;The First Building&quot;, 5)</pre>
 
-<p>which is then directly bound into the INSERT statement like:</p>
+<p>which is then directly bound into the INSERT statement like </p>
 
 <pre>cur.execute("insert into BuildingTable (ID, BuildingDetails) values (:1, :2)", (building.building_id, building))</pre>
 
@@ -1557,6 +1578,8 @@ print("CLOB data:", clobdata)
 import oracledb
 import db_config
 
+<strong>oracledb.defaults.fetch_lobs = False</strong>
+
 con = oracledb.connect(user=db_config.user, password=db_config.pw, dsn=db_config.dsn)
 cur = con.cursor()
 
@@ -1570,12 +1593,6 @@ for i in range(5):
                 (i + 1, "String data " + long_string + ' End of string'))
 con.commit()
 
-<strong>def OutputTypeHandler(cursor, name, defaultType, size, precision, scale):
-    if defaultType == oracledb.CLOB:
-        return cursor.var(oracledb.LONG_STRING, arraysize=cursor.arraysize)
-
-con.outputtypehandler = OutputTypeHandler</strong>
-
 print("Querying data...")
 cur.execute("select * from testclobs where id = :id", {'id': 1})
 <strong>(id, clobdata) = cur.fetchone()
@@ -1583,7 +1600,7 @@ print("CLOB length:", len(clobdata))
 print("CLOB data:", clobdata)</strong>
 </pre>
 
-      <p>The <em>OutputTypeHandler</em> causes python-oracledb to fetch the CLOB as a
+      <p>Setting <em>oracledb.defaults.fetch_lobs</em> to False causes python-oracledb to fetch the CLOB as a
       string.  Standard Python string functions such as <code>len()</code> can be used on the result.</p>
 
       <p>The output is the same as for <code>clob.py</code>.  To
@@ -1625,8 +1642,7 @@ for c1, c2 in rows:
     print(c1, "->", c2)
 </pre>
 
-  <p>This shows two methods of accessing result set items from a data row.  The first uses array indexes like <code>row[0]</code>. The second uses loop target variables which take the values of each row
-  tuple.</p>
+  <p>This shows two methods of accessing result set items from a data row.  The first uses array indexes like <code>row[0]</code>. The second uses loop target variables that take each row tuple's values.</p>
 
   <p>Run the file:</p>
 
@@ -1768,25 +1784,63 @@ print("Number of rows:", count)
 </ul>
 
 <h2> <a name="thick">10. Python-oracledb Thick mode</a></h2>
-<p>All the above examples use python-oracledb in <em>thin</em> mode, but there are certain features which are only available in <em>thick</em> mode of the python-oracledb driver. The upcoming sections will talk about using the <em>thick mode only </em>features including the environment setup.Note that you can also run all the earlier examples in thick mode by just changing the <code>import db_config</code> line to <code>import db_config_thick as db_config</code>. We explain more about the <code>db_config_thick.py</code> file <a href="#thickconfig">here</a>.</p>
-<p>For running in python-oracledb thick mode, most of the initial installation steps are similar to the thin mode. Run the following steps:
+<p>All the above examples use python-oracledb in <em>thin</em> mode, but there are certain features which are only available in the <em>thick</em> mode of the python-oracledb driver. The upcoming sections  show some of these.  Note that you can also run all the earlier examples in thick mode by just changing the import line in examples from <code>import db_config</code> to <code>import db_config_thick as db_config</code>.</p>
+
+<p>The following sections assume you have installed the tutorial schema as shown at the <a href="#preface" >tutorial start</a>.</p>
+
 <ul>
-<li><a href="#installsw">Install Software</a>
-<p>The Advanced Queuing section requires  python-oracledb thick mode to be using Oracle client libraries 12.2 or later. The SODA section requires Oracle Database 18 or later, and  python-oracledb thick mode must be using Oracle libraries from 18.5, or later.</p>
+        <li>
+          <h4> 10.1 Review the Oracle Client library path</h4>
+
+          <p>You additionally need to make Oracle Client libraries available.  Follow the documentation on <a href="https://python-oracledb.readthedocs.io/en/latest/user_guide/installation.html" >Installing python-oracledb</a>.</p>
+
+          <p>When you have installed Oracle Client libraries, review the library path settings in <code>db_config_thick.py</code> file. If python-oracledb cannot locate Oracle Client libraries, then your applications will fail with an error like "<em>DPI-1047: Cannot locate a 64-bit Oracle Client library</em>". For our examples, we are using Oracle Instant Client libraries.</p>
+
+<pre>
+# On Linux, this must be None.
+# Instead, the Oracle environment must be set before Python starts.
+instant_client_dir = None
+
+# On Windows, if your database is on the same machine, comment these lines out
+# and let instant_client_dir be None.  Otherwise, set this to your Instant
+# Client directory.  Note the use of the raw string r"...", which allows backslashes to
+# be used as directory separators.
+if platform.system() == &quot;Windows&quot;:
+    instant_client_dir = r"C:\Oracle\instantclient_19_14"
+
+# On macOS (Intel x86) set the directory to your Instant Client directory
+if platform.system() == &quot;Darwin&quot;:
+    instant_client_dir = os.environ.get("HOME")+"/Downloads/instantclient_19_8"
+
+# You must always call init_oracle_client() to use thick mode
+oracledb.init_oracle_client(lib_dir=instant_client_dir)</pre>
+
+ <p> <strong>Important! </strong>Calling the <code>init_oracle_client()</code> function enables the thick mode of python-oracledb. Once python-oracledb is in thick mode, you cannot return to thin mode without removing calls to <code>init_oracle_client()</code> and restarting the application.</p>
+ <p>Edit <code>db_config_thick.py</code> and set <code>instant_client_dir</code> to <code>None</code> or to a valid path according to the following notes:</p>
+
+          <ul>
+            <li>
+
+              <p>If you are on  macOS (Intel x86) or Windows, and you have installed Oracle Instant Client libraries because your database is on a remote machine, then set <code>instant_client_dir</code> to the path of the Instant Client libraries.</p>
+            </li>
+
+            <li>
+
+            <p>If you are on Windows and have a local database installed, then comment out the two Windows lines, so that <code>instant_client_dir</code> remains <code>None</code>.</p>
+
+            </li>
+
+            <li>
+
+            <p>In all other cases (including Linux with Oracle Instant Client), make sure that <code>instant_client_dir</code> is set to <code>None</code>.  In these cases you must make sure that the Oracle libraries from Instant Client or your ORACLE_HOME are in your system library search path before you start Python. On Linux, the path can be configured with <em>ldconfig</em> or with the <em>LD_LIBRARY_PATH</em> environment variable.</p>
+           </li>
+	 </ul>
 </li>
-<li><a href="#createdbuser">Create the database user</a></li>
-<li><a href="#downloadscripts">Download the tutorial scripts</a></li>
-<li><a href="#installsampletables">Install the sample tables</a></li>
-<li><a href="#startdrcp"> Start DRCP </a> if required</li>
-</ul>
-<p> In addition to the above steps, you need to follow the instructions below to run the thick mode of python-oracledb driver.</p>
-<ul>
-<li>
-    <h4 id="thickconfig">10.1 Review the configuration files for thick mode</h4>
+<li><h4 id="thickconfig">10.2 Review the configuration files for thick mode</h4>
 
           <p>Review <code>db_config_thick.py</code>   (thick mode), and <code>db_config.sql</code> files in the <code>tutorial</code> directory.  These are included in other Python and SQL files for setting up the database connection.</p>
 
-          <p>Edit <code>db_config_thick.py</code> file and change the default values to match the connection information for your environment.  Alternatively, you can set the given environment variables in your terminal window. For example, the default username is "<em>pythondemo</em>" unless the environment variable "<em>PYTHON_USER</em>" contains a different username. The default connection string is for the '<em>orclpdb</em>' database service on the same machine as Python. In Python Database API terminology, the connection string parameter is called the "data source name", or "dsn".  Using environment variables is convenient because you will not be asked to re-enter the password when you run scripts:</p>
+          <p>Edit <code>db_config_thick.py</code> file and change the default values to match the connection information for your environment.  Alternatively, you can set the given environment variables in your terminal window. For example, the default username is "<em>pythondemo</em>" unless the environment variable "<em>PYTHON_USER</em>" contains a different username. The default connection string is for the '<em>orclpdb</em>' database service on the same machine as Python. In Python Database API terminology, the connection string parameter is called the "data source name" or "dsn".  Using environment variables is convenient because you will not be asked to re-enter the password when you run scripts:</p>
 
 <pre>
 user = os.environ.get("PYTHON_USER", "pythondemo")
@@ -1808,65 +1862,19 @@ def user = "pythondemo"
 def connect_string = "localhost/orclpdb"
 
 -- Prompt for the password
-accept pw char prompt 'Enter database password for &user: ' hide
+accept pw char prompt 'Enter database password for &amp;user: ' hide
 </pre>
 
 
           <p>The tutorial instructions may need adjusting, depending on how you have set up your environment.</p>
   </li>
-
-        <li>
-          <h4> 10.2 Review the Oracle Client library path</h4>
-
-          <p>Also, review the Oracle Client library path settings in <code>db_config_thick.py</code> file. If python-oracledb cannot locate Oracle Client libraries, then your applications will fail with an error like "<em>DPI-1047: Cannot locate a 64-bit Oracle Client library</em>". For our examples, we are using Oracle Instant Client libraries.</p>
-
-<pre>
-# On Linux this must be None.
-# Instead, the Oracle environment must be set before Python starts.
-instant_client_dir = None
-
-# On Windows, if your database is on the same machine, comment these lines out
-# and let instant_client_dir be None.  Otherwise, set this to your Instant
-# Client directory.  Note the use of the raw string r"..."  so backslashes can
-# be used as directory separators.
-if platform.system() == &quot;Windows&quot;:
-    instant_client_dir = r"C:\Oracle\instantclient_19_14"
-
-# On macOS (Intel x86) set the directory to your Instant Client directory
-if platform.system() == &quot;Darwin&quot;:
-    instant_client_dir = os.environ.get("HOME")+"/Downloads/instantclient_19_8"
-
-# You must always call init_oracle_client() to use thick mode
-if instant_client_dir is None:
-    oracledb.<strong>init_oracle_client</strong>()
-else:
-    oracledb.<strong>init_oracle_client</strong>(lib_dir=instant_client_dir)</pre>
-
- <p> <strong>Important! </strong>Calling the <code>init_oracle_client()</code> function always instantiates the thick mode of python-oracledb.</p>
- <p>Edit <code>db_config_thick.py</code> and set <code>instant_client_dir</code> to <code>None</code> or to a valid path according to the following notes:</p>
-
-          <ul>
-            <li>
-
-              <p>If you are on  macOS (Intel x86) or Windows, and you have installed Oracle Instant Client libraries because your database is on a remote machine, then set <code>instant_client_dir</code> to the path of the Instant Client libraries.</p>
-            </li>
-
-            <li>
-
-            <p>If you are on Windows and have a local database installed, then comment out the two Windows lines, so that <code>instant_client_dir</code> remains <code>None</code>.</p>
-
-            </li>
-
-            <li>
-
-            <p>In all other cases (including Linux with Oracle Instant Client), make sure that <code>instant_client_dir</code> is set to <code>None</code>.  In these cases you must make sure that the Oracle libraries from Instant Client or your ORACLE_HOME are in your system library search path before you start Python. On Linux, the path can be configured with <em>ldconfig</em> or with the <em>LD_LIBRARY_PATH</em> environment variable.</p>
-           </li>
-          </ul>
 </ul>
-<p>The following sections are specific to the python-oracledb thick mode, although the long term goal is to provide them in the thin mode in future versions.</p>
+
+<p>The following sections are specific to the python-oracledb thick modes in this release of python-oracledb.</p>
+
  <h2><a name = "scrollable">11. Scrollable cursors</a></h2>
 
-    <p>Scrollable cursors enable the application to move backwards as well as forwards in query results. They can be used to skip rows as well as move to a particular row.</p>
+    <p>Scrollable cursors enable python-oracledb thick mode applications to move backwards as well as forwards in query results. They can be used to skip rows as well as move to a particular row.</p>
     <ul>
     <li><h4>11.1 Working with scrollable cursors</h4>
     <p>Review the code contained in <code>query_scroll.py</code>:</p>
@@ -1970,11 +1978,11 @@ for row in cur:
 
 <pre><strong>python bind_sdo.py</strong></pre>
 
-<p>The new SDO is shown as an object, similar to:</p>
+<p>The new SDO is shown as an object, similar to </p>
 
 <pre>(1, &lt;oracledb.Object MDSYS.SDO_GEOMETRY at 0x104a76230&gt;)</pre>
 
-<p>To show the attribute values, edit the the query code section at
+<p>To show the attribute values, edit the query code section at
 the end of the file.  Add a new method that traverses the object. The file below the existing comment "<code># (Change below here)</code>")
 should look like:</p>
 
@@ -2046,7 +2054,7 @@ Id:  1
 </ul>
 
 <h2><a name="typehandlers">13. Input and Output Type Handlers with named objects</a></h2>
-<p>Named objects can only be used in thick mode. <em>Documentation links for further reading: <a
+<p>Named objects can only be used in python-oracledb's thick mode. <em>Documentation links for further reading: <a
 href="https://python-oracledb.readthedocs.io/en/latest/user_guide/sql_execution.html#changing-fetched-data-types-with-output-type-handlers"
 >Changing Fetched Data Types with Output Type Handlers</a> and <a
 href="https://python-oracledb.readthedocs.io/en/latest/user_guide/bind.html#changing-bind-data-types-using-an-input-type-handler"
@@ -2067,7 +2075,7 @@ cur = con.cursor()
 cur.execute("""begin
                  execute immediate 'drop table testgeometry';
                  exception when others then
-                   if sqlcode <> -942 then
+                   if sqlcode &lt;&gt; -942 then
                      raise;
                    end if;
                end;""")
@@ -2141,7 +2149,7 @@ for (id, obj) in cur:
 <p>To confirm the behavior, run the file:</p>
 
 <pre><strong>python type_input_named_obj.py</strong></pre>
-<p> This will show
+<p> This will show</p>
 <pre>Querying row just inserted...
 Id:  1
    {
@@ -2161,13 +2169,13 @@ Id:  1
          5.0
          7.0
        ]
-   }</pre></p></li>
+   }</pre></li>
 </ul>
 
 <ul>
 <li>
   <h4>13.2 Output type handlers with named objects</h4>
-<p>Output type handlers enable applications to extract the data from  database named objects into a user-defined Python object  (defined by the <code>mySDO</code> class here). Review the code contained in <code>type_output_named_obj.py</code> with the output converter function shown in bold:</p>
+<p>Output type handlers enable applications to extract the data from  database named objects into a user-defined Python object (defined by the <code>mySDO</code> class here). Review the code contained in <code>type_output_named_obj.py</code> with the output converter function shown in bold:</p>
 <pre>
 import oracledb
 import db_config_thick as db_config
@@ -2180,7 +2188,7 @@ cur = con.cursor()
 cur.execute("""begin
                  execute immediate 'drop table testgeometry';
                  exception when others then
-                   if sqlcode <> -942 then
+                   if sqlcode &lt;&gt; -942 then
                      raise;
                    end if;
                end;""")
@@ -2247,18 +2255,18 @@ for (id, obj) in cur:
 <p>To confirm the behavior, run the file:</p>
 
 <pre><strong>python type_output_named_obj.py</strong></pre>
-<p> This will show
+<p> This will show</p>
 <pre>Querying the Spatial Data Object(SDO) Table using the Output Type Handler...
 ----------------------------------------------------------------------------
 SDO ID: 1
 SDO GYTPE: 2003
 SDO ELEMINFO: [1.0, 1003.0, 3.0]
-SDO_ORDINATES: [1.0, 1.0, 5.0, 7.0]</pre></p></li>
+SDO_ORDINATES: [1.0, 1.0, 5.0, 7.0]</pre></li>
 </ul>
 
 <h2><a name="aq">14. Advanced Queuing</a></h2>
 
-<p>Oracle Advanced Queuing (AQ) allows messages to be passed between applications. <em>Documentation link for further reading: <a
+<p>Oracle Advanced Queuing (AQ) APIs usable in python-oracledb thick mode allow messages to be passed between applications. <em>Documentation link for further reading: <a
 href="https://python-oracledb.readthedocs.io/en/latest/user_guide/aq.html" >Oracle Advanced Queuing (AQ)</a></em>.</p>
 
   <ul>
@@ -2352,8 +2360,8 @@ package.  The queue is used for passing Oracle UDT_BOOK objects. The file uses A
 <p>The output shows messages being queued and dequeued.</p>
 
 <p>To experiment, split the code into three files: one to create and
-start the queue, and two other files to queue and dequeue messages.
-Experiment running the queue and dequeue files concurrently in
+start the queue and two other files to queue and dequeue messages.
+Experiment with running the queue and dequeue files concurrently in
 separate terminal windows.</p>
 
 <p>Try removing the <code>commit()</code> call in
@@ -2389,7 +2397,7 @@ dequeue. </p>
 <h2><a name="soda">15. Simple Oracle Document Access (SODA)</a></h2>
 
   <p>Simple Oracle Document Access (SODA) is a set of NoSQL-style APIs.
-  Documents can be inserted, queried, and retrieved from Oracle Database.  By default, documents are JSON strings.  SODA APIs exist in many languages. <i>Documentation link for further reading: <a
+  Documents can be inserted, queried, and retrieved from Oracle Database.  By default, documents are JSON strings.  SODA APIs exist in many languages. It is usable in python-oracledb's thick mode. <i>Documentation link for further reading: <a
   href="https://python-oracledb.readthedocs.io/en/latest/user_guide/soda.html" >Simple Oracle Document Access (SODA)</a></i>.</p>
 
   <ul>
@@ -2443,7 +2451,7 @@ print(content)</pre>
       <p><code>soda.createCollection()</code> will create a new collection, or open an existing collection, if the name is already in use. (Due to a change in the default "<em>sqlType</em>" storage for Oracle Database 21c, the metadata is explicitly stated to use a BLOB column. This lets the example run with different client and database versions).</p>
 
       <p><code>insertOneAndGet()</code> inserts the content of a document into the database and returns a SODA Document Object.
-This allows access to meta data such as the document key. By default, document keys are automatically generated.</p>
+This allows access to metadata such as the document key. By default, document keys are automatically generated.</p>
 
       <p>The <code>find()</code> method is used to begin an operation that will act upon documents in the collection.</p>
 
@@ -2542,7 +2550,7 @@ for doc in my_documents:
 
     <p>On some machines, you may need to run the <code>python3</code> command instead of <code>python</code>. </p>
     <p>When you run scripts, Python automatically creates bytecode versions of them in a folder called <code>__pycache__</code>.
-    These improve performance of scripts that are run multiple times. They are automatically recreated if the source file changes.</p>
+    These improve the performance of scripts that are run multiple times. They are automatically recreated if the source file changes.</p>
 
     <h4>Indentation</h4>
 
@@ -2585,9 +2593,9 @@ ename = 'Arnie'</pre>
 
     <h4>Comments</h4>
 
-<p> Comments are either single line:</p>
+<p> Comments can be single line:</p>
   <pre># a short comment</pre>
-  <p>They can be multi-line using the triple-quote token to create a string that does nothing:</p>
+  <p>Or they can be multi-line using the triple-quote token to create a string that does nothing:</p>
   <pre>&quot;&quot;&quot;
 a longer
 comment
@@ -2657,7 +2665,7 @@ else:
     print('Unknown number')
 </pre>
 
-<p>This also shows how the clauses are delimited with colons, and each sub block of code is indented.</p>
+<p>This also shows how the clauses are delimited with colons, and each sub-block of code is indented.</p>
 
 <h4>Loops</h4>
 
@@ -2718,7 +2726,7 @@ import sys</pre>
 
 <div class="footer"></div>
 
-<hr>
+<hr/>
 <h2>License</h2>
 <p>Copyright &copy; 2017, 2022, Oracle and/or its affiliates. </p>
 
