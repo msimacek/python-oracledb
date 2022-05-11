@@ -93,28 +93,35 @@ cdef inline void pack_uint16(char_type *buf, uint16_t x, int order):
     """
     Pack a 16-bit integer into the buffer using the specified type order.
     """
-    (<uint16_t*> buf)[0] = x if order == MACHINE_BYTE_ORDER else bswap16(x)
+    if order != MACHINE_BYTE_ORDER:
+        x = bswap16(x)
+    memcpy(buf, &x, sizeof(x))
 
 
 cdef inline void pack_uint32(char_type *buf, uint32_t x, int order):
     """
     Pack a 32-bit integer into the buffer using the specified type order.
     """
-    (<uint32_t*> buf)[0] = x if order == MACHINE_BYTE_ORDER else bswap32(x)
+    if order != MACHINE_BYTE_ORDER:
+        x = bswap32(x)
+    memcpy(buf, &x, sizeof(x))
 
 
 cdef inline void pack_uint64(char_type *buf, uint64_t x, int order):
     """
     Pack a 64-bit integer into the buffer using the specified type order.
     """
-    (<uint64_t*> buf)[0] = x if order == MACHINE_BYTE_ORDER else bswap64(x)
+    if order != MACHINE_BYTE_ORDER:
+        x = bswap64(x)
+    memcpy(buf, &x, sizeof(x))
 
 
 cdef inline uint16_t unpack_uint16(const char_type *buf, int order):
     """
     Unpacks a 16-bit integer from the buffer using the specified byte order.
     """
-    cdef uint16_t raw_value = (<uint16_t*> buf)[0]
+    cdef uint16_t raw_value
+    memcpy(&raw_value, buf, sizeof(raw_value))
     return raw_value if order == MACHINE_BYTE_ORDER else bswap16(raw_value)
 
 
@@ -122,7 +129,8 @@ cdef inline uint32_t unpack_uint32(const char_type *buf, int order):
     """
     Unpacks a 32-bit integer from the buffer using the specified byte order.
     """
-    cdef uint32_t raw_value = (<uint32_t*> buf)[0]
+    cdef uint32_t raw_value
+    memcpy(&raw_value, buf, sizeof(raw_value))
     return raw_value if order == MACHINE_BYTE_ORDER else bswap32(raw_value)
 
 
