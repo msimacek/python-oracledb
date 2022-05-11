@@ -30,8 +30,8 @@ import oracledb
 import threading
 import db_config
 
-pool = oracledb.ConnectionPool(user=db_config.user, password=db_config.pw, dsn=db_config.dsn,
-                               min=2, max=5, increment=1, getmode=oracledb.POOL_GETMODE_WAIT)
+pool = oracledb.create_pool(user=db_config.user, password=db_config.pw, dsn=db_config.dsn,
+                            min=2, max=5, increment=1, getmode=oracledb.POOL_GETMODE_WAIT)
 
 
 def Query():

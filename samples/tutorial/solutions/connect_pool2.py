@@ -31,13 +31,13 @@ import threading
 import time
 import db_config
 
-pool = oracledb.ConnectionPool(user=db_config.user, password=db_config.pw, dsn=db_config.dsn + ":pooled",
-                               min=2, max=5, increment=1, getmode=oracledb.POOL_GETMODE_WAIT)
+pool = oracledb.create_pool(user=db_config.user, password=db_config.pw, dsn=db_config.dsn + ":pooled",
+                            min=2, max=5, increment=1, getmode=oracledb.POOL_GETMODE_WAIT,
+                            cclass="PYTHONDEMO", purity=oracledb.PURITY_SELF) # try PURITY_NEW
 
 
 def Query():
-    con = pool.acquire(cclass="PYTHONDEMO", purity=oracledb.ATTR_PURITY_SELF)
-    #con = pool.acquire(cclass="PYTHONDEMO", purity=oracledb.ATTR_PURITY_NEW)
+    con = pool.acquire()
     cur = con.cursor()
     for i in range(4):
         cur.execute("select myseq.nextval from dual")

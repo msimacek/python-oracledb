@@ -29,6 +29,8 @@
 import oracledb
 import db_config
 
+oracledb.defaults.fetch_lobs = False
+
 con = oracledb.connect(user=db_config.user,
                        password=db_config.pw, dsn=db_config.dsn)
 cur = con.cursor()
@@ -42,14 +44,6 @@ for i in range(5):
     cur.execute("insert into testclobs values (:1, :2)",
                 (i + 1, "String data " + long_string + ' End of string'))
 con.commit()
-
-
-def OutputTypeHandler(cursor, name, defaultType, size, precision, scale):
-    if defaultType == oracledb.CLOB:
-        return cursor.var(oracledb.LONG_STRING, arraysize=cursor.arraysize)
-
-
-con.outputtypehandler = OutputTypeHandler
 
 print("Querying data...")
 cur.execute("select * from testclobs where id = :id", {'id': 1})
