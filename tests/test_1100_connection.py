@@ -67,8 +67,8 @@ class TestCase(test_env.BaseTestCase):
         result, = cursor.fetchone()
         self.assertEqual(result, value, "%s value mismatch" % attrName)
 
-    def test_1100_all_args(self):
-        "1100 - connection to database with user, password, TNS separate"
+    def test_1100_simple_connection(self):
+        "1100 - simple connection to database"
         connection = test_env.get_connection()
         self.__verify_args(connection)
 
@@ -94,10 +94,7 @@ class TestCase(test_env.BaseTestCase):
                      "thin mode doesn't support application context yet")
     def test_1102_app_context_negative(self):
         "1102 - test invalid use of application context"
-        self.assertRaises(TypeError, oracledb.connect,
-                          user=test_env.get_main_user(),
-                          password=test_env.get_main_password(),
-                          dsn=test_env.get_connect_string(),
+        self.assertRaises(TypeError, test_env.get_connection,
                           appcontext=[('userenv', 'action')])
 
     def test_1103_attributes(self):
@@ -147,11 +144,11 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaisesRegex(oracledb.DatabaseError,
                                "^DPY-4000:|^DPY-4001:|^DPY-4026:|^ORA-12154:",
                                oracledb.connect, test_env.get_main_user())
-        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4001:",
+        self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4000:|^DPY-4001:",
                                oracledb.connect, test_env.get_main_user() + \
                                "@" + test_env.get_connect_string())
         self.assertRaisesRegex(oracledb.DatabaseError,
-                               "^DPY-4001:|^ORA-12154:|^ORA-12521:",
+                               "^DPY-4000:|^DPY-4001:|^ORA-12154:|^ORA-12521:",
                                oracledb.connect, test_env.get_main_user() + \
                                "@" + test_env.get_connect_string() + "/" + \
                                test_env.get_main_password())
@@ -159,9 +156,8 @@ class TestCase(test_env.BaseTestCase):
     def test_1106_bad_password(self):
         "1106 - connection to database with bad password"
         self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-01017:",
-                               oracledb.connect, user=test_env.get_main_user(),
-                               password=test_env.get_main_password() + "X",
-                               dsn=test_env.get_connect_string())
+                               test_env.get_connection,
+                               password=test_env.get_main_password() + "X")
 
     def test_1107_change_password(self):
         "1107 - test changing password"
@@ -172,9 +168,7 @@ class TestCase(test_env.BaseTestCase):
         new_password = "".join(sys_random.choice(string.ascii_letters) \
                        for i in range(20))
         connection.changepassword(test_env.get_main_password(), new_password)
-        connection = oracledb.connect(dsn=test_env.get_connect_string(),
-                                      user=test_env.get_main_user(),
-                                      password=new_password)
+        connection = test_env.get_connection(password=new_password)
         connection.changepassword(new_password, test_env.get_main_password())
 
     def test_1108_change_password_negative(self):
@@ -200,9 +194,7 @@ class TestCase(test_env.BaseTestCase):
         new_password = "".join(chars)
         connection.changepassword(test_env.get_main_password(), new_password)
         try:
-            arg = "%s/%s@%s" % (test_env.get_main_user(), new_password,
-                                test_env.get_connect_string())
-            oracledb.connect(arg)
+            test_env.get_connection(password=new_password)
         finally:
             connection.changepassword(new_password,
                                       test_env.get_main_password())
@@ -239,7 +231,7 @@ class TestCase(test_env.BaseTestCase):
         arg = "%s/%s@%s" % (test_env.get_main_user(),
                             test_env.get_main_password(),
                             test_env.get_connect_string())
-        connection = oracledb.connect(arg)
+        connection = test_env.get_connection(arg)
         self.__verify_args(connection)
 
     def test_1116_version(self):
@@ -501,13 +493,8 @@ class TestCase(test_env.BaseTestCase):
         sys_random = random.SystemRandom()
         new_password = "".join(sys_random.choice(string.ascii_letters) \
                        for i in range(20))
-        connection = oracledb.connect(dsn=test_env.get_connect_string(),
-                                      user=test_env.get_main_user(),
-                                      password=test_env.get_main_password(),
-                                      newpassword=new_password)
-        connection = oracledb.connect(dsn=test_env.get_connect_string(),
-                                      user=test_env.get_main_user(),
-                                      password=new_password)
+        connection = test_env.get_connection(newpassword=new_password)
+        connection = test_env.get_connection(password=new_password)
         connection.changepassword(new_password, test_env.get_main_password())
 
     def test_1132_autocommit_during_reexecute(self):
@@ -578,17 +565,6 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4011:|^DPY-4024:",
                                conn.cursor().callproc,
                                test_env.get_sleep_proc_name(), [2])
-
-    def test_1136_connect_with_params(self):
-        "1136 - test connection using ConnectParams()"
-        params = oracledb.ConnectParams(user=test_env.get_main_user(),
-                                        password=test_env.get_main_password())
-        params.parse_connect_string(test_env.get_connect_string())
-        with oracledb.connect(params=params) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("select user from dual")
-                user, = cursor.fetchone()
-                self.assertEqual(user, test_env.get_main_user().upper())
 
 if __name__ == "__main__":
     test_env.run_test_cases()

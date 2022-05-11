@@ -42,6 +42,6 @@ def drop_schema(conn):
                             proxy_user=test_env.get_proxy_user())
 
 if __name__ == "__main__":
-    conn = oracledb.connect(test_env.get_admin_connect_string())
+    conn = test_env.get_admin_connection()
     drop_schema(conn)
     print("Done.")

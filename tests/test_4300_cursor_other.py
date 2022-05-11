@@ -719,7 +719,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_4358_kill_conn_with_open_cursor(self):
         "4538 - kill connection with open cursor"
-        admin_conn = oracledb.connect(test_env.get_admin_connect_string())
+        admin_conn = test_env.get_admin_connection()
         conn = test_env.get_connection()
         cursor = conn.cursor()
         cursor.execute("""
@@ -736,7 +736,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_4359_kill_conn_in_context_manager(self):
         "4359 - kill connection in cursor context manager"
-        admin_conn = oracledb.connect(test_env.get_admin_connect_string())
+        admin_conn = test_env.get_admin_connection()
         conn = test_env.get_connection()
         with conn.cursor() as cursor:
             cursor.execute("""

@@ -30,14 +30,16 @@
 # You can set values in environment variables to bypass having the test suite
 # request the information it requires.
 #
-#     PYO_TEST_MAIN_USER: user used for most test cases
-#     PYO_TEST_MAIN_PASSWORD: password of user used for most test cases
-#     PYO_TEST_PROXY_USER: user for testing proxying
-#     PYO_TEST_PROXY_PASSWORD: password of user for testing proxying
-#     PYO_TEST_CONNECT_STRING: connect string for test suite
-#     PYO_TEST_ADMIN_USER: administrative user for test suite
-#     PYO_TEST_ADMIN_PASSWORD: administrative password for test suite
-#     PYO_TEST_DRIVER_MODE: python-oracledb mode (thick or thin) to use
+#   PYO_TEST_MAIN_USER: user used for most test cases
+#   PYO_TEST_MAIN_PASSWORD: password of user used for most test cases
+#   PYO_TEST_PROXY_USER: user for testing proxying
+#   PYO_TEST_PROXY_PASSWORD: password of user for testing proxying
+#   PYO_TEST_CONNECT_STRING: connect string for test suite
+#   PYO_TEST_ADMIN_USER: administrative user for test suite
+#   PYO_TEST_ADMIN_PASSWORD: administrative password for test suite
+#   PYO_TEST_WALLET_LOCATION: location of wallet file (thin mode, mTLS)
+#   PYO_TEST_WALLET_PASSWORD: password for wallet file (thin mode, mTLS)
+#   PYO_TEST_DRIVER_MODE: python-oracledb mode (thick or thin) to use
 #
 # PYO_TEST_CONNECT_STRING can be set to an Easy Connect string, or a
 # Net Service Name from a tnsnames.ora file or external naming service,
@@ -77,29 +79,33 @@ DEFAULT_CONNECT_STRING = "localhost/orclpdb1"
 # directly) and then stored so that a value is not requested more than once
 PARAMETERS = {}
 
-def get_value(name, label, default_value=""):
-    value = PARAMETERS.get(name)
-    if value is not None:
-        return value
+def get_value(name, label, default_value=None, password=False):
+    try:
+        return PARAMETERS[name]
+    except KeyError:
+        pass
     env_name = "PYO_TEST_" + name
     value = os.environ.get(env_name)
     if value is None:
-        if default_value:
+        if default_value is not None:
             label += " [%s]" % default_value
         label += ": "
-        if default_value:
-            value = input(label).strip()
-        else:
+        if password:
             value = getpass.getpass(label)
+        else:
+            value = input(label).strip()
         if not value:
             value = default_value
     PARAMETERS[name] = value
     return value
 
-def get_admin_connect_string():
+def get_admin_connection():
     admin_user = get_value("ADMIN_USER", "Administrative user", "admin")
-    admin_password = get_value("ADMIN_PASSWORD", f"Password for {admin_user}")
-    return "%s/%s@%s" % (admin_user, admin_password, get_connect_string())
+    admin_password = get_value("ADMIN_PASSWORD", f"Password for {admin_user}",
+                               password=True)
+    return oracledb.connect(dsn=get_connect_string(),
+                            params=get_connect_params(),
+                            user=admin_user, password=admin_password)
 
 def get_charset_ratios():
     value = PARAMETERS.get("CS_RATIO")
@@ -127,9 +133,23 @@ def get_client_version():
         PARAMETERS[name] = value
     return value
 
-def get_connection(**kwargs):
-    return oracledb.connect(get_connect_string(), user=get_main_user(),
-                            password=get_main_password(), **kwargs)
+def get_connect_params():
+    name = "CONNECT_PARAMS"
+    params = PARAMETERS.get(name)
+    if params is None:
+        wallet_location = get_wallet_location()
+        params = oracledb.ConnectParams(user=get_main_user(),
+                                        password=get_main_password(),
+                                        config_dir=wallet_location,
+                                        wallet_location=wallet_location,
+                                        wallet_password=get_wallet_password())
+        PARAMETERS[name] = params
+    return params
+
+def get_connection(dsn=None, **kwargs):
+    if dsn is None:
+        dsn = get_connect_string()
+    return oracledb.connect(dsn=dsn, params=get_connect_params(), **kwargs)
 
 def get_connect_string():
     return get_value("CONNECT_STRING", "Connect String",
@@ -140,21 +160,32 @@ def get_is_thin():
     return driver_mode == "thin"
 
 def get_main_password():
-    return get_value("MAIN_PASSWORD", "Password for %s" % get_main_user())
+    return get_value("MAIN_PASSWORD", f"Password for {get_main_user()}",
+                     password=True)
 
 def get_main_user():
     return get_value("MAIN_USER", "Main User Name", DEFAULT_MAIN_USER)
 
-def get_pool(user=None, password=None, **kwargs):
-    if user is None:
-        user = get_main_user()
-    if password is None:
-        password = get_main_password()
-    return oracledb.create_pool(user=user, password=password,
-                                dsn=get_connect_string(), **kwargs)
+def get_pool(**kwargs):
+    return oracledb.create_pool(dsn=get_connect_string(),
+                                params=get_pool_params(), **kwargs)
+
+def get_pool_params():
+    name = "POOL_PARAMS"
+    params = PARAMETERS.get(name)
+    if params is None:
+        wallet_location = get_wallet_location()
+        params = oracledb.PoolParams(user=get_main_user(),
+                                     password=get_main_password(),
+                                     config_dir=wallet_location,
+                                     wallet_location=wallet_location,
+                                     wallet_password=get_wallet_password())
+        PARAMETERS[name] = params
+    return params
 
 def get_proxy_password():
-    return get_value("PROXY_PASSWORD", "Password for %s" % get_proxy_user())
+    return get_value("PROXY_PASSWORD", f"Password for {get_proxy_user()}",
+                     password=True)
 
 def get_proxy_user():
     return get_value("PROXY_USER", "Proxy User Name", DEFAULT_PROXY_USER)
@@ -172,6 +203,14 @@ def get_server_version():
         value = tuple(int(s) for s in conn.version.split("."))[:2]
         PARAMETERS[name] = value
     return value
+
+def get_wallet_location():
+    if get_is_thin():
+        return get_value("WALLET_LOCATION", "Wallet Location")
+
+def get_wallet_password():
+    if get_is_thin():
+        return get_value("WALLET_PASSWORD", "Wallet Password", password=True)
 
 def run_sql_script(conn, script_name, **kwargs):
     statement_parts = []
@@ -229,7 +268,7 @@ class SystemStatInfo:
 
     def __init__(self, connection):
         self.prev_value = 0
-        self.admin_conn = oracledb.connect(get_admin_connect_string())
+        self.admin_conn = get_admin_connection()
         with connection.cursor() as cursor:
             cursor.execute("select sys_context('userenv', 'sid') from dual")
             self.sid, = cursor.fetchone()

@@ -647,7 +647,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_2427_drop_dead_connection_from_pool(self):
         "2427 - drop the pooled connection on receiving dead connection error"
-        admin_conn = oracledb.connect(test_env.get_admin_connect_string())
+        admin_conn = test_env.get_admin_connection()
         pool = test_env.get_pool(min=2, max=2, increment=2)
 
         # acquire connections from the pool and kill all the sessions
@@ -683,18 +683,6 @@ class TestCase(test_env.BaseTestCase):
                 self.assertEqual(user, test_env.get_main_user().upper())
             conn.close()
         self.assertEqual(pool.opened, 2)
-
-    def test_2428_create_from_params(self):
-        "2428 - create a pool using an instance of PoolParams"
-        params = oracledb.PoolParams(user=test_env.get_main_user(),
-                                     password=test_env.get_main_password())
-        params.parse_connect_string(test_env.get_connect_string())
-        pool = oracledb.create_pool(params=params)
-        with pool.acquire() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("select user from dual")
-                result, = cursor.fetchone()
-                self.assertEqual(result, test_env.get_main_user().upper())
 
 if __name__ == "__main__":
     test_env.run_test_cases()

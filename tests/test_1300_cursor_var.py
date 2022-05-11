@@ -220,9 +220,7 @@ class TestCase(test_env.BaseTestCase):
             def cursor(self):
                 Counter.cursor_created()
                 return super().cursor()
-        conn = MyConnection(test_env.get_connect_string(),
-                            user=test_env.get_main_user(),
-                            password=test_env.get_main_password())
+        conn = test_env.get_connection(conn_class=MyConnection)
         cursor = conn.cursor()
         cursor.execute("""
                 select
