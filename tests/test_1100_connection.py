@@ -151,7 +151,7 @@ class TestCase(test_env.BaseTestCase):
                                oracledb.connect, test_env.get_main_user() + \
                                "@" + test_env.get_connect_string())
         self.assertRaisesRegex(oracledb.DatabaseError,
-                               "^DPY-4001:|^ORA-12154:|^ORA-12521:",
+                               "^DPY-4001:|^DPY-4017:|^ORA-12154:|^ORA-12521:",
                                oracledb.connect, test_env.get_main_user() + \
                                "@" + test_env.get_connect_string() + "/" + \
                                test_env.get_main_password())
