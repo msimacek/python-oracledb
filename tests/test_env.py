@@ -94,8 +94,8 @@ def get_value(name, label, default_value=None, password=False):
             value = getpass.getpass(label)
         else:
             value = input(label).strip()
-        if not value:
-            value = default_value
+    if not value:
+        value = default_value
     PARAMETERS[name] = value
     return value
 
