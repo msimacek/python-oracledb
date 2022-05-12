@@ -69,12 +69,12 @@ cdef class ThinPoolImpl(BasePoolImpl):
         self._busy_conn_impls = []
         self._conn_impls_to_close = []
         self._auth_mode = constants.AUTH_MODE_DEFAULT
+        self._open = True
         self._condition = threading.Condition()
         self._bg_thread_condition = threading.Condition()
         self._bg_thread = threading.Thread(target=self._bg_thread_func,
                                            daemon=True)
         self._bg_thread.start()
-        self._open = True
 
     cdef ThinConnImpl _create_conn_impl(self, ConnectParamsImpl params=None):
         """
@@ -123,11 +123,13 @@ cdef class ThinPoolImpl(BasePoolImpl):
                     self._bg_thread_condition.wait()
 
             # perform work of creating/destroying connections
-            if self._open and self._num_pending_requests > 0:
-                with self._condition:
+            with self._condition:
+                if self._open and self._num_pending_requests > 0:
                     open_count = self.get_open_count()
                     num_conns = min(self.increment, self.max - open_count)
-                self._create_conn_impls_helper(num_conns)
+                else:
+                    num_conns = 0
+            self._create_conn_impls_helper(num_conns)
             self._close_conn_impls_helper()
             if not self._open:
                 break

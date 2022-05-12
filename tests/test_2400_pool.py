@@ -684,5 +684,14 @@ class TestCase(test_env.BaseTestCase):
             conn.close()
         self.assertEqual(pool.opened, 2)
 
+    def test_2428_acquire_conn_from_empty_pool(self):
+        "2428 - acquire a connection from an empty pool (min=0)"
+        pool = test_env.get_pool(min=0, max=2, increment=2)
+        with pool.acquire() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("select user from dual")
+                result, = cursor.fetchone()
+                self.assertEqual(result, test_env.get_main_user().upper())
+
 if __name__ == "__main__":
     test_env.run_test_cases()
