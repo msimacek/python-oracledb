@@ -11,7 +11,36 @@ For deprecations, see :ref:`Deprecations <deprecations>`.
 python-oracledb 1.0 (TBD)
 -------------------------
 
-#)  Renamed cx_Oracle to python-oracledb
+#)  Renamed cx_Oracle to python-oracledb.
+#)  Introduced a 'Thin' mode that connects directly to Oracle Database without needing Oracle Client libraries.  Thin mode is the default.
+#)  Added :ref:`oracledb.defaults <defaults>` which contains attributes that can be used
+    to adjust the default behavior of the python-oracledb driver.  In particular ``oracledb.defaults.fetch_lobs`` obsoletes the need for a LOB type handler, see :ref:`directlobs`.
+#)  Modified :meth:`oracledb.init_oracle_client` to enable the ability to call this
+    function multiple times in each process.
+#)  Added :attr:`Connection.thin` attribute which determines whether the connection was
+    established in the python-oracledb Thin mode or Thick mode.
+#)  Added a :ref:`ConnectParams Class <connparam>` which provides the ability to define
+    connection parameters in one place.
+#)  Added a :ref:`PoolParams Class <poolparam>` which provides the ability to define
+    connection parameters and pool parameters in one place.
+#)  Added a :ref:`ConnectionPool Class <connpool>` which is equivalent to the SessionPool class previously used in cx_Oracle.
+#)  Added new :ref:`Two-phase commit <tcp>` functionality.
+#)  Added :meth:`Connection.is_healthy()` which provides the Connection class with the
+    ability to check the health status of a connection.
+#)  Added :data:`~oracledb.DB_TYPE_LONG_NVARCHAR` constant to improve
+    performance. This constant can be used in output type handlers when
+    fetching NCLOB columns as a string. For IN binds, this constant can be used
+    to create a bind variable in ``cursor.var`` or via ``setinputsizes()``.
+    The ``DB_TYPE_LONG_NVARCHAR`` value won't be shown query metadata since it
+    is not a database type.
+#)  Added boolean parameter ``cache_statement`` to the :meth:`Cursor.prepare()`
+    function to help the performance of re-executed statements.
+#)  Added :attr:`~Messageproperties.recipient` attribute to support recipient lists
+    in Oracle Advanced Queuing.
+#)  Added :attr:`~oracledb._Error.full_code` attribute to improve error handling. This
+    attribute displays the top-level error prefix and the error number.
+#)  The ``V$SESSION_CONNECT_INFO`` table ``CLIENT_DRIVER`` column show the driver name and mode in use.
+
 
 cx_Oracle 8.3 (November 2021)
 -----------------------------
@@ -345,7 +374,7 @@ cx_Oracle 7.2 (July 2019)
       :ref:`queue object <queue>` in order to simplify AQ usage
     - enhanced method :meth:`Connection.msgproperties()` to allow the writable
       properties of the newly created object to be initialized.
-    - the original methods for enqueueing and dequeuing (Connection.deq(),
+    - the original methods for enqueuing and dequeuing (Connection.deq(),
       Connection.deqoptions(), Connection.enq() and Connection.enqoptions())
       are now deprecated and will be removed in a future version.
 

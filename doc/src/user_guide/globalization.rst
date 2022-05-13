@@ -8,9 +8,9 @@ Data fetched from, and sent to, Oracle Database will be mapped between the
 database character set and the "Oracle client" character set of the Oracle
 Client libraries used by python-oracledb. If data cannot be correctly mapped between
 client and server character sets, then it may be corrupted or queries may fail
-with :ref:`"codec can't decode byte" <codecerror>`. 
+with :ref:`"codec can't decode byte" <codecerror>`.
 
-All database character sets are supported by the python-oracledb Thick mode. 
+All database character sets are supported by the python-oracledb Thick mode.
 The database performs any required conversion for the python-oracledb Thin mode.
 For `national character sets <https://docs.oracle.com/en/database/oracle/oracle-database
 /21/nlspg/choosing-character-set.html#GUID-4E12D991-C286-4F1A-AFC6-F35040A5DE4F>`__:
@@ -18,17 +18,17 @@ For `national character sets <https://docs.oracle.com/en/database/oracle/oracle-
     - AL16UTF16 is supported by both the python-oracledb Thin and Thick modes
     - UTF8 is not supported by the python-oracledb Thin mode
 
-python-oracledb Thick mode uses Oracle’s National Language Support (NLS) to assist in
-globalizing applications. 
+python-oracledb Thick mode uses Oracle's National Language Support (NLS) to assist in
+globalizing applications.
 
 .. note::
-    
+
     All NLS_* environment variables are ignored by the python-oracledb Thin mode.
 
 For more information, see the `Database Globalization Support Guide
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=NLSPG>`__.
 
-You can change the following settings in the python-oracledb Thick mode with 
+You can change the following settings in the python-oracledb Thick mode with
 ``ALTER SESSION`` statement or by using the initialization parameter file.
 
     - NLS_CALENDAR: Calendar system
@@ -310,4 +310,3 @@ To convert dates:
     for row in cursor:
         print(row)       # gives 'Mi 15 Dez 19:57:56 2021'
     print()
-

@@ -285,9 +285,9 @@ synonyms, PL/SQL objects and SQL Translation profiles to be used concurrently.
 Different versions of the database objects are associated with an "edition".
 
 .. note::
-    
-    Edition-Based Redefinition (EBR) is only supported in the python-oracledb Thick mode.
-    For information on changing from one mode to the other, see :ref:`changingmodes`.
+
+    Edition-Based Redefinition (EBR) is only supported in the python-oracledb
+    Thick mode.  See :ref:`enablingthick`.
 
 The simplest way to set an edition is to pass the ``edition`` parameter to
 :meth:`oracledb.connect()` or :meth:`oracledb.create_pool()`:

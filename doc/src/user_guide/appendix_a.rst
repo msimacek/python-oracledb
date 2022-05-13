@@ -1,20 +1,22 @@
-.. _appendixa:
+.. _featuresummary:
 
-***********************************************************************************************************
-Appendix A: Features Supported in python-oracledb Thin Mode, python-oracledb Thick Mode, and cx_Oracle 8.3
-***********************************************************************************************************
+*****************************************************************
+Appendix A: Oracle Database Features Supported by python-oracledb
+*****************************************************************
 
 By default, python-oracledb runs in a 'Thin' mode which connects directly to
-Oracle Database.  This mode does not need Oracle Client libraries however some
-additional functionality are available when python-oracledb uses them.
-Python-oracledb connections are said to be in 'Thick' mode when these libraries
-are used.  Both modes have comprehensive functionality supporting the Python
-Database API v2.0 Specification.
+Oracle Database.  This mode does not need Oracle Client libraries.  However,
+some additional functionality is available when python-oracledb uses them.
+The python-oracledb connections are said to be in 'Thick' mode when Oracle Client
+libraries are used.  Both modes have comprehensive functionality supporting the
+Python Database API v2.0 Specification.  See :ref:`initialization` for how to
+enable Thick mode.
 
-The following table describes the Oracle Database features supported by
-python-oracledb Thin and Thick modes, and by cx_Oracle 8.3.
+The following table summarizes the Oracle Database features supported by
+python-oracledb Thin and Thick modes, and by cx_Oracle 8.3.  For more details
+see :ref:`driverdiff` and :ref:`compatibility`.
 
-.. list-table-with-summary::  Features Supported in python-oracledb (Thin mode and Thick mode) and cx_Oracle 8.3 Drivers
+.. list-table-with-summary::  Features Supported by python-oracledb and cx_Oracle 8.3
     :header-rows: 1
     :align: center
     :summary: The first column displays the Oracle feature. The second column indicates whether the feature is supported in the python-oracledb Thin mode. The third column indicates whether the feature is supported in the python-oracledb Thick mode. The fourth column indicates if the feature is supported in cx_Oracle 8.3.
@@ -23,6 +25,10 @@ python-oracledb Thin and Thick modes, and by cx_Oracle 8.3.
       - python-oracledb Thin Mode
       - python-oracledb Thick Mode
       - cx_Oracle 8.3
+    * - Python Database API Support
+      - Yes - a couple of features are not feasible. Many extensions.
+      - Yes - a couple of features are not feasible. Many extensions.
+      - Yes - a couple of features are not feasible. Many extensions.
     * - Oracle Client version
       - Not applicable
       - Release 11.2 and later
@@ -31,62 +37,14 @@ python-oracledb Thin and Thick modes, and by cx_Oracle 8.3.
       - Release 12.1 and later
       - Release 9.2 and later depending on Oracle Client library version
       - Release 9.2 and later depending on Oracle Client library version
-    * - Standalone connections
-      - Yes - Must use named arguments, see :ref:`syntax`
-      - Yes - Must use named arguments, see :ref:`syntax`
+    * - Standalone connections (see :ref:`standaloneconnection`)
+      - Yes - must use keyword arguments
+      - Yes - must use keyword arguments
       - Yes
-    * - Connection pooling
-      - Yes - See :ref:`connpooling`. Must use named arguments, see :ref:`syntax`.
-      - Yes - See :ref:`connpooling`. Must use named arguments, see :ref:`syntax`.
+    * - Connection Pooling - Heterogeneous and Homogeneous (see :ref:`Connection pooling <connpooling>`)
+      - Homogeneous only - must use keyword arguments
+      - Yes - must use keyword arguments
       - Yes
-    * - Homogeneous connection pools
-      - Yes
-      - Yes
-      - Yes
-    * - Heterogeneous connection pools
-      - No
-      - Yes
-      - Yes
-    * - Pool draining
-      - Yes
-      - Yes
-      - Yes
-    * - Connection pool session state callback
-      - Yes - Python function but not PL/SQL function
-      - Yes
-      - Yes
-    * - Connection pool session tagging
-      - No
-      - Yes
-      - Yes
-    * - Proxy connections
-      - No
-      - Yes
-      - Yes
-    * - Set the current schema using an attribute
-      - Yes
-      - Yes
-      - Yes
-    * - External authentication
-      - No
-      - Yes
-      - Yes
-    * - SYSDBA, SYSOPER, SYSASM, SYSBKP, SYSDGD, SYSKMT, SYSRAC
-      - Yes
-      - Yes
-      - Yes
-    * - Prelim connections
-      - No
-      - Yes
-      - Yes
-    * - RAC
-      - Yes
-      - Yes
-      - Yes
-    * - Sharding
-      - No
-      - Yes - No TIMESTAMP support (for example, Bug 30570712 or NJS Bug 31574904)
-      - Yes - No TIMESTAMP support (for example, Bug 30570712 or NJS Bug 31574904)
     * - Connection Pool Connection Load Balancing (CLB)
       - Yes
       - Yes
@@ -95,15 +53,63 @@ python-oracledb Thin and Thick modes, and by cx_Oracle 8.3.
       - No
       - Yes
       - Yes
-    * - IAM Tokens
-      - No
-      - Yes - in connection string with appropriate Oracle Client
-      - Yes - in connection string with appropriate Oracle Client
-    * - Kerberos, Radius etc authentication
+    * - Connection Pool draining
+      - Yes
+      - Yes
+      - Yes
+    * - Connection Pool session state callback (see :ref:`sessioncallback`)
+      - Yes - Python functions but not PL/SQL functions
+      - Yes
+      - Yes
+    * - Connection pool session tagging (see :ref:`conntagging`)
       - No
       - Yes
       - Yes
-    * - Native Network Encryption (NNE)
+    * - Password authentication
+      - Yes
+      - Yes
+      - Yes
+    * - External authentication (see :ref:`extauth`)
+      - No
+      - Yes
+      - Yes
+    * - Oracle Cloud Infrastructure Identity and Access Management (IAM) Tokens
+      - No
+      - Yes - in connection string with appropriate Oracle Client
+      - Yes - in connection string with appropriate Oracle Client
+    * - Kerberos and Radius authentication
+      - No
+      - Yes
+      - Yes
+    * - Proxy connections (see :ref:`proxyauth`)
+      - Yes
+      - Yes
+      - Yes
+    * - Connection mode privileges (see :ref:`connection-authorization-modes`)
+      - Yes
+      - Yes
+      - Yes
+    * - Preliminary connections
+      - No
+      - Yes
+      - Yes
+    * - Set the current schema using an attribute
+      - Yes
+      - Yes
+      - Yes
+    * - Oracle Cloud Database connectivity (see :ref:`autonomousdb`)
+      - Yes
+      - Yes
+      - Yes
+    * - Real Application Clusters (RAC)
+      - Yes
+      - Yes
+      - Yes
+    * - Oracle Sharded Databases (see :ref:`connsharding`)
+      - No
+      - Yes - No TIMESTAMP support
+      - Yes - No TIMESTAMP support
+    * - Oracle Database Native Network Encryption (NNE) (see :ref:`nne`)
       - No
       - Yes
       - Yes
@@ -111,43 +117,31 @@ python-oracledb Thin and Thick modes, and by cx_Oracle 8.3.
       - Yes
       - Yes
       - Yes
-    * - ``tnsnames.ora``
+    * - Oracle Net Services ``tnsnames.ora`` file (see :ref:`optnetfiles`)
       - Yes
       - Yes
       - Yes
-    * - ``sqlnet.ora``
-      - No - many values can be set using the :ref:`ConnectParams class <connparam>`.
+    * - Oracle Net Services ``sqlnet.ora`` file (see :ref:`optnetfiles`)
+      - No - many values can be set at connection time
       - Yes
       - Yes
-    * - Oracle Client library configuration file ``oraaccess.xml``
-      - No
+    * - Oracle Client library configuration file ``oraaccess.xml`` (see :ref:`optclientfiles`)
+      - Not applicable
       - Yes
       - Yes
-    * - Easy Connect connection strings
+    * - Easy Connect Plus connection strings
       - Yes - mostly supported. Unknown settings are ignored and not passed to Oracle Database.
       - Yes
       - Yes
-    * - Cloud connectivity
+    * - One-way TLS connections (see :ref:`onewaytls`)
       - Yes
       - Yes
       - Yes
-    * - One-way TLS (SSL connections)
+    * - Mutual TLS (mTLS) connections (see :ref:`twowaytls`)
+      - Yes - needs a PEM format wallet (see :ref:`createpem`)
       - Yes
       - Yes
-      - Yes
-    * - Two-way TLS (Mutual TLS or mTLS)
-      - Yes - with manual conversion from PKCS#12 to PEM format, subject to Cloud wallet enhancements
-      - Yes
-      - Yes
-    * - Dedicated Servers
-      - Yes
-      - Yes
-      - Yes
-    * - Shared Servers
-      - Yes
-      - Yes
-      - Yes
-    * - Database Resident Connection Pooling (DRCP)
+    * - Oracle Database Dedicated Servers, Shared Servers and Database Resident Connection Pooling (DRCP)
       - Yes
       - Yes
       - Yes
@@ -155,47 +149,47 @@ python-oracledb Thin and Thick modes, and by cx_Oracle 8.3.
       - Yes
       - Yes
       - Yes
-    * - CMAN, CMAN-TDM
+    * - CMAN and CMAN-TDM connectivity
       - Yes
       - Yes
       - Yes
-    * - Password changing
+    * - Password changing (see :meth:`Connection.changepassword()`)
       - Yes
       - Yes
       - Yes
-    * - Break/reset (:meth:`Connection.cancel()`)
+    * - Statement break/reset (see :meth:`Connection.cancel()`)
       - Yes
       - Yes
       - Yes
-    * - Edition Based Redefinition (EBR)
+    * - Edition Based Redefinition (EBR) (see :ref:`ebr`)
       - No
       - Yes
       - Yes
-    * - Python DATABASE API Support
-      - Yes - some features are not feasible. Many extensions.
-      - Yes - some features are not feasible. Many extensions.
-      - Yes - some features are not feasible. Many extensions.
-    * - SQL execution
+    * - SQL execution (see :ref:`sqlexecution`)
       - Yes - bind and fetch all types except BFILE, OBJECT, and JSON
       - Yes
       - Yes
-    * - PL/SQL execution
+    * - PL/SQL execution (see :ref:`plsqlexecution`)
       - Yes for scalar types. Yes for collection types using array interface.
       - Yes
       - Yes
-    * - Bind variables for data binding
-      - Yes
-      - Yes
-      - Yes
-    * - Array DML binding for bulk DML and PL/SQL (:meth:`Cursor.executemany()`)
-      - Yes
-      - Yes
-      - Yes
-    * - SQL and PL/SQL type and collections
+    * - Simple Oracle Document Access (SODA) API (:ref:`SODA <soda>`)
       - No
       - Yes
       - Yes
-    * - Column metadata
+    * - Bind variables for data binding (see :ref:`bind`)
+      - Yes
+      - Yes
+      - Yes
+    * - Array DML binding for bulk DML and PL/SQL (see :ref:`batchstmnt`)
+      - Yes
+      - Yes
+      - Yes
+    * - SQL and PL/SQL type and collections (see :ref:`fetchobjects`)
+      - No
+      - Yes
+      - Yes
+    * - Query column metadata
       - Yes
       - Yes
       - Yes
@@ -204,22 +198,54 @@ python-oracledb Thin and Thick modes, and by cx_Oracle 8.3.
       - UTF-8
       - Yes - can use Python encodings. Default in 8.0 is UTF-8
     * - Oracle Globalization support
-      - No - NLS_* environment variables are ignored
-      - Yes - NLS_* environment variables are respected except character set
-      - Yes - NLS_* environment variables are respected (except character set in NLS_LANG as of cx_Oracle 8.0)
-    * - Statement caching
-      - Yes - New driver supports dropping from the cache, see :ref:`stmtcache`.
-      - Yes - New driver supports dropping from the cache, see :ref:`stmtcache`.
-      - Yes
-    * - Row prefetching on first execute
+      - No - All NLS environment variables are ignored
+      - Yes - NLS environment variables are respected except character set in NLS_LANG
+      - Yes - NLS environment variables are respected except character set in NLS_LANG
+    * - Row prefetching on first query execute.(see :attr:`prefetchrows`)
       - Yes
       - Yes
       - Yes
-    * - Array fetching
+    * - Array fetching for queries (see :attr:`arraysize`)
       - Yes
       - Yes
       - Yes
-    * - Client Result Caching (CRC)
+    * - Statement caching (see :ref:`stmtcache`)
+      - Yes - new driver also supports dropping from the cache
+      - Yes - new driver also supports dropping from the cache
+      - Yes
+    * - Client Result Caching (CRC) (see :ref:`clientresultcache`)
+      - No
+      - Yes
+      - Yes
+    * - Continuous Query Notification (CQN) (see :ref:`cqn`)
+      - No
+      - Yes
+      - Yes
+    * - Advanced Queuing (AQ) (see :ref:`aqusermanual`)
+      - No
+      - Yes - must use new API introduced in cx_Oracle 7.2
+      - Yes
+    * - Call timeouts (see :attr:`Connection.call_timeout`)
+      - Yes
+      - Yes
+      - Yes
+    * - Scrollable cursors (see :ref:`scrollablecursors`)
+      - No
+      - Yes
+      - Yes
+    * - Oracle Database startup and shutdown (see :ref:`startup`)
+      - No
+      - Yes
+      - Yes
+    * - Transaction management (see :ref:`txnmgmnt`)
+      - Yes
+      - Yes
+      - Yes
+    * - Events mode for notifications
+      - No
+      - Yes
+      - Yes
+    * - Fast Application Notification (FAN) (see :ref:`fan`)
       - No
       - Yes
       - Yes
@@ -227,28 +253,23 @@ python-oracledb Thin and Thick modes, and by cx_Oracle 8.3.
       - Yes
       - Yes
       - Yes
-    * - Continuous Query Notification (CQN)
+    * - Transparent Application Failover (TAF)
+      - No
+      - Yes - no callback
+      - Yes - no callback
+    * - Transaction Guard (TG) (see :ref:`tg`)
       - No
       - Yes
       - Yes
-    * - Advanced Queuing (AQ)
-      - No
-      - Yes - must use "new" cx_Oracle 7.2 and later API. See the cx_Oracle `Advanced Queuing
-        (AQ) <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html>`__ documentation.
-      - Yes
-    * - Call timeouts :attr:`Connection.call_timeout`
+    * - Data Guard (DG) and Active Data Guard (ADG)
       - Yes
       - Yes
       - Yes
-    * - Scrollable cursors
+    * - Application Continuity (AC) and Transparent Application Continuity (TAC) (see :ref:`appcont`)
       - No
       - Yes
       - Yes
-    * - DATABASE startup & shutdown
-      - No
-      - Yes
-      - Yes
-    * - Transaction management
+    * - End-to-end monitoring and tracing attributes (see :ref:`tracingsql`)
       - Yes
       - Yes
       - Yes
@@ -256,59 +277,15 @@ python-oracledb Thin and Thick modes, and by cx_Oracle 8.3.
       - No
       - Yes
       - Yes
-    * - ''Events'' mode for notifications
-      - No
+    * - Java Debug Wire Protocol for debugging PL/SQL (see :ref:`jdwp`)
       - Yes
-      - Yes
-    * - Fast Application Notification (FAN)
-      - No
-      - Yes
-      - Yes
-    * - Fast Connection Failover (FCF)
-      - No
-      -
-      -
-    * - Transparent Application Failover (TAF)
-      - No
-      - Yes - no callback
-      - Yes - no callback
-    * - Transaction Guard (TG)
-      - No
-      - Yes
-      - Yes
-    * - Dataguard (DG) & ADG
-      - Yes
-      - Yes
-      - Yes
-    * - Application Continuity (AC and TAC)
-      - No
-      - Yes
-      - Yes
-    * - End-to-end monitoring and tracing attributes
-      - Yes - see :ref:`tracingsql`
-      - Yes
-      - Yes
-    * - Java Debug Wire Protocol for debugging PL/SQL
-      - Yes - using the connection parameter ``debug_jdwp`` or the ORA_DEBUG_JDWP environment variable
-      - Yes - using the ``ORA_DEBUG_JDWP`` environment variable
-      - Yes - using the ``ORA_DEBUG_JDWP`` environment variable
-    * - OCI_ATTR_COLLECT_CALL_TIME and OCI_ATTR_CALL_TIME
-      - No - use PYO_DEBUG_PACKETS
-      - No - use DPI tracing
-      - No - use DPI tracing
-    * - Feature Tracking
-      - No
       - Yes
       - Yes
     * - Two-phase Commit (TPC)
       - No
-      - Yes - improved support, see :ref:`tcp`
+      - Yes - improved support (see :ref:`tcp`)
       - Yes - limited support
-    * - REF CURSORS
-      - Yes
-      - Yes
-      - Yes
-    * - Nested Cursors
+    * - REF CURSORs and Nested Cursors
       - Yes
       - Yes
       - Yes
@@ -324,11 +301,7 @@ python-oracledb Thin and Thick modes, and by cx_Oracle 8.3.
       - No
       - Yes
       - Yes
-    * - Persistent LOBs
-      - Yes
-      - Yes
-      - Yes
-    * - Temporary LOBs
+    * - Persistent and Temporary LOBs
       - Yes
       - Yes
       - Yes
@@ -340,54 +313,244 @@ python-oracledb Thin and Thick modes, and by cx_Oracle 8.3.
       - Yes
       - Yes
       - Yes
-    * - INTERVAL data types
-      - Y (DAY TO SECOND), N (YEAR TO MONTH)
-      - Y (DAY TO SECOND), N (YEAR TO MONTH)
-      - Y (DAY TO SECOND), N (YEAR TO MONTH)
-    * - SODA
+    * - CHAR, VARCHAR2, NUMBER, FLOAT, DATE, and LONG data types (see :ref:`dbtypes`)
+      - Yes
+      - Yes
+      - Yes
+    * - BLOB and CLOB data types (see :ref:`dbtypes`)
+      - Yes
+      - Yes
+      - Yes
+    * - BINARY_DOUBLE and BINARY_FLOAT data types (see :ref:`dbtypes`)
+      - Yes
+      - Yes
+      - Yes
+    * - RAW and LONG RAW data types (see :ref:`dbtypes`)
+      - Yes
+      - Yes
+      - Yes
+    * - INTERVAL DAY TO SECOND data type (see :data:`~oracledb.DB_TYPE_INTERVAL_DS`)
+      - Yes
+      - Yes
+      - Yes
+    * - INTERVAL YEAR TO MONTH data type (see :data:`~oracledb.DB_TYPE_INTERVAL_YM`)
       - No
-      - Yes
-      - Yes
+      - No
+      - No
     * - Oracle 12c JSON
       - Yes
       - Yes
       - Yes
-    * - Oracle 21c JSON data type
-      - No - can fetch with an output type handler, see :ref:`Fetching JSON Differences<fetchJSON>`
+    * - Oracle 21c JSON data type (see :data:`~oracledb.DB_TYPE_JSON`)
+      - No - can fetch with an output type handler, see :ref:`Fetching JSON Differences <fetchJSON>`
       - Yes
       - Yes
-    * - ROWID
-      - Yes
-      - Yes
-      - Yes
-    * - UROWID
+    * - ROWID, UROWID data types (see :ref:`types`)
       - Yes
       - Yes
       - Yes
-    * - XMLType data type
-      - No - solution is to use ``xmltype.getclobval()``
-      - No - solution is to use ``xmltype.getclobval()``
-      - No - solution is to use ``xmltype.getclobval()``
-    * - BFILE data type
+    * - TIMESTAMP, TIMESTAMP WITH TIME ZONE, TIMESTAMP WITH LOCAL TIME ZONE data types (see :ref:`types`)
+      - Yes
+      - Yes
+      - Yes
+    * - NCHAR, NVARCHAR2, NCLOB data types (see :ref:`types`)
+      - Yes
+      - Yes
+      - Yes
+    * - PL/SQL data types BOOLEAN, PLS_INTEGER and BINARY_INTEGER (see :ref:`types`)
+      - Yes
+      - Yes
+      - Yes
+    * - XMLType data type (see :ref:`xmldatatype`)
+      - No
+      - No
+      - No
+    * - BFILE data type (see :data:`~oracledb.DB_TYPE_BFILE`)
       - No
       - Yes
       - Yes
+
+.. _supporteddbtypes:
+
+Supported Oracle Database Data Types
+====================================
+
+The following table lists the Oracle Database types that are supported in the
+python-oracledb driver.  See `Oracle Database Types
+<https://docs.oracle.com/en/database/oracle/
+oracle-database/21/sqlrf/Data-Types.html#GUID-A3C0D836-BADB-44E5-A5D4-265
+BA5968483>`__ and `PL/SQL Types <https://docs.oracle.com/en/database/oracle
+/oracle-database/21/lnpls/plsql-data-types.html#GUID-391C58FD-16AF-486C-AF28-
+173E309CDBA5>`__.  The python-oracle constant shown is the common one.  In some
+python-oracledb APIs you may use other types, for example when binding numeric
+values.
+
+.. list-table-with-summary::  Oracle Database Data Types Supported
+    :header-rows: 1
+    :align: center
+    :summary: The first column displays the database data type. The second column displays the python-oracledb constant Name. The third column indicates if the type is supported in python-oracledb
+
+    * - Oracle Database Type
+      - python-oracledb Constant Name
+      - Supported
+    * - VARCHAR2
+      - DB_TYPE_VARCHAR
+      - Yes
+    * - NVARCHAR2
+      - DB_TYPE_NVARCHAR
+      - Yes
+    * - NUMBER, FLOAT
+      - DB_TYPE_NUMBER
+      - Yes
+    * - DATE
+      - DB_TYPE_DATE
+      - Yes
+    * - BOOLEAN (PL/SQL)
+      - DB_TYPE_BOOLEAN
+      - Yes
+    * - BINARY_DOUBLE
+      - DB_TYPE_BINARY_DOUBLE
+      - Yes
+    * - BINARY_FLOAT
+      - DB_TYPE_BINARY_FLOAT
+      - Yes
+    * - TIMESTAMP
+      - DB_TYPE_TIMESTAMP
+      - Yes
     * - TIMESTAMP WITH TIME ZONE
+      - DB_TYPE_TIMESTAMP_TZ
       - Yes
+    * - TIMESTAMP WITH LOCAL TIME ZONE
+      - DB_TYPE_TIMESTAMP_LTZ
       - Yes
+    * - INTERVAL YEAR TO MONTH
+      - DB_TYPE_INTERVAL_YM
+      - Not supported in python-oracledb
+    * - INTERVAL DAY TO SECOND
+      - DB_TYPE_INTERVAL_DS
       - Yes
-    * - NCHAR and NVARCHAR2
+    * - RAW
+      - DB_TYPE_RAW
       - Yes
+    * - LONG
+      - DB_TYPE_LONG
       - Yes
+    * - LONG RAW
+      - DB_TYPE_LONG_RAW
+      - Yes
+    * - ROWID
+      - DB_TYPE_ROWID
+      - Yes
+    * - UROWID
+      - DB_TYPE_ROWID
+      - Yes.  May show DB_TYPE_UROWID in metadata. See :ref:`Query Metadata Differences <querymetadatadiff>`.
+    * - CHAR
+      - DB_TYPE_CHAR
+      - Yes
+    * - BLOB
+      - DB_TYPE_BLOB
+      - Yes
+    * - CLOB
+      - DB_TYPE_CLOB
+      - Yes
+    * - NCHAR
+      - DB_TYPE_NCHAR
       - Yes
     * - NCLOB
+      - DB_TYPE_NCLOB
       - Yes
+    * - BFILE
+      - DB_TYPE_BFILE
+      - Not supported in python-oracledb Thin mode
+    * - JSON
+      - DB_TYPE_JSON
+      - Yes. In python-oracledb Thin mode use an output type handler to fetch this Oracle Database 21c data type. See :ref:`jsondatatype`.
+    * - REF CURSOR (PL/SQL OR nested cursor)
+      - DB_TYPE_CURSOR
       - Yes
+    * - PLS_INTEGER
+      - DB_TYPE_BINARY_INTEGER
       - Yes
-    * - Bind PL/SQL Boolean
+    * - BINARY_INTEGER
+      - DB_TYPE_BINARY_INTEGER
       - Yes
-      - Yes
-      - Yes
+    * - REF
+      - n/a
+      - Not supported in python-oracledb Thin mode
+    * - XMLType
+      - n/a
+      - Not supported in python-oracledb. Use ``xmltype.getclobval()`` to fetch
+    * - User-defined types (object type, VARRAY, records, collections, SDO_*types)
+      - DB_TYPE_OBJECT
+      - Not supported in python-oracledb Thin mode
 
-A complete list of supported features can be seen `here
-<https://oracle.github.io/python python-oracledb/index.html#features>`_.
+Binding of contiguous PL/SQL Index-by BINARY_INTEGER arrays of string, number, and date are
+supported in python-oracledb Thin and Thick modes. Use :meth:`Cursor.arrayvar()` to build
+these arrays.
+
+
+Python Types supported for each Oracle Database Type are shown below.
+
+.. list-table-with-summary::  Oracle Database Types Supported
+    :header-rows: 1
+    :align: center
+    :summary: The first column displays the Oracle Database type. The second column displays the Python types that are supported for each of the database types.
+
+    * - Oracle Database Type
+      - Python Types supported
+    * - DB_TYPE_BFILE
+      - cannot be set
+    * - DB_TYPE_BINARY_DOUBLE
+      - bool, int, float, decimal.Decimal
+    * - DB_TYPE_BINARY_FLOAT
+      - bool, int, float, decimal.Decimal
+    * - DB_TYPE_BINARY_INTEGER
+      - bool, int, float, decimal.Decimal
+    * - DB_TYPE_BLOB
+      - BLOB, bytes, str
+    * - DB_TYPE_BOOLEAN
+      - ANY (converted to bool)
+    * - DB_TYPE_CHAR
+      - bytes, str
+    * - DB_TYPE_CLOB
+      - CLOB, bytes, str
+    * - DB_TYPE_CURSOR
+      - CURSOR
+    * - DB_TYPE_DATE
+      - datetime.date, datetime.datetime
+    * - DB_TYPE_INTERVAL_DS
+      - datetime.timedelta
+    * - DB_TYPE_INTERVAL_YM
+      - cannot be set
+    * - DB_TYPE_JSON
+      - ANY (converted)
+    * - DB_TYPE_LONG
+      - bytes, str
+    * - DB_TYPE_LONG_NVARCHAR
+      - bytes, str
+    * - DB_TYPE_LONG_RAW
+      - bytes, str
+    * - DB_TYPE_NCHAR
+      - bytes, str
+    * - DB_TYPE_NCLOB
+      - NCLOB, bytes, str
+    * - DB_TYPE_NUMBER
+      - bool, int, float, decimal.Decimal
+    * - DB_TYPE_NVARCHAR
+      - bytes, str
+    * - DB_TYPE_OBJECT
+      - OBJECT of specific type
+    * - DB_TYPE_RAW
+      - bytes, str
+    * - DB_TYPE_ROWID
+      - cannot be set
+    * - DB_TYPE_TIMESTAMP
+      - datetime.date, datetime.datetime
+    * - DB_TYPE_TIMESTAMP_LTZ
+      - datetime.date, datetime.datetime
+    * - DB_TYPE_TIMESTAMP_TZ
+      - datetime.date, datetime.datetime
+    * - DB_TYPE_UROWID
+      - cannot be set
+    * - DB_TYPE_VARCHAR
+      - bytes, str

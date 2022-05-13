@@ -1,15 +1,15 @@
 .. _varobj:
 
 *********************
-API: Variable Object
+API: Variable Objects
 *********************
 
 .. note::
 
     The DB API definition does not define this object.
 
-Methods
-=======
+Variable VMethods
+=================
 
 .. method:: Variable.getvalue([pos=0])
 
@@ -24,8 +24,8 @@ Methods
 
     Set the value at the given position in the variable.
 
-Attributes
-==========
+Variable Attributes
+===================
 
 .. attribute:: Variable.actual_elements
 

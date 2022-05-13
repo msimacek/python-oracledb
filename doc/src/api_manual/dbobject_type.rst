@@ -1,17 +1,17 @@
 .. _dbobjecttype:
 
-**************************
-API: DbObject Type Object
-**************************
+*************************
+API: DbObjectType Objects
+*************************
 
 .. note::
 
     This object is an extension to the DB API. It is returned by the
     :meth:`Connection.gettype()` call and is available as the
-    :data:`Variable.type` for variables containing Oracle objects.
+    :data:`Variable.type` for variables containing Oracle Database objects.
 
-Methods
-=======
+DbObjectType Methods
+====================
 
 .. method:: DbObjectType([sequence])
 
@@ -26,8 +26,8 @@ Methods
     sequence may be passed and the collection will be initialized with the
     items in that sequence.
 
-Attributes
-==========
+DbObjectType Attributes
+=======================
 
 .. attribute:: DbObjectType.attributes
 
@@ -62,7 +62,7 @@ Attributes
 .. _dbobject:
 
 DbObject Objects
-=================
+================
 
 .. note::
 
@@ -71,8 +71,8 @@ DbObject Objects
     type :data:`~oracledb.OBJECT`. Attributes can be retrieved and set
     directly.
 
-Methods
--------
+DbObject Methods
+================
 
 .. method:: DbObject.append(element)
 
@@ -166,8 +166,8 @@ Methods
 
     Removes the specified number of elements from the end of the collection.
 
-Attributes
-----------
+DbObject Attributes
+===================
 
 .. attribute:: DbObject.Type
 
@@ -177,8 +177,8 @@ Attributes
 
 .. _dbobjectattr:
 
-DbObject Attribute Objects
-===========================
+DbObjectAttribute Objects
+=========================
 
 .. note::
 

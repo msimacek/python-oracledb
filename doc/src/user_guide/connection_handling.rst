@@ -6,29 +6,32 @@ Connecting to Oracle Database
 
 Connections between python-oracledb and Oracle Database are used for executing
 :ref:`SQL <sqlexecution>`, :ref:`PL/SQL <plsqlexecution>`, and :ref:`SODA
-<sodausermanual>`. python-oracledb provides access to Oracle Database using 
-either the Thin mode or the Thick mode. You can choose your desired mode through 
-an application script runtime option.
-   
-The python-oracledb Thick mode dynamically loads Oracle Client libraries to access 
-the Oracle Database. If you intend to use the Thick mode to connect to Oracle Database, 
-then you must call :func:`~oracledb.init_oracle_client()` in the application before any 
-standalone connection or pool is created. The python-oracledb Thin mode connects directly 
-to Oracle Database. To use the python-oracledb Thin mode to connect to the database, you 
-can create a standalone connection or pool. To understand how the two modes of 
-python-oracledb differ, see :ref:`Thin and Thick mode differences <driverdiff>`.
+<sodausermanual>`.
 
-Establishing Database Connections
-=================================
+By default, python-oracledb runs in a 'Thin' mode which connects directly to
+Oracle Database.  This mode does not need Oracle Client libraries.  However,
+some :ref:`additional functionality <featuresummary>` is available when
+python-oracledb uses them.  Python-oracledb connections are said to be in
+'Thick' mode when Oracle Client libraries are used.  See :ref:`enablingthick`.
+Both modes have comprehensive functionality supporting the Python Database API
+v2.0 Specification.
 
-There are two ways to create a connection to Oracle Database using python-oracledb:
+If you intend to use the Thick mode, then you *must* call
+:func:`~oracledb.init_oracle_client()` in the application before any standalone
+connection or pool is created.  The python-oracledb Thick mode loads Oracle
+Client libraries which communicate over Oracle Net to an existing database.
+The Oracle Client libraries need to be installed separately.  See
+:ref:`installation`.  Oracle Net is not a separate product: it is how the
+Oracle Client and Oracle Database communicate.
+
+There are two ways to create a connection to Oracle Database using
+python-oracledb:
 
 *  **Standalone connections**
 
-   These are useful when the application maintains a single user
-   session to a database.  Connections are created by
-   :meth:`oracledb.connect()` or its alias
-   :meth:`oracledb.Connection()`.
+   :ref:`Standalone connections <standaloneconnection>` are useful when the
+   application needs a single connection to a database.  Connections are
+   created by calling :meth:`oracledb.connect()`.
 
 *  **Pooled connections**
 
@@ -41,50 +44,219 @@ There are two ways to create a connection to Oracle Database using python-oracle
    initialization time, and then :meth:`ConnectionPool.acquire()` can be called to
    obtain a connection from a pool.
 
-Many connection behaviors can be controlled by python-oracledb options.  Other
-settings can be configured in :ref:`optnetfiles` or in :ref:`optclientfiles`.
-These include limiting the amount of time that opening a connection can take, or
-enabling :ref:`network encryption <netencrypt>`.
+Many connection behaviors can be controlled by python-oracledb connection
+options.  Other settings can be configured in :ref:`optnetfiles` or in
+:ref:`optclientfiles`.  These include limiting the amount of time that opening
+a connection can take, or enabling :ref:`network encryption <netencrypt>`.
 
-**Example: Standalone Connection to Oracle Database**
+.. note::
+
+       Creating a connection in python-oracledb Thin mode always requires a
+       connection string, or the database host name and service name, to be
+       specified.  Thin mode cannot use "bequeath" connections and does not
+       reference Oracle environment variables ORACLE_SID, TWO_TASK, or LOCAL.
+
+.. note::
+
+       When using Python in Thin mode, the ``tnsnames.ora`` file will not be
+       automatically located.  The file's directory must explicitly be passed
+       to the appplication, see :ref:`optnetfiles`.
+
+.. _standaloneconnection:
+
+Standalone Connections
+======================
+
+Standalone connections are database connections that do not use a
+python-oracledb connection pool.  They are useful for simple applications that
+use a single connection to a database.  Simple connections are created by
+calling :meth:`oracledb.connect()` and passing a database username, the
+database password for that user, and a 'data source name' :ref:`connection
+string <connstr>`.  Python-oracledb also supports :ref:`external authentication
+<extauth>` so passwords do not need to be in the application.
+
+Creating a Standalone Connection
+--------------------------------
+
+Standalone connections are created by calling :meth:`oracledb.connect()`.
+
+A simple standalone connection example:
 
 .. code-block:: python
 
     import oracledb
+    import getpass
 
-    userpwd = ". . ." # Obtain password string from a user prompt or environment variable
+    userpwd = getpass.getpass("Enter password: ")
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orclpdb")
+                                  dsn="dbhost.example.com/orclpdb")
 
-python-oracledb also supports :ref:`external authentication <extauth>` so
-passwords do not need to be in the application.
-
-
-Closing Connections
-===================
-
-Connections should be released when they are no longer needed by calling
-:meth:`Connection.close()`.  Alternatively, you may prefer to let connections
-be automatically cleaned up when references to them go out of scope.  This lets
-python-oracledb close dependent resources in the correct order. One other approach is
-the use of a "with" block, for example:
+You could alternatively read the password from an environment variable:
 
 .. code-block:: python
 
-    with oracledb.connect(user=user, password=password,
-                           dsn="dbhost.example.com/orclpdb") as connection:
-        cursor = connection.cursor()
-        cursor.execute("insert into SomeTable values (:1, :2)",
-                       (1, "Some string"))
-        connection.commit()
+    userpwd = os.environ.get("PYTHON_PASSWORD")
+
+    connection = oracledb.connect(user="hr", password=userpwd,
+                                  dsn="localhost/orclpdb")
+
+The :meth:`oracledb.connect()` method allows the database host name and
+database service name to be passed as separate parameters.  The database
+listener port can also be passed:
+
+.. code-block:: python
+
+    import os
+
+    userpwd = os.environ.get("PYTHON_PASSWORD")
+
+    connection = oracledb.connect(user="hr", password=userpwd,
+                                  host="localhost", port=1521, service_name="orclpdb")
+
+If you like to encapsulate values, parameters can be passed using a
+:ref:`ConnectParams Object <usingconnparams>`:
+
+.. code-block:: python
+
+    params = oracledb.ConnectParams(host="my_host", port=my_port, service_name="my_service_name")
+    conn = oracledb.connect(user="my_user", password="my_password", params=params)
+
+Some values, such as the database host name, can be specified as ``connect()``
+parameters, as part of the connect string, and in the ``params`` object.  If a
+``dsn`` is passed, the python-oracledb :ref:`Thick <enablingthick>` mode will
+use the ``dsn`` string to connect, otherwise a connection string is internally
+constructed from the individual parameters and ``params`` object values, with
+the individual parameters having precedence.  In python-oracledb's default Thin
+mode, a connection string is internally used that contains all relevant values
+specified.  The precedence in Thin mode is that values in any ``dsn`` parameter
+override values passed as individual parameters, which themselves override
+values set in the ``params`` object.  Similar precedence rules also apply to
+other values.
+
+A single, combined connection string can be passed to ``connect()`` but this
+may cause complications if the password contains '@' or '/' characters:
+
+.. code-block:: python
+
+    username="hr"
+    userpwd = os.environ.get("PYTHON_PASSWORD")
+    host = "localhost"
+    port = 1521
+    service_name = "orclpdb"
+
+    dsn = f'{username}/{userpwd}@{port}:{host}/{service_name}'
+    connection = oracledb.connect(dsn)
+
+Closing Connections
++++++++++++++++++++
+
+Connections should be released when they are no longer needed.  You may prefer
+to let connections be automatically cleaned up when references to them go out
+of scope.  This lets python-oracledb close dependent resources in the correct
+order:
+
+.. code-block:: python
+
+    with oracledb.connect(user="hr", password=userpwd,
+                          dsn="dbhost.example.com/orclpdb") as connection:
+        with connection.cursor() as cursor:
+            cursor.execute("insert into SomeTable values (:1, :2)",
+                           (1, "Some string"))
+            connection.commit()
 
 This code ensures that, once the block is completed, the connection is closed
 and resources have been reclaimed by the database. In addition, any attempt to
 use the variable ``connection`` outside of the block will simply fail.
 
-Prompt closing of connections is important when using connection pools so
-connections are available for reuse by other pool users.
+Alternatively you can explicitly close a connection by calling.
+:meth:`Connection.close()`:
+
+.. code-block:: python
+
+    connection = oracledb.connect(user="hr", password=userpwd, dsn="localhost/orclpdb")
+
+    # do something with the connection
+    . . .
+
+    # close the connection
+    connection.close()
+
+.. _connerrors:
+
+Common Connection Errors
+------------------------
+
+Use keyword parameters
+++++++++++++++++++++++
+
+If you use:
+
+.. code-block:: python
+
+    connection = oracledb.connect("hr", userpwd, "localhost/orclpdb")
+
+then you will get the error::
+
+    TypeError: wrapped() takes from 0 to 1 positional arguments but 3 were given
+
+The :meth:`oracledb.connect()` method requires keyword parameters to be used
+
+.. code-block:: python
+
+    connection = oracledb.connect(user="hr", password=userpwd, dsn="localhost/orclpdb")
+
+The exception passing a single argument containing the combined credential and
+connection string.  This is supported:
+
+.. code-block:: python
+
+    connection = oracledb.connect("hr/userpwd@localhost/orclpdb")
+
+Use the correct credentials
++++++++++++++++++++++++++++
+
+If your username or password are not known by the database you attempted to
+connect to then you will get the error::
+
+    ORA-01017: invalid username/password; logon denied
+
+Find the correct username and password and try reconnecting.
+
+Use the correct connection string
++++++++++++++++++++++++++++++++++
+
+If the hostname, port, or service name are incorrect then connection will fail
+with the error::
+
+    DPY-6001: cannot connect to database. Service "doesnotexist" is not registered with the listener at host "localhost" port 1521. (Similar to ORA-12514)
+
+
+The error means that Python successfully reached a computer (in this case
+"localhost" using the default port 1521) that is running a database.  However
+the database service you wanted ("doesnotexist") does not exist there.
+
+Technically the error means the listener does not know about the service at the
+moment.  So you might also get this error if the database is currently restarting.
+
+This error is similar to the ORA-12514 error that you would see when connecting
+with python-oracledb in Thick mode, or might see with some other Oracle tools.
+
+The solution is to use a valid service name in the connection string. You can:
+
+- Check and fix any typos in the service name you used
+
+- Check the hostname and port are correct
+
+- Ask your DBA for the correct values
+
+- Wait a few moments and re-try in case the database is restarting
+
+- Review the connection information in your cloud console or cloud wallet, if
+  you are using a cloud database
+
+- Run `lsnrctl status` on the database machine to find the known service names
+
 
 .. _connstr:
 
@@ -93,14 +265,15 @@ Connection Strings
 
 The data source name parameter ``dsn`` of :meth:`oracledb.connect()` and
 :meth:`oracledb.create_pool()` is the Oracle Database connection string
-identifying which database service to connect to. The ``dsn`` string can be one
-of:
+identifying which database service to connect to.  The ``dsn`` string can be
+one of:
 
 * An Oracle Easy Connect string
 * An Oracle Net Connect Descriptor string
 * A Net Service Name mapping to a connect descriptor
 
-For more information about naming methods, see `Oracle Net Service Reference <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-E5358DEA-D619-4B7B-A799-3D2F802500F1>`__.
+For more information about naming methods, see `Oracle Net Service Reference
+<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-E5358DEA-D619-4B7B-A799-3D2F802500F1>`__.
 
 .. _easyconnect:
 
@@ -119,29 +292,19 @@ Database port 1521, use:
 .. code-block:: python
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orclpdb")
+                                  dsn="dbhost.example.com/orclpdb")
 
 If the database is using a non-default port, it must be specified:
 
 .. code-block:: python
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com:1984/orclpdb")
+                                  dsn="dbhost.example.com:1984/orclpdb")
 
 The Easy Connect syntax supports Oracle Database service names.  It cannot be
 used with the older System Identifiers (SID).
 
-In python-oracledb Thin mode, the unknown settings are ignored and are not
-passed to the database.
-
-The Easy Connect syntax has been extended in recent versions of Oracle Database
-client since its introduction in 10g.  Check the Easy Connect Naming method in
-`Oracle Net Service Administrator's Guide
-<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
-id=GUID-B0437826-43C1-49EC-A94D-B650B6A4A6EE>`__ for the syntax to use in your
-version of the Oracle Client libraries.
-
-If you are using Oracle Client 19c, the latest `Easy Connect Plus
+The latest `Easy Connect Plus
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
 id=GUID-8C85D289-6AF3-41BC-848B-BF39D32648BA>`__ syntax allows the use of
 multiple hosts or ports, along with optional entries for the wallet location,
@@ -149,47 +312,16 @@ the distinguished name of the database server, and even lets some network
 configuration options be set. This means that a :ref:`sqlnet.ora <optnetfiles>`
 file is not needed for some common connection scenarios.
 
-Oracle Net Connect Descriptor Strings
--------------------------------------
+In python-oracledb Thin mode, any unknown Easy Connect options are ignored and
+are not passed to the database.  See :ref:`Connection String Differences
+<diffconnstr>` for more information.
 
-The :meth:`oracledb.makedsn()` function can be used to construct a connect
-descriptor string for the data source name parameter ``dsn`` of
-:meth:`oracledb.connect()` and :meth:`oracledb.create_pool()`.  The
-:meth:`~oracledb.makedsn()` function accepts the database hostname, the port
-number, and the service name.  It also supports :ref:`sharding <connsharding>`
-syntax.
-
-For example, to connect to the Oracle Database service ``orclpdb`` that is
-running on the host ``dbhost.example.com`` with the default Oracle
-Database port 1521, use:
-
-.. code-block:: python
-
-    dsn = oracledb.makedsn("dbhost.example.com", 1521, service_name="orclpdb")
-    connection = oracledb.connect(user="hr", password=userpwd, dsn=dsn)
-
-Note the use of the named argument ``service_name``.  By default, the third
-parameter of :meth:`~oracledb.makedsn()` is a database System Identifier (SID),
-not a service name.  However, almost all current databases use service names.
-
-The value of ``dsn`` in this example is the connect descriptor string::
-
-    (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost.example.com)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orclpdb)))
-
-You can manually create similar connect descriptor strings.  This lets you
-extend the syntax, for example to support failover.  These strings can be
-embedded directly in the application:
-
-.. code-block:: python
-
-    dsn = """(DESCRIPTION=
-                 (FAILOVER=on)
-                 (ADDRESS_LIST=
-                   (ADDRESS=(PROTOCOL=tcp)(HOST=sales1-svr)(PORT=1521))
-                   (ADDRESS=(PROTOCOL=tcp)(HOST=sales2-svr)(PORT=1521)))
-                 (CONNECT_DATA=(SERVICE_NAME=sales.example.com)))"""
-
-    connection = oracledb.connect(user="hr", password=userpwd, dsn=dsn)
+In python-oracledb Thick mode it is the Oracle Client libraries that parse the
+Easy Connect string.  Check the Easy Connect Naming method in `Oracle Net
+Service Administrator's Guide
+<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
+id=GUID-B0437826-43C1-49EC-A94D-B650B6A4A6EE>`__ for the syntax to use in your
+version of the Oracle Client libraries.
 
 .. _netservice:
 
@@ -200,7 +332,7 @@ Connect Descriptor Strings are commonly stored in a :ref:`tnsnames.ora
 <optnetfiles>` file and associated with a Net Service Name.  This name can be
 used directly for the data source name parameter ``dsn`` of
 :meth:`oracledb.connect()` and :meth:`oracledb.create_pool()`.  For example,
-given a ``tnsnames.ora`` file with the following contents::
+given a file ``/opt/oracle/config/tnsnames.ora`` with the following contents::
 
     ORCLPDB =
       (DESCRIPTION =
@@ -215,18 +347,54 @@ then you could connect using the following code:
 
 .. code-block:: python
 
-    connection = oracledb.connect(user="hr", password=userpwd, dsn="orclpdb")
+    connection = oracledb.connect(user="hr", password=userpwd, dsn="orclpdb",
+                                  config_dir="/opt/oracle/config")
+
+More options for how python-oracledb locates ``tnsnames.ora`` files is given in
+:ref:`optnetfiles`.
 
 For more information about Net Service Names, see
 `Database Net Services Reference
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-12C94B15-2CE1-4B98-9D0C-8226A9DDF4CB>`__.
 
+Oracle Net Connect Descriptor Strings
+-------------------------------------
+
+Full Connect Descriptor strings can be embedded directly in python-oracledb
+applications:
+
+.. code-block:: python
+
+    dsn = """(DESCRIPTION=
+                 (FAILOVER=on)
+                 (ADDRESS_LIST=
+                   (ADDRESS=(PROTOCOL=tcp)(HOST=sales1-svr)(PORT=1521))
+                   (ADDRESS=(PROTOCOL=tcp)(HOST=sales2-svr)(PORT=1521)))
+                 (CONNECT_DATA=(SERVICE_NAME=sales.example.com)))"""
+
+    connection = oracledb.connect(user="hr", password=userpwd, dsn=dsn)
+
+The :meth:`oracledb.ConnectParams()` and :meth:`oracledb.get_connect_string()`
+functions can be used to construct a connect descriptor string from the
+individual components, see :ref:`usingconnparams`.  For example:
+
+.. code-block:: python
+
+    cp = oracledb.ConnectParams(host="dbhost.example.com", port=1521, service_name="orclpdb")
+    dsn = cp.get_connect_string()
+    print(dsn)
+
+This prints::
+
+    (DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=tcp)(HOST=dbhost.example.com)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=orclpdb))(SECURITY=(SSL_SERVER_DN_MATCH=True)))
+
+
 JDBC and Oracle SQL Developer Connection Strings
 ------------------------------------------------
 
-The python-oracledb connection string syntax is different to Java JDBC and the common
-Oracle SQL Developer syntax.  If these JDBC connection strings reference a
-service name like::
+The python-oracledb connection string syntax is different to Java JDBC and the
+common Oracle SQL Developer syntax.  If these JDBC connection strings reference
+a service name like::
 
     jdbc:oracle:thin:@hostname:port/service_name
 
@@ -239,10 +407,10 @@ then use Oracle's Easy Connect syntax in python-oracledb:
 .. code-block:: python
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com:1521/orclpdb")
+                                  dsn="dbhost.example.com:1521/orclpdb")
 
-Alternatively, if a JDBC connection string uses an old-style Oracle SID "system
-identifier", and the database does not have a service name::
+Alternatively, if a JDBC connection string uses an old-style Oracle Database
+SID "system identifier", and the database does not have a service name::
 
     jdbc:oracle:thin:@hostname:port:sid
 
@@ -250,13 +418,12 @@ for example::
 
     jdbc:oracle:thin:@dbhost.example.com:1521:orcl
 
-then a connect descriptor string from ``makedsn()`` can be used in the
-application:
+then connect by using the ``sid`` parameter:
 
 .. code-block:: python
 
-    dsn = oracledb.makedsn("dbhost.example.com", 1521, sid="orcl")
-    connection = oracledb.connect(user="hr", password=userpwd, dsn=dsn)
+    connection = oracledb.connect(user="hr", password=userpwd,
+                                  host="dbhost.example.com", port=1521, sid="orcl")
 
 Alternatively, create a ``tnsnames.ora`` (see :ref:`optnetfiles`) entry, for
 example::
@@ -275,97 +442,112 @@ This can be referenced in python-oracledb:
 
     connection = oracledb.connect(user="hr", password=userpwd, dsn="finance")
 
+.. _usingconnparams:
 
 Using the ConnectParams Builder Class
 ======================================
 
-The :ref:`ConnectParams class <connparam>` provides an alternative approach 
-which allows you to define all of the parameters that are required to establish 
-a connection to the database in a single place. Since the use of the ConnectParams
-class is optional, you can continue to use the previous approaches, see :ref:`syntax`.
-
-The optional ``ConnectParams()`` class provides you with the ability to:
-
-  - Define the connection parameters in a single place
-
-  - Document the description of all of these parameters in a single place
-
-  - Define the settings for the network parameters in python-oracledb Thin mode
-
-The :func:`oracledb.ConnectParams()` function returns a ``ConnectParams`` object. 
-The object can be passed to :func:`oracledb.connect()`, :func:`oracledb.create_pool()`, 
-or :func:`oracledb.ConnectionPool()`, see :ref:`syntax`.
-
-The following examples show how to use the connection property builder function, 
-:func:`oracledb.ConnectParams()`:
+The :ref:`ConnectParams class <connparam>` allows you to define connection
+parameters in a single place.  The :func:`oracledb.ConnectParams()` function
+returns a ``ConnectParams`` object.  The object can be passed to
+:func:`oracledb.connect()`. For example:
 
 .. code-block:: python
 
-    # Example 1
-
-    cp = oracledb.ConnectParams(user="my_user", password="my_password", host="my_host", 
-                                    service_name="orclpdb", port=1521)
+    cp = oracledb.ConnectParams(user="hr", password=userpwd,
+                                host="dbhost", port=1521, service_name="orclpdb")
     connection = oracledb.connect(params=cp)
 
-    # The connect() call above is equivalent to the following connect() call:
-    
-    connection = oracledb.connect(user="my_user", password="my_password", host="my_host", 
-                                    service_name="orclpdb", port=1521)
-
-    # Example 2
-
-    cp = oracledb.ConnectParams(host="my_host", service_name="orclpdb"
-                                   port=1521)
-    connection = oracledb.connect(user="my_user", password="my_password", params=cp)
-
-    # Example 3
-
-    cp = oracledb.ConnectParams(host="my_host", port="my_port"
-                                   service_name="my_service_name")
-    dsn = cp.get_connect_string()
-    conn = oracledb.connect(user="my_user", password="my_password", dsn=dsn)
-
-You can set the attributes using :meth:`ConnectParams.set()` as shown below:
+The use of the ConnectParams class is optional because you can pass the same
+parameters directly to :func:`~oracledb.connect()`.  For example, the code above
+is equivalent to:
 
 .. code-block:: python
 
-    cp = oracledb.ConnectParams(password="my_password", host="localhost",
-                               service_name="orclpdb", port=1521)
-    
+    connection = oracledb.connect(user="hr", password=userpwd,
+                                  host="dbhost", port=1521, service_name="orclpdb")
+
+
+If you want to keep credentials separate, you can use ConnectParams just to
+encapsulate connection string components:
+
+.. code-block:: python
+
+    cp = oracledb.ConnectParams(host="dbhost", port=1521, service_name="orclpdb")
+    connection = oracledb.connect(user="hr", password=userpwd, params=cp)
+
+You can use :meth:`ConnectParams.get_connect_string()` to get a connection
+string from a ConnectParams object:
+
+.. code-block:: python
+
+    cp = oracledb.ConnectParams(host="dbhost", port="my_port", service_name="my_service_name")
+    dsn = cp.get_connect_string()
+    connection = oracledb.connect(user="hr", password=userpwd, dsn=dsn)
+
+To parse a connection string and store components as attributes:
+
+.. code-block:: python
+
+    cp = oracledb.ConnectParams()
+    cp.parse_connect_string("host.example.com:1522/orclpdb")
+
+Most parameter values of :func:`oracledb.ConnectParams()` are gettable as
+attributes, for example to get the stored host name:
+
+.. code-block:: python
+
+    print(cp.host)
+
+Attributes such as the password are not gettable.
+
+You can set individual attributes using :meth:`ConnectParams.set()`:
+
+.. code-block:: python
+
+    cp = oracledb.ConnectParams(host="localhost", port=1521, service_name="orclpdb")
+
     # set a new port
     cp.set(port=1522)
-    
+
     # change both the port and service name
     cp.set(port=1523, service_name="orclpdb")
 
-The parameter values of :func:`oracledb.ConnectParams()` are gettable as attributes. 
-The following example shows how to get the stored username:
-
-.. code-block:: python
-
-    cp = oracledb.ConnectParams(user="my_user", password="my_password", host="localhost",
-                                service_name="orclpdb", port=1521)
-
-    print(cp.user)
-
+Some values, such as the database host name, can be specified as
+:func:`oracledb.connect()`, parameters, as part of the connect string, and in
+the ``params`` object.  If a ``dsn`` is passed, the python-oracledb :ref:`Thick
+<enablingthick>` mode will use the ``dsn`` string to connect, otherwise a
+connection string is internally constructed from the individual parameters and
+``params`` object values, with the individual parameters having precedence.  In
+python-oracledb's default Thin mode, a connection string is internally used
+that contains all relevant values specified.  The precedence in Thin mode is
+that values in any ``dsn`` parameter override values passed as individual
+parameters, which themselves override values set in the ``params`` object.
+Similar precedence rules also apply to other values.
 
 .. _connpooling:
 
 Connection Pooling
 ==================
 
-python-oracledb's connection pooling lets applications create and maintain a pool of
-connections to the database.  Connection pooling is important for performance
-when applications frequently connect and disconnect from the database.  The pool
-implementation uses Oracle's `session pool technology
-<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
-id=GUID-F9662FFB-EAEF-495C-96FC-49C6D1D9625C>`__ which supports Oracle's
-:ref:`high availability <highavailability>` features and is recommended for
-applications that must be reliable.  This also means that small pools can be
+Python-oracledb's connection pooling lets applications create and maintain a
+pool of open connections to the database.  Connection pooling is available in
+both Thin and :ref:`Thick <enablingthick>` modes.  Connection pooling is
+important for performance when applications frequently connect and disconnect
+from the database.  The high available features of pools also make small pools
 useful for applications that want a few connections available for infrequent
-use.
+use and requires them to be immediately usable when acquired.
 
-A connection pool is created by calling :meth:`~oracledb.create_pool()`.  This
+In python-oracledb Thick mode, the pool implementation uses Oracle's `session
+pool technology <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
+id=GUID-F9662FFB-EAEF-495C-96FC-49C6D1D9625C>`__ which supports additional
+Oracle Database features, for example some advanced :ref:`high availability
+<highavailability>` features.
+
+Creating a Connection Pool
+--------------------------
+
+A connection pool is created by calling :meth:`oracledb.create_pool()`.  This
 is generally called during application initialization.  The initial pool size
 and the maximum pool size are provided at the time of pool creation.  When the
 pool needs to grow, new connections are created automatically.  The pool can
@@ -373,11 +555,11 @@ shrink back to the minimum size when connections are no longer in use.  For
 pools created with :ref:`external authentication <extauth>`, with
 :ref:`homogeneous <connpooltypes>` set to False, or when using :ref:`drcp`, then
 the number of connections initially created is zero even if a larger value is
-specified for ``min``.  Also in these cases the pool increment is always 1,
+specified for ``min``.  Also in these cases the pool increment unit is always 1,
 regardless of the value of ``increment``.
 
 After a pool has been created, connections can be obtained from it by calling
-:meth:`~ConnectionPool.acquire()`.  These connections can be used in the same way
+:meth:`ConnectionPool.acquire()`.  These connections can be used in the same way
 that standalone connections are used.
 
 Connections acquired from the pool should be released back to the pool using
@@ -388,93 +570,86 @@ scope.  This make connections available for other users of the pool.
 
 The connection pool can be completely closed using :meth:`ConnectionPool.close()`.
 
-The example below shows how to connect to Oracle Database using a
-connection pool:
+The example below shows how to use a connection pool:
 
 .. code-block:: python
 
-    # Create the connection pool
-    pool = oracledb.create_pool(user="hr", password=userpwd,
-                                 dsn="dbhost.example.com/orclpdb", min=2,
-                                 max=5, increment=1)
+    # Create the connection pool during application initialization
+    pool = oracledb.create_pool(user="hr", password=userpwd, dsn="dbhost.example.com/orclpdb",
+                                min=2, max=5, increment=1)
 
     # Acquire a connection from the pool
     connection = pool.acquire()
 
     # Use the pooled connection
-    cursor = connection.cursor()
-    for result in cursor.execute("select * from mytab"):
-        print(result)
+    with connection.cursor() as cursor:
+        for result in cursor.execute("select * from mytab"):
+            print(result)
 
     # Release the connection to the pool
     pool.release(connection)
 
-    # Close the pool
+    # Close the pool at application shutdown
     pool.close()
 
-Other :meth:`oracledb.create_pool()` options can be used at pool creation.
-For example the ``getmode`` value can be set so that any :meth:`ConnectionPool.acquire()` 
-call will wait for a connection to become available if all are currently in use, for
-example:
+Similar to standalone connections, you may prefer to let connections be closed
+implicitly at end of scope, for example with a ``with`` statement:
 
 .. code-block:: python
 
-    # Create the session pool
-    pool = oracledb.create_pool(user="hr", password=userpwd,
-                                 dsn="dbhost.example.com/orclpdb", min=2,
-                                 max=5, increment=1,
-                                 getmode=oracledb.SPOOL_ATTRVAL_WAIT)
+    with pool.acquire() as connection:
+        with connection.cursor() as cursor:
+            for result in cursor.execute("select * from mytab"):
+                print(result)
 
-See `ConnectionPool.py
-<https://github.com/oracle/oracledb/tree/main/samples/ConnectionPool.py>`__
+Various :meth:`oracledb.create_pool()` options can be specified at pool
+creation.  For example the ``getmode`` value can be set so that any
+:meth:`ConnectionPool.acquire()` call will return immediately without waiting
+for a connection to become available if all are currently in use, for example:
+
+.. code-block:: python
+
+    pool = oracledb.create_pool(user="hr", password=userpwd, dsn="dbhost.example.com/orclpdb",
+                                min=2, max=5, increment=1,
+                                getmode=oracledb.POOL_GETMODE_NOWAIT)
+
+See `connection_pool.py
+<https://github.com/oracle/python-oracledb/tree/main/samples/connection_pool.py>`__
 for an example.
 
-Before :meth:`ConnectionPool.acquire()` returns, python-oracledb does a lightweight check
-to see if the network transport for the selected connection is still open.  If
-it is not, then :meth:`~ConnectionPool.acquire()` will clean up the connection and
-return a different one.  This check will not detect cases such as where the
-database session has been killed by the DBA, or reached a database resource
-manager quota limit.  To help in those cases, :meth:`~ConnectionPool.acquire()`
-will also do a full :ref:`round-trip <roundtrips>` ping to the database when it
-is about to return a connection that was unused in the pool for
-:data:`ConnectionPool.ping_interval` seconds.  If the ping fails, the connection
-will be discarded and another one obtained before :meth:`~ConnectionPool.acquire()`
-returns to the application.  Because this full ping is time based, it won't
-catch every failure.  Also network timeouts and session kills may occur after
-:meth:`~ConnectionPool.acquire()` and before :meth:`Cursor.execute()`.  To handle
+**Pool Connection Health**
+
+Before :meth:`ConnectionPool.acquire()` returns, python-oracledb does a
+lightweight check similar to :meth:`Connection.is_healthy()` to see if the
+network transport for the selected connection is still open.  If it is not,
+then :meth:`~ConnectionPool.acquire()` will clean up the connection and return
+a different one.
+
+This check will not detect cases such as where the database session has been
+killed by the DBA, or reached a database resource manager quota limit.  To help
+in those cases, :meth:`~ConnectionPool.acquire()` will also do a full
+:ref:`round-trip <roundtrips>` database ping similar to
+:meth:`Connection.ping()` when it is about to return a connection that was
+unused in the pool for :data:`ConnectionPool.ping_interval` seconds.  If the
+ping fails, the connection will be discarded and another one obtained before
+:meth:`~ConnectionPool.acquire()` returns to the application.
+
+Because this full ping is time based it won't catch every failure.  Also
+network timeouts and session termination may occur between the calls to
+:meth:`~ConnectionPool.acquire()` and :meth:`Cursor.execute()`.  To handle
 these cases, applications need to check for errors after each
-:meth:`~Cursor.execute()` and make application-specific decisions about retrying
-work if there was a connection failure.  Oracle's :ref:`Application Continuity
-<highavailability>` can do this automatically in some cases.  Note both the
-lightweight and full ping connection checks can mask performance-impacting
-configuration issues, for example firewalls killing connections, so monitor the
-connection rate in `AWR
+:meth:`~Cursor.execute()` and make application-specific decisions about
+retrying work if there was a connection failure.  When using python-oracledb in
+Thick mode, Oracle Database features like :ref:`Application Continuity
+<highavailability>` can do this automatically in some cases.
+
+Note both the lightweight and full ping connection checks can mask
+performance-impacting configuration issues, for example firewalls killing
+connections, so monitor the connection rate in `AWR
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-56AEF38E-9400-427B-A818-EDEC145F7ACD>`__
-for an unexpected value.  You can explicitly initiate a full ping to check
-connection liveness with :meth:`Connection.ping()` but overuse will impact
-performance and scalability.
-
-Connection Pool Sizing
-----------------------
-
-The Oracle Real-World Performance Group's recommendation is to use fixed size
-connection pools.  The values of ``min`` and ``max`` should be the same (and the
-``increment`` equal to zero).  This avoids connection storms which can decrease
-throughput.  See `Guideline for Preventing Connection Storms: Use Static Pools
-<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-7DFBA826-7CC0-4D16-B19C-31D168069B54>`__,
-which contains more details about sizing of pools.  Having a fixed size will
-guarantee that the database can handle the upper pool size.  For example, if a
-pool needs to grow but the database resources are limited, then
-:meth:`ConnectionPool.acquire()` may return errors such as ORA-28547.  With a fixed
-pool size, this class of error will occur when the pool is created, allowing you
-to change the size before users access the application.  With a dynamically
-growing pool, the error may occur much later after the pool has been in use for
-some time.
-
-The Real-World Performance Group also recommends keeping pool sizes small, as
-they may perform better than larger pools. The pool attributes should be
-adjusted to handle the desired workload within the bounds of available resources
-in python-oracledb and the database.
+for an unexpectedly large value.  You can explicitly initiate a full round-trip
+ping at anytime with :meth:`Connection.ping()` to check connection liveness but
+overuse will impact performance and scalability.
 
 Make sure the :ref:`firewall <hanetwork>`, `resource manager
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-2BEF5482-CF97-4A85-BD90-9195E41E74EF>`__
@@ -482,6 +657,29 @@ or user profile `IDLE_TIME
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-ABC7AE4D-64A8-4EA9-857D-BEF7300B64C3>`__
 do not expire idle sessions, since this will require connections be recreated,
 which will impact performance and scalability.
+
+Connection Pool Sizing
+----------------------
+
+The Oracle Real-World Performance Group's recommendation is to use fixed size
+connection pools.  The values of ``min`` and ``max`` should be the same (and
+the ``increment`` equal to zero).  This avoids connection storms which can
+decrease throughput.  See `Guideline for Preventing Connection Storms: Use
+Static Pools
+<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-7DFBA826-7CC0-4D16-B19C-31D168069B54>`__,
+which contains more details about sizing of pools.  Having a fixed size will
+guarantee that the database can handle the upper pool size.  For example, if a
+dynamically sized pool needs to grow but the database resources are limited,
+then :meth:`ConnectionPool.acquire()` may return errors such as ORA-28547.
+With a fixed pool size, this class of error will occur when the pool is
+created, allowing you to change the size before users access the application.
+With a dynamically growing pool, the error may occur much later while the
+application is in use.
+
+The Real-World Performance Group also recommends keeping pool sizes small, as
+they may perform better than larger pools. The pool attributes should be
+adjusted to handle the desired workload within the bounds of available resources
+in python-oracledb and the database.
 
 .. _poolreconfiguration:
 
@@ -512,8 +710,8 @@ complete.
 
 Calling ``reconfigure()`` is the only way to change a pool's ``min``, ``max``
 and ``increment`` values.  Other attributes such as
-:data:`~ConnectionPool.wait_timeout` can also be passed to ``reconfigure()`` or
-they can be set directly:
+:data:`~ConnectionPool.wait_timeout` can be passed to ``reconfigure()`` or they
+can be set directly:
 
 .. code-block:: python
 
@@ -525,16 +723,20 @@ Session CallBacks for Setting Pooled Connection State
 -----------------------------------------------------
 
 Applications can set "session" state in each connection.  Examples of session
-state are NLS settings from ``ALTER SESSION`` statements.  Pooled connections
-will retain their session state after they have been released back to the pool.
-However, because pools can grow, or connections in the pool can be recreated,
-there is no guarantee a subsequent :meth:`~ConnectionPool.acquire()` call will
-return a database connection that has any particular state.
+state are NLS globalization settings from ``ALTER SESSION`` statements.  Pooled
+connections will retain their session state after they have been released back
+to the pool.  However, because pools can grow, or connections in the pool can
+be recreated, there is no guarantee a subsequent
+:meth:`~ConnectionPool.acquire()` call will return a database connection that
+has any particular state.
 
-The :meth:`~oracledb.create_pool()` parameter ``session_callback``
-enables efficient setting of session state so that connections have a
-known session state, without requiring that state to be explicitly set
-after each :meth:`~ConnectionPool.acquire()` call.
+The :meth:`~oracledb.create_pool()` parameter ``session_callback`` enables
+efficient setting of session state so that connections have a known session
+state, without requiring that state to be explicitly set after every
+:meth:`~ConnectionPool.acquire()` call.  The callback is internally invoked
+when :meth:`~ConnectionPool.acquire()` is called and runs first.
+
+The session callback can be a Python function or a PL/SQL procedure.
 
 Connections can also be tagged when they are released back to the pool.  The
 tag is a user-defined string that represents the session state of the
@@ -544,20 +746,22 @@ another session will be returned.  By comparing the actual and requested tags,
 applications can determine what exact state a session has, and make any
 necessary changes.
 
-The session callback can be a Python function or a PL/SQL procedure.
+Connection tagging and PL/SQL callbacks are only available in python-oracledb
+Thick mode.  Python callbacks can be used in python-oracledb Thin and Thick
+modes.
 
 There are three common scenarios for ``session_callback``:
 
 - When all connections in the pool should have the same state, use a
   Python callback without tagging.
 
-- When connections in the pool require different state for different
-  users, use a Python callback with tagging.
+- When connections in the pool require different state for different users, use
+  a Python callback with tagging.
 
-- When using :ref:`drcp`: use a PL/SQL callback with tagging.
+- With :ref:`drcp`, use a PL/SQL callback with tagging.
 
-
-**Python Callback**
+Python Callback
++++++++++++++++
 
 If the ``session_callback`` parameter is a Python procedure, it will be called
 whenever :meth:`~ConnectionPool.acquire()` will return a newly created database
@@ -571,12 +775,12 @@ An example is:
 
     # Set the NLS_DATE_FORMAT for a session
     def init_session(connection, requested_tag):
-        cursor = connection.cursor()
-        cursor.execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI'")
+        with connection.cursor() as cursor:
+            cursor.execute("alter session set nls_date_format = 'YYYY-MM-DD HH24:MI'")
 
     # Create the pool with session callback defined
-    pool = oracledb.create_pool(user="hr", password=userpwd, dsn="orclpdb",
-                                 session_callback=init_session)
+    pool = oracledb.create_pool(user="hr", password=userpwd, dsn="localhost/orclpdb",
+                                session_callback=init_session)
 
     # Acquire a connection from the pool (will always have the new date format)
     connection = pool.acquire()
@@ -600,11 +804,15 @@ statement:
     cursor.execute("""
             begin
                 execute immediate
-                        'alter session set nls_date_format = ''YYYY-MM-DD'' nls_language = AMERICAN';
+                        'alter session set nls_date_format = ''YYYY-MM-DD''
+                                           nls_language = AMERICAN';
                 -- other SQL statements could be put here
             end;""")
 
-**Connection Tagging**
+.. _conntagging:
+
+Connection Tagging
+++++++++++++++++++
 
 Connection tagging is used when connections in a pool should have differing
 session states.  In order to retrieve a connection with a desired state, the
@@ -612,13 +820,12 @@ session states.  In order to retrieve a connection with a desired state, the
 
 .. note::
 
-    Connection tagging is only supported in the python-oracledb Thick 
-    mode. For information on how to change from one mode to the other, 
-    see :ref:`changingmodes` .
+    Connection tagging is only supported in the python-oracledb Thick mode. See
+    :ref:`enablingthick` .
 
-When python-oracledb is using Oracle Client libraries 12.2 or later, then python-oracledb
-uses 'multi-property tags' and the tag string must be of the form of one or
-more "name=value" pairs separated by a semi-colon, for example
+When python-oracledb is using Oracle Client libraries 12.2 or later, then
+python-oracledb uses 'multi-property tags' and the tag string must be of the
+form of one or more "name=value" pairs separated by a semi-colon, for example
 ``"loc=uk;lang=cy"``.
 
 When a connection is requested with a given tag, and a connection with that tag
@@ -654,14 +861,20 @@ See `session_callback.py
 <https://github.com/oracle/oracledb/tree/main/
 samples/session_callback.py>`__ for an example.
 
-**PL/SQL Callback**
+PL/SQL Callback
++++++++++++++++
 
-When python-oracledb uses Oracle Client 12.2 or later, the session callback can also
-be the name of a PL/SQL procedure.  A PL/SQL callback will be initiated only
-when the tag currently associated with a connection does not match the tag that
-is requested.  A PL/SQL callback is most useful when using :ref:`drcp` because
-DRCP does not require a :ref:`round-trip <roundtrips>` to invoke a PL/SQL
-session callback procedure.
+.. note::
+
+    PL/SQL Callbacks are only supported in the python-oracledb Thick mode. See
+    :ref:`enablingthick`.
+
+When python-oracledb uses Oracle Client 12.2 or later, the session callback can
+also be the name of a PL/SQL procedure.  A PL/SQL callback will be initiated
+only when the tag currently associated with a connection does not match the tag
+that is requested.  A PL/SQL callback is most useful when using :ref:`drcp`
+because DRCP does not require a :ref:`round-trip <roundtrips>` to invoke a
+PL/SQL session callback procedure.
 
 The PL/SQL session callback should accept two VARCHAR2 arguments:
 
@@ -675,17 +888,18 @@ The PL/SQL session callback should accept two VARCHAR2 arguments:
 The logic in this procedure can parse the actual tag in the session that has
 been selected by the pool and compare it with the tag requested by the
 application.  The procedure can then change any state required before the
-connection is returned to the application from :meth:`~ConnectionPool.acquire()`.
+connection is returned to the application from
+:meth:`~ConnectionPool.acquire()`.
 
-If the ``matchanytag`` attribute of :meth:`~ConnectionPool.acquire()` is *True*,
-then a connection with any state may be chosen by the pool.
+If the ``matchanytag`` attribute of :meth:`~ConnectionPool.acquire()` is
+*True*, then a connection with any state may be chosen by the pool.
 
 Oracle 'multi-property tags' must be used.  The tag string must be of the form
 of one or more "name=value" pairs separated by a semi-colon, for example
 ``"loc=uk;lang=cy"``.
 
-In python-oracledb set ``session_callback`` to the name of the PL/SQL procedure. For
-example:
+In python-oracledb set ``session_callback`` to the name of the PL/SQL
+procedure. For example:
 
 .. code-block:: python
 
@@ -707,29 +921,70 @@ samples/session_callback_plsql.py>`__ for an example.
 Heterogeneous and Homogeneous Connection Pools
 ----------------------------------------------
 
-By default, connection pools are ‘homogeneous’, meaning that all connections
-use the same database credentials.  However, if the pool option ``homogeneous``
-is False at the time of pool creation, then a ‘heterogeneous’ pool will be
-created.  This allows different credentials to be used each time a connection
-is acquired from the pool with :meth:`~ConnectionPool.acquire()`.
+By default, connection pools are 'homogeneous', meaning that all connections
+use the same database credentials.  'Heterogeneous' pools allow different
+credentials to be used each time a connection is acquired from the pool with
+:meth:`~ConnectionPool.acquire()`.
 
 **Heterogeneous Pools**
 
-When a heterogeneous pool is created by setting ``homogeneous`` to False and no
-credentials are supplied during pool creation, then a user name and password
-may be passed to :meth:`~ConnectionPool.acquire()` as shown in this example:
+In the python-oracledb Thick mode, the pool option ``homogeneous`` can be set
+to False at the time of pool creation.  No credentials should be supplied.
+User names and passwords may later be passed to
+:meth:`~ConnectionPool.acquire()`:
 
 .. code-block:: python
 
-    pool = oracledb.create_pool(dsn="dbhost.example.com/orclpdb",
-                                 homogeneous=False)
+    pool = oracledb.create_pool(dsn="dbhost.example.com/orclpdb", homogeneous=False)
     connection = pool.acquire(user="hr", password=userpwd)
 
-.. note::
+.. _usingpoolparams:
 
-    Heterogeneous connection pools are only supported in the python-oracledb Thick 
-    mode. For information on how to change from one mode to the other, 
-    see :ref:`changingmodes`.
+Using the PoolParams Builder Class
+----------------------------------
+
+The :ref:`PoolParams class <poolparam>` allows you to define connection and
+pool parameters in a single place.  The :func:`oracledb.PoolParams()` function
+returns a ``PoolParams`` object.  This is a subclass of the :ref:`ConnectParams
+class <connparam>` with additional pool-specific attributes such as the pool
+size.  A `PoolParams` object can be passed to
+:func:`oracledb.create_pool()`. For example:
+
+.. code-block:: python
+
+    pp = oracledb.PoolParams(min=1, max=2, increment=1)
+    pool = oracledb.create_pool(user="hr", password=userpw, dsn="dbhost.example.com/orclpdb",
+                                params=pp)
+
+The use of the PoolParams class is optional because you can pass the same
+parameters directly to :func:`~oracledb.create_pool()`.  For example, the code
+above is equivalent to:
+
+.. code-block:: python
+
+    pool = oracledb.create_pool(user="hr", password=userpw, dsn="dbhost.example.com/orclpdb",
+                                min=1, max=2, increment=1)
+
+Most PoolParams arguments are gettable as properties.  They may be set
+individually using the ``set()`` method:
+
+.. code-block:: python
+
+    pp = oracledb.PoolParams()
+    pp.set(min=5)
+    print(pp.min) # 5
+
+Some values, such as the database host name, can be specified as
+:func:`oracledb.create_pool()` parameters, as part of the connect string, and
+in the ``params`` object.  If a ``dsn`` is passed, the python-oracledb
+:ref:`Thick <enablingthick>` mode will use the ``dsn`` string to connect,
+otherwise a connection string is internally constructed from the individual
+parameters and ``params`` object values, with the individual parameters having
+precedence.  In python-oracledb's default Thin mode, a connection string is
+internally used that contains all relevant values specified.  The precedence in
+Thin mode is that values in any ``dsn`` parameter override values passed as
+individual parameters, which themselves override values set in the ``params``
+object.  Similar precedence rules also apply to other values.
 
 .. _drcp:
 
@@ -739,23 +994,36 @@ Database Resident Connection Pooling (DRCP)
 `Database Resident Connection Pooling (DRCP)
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
 id=GUID-015CA8C1-2386-4626-855D-CC546DDC1086>`__ enables database resource
-sharing for applications that run in multiple client processes, or run on
-multiple middle-tier application servers.  By default each connection from
-Python will use one database server process.  DRCP allows pooling of these
-server processes.  This reduces the amount of memory required on the database
-host.  The DRCP pool can be shared by multiple applications.
+sharing for applications that use a large number of connections, that run in
+multiple client processes, or run on multiple middle-tier application servers.
+By default each connection from Python will use one database server process.
+DRCP allows pooling of these server processes.  This reduces the amount of
+memory required on the database host.  The DRCP pool can be shared by multiple
+applications.
 
 DRCP is useful for applications which share the same database credentials, have
 similar session settings (for example date format settings or PL/SQL package
 state), and where the application gets a database connection, works on it for a
 relatively short duration, and then releases it.
 
-Applications can choose whether or not to use pooled connections at runtime.
+For efficiency, it is recommended that DRCP connections should be used in
+conjunction with python-oracledb's local :ref:`connection pool <connpooling>`.
+Using DRCP with standalone connections is not as efficient as using it in
+conjunction with a python-oracleb connection pool, but does allow the database
+to reuse database server processes which can provide a performance benefit.
 
-For efficiency, it is recommended that DRCP connections should be used
-in conjunction with python-oracledb’s local :ref:`connection pool <connpooling>`.
+Although applications can choose whether or not to use pooled connections at
+runtime, care must be taken to configure the database appropriately for the
+number of expected connections, and also to stop inadvertent use of non-DRCP
+connections leading to a database server resource shortage. Conversely, avoid
+using DRCP connections for long-running operations.
 
-**Using DRCP in Python**
+For more information about DRCP see `Oracle Database Concepts Guide
+<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
+id=GUID-531EEE8A-B00A-4C03-A2ED-D45D92B3F797>`__, and for DRCP Configuration
+see `Oracle Database Administrator's Guide
+<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
+id=GUID-82FF6896-F57E-41CF-89F7-755F3BC9C924>`__.
 
 Using DRCP with python-oracledb applications involves the following steps:
 
@@ -763,10 +1031,15 @@ Using DRCP with python-oracledb applications involves the following steps:
 2. Configuring the application to use a DRCP connection
 3. Deploying the application
 
-**Configuring and enabling DRCP**
+Enabling DRCP in Oracle Database
+--------------------------------
 
-Every instance of Oracle Database uses a single, default connection
-pool. The pool can be configured and administered by a DBA using the
+Every Oracle Database uses a single, default DRCP connection pool.  From Oracle
+Database 21c each Pluggable database can optionally have its own pool.  Note
+DRCP is already enabled in Oracle Autonomous Database and pool management is
+different to the steps below.
+
+DRCP pools can be configured and administered by a DBA using the
 ``DBMS_CONNECTION_POOL`` package:
 
 .. code-block:: sql
@@ -834,111 +1107,158 @@ instance restarts, unless explicitly stopped with the
 
 The pool cannot be stopped while connections are open.
 
-**Application Deployment for DRCP**
+Coding Applications to use DRCP
+-------------------------------
 
-In order to use DRCP, the ``cclass`` and ``purity`` parameters should
-be passed to :meth:`oracledb.connect()` or :meth:`ConnectionPool.acquire()`.  If
-``cclass`` is not set, the pooled server sessions will not be reused optimally,
-and the DRCP statistic views will record large values for NUM_MISSES.
+To use DRCP, application connection establishment must request a DRCP pooled
+server.  The best practice is also to specify a user-chosen connection class
+name.  A 'purity' of the connection session state can optionally be specified.
+See the Oracle Database documentation on `benefiting from scalability
+<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-661BB906-74D2-4C5D-9C7E-2798F76501B3>`__
+for more background on purity and connection classes.
 
-The DRCP ``purity`` can be one of ``ATTR_PURITY_NEW``, ``ATTR_PURITY_SELF``,
-or ``ATTR_PURITY_DEFAULT``.  The value ``ATTR_PURITY_SELF`` allows reuse of
-both the pooled server process and session memory, giving maximum benefit from
-DRCP.  See the Oracle documentation on `benefiting from scalability
-<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
-id=GUID-661BB906-74D2-4C5D-9C7E-2798F76501B3>`__.
+To request the database use a DRCP pooled server, you can use a specific
+connection string in :meth:`oracledb.create_pool()` or
+:meth:`oracledb.connect()` like one of the following syntaxes.
 
-The connection string used for :meth:`~oracledb.connect()` or
-:meth:`~ConnectionPool.acquire()` must request a pooled server by
-following one of the syntaxes shown below:
-
-Using Oracle’s Easy Connect syntax, the connection would look like:
+For example with the :ref:`Easy Connect syntax <easyconnect>`:
 
 .. code-block:: python
 
-    connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orcl:pooled")
+    dsn = "dbhost.example.com/orcl:pooled"
 
-Or if you connect using a Net Service Name named ``customerpool``:
-
-.. code-block:: python
-
-    connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="customerpool")
-
-Then only the Oracle Network configuration file ``tnsnames.ora`` needs
-to be modified::
+Alternatively add ``(SERVER=POOLED)`` to the connect descriptor such as used in
+an Oracle Network configuration file ``tnsnames.ora``::
 
     customerpool = (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)
               (HOST=dbhost.example.com)
               (PORT=1521))(CONNECT_DATA=(SERVICE_NAME=CUSTOMER)
               (SERVER=POOLED)))
 
-If these changes are made and the database is not actually configured for DRCP,
-or the pool is not started, then connections will not succeed and an error will
-be returned to the Python application.
-
-Although applications can choose whether or not to use pooled connections at
-runtime, care must be taken to configure the database appropriately for the
-number of expected connections, and also to stop inadvertent use of non-DRCP
-connections leading to a database server resource shortage. Conversely, avoid
-using DRCP connections for long-running operations.
-
-The example below shows how to connect to Oracle Database using Database
-Resident Connection Pooling:
+You can also specify to use a DRCP pooled server by setting the ``server_type``
+parameter when creating a standalone connection or creating a python-oracledb
+connection pool.  For example:
 
 .. code-block:: python
 
-    connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orcl:pooled",
-                                   cclass="MYCLASS",
-                                   purity=oracledb.ATTR_PURITY_SELF)
+    pool = oracledb.create_pool(user="hr", password=userpwd, dsn="dbhost.example.com/orclpdb",
+                                min=2, max=5, increment=1
+                                server_type="pooled")
 
-The example below shows connecting to Oracle Database using DRCP and
-python-oracledb's connection pooling:
 
-.. code-block:: python
+**DRCP Connection Class Names**
 
-    mypool = oracledb.create_pool(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orcl:pooled")
-    connection = mypool.acquire(cclass="MYCLASS",
-                                purity=oracledb.ATTR_PURITY_SELF)
+The best practice is to specify a ``cclass`` class name when creating a
+python-oracledb connection pool.  This user-chosen name provides some
+partitioning of DRCP session memory so reuse is limited to similar
+applications.  It provides maximum pool sharing if multiple application
+processes are started.  A class name also allows better DRCP usage tracking in
+the database.  In the database monitoring views, the class name shown will be
+the value specified in the application prefixed with the user name.
 
-For more information about DRCP see `Oracle Database Concepts Guide
-<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
-id=GUID-531EEE8A-B00A-4C03-A2ED-D45D92B3F797>`__, and for DRCP Configuration
-see `Oracle Database Administrator's Guide
-<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
-id=GUID-82FF6896-F57E-41CF-89F7-755F3BC9C924>`__.
-
-**Closing Connections**
-
-Python scripts where python-oracledb connections do not go out of scope quickly
-(which releases them), or do not currently use :meth:`Connection.close()`,
-should be examined to see if :meth:`~Connection.close()` can be used, which
-then allows maximum use of DRCP pooled servers by the database:
+To create a connection pool requesting a DRCP pooled server and specifying a
+class name you could call:
 
 .. code-block:: python
 
-     # Do some database operations
-    connection = mypool.acquire(cclass="MYCLASS", purity=oracledb.ATTR_PURITY_SELF)
+    pool = oracledb.create_pool(user="hr", password=userpwd, dsn="dbhost.example.com/orclpdb:pooled",
+                                min=2, max=5, increment=1
+                                cclass="MYAPP")
+
+The python-oracledb connection pool size does not need to match the DRCP pool
+size.  The limit on overall execution parallelism is determined by the DRCP
+pool size.
+
+Connection class names can also be passed to :meth:`~ConnectionPool.acquire()`,
+if desired:
+
+.. code-block:: python
+
+    pool = oracledb.create_pool(user="hr", password=userpwd, dsn="dbhost.example.com/orclpdb:pooled",
+                                min=2, max=5, increment=1
+                                cclass="MYAPP")
+
+    connection = mypool.acquire(cclass="OTHERAPP")
+
+If a pooled server of a requested class is not available, a server with new
+session state is used.  If the DRCP pool cannot grow, a server with a different
+class may be used and its session state cleared.
+
+If ``cclass`` is not set, the pooled server sessions will not be reused
+optimally, and the DRCP statistic views may record large values for NUM_MISSES.
+
+**DRCP Connection Purity**
+
+DRCP allows the connection session memory to be reused or cleaned each time a
+connections is acquired from the pool.  The pool or connection creation
+``purity`` parameter can be one of ``PURITY_NEW``, ``PURITY_SELF``, or
+``PURITY_DEFAULT``.  The value ``PURITY_SELF`` allows reuse of both the pooled
+server process and session memory, giving maximum benefit from DRCP.  By
+default, python-oracledb pooled connections use ``PURITY_SELF`` and standalone
+connections use ``PURITY_NEW``.
+
+To limit session sharing you can explicitly require that new session memory be
+allocated each time ``acquire()`` is called:
+
+.. code-block:: python
+
+    pool = oracledb.create_pool(user="hr", password=userpwd, dsn="dbhost.example.com/orclpdb:pooled",
+                                min=2, max=5, increment=1
+                                cclass="MYAPP", purity=oracledb.PURITY_NEW)
+
+**Setting the Connection Class and Purity in the Connection String**
+
+For the python-oracledb Thin mode, you can specify the class and purity in the
+connection string itself.  This removes the need to modify an existing
+application when you want to use DRCP:
+
+.. code-block:: python
+
+    dsn = "localhost/orclpdb:pooled?pool_connection_class=MYAPP&pool_purity=self"
+
+Recent versions of Oracle Client libraries also support this syntax however
+explicitly specifying the purity as SELF in this way may cause some unusable
+connections in a python-oracledb Thick mode connection pool not to be
+terminated.  In summary, if you cannot programmatically set the class name and
+purity, or cannot use python-oracledb Thin mode, then avoid explicitly setting
+the purity as a connection string parameter when using a python-oracledb
+connection pooling in Thick mode.
+
+**Closing Connections when using DRCP**
+
+Similar to using a python-oracledb connection pool, Python scripts where
+python-oracledb connections do not go out of scope quickly (which releases
+them), or do not currently use :meth:`Connection.close()` or
+:meth:`ConnectionPool.release()`, should be examined to see if connections can
+be closed earlier.  This allows maximum reuse of DRCP pooled servers by other
+users:
+
+.. code-block:: python
+
+    pool = oracledb.create_pool(user="hr", password=userpwd, dsn="dbhost.example.com/orclpdb:pooled",
+                                min=2, max=5, increment=1
+                                cclass="MYAPP")
+
+    # Do some database operations
+    connection = mypool.acquire()
     . . .
-    connection.close();
+    connection.close();             # <- Add this to release the DRCP pooled server
 
     # Do lots of non-database work
     . . .
 
     # Do some more database operations
-    connection = mypool.acquire(cclass="MYCLASS", purity=oracledb.ATTR_PURITY_SELF)
+    connection = mypool.acquire()   # <- And get a new pooled server only when needed
     . . .
     connection.close();
 
-**Monitoring DRCP**
+Monitoring DRCP
+---------------
 
 Data dictionary views are available to monitor the performance of DRCP.
 Database administrators can check statistics such as the number of busy and
 free servers, and the number of hits and misses in the pool against the total
-number of requests from clients. The views are:
+number of requests from clients. The views include:
 
 * ``DBA_CPOOL_INFO``
 * ``V$PROCESS``
@@ -973,7 +1293,7 @@ sessions.  It can also be joined with ``V$PROCESS`` via
 
 The ``V$CPOOL_STATS`` view displays information about the DRCP statistics for
 an instance.  The V$CPOOL_STATS view can be used to assess how efficient the
-pool settings are. T his example query shows an application using the pool
+pool settings are.  This example query shows an application using the pool
 effectively.  The low number of misses indicates that servers and sessions were
 reused.  The wait count shows just over 1% of requests had to wait for a pooled
 server to become available::
@@ -998,6 +1318,10 @@ level statistics for the pool per instance::
     -------------------------------- ------------ ---------- ----------
     HR.MYCLASS                             100031      99993         38
 
+
+The class name columns shows the database user name appended with the
+connection class name.
+
 **V$CPOOL_CONN_INFO View**
 
 The ``V$POOL_CONN_INFO`` view gives insight into client processes that are
@@ -1007,18 +1331,17 @@ introduced in Oracle 11gR2.
 
 You can monitor the view ``V$CPOOL_CONN_INFO`` to, for example, identify
 misconfigured machines that do not have the connection class set correctly.
-This view maps the machine name to the class name::
+This view maps the machine name to the class name.  In python-oracledb Thick
+mode the class name will be default to one like shown below::
 
     SQL> SELECT cclass_name, machine FROM v$cpool_conn_info;
 
     CCLASS_NAME                             MACHINE
     --------------------------------------- ------------
     CJ.OCI:SP:wshbIFDtb7rgQwMyuYvodA        cjlinux
-    . . .
 
 In this example you would examine applications on ``cjlinux`` and make
 sure ``cclass`` is set.
-
 
 .. _proxyauth:
 
@@ -1026,18 +1349,12 @@ Connecting Using Proxy Authentication
 =====================================
 
 Proxy authentication allows a user (the "session user") to connect to Oracle
-Database using the credentials of a 'proxy user'.  Statements will run as the
+Database using the credentials of a "proxy user".  Statements will run as the
 session user.  Proxy authentication is generally used in three-tier applications
 where one user owns the schema while multiple end-users access the data.  For
 more information about proxy authentication, see the `Oracle documentation
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
 id=GUID-D77D0D4A-7483-423A-9767-CBB5854A15CC>`__.
-
-.. note::
-
-    Connecting to Oracle Database using proxy authentication is only supported 
-    in the python-oracledb Thick mode. For information on how to change from 
-    one mode to the other, see :ref:`changingmodes`.
 
 An alternative to using proxy users is to set
 :attr:`Connection.client_identifier` after connecting and use its value in
@@ -1071,16 +1388,14 @@ Standalone connection examples:
 .. code-block:: python
 
     # Basic Authentication without a proxy
-    connection = oracledb.connect(user="myproxyuser",
-                                   password="myproxyuserpw",
-                                   dsn="dbhost.example.com/orclpdb")
+    connection = oracledb.connect(user="myproxyuser", password="myproxyuserpw",
+                                  dsn="dbhost.example.com/orclpdb")
     # PROXY_USER:   None
     # SESSION_USER: MYPROXYUSER
 
     # Basic Authentication with a proxy
-    connection = oracledb.connect(user="myproxyuser[mysessionuser]",
-                                   password="myproxyuserpw",
-                                   dsn="dbhost.example.com/orclpdb")
+    connection = oracledb.connect(user="myproxyuser[mysessionuser]", password="myproxyuserpw",
+                                  dsn="dbhost.example.com/orclpdb")
     # PROXY_USER:   MYPROXYUSER
     # SESSION_USER: MYSESSIONUSER
 
@@ -1090,16 +1405,16 @@ Pooled connection examples:
 
     # Basic Authentication without a proxy
     pool = oracledb.create_pool(user="myproxyuser", password="myproxyuser",
-                                 dsn="dbhost.example.com/orclpdb")
+                                dsn="dbhost.example.com/orclpdb")
     connection = pool.acquire()
     # PROXY_USER:   None
     # SESSION_USER: MYPROXYUSER
 
     # Basic Authentication with proxy
-    pool = oracledb.create_pool(user="myproxyuser[mysessionuser]",
-                                 password="myproxyuser",
-                                 dsn="dbhost.example.com/orclpdb",
-                                 homogeneous=False)
+    pool = oracledb.create_pool(user="myproxyuser[mysessionuser]", password="myproxyuser",
+                                dsn="dbhost.example.com/orclpdb",
+                                homogeneous=False)
+
     connection = pool.acquire()
     # PROXY_USER:   MYPROXYUSER
     # SESSION_USER: MYSESSIONUSER
@@ -1120,9 +1435,8 @@ or with an external authentication service.
 
 .. note::
 
-    Connecting to Oracle Database using external authentication is only supported 
-    in the python-oracledb Thick mode. For information on how to change from one 
-    mode to the other, see :ref:`changingmodes`.
+    Connecting to Oracle Database using external authentication is only
+    supported in the python-oracledb Thick mode. See :ref:`enablingthick`.
 
 Using an Oracle Wallet for External Authentication
 --------------------------------------------------
@@ -1331,18 +1645,16 @@ The example below shows how to connect to Oracle Database as SYSDBA:
 
     connection = oracledb.connect(user="sys", password=syspwd,
                                    dsn="dbhost.example.com/orclpdb",
-                                   mode=oracledb.SYSDBA)
+                                   mode=oracledb.AUTH_MODE_SYSDBA)
 
-    cursor = con.cursor()
-    sql = "GRANT SYSOPER TO hr"
-    cursor.execute(sql)
+    with connection.cursor() as cursor:
+        cursor.execute("GRANT SYSOPER TO hr")
 
 This is equivalent to executing the following in SQL*Plus:
 
 .. code-block:: sql
 
     CONNECT sys/syspwd AS SYSDBA
-
     GRANT SYSOPER TO hr;
 
 .. _netencrypt:
@@ -1350,27 +1662,35 @@ This is equivalent to executing the following in SQL*Plus:
 Securely Encrypting Network Traffic to Oracle Database
 ======================================================
 
-You can encrypt data transferred between the Oracle Database and the Oracle
-Client libraries used by python-oracledb so that unauthorized parties are not able to
-view plain text values as the data passes over the network.  The easiest
-configuration is Oracle’s native network encryption.  The standard SSL protocol
-can also be used if you have a PKI, but setup is necessarily more involved.
+You can encrypt data transferred between the Oracle Database and
+python-oracledb so that unauthorized parties are not able to view plain text
+values as the data passes over the network.
 
-.. note::
-    
-    Native network encryption is only supported in the python-oracledb Thick 
-    mode. For information on how to change from one mode to the other, 
-    see :ref:`changingmodes`.
+Both python-oracledb Thin and Thick modes support TLS.  Refer to the `Oracle
+Database Security Guide <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
+id=GUID-41040F53-D7A6-48FA-A92A-0C23118BC8A0>`__ for more configuration
+information.
+
+.. _nne:
+
+Native Network Encryption
+-------------------------
+
+The python-oracledb :ref:`Thick mode <enablingthick>` can additionally use
+Oracle Database's `native network encryption
+<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
+id=GUID-7F12066A-2BA1-476C-809B-BB95A3F727CF>`__.
 
 With native network encryption, the client and database server negotiate a key
 using Diffie-Hellman key exchange.  This provides protection against
 man-in-the-middle attacks.
 
-Native network encryption can be configured by editing Oracle Net’s optional
-:ref:`sqlnet.ora <optnetfiles>` configuration file, on either the database
-server and/or on each python-oracledb 'client' machine.  Parameters control whether
-data integrity checking and encryption is required or just allowed, and which
-algorithms the client and server should consider for use.
+Native network encryption can be configured by editing Oracle Net's optional
+:ref:`sqlnet.ora <optnetfiles>` configuration file.  The file on either the
+database server and/or on each python-oracledb 'client' machine can be
+configured.  Parameters control whether data integrity checking and encryption
+is required or just allowed, and which algorithms the client and server should
+consider for use.
 
 As an example, to ensure all connections to the database are checked for
 integrity and are also encrypted, create or edit the Oracle Database
@@ -1408,17 +1728,11 @@ The ``NETWORK_SERVICE_BANNER`` column of the database view
 id=GUID-9F0DCAEA-A67E-4183-89E7-B1555DC591CE>`__ can be used to verify the
 encryption status of a connection.
 
-For more information on Oracle Data Network Encryption and Integrity,
-configuring SSL network encryption and Transparent Data Encryption of
-data-at-rest in the database, see `Oracle Database Security Guide
-<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
-id=GUID-41040F53-D7A6-48FA-A92A-0C23118BC8A0>`__.
-
 
 Resetting Passwords
 ===================
 
-After connecting, passwords can be changed by calling
+After connecting to Oracle Database, passwords can be changed by calling
 :meth:`Connection.changepassword()`:
 
 .. code-block:: python
@@ -1448,124 +1762,153 @@ of the function :meth:`oracledb.connect()` constructor:
 Connecting to Oracle Cloud Autonomous Databases
 ================================================
 
-Python applications can connect to Oracle Autonomous Database (ADB) 
-in Oracle Cloud either through one-way TLS (Transport Layer Security) 
-or mutual TLS (mTLS). One-way TLS and mTLS provide enhanced security for
-authentication and encryption. A database username and password is still 
-required for your application connections. Oracle ADB is configured to 
-use mTLS by default.
+Python applications can connect to Oracle Autonomous Database (ADB) in Oracle
+Cloud using one-way TLS (Transport Layer Security) or mutual TLS
+(mTLS). One-way TLS and mTLS provide enhanced security for authentication and
+encryption.
 
-The python-oracledb driver needs to be configured to use TLS to connect to the 
-Oracle ADB. Ensure that you have access to an Oracle ADB through an Oracle 
-Cloud Infrastructure account. Users have to use OS level controls to limit 
-TLS versions. For example, 
-see `Hardening TLS Configuration <https://access.redhat.com/documentation/en-us/red_
-hat_enterprise_linux/7/html/security_guide/sec-hardening_tls_configuration>`__.
+A database username and password are still required for your application
+connections.  If you need to create a new database schema so you do not login
+as the privileged ADMIN user, refer to the relevant Oracle Cloud documentation,
+for example see `Create Database Users
+<https://docs.oracle.com/en/cloud/paas/autonomous-database/adbdu/managing-database-
+users.html#GUID-5B94EA60-554A-4BA4-96A3-1D5A3ED5878D>`__ in the Oracle
+Autonomous Database manual.
 
-One-way TLS Connection to an Oracle ADB
----------------------------------------
+.. _onewaytls:
 
-In one-way TLS, applications can connect to Oracle ADBs without using a 
-wallet on the client side. The Thin and Thick modes of the python-oracledb 
-driver support one-way TLS. Applications that use the python-oracledb Thick 
-mode, cx_Oracle driver, or Oracle Call Interface (OCI) can connect to the 
-Oracle ADB through one-way TLS only when using Oracle Client library versions 
-from 19.14 to 21.5.
+One-way TLS Connection to Oracle Autonomous Database
+----------------------------------------------------
 
-To enable one-way TLS for an ADB instance, complete the following steps in an 
-Oracle Cloud console in the **Autonomous Database Information** section of the ADB 
-instance details:
+With one-way TLS, python-oracledb applications can connect to Oracle ADB
+without using a wallet.  Both Thin and Thick modes of the python-oracledb
+driver support one-way TLS.  Applications that use the python-oracledb Thick
+mode, can connect to the Oracle ADB through one-way TLS only when using Oracle
+Client library versions 19.14 (or later) or 21.5 (or later).
 
-    1. Click the **Edit** link next to *Access Control List* to update the Access 
-       Control List (ACL). The **Edit Access Control List** dialog box is displayed.
+To enable one-way TLS for an ADB instance, complete the following steps in an
+Oracle Cloud console in the **Autonomous Database Information** section of the
+ADB instance details:
 
-    2. In the **Edit Access Control List** dialog box, select the type of address list
-       entries and the corresponding values. You can include the required IP 
-       (Internet Protocol) addresses, hostnames, or Virtual Cloud Networks (VCNs). 
-       The ACL limits access to only the IP addresses or VCNs that have been 
-       defined and blocks all other incoming traffic.
+1. Click the **Edit** link next to *Access Control List* to update the Access
+   Control List (ACL). The **Edit Access Control List** dialog box is displayed.
 
-    3. Navigate back to the ADB instance details page and click the **Edit** link 
-       next to *Mutual TLS (mTLS) Authentication*. The **Edit Mutual TLS Authentication**
-       is displayed.
-            
-    4. In the **Edit Mutual TLS Authentication** dialog box, deselect the 
-       **Require mutual TLS (mTLS) authentication** check box to disable the mTLS 
-       requirement on Oracle ADB and click **Save Changes**.
+2. In the **Edit Access Control List** dialog box, select the type of address
+   list entries and the corresponding values. You can include the required IP
+   addresses, hostnames, or Virtual Cloud Networks (VCNs).  The ACL limits
+   access to only the IP addresses or VCNs that have been defined and blocks
+   all other incoming traffic.
 
-    5. Navigate back to the ADB instance details page and click **DB Connection** on 
-       the top of the page. A **Database Connection** dialog box is displayed.
+3. Navigate back to the ADB instance details page and click the **Edit** link
+   next to *Mutual TLS (mTLS) Authentication*. The **Edit Mutual TLS Authentication**
+   is displayed.
 
-    1. In the Database Connection dialog box, select TLS from the **Connection Strings**
-       drop-down list.
+4. In the **Edit Mutual TLS Authentication** dialog box, deselect the
+   **Require mutual TLS (mTLS) authentication** check box to disable the mTLS
+   requirement on Oracle ADB and click **Save Changes**.
 
-    2. Copy the appropriate Connection String of the DB instance used by your application. 
-   
-    3. Paste and store the connection string in any file, say ``connstring.txt``. The 
-       connection string has the following format:
+5. Navigate back to the ADB instance details page and click **DB Connection** on
+   the top of the page. A **Database Connection** dialog box is displayed.
 
-       .. code-block:: python
+6. In the Database Connection dialog box, select TLS from the **Connection Strings**
+   drop-down list.
 
-           (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)
-                         (port=1522)(host=xxx.oraclecloud.com))(connect_data=(service_name=xxx.adb.oraclecloud.com))
-                         (security=(ssl_server_dn_match=yes)(ssl_server_cert_dn="CN=adwc.uscom-east-1.oraclecloud.com,OU=Oracle BMCS US, 
-                          O=Oracle Corporation, L=Redwood City, T=California, C=US")))
+7. Copy the appropriate Connection String of the database instance used by your application.
 
-In your application, it is recommended to get the ADB credentials and connect 
-string from user input, environment variables, wallets, or even use external 
-authentication such as Kerberos. It is not recommended to use hard-coded values 
-for the ADB credentials and connect string in your application as they are less 
-secure and will impose restrictions on the usage of your application across other 
-databases. 
+Applications can connect to your Oracle ADB instance using the database
+credentials and the copied connect descriptor.  For example, to connect as the
+ADMIN user:
 
-As an example here, you can pass the ADB credentials and connect string from 
-specific environment variables. On a Linux platform, these environment variables 
-are defined as shown below::
+.. code-block:: python
 
-    export PYTHON_USERNAME={ADB USERNAME}
-    export PYTHON_PASSWORD={ADB PASSWORD}
-    export PYTHON_CONNECTSTRING={ADB CONNECTSTRING}
+    cs = '''(description = (retry_count=20)(retry_delay=3)(address=(protocol=tcps)
+               (port=1522)(host=xxx.oraclecloud.com))(connect_data=(service_name=xxx.adb.oraclecloud.com))
+               (security=(ssl_server_dn_match=yes)(ssl_server_cert_dn="CN=xxx.oraclecloud.com,OU=Oracle BMCS US,
+               O=Oracle Corporation, L=Redwood City, T=California, C=US")))'''
 
-The ``{ADB CONNECTSTRING}`` value is obtained from the connect string stored in 
-the ``connstring.txt`` file, which was received earlier from the ADB.
+    connection = oracledb.connect(user="admin", password=pw, dsn=cs)
 
-Once you have set the Oracle environment variables used by your application, 
-you can run your application.
 
-Mutual TLS (mTLS) or Two-way TLS on Oracle ADB
------------------------------------------------
+You can download the ADB connection wallet using the **DB Connection** button
+and extract the ``tnsnames.ora`` file, or create one yourself if you prefer to
+keep connections strings out of application code, see :ref:`netservice`.
 
-To enable connection to Oracle ADB in Oracle Cloud using mTLS, a wallet needs 
-to be downloaded from the cloud. python-oracledb needs to be configured to use 
-mTLS. For the python-oracledb Thick mode, the usage of mTLS is similar 
-to cx_Oracle as detailed in the subsequent sections. For the python-oracledb 
-Thin mode, you must either use the PEM file available in the wallet or create 
-a PEM file as detailed in the :ref:`createpem` section. The PEM files that are
-available in the wallets are encrypted and the ``wallet_password`` will need to
-be specified.
+You may be interested in the blog post `Easy wallet-less connections to Oracle
+Autonomous Databases in Python
+<https://blogs.oracle.com/opal/post/easy-way-to-connect-python-applications-to-oracle-autonomous-databases>`__.
+
+.. _twowaytls:
+
+Mutual TLS (mTLS) Connection to Oracle Autonomous Database
+----------------------------------------------------------
+
+To enable python-oracledb connections to Oracle Autonomous Database in Oracle
+Cloud using mTLS, a wallet needs to be downloaded from the cloud console.  mTLS
+is sometimes called Two-way TLS.
 
 Install the Wallet and Network Configuration Files
-+++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++
 
-From the Oracle Cloud console for the database, download the wallet zip file.
-It contains the wallet and network configuration files.  Note: keep wallet
-files in a secure location and share them only with authorized users.
+From the Oracle Cloud console for the database, download the wallet zip file
+using the **DB Connection** button.  The zip contains the wallet and network
+configuration files.  Note: keep wallet files in a secure location and share
+them only with authorized users.
 
-Unzip the wallet zip file.  For python-oracledb, only these files from the zip 
-are needed:
+Unzip the wallet zip file.
 
-- ``tnsnames.ora`` - Maps net service names used for application connection strings to your database services
-- ``sqlnet.ora``  - Configures Oracle Network settings
-- ``cwallet.sso`` - Enables SSL/TLS connections
+**In python-oracledb Thin mode**
 
-There are now two options:
+For python-oracledb in Thin mode, only two files from the zip are needed:
+
+- ``tnsnames.ora`` - Maps net service names used for application connection
+  strings to your database services
+- ``ewallet.pem`` - Enables SSL/TLS connections in Thin mode. Keep this file
+  secure
+
+If you do not have a PEM file, see :ref:`createpem`.
+
+Move these files to a location such as ``/opt/OracleCloud/MYDB``.
+
+Connection can be made using your database credentials and setting the ``dsn``
+parameter to the desired network alias from the ``tnsnames.ora`` file.  The
+``config_dir`` parameter indicates the directory containing ``tnsnames.ora``.
+The ``wallet_location`` parameter is the directory containing the PEM file.  In
+this example the files are in the same directory.  For example, to connect as
+the ADMIN user using the ``mydb_low`` network service name:
+
+.. code-block:: python
+
+    connection = oracledb.connect(user="admin", password=pw, dsn="mydb_low",
+                                  config_dir="/opt/OracleCloud/MYDB",
+                                  wallet_location="/opt/OracleCloud/MYDB", wallet_password=wp)
+
+**In python-oracledb Thick mode**
+
+For python-oracledb in Thick mode, only these files from the zip are needed:
+
+- ``tnsnames.ora`` - Maps net service names used for application connection
+  strings to your database services
+- ``sqlnet.ora`` - Configures Oracle Network settings
+- ``cwallet.sso`` - Enables SSL/TLS connections in Thick mode.  Keep this file
+  secure
+
+There are two options:
 
 - Move the three files to the ``network/admin`` directory of the client
   libraries used by your application. For example if you are using Instant
-  Client 19c and it is in ``$HOME/instantclient_19_11``, then you would put the
-  wallet files in ``$HOME/instantclient_19_11/network/admin/``.
+  Client 19c and it is in ``$HOME/instantclient_19_15``, then you would put the
+  wallet files in ``$HOME/instantclient_19_15/network/admin/``.
 
-- Alternatively, move them to any accessible directory, for example
+  Connection can be made using your database credentials and setting the
+  ``dsn`` parameter to the desired network alias from the ``tnsnames.ora``
+  file.  For example, to connect as the ADMIN user using the ``mydb_low``
+  network service name:
+
+  .. code-block:: python
+
+       connection = oracledb.connect(user="admin", password=pw, dsn="mydb_low")
+
+- Alternatively, move the three files to any accessible directory, for example
   ``/opt/OracleCloud/MYDB``.
 
   Then edit ``sqlnet.ora`` and change the wallet location directory to the
@@ -1578,35 +1921,19 @@ There are now two options:
   location, your application needs to indicate where they are, either with the
   ``config_dir`` parameter to :meth:`oracledb.init_oracle_client()`, or using
   the ``TNS_ADMIN`` environment variable.  See :ref:`Optional Oracle Net
-  Configuration Files <optnetfiles>`.  Neither of these settings are needed,
-  and you don't need to edit ``sqlnet.ora``, if you have put all the files in
-  the ``network/admin`` directory.
+  Configuration Files <optnetfiles>`.  (Neither of these settings are needed,
+  and you do not need to edit ``sqlnet.ora``, if you have put all the files in
+  the ``network/admin`` directory.)
 
-Run Your Application
-+++++++++++++++++++++
+  For example, to connect as the ADMIN user using the ``mydb_low`` network
+  service name:
 
-The ``tnsnames.ora`` file contains net service names for various levels of
-database service.  For example, if you create a database called CJDB1 with the
-Always Free services from the `Oracle Cloud Free Tier
-<https://www.oracle.com/cloud/free/>`__, then you might decide to use the
-connection string in ``tnsnames.ora`` called ``cjdb1_high``.
+  .. code-block:: python
 
-Update your application to use your schema username, its database password, and
-a net service name, for example:
+       oracledb.init_oracle_client(config_dir="/opt/OracleCloud/MYDB")
 
-.. code-block:: python
+       connection = oracledb.connect(user="admin", password=pw, dsn="mydb_low")
 
-    connection = oracledb.connect(user="scott", password=userpwd, dsn="cjdb1_high")
-
-Once you have set optional Oracle environment variables used by your
-application, such as ``TNS_ADMIN``, you can start your application.
-
-If you need to create a new database schema so you do not login as the
-privileged ADMIN user, refer to the relevant Oracle Cloud documentation, for
-example see `Create Database Users
-<https://docs.oracle.com/en/cloud/paas/autonomous-database/adbdu/managing-database-
-users.html#GUID-5B94EA60-554A-4BA4-96A3-1D5A3ED5878D>`__
-in the Oracle Autonomous Database manual.
 
 Access Through a Proxy
 +++++++++++++++++++++++
@@ -1614,9 +1941,37 @@ Access Through a Proxy
 If you are behind a firewall, you can tunnel TLS/SSL connections via a proxy
 using `HTTPS_PROXY
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-C672E92D-CE32-4759-9931-92D7960850F7>`__
-in the connect descriptor.  Successful connection depends on specific proxy
-configurations.  Oracle does not recommend doing this when performance is
-critical.
+in the connect descriptor or setting connection attributes.  Successful
+connection depends on specific proxy configurations.  Oracle does not recommend
+doing this when performance is critical.
+
+**In python-oracledb Thin mode**
+
+The proxy settings can be passed during connection creation:
+
+.. code-block:: python
+
+    connection = oracledb.connect(user="admin", password=pw, dsn="mydb_low",
+                                  config_dir="/opt/OracleCloud/MYDB",
+                                  wallet_location="/opt/OracleCloud/MYDB", wallet_password=wp,
+                                  https_proxy='myproxy.example.com', https_proxy_port=80)
+
+Alternatively edit ``tnsnames.ora`` and add an ``HTTPS_PROXY`` proxy name and
+``HTTPS_PROXY_PORT`` port to the connect descriptor address list of any service
+name you plan to use, for example::
+
+    mydb_low = (description=
+        (address=
+        (https_proxy=myproxy.example.com)(https_proxy_port=80)
+        (protocol=tcps)(port=1522)(host= . . . )
+
+.. code-block:: python
+
+    connection = oracledb.connect(user="admin", password=pw, dsn="mydb_low",
+                                  config_dir="/opt/OracleCloud/MYDB",
+                                  wallet_location="/opt/OracleCloud/MYDB", wallet_password=wp)
+
+**In python-oracledb Thick mode**
 
 Edit ``sqlnet.ora`` and add a line::
 
@@ -1626,8 +1981,7 @@ Edit ``tnsnames.ora`` and add an ``HTTPS_PROXY`` proxy name and
 ``HTTPS_PROXY_PORT`` port to the connect descriptor address list of any service
 name you plan to use, for example::
 
-
-    cjdb1_high = (description=
+    mydb_high = (description=
         (address=
         (https_proxy=myproxy.example.com)(https_proxy_port=80)
         (protocol=tcps)(port=1522)(host= . . . )
@@ -1660,32 +2014,43 @@ Then your applications can connect using the connection string:
     connection = oracledb.connect(user="hr", password=userpwd, dsn=dsn)
 
 The ``wallet_location`` parameter needs to be set to the directory containing
-the ``cwallet.sso`` file from the wallet ZIP.  The other wallet files,
-including ``tnsnames.ora``, are not needed when you use the Easy Connect Plus
-syntax.
+the ``cwallet.sso`` or ``ewallet.pem`` file from the wallet zip.  The other
+wallet files, including ``tnsnames.ora``, are not needed when you use the Easy
+Connect Plus syntax.
 
 You can add other Easy Connect parameters to the connection string, for example::
 
     dsn = dsn + "&https_proxy=myproxy.example.com&https_proxy_port=80"
+
+With python-oracledb Thin mode the wallet password needs to passed as a
+connection parameter.
 
 .. _createpem:
 
 Creating a PEM File for python-oracledb Thin Mode
 +++++++++++++++++++++++++++++++++++++++++++++++++
 
-For the python-oracledb Thin mode, you must create a Privacy Enhanced Mail (PEM) file. 
-Oracle Cloud users who do not wish to move to one-way TLS need to convert the 
-Wallet PKCS12 ewallet.p12 file to PEM format using third party tools or the script below. 
-A password is optional, depending on whether the wallet is encrypted or not.
+For mutual TLS in python-oracledb Thin mode, the certificate must be Privacy
+Enhanced Mail (PEM) format.  If you are using Oracle Autonomous Database and
+your wallet zip file does not already include a PEM file, then you can convert
+the PKCS12 ``ewallet.p12`` file to PEM format using third party tools or the
+script below.
 
-The Thin mode functions :func:`oracledb.connect()`, :func:`oracledb.create_pool()`, 
-and :func:`oracledb.ConnectionPool()` take wallet_location and wallet_password parameters, 
-see :ref:`connparam`.
+For example invoke the conversion script by passing the wallet password and the
+directory containing the PKCS file::
 
-The following is a sample script that converts a PKCS#12 encoded file found in Oracle Cloud 
-wallet zip files to the PEM encoded file that the python-oracledb Thin mode expects.
+    python create_pem.py --wallet-password 'xxxxx' /Users/scott/cloud_configs/MYDBDIR
+
+Once the PEM file has been created, you can use it by passing its directory
+location as the ``wallet_location`` parameter to :func:`oracledb.connect()` or
+:func:`oracledb.create_pool()`.  These methods also accept a
+``wallet_password`` parameter.  See :ref:`twowaytls`.
+
+**Script to convert from PKCS12 to PEM**
 
 .. code-block:: python
+
+    # create_pem.py
 
     import argparse
     import getpass
@@ -1751,11 +2116,10 @@ Sharding is configured in Oracle Database, see the `Oracle Sharding
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=SHARD>`__ manual.
 Sharding requires Oracle Database and Oracle Client libraries 12.2, or later.
 
-.. note:: 
+.. note::
 
-    Sharding is only supported in the python-oracledb Thick mode. For 
-    information on how to change from one mode to the other, 
-    see :ref:`changingmodes`.
+    Sharding is only supported in the python-oracledb Thick mode.  See
+    :ref:`enablingthick`.
 
 The :meth:`oracledb.connect()` and :meth:`ConnectionPool.acquire()` functions
 accept ``shardingkey`` and ``supershardingkey`` parameters that are a sequence
@@ -1798,16 +2162,16 @@ then direct connection to a shard can be made by passing a single sharding key:
 .. code-block:: python
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orclpdb",
-                                   shardingkey=["SCOTT"])
+                                  dsn="dbhost.example.com/orclpdb",
+                                  shardingkey=["SCOTT"])
 
 Numbers keys can be used in a similar way:
 
 .. code-block:: python
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orclpdb",
-                                   shardingkey=[110])
+                                  dsn="dbhost.example.com/orclpdb",
+                                  shardingkey=[110])
 
 When sharding by DATE, you can connect like:
 
@@ -1818,8 +2182,8 @@ When sharding by DATE, you can connect like:
     d = datetime.datetime(2014, 7, 3)
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orclpdb",
-                                   shardingkey=[d])
+                                  dsn="dbhost.example.com/orclpdb",
+                                  shardingkey=[d])
 
 When sharding by RAW, you can connect like:
 
@@ -1828,8 +2192,8 @@ When sharding by RAW, you can connect like:
     b = b'\x01\x04\x08';
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orclpdb",
-                                   shardingkey=[b])
+                                  dsn="dbhost.example.com/orclpdb",
+                                  shardingkey=[b])
 
 Multiple keys can be specified, for example:
 
@@ -1838,14 +2202,116 @@ Multiple keys can be specified, for example:
     key_list = [70, "SCOTT", "gold", b'\x00\x01\x02']
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orclpdb",
-                                   shardingkey=key_list)
+                                  dsn="dbhost.example.com/orclpdb",
+                                  shardingkey=key_list)
 
 A super sharding key example is:
 
 .. code-block:: python
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orclpdb",
-                                   supershardingkey=["goldclass"],
-                                   shardingkey=["SCOTT"])
+                                  dsn="dbhost.example.com/orclpdb",
+                                  supershardingkey=["goldclass"],
+                                  shardingkey=["SCOTT"])
+
+.. _dbviews:
+
+Database Views
+==============
+
+``V$SESSION_CONNECT_INFO``
+----------------------------
+
+The following table lists sample values for `V$SESSION_CONNECT_INFO
+<https://docs.oracle.com/en/database/oracle/oracle-database/21/refrn/V-
+SESSION_CONNECT_INFO.html#GUID-9F0DCAEA-A67E-4183-89E7-B1555DC591CE>`__
+for the python-oracledb Thick and Thin modes:
+
+.. list-table-with-summary:: V$SESSION_CONNECT_INFO column values
+    :header-rows: 1
+    :widths: 15 10 10
+    :name: V$SESSION_CONNECT_INFO
+    :summary: The first column is the name of V$SESSION_CONNECT_INFO view's column. The second column lists the python-oracledb Thick mode value. The third column is the python-oracledb Thin mode value.
+
+    * - Column
+      - Thick value
+      - Thin value
+    * - SID
+      - the session id
+      - the session id
+    * - SERIAL#
+      - the serial number
+      - the serial number
+    * - AUTHENTICATION_TYPE
+      - for example, "Database"
+      - for example, "Database"
+    * - OSUSER
+      - the OS user
+      - the OS user
+    * - NETWORK_SERVICE_BANNER
+      - the database banner. Note the table has one row per banner line.
+      - the database banner. Note the table has one row per banner line.
+    * - CLIENT_CHARSET
+      - AL32UTF8
+      - AL32UTF8
+    * - CLIENT_CONNECTION
+      - for example, "Heterogeneous"
+      - for example, "Heterogeneous"
+    * - CLIENT_OCI_LIBRARY
+      - the Oracle Client or Instant Client type, such as "Full Instant Client"
+      - "Unknown"
+    * - CLIENT_VERSION
+      - the Oracle Client library version number
+      - "0.9.4.0.0" (the python-oracledb version number with an extra .0.0)
+    * - CLIENT_DRIVER
+      - "python-oracledb thk : 1.0.0"
+      - "python-oracledb thn : 1.0.0"
+    * - CLIENT_LOBATTR
+      - "Client Temp Lob Rfc On"
+      - "Client Temp Lob Rfc Off"
+    * - CLIENT_REGID
+      - 0
+      - 0
+    * - CON_ID
+      - 0
+      - 0
+
+For example, to see which driver mode is in use you can execute:
+
+.. code-block:: python
+
+    with connection.cursor() as cursor:
+        sql = """SELECT UNIQUE CLIENT_DRIVER
+                 FROM V$SESSION_CONNECT_INFO
+                 WHERE SID = SYS_CONTEXT('USERENV', 'SID')"""
+        for r, in cursor.execute(sql):
+            print(r)
+
+The driver name [CLIENT_DRIVER] is configurable in the python-oracledb
+Thick mode with ``init_oracle_client(driver_name='abc')``. Note that the
+``CLIENT_DRIVER`` length field was fixed to allow 30 characters in
+12.1.0.2 & 12.2. This is not configurable in the python-oracledb Thin mode.
+
+``V$SESSION``
+-------------
+
+The following table list sample values for columns with differences in `V$SESSION <https://docs.oracle.com/en/database/oracle/oracle-database/21/refrn/V-SESSION.html>`__.
+
+.. list-table-with-summary:: V$SESSION column values
+    :header-rows: 1
+    :widths: 15 10 10
+    :name: V$SESSION_COLUMN_VALUES
+    :summary: The first column is the name of the column. The second column lists the python-oracledb Thick mode value. The third column is the python-oracledb Thin mode value.
+
+    * - Column
+      - Thick value
+      - Thin value
+    * - TERMINAL
+      - similar to `ttys001`
+      - the string "unknown"
+    * - PROGRAM
+      - similar to `python@myuser-mac2 (TNS V1-V3)`
+      - the contents of Python's ``sys.executable``, such as `/Users/myuser/.pyenv/versions/3.9.6/bin/python`
+    * - MODULE
+      - similar to `python@myuser-mac2 (TNS V1-V3)`
+      - the contents of Python's ``sys.executable``, such as `/Users/myuser/.pyenv/versions/3.9.6/bin/python`

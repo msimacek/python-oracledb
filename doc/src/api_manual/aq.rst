@@ -12,14 +12,14 @@ See :ref:`aqusermanual` for more information about using AQ in python-oracledb.
 
 .. _queue:
 
-Queues
-======
+Queue Objects
+=============
 
 These objects are created using the :meth:`Connection.queue()` method and are
 used to enqueue and dequeue messages.
 
-Methods
---------
+Queue Methods
+-------------
 
 .. method:: Queue.deqmany(maxMessages)
 
@@ -51,13 +51,13 @@ Methods
     .. warning::
 
         Calling this function in parallel on different connections
-        acquired from the same pool may fail due to Oracle bug 29928074. Ensure 
+        acquired from the same pool may fail due to Oracle bug 29928074. Ensure
         that this function is not run in parallel, use standalone connections or
-        connections from different pools, or make multiple calls to 
-        :meth:`Queue.enqone()` instead. The function :meth:`Queue.deqmany()` 
+        connections from different pools, or make multiple calls to
+        :meth:`Queue.enqone()` instead. The function :meth:`Queue.deqmany()`
         call is not affected.
 
-    
+
     For consistency and compliance with the PEP 8 naming style, the name of
     the method was changed from `enqMany()`. The old name will continue
     to work for a period of time.
@@ -73,8 +73,8 @@ Methods
     the method was changed from `enqOne()`. The old name will continue
     to work for a period of time.
 
-Attributes
-----------
+Queue Attributes
+----------------
 
 .. attribute:: Queue.connection
 
@@ -135,15 +135,15 @@ Dequeue Options
 
 .. attribute:: DeqOptions.consumername
 
-    This read-write attribute specifies the name of the consumer. Only messages 
-    matching the consumer name will be accessed. If the queue is not set up for 
-    multiple consumers this attribute should not be set. The default is to have 
+    This read-write attribute specifies the name of the consumer. Only messages
+    matching the consumer name will be accessed. If the queue is not set up for
+    multiple consumers this attribute should not be set. The default is to have
     no consumer name specified.
 
 
 .. attribute:: DeqOptions.correlation
 
-    This read-write attribute specifies the correlation identifier of the message 
+    This read-write attribute specifies the correlation identifier of the message
     to be dequeued. Special pattern-matching characters, such as the percent sign (%)
     and the underscore (_), can be used. If multiple messages satisfy the
     pattern, the order of dequeuing is indeterminate. The default is to have no
@@ -160,8 +160,8 @@ Dequeue Options
 
 .. attribute:: DeqOptions.mode
 
-    This read-write attribute specifies the locking behaviour associated 
-    with the dequeue operation. It should be one of the values 
+    This read-write attribute specifies the locking behaviour associated
+    with the dequeue operation. It should be one of the values
     :data:`~oracledb.DEQ_BROWSE`,
     :data:`~oracledb.DEQ_LOCKED`,
     :data:`~oracledb.DEQ_REMOVE` (default), or
@@ -170,13 +170,13 @@ Dequeue Options
 
 .. attribute:: DeqOptions.msgid
 
-    This read-write attribute specifies the identifier of the message to be 
+    This read-write attribute specifies the identifier of the message to be
     dequeued. The default is to have no message identifier specified.
 
 
 .. attribute:: DeqOptions.navigation
 
-    This read-write attribute specifies the position of the message that 
+    This read-write attribute specifies the position of the message that
     is retrieved. It should be one of the values :data:`~oracledb.DEQ_FIRST_MSG`,
     :data:`~oracledb.DEQ_NEXT_MSG` (default), or
     :data:`~oracledb.DEQ_NEXT_TRANSACTION`.
@@ -184,7 +184,7 @@ Dequeue Options
 
 .. attribute:: DeqOptions.transformation
 
-    This read-write attribute specifies the name of the transformation that must 
+    This read-write attribute specifies the name of the transformation that must
     be applied after the message is dequeued from the database but before it is
     returned to the calling application. The transformation must be created
     using dbms_transform. The default is to have no transformation specified.
@@ -192,7 +192,7 @@ Dequeue Options
 
 .. attribute:: DeqOptions.visibility
 
-    This read-write attribute specifies the transactional behavior of the dequeue 
+    This read-write attribute specifies the transactional behavior of the dequeue
     request. It should be one of the values :data:`~oracledb.DEQ_ON_COMMIT` (default)
     or :data:`~oracledb.DEQ_IMMEDIATE`. This attribute is ignored when using
     the :data:`~oracledb.DEQ_BROWSE` mode. Note the value of
@@ -229,7 +229,7 @@ Enqueue Options
 
 .. attribute:: EnqOptions.transformation
 
-    This read-write attribute specifies the name of the transformation that 
+    This read-write attribute specifies the name of the transformation that
     must be applied before the message is enqueued into the database. The
     transformation must be created using dbms_transform. The default is to have
     no transformation specified.
@@ -237,7 +237,7 @@ Enqueue Options
 
 .. attribute:: EnqOptions.visibility
 
-    This read-write attribute specifies the transactional behavior of the enqueue 
+    This read-write attribute specifies the transactional behavior of the enqueue
     request. It should be one of the values :data:`~oracledb.ENQ_ON_COMMIT` (default)
     or :data:`~oracledb.ENQ_IMMEDIATE`. Note the value of
     :attr:`~Connection.autocommit` is ignored.
@@ -265,13 +265,13 @@ Message Properties
 
 .. attribute:: MessageProperties.correlation
 
-    This read-write attribute specifies the correlation used when the message 
+    This read-write attribute specifies the correlation used when the message
     was enqueued.
 
 
 .. attribute:: MessageProperties.delay
 
-    This read-write attribute specifies the number of seconds to delay an 
+    This read-write attribute specifies the number of seconds to delay an
     enqueued message. Any integer is acceptable but the constant
     :data:`~oracledb.MSG_NO_DELAY` can also be used indicating that the
     message is available for immediate dequeuing.
@@ -291,7 +291,7 @@ Message Properties
 
 .. attribute:: MessageProperties.exceptionq
 
-    This read-write attribute specifies the name of the queue to which the message 
+    This read-write attribute specifies the name of the queue to which the message
     is moved if it cannot be processed successfully. Messages are moved if the
     number of unsuccessful dequeue attempts has exceeded the maximum number of
     retries or if the message has expired. All messages in the exception queue
@@ -301,8 +301,8 @@ Message Properties
 
 .. attribute:: MessageProperties.expiration
 
-    This read-write attribute specifies, in seconds, how long the message is 
-    available for dequeuing. This attribute is an offset from the delay attribute. 
+    This read-write attribute specifies, in seconds, how long the message is
+    available for dequeuing. This attribute is an offset from the delay attribute.
     Expiration processing requires the queue monitor to be running. Any integer is
     accepted but the constant :data:`~oracledb.MSG_NO_EXPIRATION` can also be
     used indicating that the message never expires.
@@ -317,8 +317,8 @@ Message Properties
 
 .. attribute:: MessageProperties.payload
 
-    This read-write attribute identifies the payload that will be enqueued or the 
-    payload that was dequeued when using a :ref:`queue <queue>`. When enqueuing, 
+    This read-write attribute identifies the payload that will be enqueued or the
+    payload that was dequeued when using a :ref:`queue <queue>`. When enqueuing,
     the value is checked to ensure that it conforms to the type expected by that
     queue. For RAW queues, the value can be a bytes object or a string. If the
     value is a string it will first be converted to bytes by encoding in the
@@ -327,7 +327,7 @@ Message Properties
 
 .. attribute:: MessageProperties.priority
 
-    This read-write attribute specifies the priority of the message. A smaller 
+    This read-write attribute specifies the priority of the message. A smaller
     number indicates a higher priority. The priority can be any integer, including
     negative numbers. The default value is zero.
 
@@ -343,8 +343,8 @@ Message Properties
 
     This read-write attribute specifies a list of recipient names that can be
     associated with a message at the time of enqueuing the message. This allows a
-    limited set of recipients to dequeue each message. The recipient list associated 
-    with the message overrides the queue subscriber list, if there is one. The 
+    limited set of recipients to dequeue each message. The recipient list associated
+    with the message overrides the queue subscriber list, if there is one. The
     recipient names need not be in the subscriber list but can be, if desired.
 
     To dequeue a message, the consumername attribute can be set to one of

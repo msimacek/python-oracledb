@@ -1,88 +1,90 @@
 .. _defaults:
 
-*********************
+********************
 API: Defaults Object
-*********************
+********************
 
-The defaults object contains attributes that can be used to adjust the 
-default behavior of the python-oracledb driver.
+This object contains attributes that can be used to adjust the behavior of the
+python-oracledb driver.
 
-The attributes that are not supported in the Thin or Thick mode, will be 
-ignored in that particular mode.
+All attributes are supported in Thin and Thick modes, subject to noted details.
 
+An example of changing a default value is:
 
-Attributes
-----------
+.. code-block:: python
 
-.. attribute:: arraysize
+    import oracledb
 
-    The default value for :attr:`Cursor.arraysize`. This is a query tuning 
-    attribute.
+    oracledb.defaults.fetch_lobs = False  # return LOBs directly as strings or bytes
 
-    This attribute is supported in the python-oracledb Thin and Thick modes 
-    and has an initial value of 100.
+Defaults Attributes
+===================
 
-.. attribute:: config_dir
+.. attribute:: defaults.arraysize
 
-    The directory in which configuration files such as tnsnames.ora are found 
-    by default. 
-    
-    If the ``TNS_ADMIN`` environment variable is not set, then the default value 
-    is None in the python-oracledb Thin mode and no tnsnames.ora file will be usable 
-    until the attribute value is changed. If this attribute is None in the 
-    python-oracledb Thick mode, then the usual Oracle Client search path behavior 
-    for configuration files is used. This is described in the cx_Oracle documentation 
-    and the Oracle Client library documentation.
+    The default value for :attr:`Cursor.arraysize`. This is a query tuning
+    attribute, see :ref:`tuning`.
 
-    This attribute is supported in the python-oracledb Thick and Thin modes and has an 
-    initial value of ``os.environ.get("TNS_ADMIN")``.
+    This attribute has an initial value of 100.
 
-.. attribute:: fetch_decimals
+.. attribute:: defaults.config_dir
 
-    Identifies whether numbers should be fetched as ``decimal.Decimal`` values. 
-    This can help avoid issues with converting numbers from Oracle Database's 
-    decimal format to Python's binary format. 
-    
-    An output type handler such as the one currently used in cx_Oracle 
-    (see `return_numbers_as_decimals.py <https://github.com/oracle/python-cx_Oracle/
-    blob/main/samples/return_numbers_as_decimals.py>`__) can alternatively be used 
-    to adjust the returned type. If a type handler exists and returns a variable 
-    (that is, `cursor.var(...)`), then that return variable is used. If the type 
-    handler returns None, then the value of ``oracledb.defaults.fetch_decimals`` 
-    is used.
+    The directory in which optional configuration files such as
+    ``tnsnames.ora`` will be read from.
 
-    This attribute is supported in the python-oracledb Thin and Thick modes and 
-    has an initial value of False.
+    If the ``TNS_ADMIN`` environment variable is not set, then the default
+    value is None in the python-oracledb Thin mode and no ``tnsnames.ora`` file
+    will be read.  If this attribute is None in the python-oracledb Thick mode,
+    then the usual Oracle Client search path behavior for configuration files
+    is used. This is described in :ref:`optnetfiles`.
 
-.. attribute:: fetch_lobs
+    This attribute takes its initial value from the environment variable
+    ``TNS_ADMIN``.
 
-    When the value of this attribute is True, then queries to LOB columns return 
-    LOB locators. When the value of this attribute is False, then strings or bytes 
-    are fetched. If LOBs are larger than 1 GB, then this attribute should be set to 
-    True and the LOBs should be streamed. 
-    
-    An output type handler such as the one currently used in cx_Oracle (see 
+.. attribute:: defaults.fetch_decimals
+
+    Identifies whether numbers should be fetched as ``decimal.Decimal`` values.
+    This can help avoid issues with converting numbers from Oracle Database's
+    decimal format to Python's binary format.
+
+    An output type handler such as previously required in cx_Oracle (see
+    `return_numbers_as_decimals.py <https://github.com/oracle/python-cx_Oracle/
+    blob/main/samples/return_numbers_as_decimals.py>`__) can alternatively be
+    used to adjust the returned type.  If a type handler exists and returns a
+    variable (that is, `cursor.var(...)`), then that return variable is used.
+    If the type handler returns None, then the value of
+    ``oracledb.defaults.fetch_decimals`` is used to determine whether to return
+    ``decimal.Decimal`` values.
+
+    This attribute has an initial value of False.
+
+.. attribute:: defaults.fetch_lobs
+
+    When the value of this attribute is True, then queries to LOB columns return
+    LOB locators. When the value of this attribute is False, then strings or bytes
+    are fetched. If LOBs are larger than 1 GB, then this attribute should be set to
+    True and the LOBs should be streamed.  See :ref:`lobdata`.
+
+    An output type handler such as the one previously required in cx_Oracle (see
     `return_lobs_as_strings.py <https://github.com/oracle/python-cx_Oracle/blob/main/samples/
-    return_lobs_as_strings.py>`__) can alternatively be used to adjust the returned type. 
-    If a type handler exists and returns a variable (that is, `cursor.var(...)`), then 
-    that return variable is used. If the type handler returns None, then the value of 
+    return_lobs_as_strings.py>`__) can alternatively be used to adjust the returned type.
+    If a type handler exists and returns a variable (that is, `cursor.var(...)`), then
+    that return variable is used. If the type handler returns None, then the value of
     ``oracledb.defaults.fetch_lobs`` is used.
 
-    This attribute is supported in the python-oracledb Thin and Thick modes and 
-    has an initial value of True.
+    This attribute has an initial value of True.
 
-.. attribute:: prefetchrows
+.. attribute:: defaults.prefetchrows
 
-    The default value for :attr:`Cursor.prefetchrow`. This is a query tuning attribute.
+    The default value for :attr:`Cursor.prefetchrow`. This is a query tuning
+    attribute, see :ref:`tuning`.
 
-    This attribute is supported in the python-oracledb Thin and Thick modes and 
-    has an initial value of 2.
+    This attribute has an initial value of 2.
 
-.. attribute:: stmtcachesize
+.. attribute:: defaults.stmtcachesize
 
-    The default value for :attr:`Connection.stmtcachesize`, 
-    :attr:`ConnectionPool.stmtcachesize`, and :attr:`SessionPool.stmtcachesize`. This is a 
-    tuning attribute.
+    The default value for :attr:`Connection.stmtcachesize` and
+    :attr:`ConnectionPool.stmtcachesize`. This is a tuning attribute, see
+    :ref:`stmtcache`.
 
-    This attribute is supported in the python-oracledb Thin and Thick modes and has 
-    an initial value of 20.
+    This attribute has an initial value of 20.

@@ -1,15 +1,15 @@
 .. _subscrobj:
 
 *************************
-API: Subscription Object
+API: Subscription Objects
 *************************
 
 .. note::
 
     This object is an extension the DB API.
 
-Methods
-=======
+Subscription Methods
+====================
 
 .. method:: Subscription.registerquery(statement, [args])
 
@@ -20,8 +20,8 @@ Methods
     oracledb.SUBSCR_QOS_QUERY when the subscription was created, then the ID
     for the registered query is returned; otherwise, None is returned.
 
-Attributes
-==========
+Subscription Attributes
+=======================
 
 .. attribute:: Subscription.callback
 
@@ -109,7 +109,6 @@ Message Objects
     This object is created internally when notification is received and passed
     to the callback procedure specified when a subscription is created.
 
-
 .. attribute:: Message.consumer_name
 
     This read-only attribute returns the name of the consumer which generated
@@ -182,8 +181,8 @@ Message Objects
     See the constants section on event types for additional information.
 
 
-Message Table Objects
----------------------
+MessageTable Objects
+--------------------
 
 .. note::
 
@@ -211,8 +210,8 @@ Message Table Objects
     included the flag :data:`~oracledb.SUBSCR_QOS_ROWIDS`.
 
 
-Message Row Objects
--------------------
+MessageRow Objects
+------------------
 
 .. note::
 
@@ -232,8 +231,8 @@ Message Row Objects
     This read-only attribute returns the rowid of the row that was changed.
 
 
-Message Query Objects
----------------------
+MessageQuery Objects
+--------------------
 
 .. note::
 

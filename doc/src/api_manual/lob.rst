@@ -1,8 +1,8 @@
 .. _lobobj:
 
-*****************
+****************
 API: LOB Objects
-*****************
+****************
 
 See :ref:`lobdata` for more information about using LOBs.
 
@@ -11,8 +11,8 @@ See :ref:`lobdata` for more information about using LOBs.
     This object is an extension the DB API. It is returned whenever Oracle
     :data:`CLOB`, :data:`BLOB` and :data:`BFILE` columns are fetched.
 
-Methods
-=======
+LOB Methods
+===========
 
 .. method:: LOB.close()
 
@@ -91,8 +91,8 @@ Methods
     Note that if you want to make the LOB value smaller, you must use the
     :meth:`~LOB.trim()` function.
 
-Attributes
-==========
+LOB Attributes
+===============
 
 .. attribute:: LOB.type
 

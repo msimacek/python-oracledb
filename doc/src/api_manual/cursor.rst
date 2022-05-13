@@ -1,11 +1,11 @@
 .. _cursorobj:
 
 *******************
-API: Cursor Object
+API: Cursor Objects
 *******************
 
-Methods
-========
+Cursor Methods
+==============
 
 .. method:: Cursor.__enter__()
 
@@ -301,15 +301,15 @@ Methods
         immediately and an implied commit takes place.
 
 
-.. method:: Cursor.prepare(statement, tag, cache_statement)
+.. method:: Cursor.prepare(statement, tag, cache_statement=True)
 
     This can be used before a call to :meth:`~Cursor.execute()` to define the
     statement that will be executed. When this is done, the prepare phase will
     not be performed when the call to :meth:`~Cursor.execute()` is made with
-    None or the same string object as the statement. If the tag parameter is 
-    specified and the cache_statement parameter is True, the statement will be 
-    returned to the statement cache with the given tag. If the cache_statement 
-    parameter is False, the statement will be removed from the statement cache 
+    None or the same string object as the statement. If the tag parameter is
+    specified and the cache_statement parameter is True, the statement will be
+    returned to the statement cache with the given tag. If the cache_statement
+    parameter is False, the statement will be removed from the statement cache
     (if it was found there) or will simply not be cached.
 
     See :ref:`Statement Caching <stmtcache>` for more information.
@@ -442,8 +442,8 @@ Methods
 
         The DB API definition does not define this method.
 
-Attributes
-===========
+Cursor Attributes
+=================
 
 .. attribute:: Cursor.arraysize
 
@@ -600,4 +600,3 @@ Attributes
     .. note::
 
         The DB API definition does not define this attribute.
-

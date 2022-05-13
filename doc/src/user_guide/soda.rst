@@ -16,8 +16,8 @@ query-by-example (QBE) pattern-matching.
 
 .. note::
 
-    SODA is only supported in the python-oracledb Thick mode. For information on 
-    how to change from one mode to the other, see :ref:`changingmodes`.
+    SODA is only supported in the python-oracledb Thick mode.  See
+    :ref:`enablingthick`.
 
 SODA uses a SQL schema to store documents but you do not need to know SQL or
 how the documents are stored. However, access via SQL does allow use of

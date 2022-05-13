@@ -9,9 +9,8 @@ python-oracledb.
 
 .. note::
 
-    The database start up and shut down functionality is only supported in 
-    the python-oracledb Thick mode. For information on how to change from
-    one mode to the other, see :ref:`changingmodes`.
+    Database start up and shut down functionality is only supported in the
+    python-oracledb Thick mode.  See :ref:`enablingthick`.
 
 ===========================
 Starting Oracle Database Up
