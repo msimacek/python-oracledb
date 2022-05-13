@@ -80,7 +80,11 @@ cdef class Protocol:
         connections, the session will be logged off. For pooled connections,
         the connection will be returned to the pool for subsequent use.
         """
-        cdef Message message
+        cdef:
+            Message message
+            uint32_t release_mode = DRCP_DEAUTHENTICATE \
+                    if conn_impl._pool is None else 0
+
         with self._request_lock:
 
             # if a read failed on the socket earlier, clear the socket
@@ -100,7 +104,7 @@ cdef class Protocol:
                     message = conn_impl._create_message(RollbackMessage)
                     self._process_message(message)
                 if conn_impl._drcp_enabled:
-                    self._release_drcp_session(self._write_buf)
+                    self._release_drcp_session(self._write_buf, release_mode)
                     conn_impl._drcp_establish_session = True
 
             # if the connection is part of a pool, return it to the pool
@@ -303,9 +307,11 @@ cdef class Protocol:
             buf.skip_raw_bytes(3)
             message.error_info.message = buf.read_str(TNS_CS_IMPLICIT)
 
-    cdef int _release_drcp_session(self, WriteBuffer buf) except -1:
+    cdef int _release_drcp_session(self, WriteBuffer buf,
+                                   uint32_t release_mode) except -1:
         """
-        Release the session back to DRCP.
+        Release the session back to DRCP. Standalone sessions are marked for
+        deauthentication.
         """
         buf.start_request(TNS_PACKET_TYPE_DATA)
         buf.write_uint8(TNS_MSG_TYPE_ONEWAY_FN)
@@ -313,7 +319,7 @@ cdef class Protocol:
         buf.write_uint8(0)                  # seq number
         buf.write_uint8(0)                  # pointer (tag name)
         buf.write_uint8(0)                  # tag name length
-        buf.write_ub4(0)                    # mode
+        buf.write_ub4(release_mode)         # mode
         buf.end_request()
 
     cdef int _reset(self, Message message) except -1:
