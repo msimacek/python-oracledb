@@ -64,7 +64,7 @@ class ConnectParams:
                  sid: str=None,
                  server_type: str=None,
                  cclass: str=None,
-                 purity: int=0,
+                 purity: int=oracledb.PURITY_DEFAULT,
                  expire_time: int=0,
                  retry_count: int=0,
                  retry_delay: int=0,
@@ -136,7 +136,7 @@ class ConnectParams:
           Pooling (DRCP) (default: None)
 
         - purity: purity to use for Database Resident Connection Pooling (DRCP)
-          (default: 0)
+          (default: oracledb.PURITY_DEFAULT)
 
         - expire_time: an integer indicating the number of minutes between the
           sending of keepalive probes. If this parameter is set to a value
