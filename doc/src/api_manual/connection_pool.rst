@@ -1,15 +1,15 @@
 .. _connpool:
 
 ***************************
-API: ConnectionPool Object
+API: ConnectionPool Objects
 ***************************
 
 .. note::
 
     This object is an extension to the DB API.
 
-The new ConnectionPool class is synonomous with SessionPool. The SessionPool class 
-and function ``Oracledb.SessionPool`` is deprecated in python-oracledb. 
+The new ConnectionPool class is synonomous with SessionPool. The SessionPool class
+and function ``Oracledb.SessionPool`` is deprecated in python-oracledb.
 (The name SessionPool came from the `Oracle Call Interface (OCI)
 session pool
 <https://docs.oracle.com/en/database/oracle/oracle-database/19/lnoci/session-and-
@@ -17,7 +17,7 @@ connection-pooling.html#GUID-F9662FFB-EAEF-495C-96FC-49C6D1D9625C>`__.
 This implementation is only used in the python-oracledb Thick mode
 and is not available in the python-oracledb Thin mode).
 
-In python-oracledb, the type `pool` will show the class `oracledb.ConnectionPool`. 
+In python-oracledb, the type `pool` will show the class `oracledb.ConnectionPool`.
 This only affects the name.
 
 The following code will continue to work providing backward compatibility:
@@ -36,12 +36,12 @@ The following code will also work:
 
    isinstance(pool, oracledb.ConnectionPool) == True
 
-The function :meth:`oracledb.SessionPool` that is used to create pools 
+The function :meth:`oracledb.SessionPool` that is used to create pools
 is deprecated in python-oracledb 1.0 and has been replaced by the function
 :meth:`oracledb.create_pool`.
 
-Methods
-=======
+ConnectionPool Methods
+======================
 
 .. method:: ConnectionPool.acquire(user=None, password=None, cclass=None, \
         purity=oracledb.PURITY_DEFAULT, tag=None, matchanytag=False, \
@@ -64,7 +64,7 @@ Methods
     pairs like "k1=v1;k2=v2" and will limit the connections that can be returned
     from a connection pool unless the matchanytag parameter is set to True. In
     that case, connections with the specified tag will be preferred over others,
-    but if no such connections are available, then a connection with a different tag 
+    but if no such connections are available, then a connection with a different tag
     may be returned instead. In any case, untagged connections will always be returned
     if no connections with the specified tag are available. Connections are tagged when
     they are :meth:`released <ConnectionPool.release>` back to the pool.
@@ -96,22 +96,22 @@ Methods
 
     The dsn parameter (data source name) can be a string in the format
     ``user/password@connect_string`` or can simply be a connect string in
-    which case the user and password need to be specified separately. 
+    which case the user and password need to be specified separately.
     See :ref:`connstr` for more information.
 
     The pool_class parameter is a ConnectionPool or a subclass of
-    ConnectionPool. 
+    ConnectionPool.
 
     The pool_params parameter is of type PoolParams and contains
     parameters that are used to create the pool. If not specified, a new
     PoolParams object will be created using the additional keyword arguments.
     See :ref:`poolparam` for more information.
 
-    The conn_params parameter is of type ConnectParams and contains 
+    The conn_params parameter is of type ConnectParams and contains
     connection parameters that will be used when creating connections
     in the pool. If not specified, a new ConnectParams object will be created
     using the additional keyword arguments. See :ref:`connparam` for more information.
-    If a dsn is supplied, it will modify the connection parameters to include the 
+    If a dsn is supplied, it will modify the connection parameters to include the
     parameters supplied in the dsn.
 
 
@@ -147,18 +147,18 @@ Methods
     :meth:`ConnectionPool.acquire()` depends on the ``getmode`` in effect when
     ``acquire()`` is called:
 
-    * With mode :data:`~oracledb.POOL_GETMODE_FORCEGET`, an ``acquire()`` call will 
+    * With mode :data:`~oracledb.POOL_GETMODE_FORCEGET`, an ``acquire()`` call will
       wait until the pool has been reconfigured.
 
-    * With mode :data:`~oracledb.POOL_GETMODE_TIMEDWAIT`, an ``acquire()`` call will 
-      try to acquire a connection in the time specified by pool.wait_timeout and return 
+    * With mode :data:`~oracledb.POOL_GETMODE_TIMEDWAIT`, an ``acquire()`` call will
+      try to acquire a connection in the time specified by pool.wait_timeout and return
       an error if the time taken exceeds that value.
 
-    * With mode :data:`~oracledb.POOL_GETMODE_WAIT`, an ``acquire()`` call will wait 
+    * With mode :data:`~oracledb.POOL_GETMODE_WAIT`, an ``acquire()`` call will wait
       until after the pool has been reconfigured and a connection is available.
-  
-    * With mode :data:`~oracledb.POOL_GETMODE_NOWAIT`, if the number of busy connections 
-      is less than the pool size, ``acquire()`` will return a new connection after pool 
+
+    * With mode :data:`~oracledb.POOL_GETMODE_NOWAIT`, if the number of busy connections
+      is less than the pool size, ``acquire()`` will return a new connection after pool
       reconfiguration is complete.
 
     Closing connections with :meth:`ConnectionPool.release()` or
@@ -194,8 +194,8 @@ Methods
     back to the pool.
 
 
-Attributes
-===========
+ConnectionPool Attributes
+=========================
 
 .. attribute:: ConnectionPool.busy
 
@@ -307,8 +307,8 @@ Attributes
 .. attribute:: ConnectionPool.stmtcachesize
 
     This read-write attribute specifies the size of the statement cache that
-    will be used for connections obtained from the pool. Once a connection is 
-    created, that connection’s statement cache size can only be changed by 
+    will be used for connections obtained from the pool. Once a connection is
+    created, that connection’s statement cache size can only be changed by
     setting the stmtcachesize attribute on the connection itself.
 
     See :ref:`Statement Caching <stmtcache>` for more information.
@@ -326,9 +326,9 @@ Attributes
 
     This read-write attribute specifies the time (in seconds) after which idle
     connections will be terminated in order to maintain an optimum number of open
-    connections. A value of 0 means that no idle connections are terminated. Note 
-    that in python-oracledb Thick mode with older Oracle Client Libraries, the 
-    termination only occurs when the pool is accessed. 
+    connections. A value of 0 means that no idle connections are terminated. Note
+    that in python-oracledb Thick mode with older Oracle Client Libraries, the
+    termination only occurs when the pool is accessed.
 
 .. attribute:: ConnectionPool.tnsentry
 
@@ -337,7 +337,7 @@ Attributes
 
     .. deprecated:: cx_Oracle 8.2
 
-        Use the attribute :attr:`~ConnectionPool.dsn` instead.
+    Use the attribute :attr:`~ConnectionPool.dsn` instead.
 
 
 .. attribute:: ConnectionPool.username

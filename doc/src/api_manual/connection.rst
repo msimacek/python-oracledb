@@ -1,16 +1,19 @@
 .. _connobj:
 
 ***********************
-API: Connection Object
+API: Connection Objects
 ***********************
+
+A Connection object can be created with :meth:`oracledb.connect()`.
 
 .. note::
 
-    Any outstanding changes will be rolled back when the connection object
-    is destroyed or closed.
+    Any outstanding database transaction will be rolled back when the
+    connection object is destroyed or closed.  You must perform a commit first
+    if you want data to persist in the database, see :ref:`txnmgmnt`.
 
-Methods
-=======
+Connection Methods
+==================
 
 .. method:: Connection.__enter__()
 
@@ -44,7 +47,7 @@ Methods
 
     .. deprecated:: 1.0
 
-        Use the method :meth:`Connection.tpc_begin()` instead.
+    Use the method :meth:`Connection.tpc_begin()` instead.
 
     .. note::
 
@@ -71,7 +74,7 @@ Methods
 .. method:: Connection.close()
 
     Closes the connection now and makes it unusable for further operations.
-    An Error exception will be raised if any operation is attempted with this 
+    An Error exception will be raised if any operation is attempted with this
     connection after this method is completed successfully.
 
     All open cursors and LOBs created by the connection will be closed and will
@@ -173,7 +176,7 @@ Methods
 
     .. deprecated:: python-oracledb 1.0
 
-        Use the method :meth:`Connection.tpc_prepare()` instead.
+    Use the method :meth:`Connection.tpc_prepare()` instead.
 
     .. note::
 
@@ -183,7 +186,7 @@ Methods
 .. method:: Connection.queue(name, payload_type=None)
 
     Creates a :ref:`queue <queue>` which is used to enqueue and dequeue
-    messages in Advanced Queueing.
+    messages in Advanced Queuing.
 
     The name parameter is expected to be a string identifying the queue in
     which messages are to be enqueued or dequeued.
@@ -258,7 +261,7 @@ Methods
 
         This method is an extension to the DB API definition.
 
-.. method:: Connection.subscribe(namespace=oracledb.SUBSCR_NAMESPACE_DBCHANGE, \ 
+.. method:: Connection.subscribe(namespace=oracledb.SUBSCR_NAMESPACE_DBCHANGE, \
                 protocol=oracledb.SUBSCR_PROTO_OCI, callback=None, timeout=0, \
                 operations=OPCODE_ALLOPS, port=0, qos=0, ip_address=None, grouping_class=0, \
                 grouping_value=0, grouping_type=oracledb.SUBSCR_GROUPING_TYPE_SUMMARY, \
@@ -350,84 +353,84 @@ Methods
 
 .. method:: Connection.tpc_begin(xid, flags)
 
-    Begins a Two-Phase Commit (TPC) on a global transaction using the specified 
+    Begins a Two-Phase Commit (TPC) on a global transaction using the specified
     transaction identifier (xid).
 
-    The xid parameter should be an object returned by the :meth:`~Connection.xid()` 
+    The xid parameter should be an object returned by the :meth:`~Connection.xid()`
     method.
 
-    The flags parameter is one of the constants :data:`oracledb.TPC_BEGIN_JOIN`, 
-    :data:`oracledb.TPC_BEGIN_NEW`, :data:`oracledb.TPC_BEGIN_PROMOTE`, or 
+    The flags parameter is one of the constants :data:`oracledb.TPC_BEGIN_JOIN`,
+    :data:`oracledb.TPC_BEGIN_NEW`, :data:`oracledb.TPC_BEGIN_PROMOTE`, or
     :data:`oracledb.TPC_BEGIN_RESUME`. The default is :data:`oracledb.TPC_BEGIN_NEW`.
 
     The following code sample demonstrates the ``tpc_begin()`` function::
 
         connection.tpc_begin(xid=x, flags=oracledb.TPC_BEGIN_NEW)
-        x = connection.xid(format_id=1, global_transaction_id=“tx1”, branch_qualifier=“br1”)
+        x = connection.xid(format_id=1, global_transaction_id="tx1", branch_qualifier="br1")
 
     See :ref:`tcp` for information on TPC.
 
 .. method:: Connection.tpc_commit(xid, one_phase)
 
-    Commits a global transaction. When called with no arguments, this method commits 
+    Commits a global transaction. When called with no arguments, this method commits
     a transaction previously prepared with :meth:`~Connection.tpc_begin()` and optionally
-    prepared with :meth:`~Connection.tpc_prepare()`. If :meth:`~Connection.tpc_prepare()` 
-    is not called, a single phase commit is performed. A transaction manager may choose 
+    prepared with :meth:`~Connection.tpc_prepare()`. If :meth:`~Connection.tpc_prepare()`
+    is not called, a single phase commit is performed. A transaction manager may choose
     to do this if only a single resource is participating in the global transaction.
 
-    If an xid parameter is passed, then an object should be returned by the 
-    :meth:`~Connection.xid()` function. This form should be called outside of a 
+    If an xid parameter is passed, then an object should be returned by the
+    :meth:`~Connection.xid()` function. This form should be called outside of a
     transaction and is intended for use in recovery.
 
-    The one_phase parameter is a boolean identifying whether to perform a one-phase 
+    The one_phase parameter is a boolean identifying whether to perform a one-phase
     or two-phase commit. If one_phase parameter is True, a single-phase commit is performed.
-    The default value is False. This parameter is only examined if a value is provided 
-    for the xid parameter. Otherwise, the driver already knows whether 
-    :meth:`~Connection.tpc_prepare()` was called for the transaction and whether a 
+    The default value is False. This parameter is only examined if a value is provided
+    for the xid parameter. Otherwise, the driver already knows whether
+    :meth:`~Connection.tpc_prepare()` was called for the transaction and whether a
     one-phase or two-phase commit is required.
 
     The following code sample demonstrates the ``tpc_commit()`` function::
 
         connection.tpc_commit(xid=x, one_phase=False)
-        x = connection.xid(format_id=1, global_transaction_id=“tx1”, branch_qualifier=“br1”)
+        x = connection.xid(format_id=1, global_transaction_id="tx1", branch_qualifier="br1")
 
     See :ref:`tcp` for information on TPC.
 
 .. method:: Connection.tpc_end(xid, flags)
 
-    Ends or suspends work on a global transaction. This function is only intended 
+    Ends or suspends work on a global transaction. This function is only intended
     for use by transaction managers.
 
-    If an xid parameter is passed, then an object should be returned by the 
-    :meth:`~Connection.xid()` function. If no xid parameter is passed, then the 
+    If an xid parameter is passed, then an object should be returned by the
+    :meth:`~Connection.xid()` function. If no xid parameter is passed, then the
     transaction identifier used by the previous :meth:`~Connection.tpc_begin()` is used.
 
-    The flags is one of the constants :data:`oracledb.TPC_END_NORMAL` or 
+    The flags is one of the constants :data:`oracledb.TPC_END_NORMAL` or
     :data:`oracledb.TPC_END_SUSPEND`. The default is :data:`oracledb.TPC_END_NORMAL`.
 
-    If the flag is :data:`oracledb.TPC_END_SUSPEND` then the transaction may be 
-    resumed later by calling :meth:`Connection.tpc_begin()` with the flag 
+    If the flag is :data:`oracledb.TPC_END_SUSPEND` then the transaction may be
+    resumed later by calling :meth:`Connection.tpc_begin()` with the flag
     :data:`oracledb.TPC_BEGIN_RESUME`.
 
     The following code sample demonstrates the ``tpc_end()`` function::
 
         connection.tpc_end(xid=x, flags=oracledb.TPC_END_NORMAL)
-        x = connection.xid(format_id=1, global_transaction_id=“tx1”, branch_qualifier=“br1”)
+        x = connection.xid(format_id=1, global_transaction_id="tx1", branch_qualifier="br1")
 
     See :ref:`tcp` for information on TPC.
 
 .. method:: Connection.tpc_forget(xid)
 
-    Causes the database to forget a heuristically completed TPC transaction. This 
+    Causes the database to forget a heuristically completed TPC transaction. This
     function is only intended to be called by transaction managers.
-    
-    The xid parameter is mandatory and should be an object should be returned by 
-    the :meth:`~Connection.xid()` function. 
+
+    The xid parameter is mandatory and should be an object should be returned by
+    the :meth:`~Connection.xid()` function.
 
     The following code sample demonstrates the ``tpc_forget()`` function::
 
         connection.tpc_forget(xid=x)
-        x = connection.xid(format_id=1, global_transaction_id=“tx1”, branch_qualifier=“br1”)
+        x = connection.xid(format_id=1, global_transaction_id="tx1", branch_qualifier="br1")
 
     See :ref:`tcp` for information on TPC.
 
@@ -435,32 +438,32 @@ Methods
 
     Prepares a two-phase transaction for commit. After this function is called,
     no further activity should take place on this connection until either
-    :meth:`~Connection.tpc_commit()` or :meth:`~Connection.tpc_rollback()` have 
+    :meth:`~Connection.tpc_commit()` or :meth:`~Connection.tpc_rollback()` have
     been called.
 
-    Returns a boolean indicating whether a commit is needed or not. If you attempt to 
-    commit when not needed, then it results in the error ``ORA-24756: transaction does not 
+    Returns a boolean indicating whether a commit is needed or not. If you attempt to
+    commit when not needed, then it results in the error ``ORA-24756: transaction does not
     exist``.
 
-    If an xid parameter is passed, then an object should be returned by the 
-    :meth:`~Connection.xid()` function. If an xid parameter is not passed, then the 
+    If an xid parameter is passed, then an object should be returned by the
+    :meth:`~Connection.xid()` function. If an xid parameter is not passed, then the
     transaction identifier used by the previous :meth:`~Connection.tpc_begin()` is used.
 
     The following code sample demonstrates the ``tpc_prepare()`` function::
 
         connection.tpc_prepare(xid=x)
-        x = connection.xid(format_id=1, global_transaction_id=“tx1”, branch_qualifier=“br1”)
+        x = connection.xid(format_id=1, global_transaction_id="tx1", branch_qualifier="br1")
 
     See :ref:`tcp` for information on TPC.
 
 .. method:: Connection.tpc_recover()
 
-    Returns a list of pending transaction identifiers that require recovery. Objects of 
-    type ``Xid`` (as returned by the :meth:`~Connection.xid()` function) are returned and 
-    these can be passed to :meth:`~Connection.tpc_commit()` or :meth:`~Connection.tpc_rollback()` 
+    Returns a list of pending transaction identifiers that require recovery. Objects of
+    type ``Xid`` (as returned by the :meth:`~Connection.xid()` function) are returned and
+    these can be passed to :meth:`~Connection.tpc_commit()` or :meth:`~Connection.tpc_rollback()`
     as needed.
 
-    This function queries the view ``DBA_PENDING_TRANSACTIONS`` and requires ``SELECT`` 
+    This function queries the view ``DBA_PENDING_TRANSACTIONS`` and requires ``SELECT``
     privilege on that view.
 
     The following code sample demonstrates the ``tpc_recover()`` function::
@@ -473,18 +476,18 @@ Methods
 .. method:: Connection.tpc_rollback(xid)
 
     Rolls back a global transaction.
-    
-    If an xid parameter is not passed, then it rolls back the transaction that was previously 
+
+    If an xid parameter is not passed, then it rolls back the transaction that was previously
     started with :meth:`~Connection.tpc_begin()`.
 
-    If an xid parameter is passed, then an object should be returned by 
-    :meth:`~Connection.xid()` and the specified transaction is rolled back. This form 
+    If an xid parameter is passed, then an object should be returned by
+    :meth:`~Connection.xid()` and the specified transaction is rolled back. This form
     should be called outside of a transaction and is intended for use in recovery.
 
     The following code sample demonstrates the ``tpc_rollback()`` function::
 
         connection.tpc_rollback(xid=x)
-        x = connection.xid(format_id=1, global_transaction_id=“tx1”, branch_qualifier=“br1”)
+        x = connection.xid(format_id=1, global_transaction_id="tx1", branch_qualifier="br1")
 
     See :ref:`tcp` for information on TPC.
 
@@ -497,30 +500,32 @@ Methods
 
 .. method:: Connection.xid (format_id, global_transaction_id, branch_qualifier)
 
-    Returns a global transaction identifier (xid) that can be used with the 
+    Returns a global transaction identifier (xid) that can be used with the
     Two-Phase Commit (TPC) functions.
 
-    The xid contains a format identifier, a global transaction identifier, and 
-    a branch identifier. There are no checks performed at the Python level. The 
+    The xid contains a format identifier, a global transaction identifier, and
+    a branch identifier. There are no checks performed at the Python level. The
     values are checked by ODPI-C when they are passed to the relevant functions.
     .. When this functionality is also supported in the thin driver the checks will be performed at the Python level as well.
 
-    The format_id parameter should be a positive 32-bit integer. This value identifies 
-    the format of the global_transaction_id and branch_qualifier parameters and the 
-    value is determined by the Transaction Manager (TM), if one is in use. 
-    
-    The global_transaction_id and branch_qualifier parameters should be of type 
-    bytes or string. If a value of type string is passed, then this value will be 
+    The format_id parameter should be a positive 32-bit integer. This value identifies
+    the format of the global_transaction_id and branch_qualifier parameters and the
+    value is determined by the Transaction Manager (TM), if one is in use.
+
+    The global_transaction_id and branch_qualifier parameters should be of type
+    bytes or string. If a value of type string is passed, then this value will be
     UTF-8 encoded to bytes. The values cannot exceed 64 bytes in length.
 
     The following code sample demonstrates the ``xid()`` function::
 
-        connection.xid(format_id=1, global_transaction_id=“tx1”, branch_qualifier=“br1”)
+        connection.xid(format_id=1, global_transaction_id="tx1", branch_qualifier="br1")
 
     See :ref:`tcp` for information on TPC.
 
-Attributes
-==========
+.. _connattrs:
+
+Connection Attributes
+=====================
 
 .. attribute:: Connection.action
 
@@ -597,7 +602,7 @@ Attributes
 .. attribute:: Connection.dbop
 
     This write-only attribute sets the database operation that is to be
-    monitored. This can be viewed in the ``DBOP_NAME`` column of the 
+    monitored. This can be viewed in the ``DBOP_NAME`` column of the
     ``V$SQL_MONITOR`` table.
 
     .. note::
@@ -615,8 +620,8 @@ Attributes
 
 .. attribute:: Connection.econtext_id
 
-    This write-only attribute specifies the execution context id. This 
-    value can be found as ecid in the v$session table and econtext_id in the 
+    This write-only attribute specifies the execution context id. This
+    value can be found as ecid in the v$session table and econtext_id in the
     auditing tables. The maximum length is 64 bytes.
 
 .. attribute:: Connection.edition
@@ -702,12 +707,13 @@ Attributes
 
 .. attribute:: Connection.maxBytesPerCharacter
 
-    This read-only attribute returns the maximum number of bytes each character
-    can use for the client character set.
+    This deprecated, read-only attribute returns the value 4 since encodings
+    are always UTF-8.
+
+    Previously it returned the maximum number of bytes each character can use
+    for the client character set.
 
     .. deprecated:: cx_Oracle 8.2
-
-        Use the constant value of 4 instead.
 
     .. note::
 
@@ -787,6 +793,10 @@ Attributes
     This read-only attribute returns a boolean indicating if the connection was established
     with the python-oracledb Thin mode (True) or python-oracledb Thick mode (False).
 
+    .. note::
+
+        This attribute is an extension to the DB API definition.
+
 .. attribute:: Connection.tnsentry
 
     This read-only attribute returns the TNS entry of the database to which a
@@ -794,7 +804,7 @@ Attributes
 
     .. deprecated:: cx_Oracle 8.2
 
-        Use the attribute :attr:`~Connection.dsn` instead.
+    Use the attribute :attr:`~Connection.dsn` instead.
 
     .. note::
 

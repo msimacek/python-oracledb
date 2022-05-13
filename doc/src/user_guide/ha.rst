@@ -85,8 +85,8 @@ must connect to a FAN-enabled database service.  The application should have
 
 .. note::
 
-    FAN is only supported in the python-oracledb Thick mode. For information on 
-    how to change from one mode to the other, see :ref:`changingmodes`.
+    FAN is only supported in the python-oracledb Thick mode. See
+    :ref:`enablingthick`.
 
 FAN support is useful for planned and unplanned outages. It provides immediate
 notification to python-oracledb following outages related to the database, computers,
@@ -120,18 +120,17 @@ Notification
 Application Continuity (AC)
 ---------------------------
 
-Oracle Application Continuity (AC) and Transparent Application Continuity (TAC) 
-are Oracle Database technologies that record application interaction with the 
-database and, in the event of a database instance outage, attempt to replay 
-the interaction on a surviving database instance. If successful, users will 
-be unaware of any database issue. AC and TAC are best suited for OLTP 
+Oracle Application Continuity (AC) and Transparent Application Continuity (TAC)
+are Oracle Database technologies that record application interaction with the
+database and, in the event of a database instance outage, attempt to replay
+the interaction on a surviving database instance. If successful, users will
+be unaware of any database issue. AC and TAC are best suited for OLTP
 applications.
 
 .. note::
 
-    Oracle AC and TAC functionalities are only supported in the 
-    python-oracledb Thick mode. For information on how to change from
-    one mode to the other, see :ref:`changingmodes`.
+    Oracle AC and TAC functionality is only supported in the python-oracledb
+    Thick mode.  See :ref:`enablingthick`.
 
 When AC or TAC are configured on the database service, they are transparently
 available to python-oracledb applications.
@@ -157,9 +156,8 @@ database are 12.1 or higher.
 
 .. note::
 
-    The Transaction Guard feature is only supported in the python-oracledb 
-    Thick mode. For information on how to change from one mode to the other, 
-    see :ref:`changingmodes`.
+    The Transaction Guard feature is only supported in the python-oracledb
+    Thick mode.  See :ref:`enablingthick`.
 
 Using Transaction Guard helps to:
 

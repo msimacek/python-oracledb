@@ -1,19 +1,17 @@
 Welcome to python-oracledb's documentation!
 ===========================================
 
-**python-oracledb** is the new and upgraded release of cx_Oracle. 
-This module supersedes the cx_Oracle module.
+The **python-oracledb** driver is the new and upgraded release of cx_Oracle.
+The driver an open source module that enables Python programs to access Oracle
+Database. It conforms to the `Python Database API v2.0 Specification
+<https://www.python.org/dev/peps/pep-0249/>`__ with a considerable number of
+additions and a couple of exclusions.
 
-**python-oracledb** is a module that enables Python programs to access 
-Oracle Database and conforms to the Python database API specification.
-This module is currently tested against Oracle Client 21c, 19c, 18c, 12c, 
-and 11.2, and Python 3.6, 3.7, 3.8, and 3.9.
+This module is currently tested with Python 3.6, 3.7, 3.8, 3.9, and 3.10
+against Oracle Database 21c, 19c, 18c, 12c, and 11.2.
 
-**python-oracledb** is distributed under an open-source :ref:`license <license>`
-(the BSD license). A detailed description of python-oracledb changes can be found in
-the :ref:`release notes <releasenotes>`.
-
-Contents:
+Changes in python-oracledb releases can be found in the :ref:`release notes
+<releasenotes>`.
 
 User Guide
 ==========
@@ -24,7 +22,6 @@ User Guide
 
     user_guide/introduction.rst
     user_guide/installation.rst
-    user_guide/upgrading.rst
     user_guide/initialization.rst
     user_guide/connection_handling.rst
     user_guide/sql_execution.rst
@@ -46,6 +43,9 @@ User Guide
     user_guide/ha.rst
     user_guide/tracing_sql.rst
     user_guide/appendix_a.rst
+    user_guide/appendix_b.rst
+    user_guide/appendix_c.rst
+    user_guide/upgrading.rst
 
 API Manual
 ==========
@@ -67,10 +67,6 @@ API Manual
     api_manual/variable.rst
     api_manual/aq.rst
     api_manual/soda.rst
-    api_manual/additional_features.rst
-    api_manual/mode_differences.rst
-    api_manual/connections_config.rst
-    api_manual/cxOracle_compatibility.rst
     api_manual/deprecations.rst
 
 

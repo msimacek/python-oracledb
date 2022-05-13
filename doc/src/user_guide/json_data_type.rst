@@ -11,33 +11,21 @@ making it available for relational processes and tools.  Also see
 :ref:`Simple Oracle Document Access (SODA) <sodausermanual>`, which allows
 access to JSON documents through a set of NoSQL-style APIs.
 
-Prior to Oracle Database 21, JSON in relational tables is stored as BLOB, CLOB
-or VARCHAR2 data, allowing easy access with python-oracledb.  Oracle Database 21
-introduced a dedicated JSON data type with a new `binary storage format
-<https://blogs.oracle.com/jsondb/osonformat>`__ that improves performance and
-functionality.  To use the new dedicated JSON type, the Oracle Database and
-Oracle Client libraries must be version 21, or later.  Also cx_Oracle must be
-8.1, or later.
-
-For more information about using JSON in Oracle Database see the
-`Database JSON Developer's Guide
+For more information about using JSON in Oracle Database see the `Database JSON
+Developer's Guide
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=ADJSN>`__.
 
-In Oracle Database 21, to create a table with a column called ``JSON_DATA`` for
-JSON data:
+**Oracle Database 12c JSON Data Type**
+
+In Oracle Database 12c, JSON in relational tables is stored as BLOB, CLOB or
+VARCHAR2 data.  All of these types can be used with python-oracledb in Thin or
+Thick modes.
+
+The older syntax to create a table with a JSON column is like:
 
 .. code-block:: sql
 
-    create table customers (
-        id integer not null primary key,
-        json_data json
-    );
-
-For older Oracle Database versions the syntax is:
-
-.. code-block:: sql
-
-    create table customers (
+    create table CustomersAsBlob (
         id integer not null primary key,
         json_data blob check (json_data is json)
     );
@@ -45,104 +33,134 @@ For older Oracle Database versions the syntax is:
 The check constraint with the clause ``IS JSON`` ensures only JSON data is
 stored in that column.
 
-The older syntax can still be used in Oracle Database 21, however the
+The older syntax can still be used in Oracle Database 21c, however the
 recommendation is to move to the new JSON type.  With the old syntax, the
 storage can be BLOB, CLOB, or VARCHAR2.  Of these, BLOB is preferred to avoid
 character set conversion overheads.
 
-Using Oracle Database 21c and python-oracledb Thin Mode
-=========================================================
+**Oracle Database 21c JSON Data Type**
 
-For python-oracledb Thin mode, a type handler is required to fetch 
-the Oracle 21c JSON datatype. This type handler is not required when
-you use the python-oracledb Thick mode and Oracle Database 21c and later. 
-If a type handler is used in the python-oracledb Thick mode, then the
-behavior is same in both the python-oracledb modes. The following example 
-shows a type handler:
+Oracle Database 21c introduced a dedicated JSON data type with a new `binary
+storage format <https://blogs.oracle.com/jsondb/osonformat>`__ that improves
+performance and functionality.  To fully take advantage of the dedicated JSON
+type, use python-oracledb in Thick mode with Oracle Client libraries version
+21, or later.
 
-.. code:: python
+In Oracle Database 21, to create a table with a column called ``JSON_DATA`` for
+JSON data you might use:
 
-  def type_handler(cursor, name, default_type, size, precision, scale):
-    
-    # to fetch the 21c JSON datatype when using python-oracledb thin mode
-    
-    if default_type == oracledb.DB_TYPE_JSON:
-        return cursor.var(str, arraysize=cursor.arraysize,
-                          outconverter=json.loads)
+.. code-block:: sql
 
-Using python-oracledb Thin mode with Oracle 21c, you can insert as shown 
-below:
+    create table CustomersAsJson (
+        id integer not null primary key,
+        json_data json
+    );
 
-.. code:: python
 
-  data = [
-    (1, dict(name="Rod", dept="Sales", location="Germany")),
-    (2, dict(name="George", dept="Marketing", location="Bangalore")),
-    (3, dict(name="Sam", dept="Sales", location="Mumbai")),
-    (4, dict(name="Jill", dept="Marketing", location="Germany"))
-  ]
+Using the Oracle Database 21c JSON Type in python-oracledb Thick Mode
+=====================================================================
 
-  insert_sql = "insert into CustomersAsJson values (:1, :2)"
+Using python-oracledb Thick mode with Oracle Database 21c and Oracle Client 21c
+(or later), you can insert by binding as shown below:
 
-  if not conn.thin and client_version >= 21:
+.. code-block:: python
+
+    data = [
+      (5, dict(name="Sally", dept="Sales", location="France")),
+    ]
+    insert_sql = "insert into CustomersAsJson values (:1, :2)"
+
     # Take advantage of direct binding
     cursor.setinputsizes(None, oracledb.DB_TYPE_JSON)
-    cursor.executemany(insert_sql, data)
+    cursor.execute(insert_sql, [1, data])
 
-  else:
+To fetch a JSON column, use:
+
+.. code-block:: python
+
+    for row in cursor.execute("select * from CustomersAsJson"):
+        print(row)
+
+See `json_direct.py
+<https://github.com/oracle/python-oracledb/tree/main/samplesjson_direct.py>`__
+for a runnable example.  The example also shows how to use this type when
+python-oracledb Thick mode uses older Oracle Client libraries.
+
+Using the Oracle Database 21c JSON Type and python-oracledb Thin Mode
+=====================================================================
+
+Using python-oracledb Thin mode with Oracle Database 21c, you can insert into a
+JSON column as shown below:
+
+.. code:: python
+
+    data = [
+      (1, dict(name="Rod", dept="Sales", location="Germany")),
+      (2, dict(name="George", dept="Marketing", location="Bangalore")),
+      (3, dict(name="Sam", dept="Sales", location="Mumbai")),
+      (4, dict(name="Jill", dept="Marketing", location="Germany"))
+    ]
+
+    insert_sql = "insert into CustomersAsJson values (:1, :2)"
+
     # Insert the data as a JSON string
     cursor.executemany(insert_sql, [(i, json.dumps(j)) for i, j in data])
 
-To fetch JSON type, use:
-
-.. code:: python
-
- for row in cursor.execute("select * from CustomersAsJson"):
-      print(row)
-
-
-Using Oracle Database 21c and python-oracledb Thick Mode
-=========================================================
-
-Using python-oracledb Thick mode with Oracle Database 21c and 
-Oracle Client 21, you can insert by binding as shown below:
-
-.. code-block:: python
-  
-  data = dict(name="Rod", dept="Sales", location="Germany")
-  inssql = "insert into CustomersAsJson values (:1, :2)"
-
-  cursor.setinputsizes(None, oracledb.DB_TYPE_JSON)
-  cursor.execute(inssql, [1, data])
-
-To fetch JSON type, use:
+For python-oracledb Thin mode, a type handler is required to fetch the Oracle
+21c JSON datatype.  If a type handler is used in the python-oracledb Thick
+mode, then the behavior is same in both the python-oracledb modes. The
+following example shows a type handler:
 
 .. code-block:: python
 
-    for j, in cursor.execute(sql):
-        print(j)
+    def my_type_handler(cursor, name, default_type, size, precision, scale):
+        if default_type == oracledb.DB_TYPE_JSON:
+            return cursor.var(str, arraysize=cursor.arraysize, outconverter=json.loads)
 
-Using Oracle 19c and earlier
-============================
+    cursor.outputtypehandler = my_type_handler
 
-With the older BLOB storage, or to insert JSON strings, use:
+    for row in cursor.execute("select * from CustomersAsJson"):
+        print(row)
+
+With a type handler, the python-oracledb Thin mode is equivalent
+to using the python-oracledb Thick mode with Oracle Client 21c. The
+python-oracledb Thin mode returns timestamps in a string representation.
+Without a type handler, the python-oracledb Thin mode gives an error that
+``DB_TYPE_JSON`` is not supported.
+
+A type handler is not needed when fetching from the Oracle Database 19c JSON
+type, since this is represented as VARCHAR2 or LOB.
+
+See `json_type.py
+<https://github.com/oracle/python-oracledb/tree/main/samplesjson_type.py>`__
+for a runnable example.
+
+Using the Oracle 12c JSON type in python-oracledb
+=================================================
+
+When using Oracle Database 12c or later with JSON using BLOB storage to insert
+JSON strings, use:
 
 .. code-block:: python
-  
-  data = dict(name="Rod", dept="Sales", location="Germany")
-  inssql = "insert into CustomersAsBlob values (:1, :2)"
 
-  cursor.execute(inssql, [1, json.dumps(data)])
+    data = dict(name="Rod", dept="Sales", location="Germany")
+    inssql = "insert into CustomersAsBlob values (:1, :2)"
+
+    cursor.execute(inssql, [1, json.dumps(data)])
 
 To fetch JSON strings, use:
 
 .. code-block:: python
 
-  sql = """SELECT JSON_VALUE(json_data, '$.location')
-         FROM CustomersAsBlob
-         OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY"""
-  for r in cursor.execute(sql):
-    print(r)
+    import json
+
+    sql = "SELECT c.json_data FROM CustomersAsBlob c"
+    for j, in cursor.execute(sql):
+        print(json.loads(j.read()))
+
+See `json_blob.py
+<https://github.com/oracle/python-oracledb/tree/main/samplesjson_blob.py>`__
+for a runnable example.
 
 IN Bind Type Mapping
 ====================

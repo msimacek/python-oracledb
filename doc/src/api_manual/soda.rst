@@ -13,7 +13,7 @@ strings. See the :ref:`user manual <sodausermanual>` for examples.
 .. _sodarequirements:
 
 SODA Requirements
-==================
+=================
 
 To use SODA, the role SODA_APP must be granted to the user.  To create
 collections, users need the CREATE TABLE privilege.  These can be granted by a
@@ -68,14 +68,17 @@ SODA requires Oracle Client 18.3 or higher and Oracle Database 18.1 and higher.
 
 .. _sodadb:
 
-SODA Database Object
-=====================
+SodaDatabase Objects
+====================
 
 .. note::
 
-    This object is an extension the DB API. It is returned by the method
-    :meth:`Connection.getSodaDatabase()`.
+    The SODA Database object is an extension the DB API. It is returned by the
+    method :meth:`Connection.getSodaDatabase()`.
 
+
+SodaDatabase Methods
+--------------------
 
 .. method:: SodaDatabase.createCollection(name, metadata=None, mapMode=False)
 
@@ -145,18 +148,18 @@ SODA Database Object
 
 .. _sodacoll:
 
-SODA Collection Object
-=======================
+SodaCollection Objects
+======================
 
 .. note::
 
-    This object is an extension the DB API. It is used to represent SODA
-    collections and is created by methods
+    The SODA Collection object is an extension the DB API. It is used to
+    represent SODA collections and is created by methods
     :meth:`SodaDatabase.createCollection()` and
     :meth:`SodaDatabase.openCollection()`.
 
-Methods
--------
+SodaCollection Methods
+----------------------
 
 .. method:: SodaCollection.createIndex(spec)
 
@@ -167,7 +170,7 @@ Methods
     for information on indexes in SODA.
 
     .. note::
-        
+
         A commit should be performed before attempting to create an index.
 
 
@@ -328,8 +331,8 @@ Methods
     Removes all of the documents in the collection, similarly to what is done
     for rows in a table by the TRUNCATE TABLE statement.
 
-Attributes
-----------
+SodaCollection Attributes
+-------------------------
 
 .. attribute:: SodaCollection.metadata
 
@@ -347,19 +350,18 @@ Attributes
 
 .. _sodadoc:
 
-SODA Document Object
-=====================
+SodaDoc Objects
+===============
 
 .. note::
 
-    This object is an extension the DB API. It is returned by the methods
-    :meth:`SodaDatabase.createDocument()`,
-    :meth:`SodaOperation.getDocuments()` and
-    :meth:`SodaOperation.getOne()` as well as by iterating over
-    :ref:`SODA document cursors <sodadoccur>`.
+    The SODA Document object is an extension the DB API. It is returned by the
+    methods :meth:`SodaDatabase.createDocument()`,
+    :meth:`SodaOperation.getDocuments()` and :meth:`SodaOperation.getOne()` as
+    well as by iterating over :ref:`SODA document cursors <sodadoccur>`.
 
-Methods
--------
+SodaDoc Methods
+---------------
 
 .. method:: SodaDoc.getContent()
 
@@ -381,8 +383,8 @@ Methods
     is not known, UTF-8 will be used. If there is no content, however, None
     will be returned.
 
-Attributes
------------
+SodaDoc Attributes
+------------------
 
 .. attribute:: SodaDoc.createdOn
 
@@ -427,15 +429,18 @@ Attributes
 
 .. _sodadoccur:
 
-SODA Document Cursor Object
-============================
+SodaDocCursor Objects
+=====================
 
 .. note::
 
-    This object is an extension the DB API. It is returned by the method
-    :meth:`SodaOperation.getCursor()` and implements the iterator protocol.
-    Each iteration will return a :ref:`SODA document object <sodadoc>`.
+    The SODA Document Cursor object is an extension the DB API. It is returned
+    by the method :meth:`SodaOperation.getCursor()` and implements the iterator
+    protocol.  Each iteration will return a :ref:`SODA document object
+    <sodadoc>`.
 
+SodaDocCursor Methods
+---------------------
 
 .. method:: SodaDocCursor.close()
 
@@ -446,15 +451,17 @@ SODA Document Cursor Object
 
 .. _sodaop:
 
-SODA Operation Object
+SodaOperation Objects
 =====================
 
 .. note::
 
-    This object is an extension to the DB API. It represents an operation that
-    will be performed on all or some of the documents in a SODA collection. It
-    is created by the method :meth:`SodaCollection.find()`.
+    The SODA Operation Object is an extension to the DB API. It represents an
+    operation that will be performed on all or some of the documents in a SODA
+    collection. It is created by the method :meth:`SodaCollection.find()`.
 
+SodaOperation Methods
+---------------------
 
 .. method:: SodaOperation.count()
 

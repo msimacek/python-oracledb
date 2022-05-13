@@ -69,18 +69,18 @@ Fetching LOBs as Strings and Bytes
 ----------------------------------
 
 CLOBs and BLOBs smaller than 1 GB can queried from the database directly as
-strings and bytes.  This can be much faster than streaming.
-
-A :attr:`Connection.outputtypehandler` or :attr:`Cursor.outputtypehandler` needs
-to be used as shown in this example:
+strings and bytes.  This can be much faster than streaming a :ref:`LOB Object
+<lobobj>`.  Support is enabled by setting the :ref:`Defaults Object
+<defaults>`.
 
 .. code-block:: python
 
-    def output_type_handler(cursor, name, default_type, size, precision, scale):
-        if default_type == oracledb.DB_TYPE_CLOB:
-            return cursor.var(oracledb.DB_TYPE_LONG, arraysize=cursor.arraysize)
-        if default_type == oracledb.DB_TYPE_BLOB:
-            return cursor.var(oracledb.DB_TYPE_LONG_RAW, arraysize=cursor.arraysize)
+    import oracledb
+
+    # returns strings or bytes instead of a locator
+    oracledb.defaults.fetch_lobs = False
+
+    . . .
 
     id_val = 1
     text_data = "The quick brown fox jumps over the lazy dog"
@@ -88,7 +88,6 @@ to be used as shown in this example:
     cursor.execute("insert into lob_tbl (id, c, b) values (:1, :2, :3)",
                    [id_val, text_data, binary_data])
 
-    connection.outputtypehandler = output_type_handler
     cursor.execute("select c, b from lob_tbl where id = :1", [id_val])
     clob_data, blob_data = cursor.fetchone()
     print("CLOB length:", len(clob_data))
@@ -103,14 +102,28 @@ This displays::
     BLOB length: 16
     BLOB data: b'Some binary data'
 
+An older alternative to using ``oracledb.defaults.fetch_lobs`` is to use a type
+handler:
+
+.. code-block:: python
+
+    def output_type_handler(cursor, name, default_type, size, precision, scale):
+        if default_type == oracledb.DB_TYPE_CLOB:
+            return cursor.var(oracledb.DB_TYPE_LONG, arraysize=cursor.arraysize)
+        if default_type == oracledb.DB_TYPE_BLOB:
+            return cursor.var(oracledb.DB_TYPE_LONG_RAW, arraysize=cursor.arraysize)
+        if default_type == oracledb.DB_TYPE_NCLOB:
+            return cursor.var(oracledb.DB_TYPE_LONG_NVARCHAR, arraysize=cursor.arraysize)
+
+    connection.outputtypehandler = output_type_handler
 
 Streaming LOBs (Read)
 ---------------------
 
-Without the output type handler, the CLOB and BLOB values are fetched as
-:ref:`LOB objects<lobobj>`. The size of the LOB object can be obtained by
-calling :meth:`LOB.size()` and the data can be read by calling
-:meth:`LOB.read()`:
+Without setting ``oracledb.defaults.fetch_lobs`` to Falase, or without using a
+output type handler, the CLOB and BLOB values are fetched as :ref:`LOB
+objects<lobobj>`. The size of the LOB object can be obtained by calling
+:meth:`LOB.size()` and the data can be read by calling :meth:`LOB.read()`:
 
 .. code-block:: python
 
@@ -198,31 +211,3 @@ procedure exceeds that which can fit in a single block of data, however, you
 can use the method :meth:`Connection.createlob()` to create a temporary LOB.
 This LOB can then be read and written just like in the examples shown above for
 persistent LOBs.
-
-.. _nclob:
-
-Fetching NCLOB Columns as String
----------------------------------
-
-A new ``DB_TYPE_LONG_NVARCHAR`` constant can be used in output type handlers
-when fetching NCLOB columns as String, which is important for performance. Note
-that setting the new ``oracledb.defaults.fetch_lobs`` attribute to False
-removes the need for an output type handler in this example.
-
-The constant avoids a double type-conversion.  Similar to existing usages of
-``oracledb.LONG_STRING`` and ``oracledb.LONG_BINARY`` (for CLOB and BLOB), this
-feature is limited to NCLOBs of 1 GB or shorter.
-
-.. code-block:: python
-
-   def output_type_handler(cursor, name, default_type, size, precision, scale):
-       if default_type == oracledb.NCLOB:
-           return cursor.var(oracledb.DB_TYPE_LONG_NVARCHAR, arraysize=cursor.arraysize)
-
-For IN binds, the new type constant can be used to create a bind variable in
-``cursor.var`` or via ``setinputsizes()``.
-
-The ``DB_TYPE_LONG_NVARCHAR`` value won't be shown query metadata since it is
-not a database type.
-
-

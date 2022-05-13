@@ -12,9 +12,8 @@ architecture.
 
 .. note::
 
-    Oracle Advanced Queuing is only supported in the python-oracledb Thick mode.
-    For information on how to change from one mode to the other, see 
-    :ref:`changingmodes`.
+    Oracle Advanced Queuing is only supported in the python-oracledb Thick
+    mode.  See :ref:`enablingthick`.
 
 python-oracledb uses the updated interface for Oracle Advanced Queuing that
 was first introduced in cx_Oracle 7.2.
@@ -146,17 +145,17 @@ You can associate a list of recipient names with a message at the time of
 enqueuing the message. This feature limits the set of recipients that have
 to dequeue each message.
 
-The recipient list associated with a message overrides the queue subscriber 
-list, if it exists. It is not mandatory to include the recipient name in the 
+The recipient list associated with a message overrides the queue subscriber
+list, if it exists. It is not mandatory to include the recipient name in the
 subscriber list and if desired, it can be included.
 
 To dequeue a message, the consumername attribute can be set to one of the
-recipient names. The original message recipient list is not available 
+recipient names. The original message recipient list is not available
 on dequeued messages. All recipients have to dequeue a message
 before it gets removed from the queue.
 
-When subscribing to a queue, each subscriber can dequeue all the messages 
-placed into a specific queue and each recipient is a designated target of 
+When subscribing to a queue, each subscriber can dequeue all the messages
+placed into a specific queue and each recipient is a designated target of
 a particular message.
 
 
@@ -165,7 +164,7 @@ For example::
     props = self.connection.msgproperties(payload=book,recipients=["sub2", "sub3"])
     queue.enqone(props)
 
-Later, when dequeuing messages a specific recipient can be set to get messages intended 
+Later, when dequeuing messages a specific recipient can be set to get messages intended
 for that recipient::
 
     queue.deqoptions.consumername = "sub3"

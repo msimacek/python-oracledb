@@ -34,14 +34,14 @@ root_doc = master_doc = 'index'
 
 # General substitutions.
 project = 'python-oracledb'
-copyright = u'2016, 2021, 2022, Oracle and/or its affiliates. All rights reserved. Portions Copyright © 2007-2015, Anthony Tuininga. All rights reserved. Portions Copyright © 2001-2007, Computronix (Canada) Ltd., Edmonton, Alberta, Canada. All rights reserved'
+copyright = u'2016, 2022, Oracle and/or its affiliates. All rights reserved. Portions Copyright © 2007-2015, Anthony Tuininga. All rights reserved. Portions Copyright © 2001-2007, Computronix (Canada) Ltd., Edmonton, Alberta, Canada. All rights reserved'
 author = 'Oracle'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '1'
+version = '1.0'
 # The full version, including alpha/beta/rc tags.
 release = '1.0-dev'
 
@@ -132,4 +132,3 @@ numfig = True
 
 # If false, no module index is generated.
 #latex_use_modindex = True
-

@@ -1,172 +1,94 @@
 .. _tracingsql:
 
-*********************************
-Tracing SQL and PL/SQL Statements
-*********************************
-
-.. _dbviews:
-
-Database Views
-==============
-
-``V$SESSION_CONNECT_INFO``
-----------------------------
-
-The following table lists sample values for `V$SESSION_CONNECT_INFO
-<https://docs.oracle.com/en/database/oracle/oracle-database/21/refrn/V-
-SESSION_CONNECT_INFO.html#GUID-9F0DCAEA-A67E-4183-89E7-B1555DC591CE>`__
-for the python-oracledb Thick and Thin modes:
-
-.. list-table-with-summary:: V$SESSION_CONNECT_INFO column values
-    :header-rows: 1
-    :widths: 15 10 10
-    :name: V$SESSION_CONNECT_INFO
-    :summary: The first column is the name of V$SESSION_CONNECT_INFO view's column. The second column lists the python-oracledb Thick mode value. The third column is the python-oracledb Thin mode value.
-
-    * - Column
-      - Thick value
-      - Thin value
-    * - SID
-      - the session id
-      - the session id
-    * - SERIAL#
-      - the serial number
-      - the serial number
-    * - AUTHENTICATION_TYPE
-      - for example, "Database"
-      - for example, "Database"
-    * - OSUSER
-      - the OS user
-      - the OS user
-    * - NETWORK_SERVICE_BANNER
-      - the database banner. Note the table has one row per banner line.
-      - the database banner. Note the table has one row per banner line.
-    * - CLIENT_CHARSET
-      - AL32UTF8
-      - AL32UTF8
-    * - CLIENT_CONNECTION
-      - for example, "Heterogeneous"
-      - for example, "Heterogeneous"
-    * - CLIENT_OCI_LIBRARY
-      - the Oracle Client or Instant Client type, such as "Full Instant Client"
-      - "Unknown"
-    * - CLIENT_VERSION
-      - the Oracle Client library version number
-      - "0.9.4.0.0" (the python-oracledb version number with an extra .0.0)
-    * - CLIENT_DRIVER
-      - "python-oracledb thk : 0.9.4"
-      - "python-oracledb thn : 0.9.4"
-    * - CLIENT_LOBATTR
-      - "Client Temp Lob Rfc On"
-      - "Client Temp Lob Rfc Off"
-    * - CLIENT_REGID
-      - 0
-      - 0
-    * - CON_ID
-      - 0
-      - 0
-
-For example, to see which driver mode is in use you can execute:
-
-.. code-block:: python
-
-    with connection.cursor() as cursor:
-        sql = """SELECT UNIQUE CLIENT_DRIVER
-                 FROM V$SESSION_CONNECT_INFO
-                 WHERE SID = SYS_CONTEXT('USERENV', 'SID')"""
-        for r, in cursor.execute(sql):
-            print(r)
-
-The driver name [CLIENT_DRIVER] is configurable in the python-oracledb
-Thick mode with ``init_oracle_client(driver_name='abc')``. Note that the
-``CLIENT_DRIVER`` length field was fixed to allow 30 characters in
-12.1.0.2 & 12.2. This is not configurable in the python-oracledb Thin mode.
-
-``V$SESSION``
--------------
-
-The following table list sample values for columns with differences in `V$SESSION <https://docs.oracle.com/en/database/oracle/oracle-database/21/refrn/V-SESSION.html>`__.
-
-.. list-table-with-summary:: V$SESSION column values
-    :header-rows: 1
-    :widths: 15 10 10
-    :name: V$SESSION_COLUMN_VALUES
-    :summary: The first column is the name of the column. The second column lists the python-oracledb Thick mode value. The third column is the python-oracledb Thin mode value.
-
-    * - Column
-      - Thick value
-      - Thin value
-    * - TERMINAL
-      - similar to `ttys001`
-      - the string "unknown"
-    * - PROGRAM
-      - similar to `python@cjones-mac2 (TNS V1-V3)`
-      - the contents of Python's ``sys.executable``, such as `/Users/cjones/.pyenv/versions/3.9.6/bin/python`
-    * - MODULE
-      - similar to `python@cjones-mac2 (TNS V1-V3)`
-      - the contents of Python's ``sys.executable``, such as `/Users/cjones/.pyenv/versions/3.9.6/bin/python`
+***********************
+Tracing python-oracledb
+***********************
 
 .. _applntracing:
 
 Application Tracing
-====================
+===================
 
-- End-to-end database tracing attributes such as :attr:`Connection.action`
-  and :attr:`Connection.module` are supported in the python-oracledb Thin and
-  Thick modes, similar to cx_Oracle.
+There are multiple approaches for application tracing and monitoring:
 
-- Users can subclass python-oracledb and implement their own driver API call
-  tracing and logging. Also, they can use standard `Python tracing capabilities
-  <https://docs.python.org/3/library/trace.html>`__.
+- :ref:`End-to-end database tracing <endtoendtracing>` attributes such as
+  :attr:`Connection.action`, and :attr:`Connection.module` are supported in the
+  python-oracledb Thin and Thick modes.  Using these attributes is recommended
+  since they aid application monitoring and troubleshooting.
 
-- To identify which Oracle Net connect descriptor parameters are used or
-  ignored in the python-oracledb Thin mode, create a :ref:`ConnectParams Class
-  <connparam>` object with the desired connect string. If the attributes are not
-  shown in the object, then they have been ignored. Note that even if values are
-  parsed and stored in the ConnectParams object, these values may be ignored at
-  connection time based on whether a connection is created in the python-oracledb
-  Thin or Thick mode.
+- You can :ref:`subclass python-oracledb classes <subclassconn>` and implement
+  your own driver API call tracing and logging. Also, the standard `Python
+  tracing capabilities <https://docs.python.org/3/library/trace.html>`__ can be
+  used.
 
-- For the python-oracledb Thin mode, packets can be traced by setting the
-  environment variable::
+- The Java Debug Wire Protocol (JDWP) for debugging PL/SQL can be used, see :ref:`jdwp`.
 
-      PYO_DEBUG_PACKETS=1
+- Python-oracledb in Thick mode can dump a trace of SQL statements
+  executed, see :ref:`lowlevelsqltrace`.
 
-  Output goes to stdout. The logging is similar to a SQL*Net trace (level=16)
-  and is intended solely for debugging.
+.. _endtoendtracing:
 
-- The python-oracledb Thick mode can be traced using:
+Oracle Database End-to-End Tracing
+----------------------------------
 
-    -  DPI_DEBUG_LEVEL as documented in `ODPI-C Debugging
-       <https://oracle.github.io/odpi/doc/user_guide/debugging.html>`__.
+Oracle Database End-to-end application tracing simplifies diagnosing application
+code flow and performance problems in multi-tier or multi-user environments.
 
-    -  Oracle Call Interface (OCI) tracing
+The connection attributes, :attr:`~Connection.client_identifier`,
+:attr:`~Connection.clientinfo`, :attr:`~Connection.dbop`,
+:attr:`~Connection.module` and :attr:`~Connection.action`, set the metadata for
+end-to-end tracing.  You can use data dictionary and ``V$`` views to monitor
+tracing or use other application tracing utilities.
 
-    -  Oracle Net Services tracing as documented in `Oracle Net Services
-       tracing parameters <https://docs.oracle.com/en/database/oracle/oracle-database/21/
-       netrf/parameters-for-the-sqlnet.ora.html>`__
+The attributes are sent to the database when the next :ref:`round-trip
+<roundtrips>` to the database occurs, for example when the next SQL statement is
+executed.
 
-- Java Wire Debug Protocol (JWDP) for debugging PL/SQL
+The attribute values will remain set in connections released back to connection
+pools.  When the application re-acquires a connection from the pool it should
+initialize the values to a desired state before using that connection.
 
-  The python-oracledb applications that call PL/SQL can step through that PL/SQL code
-  using JDWP in a debugger. This allows Python and PL/SQL code to be debugged in the
-  same debugger environment. You can enable PL/SQL debugging in the python-oracledb
-  modes as follows:
+The example below shows setting the action, module and client identifier
+attributes on the connection object:
 
-    - If you are using python-oracledb Thick mode, set the ``ORA_DEBUG_JDWP`` environment
-      variable to `host=hostname;port=portnum` indicating where the PL/SQL debugger
-      is running.
+.. code-block:: python
 
-    - In the python-oracledb Thin mode, you can additionally set the connection
-      parameter ``debug_jdwp``. This variable defaults to the value of the
-      ``ORA_DEBUG_JDWP`` environment variable.
+    # Set the tracing metadata
+    connection.client_identifier = "pythonuser"
+    connection.action = "Query Session tracing parameters"
+    connection.module = "End-to-end Demo"
 
-  See `DBMS_DEBUG_JDWP <https://docs.oracle.com/en/database/oracle/oracle-database/
-  19/arpls/DBMS_DEBUG_JDWP.html>`_ and `Debugging PL/SQL from ASP.NET and Visual
-  Studio <http://cshay.blogspot.com/2006/10/debugging-plsql-from-aspnet-and-visual.html>`_.
+    for row in cursor.execute("""
+            SELECT username, client_identifier, module, action
+            FROM V$SESSION
+            WHERE username = 'SYSTEM'"""):
+        print(row)
 
-Subclass Connections
-====================
+The output will be::
+
+    ('SYSTEM', 'pythonuser', 'End-to-end Demo', 'Query Session tracing parameters')
+
+The values can also be manually set as shown by calling
+`DBMS_APPLICATION_INFO procedures
+<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
+id=GUID-14484F86-44F2-4B34-B34E-0C873D323EAD>`__
+or `DBMS_SESSION.SET_IDENTIFIER
+<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
+id=GUID-988EA930-BDFE-4205-A806-E54F05333562>`__. These incur round-trips to
+the database, however, reducing scalability.
+
+.. code-block:: sql
+
+    BEGIN
+        DBMS_SESSION.SET_IDENTIFIER('pythonuser');
+        DBMS_APPLICATION_INFO.set_module('End-to-End Demo');
+        DBMS_APPLICATION_INFO.set_action(action_name => 'Query Session tracing parameters');
+    END;
+
+.. _subclassconn:
+
+Subclassing Connections
+-----------------------
 
 Subclassing enables applications to add "hooks" for connection and statement
 execution.  This can be used to alter, or log, connection and execution
@@ -231,74 +153,39 @@ See `Subclassing.py
 samples/subclassing.py>`__ for an example.
 
 
-.. _endtoendtracing:
+.. _jdwp:
 
-Oracle Database End-to-End Tracing
-==================================
+Debugging PL/SQL with the Java Debug Wire Protocol
+--------------------------------------------------
 
-Oracle Database End-to-end application tracing simplifies diagnosing application
-code flow and performance problems in multi-tier or multi-user environments.
+The Java Debug Wire Protocol (JDWP) for debugging PL/SQL can be used.
 
-The connection attributes, :attr:`~Connection.client_identifier`,
-:attr:`~Connection.clientinfo`, :attr:`~Connection.dbop`,
-:attr:`~Connection.module` and :attr:`~Connection.action`, set the metadata for
-end-to-end tracing.  You can use data dictionary and ``V$`` views to monitor
-tracing or use other application tracing utilities.
+  The python-oracledb applications that call PL/SQL can step through that PL/SQL code
+  using JDWP in a debugger. This allows Python and PL/SQL code to be debugged in the
+  same debugger environment. You can enable PL/SQL debugging in the python-oracledb
+  modes as follows:
 
-The attributes are sent to the database when the next :ref:`round-trip
-<roundtrips>` to the database occurs, for example when the next SQL statement is
-executed.
+    - If you are using python-oracledb Thick mode, set the ``ORA_DEBUG_JDWP`` environment
+      variable to `host=hostname;port=portnum` indicating where the PL/SQL debugger
+      is running.
 
-The attribute values will remain set in connections released back to connection
-pools.  When the application re-acquires a connection from the pool it should
-initialize the values to a desired state before using that connection.
+    - In the python-oracledb Thin mode, you can additionally set the connection
+      parameter ``debug_jdwp``. This variable defaults to the value of the
+      ``ORA_DEBUG_JDWP`` environment variable.
 
-The example below shows setting the action, module and client identifier
-attributes on the connection object:
-
-.. code-block:: python
-
-    # Set the tracing metadata
-    connection.client_identifier = "pythonuser"
-    connection.action = "Query Session tracing parameters"
-    connection.module = "End-to-end Demo"
-
-    for row in cursor.execute("""
-            SELECT username, client_identifier, module, action
-            FROM V$SESSION
-            WHERE username = 'SYSTEM'"""):
-        print(row)
-
-The output will be::
-
-    ('SYSTEM', 'pythonuser', 'End-to-end Demo', 'Query Session tracing parameters')
-
-The values can also be manually set as shown by calling
-`DBMS_APPLICATION_INFO procedures
-<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
-id=GUID-14484F86-44F2-4B34-B34E-0C873D323EAD>`__
-or `DBMS_SESSION.SET_IDENTIFIER
-<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
-id=GUID-988EA930-BDFE-4205-A806-E54F05333562>`__. These incur round-trips to
-the database, however, reducing scalability.
-
-.. code-block:: sql
-
-    BEGIN
-        DBMS_SESSION.SET_IDENTIFIER('pythonuser');
-        DBMS_APPLICATION_INFO.set_module('End-to-End Demo');
-        DBMS_APPLICATION_INFO.set_action(action_name => 'Query Session tracing parameters');
-    END;
+  See `DBMS_DEBUG_JDWP <https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_DEBUG_JDWP.html>`_ and `Debugging PL/SQL from ASP.NET and Visual
+  Studio <http://cshay.blogspot.com/2006/10/debugging-plsql-from-aspnet-and-visual.html>`_.
 
 
-Low Level SQL Tracing in python-oracledb
-========================================
+.. _lowlevelsqltrace:
 
-python-oracledb is implemented using the `ODPI-C <https://oracle.github.io/odpi>`__
-wrapper on top of the Oracle Client libraries.  The ODPI-C tracing capability
-can be used to log executed python-oracledb statements to the standard error stream.
-Before executing Python, set the environment variable ``DPI_DEBUG_LEVEL`` to
-16.
+Low Level SQL Tracing
+---------------------
+
+The Thick mode of python-oracledb is implemented using the `ODPI-C <https://oracle.
+github.io/odpi>`__ wrapper on top of the Oracle Client libraries.  The ODPI-C tracing
+capability can be used to log executed python-oracledb statements to the standard error
+stream. Before executing Python, set the environment variable ``DPI_DEBUG_LEVEL`` to 16.
 
 At a Windows command prompt, this could be done with::
 
@@ -327,3 +214,28 @@ and the SQL statement executed::
 See `ODPI-C Debugging
 <https://oracle.github.io/odpi/doc/user_guide/debugging.html>`__ for
 documentation on ``DPI_DEBUG_LEVEL``.
+
+Low Level Python-oracledb Driver Tracing
+========================================
+
+Low level tracing is mostly useful to maintainers of python-oracledb.
+
+- For the python-oracledb Thin mode, packets can be traced by setting the
+  environment variable::
+
+      pyo_debug_packets=1
+
+  Output goes to stdout. The logging is similar to an Oracle Net trace of
+  level 16.
+
+- The python-oracledb Thick mode can be traced using:
+
+    - dpi_debug_level as documented in `ODPI-C Debugging
+      <https://oracle.github.io/odpi/doc/user_guide/debugging.html>`__.
+
+    - Oracle Call Interface (OCI) tracing as directed by Oracle Support.
+
+    - Oracle Net services tracing as documented in `Oracle Net Services Tracing
+      Parameters
+      <https://docs.oracle.com/en/database/oracle/oracle-database/21/
+      netrf/parameters-for-the-sqlnet.ora.html>`__
