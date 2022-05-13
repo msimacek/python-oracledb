@@ -464,7 +464,7 @@ cdef class BaseCursorImpl:
                               var_arraysize=var.num_elements,
                               required_arraysize=self.arraysize)
 
-    def bind_many(self, cursor, parameters):
+    def bind_many(self, object cursor, list parameters):
         """
         Internal method used for binding multiple rows of data.
         """
