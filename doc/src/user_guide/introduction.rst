@@ -11,17 +11,18 @@ with a considerable number of additions and a couple of exclusions.
 
 The python-oracledb driver is the renamed, major version successor to
 `cx_Oracle 8.3 <https://oracle.github.io/python-cx_Oracle/>`__.  For upgrade
-information see :ref:`upgrading`.
+information, see :ref:`upgrading`.
 
 Python-oracledb is typically installed from Python's package repository
 `PyPI <https://pypi.org/project/oracledb/>`__ using `pip
-<https://pip.pypa.io/en/latest/installing/>`__, see :ref:`installation`.
+<https://pip.pypa.io/en/latest/installing/>`__. See :ref:`installation` for
+more information.
 
 Architecture
 ============
 
-The python-oracledb driver runs in one of two modes, determined by an
-application setting.
+The python-oracledb driver can run in either the Thin mode or Thick mode,
+which is determined by an application setting.
 
 python-oracledb Thin Mode Architecture
 --------------------------------------

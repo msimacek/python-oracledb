@@ -27,25 +27,24 @@ User Guide
     user_guide/sql_execution.rst
     user_guide/plsql_execution.rst
     user_guide/bind.rst
-    user_guide/lob_data.rst
-    user_guide/json_data_type.rst
-    user_guide/soda.rst
-    user_guide/xml_data_type.rst
     user_guide/batch_statement.rst
-    user_guide/exception_handling.rst
-    user_guide/aq.rst
-    user_guide/cqn.rst
     user_guide/txn_management.rst
     user_guide/tuning.rst
+    user_guide/lob_data.rst
+    user_guide/json_data_type.rst
+    user_guide/xml_data_type.rst
+    user_guide/soda.rst
+    user_guide/aq.rst
+    user_guide/cqn.rst
     user_guide/two_phase_commit.rst
-    user_guide/globalization.rst
     user_guide/startup.rst
     user_guide/ha.rst
-    user_guide/tracing_sql.rst
+    user_guide/tracing.rst
+    user_guide/globalization.rst
+    user_guide/exception_handling.rst
     user_guide/appendix_a.rst
     user_guide/appendix_b.rst
     user_guide/appendix_c.rst
-    user_guide/upgrading.rst
 
 API Manual
 ==========
@@ -55,16 +54,16 @@ API Manual
     :maxdepth: 3
 
     api_manual/module.rst
-    api_manual/connection.rst
-    api_manual/cursor.rst
-    api_manual/lob.rst
-    api_manual/connect_param.rst
-    api_manual/pool_params.rst
-    api_manual/connection_pool.rst
     api_manual/defaults.rst
-    api_manual/dbobject_type.rst
-    api_manual/subscription.rst
+    api_manual/connection.rst
+    api_manual/connect_param.rst
+    api_manual/connection_pool.rst
+    api_manual/pool_params.rst
+    api_manual/cursor.rst
     api_manual/variable.rst
+    api_manual/subscription.rst
+    api_manual/lob.rst
+    api_manual/dbobject_type.rst
     api_manual/aq.rst
     api_manual/soda.rst
     api_manual/deprecations.rst

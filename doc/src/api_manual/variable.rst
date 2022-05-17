@@ -8,7 +8,7 @@ API: Variable Objects
 
     The DB API definition does not define this object.
 
-Variable VMethods
+Variable Methods
 =================
 
 .. method:: Variable.getvalue([pos=0])

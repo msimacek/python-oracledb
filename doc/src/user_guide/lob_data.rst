@@ -4,7 +4,7 @@
 Using CLOB and BLOB Data
 ************************
 
-Oracle Database uses :ref:`lobobj` to store large data such as text, images,
+Oracle Database uses :ref:`LOB objects <lobobj>` to store large data such as text, images,
 videos and other multimedia formats.  The maximum size of a LOB is limited to
 the size of the tablespace storing it.
 

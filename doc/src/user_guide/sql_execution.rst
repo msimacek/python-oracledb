@@ -16,7 +16,7 @@ PL/SQL statements are discussed in :ref:`plsqlexecution`.  Other chapters
 contain information on specific data types and features.  See :ref:`batchstmnt`,
 :ref:`lobdata`, :ref:`jsondatatype`, and :ref:`xmldatatype`.
 
-python-oracledb can be used to execute individual statements, one at a time.  It does
+Python-oracledb can be used to execute individual statements, one at a time.  It does
 not read SQL*Plus ".sql" files.  To read SQL files, use a technique like the one
 in ``run_sql_script()`` in `samples/sample_env.py
 <https://github.com/oracle/python-oracledb/blob/main/samples/sample_env.py>`__
@@ -95,7 +95,7 @@ which defaults to the value of :attr:`Cursor.arraysize`.
         for row in rows:
             print(row)
 
-If all of the rows need to be fetched, and can be contained in memory, the
+If all of the rows need to be fetched and can be contained in memory, the
 method :meth:`Cursor.fetchall()` can be used.
 
 .. code-block:: python
@@ -126,7 +126,7 @@ example:
         for row in cursor.execute("select * from MyTable"):
             print(row)
 
-This code ensures that, once the block is completed, the cursor is closed and
+This code ensures that once the block is completed, the cursor is closed and
 resources have been reclaimed by the database. In addition, any attempt to use
 the variable ``cursor`` outside of the block will simply fail.
 
@@ -350,7 +350,7 @@ See `samples/return_numbers_as_decimals.py
 Changing Query Results with Outconverters
 -----------------------------------------
 
-python-oracledb "outconverters" can be used with :ref:`output type handlers
+Python-oracledb "outconverters" can be used with :ref:`output type handlers
 <outputtypehandlers>` to change returned data.
 
 For example, to make queries return empty strings instead of NULLs:
@@ -375,7 +375,7 @@ For example, to make queries return empty strings instead of NULLs:
 Changing Query Results with Rowfactories
 ----------------------------------------
 
-python-oracledb "rowfactories" are methods called for each row that is retrieved from
+Python-oracledb "rowfactories" are methods called for each row that is retrieved from
 the database. The :meth:`Cursor.rowfactory` method is called with the tuple that
 would normally be returned from the database.  The method can convert the tuple
 to a different value and return it to the application in place of the tuple.
@@ -395,7 +395,7 @@ The output is::
     {'LOCATION_ID': 1000, 'STREET_ADDRESS': '1297 Via Cola di Rie', 'POSTAL_CODE': '00989', 'CITY': 'Roma', 'STATE_PROVINCE': None, 'COUNTRY_ID': 'IT'}
 
 If you join tables where the same column name occurs in both tables with
-different meanings or values, then use a column alias in the query.  Otherwise
+different meanings or values, then use a column alias in the query.  Otherwise,
 only one of the similarly named columns will be included in the dictionary:
 
 .. code-block:: sql
@@ -548,14 +548,14 @@ Query data is commonly broken into one or more sets:
 The latter can be handled by calling :meth:`Cursor.fetchmany()` with one
 execution of the SQL query.
 
-'Web pagination' and limiting the maximum number of rows are discussed in this
+'Web pagination' and limiting the maximum number of rows are detailed in this
 section.  For each 'page' of results, a SQL query is executed to get the
 appropriate set of rows from a table.  Since the query may be executed more
-than once, make sure to use :ref:`bind variables <bind>` for row numbers and
+than once, ensure to use :ref:`bind variables <bind>` for row numbers and
 row limits.
 
 Oracle Database 12c SQL introduced an ``OFFSET`` / ``FETCH`` clause which is
-similar to the ``LIMIT`` keyword of MySQL.  In Python you can fetch a set of
+similar to the ``LIMIT`` keyword of MySQL.  In Python, you can fetch a set of
 rows using:
 
 .. code-block:: python
@@ -599,7 +599,7 @@ number of the last row to return.  For example::
 This always has an 'extra' column, here called RNUM.
 
 An alternative and preferred query syntax for Oracle Database 11g uses the
-analytic ``ROW_NUMBER()`` function. For example to get the 1st to 20th names the
+analytic ``ROW_NUMBER()`` function. For example, to get the 1st to 20th names the
 query is::
 
     SELECT last_name FROM
@@ -608,7 +608,7 @@ query is::
             FROM employees)
     WHERE myr BETWEEN 1 and 20
 
-Make sure to use :ref:`bind variables <bind>` for the upper and lower limit
+Ensure to use :ref:`bind variables <bind>` for the upper and lower limit
 values.
 
 .. _crc:
@@ -616,7 +616,7 @@ values.
 Client Result Cache
 -------------------
 
-python-oracledb applications can use Oracle Database's `Client Result Cache
+Python-oracledb applications can use Oracle Database's `Client Result Cache
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-35CB2592-7588-4C2D-9075-6F639F25425E>`__
 The CRC enables client-side caching of SQL query (SELECT statement) results in
 client memory for immediate use when the same query is re-executed.  This is
@@ -744,7 +744,7 @@ If queries fail with the error "codec can't decode byte" when you select data,
 then:
 
 * Check your :ref:`character set <globalization>` is correct.  Review the
-  :ref:`client and database character sets <findingcharset>`.  Check with
+  :ref:`database character sets <findingcharset>`.  Check with
   :ref:`fetching-raw-data`. Consider using UTF-8, if this is appropriate:
 
     .. code-block:: python
