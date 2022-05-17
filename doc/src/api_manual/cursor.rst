@@ -4,6 +4,8 @@
 API: Cursor Objects
 *******************
 
+A cursor object can be created with :meth:`Connection.cursor`.
+
 Cursor Methods
 ==============
 

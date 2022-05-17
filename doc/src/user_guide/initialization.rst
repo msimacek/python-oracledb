@@ -4,11 +4,6 @@
 Initializing python-oracledb
 ****************************
 
-.. _enablingthick:
-
-Enabling python-oracledb Thick mode
-===================================
-
 By default, python-oracledb runs in a 'Thin' mode which connects directly to
 Oracle Database.  This mode does not need Oracle Client libraries.  However,
 some :ref:`additional functionality <featuresummary>` is available when
@@ -16,19 +11,25 @@ python-oracledb uses them.  Python-oracledb is said to be in 'Thick' mode when
 Oracle Client libraries are used.  Both modes have comprehensive functionality
 supporting the Python Database API v2.0 Specification.
 
-All connections in the application must use the same mode.  Changing to Thick
-mode requires the addition of a call to :func:`oracledb.init_oracle_client()`
-and an application restart.  Other small changes may also be required.
+.. _enablingthick:
 
-Thick mode is enabled by:
+Enabling python-oracledb Thick mode
+===================================
+
+All connections in the application must use the same mode.  Changing from the
+default Thin mode to the Thick mode requires the addition of a call to
+:func:`oracledb.init_oracle_client()` and an application restart.  Other small
+changes may also be required.
+
+The Thick mode is enabled by:
 
 - Calling :func:`~oracledb.init_oracle_client()` in the application as shown in
   sections below.
 
-- If you are moving from Thin mode then refer to :ref:`featuresummary` and
-  :ref:`driverdiff` for other changes that may be needed.
+- If you are changing from the default Thin mode, then refer to :ref:`featuresummary`
+  and :ref:`driverdiff` for other changes that may be needed.
 
-- If you are upgrading a cx_Oracle application to python-oracledb refer to
+- If you are upgrading a cx_Oracle application to python-oracledb, then refer to
   :ref:`upgrading` for other changes that may be needed.
 
 .. note::
@@ -37,15 +38,15 @@ Thick mode is enabled by:
     :func:`~oracledb.init_oracle_client()` in the application.  It must be
     called before any :ref:`standalone connection <standaloneconnection>` or
     :ref:`connection pool <connpooling>` is created.  If a connection or pool
-    is first created in the default Thin mode, then Thick mode cannot be
+    is first created in the default Thin mode, then the Thick mode cannot be
     enabled.
 
-    Once Thick mode is enabled, all connections will be in Thick mode and you
+    Once the Thick mode is enabled, all connections will be in Thick mode and you
     cannot go back to Thin mode.
 
 You can validate the python-oracledb mode by querying the ``CLIENT_DRIVER``
 column of ``V$SESSION_CONNECT_INFO`` and verifying if the value of the column
-begins with ``python-oracledb thk``. See :ref:`dbviews`.
+begins with ``python-oracledb thk``. See :ref:`vsessconinfo`.
 
 Enabling the python-oracledb Thick mode loads Oracle Client libraries which
 handle communication to the database.  The Oracle Database needs to be
@@ -92,9 +93,9 @@ libraries.
     Client 'Basic' or 'Basic Light' package.  If you pass the library
     directory from a full client or database installation, such as Oracle
     Database "XE" Express Edition, then you will need to have previously set
-    your environment to use that same software installation, otherwise files
+    your environment to use that same software installation. Otherwise, files
     such as message files will not be located and you may have library
-    version clashes.  On Windows when the path contains backslashes, use a
+    version clashes.  On Windows, when the path contains backslashes, use a
     'raw' string like ``r"C:\instantclient_19_14"``.
 
     If the Oracle Client libraries cannot be loaded from ``lib_dir``, then an
@@ -115,7 +116,7 @@ libraries.
     'Basic' or 'Basic Light' package.
 
     If the libraries are not found there, the search looks at the directories
-    on the system library search path, e.g. the ``PATH`` environment
+    on the system library search path, for example, the ``PATH`` environment
     variable.
 
     If the Oracle Client libraries cannot be loaded, then an exception is
@@ -148,13 +149,13 @@ libraries.
         oracledb.init_oracle_client()
 
     In this case, the Oracle Client libraries are first looked for in the
-    directory where the python-oracledb Thick mode binary module is.  This
-    directory should contain the libraries from an unzipped Instant Client
+    directory where the python-oracledb Thick mode binary module is installed.
+    This directory should contain the libraries from an unzipped Instant Client
     'Basic' or 'Basic Light' package, or a symbolic link to the main Oracle
     Client library if Instant Client is in a different directory.
 
     You can find the directory containing the Thick mode binary module by
-    invoking the python CLI without specifying a Python script, executing
+    calling the python CLI without specifying a Python script, executing
     ``import oracledb``, and then typing ``oracledb`` at the prompt.  For
     example if
     ``/Users/yourname/Library/3.9.6/lib/python3.9/site-packages/oracledb-1.0.0-py3.9-macosx-11.5-x86_64.egg/oracledb``
@@ -164,7 +165,7 @@ libraries.
 
     If python-oracledb does not find the Oracle Client library in that
     directory, the directories on the system library search path may be used,
-    e.g. ``~/lib/`` and ``/usr/local/lib``, or in ``$DYLD_LIBRARY_PATH``.
+    for example, ``~/lib/`` and ``/usr/local/lib``, or in ``$DYLD_LIBRARY_PATH``.
     These paths will vary with macOS version and Python version.  Any value
     in ``DYLD_LIBRARY_PATH`` will not propagate to a sub-shell.
 
@@ -192,7 +193,7 @@ libraries.
    ``LD_LIBRARY_PATH``.
 
    If libraries are not found in the system library search path, then
-   ``$ORACLE_HOME/lib`` will be used.  Note the environment variable
+   ``$ORACLE_HOME/lib`` will be used.  Note that the environment variable
    ``ORACLE_HOME`` should only ever be set when you have a full database
    installation or full client installation (such as installed with the Oracle
    GUI installer).  It should not be set if you are using Oracle Instant
@@ -202,12 +203,12 @@ libraries.
    If the Oracle Client libraries cannot be loaded, then an exception is
    raised.
 
-Make sure the Python process has directory and file access permissions for the
+Ensure that the Python process has directory and file access permissions for the
 Oracle Client libraries.  On Linux ensure a ``libclntsh.so`` file exists.  On
 macOS ensure a ``libclntsh.dylib`` file exists.  python-oracledb Thick will not directly
 load ``libclntsh.*.XX.1`` files in ``lib_dir`` or from the directory where the
-python-oracledb binary module is.  Note other libraries used by ``libclntsh*`` are
-also required.
+python-oracledb binary module is available.  Note that other libraries used by
+``libclntsh*`` are also required.
 
 To trace the loading of Oracle Client libraries, the environment variable
 ``DPI_DEBUG_LEVEL`` can be set to 64 before starting Python.  For example, on
@@ -245,15 +246,15 @@ example, if the Oracle Instant Client Libraries are in
 Note the use of a 'raw' string ``r"..."`` on Windows so that backslashes are
 treated as directory separators.
 
-**Note if you set** ``lib_dir`` **on Linux and related platforms, you must still
-have configured the system library search path to include that directory before
-starting Python**.
+**Note that if you set** ``lib_dir`` **on Linux and related platforms, you must
+still have configured the system library search path to include that directory
+before starting Python**.
 
 On any operating system, if you set ``lib_dir`` to the library directory of a
 full database or full client installation, you will need to have previously set
 the Oracle environment, for example by setting the ``ORACLE_HOME`` environment
-variable.  Otherwise you will get errors like ORA-1804.  You should set this,
-and other Oracle environment variables, before starting Python, as
+variable.  Otherwise, you will get errors like ``ORA-1804``.  You should set this
+along with other Oracle environment variables before starting Python as
 shown in :ref:`envset`.
 
 .. _optnetfiles:
@@ -286,7 +287,7 @@ files affect connections and applications.  The common files are:
 
 **python-oracledb Thin mode**
 
-In python-oracledb Thin mode applications you specify the directory that
+In python-oracledb Thin mode applications, you specify the directory that
 contains the ``tnsnames.ora`` file by:
 
 - setting the `TNS_ADMIN
@@ -296,8 +297,8 @@ contains the ``tnsnames.ora`` file by:
 - setting :attr:`defaults.config_dir` to the directory containing the file
 
 - setting the ``config_dir`` parameter to the directory containing the file
-  when :func:`connecting <oracledb.connect()>` or creating a :func:`connection
-  pool <oracledb.create_pool()>`.
+  when :func:`connecting <oracledb.connect()>` or creating a
+  :func:`connection pool <oracledb.create_pool()>`.
 
 For example:
 
@@ -309,7 +310,7 @@ For example:
 
 .. note::
 
-    In Thin mode you must explicitly set the directory because traditional
+    In Thin mode, you must explicitly set the directory because traditional
     "default" locations such as the Instant Client ``network/admin/``
     subdirectory, or ``$ORACLE_HOME/network/admin/``, or
     ``$ORACLE_BASE/homes/XYZ/network/admin/`` (in a read-only Oracle Database
@@ -317,7 +318,7 @@ For example:
 
 **python-oracledb Thick mode**
 
-In python-oracleb Thick mode you can also specify the configuration file
+In python-oracleb Thick mode, you can also specify the configuration file
 directory as a parameter in the :meth:`oracledb.init_oracle_client()` call.
 For example, if the file ``/opt/oracle/config/tnsnames.ora`` should be used,
 you can call:
@@ -356,10 +357,10 @@ configuration files.  They include:
 - ``$ORACLE_HOME/network/admin`` if python-oracledb Thick is using libraries
   from a database installation.
 
-Note the :ref:`easyconnect` can set many common configuration options without
-needing ``tnsnames.ora`` or ``sqlnet.ora`` files.
+Note that the :ref:`easyconnect` can set many common configuration options
+without needing ``tnsnames.ora`` or ``sqlnet.ora`` files.
 
-The section :ref:`Network Configuration <hanetwork>` has some more discussion
+The section :ref:`Network Configuration <hanetwork>` has additional information
 about Oracle Net configuration.
 
 .. _optclientfiles:
@@ -367,7 +368,7 @@ about Oracle Net configuration.
 Optional Oracle Client Configuration File
 =========================================
 
-When python-oracledb uses Oracle Client libraries version 12.1, or later, an
+When python-oracledb uses Oracle Client libraries version 12.1 or later, an
 optional client parameter file called ``oraaccess.xml`` can be used to
 configure some behaviors of those libraries, such as statement caching and
 prefetching.  This can be useful if the application cannot be altered.  The
@@ -394,21 +395,21 @@ A sample ``oraaccess.xml`` file that sets the Oracle client 'prefetch' value to
       </default_parameters>
     </oraaccess>
 
-Prefetching is the number of additional rows the underlying Oracle client
+Prefetching is the number of additional rows that the underlying Oracle Client
 library fetches whenever python-oracledb Thick requests query data from the database.
 Prefetching is a tuning option to maximize data transfer efficiency and minimize
 :ref:`round-trips <roundtrips>` to the database.  The prefetch size does not
-affect when, or how many, rows are returned by the thick driver to the application.
-The cache management is transparently handled by the Oracle client libraries.
-Note, standard thick driver fetch tuning is via :attr:`Cursor.arraysize`, but
+affect when or how many rows are returned by the Thick mode to the application.
+The cache management is transparently handled by the Oracle Client libraries.
+Note that standard Thick mode fetch tuning is done using :attr:`Cursor.arraysize`, but
 changing the prefetch value can be useful in some cases such as when modifying
 the application is not feasible.
 
 The `oraaccess.xml` file has other uses including:
 
-  - Changing the value of Fast Application Notification :ref:`FAN <fan>` events which affects notifications and Runtime Load Balancing (RLB).
-  - Configuring `Client Result Caching <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-D2FA7B29-301B-4AB8-8294-2B1B015899F9>`__ parameters
-  - Turning on `Client Statement Cache Auto-tuning <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&d=GUID-6E21AA56-5BBE-422A-802C-197CAC8AAEA4>`__
+- Changing the value of Fast Application Notification :ref:`FAN <fan>` events which affects notifications and Runtime Load Balancing (RLB).
+- Configuring `Client Result Caching <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-D2FA7B29-301B-4AB8-8294-2B1B015899F9>`__ parameters
+- Turning on `Client Statement Cache Auto-tuning <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&d=GUID-6E21AA56-5BBE-422A-802C-197CAC8AAEA4>`__
 
 Refer to the documentation on `oraaccess.xml
 <https://www.oracle.com/pls/topic/lookup?
@@ -423,15 +424,15 @@ Oracle Environment Variables for python-oracledb Thick Mode
 Some common environment variables that influence python-oracledb are shown
 below.  The variables that may be needed depend on how Python is installed, how
 you connect to the database, and what optional settings are desired.  It is
-recommended to set Oracle variables in the environment before invoking Python,
-however they may also be set in the application with ``os.putenv()`` before the
+recommended to set Oracle variables in the environment before calling Python.
+However, they may also be set in the application with ``os.putenv()`` before the
 first connection is established.  System environment variables like
 ``LD_LIBRARY_PATH`` must be set before Python starts.
 
 .. note::
 
-    These variables, with the exception of ``TNS_ADMIN``, are only supported in
-    the python-oracledb Thick mode.  See :ref:`enablingthick`.
+  These variables, with the exception of ``TNS_ADMIN``, are only supported in
+  the python-oracledb Thick mode.  See :ref:`enablingthick`.
 
 .. list-table-with-summary:: Common Oracle environment variables
     :header-rows: 1
@@ -446,8 +447,8 @@ first connection is established.  System environment variables like
         Oracle libraries, for example ``$ORACLE_HOME/lib`` or
         ``/opt/instantclient_19_3``. This variable is not needed if the
         libraries are located by an alternative method, such as with
-        ``ldconfig``. On other UNIX platforms you may need to set an OS
-        specific equivalent, such as ``LIBPATH`` or ``SHLIB_PATH``.
+        ``ldconfig``. On other UNIX platforms, you may need to set an OS
+        specific equivalent such as ``LIBPATH`` or ``SHLIB_PATH``.
     * - PATH
       - The library search path for Windows should include the location where
         ``OCI.DLL`` is found.  Not needed if you set ``lib_dir`` in a call to
@@ -467,7 +468,7 @@ first connection is established.  System environment variables like
         This variable should not be set if you are using Oracle Instant Client.
     * - NLS_LANG
       - Determines the 'national language support' globalization options for
-        python-oracledb. Note: from cx_Oracle 8, the character set component is
+        python-oracledb. Note that from cx_Oracle 8, the character set component is
         ignored and only the language and territory components of ``NLS_LANG``
         are used. The character set can instead be specified during connection
         or connection pool creation. See :ref:`globalization`.
@@ -479,10 +480,10 @@ first connection is established.  System environment variables like
 Oracle Instant Client includes a small and big time zone file, for example
 ``timezone_32.dat`` and ``timezlrg_32.dat``.  The versions can be shown by running
 the utility ``genezi -v`` located in the Instant Client directory.  The small file
-contains only the most commonly used time zones.  By default the larger
+contains only the most commonly used time zones.  By default, the larger
 ``timezlrg_n.dat`` file is used.  If you want to use the smaller ``timezone_n.dat``
 file, then set the ``ORA_TZFILE`` environment variable to the name of the file
-without any directory prefix, for example ``export ORA_TZFILE=timezone_32.dat``.
+without any directory prefix. For example ``export ORA_TZFILE=timezone_32.dat``.
 With Oracle Instant Client 12.2 or later, you can also use an external time zone
 file.  Create a subdirectory ``oracore/zoneinfo`` under the Instant Client
 directory, and move the file into it.  Then set ``ORA_TZFILE`` to the file name,
@@ -492,7 +493,7 @@ file in use.
 If python-oracledb Thick mode is using Oracle Client libraries from an Oracle
 Database or full Oracle Client software installation (such as installed with
 Oracle's GUI installer), and you want to use a non-default time zone file, then
-set ``ORA_TZFILE`` to the file name with a directory prefix, for example:
+set ``ORA_TZFILE`` to the file name with a directory prefix. For example:
 ``export ORA_TZFILE=/opt/oracle/myconfig/timezone_31.dat``.
 
 The Oracle Database documentation contains more information about time zone
@@ -506,7 +507,7 @@ Other python-oracledb Thick Mode Initialization
 
 The :meth:`oracledb.init_oracle_client()` function allows ``driver_name`` and
 ``error_url`` parameters to be set.  These are useful for applications whose
-end-users are not aware python-oracledb is being used.  An example of setting
+end-users are not aware that python-oracledb is being used.  An example of setting
 the parameters is:
 
 .. code-block:: python
@@ -526,7 +527,7 @@ The convention for ``driver_name`` is to separate the product name from the
 product version by a colon and single blank characters.  The value will be
 shown in Oracle Database views like ``V$SESSION_CONNECT_INFO``.  If this
 parameter is not specified, then a value like "python-oracledb thk : 1.0.0" is
-shown, see :ref:`dbviews`.
+shown, see :ref:`vsessconinfo`.
 
 The ``error_url`` string will be shown in the exception raised if
 ``init_oracle_client()`` cannot load the Oracle Client libraries.  This allows
@@ -559,4 +560,4 @@ If you have been using python-oracledb in Thick mode, you can use Thin mode by:
 
 You can validate the python-oracledb mode by querying the ``CLIENT_DRIVER``
 column of ``V$SESSION_CONNECT_INFO`` and verifying if the value of the column
-begins with ``python-oracledb thn``. See :ref:`dbviews`.
+begins with ``python-oracledb thn``. See :ref:`vsessconinfo`.

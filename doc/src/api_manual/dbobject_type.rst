@@ -72,7 +72,7 @@ DbObject Objects
     directly.
 
 DbObject Methods
-================
+++++++++++++++++
 
 .. method:: DbObject.append(element)
 
@@ -167,7 +167,7 @@ DbObject Methods
     Removes the specified number of elements from the end of the collection.
 
 DbObject Attributes
-===================
++++++++++++++++++++
 
 .. attribute:: DbObject.Type
 
