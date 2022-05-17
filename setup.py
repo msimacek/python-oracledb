@@ -23,6 +23,8 @@
 #------------------------------------------------------------------------------
 
 import os
+import platform
+import sys
 from setuptools import setup, Extension
 
 # base source directory
@@ -58,17 +60,30 @@ thin_depends = [os.path.join(impl_dir, n) \
                         or n.endswith(".pxd") or n == "bswap.c"]
 thin_depends.append(base_pxd)
 
+# if the platform is macOS, add arguments requied for cross-compiliation for
+# both x86_64 and arm64 architectures.
+extra_compile_args = []
+if sys.platform == "darwin":
+    if platform.machine() == "x86_64":
+        target = "arm64-apple-macos"
+    else:
+        target = "x86_64-apple-macos"
+    extra_compile_args.extend(["-target", target])
+
 setup(
     ext_modules=[
         Extension("oracledb.base_impl",
                   sources=["src/oracledb/base_impl.pyx"],
-                  depends=base_depends),
+                  depends=base_depends,
+                  extra_compile_args=extra_compile_args),
         Extension("oracledb.thin_impl",
                   sources=["src/oracledb/thin_impl.pyx"],
-                  depends=thin_depends),
+                  depends=thin_depends,
+                  extra_compile_args=extra_compile_args),
         Extension("oracledb.thick_impl",
                   sources=["src/oracledb/thick_impl.pyx"],
                   include_dirs=["src/oracledb/impl/thick/odpi/include"],
-                  depends=thick_depends)
+                  depends=thick_depends,
+                  extra_compile_args=extra_compile_args)
     ]
 )
