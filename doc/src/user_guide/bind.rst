@@ -216,7 +216,7 @@ RETURNING section of the statement.
 LOB Bind Variables
 ==================
 
-Database CLOBs, NCLOBS, BLOBs and BFILEs can be bound with types
+Database CLOBs, NCLOBS, BLOBs, and BFILEs can be bound with types
 :attr:`oracledb.DB_TYPE_CLOB`, :attr:`oracledb.DB_TYPE_NCLOB`,
 :attr:`oracledb.DB_TYPE_BLOB` and :attr:`oracledb.DB_TYPE_BFILE`
 respectively. LOBs fetched from the database or created with
@@ -226,7 +226,7 @@ LOBs may represent Oracle Database persistent LOBs (those stored in tables) or
 temporary LOBs (such as those created with :meth:`Connection.createlob()` or
 returned by some SQL and PL/SQL operations).
 
-LOBs can be used as IN, OUT or IN/OUT bind variables.
+LOBs can be used as IN, OUT, or IN/OUT bind variables.
 
 See :ref:`lobdata` for examples.
 
@@ -235,7 +235,7 @@ See :ref:`lobdata` for examples.
 REF CURSOR Bind Variables
 =========================
 
-python-oracledb provides the ability to bind and define PL/SQL REF cursors.  As an
+Python-oracledb provides the ability to bind and define PL/SQL REF cursors.  As an
 example, consider the PL/SQL procedure:
 
 .. code-block:: sql
@@ -532,7 +532,7 @@ This produces the output::
 Binding PL/SQL Records
 ======================
 
-PL/SQL record type objects can also be bound for IN, OUT and IN/OUT
+PL/SQL record type objects can also be bound for IN, OUT, and IN/OUT
 bind variables.  For example:
 
 .. code-block:: sql
@@ -773,7 +773,7 @@ Binding Column and Table Names
 ==============================
 
 Column and table names cannot be bound in SQL queries.  You can concatenate
-text to build up a SQL statement, but make sure you use an Allow List or other
+text to build up a SQL statement, but ensure that you use an Allow List or other
 means to validate the data in order to avoid SQL Injection security issues:
 
 .. code-block:: python

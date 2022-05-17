@@ -7,9 +7,9 @@ Executing Batch Statement and Bulk Loading
 Inserting or updating multiple rows can be performed efficiently with
 :meth:`Cursor.executemany()`, making it easy to work with large data sets with
 python-oracledb.  This method can significantly outperform repeated calls to
-:meth:`Cursor.execute()` by reducing network transfer costs and database overheads.
-The :meth:`~Cursor.executemany()` method can also be used to execute PL/SQL
-statements multiple times at once.
+:meth:`Cursor.execute()` by reducing network transfer costs and database
+overheads.  The :meth:`~Cursor.executemany()` method can also be used to
+execute PL/SQL statements multiple times at once.
 
 There are examples in the `GitHub examples
 <https://github.com/oracle/python-oracledb/tree/main/samples>`__
@@ -61,6 +61,47 @@ that is being processed.  Repeated calls to :meth:`~Cursor.executemany()` are
 still better than repeated calls to :meth:`~Cursor.execute()`.
 
 
+Predefining Memory Areas
+------------------------
+
+When multiple rows of data are being processed there is the possibility that
+the data is not uniform in type and size.  In such cases, python-oracledb makes
+some effort to accommodate such differences.  Type determination for each
+column is deferred until a value that is not ``None`` is found in the column's
+data.  If all values in a particular column are ``None``, then python-oracledb
+assumes the type is a string and has a length of 1.  python-oracledb will also
+adjust the size of the buffers used to store strings and bytes when a longer
+value is encountered in the data.  These sorts of operations incur overhead as
+memory has to be reallocated and data copied.  To eliminate this overhead,
+using :meth:`~Cursor.setinputsizes()` tells python-oracledb about the type and
+size of the data that is going to be used.
+
+Consider the following code:
+
+.. code-block:: python
+
+    data = [
+        (110, "Parent 110"),
+        (2000, "Parent 2000"),
+        (30000, "Parent 30000"),
+        (400000, "Parent 400000"),
+        (5000000, "Parent 5000000")
+    ]
+    cursor.setinputsizes(None, 20)
+    cursor.executemany("""
+            insert into ParentTable (ParentId, Description)
+            values (:1, :2)""", data)
+
+If this example did not call :meth:`~Cursor.setinputsizes()`, then
+python-oracledb would perform five allocations of increasing size and perform
+data copies as it discovered each new, longer string.  However
+``cursor.setinputsizes(None, 20)`` tells python-oracledb that the maximum size
+of the strings that will be processed is 20 characters.  The first parameter of
+``None`` tells python-oracledb that its default processing will be sufficient
+since numeric data is already stored efficiently.  Since python-oracledb
+allocates memory for each row based on the supplied values, do not oversize
+them.
+
 Batch Execution of PL/SQL
 =========================
 
@@ -78,6 +119,9 @@ example:
         (50, 'Parent 50')
     ]
     cursor.executemany("begin mypkg.create_parent(:1, :2); end;", data)
+
+If ``executemany()`` is used for PL/SQL code that returns OUT binds it will
+have the same performance characteristics as repeated calls to ``execute()``.
 
 Note that the ``batcherrors`` parameter (discussed below) cannot be used with
 PL/SQL block execution.
@@ -191,49 +235,9 @@ The output would then be::
     Child IDs deleted for parent ID 50 are [1012, 1013, 1014, 1015]
 
 Note that the bind variable created to accept the returned data must have an
-arraysize large enough to hold data for each row that is processed. Also,
-the call to :meth:`Cursor.setinputsizes()` binds this variable immediately so
-that it does not have to be passed in each row of data.
-
-
-Predefining Memory Areas
-========================
-
-When multiple rows of data are being processed there is the possibility that
-the data is not uniform in type and size.  In such cases, python-oracledb makes some
-effort to accommodate such differences.  Type determination for each column is
-deferred until a value that is not ``None`` is found in the column's data.  If
-all values in a particular column are ``None``, then python-oracledb assumes the type
-is a string and has a length of 1.  python-oracledb will also adjust the size of the
-buffers used to store strings and bytes when a longer value is encountered in
-the data.  These sorts of operations incur overhead as memory has to be
-reallocated and data copied.  To eliminate this overhead, using
-:meth:`~Cursor.setinputsizes()` tells python-oracledb about the type and size of the
-data that is going to be used.
-
-Consider the following code:
-
-.. code-block:: python
-
-    data = [
-        (110, "Parent 110"),
-        (2000, "Parent 2000"),
-        (30000, "Parent 30000"),
-        (400000, "Parent 400000"),
-        (5000000, "Parent 5000000")
-    ]
-    cursor.setinputsizes(None, 20)
-    cursor.executemany("""
-            insert into ParentTable (ParentId, Description)
-            values (:1, :2)""", data)
-
-In this example, without the call to :meth:`~Cursor.setinputsizes()`, python-oracledb
-would perform five allocations of increasing size as it discovered each new,
-longer string.  However ``cursor.setinputsizes(None, 20)`` tells python-oracledb that
-the maximum size of the strings that will be processed is 20 characters.  Since
-python-oracledb allocates memory for each row based on this value, it is best not to
-oversize it. The first parameter of ``None`` tells python-oracledb that its default
-processing will be sufficient.
+arraysize large enough to hold data for each row that is processed. Also, the
+call to :meth:`Cursor.setinputsizes()` binds this variable immediately so that
+it does not have to be passed in each row of data.
 
 Loading CSV Files into Oracle Database
 ======================================

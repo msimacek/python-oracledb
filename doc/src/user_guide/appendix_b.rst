@@ -6,11 +6,11 @@ Appendix B: Differences between python-oracledb Thin and Thick Modes
 
 By default, python-oracledb runs in a 'Thin' mode which connects directly to
 Oracle Database.  This mode does not need Oracle Client libraries.  However,
-some additional functionality is available when python-oracledb uses them.
-The python-oracledb connections are said to be in 'Thick' mode when Oracle Client
-libraries are used.  Both modes have comprehensive functionality supporting the
-Python Database API v2.0 Specification.  See :ref:`initialization` for how to
-enable Thick mode.
+some :ref:`additional functionality <featuresummary>` is available when
+python-oracledb uses them.  Python-oracledb connections are said to be in
+'Thick' mode when Oracle Client libraries are used.  See :ref:`enablingthick`.
+Both modes have comprehensive functionality supporting the Python Database API
+v2.0 Specification.
 
 This section details the differences between the python-oracledb Thin and Thick
 modes.
@@ -25,7 +25,7 @@ can be used.
 - By default, python-oracledb runs in a 'Thin' mode which connects directly to
   Oracle Database.
 
-- If :func:`oracledb.init_oracle_client()` is called in the application
+- If :func:`oracledb.init_oracle_client()` loads the Oracle Client libraries
   before any standalone connection or pool is created, then the mode becomes
   Thick.  See :ref:`enablingthick`.
 
@@ -61,7 +61,7 @@ Oracle Net Services and Client Configuration Files
 
 In the python-oracledb Thin mode:
 
-- the location of any ``tnsnames.ora`` files must explicitly be passed to the
+- The location of any ``tnsnames.ora`` files must explicitly be passed to the
   application.
 
 - Any ``sqlnet.ora`` file will not be read.  Instead, pass an equivalent
@@ -79,14 +79,7 @@ Connection Strings
 ------------------
 
 The python-oracledb Thin mode accepts connection strings in the same formats as
-the Thick mode, but not all Oracle Net keywords will be supported. The accepted formats
-are:
-
-- Easy Connect Strings
-- Full Connect Descriptor Strings
-- Oracle Net Service names
-
-See :ref:`connstr` for more information.
+the Thick mode, but not all Oracle Net keywords will be supported.
 
 The following table lists the parameters that are recognized in Thin mode
 either in Easy Connect Strings or in Full Connect Descriptor Strings that are
@@ -208,7 +201,7 @@ Connection Pooling Differences between Thin and Thick Modes
 Python-oracledb introduced the :ref:`ConnectionPool Object <connpool>` class to
 replace ``SessionPool``.  A new :func:`oracledb.create_pool()` method is now
 the recomended way to create a connection pool.  The use of the equivalent
-``SessionPool()`` is :ref:`deprecated <deprecations>`.
+``SessionPool()`` method is :ref:`deprecated <deprecations>`.
 
 The :func:`~oracledb.create_pool()` in the python-oracledb Thin mode differs
 from the python-oracledb Thick mode in the following ways:
@@ -304,20 +297,20 @@ Fetching JSON in Thin and Thick Modes
 =====================================
 
 The python-oracledb Thin mode does not natively handle the Oracle Database 21c
-data type but a type handler can be used when fetching the type, see
+JSON data type but a type handler can be used when fetching the type, see
 :ref:`jsondatatype`.
 
 Error Handling in Thin and Thick Modes
 ======================================
 
-The python-oracledb Thin and Thick modes handle errors differently. See
+The python-oracledb Thin and Thick modes handle some errors differently. See
 :ref:`errorhandling`.
 
 Globalization in Thin and Thick Modes
 =====================================
 
-All NLS environment variables are ignored by the python-oracledb Thin mode. See
-:ref:`globalization`.
+All NLS environment variables are ignored by the python-oracledb Thin mode. Use
+Python's capabilities instead.  See :ref:`globalization`.
 
 Tracing in Thin and Thick Modes
 ===============================

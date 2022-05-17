@@ -61,10 +61,10 @@ attributes on the connection object:
     for row in cursor.execute("""
             SELECT username, client_identifier, module, action
             FROM V$SESSION
-            WHERE username = 'SYSTEM'"""):
+            WHERE SID = SYS_CONTEXT('USERENV', 'SID')"""):
         print(row)
 
-The output will be::
+The output will be like::
 
     ('SYSTEM', 'pythonuser', 'End-to-end Demo', 'Query Session tracing parameters')
 
@@ -84,6 +84,19 @@ the database, however, reducing scalability.
         DBMS_APPLICATION_INFO.set_module('End-to-End Demo');
         DBMS_APPLICATION_INFO.set_action(action_name => 'Query Session tracing parameters');
     END;
+
+The value of :attr:`Connection.dbop` will be shown in the ``DBOP_NAME`` column
+of the ``V$SQL_MONITOR`` table:
+
+.. code-block:: python
+
+    connection.dbop = "my op"
+
+    for row in cursor.execute("""
+            SELECT dbop_name
+            FROM v$sql_monitor
+            WHERE SID = SYS_CONTEXT('USERENV', 'SID')"""):
+        print(row)
 
 .. _subclassconn:
 
@@ -214,6 +227,100 @@ and the SQL statement executed::
 See `ODPI-C Debugging
 <https://oracle.github.io/odpi/doc/user_guide/debugging.html>`__ for
 documentation on ``DPI_DEBUG_LEVEL``.
+
+.. _vsessconinfo:
+
+Finding the Python-oracledb Mode
+================================
+
+To see which driver mode is in use you can query the table
+``V$SESSION_CONNECT_INFO``, for example:
+
+.. code-block:: python
+
+    with connection.cursor() as cursor:
+        sql = """SELECT UNIQUE CLIENT_DRIVER
+                 FROM V$SESSION_CONNECT_INFO
+                 WHERE SID = SYS_CONTEXT('USERENV', 'SID')"""
+        for r, in cursor.execute(sql):
+            print(r)
+
+Output is like::
+
+    python-oracledb thn : 1.0.0
+
+In the python-oracledb Thick mode the output would be like::
+
+    python-oracledb thk : 1.0.0
+
+The ``CLIENT_DRIVER`` values is configurable in the python-oracledb Thick mode
+with a call like ``init_oracle_client(driver_name='myapp : 2.0.0')``, see
+:ref:`otherinit`.
+
+
+.. _dbviews:
+
+Database Views
+==============
+
+This section shows some sample column values for database views.  Other views
+also contain useful information, such as the DRCP views discussed in
+:ref:`monitoringdrcp`.
+
+``V$SESSION_CONNECT_INFO``
+--------------------------
+
+The following table lists sample values for some `V$SESSION_CONNECT_INFO
+<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-9F0DCAEA-A67E-4183-89E7-B1555DC591CE>`__
+columns:
+
+.. list-table-with-summary:: Sample V$SESSION_CONNECT_INFO column values
+    :header-rows: 1
+    :widths: 15 10 10
+    :name: V$SESSION_CONNECT_INFO
+    :summary: The first column is the name of V$SESSION_CONNECT_INFO view's column. The second column lists a sample python-oracledb Thick mode value. The third column list a sample python-oracledb Thin mode value.
+
+    * - Column
+      - Thick value
+      - Thin value
+    * - CLIENT_OCI_LIBRARY
+      - The Oracle Client or Instant Client type, such as "Full Instant Client"
+      - "Unknown"
+    * - CLIENT_VERSION
+      - The Oracle Client library version number
+      - "1.0.0.0.0" (the python-oracledb version number with an extra .0.0)
+    * - CLIENT_DRIVER
+      - "python-oracledb thk : 1.0.0"
+      - "python-oracledb thn : 1.0.0"
+
+
+``V$SESSION``
+-------------
+
+The following table list sample values for columns with differences in
+`V$SESSION
+<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-28E2DC75-E157-4C0A-94AB-117C205789B9>`__.
+
+.. list-table-with-summary:: Sample V$SESSION column values
+    :header-rows: 1
+    :widths: 15 10 10
+    :name: V$SESSION_COLUMN_VALUES
+    :summary: The first column is the name of the column. The second column lists a sample python-oracledb Thick mode value. The third column lists a sample python-oracledb Thin mode value.
+
+    * - Column
+      - Thick value
+      - Thin value
+    * - TERMINAL
+      - similar to `ttys001`
+      - the string "unknown"
+    * - PROGRAM
+      - similar to `python@myuser-mac2 (TNS V1-V3)`
+      - the contents of Python's ``sys.executable``, such as `/Users/myuser/.pyenv/versions/3.9.6/bin/python`
+    * - MODULE
+      - similar to `python@myuser-mac2 (TNS V1-V3)`
+      - the contents of Python's ``sys.executable``, such as `/Users/myuser/.pyenv/versions/3.9.6/bin/python`
+
+The ``MODULE`` column value can be set as shown in :ref:`endtoendtracing`.
 
 Low Level Python-oracledb Driver Tracing
 ========================================

@@ -198,7 +198,7 @@ see :ref:`driverdiff` and :ref:`compatibility`.
       - UTF-8
       - Yes - can use Python encodings. Default in 8.0 is UTF-8
     * - Oracle Globalization support
-      - No - All NLS environment variables are ignored
+      - No - All NLS environment variables are ignored.  Use Python globalization support instead
       - Yes - NLS environment variables are respected except character set in NLS_LANG
       - Yes - NLS environment variables are respected except character set in NLS_LANG
     * - Row prefetching on first query execute.(see :attr:`prefetchrows`)
@@ -313,19 +313,19 @@ see :ref:`driverdiff` and :ref:`compatibility`.
       - Yes
       - Yes
       - Yes
-    * - CHAR, VARCHAR2, NUMBER, FLOAT, DATE, and LONG data types (see :ref:`dbtypes`)
+    * - CHAR, VARCHAR2, NUMBER, FLOAT, DATE, and LONG data types
       - Yes
       - Yes
       - Yes
-    * - BLOB and CLOB data types (see :ref:`dbtypes`)
+    * - BLOB and CLOB data types
       - Yes
       - Yes
       - Yes
-    * - BINARY_DOUBLE and BINARY_FLOAT data types (see :ref:`dbtypes`)
+    * - BINARY_DOUBLE and BINARY_FLOAT data types
       - Yes
       - Yes
       - Yes
-    * - RAW and LONG RAW data types (see :ref:`dbtypes`)
+    * - RAW and LONG RAW data types
       - Yes
       - Yes
       - Yes
@@ -345,19 +345,19 @@ see :ref:`driverdiff` and :ref:`compatibility`.
       - No - can fetch with an output type handler, see :ref:`Fetching JSON Differences <fetchJSON>`
       - Yes
       - Yes
-    * - ROWID, UROWID data types (see :ref:`types`)
+    * - ROWID, UROWID data types
       - Yes
       - Yes
       - Yes
-    * - TIMESTAMP, TIMESTAMP WITH TIME ZONE, TIMESTAMP WITH LOCAL TIME ZONE data types (see :ref:`types`)
+    * - TIMESTAMP, TIMESTAMP WITH TIME ZONE, TIMESTAMP WITH LOCAL TIME ZONE data types
       - Yes
       - Yes
       - Yes
-    * - NCHAR, NVARCHAR2, NCLOB data types (see :ref:`types`)
+    * - NCHAR, NVARCHAR2, NCLOB data types
       - Yes
       - Yes
       - Yes
-    * - PL/SQL data types BOOLEAN, PLS_INTEGER and BINARY_INTEGER (see :ref:`types`)
+    * - PL/SQL data types BOOLEAN, PLS_INTEGER and BINARY_INTEGER
       - Yes
       - Yes
       - Yes
@@ -388,110 +388,139 @@ values.
 .. list-table-with-summary::  Oracle Database Data Types Supported
     :header-rows: 1
     :align: center
-    :summary: The first column displays the database data type. The second column displays the python-oracledb constant Name. The third column indicates if the type is supported in python-oracledb
+    :summary: The first column displays the database data type. The second column displays the python-oracledb constant Name. The third column indicates if the type is supported in python-oracledb.
 
     * - Oracle Database Type
       - python-oracledb Constant Name
-      - Supported
+      - Supported in python-oracledb
+      - Supported Python Types
     * - VARCHAR2
       - DB_TYPE_VARCHAR
       - Yes
+      - bytes, str
     * - NVARCHAR2
       - DB_TYPE_NVARCHAR
       - Yes
+      - bytes, str
     * - NUMBER, FLOAT
       - DB_TYPE_NUMBER
       - Yes
+      - bool, int, float, decimal.Decimal
     * - DATE
       - DB_TYPE_DATE
       - Yes
+      - datetime.date, datetime.datetime
     * - BOOLEAN (PL/SQL)
       - DB_TYPE_BOOLEAN
       - Yes
+      - ANY (converted to bool)
     * - BINARY_DOUBLE
       - DB_TYPE_BINARY_DOUBLE
       - Yes
+      - bool, int, float, decimal.Decimal
     * - BINARY_FLOAT
       - DB_TYPE_BINARY_FLOAT
       - Yes
+      - bool, int, float, decimal.Decimal
     * - TIMESTAMP
       - DB_TYPE_TIMESTAMP
       - Yes
+      - datetime.date, datetime.datetime
     * - TIMESTAMP WITH TIME ZONE
       - DB_TYPE_TIMESTAMP_TZ
       - Yes
+      - datetime.date, datetime.datetime
     * - TIMESTAMP WITH LOCAL TIME ZONE
       - DB_TYPE_TIMESTAMP_LTZ
       - Yes
+      - datetime.date, datetime.datetime
     * - INTERVAL YEAR TO MONTH
       - DB_TYPE_INTERVAL_YM
       - Not supported in python-oracledb
+      - cannot be set
     * - INTERVAL DAY TO SECOND
       - DB_TYPE_INTERVAL_DS
       - Yes
+      - datetime.timedelta
     * - RAW
       - DB_TYPE_RAW
       - Yes
+      - bytes, str
     * - LONG
       - DB_TYPE_LONG
       - Yes
+      - bytes, str
     * - LONG RAW
       - DB_TYPE_LONG_RAW
       - Yes
+      - bytes, str
     * - ROWID
       - DB_TYPE_ROWID
       - Yes
+      - cannot be set
     * - UROWID
       - DB_TYPE_ROWID
       - Yes.  May show DB_TYPE_UROWID in metadata. See :ref:`Query Metadata Differences <querymetadatadiff>`.
+      - cannot be set
     * - CHAR
       - DB_TYPE_CHAR
       - Yes
+      - bytes, str
     * - BLOB
       - DB_TYPE_BLOB
       - Yes
+      - BLOB, bytes, str
     * - CLOB
       - DB_TYPE_CLOB
       - Yes
+      - CLOB, bytes, str
     * - NCHAR
       - DB_TYPE_NCHAR
       - Yes
+      - bytes, str
     * - NCLOB
       - DB_TYPE_NCLOB
       - Yes
+      - NCLOB, bytes, str
     * - BFILE
       - DB_TYPE_BFILE
       - Not supported in python-oracledb Thin mode
+      - cannot be set
     * - JSON
       - DB_TYPE_JSON
       - Yes. In python-oracledb Thin mode use an output type handler to fetch this Oracle Database 21c data type. See :ref:`jsondatatype`.
+      - ANY (converted)
     * - REF CURSOR (PL/SQL OR nested cursor)
       - DB_TYPE_CURSOR
       - Yes
+      - CURSOR
     * - PLS_INTEGER
       - DB_TYPE_BINARY_INTEGER
       - Yes
+      - bool, int, float, decimal.Decimal
     * - BINARY_INTEGER
       - DB_TYPE_BINARY_INTEGER
       - Yes
+      - bool, int, float, decimal.Decimal
     * - REF
       - n/a
       - Not supported in python-oracledb Thin mode
+      - n/a
     * - XMLType
       - n/a
-      - Not supported in python-oracledb. Use ``xmltype.getclobval()`` to fetch
+      - Not supported in python-oracledb. Use ``xmltype.getclobval()`` to fetch.
+      - n/a
     * - User-defined types (object type, VARRAY, records, collections, SDO_*types)
       - DB_TYPE_OBJECT
       - Not supported in python-oracledb Thin mode
+      - OBJECT of specific type
 
 Binding of contiguous PL/SQL Index-by BINARY_INTEGER arrays of string, number, and date are
 supported in python-oracledb Thin and Thick modes. Use :meth:`Cursor.arrayvar()` to build
 these arrays.
 
 
-Python Types supported for each Oracle Database Type are shown below.
-
-.. list-table-with-summary::  Oracle Database Types Supported
+.. Python Types supported for each Oracle Database Type are shown below... list-table-with-summary::  Oracle Database Types Supported
     :header-rows: 1
     :align: center
     :summary: The first column displays the Oracle Database type. The second column displays the Python types that are supported for each of the database types.

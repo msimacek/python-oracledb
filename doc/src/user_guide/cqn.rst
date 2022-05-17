@@ -89,7 +89,7 @@ See :ref:`subscr-qos` for the quality of service values that are supported.
 See :ref:`subscr-namespaces` and :ref:`subscr-protocols` for the namespaces and
 protocols that are supported.
 
-See :ref:`subscrobj` for more details on the subscription object that is
+See :ref:`Subscription Objects <subscrobj>` for more details on the subscription object that is
 created.
 
 When using Oracle Database and Oracle client libraries 19.4, or later, the

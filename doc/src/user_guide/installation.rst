@@ -9,7 +9,7 @@ Database.
 
 Python-oracledb is the new name for the Python `cx_Oracle driver
 <https://oracle.github.io/python-cx_Oracle/>`__.  If you are upgrading from
-cx_Oracle, also read :ref:`upgrading`.
+cx_Oracle, see :ref:`upgrading`.
 
 .. figure:: /images/python-oracledb-thin-arch.png
    :alt: architecture of the python-oracledb driver
@@ -29,19 +29,22 @@ the Python Database API v2.0 Specification.
 Quick Start python-oracledb Installation
 ========================================
 
-- Install `Python 3 <https://www.python.org/downloads>`__, if it is not already
-  available.
+This section contains the steps that you need to perform to install python-oracledb
+quickly.
 
-  On Windows use Python 3.7 to 3.10.  On macOS use Python 3.8 to 3.10.  On
-  Linux use Python 3.6 to 3.10.
+1. Install `Python 3 <https://www.python.org/downloads>`__, if it is not already
+   available. The version of Python to be used depends on the operating system (OS):
 
-  By default python-oracledb connects directly to Oracle Database so it can be
+  - On Windows, use Python 3.7 to 3.10
+  - On macOS, use Python 3.8 to 3.10
+  - On Linux, use Python 3.6 to 3.10
+
+  By default, python-oracledb connects directly to Oracle Database so it can be
   used when Oracle Client libraries are not available or easily installable.
   This includes in cloud deployments, for Apple M1, or for Alpine Linux. (Note
   not all environments are tested).
 
-- Install python-oracledb from `PyPI
-  <https://pypi.org/project/oracledb/>`__:
+2. Install python-oracledb from `PyPI <https://pypi.org/project/oracledb/>`__:
 
   .. code-block:: shell
 
@@ -51,7 +54,7 @@ Quick Start python-oracledb Installation
   will be downloaded instead.  This will be compiled and the resulting binary
   installed.
 
-  The ``--user`` option may be useful if you don't have permission to write to
+  The ``--user`` option may be useful if you do not have permission to write to
   system directories:
 
   .. code-block:: shell
@@ -61,7 +64,7 @@ Quick Start python-oracledb Installation
   If you are behind a proxy, add a proxy server to the command, for example add
   ``--proxy=http://proxy.example.com:80``
 
-- Create a file ``test.py`` like:
+3. Create a file ``test.py`` such as:
 
   .. code-block:: python
 
@@ -80,8 +83,8 @@ Quick Start python-oracledb Installation
               for r in cursor.execute(sql):
                   print(r)
 
-- In your your IDE or terminal window set the three environment variables used
-  by the test program.
+4. In your your integrated development environment (IDE) or terminal window, set
+   the three environment variables used by the test program.
 
   Simple :ref:`connection <connhandling>` to the database requires an Oracle
   Database `user name and password
@@ -91,9 +94,9 @@ Quick Start python-oracledb Installation
   ``hostname/servicename``, using the host name where the database is running
   and the Oracle Database service name of the database instance.  The database
   can be on-premises or in the Cloud.  It should be version 12.1 or later.  The
-  Python-oracledb driver does not include a database.
+  python-oracledb driver does not include a database.
 
-- Run the program like:
+5. Run the program as shown below:
 
   .. code-block:: shell
 
@@ -105,55 +108,59 @@ You can learn more about python-oracledb from the `python-oracledb
 documentation <https://python-oracledb.readthedocs.io/en/latest/index.html>`__
 and `samples <https://github.com/oracle/python-oracledb/blob/main/samples>`__.
 
-If you run into installation trouble, check out the section on `Troubleshooting`_.
+If you run into installation trouble, see `Troubleshooting`_.
 
 Supported Oracle Database Versions
 ==================================
 
-When python-oracledb is used in the default Thin mode it connects directly to
+When python-oracledb is used in the default Thin mode, it connects directly to
 the Oracle Database and does not require Oracle Client libraries.  Connections
 in this mode can be made to Oracle Database 12.1 or later.
 
-To use python-oracledb :ref:`Thick mode features <featuresummary>` requires
-additional Oracle Client libraries be installed, as shown later in this
-documentation.  Connections in this mode can be made to Oracle Database 9.2, or
-later, depending on the Oracle Client library version.
+To use the :ref:`Thick mode features <featuresummary>` of python-oracledb,
+additional Oracle Client libraries must be installed, as detailed in the
+subsequent sections.  Connections in this mode can be made to Oracle
+Database 9.2, or later, depending on the Oracle Client library version.
 
 Oracle's standard client-server network interoperability allows connections
 between different versions of Oracle Client libraries and Oracle Database.  For
-currently certified configurations see Oracle Support's `Doc ID 207303.1
+currently certified configurations, see Oracle Support's `Doc ID 207303.1
 <https://support.oracle.com/epmos/faces/DocumentDisplay?id=207303.1>`__.  In
-summary, Oracle Client 21 can connect to Oracle Database 12.1 or greater.
-Oracle Client 19, 18 and 12.2 can connect to Oracle Database 11.2 or
-greater. Oracle Client 12.1 can connect to Oracle Database 10.2 or
-greater. Oracle Client 11.2 can connect to Oracle Database 9.2 or greater.  The
-technical restrictions on creating connections may be more flexible.  For
-example Oracle Client 12.2 can successfully connect to Oracle Database 10.2.
+summary:
+
+- Oracle Client 21 can connect to Oracle Database 12.1 or later
+- Oracle Client 19, 18 and 12.2 can connect to Oracle Database 11.2 or later
+- Oracle Client 12.1 can connect to Oracle Database 10.2 or later
+- Oracle Client 11.2 can connect to Oracle Database 9.2 or later
+
+The technical restrictions on creating connections may be more flexible.  For
+example, Oracle Client 12.2 can successfully connect to Oracle Database 10.2.
 
 The python-oracledb attribute :attr:`Connection.thin` can be used to see what
-mode a connection is in.  In Thick mode the function
+mode a connection is in.  In the Thick mode, the function
 :func:`oracledb.clientversion()` can be used to determine which Oracle Client
 version is in use. The attribute :attr:`Connection.version` can be used to
 determine which Oracle Database version a connection is accessing. These can
-then be used to adjust application behavior accordingly. Attempts to use Oracle
-features that are not supported by a particular mode or client library/database
-combination will result in runtime errors.
+then be used to adjust the application behavior accordingly. Any attempt to
+use Oracle features that are not supported by a particular mode or client
+library/database combination will result in runtime errors.
 
 Installation Requirements
 ==========================
 
-To use python-oracledb you need:
+To use python-oracledb, you need:
 
-- Python 3.6, 3.7, 3.8, 3.9 or 3.10 depending on the operating system.
+- Python 3.6, 3.7, 3.8, 3.9 or 3.10 depending on the operating system:
 
-  On Windows use Python 3.7 to 3.10.  On macOS use Python 3.8 to 3.10.  On
-  Linux use Python 3.6 to 3.10.
+  - Windows: Use Python 3.7 to 3.10
+  - macOS: Use Python 3.8 to 3.10
+  - Linux: Use Python 3.6 to 3.10
 
 - The Python cryptography package. This package is automatically installed as a
   dependency of python-oracledb.  It is strongly recommended that you keep the
   cryptography package up to date whenever new versions are released.
 
-- Optionally Oracle Client libraries can be installed to enable some additional
+- Optionally, Oracle Client libraries can be installed to enable some additional
   advanced functionality. These can be from the free `Oracle Instant Client
   <https://www.oracle.com/database/technologies/instant-client.html>`__, from a
   full Oracle Client installation (such as installed by Oracle's GUI
@@ -181,7 +188,7 @@ repository `PyPI <https://pypi.org/project/python-oracledb/>`__:
 
     python -m pip install oracledb
 
-The ``--user`` option may be useful if you don't have permission to write to
+The ``--user`` option may be useful if you do not have permission to write to
 system directories:
 
 .. code-block:: shell
@@ -193,7 +200,7 @@ If you are behind a proxy, add a proxy server to the command, for example add
 
 This will download and install a pre-compiled binary from `PyPI
 <https://pypi.org/project/oracledb/>`__ if one is available for your
-architecture.  Otherwise the source will be downloaded, compiled, and the
+architecture.  Otherwise, the source will be downloaded, compiled, and the
 resulting binary installed.  Compiling python-oracledb requires the
 ``Python.h`` header file.  If you are using the default ``python`` package,
 this file is in the ``python-devel`` package or equivalent.
@@ -201,8 +208,8 @@ this file is in the ``python-devel`` package or equivalent.
 Optionally Install Oracle Client
 --------------------------------
 
-By default python-oracledb runs in a Thin mode which connects directly to
-Oracle Database so no further installation steps are required.  However to use
+By default, python-oracledb runs in a Thin mode which connects directly to
+Oracle Database so no further installation steps are required.  However, to use
 additional features available in :ref:`Thick mode <featuresummary>` you need
 Oracle Client libraries installed.  Oracle Client versions 21, 19, 18, 12 and
 11.2 are supported.
@@ -226,7 +233,7 @@ To use python-oracledb in Thick mode you must call
 
     oracledb.init_oracle_client()
 
-On Linux do not pass the ``lib_dir`` parameter in the call: the Oracle Client
+On Linux, do not pass the ``lib_dir`` parameter in the call: the Oracle Client
 libraries on Linux must be in the system library search path *before* the
 Python process starts.
 
@@ -239,12 +246,12 @@ To use python-oracledb Thick mode with Oracle Instant Client zip files:
 1. Download an Oracle 21, 19, 18, 12, or 11.2 "Basic" or "Basic Light" zip file
    matching your Python 64-bit or 32-bit architecture:
 
-   - `x86-64 64-bit <https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html>`__
-   - `x86 32-bit <https://www.oracle.com/database/technologies/instant-client/linux-x86-32-downloads.html>`__
-   - `ARM (aarch64) 64-bit <https://www.oracle.com/database/technologies/instant-client/linux-arm-aarch64-downloads.html>`__
+  - `x86-64 64-bit <https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html>`__
+  - `x86 32-bit <https://www.oracle.com/database/technologies/instant-client/linux-x86-32-downloads.html>`__
+  - `ARM (aarch64) 64-bit <https://www.oracle.com/database/technologies/instant-client/linux-arm-aarch64-downloads.html>`__
 
-   The latest version is recommended. Oracle Instant Client 21 will connect to
-   Oracle Database 12.1 or later.
+  The latest version is recommended. Oracle Instant Client 21 will connect to
+  Oracle Database 12.1 or later.
 
 2. Unzip the package into a single directory that is accessible to your
    application. For example:
@@ -280,7 +287,7 @@ To use python-oracledb Thick mode with Oracle Instant Client zip files:
        export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_6:$LD_LIBRARY_PATH
 
 5. If you use optional Oracle configuration files such as ``tnsnames.ora``,
-   ``sqlnet.ora`` or ``oraaccess.xml`` with Instant Client, then put the files
+   ``sqlnet.ora``, or ``oraaccess.xml`` with Instant Client, then put the files
    in an accessible directory, for example in
    ``/opt/oracle/your_config_dir``. Then use:
 
@@ -290,7 +297,7 @@ To use python-oracledb Thick mode with Oracle Instant Client zip files:
 
        oracledb.init_oracle_client(config_dir="/home/your_username/oracle/your_config_dir")
 
-   Or set the environment variable ``TNS_ADMIN`` to that directory name.
+   or set the environment variable ``TNS_ADMIN`` to that directory name.
 
    Alternatively, put the files in the ``network/admin`` subdirectory of Instant
    Client, for example in ``/opt/oracle/instantclient_21_6/network/admin``.
@@ -305,20 +312,20 @@ To use python-oracledb with Oracle Instant Client RPMs:
 1. Download an Oracle 21, 19, 18, 12, or 11.2 "Basic" or "Basic Light" RPM
    matching your Python architecture:
 
-   - `x86-64 64-bit <https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html>`__
-   - `x86 32-bit <https://www.oracle.com/database/technologies/instant-client/linux-x86-32-downloads.html>`__
-   - `ARM (aarch64) 64-bit <https://www.oracle.com/database/technologies/instant-client/linux-arm-aarch64-downloads.html>`__
+  - `x86-64 64-bit <https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html>`__
+  - `x86 32-bit <https://www.oracle.com/database/technologies/instant-client/linux-x86-32-downloads.html>`__
+  - `ARM (aarch64) 64-bit <https://www.oracle.com/database/technologies/instant-client/linux-arm-aarch64-downloads.html>`__
 
-   Oracle's yum server has convenient repositories:
+  Oracle's yum server has convenient repositories:
 
-   - `Instant Client 21 RPMs for Oracle Linux x86-64 8 <https://yum.oracle.com/repo/OracleLinux/OL8/oracle/instantclient21/x86_64/index.html>`__, `Older Instant Client RPMs for Oracle Linux x86-64 8 <https://yum.oracle.com/repo/OracleLinux/OL8/oracle/instantclient/x86_64/index.html>`__
-   - `Instant Client 21 RPMs for Oracle Linux x86-64 7 <https://yum.oracle.com/repo/OracleLinux/OL7/oracle/instantclient21/x86_64/index.html>`__, `Older Instant Client RPMs for Oracle Linux x86-64 7 <https://yum.oracle.com/repo/OracleLinux/OL7/oracle/instantclient/x86_64/index.html>`__
-   - `Instant Client RPMs for Oracle Linux x86-64 6 <https://yum.oracle.com/repo/OracleLinux/OL6/oracle/instantclient/x86_64/index.html>`__
-   - `Instant Client RPMs for Oracle Linux ARM (aarch64) 8 <https://yum.oracle.com/repo/OracleLinux/OL8/oracle/instantclient/aarch64/index.html>`__
-   - `Instant Client RPMs for Oracle Linux ARM (aarch64) 7 <https://yum.oracle.com/repo/OracleLinux/OL7/oracle/instantclient/aarch64/index.html>`__
+  - `Instant Client 21 RPMs for Oracle Linux x86-64 8 <https://yum.oracle.com/repo/OracleLinux/OL8/oracle/instantclient21/x86_64/index.html>`__, `Older Instant Client RPMs for Oracle Linux x86-64 8 <https://yum.oracle.com/repo/OracleLinux/OL8/oracle/instantclient/x86_64/index.html>`__
+  - `Instant Client 21 RPMs for Oracle Linux x86-64 7 <https://yum.oracle.com/repo/OracleLinux/OL7/oracle/instantclient21/x86_64/index.html>`__, `Older Instant Client RPMs for Oracle Linux x86-64 7 <https://yum.oracle.com/repo/OracleLinux/OL7/oracle/instantclient/x86_64/index.html>`__
+  - `Instant Client RPMs for Oracle Linux x86-64 6 <https://yum.oracle.com/repo/OracleLinux/OL6/oracle/instantclient/x86_64/index.html>`__
+  - `Instant Client RPMs for Oracle Linux ARM (aarch64) 8 <https://yum.oracle.com/repo/OracleLinux/OL8/oracle/instantclient/aarch64/index.html>`__
+  - `Instant Client RPMs for Oracle Linux ARM (aarch64) 7 <https://yum.oracle.com/repo/OracleLinux/OL7/oracle/instantclient/aarch64/index.html>`__
 
-   The latest version is recommended.  Oracle Instant Client 21 will connect to
-   Oracle Database 12.1 or later.
+  The latest version is recommended.  Oracle Instant Client 21 will connect to
+  Oracle Database 12.1 or later.
 
 2. Install the downloaded RPM with sudo or as the root user. For example:
 
@@ -328,10 +335,10 @@ To use python-oracledb with Oracle Instant Client RPMs:
 
    Yum will automatically install required dependencies, such as ``libaio``.
 
-   On recent Linux versions, such as Oracle Linux 8, you may need to manually
+   On recent Linux versions such as Oracle Linux 8, you may need to manually
    install the ``libnsl`` package when using Oracle Instant Client 19.
 
-3. For Instant Client 19, or later, the system library search path is
+3. For Instant Client 19 or later, the system library search path is
    automatically configured during installation.
 
    For older versions, if there is no other Oracle software on the machine that
@@ -361,7 +368,7 @@ To use python-oracledb with Oracle Instant Client RPMs:
 
        oracledb.init_oracle_client(config_dir="/opt/oracle/your_config_dir")
 
-   Or set the environment variable ``TNS_ADMIN`` to that directory name.
+   or set the environment variable ``TNS_ADMIN`` to that directory name.
 
    Alternatively, put the files in the ``network/admin`` subdirectory of Instant
    Client, for example in ``/usr/lib/oracle/21/client64/lib/network/admin``.
@@ -391,7 +398,7 @@ architecture.
 
        source /u01/app/oracle/product/11.2.0/xe/bin/oracle_env.sh
 
-2. Optional Oracle configuration files such as ``tnsnames.ora``, ``sqlnet.ora``
+2. Optional Oracle configuration files such as ``tnsnames.ora``, ``sqlnet.ora``,
    or ``oraaccess.xml`` can be placed in ``$ORACLE_HOME/network/admin``.
 
    Alternatively, Oracle configuration files can be put in another, accessible
@@ -428,10 +435,10 @@ and the resulting binary installed.
 Optionally Install Oracle Client
 --------------------------------
 
-By default python-oracledb runs in a Thin mode which connects directly to
-Oracle Database so no further installation steps are required.  However to use
+By default, python-oracledb runs in a Thin mode which connects directly to
+Oracle Database so no further installation steps are required.  However, to use
 additional features available in :ref:`Thick mode <featuresummary>` you need
-Oracle Client libraries installed.  Oracle Client versions 21, 19, 18, 12 and
+Oracle Client libraries installed.  Oracle Client versions 21, 19, 18, 12, and
 11.2 are supported.
 
 - If your database is on a remote computer, then download the free `Oracle
@@ -453,7 +460,7 @@ To use python-oracledb in Thick mode you must call
 
     oracledb.init_oracle_client()
 
-On Windows you may prefer to pass the ``lib_dir`` parameter in the call, as
+On Windows, you may prefer to pass the ``lib_dir`` parameter in the call as
 shown below.
 
 Oracle Instant Client Zip Files
@@ -482,11 +489,11 @@ To use python-oracledb in Thick mode with Oracle Instant Client zip files:
    a 64-bit or 32-bit architecture to match Instant Client's architecture.
    Each Instant Client version requires a different redistributable version:
 
-   - For Instant Client 21 install `VS 2019 <https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170>`__ or later.
-   - For Instant Client 19 install `VS 2017 <https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170>`__.
-   - For Instant Client 18 or 12.2 install `VS 2013 <https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2013-vc-120>`__
-   - For Instant Client 12.1 install `VS 2010 <https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2010-vc-100-sp1-no-longer-supported>`__
-   - For Instant Client 11.2 install `VS 2005 64-bit <https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2005-vc-80-sp1-no-longer-supported>`__
+  - For Instant Client 21, install `VS 2019 <https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170>`__ or later
+  - For Instant Client 19, install `VS 2017 <https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170>`__
+  - For Instant Client 18 or 12.2, install `VS 2013 <https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2013-vc-120>`__
+  - For Instant Client 12.1, install `VS 2010 <https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2010-vc-100-sp1-no-longer-supported>`__
+  - For Instant Client 11.2, install `VS 2005 64-bit <https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2005-vc-80-sp1-no-longer-supported>`__
 
 Configure Oracle Instant Client
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -494,32 +501,32 @@ Configure Oracle Instant Client
 1. There are several alternative ways to tell python-oracledb where your Oracle
    Client libraries are, see :ref:`initialization`.
 
-   * With Oracle Instant Client you can use
-     :meth:`oracledb.init_oracle_client()` in your application, for example:
+  * With Oracle Instant Client you can use
+    :meth:`oracledb.init_oracle_client()` in your application, for example:
 
-     .. code-block:: python
+    .. code-block:: python
 
-         import oracledb
+        import oracledb
 
-         oracledb.init_oracle_client(lib_dir=r"C:\oracle\instantclient_19_14")
+        oracledb.init_oracle_client(lib_dir=r"C:\oracle\instantclient_19_14")
 
-     Note a 'raw' string is used because backslashes occur in the path.
+    Note that a 'raw' string is used because backslashes occur in the path.
 
-   * Alternatively, add the Oracle Instant Client directory to the ``PATH``
-     environment variable.  The directory must occur in ``PATH`` before any
-     other Oracle directories.  Restart any open command prompt windows.
+  * Alternatively, add the Oracle Instant Client directory to the ``PATH``
+    environment variable.  The directory must occur in ``PATH`` before any
+    other Oracle directories.  Restart any open command prompt windows.
 
-   * Another way to set ``PATH`` is to use a batch file that sets it before
-     Python is executed, for example::
+  * Another way to set ``PATH`` is to use a batch file that sets it before
+    Python is executed, for example::
 
-         REM mypy.bat
-         SET PATH=C:\oracle\instantclient_19_14;%PATH%
-         python %*
+        REM mypy.bat
+        SET PATH=C:\oracle\instantclient_19_14;%PATH%
+        python %*
 
-     Invoke this batch file every time you want to run Python.
+    Invoke this batch file every time you want to run Python.
 
 2. If you use optional Oracle configuration files such as ``tnsnames.ora``,
-   ``sqlnet.ora`` or ``oraaccess.xml`` with Instant Client, then put the files
+   ``sqlnet.ora``, or ``oraaccess.xml`` with Instant Client, then put the files
    in an accessible directory, for example in
    ``C:\oracle\your_config_dir``. Then use:
 
@@ -530,7 +537,7 @@ Configure Oracle Instant Client
        oracledb.init_oracle_client(lib_dir=r"C:\oracle\instantclient_19_14",
                                    config_dir=r"C:\oracle\your_config_dir")
 
-   Or set the environment variable ``TNS_ADMIN`` to that directory name.
+   or set the environment variable ``TNS_ADMIN`` to that directory name.
 
    Alternatively, put the files in a ``network\admin`` subdirectory of Instant
    Client, for example in ``C:\oracle\instantclient_19_11\network\admin``.
@@ -553,7 +560,7 @@ Python architecture.
    Restart any open command prompt windows.
 
 2. Optional Oracle configuration files such as ``tnsnames.ora``,
-   ``sqlnet.ora`` or ``oraaccess.xml`` can be placed in the
+   ``sqlnet.ora``, or ``oraaccess.xml`` can be placed in the
    ``network\admin`` subdirectory of the Oracle Database software
    installation.
 
@@ -577,15 +584,6 @@ Installing python-oracledb on macOS
 Python-oracledb is available a Universal binary for Apple Intel and M1
 architectures.
 
-Install Python
---------------
-
-You may need to install a new version of Python because the bundled Python 3
-version has restricted entitlements and will fail to load Oracle client
-libraries if python-oracledb Thick mode is used.  Instead use Python from
-`Python.org <https://www.python.org/downloads>`__ or evaluate whether
-installing with `Homebrew <https://brew.sh>`__ suits your requirements.
-
 Install python-oracledb
 -----------------------
 
@@ -597,7 +595,7 @@ to install python-oracledb from Python's package repository `PyPI
 
     python -m pip install oracledb
 
-The ``--user`` option may be useful if you don't have permission to write to
+The ``--user`` option may be useful if you do not have permission to write to
 system directories:
 
 .. code-block:: shell
@@ -613,10 +611,10 @@ installed.
 Optionally Install Oracle Client
 --------------------------------
 
-By default python-oracledb runs in a Thin mode which connects directly to
-Oracle Database so no further installation steps are required.  However to use
+By default, python-oracledb runs in a Thin mode which connects directly to
+Oracle Database so no further installation steps are required.  However, to use
 additional features available in :ref:`Thick mode <featuresummary>` you need
-Oracle Client libraries installed.  Note to use Thick mode on the M1
+Oracle Client libraries installed.  Note that to use Thick mode on the M1
 architecture you will need to use Rosetta with Python x64 and the Instant
 Client (Intel x64) libraries.
 
@@ -626,7 +624,7 @@ Manual Installation
 * Download the **Basic** 64-bit DMG from `Oracle
   <https://www.oracle.com/database/technologies/instant-client/macos-intel-x86-downloads.html>`__.
 
-* In Finder, double click on the DMG to mount it.
+* In Finder, double-click DMG to mount it.
 
 * Open a terminal window and run the install script in the mounted package, for example:
 
@@ -673,7 +671,7 @@ Configure Oracle Instant Client
         oracledb.init_oracle_client(lib_dir="/Users/your_username/Downloads/instantclient_19_8")
 
 2. If you use optional Oracle configuration files such as ``tnsnames.ora``,
-   ``sqlnet.ora`` or ``oraaccess.xml`` with Oracle Instant Client, then put the
+   ``sqlnet.ora``, or ``oraaccess.xml`` with Oracle Instant Client, then put the
    files in an accessible directory, for example in
    ``/Users/your_username/oracle/your_config_dir``. Then use:
 
@@ -750,11 +748,6 @@ which the following commands should be run::
     python setup.py build
     python setup.py install
 
-Upgrading from cx_Oracle 8.3
-============================
-
-See :ref:`Upgrading from cx_Oracle to python-oracledb <upgrading>`.
-
 Troubleshooting
 ================
 
@@ -764,47 +757,47 @@ If installation fails:
   using a different method. **Google anything that looks like an error.**
   Try some potential solutions.
 
-- Was there a network connection error?  Do you need to set the
-  environment variables ``http_proxy`` and/or ``https_proxy``?  Or
+- If there was a network connection error, check if you need to set the
+  environment variables ``http_proxy`` and/or ``https_proxy``  or
   try ``pip install --proxy=http://proxy.example.com:80 oracledb
-  --upgrade``?
+  --upgrade``.
 
-- If upgrading gave no errors but the old version is still
+- If the upgrade did not give any errors but the old version is still
   installed, try ``pip install oracledb --upgrade
-  --force-reinstall``
+  --force-reinstall``.
 
 - If you do not have access to modify your system version of
-  Python, can you use ``pip install oracledb --upgrade --user``
-  or venv?
+  Python, then use ``pip install oracledb --upgrade --user``
+  or venv.
 
-- Do you get the error "``No module named pip``"? The pip module is builtin
-  to Python but is sometimes removed by the OS. Use the venv module
-  (builtin to Python 3.x) or virtualenv module instead.
+- If you get the error ``No module named pip``, it means that the pip module
+  that is built into Python may sometimes be removed by the OS. Use the venv
+  module (built into Python 3.x) or virtualenv module instead.
 
-- Do you get the error "``fatal error: dpi.h: No such file or directory``"
-  when building from source code? Ensure that your source installation has
-  a subdirectory called "odpi" containing files. If missing, review the
+- If you get the error ``fatal error: dpi.h: No such file or directory``
+  when building from source code, then ensure that your source installation has
+  a subdirectory called "odpi" containing files. If this is missing, review the
   section on `Install Using GitHub`_.
 
 If using python-oracledb fails:
 
-- If you have multiple versions of Python installed, make sure you are
+- If you have multiple versions of Python installed, ensure that you are
   using the correct python and pip (or python3 and pip3) executables.
 
-- Do you get the error "``DPI-1047: Oracle Client library cannot be
-  loaded``"?
+- If you get the error ``DPI-1047: Oracle Client library cannot be
+  loaded``:
 
   - Review the :ref:`features available in python-oracledb's default Thin mode
-    <featuresummary>`.  If Thin mode suits your requirements then remove calls
+    <featuresummary>`.  If Thin mode suits your requirements, then remove calls
     in your application to :meth:`oracledb.init_oracle_client()` since this
     loads the Oracle Client library to enable Thick mode.
 
-  - On Windows and macOS pass the ``lib_dir`` library directory parameter
+  - On Windows and macOS, pass the ``lib_dir`` library directory parameter
     in your :meth:`oracledb.init_oracle_client()` call.  The parameter
     should be the location of your Oracle Client libraries. Do not pass
     this parameter on Linux.
 
-  - Check that Python and your Oracle Client libraries are both 64-bit or
+  - Check if Python and your Oracle Client libraries are both 64-bit or
     both 32-bit.  The ``DPI-1047`` message will tell you whether the 64-bit
     or 32-bit Oracle Client is needed for your Python.
 
@@ -821,39 +814,39 @@ If using python-oracledb fails:
 
         export DPI_DEBUG_LEVEL=64
 
-  - On Windows if you have a full database installation, make sure this
+  - On Windows, if you have a full database installation, ensure that this
     database is the `currently configured database
     <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-33D575DD-47FF-42B1-A82F-049D3F2A8791>`__.
 
   - On Windows, if you are not using passing a library directory parameter
     to :meth:`oracledb.init_oracle_client()`, then restart your command
-    prompt and use ``set PATH`` to check the environment variable has the
+    prompt and use ``set PATH`` to check if the environment variable has the
     correct Oracle Client listed before any other Oracle directories.
 
-  - On Windows use the ``DIR`` command to verify that ``OCI.DLL`` exists in
+  - On Windows, use the ``DIR`` command to verify that ``OCI.DLL`` exists in
     the directory passed to :meth:`oracledb.init_oracle_client()` or set in
     ``PATH``.
 
-  - On Windows check that the correct `Windows Redistributables
+  - On Windows, check that the correct `Windows Redistributables
     <https://oracle.github.io/odpi/doc/installation.html#windows>`__ have
     been installed.
 
-  - On Linux check the ``LD_LIBRARY_PATH`` environment variable contains
+  - On Linux, check if the ``LD_LIBRARY_PATH`` environment variable contains
     the Oracle Client library directory. Or, if you are using Oracle
-    Instant Client, a preferred alternative is to ensure a file in the
+    Instant Client, a preferred alternative is to ensure that a file in the
     ``/etc/ld.so.conf.d`` directory contains the path to the Instant Client
     directory, and then run ``ldconfig``.
 
-- If you got the error "``DPY-3010: connections to this database server
-  version are not supported by python-oracledb in thin mode``" when
-  connecting to Oracle Database 11.2 then you need to enable Thick mode by
+- If you get the error ``DPY-3010: connections to this database server
+  version are not supported by python-oracledb in thin mode`` when
+  connecting to Oracle Database 11.2, then you need to enable Thick mode by
   installing Oracle Client libraries and calling
-  :meth:`oracledb.init_oracle_client()` in your code.  Alternatively
+  :meth:`oracledb.init_oracle_client()` in your code.  Alternatively,
   upgrade your database.
 
-- If you got the error "``DPI-1072: the Oracle Client library version is
+- If you get the error "``DPI-1072: the Oracle Client library version is
   unsupported``", then review the installation requirements.  The Thick
-  mode of python-oracledb needs Oracle client libraries 11.2 or later.
+  mode of python-oracledb needs Oracle Client libraries 11.2 or later.
   Note that version 19 is not supported on Windows 7.  Similar steps shown
   above for ``DPI-1047`` may help.  You may be able to use Thin mode which
   can be done by removing calls :meth:`oracledb.init_oracle_client()` from
