@@ -36,6 +36,7 @@ cdef class ThickVarImpl(BaseVarImpl):
         uint32_t _native_type_num
         bint _get_returned_data
         uint32_t _last_size
+        uint32_t _last_num_elements
 
     def __dealloc__(self):
         if self._handle != NULL:
@@ -83,7 +84,8 @@ cdef class ThickVarImpl(BaseVarImpl):
             dpiData *data
             object cursor
             uint32_t i
-        if self._handle == NULL or self._last_size < self.size:
+        if self._handle == NULL or self._last_size < self.size \
+                or self._last_num_elements < self.num_elements:
             return self._create_handle(conn_impl)
         if self._native_type_num == DPI_NATIVE_TYPE_STMT:
             for i in range(self.num_elements):
@@ -113,6 +115,7 @@ cdef class ThickVarImpl(BaseVarImpl):
                           &self._data) < 0:
             _raise_from_odpi()
         self._last_size = self.size
+        self._last_num_elements = self.num_elements
 
     cdef object _get_cursor_value(self, object conn, dpiDataBuffer *dbvalue,
                                   uint32_t pos, bint in_fetch):

@@ -92,7 +92,7 @@ cdef class ThinVarImpl(BaseVarImpl):
         # bind by position
         else:
             num_binds = len(bind_info_list)
-            num_vars = len(cursor_impl.bind_var_impls)
+            num_vars = len(cursor_impl.bind_vars)
             if num_binds != num_vars:
                 errors._raise_err(errors.ERR_WRONG_NUMBER_OF_POSITIONAL_BINDS,
                                   expected_num=num_binds, actual_num=num_vars)

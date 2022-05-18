@@ -205,18 +205,13 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         if dpiStmt_setOciAttr(self._handle, attr_num, oci_value, oci_len) < 0:
             _raise_from_odpi()
 
-    cdef int _transform_binds(self, object conn,
-                              uint32_t num_execs=1) except -1:
+    cdef int _transform_binds(self, object conn, uint32_t num_execs) except -1:
         cdef:
             ThickVarImpl var_impl
-            object var
-        if isinstance(self.bind_vars, dict):
-            for var in self.bind_vars.values():
-                var_impl = <ThickVarImpl> var._impl
-                var_impl._transform_to_python(conn, self._conn_impl, num_execs)
-        elif isinstance(self.bind_vars, list):
-            for var in self.bind_vars:
-                var_impl = <ThickVarImpl> var._impl
+            BindVar bind_var
+        if self.bind_vars is not None:
+            for bind_var in self.bind_vars:
+                var_impl = <ThickVarImpl> bind_var.var_impl
                 var_impl._transform_to_python(conn, self._conn_impl, num_execs)
 
     def execute(self, cursor):
@@ -228,7 +223,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             uint64_t rowcount = 0
             int status
         if self.bind_vars is not None:
-            self._perform_binds(cursor.connection)
+            self._perform_binds(cursor.connection, 1)
         if self._conn_impl.autocommit:
             mode = DPI_MODE_EXEC_COMMIT_ON_SUCCESS
         else:
@@ -243,7 +238,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         if num_query_cols > 0:
             self._perform_define(cursor, num_query_cols)
         elif self._stmt_info.isReturning or self._stmt_info.isPLSQL:
-            self._transform_binds(cursor.connection)
+            self._transform_binds(cursor.connection, 1)
 
     def executemany(self, cursor, num_execs, batcherrors, arraydmlrowcounts):
         """

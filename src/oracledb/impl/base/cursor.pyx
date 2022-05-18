@@ -33,202 +33,90 @@ cdef class BaseCursorImpl:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef int _bind_type(self,
-                        BindVarCollection bind_vars,
-                        BindVarCollection bind_var_impls,
-                        BindVarKey key,
-                        object typ) except -1:
+    cdef int _bind_values(self,
+                          object cursor,
+                          object type_handler,
+                          object params,
+                          uint32_t num_rows,
+                          uint32_t row_num,
+                          bint defer_type_assignment) except -1:
         """
-        Internal method used for setting a bind variable given a Python type.
-        Fused types are used in order to improve performance while retaining
-        readability and in order to avoid duplicating code.
+        Internal method used for binding values.
         """
-        cdef BaseVarImpl var_impl
-        if isinstance(typ, PY_TYPE_VAR):
-            bind_vars[key] = typ
-            bind_var_impls[key] = typ._impl
+        if self.bind_vars is None:
+            self.bind_vars = []
+        if isinstance(params, dict):
+            if self.bind_style is None:
+                self.bind_style = dict
+                self.bind_vars_by_name = {}
+            elif self.bind_style is not dict:
+                errors._raise_err(errors.ERR_MIXED_POSITIONAL_AND_NAMED_BINDS)
+            self._bind_values_by_name(cursor, type_handler, <dict> params,
+                                      num_rows, row_num, defer_type_assignment)
+        elif isinstance(params, (list, tuple)):
+            if self.bind_style is None:
+                self.bind_style = list
+            elif self.bind_style is not list:
+                errors._raise_err(errors.ERR_MIXED_POSITIONAL_AND_NAMED_BINDS)
+            self._bind_values_by_position(cursor, type_handler, <dict> params,
+                                          num_rows, row_num,
+                                          defer_type_assignment)
         else:
-            var_impl = self._create_var_impl_from_type(typ)
-            typ = typ if isinstance(typ, PY_TYPE_DB_OBJECT_TYPE) \
-                    else var_impl.dbtype
-            bind_vars[key] = PY_TYPE_VAR._from_impl(var_impl, typ)
-            bind_var_impls[key] = var_impl
+            errors._raise_err(errors.ERR_WRONG_EXECUTEMANY_PARAMETERS_TYPE)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef int _bind_type_by_name(self, dict params) except -1:
-        """
-        Internal method used for setting bind variables by type by name.
-        """
-        cdef:
-            dict bind_vars, bind_var_impls
-            object typ
-        bind_vars = self.bind_vars = {}
-        bind_var_impls = self.bind_var_impls = {}
-        for name, value in params.items():
-            if value is not None:
-                self._bind_type(bind_vars, bind_var_impls, name, value)
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    cdef int _bind_type_by_position(self, tuple params) except -1:
-        """
-        Internal method used for setting binding variables by position.
-        """
-        cdef:
-            list bind_vars, bind_var_impls
-            ssize_t i, num_params
-        num_params = len(params)
-        bind_vars = self.bind_vars = [None] * num_params
-        bind_var_impls = self.bind_var_impls = [None] * num_params
-        for i, value in enumerate(params):
-            if value is not None:
-                self._bind_type(bind_vars, bind_var_impls, i, value)
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    cdef int _bind_value(self,
-                         object cursor,
-                         object type_handler,
-                         BindVarCollection bind_vars,
-                         BindVarCollection bind_var_impls,
-                         BindVarKey key,
-                         object value,
-                         uint32_t num_elements,
-                         uint32_t pos) except -1:
-        """
-        Internal method used for setting a bind variable given a Python value.
-        If no bind variable exists in the bind variable collection for the
-        given key, a new bind variable is created. Fused types are used in
-        order to improve performance while retaining readability and in order
-        to avoid duplicating code.
-        """
-        cdef:
-            BaseVarImpl orig_var_impl, var_impl
-            object orig_var, var, typ
-
-        # if the value to be bound is a variable, use it directly
-        if isinstance(value, PY_TYPE_VAR):
-            if BindVarCollection is dict:
-                orig_var = bind_vars.get(key)
-            else:
-                orig_var = bind_vars[key]
-            if value is not orig_var:
-                bind_vars[key] = value
-                bind_var_impls[key] = value._impl
-            return 0
-
-        # see if a variable was bound previously, and if so, attempt to set the
-        # value in this variable; a failure to set the value will simply result
-        # in a new variable being created; if the number of elements has
-        # increased, a new variable is also created using the same type
-        # information
-        if BindVarCollection is dict:
-            orig_var_impl = bind_var_impls.get(key)
-        else:
-            orig_var_impl = bind_var_impls[key]
-        if orig_var_impl is not None:
-            if num_elements <= orig_var_impl.num_elements:
-                var_impl = orig_var_impl
-            else:
-                var_impl = self._create_var_impl()
-                var_impl.num_elements = num_elements
-                var_impl.dbtype = orig_var_impl.dbtype
-                var_impl.objtype = orig_var_impl.objtype
-                var_impl.is_array = orig_var_impl.is_array
-                var_impl.size = orig_var_impl.size
-                var_impl.buffer_size = orig_var_impl.buffer_size
-                var_impl.inconverter = orig_var_impl.inconverter
-                var_impl.outconverter = orig_var_impl.outconverter
-                var_impl.values = [None] * num_elements
-            try:
-                var_impl.set_value(pos, value)
-                if var_impl is not orig_var_impl:
-                    bind_vars[key] = PY_TYPE_VAR._from_impl(var_impl)
-                    bind_var_impls[key] = var_impl
-                return 0
-            except TypeError:
-                if pos > 0:
-                    raise
-
-        # if an input type handler is specified, call it; the input type
-        # handler should return a variable or None; the value None implies that
-        # the default processing should take place just as if no input type
-        # handler was defined
-        if type_handler is not None:
-            var = type_handler(cursor, value, num_elements)
-            if var is not None:
-                if not isinstance(var, PY_TYPE_VAR):
-                    message = "expecting variable from input type handler"
-                    raise TypeError(message)
-                var_impl = var._impl
-                var_impl.set_value(pos, value)
-                bind_vars[key] = var
-                bind_var_impls[key] = var_impl
-                return 0
-
-        # finally, create a new variable deriving type information from the
-        # value that is being set
-        var_impl = self._create_var_impl_from_value(value, num_elements)
-        var_impl.set_value(pos, value)
-        typ = value.type if isinstance(value, PY_TYPE_DB_OBJECT) \
-                else var_impl.dbtype
-        bind_vars[key] = PY_TYPE_VAR._from_impl(var_impl, typ)
-        bind_var_impls[key] = var_impl
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    cdef int _bind_value_by_name(self,
-                                 object cursor,
-                                 object type_handler,
-                                 dict params,
-                                 uint32_t num_elements,
-                                 uint32_t pos) except -1:
+    cdef int _bind_values_by_name(self,
+                                  object cursor,
+                                  object type_handler,
+                                  dict params,
+                                  uint32_t num_rows,
+                                  uint32_t row_num,
+                                  bint defer_type_assignment) except -1:
         """
         Internal method used for binding values by name.
         """
         cdef:
-            dict bind_vars, bind_var_impls
-        if self.bind_vars is None:
-            self.bind_vars = {}
-            self.bind_var_impls = {}
-        bind_vars = self.bind_vars
-        bind_var_impls = self.bind_var_impls
-        type_handler = self._get_input_type_handler()
+            BindVar bind_var
+            ssize_t pos
         for name, value in params.items():
-            self._bind_value(cursor, type_handler, bind_vars, bind_var_impls,
-                             name, value, num_elements, pos)
+            bind_var = <BindVar> self.bind_vars_by_name.get(name)
+            if bind_var is None:
+                pos = len(self.bind_vars_by_name)
+                if pos < len(self.bind_vars):
+                    bind_var = <BindVar> self.bind_vars[pos]
+                else:
+                    bind_var = BindVar.__new__(BindVar)
+                    self.bind_vars.append(bind_var)
+                bind_var.name = name
+                self.bind_vars_by_name[name] = bind_var
+            bind_var._set_by_value(self, cursor, value, type_handler, row_num,
+                                   num_rows, defer_type_assignment)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef int _bind_value_by_position(self,
-                                     object cursor,
-                                     object type_handler,
-                                     object params,
-                                     uint32_t num_elements,
-                                     uint32_t pos) except -1:
+    cdef int _bind_values_by_position(self,
+                                      object cursor,
+                                      object type_handler,
+                                      object params,
+                                      uint32_t num_rows,
+                                      uint32_t row_num,
+                                      bint defer_type_assignment) except -1:
         """
         Internal method used for binding values by position.
         """
         cdef:
-            list bind_vars, bind_var_impls, empty_values
-            Py_ssize_t i, num_params, orig_num_params
-        num_params = len(params)
-        if self.bind_vars is not None:
-            bind_vars = self.bind_vars
-            bind_var_impls = self.bind_var_impls
-            orig_num_params = len(bind_vars)
-        else:
-            bind_vars = self.bind_vars = []
-            bind_var_impls = self.bind_var_impls = []
-            orig_num_params = 0
-        if num_params > orig_num_params:
-            empty_values = [None] * (num_params - orig_num_params)
-            bind_vars.extend(empty_values)
-            bind_var_impls.extend(empty_values)
+            BindVar bind_var
+            ssize_t i
         for i, value in enumerate(params):
-            self._bind_value(cursor, type_handler, bind_vars, bind_var_impls,
-                             i, value, num_elements, pos)
+            if i < len(self.bind_vars):
+                bind_var = <BindVar> self.bind_vars[i]
+            else:
+                bind_var = BindVar.__new__(BindVar)
+                bind_var.pos = i + 1
+                self.bind_vars.append(bind_var)
+            bind_var._set_by_value(self, cursor, value, type_handler, row_num,
+                                   num_rows, defer_type_assignment)
 
     cdef int _close(self, bint in_del) except -1:
         """
@@ -328,54 +216,6 @@ cdef class BaseCursorImpl:
         """
         raise NotImplementedError()
 
-    cdef BaseVarImpl _create_var_impl_from_type(self, object value):
-        """
-        Internal method for creating a variable that can contain data of the
-        specified type.
-        """
-        cdef BaseVarImpl var_impl
-        var_impl = self._create_var_impl()
-        var_impl.num_elements = 1
-        if isinstance(value, list):
-            if len(value) != 2:
-                errors._raise_err(errors.ERR_WRONG_ARRAY_DEFINITION)
-            var_impl._set_type_info_from_type(value[0])
-            var_impl.num_elements = value[1]
-            var_impl.is_array = True
-        elif isinstance(value, int):
-            var_impl.dbtype = DB_TYPE_VARCHAR
-            var_impl.size = value
-        else:
-            var_impl._set_type_info_from_type(value)
-        var_impl._finalize_init()
-        return var_impl
-
-    cdef BaseVarImpl _create_var_impl_from_value(self,
-                                                 object value,
-                                                 uint32_t num_elements):
-        """
-        Internal method for creating a variable that can contain the specified
-        value.
-        """
-        cdef:
-            bint is_plsql = self._is_plsql()
-            BaseVarImpl var_impl
-        var_impl = self._create_var_impl()
-        if not isinstance(value, list):
-            var_impl.num_elements = num_elements
-            var_impl._set_type_info_from_value(value, is_plsql)
-        else:
-            var_impl.is_array = True
-            var_impl.num_elements = max(num_elements, len(value))
-            for element in value:
-                if element is not None:
-                    var_impl._set_type_info_from_value(element, is_plsql)
-            if var_impl.dbtype is None:
-                var_impl.dbtype = DB_TYPE_VARCHAR
-                var_impl.size = 1
-        var_impl._finalize_init()
-        return var_impl
-
     cdef int _fetch_rows(self, object cursor) except -1:
         """
         Internal method used for fetching rows from a cursor.
@@ -432,20 +272,34 @@ cdef class BaseCursorImpl:
         """
         raise NotImplementedError()
 
-    cdef int _perform_binds(self, object conn, uint32_t num_execs=1) except -1:
+    cdef int _perform_binds(self, object conn, uint32_t num_execs) except -1:
         """
         Perform all binds on the cursor.
         """
         cdef:
-            BaseVarImpl var_impl
-            Py_ssize_t pos
-            object key
-        if isinstance(self.bind_var_impls, dict):
-            for key, var_impl in self.bind_var_impls.items():
-                var_impl._bind(conn, self, num_execs, key, 0)
-        else:
-            for pos, var_impl in enumerate(self.bind_var_impls):
-                var_impl._bind(conn, self, num_execs, None, pos + 1)
+            BindVar bind_var
+            ssize_t i
+        for i, bind_var in enumerate(self.bind_vars):
+            bind_var.var_impl._bind(conn, self, num_execs, bind_var.name,
+                                    bind_var.pos)
+
+    cdef int _reset_bind_vars(self, uint32_t num_rows) except -1:
+        """
+        Reset all of the existing bind variables. If any bind variables don't
+        have enough space to store the number of rows specified, remove the
+        reference to that bind variable.
+        """
+        cdef:
+            BindVar bind_var
+            ssize_t i
+        if self.bind_vars is not None:
+            for i in range(len(self.bind_vars)):
+                bind_var = <BindVar> self.bind_vars[i]
+                if bind_var.var_impl is not None \
+                        and bind_var.var_impl.num_elements < num_rows:
+                    bind_var.var_impl.num_elements = num_rows
+                    bind_var.var_impl.values = [None] * num_rows
+                bind_var.has_value = False
 
     @utils.CheckImpls("setting a cursor OCI attribute")
     def _set_oci_attr(self, uint32_t attr_num, uint32_t attr_type,
@@ -469,48 +323,40 @@ cdef class BaseCursorImpl:
         Internal method used for binding multiple rows of data.
         """
         cdef:
-            bint has_pos_bind = False, has_name_bind = False
-            object params_row, value
+            bint defer_type_assignment
             ssize_t i, num_rows
+            object params_row
         type_handler = self._get_input_type_handler()
         num_rows = len(parameters)
+        self._reset_bind_vars(num_rows)
         for i, params_row in enumerate(parameters):
-            if isinstance(params_row, dict):
-                has_name_bind = True
-                if has_pos_bind:
-                    break
-                self._bind_value_by_name(cursor, type_handler,
-                                         <dict> params_row, num_rows, i)
-            elif isinstance(params_row, (list, tuple)):
-                has_pos_bind = True
-                if has_name_bind:
-                    break
-                self._bind_value_by_position(cursor, type_handler, params_row,
-                                             num_rows, i)
-            else:
-                errors._raise_err(errors.ERR_WRONG_EXECUTEMANY_PARAMETERS_TYPE)
-        if has_pos_bind and has_name_bind:
-            errors._raise_err(errors.ERR_MIXED_POSITIONAL_AND_NAMED_BINDS)
+            defer_type_assignment = (i == num_rows - 1)
+            self._bind_values(cursor, type_handler, params_row, num_rows, i,
+                              defer_type_assignment)
 
     def bind_one(self, cursor, parameters):
         """
         Internal method used for binding a single row of data.
         """
-        cdef uint32_t num_rows = 1, pos = 0
+        cdef:
+            bint defer_type_assignment = False
+            uint32_t row_num = 0, num_rows = 1
+            ssize_t num_bind_vars, pos
+            object name, value
+            BindVar bind_var
+            dict dict_params
         type_handler = self._get_input_type_handler()
-        if isinstance(parameters, dict):
-            self._bind_value_by_name(cursor, type_handler, <dict> parameters,
-                                     num_rows, pos)
-        else:
-            self._bind_value_by_position(cursor, type_handler, parameters,
-                                         num_rows, pos)
+        self._reset_bind_vars(num_rows)
+        self._bind_values(cursor, type_handler, parameters, num_rows, row_num,
+                          defer_type_assignment)
 
     def close(self, bint in_del=False):
         """
         Closes the cursor and makes it unusable for further operations.
         """
         self.bind_vars = None
-        self.bind_var_impls = None
+        self.bind_vars_by_name = None
+        self.bind_style = None
         self.fetch_vars = None
         self._close(in_del)
 
@@ -559,6 +405,24 @@ cdef class BaseCursorImpl:
     def get_bind_names(self):
         pass
 
+    def get_bind_vars(self):
+        """
+        Return a list (when binding by position) or a dictionary (when binding
+        by name) of the bind variables associated with the cursor.
+        """
+        cdef:
+            BindVar bind_var
+            ssize_t i
+        if self.bind_vars is None:
+            return []
+        for bind_var in self.bind_vars:
+            if bind_var.var is None and bind_var.var_impl is not None:
+                bind_var.var = PY_TYPE_VAR._from_impl(bind_var.var_impl)
+        if self.bind_style is list:
+            return [bind_var.var for bind_var in self.bind_vars]
+        return dict([(bind_var.name, bind_var.var) \
+                for bind_var in self.bind_vars])
+
     def get_description(self):
         """
         Internal method for populating the cursor description.
@@ -592,12 +456,29 @@ cdef class BaseCursorImpl:
         """
         pass
 
-    def setinputsizes(self, cursor, args, kwargs):
+    def setinputsizes(self, tuple args, dict kwargs):
         """
         Sets type information for bind variables in advance of executing a
         statement (and binding values).
         """
+        cdef:
+            object name, value
+            BindVar bind_var
+            ssize_t pos
+        self.bind_vars = []
         if kwargs:
-            self._bind_type_by_name(kwargs)
+            self.bind_style = dict
+            self.bind_vars_by_name = {}
+            for name, value in kwargs.items():
+                bind_var = BindVar.__new__(BindVar)
+                self.bind_vars.append(bind_var)
+                self.bind_vars_by_name[name] = bind_var
+                bind_var._set_by_type(self, value)
+                bind_var.name = name
         else:
-            self._bind_type_by_position(args)
+            self.bind_style = list
+            for pos, value in enumerate(args):
+                bind_var = BindVar.__new__(BindVar)
+                self.bind_vars.append(bind_var)
+                bind_var._set_by_type(self, value)
+                bind_var.pos = pos + 1
