@@ -107,7 +107,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
     cdef int _preprocess_execute(self, object conn) except -1:
         cdef BindInfo bind_info
         if self.bind_vars is not None:
-            self._perform_binds(conn)
+            self._perform_binds(conn, 0)
         for bind_info in self._statement._bind_info_list:
             if bind_info._bind_var_impl is None:
                 errors._raise_err(errors.ERR_MISSING_BIND_VALUE,

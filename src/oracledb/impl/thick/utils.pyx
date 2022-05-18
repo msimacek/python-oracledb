@@ -112,8 +112,6 @@ cdef int _convert_from_python(object value, DbType dbtype,
         dbvalue.asBytes.length = buf.length
     elif oracle_type == DPI_ORACLE_TYPE_NATIVE_DOUBLE \
             or oracle_type == DPI_ORACLE_TYPE_NATIVE_FLOAT:
-        if not isinstance(value, (float, int, PY_TYPE_DECIMAL)):
-            raise TypeError("expecting number")
         if oracle_type == DPI_ORACLE_TYPE_NATIVE_DOUBLE:
             dbvalue.asDouble = <double> value
         else:
@@ -123,15 +121,11 @@ cdef int _convert_from_python(object value, DbType dbtype,
             or oracle_type == DPI_ORACLE_TYPE_CHAR \
             or oracle_type == DPI_ORACLE_TYPE_NCHAR \
             or oracle_type == DPI_ORACLE_TYPE_LONG_VARCHAR:
-        if not isinstance(value, str):
-            raise TypeError("expecting str")
         buf.set_value(value)
         dbvalue.asBytes.ptr = buf.ptr
         dbvalue.asBytes.length = buf.length
     elif oracle_type == DPI_ORACLE_TYPE_RAW \
             or oracle_type == DPI_ORACLE_TYPE_LONG_RAW:
-        if not isinstance(value, bytes):
-            raise TypeError("expecting bytes")
         buf.set_value(value)
         dbvalue.asBytes.ptr = buf.ptr
         dbvalue.asBytes.length = buf.length
@@ -141,20 +135,15 @@ cdef int _convert_from_python(object value, DbType dbtype,
             or oracle_type == DPI_ORACLE_TYPE_TIMESTAMP_TZ:
         memset(&dbvalue.asTimestamp, 0, sizeof(dbvalue.asTimestamp))
         timestamp = &dbvalue.asTimestamp
-        if isinstance(value, PY_TYPE_DATETIME):
-            timestamp.year = cydatetime.datetime_year(value)
-            timestamp.month = cydatetime.datetime_month(value)
-            timestamp.day = cydatetime.datetime_day(value)
-            timestamp.hour = cydatetime.datetime_hour(value)
-            timestamp.minute = cydatetime.datetime_minute(value)
-            timestamp.second = cydatetime.datetime_second(value)
-            timestamp.fsecond = cydatetime.datetime_microsecond(value) * 1000
-        elif isinstance(value, PY_TYPE_DATE):
-            timestamp.year = cydatetime.date_year(value)
-            timestamp.month = cydatetime.date_month(value)
-            timestamp.day = cydatetime.date_day(value)
-        else:
-            raise TypeError("expecting datetime.date or datetime.datetime")
+        timestamp.year = cydatetime.PyDateTime_GET_YEAR(value)
+        timestamp.month = cydatetime.PyDateTime_GET_MONTH(value)
+        timestamp.day = cydatetime.PyDateTime_GET_DAY(value)
+        if cydatetime.PyDateTime_Check(value):
+            timestamp.hour = cydatetime.PyDateTime_DATE_GET_HOUR(value)
+            timestamp.minute = cydatetime.PyDateTime_DATE_GET_MINUTE(value)
+            timestamp.second = cydatetime.PyDateTime_DATE_GET_SECOND(value)
+            timestamp.fsecond = \
+                    cydatetime.PyDateTime_DATE_GET_MICROSECOND(value) * 1000
     elif oracle_type == DPI_ORACLE_TYPE_BOOLEAN:
         dbvalue.asBoolean = <bint> value
     elif oracle_type == DPI_ORACLE_TYPE_NATIVE_INT:
@@ -163,8 +152,6 @@ cdef int _convert_from_python(object value, DbType dbtype,
         else:
             dbvalue.asInt64 = <int64_t> value
     elif oracle_type == DPI_ORACLE_TYPE_INTERVAL_DS:
-        if not isinstance(value, PY_TYPE_TIMEDELTA):
-            raise TypeError("expecting datetime.timedelta")
         seconds = cydatetime.timedelta_seconds(value)
         dbvalue.asIntervalDS.days = cydatetime.timedelta_days(value)
         dbvalue.asIntervalDS.hours = seconds // 3600

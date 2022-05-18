@@ -154,9 +154,9 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3709_DB_TYPE_DATE(self):
         "3709 - setting values on variables of type DB_TYPE_DATE"
-        self._test_positive_set_and_get(oracledb.DB_TYPE_DATE,
-                                        datetime.date(2017, 5, 6),
-                                        datetime.datetime(2017, 5, 6))
+        value = datetime.date(2017, 5, 6)
+        self._test_positive_set_and_get(oracledb.DB_TYPE_DATE, value,
+                                        value)
         value = datetime.datetime(2017, 5, 6, 9, 36, 0)
         self._test_positive_set_and_get(oracledb.DB_TYPE_DATE, value, value)
         self._test_positive_set_and_get(oracledb.DB_TYPE_DATE, None, None)
@@ -164,9 +164,9 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3710_DB_TYPE_TIMESTAMP(self):
         "3710 - setting values on variables of type DB_TYPE_TIMESTAMP"
-        self._test_positive_set_and_get(oracledb.DB_TYPE_TIMESTAMP,
-                                        datetime.date(2017, 5, 6),
-                                        datetime.datetime(2017, 5, 6))
+        value = datetime.date(2017, 5, 6)
+        self._test_positive_set_and_get(oracledb.DB_TYPE_TIMESTAMP, value,
+                                        value)
         value = datetime.datetime(2017, 5, 6, 9, 36, 0, 300000)
         self._test_positive_set_and_get(oracledb.DB_TYPE_TIMESTAMP, value,
                                         value)
@@ -175,9 +175,9 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3711_DB_TYPE_TIMESTAMP_TZ(self):
         "3711 - setting values on variables of type DB_TYPE_TIMESTAMP_TZ"
-        self._test_positive_set_and_get(oracledb.DB_TYPE_TIMESTAMP_TZ,
-                                        datetime.date(2017, 5, 6),
-                                        datetime.datetime(2017, 5, 6))
+        value = datetime.date(2017, 5, 6)
+        self._test_positive_set_and_get(oracledb.DB_TYPE_TIMESTAMP_TZ, value,
+                                        value)
         value = datetime.datetime(2017, 5, 6, 9, 36, 0, 300000)
         self._test_positive_set_and_get(oracledb.DB_TYPE_TIMESTAMP_TZ, value,
                                         value)
@@ -187,9 +187,9 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3712_DB_TYPE_TIMESTAMP_LTZ(self):
         "3712 - setting values on variables of type DB_TYPE_TIMESTAMP_LTZ"
-        self._test_positive_set_and_get(oracledb.DB_TYPE_TIMESTAMP_LTZ,
-                                        datetime.date(2017, 5, 6),
-                                        datetime.datetime(2017, 5, 6))
+        value = datetime.date(2017, 5, 6)
+        self._test_positive_set_and_get(oracledb.DB_TYPE_TIMESTAMP_LTZ, value,
+                                        value)
         value = datetime.datetime(2017, 5, 6, 9, 36, 0, 300000)
         self._test_positive_set_and_get(oracledb.DB_TYPE_TIMESTAMP_LTZ, value,
                                         value)

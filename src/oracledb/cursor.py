@@ -132,6 +132,8 @@ class Cursor:
         self._impl.fetch_vars = None
         if not self._set_input_sizes:
             self._impl.bind_vars = None
+            self._impl.bind_vars_by_name = None
+            self._impl.bind_style = None
         self._impl.prepare(statement, tag, cache_statement)
         self.statement = statement
         self._impl.rowfactory = None
@@ -236,7 +238,7 @@ class Cursor:
         In particular, elements should not be removed or replaced.
         """
         self._verify_open()
-        return self._impl.bind_vars or []
+        return self._impl.get_bind_vars()
 
     def callfunc(self, name: str, return_type: object,
                  parameters: Union[list, tuple]=None,
@@ -280,7 +282,7 @@ class Cursor:
         self._call(name, parameters, keyword_parameters)
         if parameters is None:
             return []
-        return [v.getvalue() for v in self._impl.bind_vars[:len(parameters)]]
+        return [v.get_value(0) for v in self._impl.bind_vars[:len(parameters)]]
 
     def close(self) -> None:
         """
@@ -355,14 +357,14 @@ class Cursor:
                 and not isinstance(parameters, (list, tuple, dict)):
             errors._raise_err(errors.ERR_WRONG_EXECUTE_PARAMETERS_TYPE)
         self._verify_open()
-        bind_vars = self._impl.bind_vars
+        impl = self._impl
+        bind_vars = impl.bind_vars
+        bind_style = impl.bind_style
         prepare_needed = statement and statement != self.statement
         if not (prepare_needed and not self._set_input_sizes) \
                 and bind_vars is not None and parameters is not None:
-            if isinstance(bind_vars, dict) \
-                    and not isinstance(parameters, dict) \
-                    or isinstance(bind_vars, list) \
-                    and isinstance(parameters, dict):
+            if bind_style is dict and not isinstance(parameters, dict) \
+                    or bind_style is not dict and isinstance(parameters, dict):
                 errors._raise_err(errors.ERR_MIXED_POSITIONAL_AND_NAMED_BINDS)
 
         # prepare statement, if necessary
@@ -372,9 +374,9 @@ class Cursor:
         # perform bind and execute
         self._set_input_sizes = False
         if parameters is not None:
-            self._impl.bind_one(self, parameters)
-        self._impl.execute(self)
-        if self._impl.fetch_vars is not None:
+            impl.bind_one(self, parameters)
+        impl.execute(self)
+        if impl.fetch_vars is not None:
             return self
 
     def executemany(self, statement: Union[str, None],
@@ -432,7 +434,8 @@ class Cursor:
             num_execs = parameters
         else:
             num_execs = len(parameters)
-            self._impl.bind_many(self, parameters)
+            if num_execs > 0:
+                self._impl.bind_many(self, parameters)
         self._impl.executemany(self, num_execs, bool(batcherrors),
                                bool(arraydmlrowcounts))
 
@@ -714,9 +717,9 @@ class Cursor:
             errors._raise_err(errors.ERR_ARGS_AND_KEYWORD_ARGS)
         elif args or kwargs:
             self._verify_open()
-            self._impl.setinputsizes(self, args, kwargs)
+            self._impl.setinputsizes(args, kwargs)
             self._set_input_sizes = True
-            return self._impl.bind_vars
+            return self._impl.get_bind_vars()
         return []
 
     def setoutputsize(self, size: int, column: int=0) -> None:

@@ -186,13 +186,13 @@ class TestCase(test_env.BaseTestCase):
     @unittest.skipUnless(test_env.get_server_version() >= (21, 0),
                          "unsupported server")
     def test_3806(self):
-        "3806 - output type handler for fetching 21c JSON when using thin mode"
+        "3806 - output type handler for fetching 21c JSON"
         self.cursor.execute("truncate table TestJson")
         insert_sql = "insert into TestJson values (:1, :2)"
         json_data = [
-            (dict(name="John", city="Delhi")),
-            (dict(name="George", city="Bangalore")),
-            (dict(name="Sam", city="Mumbai"))
+            dict(name="John", city="Delhi"),
+            dict(name="George", city="Bangalore"),
+            dict(name="Sam", city="Mumbai")
         ]
         data_to_insert = list(enumerate(json_data))
         json_as_string = self.connection.thin or \

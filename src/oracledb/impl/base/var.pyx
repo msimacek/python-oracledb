@@ -38,6 +38,130 @@ cdef class BaseVarImpl:
         """
         raise NotImplementedError()
 
+    cdef int _check_scalar_value(self, object value, bint *can_set) except -1:
+        """
+        Checks a scalar value to see if the type of Python value is accepted by
+        the database type. An exception is raised if the can_set pointer is
+        NULL; otherwise, the flag will be adjusted if the value cannot be set.
+        """
+        cdef:
+            bint type_ok = True
+            BaseLobImpl lob_impl
+            uint32_t db_type_num
+
+        # check to see that the type of value is accepted
+        db_type_num = self.dbtype.num
+        if db_type_num in (DB_TYPE_NUM_NUMBER, DB_TYPE_NUM_BINARY_INTEGER,
+                           DB_TYPE_NUM_BINARY_DOUBLE,
+                           DB_TYPE_NUM_BINARY_FLOAT):
+            type_ok = isinstance(value,
+                                 (PY_TYPE_BOOL, int, float, PY_TYPE_DECIMAL))
+        elif db_type_num in (DB_TYPE_NUM_CHAR, DB_TYPE_NUM_VARCHAR,
+                             DB_TYPE_NUM_NCHAR, DB_TYPE_NUM_NVARCHAR,
+                             DB_TYPE_NUM_LONG_VARCHAR,
+                             DB_TYPE_NUM_LONG_NVARCHAR,
+                             DB_TYPE_NUM_RAW, DB_TYPE_NUM_LONG_RAW):
+            type_ok = isinstance(value, (bytes, str))
+        elif db_type_num in (DB_TYPE_NUM_DATE, DB_TYPE_NUM_TIMESTAMP,
+                           DB_TYPE_NUM_TIMESTAMP_LTZ,
+                           DB_TYPE_NUM_TIMESTAMP_TZ):
+            type_ok = cydatetime.PyDateTime_Check(value) \
+                    or cydatetime.PyDate_Check(value)
+        elif db_type_num == DB_TYPE_NUM_INTERVAL_DS:
+            type_ok = isinstance(value, PY_TYPE_TIMEDELTA)
+        elif db_type_num in (DB_TYPE_NUM_CLOB,
+                             DB_TYPE_NUM_NCLOB,
+                             DB_TYPE_NUM_BLOB):
+            if isinstance(value, PY_TYPE_LOB):
+                lob_impl = value._impl
+                if lob_impl.dbtype is not self.dbtype:
+                    if can_set != NULL:
+                        can_set[0] = False
+                        return 0
+                    errors._raise_err(errors.ERR_LOB_OF_WRONG_TYPE,
+                                      actual_type_name=lob_impl.dbtype.name,
+                                      expected_type_name=self.dbtype.name)
+            else:
+                type_ok = isinstance(value, (bytes, str))
+        elif db_type_num == DB_TYPE_NUM_OBJECT:
+            type_ok = isinstance(value, PY_TYPE_DB_OBJECT)
+            if type_ok and value._impl.type != self.objtype:
+                if can_set != NULL:
+                    can_set[0] = False
+                    return 0
+                errors._raise_err(errors.ERR_WRONG_OBJECT_TYPE,
+                                  actual_schema=value.type.schema,
+                                  actual_name=value.type.name,
+                                  expected_schema=self.objtype.schema,
+                                  expected_name=self.objtype.name)
+        elif db_type_num == DB_TYPE_NUM_CURSOR:
+            type_ok = isinstance(value, PY_TYPE_CURSOR)
+        elif db_type_num in (DB_TYPE_NUM_ROWID, DB_TYPE_NUM_UROWID,
+                             DB_TYPE_NUM_INTERVAL_YM):
+            if can_set != NULL:
+                can_set[0] = False
+                return 0
+            errors._raise_err(errors.ERR_UNSUPPORTED_VAR_SET,
+                              db_type_name=self.dbtype.name)
+        if not type_ok:
+            if can_set != NULL:
+                can_set[0] = False
+                return 0
+            errors._raise_err(errors.ERR_UNSUPPORTED_PYTHON_TYPE_FOR_VAR,
+                              py_type_name = type(value).__name__,
+                              db_type_name = self.dbtype.name)
+
+    cdef object _check_value(self, object value, bint *can_set):
+        """
+        Checks that the value can be set on the variable. The input converter
+        is called, if applicable, and this value is returned if that value can
+        be set; otherwise, the original value is returned since a new variable
+        will be created (unless an exception is raised when the can_set pointer
+        is NULL).
+        """
+        cdef object element_value, orig_value = value
+
+        # scalar values can be checked directly
+        if not self.is_array:
+            if self.inconverter is not None:
+                value = self.inconverter(value)
+            if value is not None:
+                self._check_scalar_value(value, can_set)
+                if can_set != NULL and not can_set[0]:
+                    return orig_value
+            return value
+
+        # array variables must have a list supplied to them
+        if not isinstance(value, list):
+            if can_set != NULL:
+                can_set[0] = False
+                return orig_value
+            errors._raise_err(errors.ERR_EXPECTING_LIST_FOR_ARRAY_VAR)
+
+        # the size of the array must be sufficient to hold all of the
+        # elements
+        if len(value) > self.num_elements:
+            if can_set != NULL:
+                can_set[0] = False
+                return orig_value
+            errors._raise_err(errors.ERR_INCORRECT_VAR_ARRAY_SIZE,
+                              var_arraysize=self.arraysize,
+                              required_arraysize=len(value))
+
+        # if an input converter is specified, call it for each of the elements
+        # in the list
+        if self.inconverter is not None:
+            value = [self.inconverter(v) for v in value]
+
+        # check each of the element's values
+        for element_value in value:
+            if value is not None:
+                self._check_scalar_value(element_value, can_set)
+                if can_set != NULL and not can_set[0]:
+                    return orig_value
+
+        return value
+
     cdef int _finalize_init(self) except -1:
         """
         Internal method that finalizes initialization of the variable.
@@ -59,94 +183,54 @@ cdef class BaseVarImpl:
         self.size = new_size
         self.buffer_size = new_size * self.dbtype._buffer_size_factor
 
-    cdef int _set_single_value(self, uint32_t pos, object value) except -1:
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef int _set_scalar_value(self, ssize_t pos, object value) except -1:
         """
-        Set a single element of the variable to the specified value.
+        Set the value of the variable at the given position. At this point it
+        is assumed that all checks have been performed!
         """
         cdef:
             uint32_t db_type_num, size
-            object lob
-        if self.inconverter is not None:
-            value = self.inconverter(value)
+            object orig_value
         if value is not None:
             db_type_num = self.dbtype.num
-            if db_type_num in (DB_TYPE_NUM_NUMBER, DB_TYPE_NUM_BINARY_INTEGER,
-                               DB_TYPE_NUM_BINARY_DOUBLE,
-                               DB_TYPE_NUM_BINARY_FLOAT):
-                if not isinstance(value,
-                                  (PY_TYPE_BOOL, int, float, PY_TYPE_DECIMAL)):
-                    raise TypeError("expecting number or boolean")
-                if db_type_num in (DB_TYPE_NUM_BINARY_FLOAT,
-                                   DB_TYPE_NUM_BINARY_DOUBLE):
-                    value = float(value)
-                elif db_type_num == DB_TYPE_NUM_BINARY_INTEGER \
-                        or isinstance(value, PY_TYPE_BOOL):
-                    value = int(value)
-            elif db_type_num in (DB_TYPE_NUM_CHAR, DB_TYPE_NUM_VARCHAR,
+            if db_type_num in (DB_TYPE_NUM_CHAR, DB_TYPE_NUM_VARCHAR,
                                  DB_TYPE_NUM_NCHAR, DB_TYPE_NUM_NVARCHAR,
                                  DB_TYPE_NUM_LONG_VARCHAR,
                                  DB_TYPE_NUM_LONG_NVARCHAR):
                 if isinstance(value, bytes):
                     value = (<bytes> value).decode()
-                elif not isinstance(value, str):
-                    raise TypeError("expecting string")
                 size = <uint32_t> len(<str> value)
                 if size > self.size:
                     self._resize(size)
             elif db_type_num in (DB_TYPE_NUM_RAW, DB_TYPE_NUM_LONG_RAW):
                 if isinstance(value, str):
                     value = (<str> value).encode()
-                elif not isinstance(value, bytes):
-                    raise TypeError("expecting bytes")
                 size = <uint32_t> len(<bytes> value)
                 if size > self.size:
                     self._resize(size)
-            elif db_type_num in (DB_TYPE_NUM_DATE, DB_TYPE_NUM_TIMESTAMP,
-                                 DB_TYPE_NUM_TIMESTAMP_LTZ,
-                                 DB_TYPE_NUM_TIMESTAMP_TZ):
-                if isinstance(value, PY_TYPE_DATETIME):
-                    pass
-                elif isinstance(value, PY_TYPE_DATE):
-                    value = cydatetime.datetime_new(value.year, value.month,
-                                                    value.day, 0, 0, 0, 0,
-                                                    None)
-                else:
-                    message = "expecting datetime.date or datetime.datetime"
-                    raise TypeError(message)
-            elif db_type_num == DB_TYPE_NUM_INTERVAL_DS:
-                if not isinstance(value, PY_TYPE_TIMEDELTA):
-                    raise TypeError("expecting datetime.timedelta")
-            elif db_type_num == DB_TYPE_NUM_BOOLEAN:
-                value = bool(value)
             elif db_type_num in (DB_TYPE_NUM_CLOB, DB_TYPE_NUM_NCLOB,
                                  DB_TYPE_NUM_BLOB):
-                if isinstance(value, PY_TYPE_LOB):
-                    if value.type is not self.dbtype:
-                        message = f"LOB must be of type {self.dbtype}"
-                        raise TypeError(message)
-                elif not isinstance(value, (bytes, str)):
-                    raise TypeError("expecting LOB, string or bytes")
-                else:
-                    lob = self.values[pos]
-                    if lob is not None and isinstance(lob, PY_TYPE_LOB):
-                        lob.trim()
+                if not isinstance(value, PY_TYPE_LOB):
+                    orig_value = self.values[pos]
+                    if isinstance(orig_value, PY_TYPE_LOB):
+                        orig_value.trim()
                         if value:
-                            lob.write(value)
-                        value = lob
-            elif db_type_num in (DB_TYPE_NUM_ROWID, DB_TYPE_NUM_UROWID):
-                errors._raise_err(errors.ERR_SET_ROWID_DIRECTLY)
-            elif db_type_num == DB_TYPE_NUM_OBJECT:
-                if not isinstance(value, PY_TYPE_DB_OBJECT):
-                    raise TypeError("expecting DbObject")
-                if value._impl.type != self.objtype:
-                    errors._raise_err(errors.ERR_WRONG_OBJECT_TYPE,
-                                      actual_schema=value.type.schema,
-                                      actual_name=value.type.name,
-                                      expected_schema=self.objtype.schema,
-                                      expected_name=self.objtype.name)
-            elif db_type_num == DB_TYPE_NUM_CURSOR:
-                if not isinstance(value, PY_TYPE_CURSOR):
-                    raise TypeError("expecting cursor")
+                            orig_value.write(value)
+                        value = orig_value
+            elif db_type_num == DB_TYPE_NUM_BOOLEAN:
+                value = bool(value)
+            elif db_type_num in (DB_TYPE_NUM_NUMBER,
+                                 DB_TYPE_NUM_BINARY_INTEGER,
+                                 DB_TYPE_NUM_BINARY_FLOAT,
+                                 DB_TYPE_NUM_BINARY_DOUBLE):
+                if db_type_num in (DB_TYPE_NUM_BINARY_FLOAT,
+                                   DB_TYPE_NUM_BINARY_DOUBLE):
+                    value = float(value)
+                elif db_type_num == DB_TYPE_NUM_BINARY_INTEGER \
+                        or cpython.PyBool_Check(value):
+                    value = int(value)
         self.values[pos] = value
 
     cdef int _set_type_info_from_type(self, object typ) except -1:
@@ -234,6 +318,22 @@ cdef class BaseVarImpl:
         if size > self.size:
             self.size = size
 
+    cdef int _set_value(self, ssize_t pos, object value) except -1:
+        """
+        Set the value of the variable at the given position. At this point it
+        is assumed that all checks have been performed!
+        """
+        cdef:
+            object element_value
+            ssize_t i
+        if self.is_array:
+            for i, element_value in enumerate(value):
+                self._set_scalar_value(i, element_value)
+            self.num_elements_in_array = len(value)
+        else:
+            self._set_scalar_value(pos, value)
+        self._is_value_set = True
+
     def get_description(self):
         """
         Return a 7-tuple containing information about the variable: (name,
@@ -271,7 +371,17 @@ cdef class BaseVarImpl:
                 size_in_bytes or None, precision, scale,
                 fetch_info._nulls_allowed)
 
-    cpdef set_value(self, uint32_t pos, object value):
+    def get_value(self, uint32_t pos):
+        """
+        Internal method for getting the value of a variable.
+        """
+        if self.is_array:
+            return self.values[:self.num_elements_in_array]
+        if pos >= self.num_elements:
+            raise IndexError("position out of range")
+        return self.values[pos]
+
+    def set_value(self, ssize_t pos, object value):
         """
         Internal method for setting a variable's value at the specified
         position.
@@ -282,15 +392,7 @@ cdef class BaseVarImpl:
         if self.is_array:
             if pos > 0:
                 errors._raise_err(errors.ERR_ARRAYS_OF_ARRAYS)
-            if not isinstance(value, list):
-                raise TypeError("expecting list")
-            elif len(value) > self.num_elements:
-                raise TypeError("list too large for variable")
-            for i, element_value in enumerate(value):
-                self._set_single_value(i, element_value)
-            self.num_elements_in_array = len(value)
-        else:
-            if pos >= self.num_elements:
-                raise IndexError("position out of range")
-            self._set_single_value(pos, value)
-        self._is_value_set = True
+        elif pos >= self.num_elements:
+            raise IndexError("position out of range")
+        value = self._check_value(value, NULL)
+        self._set_value(pos, value)

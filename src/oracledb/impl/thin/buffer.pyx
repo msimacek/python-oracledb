@@ -1327,16 +1327,17 @@ cdef class WriteBuffer:
             unsigned int year
             char_type buf[13]
             uint32_t fsecond
-        year = cydatetime.datetime_year(value)
+        year = cydatetime.PyDateTime_GET_YEAR(value)
         buf[0] = <uint8_t> ((year // 100) + 100)
         buf[1] = <uint8_t> ((year % 100) + 100)
-        buf[2] = <uint8_t> cydatetime.datetime_month(value)
-        buf[3] = <uint8_t> cydatetime.datetime_day(value)
-        buf[4] = <uint8_t> cydatetime.datetime_hour(value) + 1
-        buf[5] = <uint8_t> cydatetime.datetime_minute(value) + 1
-        buf[6] = <uint8_t> cydatetime.datetime_second(value) + 1
+        buf[2] = <uint8_t> cydatetime.PyDateTime_GET_MONTH(value)
+        buf[3] = <uint8_t> cydatetime.PyDateTime_GET_DAY(value)
+        buf[4] = <uint8_t> cydatetime.PyDateTime_DATE_GET_HOUR(value) + 1
+        buf[5] = <uint8_t> cydatetime.PyDateTime_DATE_GET_MINUTE(value) + 1
+        buf[6] = <uint8_t> cydatetime.PyDateTime_DATE_GET_SECOND(value) + 1
         if length > 7:
-            fsecond = <uint32_t> cydatetime.datetime_microsecond(value) * 1000
+            fsecond = <uint32_t> \
+                    cydatetime.PyDateTime_DATE_GET_MICROSECOND(value) * 1000
             if fsecond == 0:
                 length = 7
             else:

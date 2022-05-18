@@ -102,11 +102,7 @@ class Var:
         list corresponding to the returned data for the given execution of the
         statement (as identified by the pos parameter).
         """
-        if self._impl.is_array:
-            return self._impl.values[:self._impl.num_elements_in_array]
-        if pos >= self._impl.num_elements:
-            raise IndexError("position out of range")
-        return self._impl.values[pos]
+        return self._impl.get_value(pos)
 
     @property
     def inconverter(self) -> Callable:

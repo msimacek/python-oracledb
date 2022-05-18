@@ -151,13 +151,14 @@ ERR_INVALID_CONN_CLASS = 2023
 ERR_INVALID_CONNECT_PARAMS = 2025
 ERR_INVALID_POOL_CLASS = 2026
 ERR_INVALID_POOL_PARAMS = 2027
+ERR_EXPECTING_LIST_FOR_ARRAY_VAR = 2028
 
 # error numbers that result in NotSupportedError
 ERR_TIME_NOT_SUPPORTED = 3000
 ERR_FEATURE_NOT_SUPPORTED = 3001
 ERR_PYTHON_VALUE_NOT_SUPPORTED = 3002
 ERR_PYTHON_TYPE_NOT_SUPPORTED = 3003
-ERR_SET_ROWID_DIRECTLY = 3004
+ERR_UNSUPPORTED_VAR_SET = 3004
 ERR_ARRAYS_OF_ARRAYS = 3005
 ERR_ORACLE_TYPE_NOT_SUPPORTED = 3006
 ERR_DB_TYPE_NOT_SUPPORTED = 3007
@@ -166,6 +167,8 @@ ERR_SELF_BIND_NOT_SUPPORTED = 3009
 ERR_SERVER_VERSION_NOT_SUPPORTED = 3010
 ERR_SERVER_LOGON_TYPE_NOT_SUPPORTED = 3011
 ERR_NCHAR_CS_NOT_SUPPORTED = 3012
+ERR_UNSUPPORTED_PYTHON_TYPE_FOR_VAR = 3013
+ERR_LOB_OF_WRONG_TYPE = 3014
 
 # error numbers that result in DatabaseError
 ERR_TNS_ENTRY_NOT_FOUND = 4000
@@ -269,11 +272,13 @@ ERR_MESSAGE_FORMATS = {
             'database type "{name}" is not supported',
     ERR_DUPLICATED_PARAMETER:
             '"{deprecated_name}" and "{new_name}" cannot be specified together',
+    ERR_EXPECTING_LIST_FOR_ARRAY_VAR:
+            'expecting list when setting array variables',
     ERR_EXPECTING_TYPE:
             'expected a type',
     ERR_EXPECTING_VAR:
-            'output type handler should return None or the value '
-            'returned by a call to cursor.var()',
+            'type handler should return None or the value returned by a call '
+            'to cursor.var()',
     ERR_FEATURE_NOT_SUPPORTED:
             '{feature} is only supported in python-oracledb {driver_type} mode',
     ERR_INCONSISTENT_DATATYPES:
@@ -332,6 +337,9 @@ ERR_MESSAGE_FORMATS = {
     ERR_LISTENER_REFUSED_CONNECTION:
             'cannot connect to database. Listener refused connection. '
             '(Similar to ORA-{error_code})',
+    ERR_LOB_OF_WRONG_TYPE:
+            'LOB is of type {actual_type_name} but must be of type '
+            '{expected_type_name}',
     ERR_MESSAGE_HAS_NO_PAYLOAD:
             'message has no payload',
     ERR_MESSAGE_TYPE_UNKNOWN:
@@ -393,8 +401,6 @@ ERR_MESSAGE_FORMATS = {
     ERR_SERVER_VERSION_NOT_SUPPORTED:
             'connections to this database server version are not supported '
             'by python-oracledb in thin mode',
-    ERR_SET_ROWID_DIRECTLY:
-            'rowid variables cannot be set directly',
     ERR_THIN_CONNECTION_ALREADY_CREATED:
             'python-oracledb thick mode cannot be used because a thin mode '
             'connection has already been created',
@@ -413,6 +419,11 @@ ERR_MESSAGE_FORMATS = {
             'positive integer',
     ERR_UNSUPPORTED_INBAND_NOTIFICATION:
             'unsupported in-band notification with error number {err_num}',
+    ERR_UNSUPPORTED_PYTHON_TYPE_FOR_VAR:
+            'unsupported Python type {py_type_name} for variable '
+            '{db_type_name}',
+    ERR_UNSUPPORTED_VAR_SET:
+            'variable of type {db_type_name} does not support being set',
     ERR_WALLET_FILE_MISSING:
             'cannot connect to database. Wallet file {name} was not found',
     ERR_WRONG_ARRAY_DEFINITION:
