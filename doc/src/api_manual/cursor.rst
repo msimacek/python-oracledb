@@ -160,29 +160,29 @@ Cursor Methods
     against all parameter mappings or sequences found in the sequence
     parameters. See :ref:`batchstmnt`.
 
-    The statement is managed in the same way as the :meth:`~Cursor.execute()`
-    method manages it. If the size of the buffers allocated for any of the
-    parameters exceeds 2 GB, you will receive the error "DPI-1015: array size
-    of <n> is too large", where <n> varies with the size of each element being
-    allocated in the buffer. If you receive this error, decrease the number of
-    elements in the sequence parameters.
+    The ``statement`` parameter is managed in the same way as the
+    :meth:`~Cursor.execute()` method manages it. If the size of the buffers
+    allocated for any of the parameters exceeds 2 GB, you will receive the
+    error "DPI-1015: array size of <n> is too large", where <n> varies with the
+    size of each element being allocated in the buffer. If you receive this
+    error, decrease the number of elements in the sequence parameters.
 
     If there are no parameters, or parameters have previously been bound, the
     number of iterations can be specified as an integer instead of needing to
     provide a list of empty mappings or sequences.
 
-    When True, the batcherrors parameter enables batch error support within
+    When True, the ``batcherrors`` parameter enables batch error support within
     Oracle and ensures that the call succeeds even if an exception takes place
     in one or more of the sequence of parameters. The errors can then be
     retrieved using :meth:`~Cursor.getbatcherrors()`.
 
-    When True, the arraydmlrowcounts parameter enables DML row counts to be
+    When True, the ``arraydmlrowcounts`` parameter enables DML row counts to be
     retrieved from Oracle after the method has completed. The row counts can
     then be retrieved using :meth:`~Cursor.getarraydmlrowcounts()`.
 
-    Both the batcherrors parameter and the arraydmlrowcounts parameter can only
-    be true when executing an insert, update, delete or merge statement; in all
-    other cases an error will be raised.
+    Both the ``batcherrors`` parameter and the ``arraydmlrowcounts`` parameter
+    can only be true when executing an insert, update, delete or merge
+    statement; in all other cases an error will be raised.
 
     For maximum efficiency, it is best to use the
     :meth:`~Cursor.setinputsizes()` method to specify the parameter types and
@@ -308,11 +308,15 @@ Cursor Methods
     This can be used before a call to :meth:`~Cursor.execute()` to define the
     statement that will be executed. When this is done, the prepare phase will
     not be performed when the call to :meth:`~Cursor.execute()` is made with
-    None or the same string object as the statement. If the tag parameter is
-    specified and the cache_statement parameter is True, the statement will be
-    returned to the statement cache with the given tag. If the cache_statement
-    parameter is False, the statement will be removed from the statement cache
-    (if it was found there) or will simply not be cached.
+    None or the same string object as the statement.
+
+    If the ``tag`` parameter is specified and the ``cache_statement`` parameter
+    is True, the statement will be returned to the statement cache with the
+    given tag.
+
+    If the ``cache_statement`` parameter is False, the statement will be
+    removed from the statement cache (if it was found there) or will simply not
+    be cached.
 
     See :ref:`Statement Caching <stmtcache>` for more information.
 
@@ -405,35 +409,35 @@ Cursor Methods
         * - str
           - :attr:`oracledb.DB_TYPE_VARCHAR`
 
-    The size parameter specifies the length of string and raw variables and is
+    The ``size`` parameter specifies the length of string and raw variables and is
     ignored in all other cases. If not specified for string and raw variables,
     the value 4000 is used.
 
-    The arraysize parameter specifies the number of elements the variable will
+    The ``arraysize`` parameter specifies the number of elements the variable will
     have. If not specified the bind array size (usually 1) is used. When a
     variable is created in an output type handler this parameter should be set
     to the cursor's array size.
 
-    The inconverter and outconverter parameters specify methods used for
+    The ``inconverter`` and ``outconverter`` parameters specify methods used for
     converting values to/from the database. More information can be found in
     the section on :ref:`variable objects<varobj>`.
 
-    The typename parameter specifies the name of a SQL object type and must be
+    The ``typename`` parameter specifies the name of a SQL object type and must be
     specified when using type :data:`oracledb.OBJECT` unless the type object
     was passed directly as the first parameter.
 
-    The encoding_errors parameter specifies what should happen when decoding
+    The ``encoding_errors`` parameter specifies what should happen when decoding
     byte strings fetched from the database into strings. It should be one of
     the values noted in the builtin
     `decode <https://docs.python.org/3/library/stdtypes.html#bytes.decode>`__
     function.
 
-    The bypass_decode parameter, if specified, should be passed as a
+    The ``bypass_decode`` parameter, if specified, should be passed as a
     boolean value. Passing a `True` value causes values of database types
     :data:`~oracledb.DB_TYPE_VARCHAR`, :data:`~oracledb.DB_TYPE_CHAR`,
     :data:`~oracledb.DB_TYPE_NVARCHAR`, :data:`~oracledb.DB_TYPE_NCHAR` and
     :data:`~oracledb.DB_TYPE_LONG` to be returned as `bytes` instead of `str`,
-    meaning that python-oracledb doesn't do any decoding. See :ref:`Fetching raw
+    meaning that python-oracledb does not do any decoding. See :ref:`Fetching raw
     data <fetching-raw-data>` for more information.
 
     For consistency and compliance with the PEP 8 naming style, the

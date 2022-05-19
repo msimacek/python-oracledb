@@ -53,7 +53,7 @@ The following example inserts five rows into the table ``ParentTable``:
 
 This code requires only one :ref:`round-trip <roundtrips>` from the client to
 the database instead of the five round-trips that would be required for
-repeated calls to :meth:`~Cursor.execute()`.  For very large data sets there
+repeated calls to :meth:`~Cursor.execute()`.  For very large data sets, there
 may be an external buffer or network limits to how many rows can be processed,
 so repeated calls to ``executemany()`` may be required.  The limits are based
 on both the number of rows being processed as well as the "size" of each row
@@ -69,7 +69,7 @@ the data is not uniform in type and size.  In such cases, python-oracledb makes
 some effort to accommodate such differences.  Type determination for each
 column is deferred until a value that is not ``None`` is found in the column's
 data.  If all values in a particular column are ``None``, then python-oracledb
-assumes the type is a string and has a length of 1.  python-oracledb will also
+assumes the type is a string and has a length of 1.  Python-oracledb will also
 adjust the size of the buffers used to store strings and bytes when a longer
 value is encountered in the data.  These sorts of operations incur overhead as
 memory has to be reallocated and data copied.  To eliminate this overhead,
@@ -93,8 +93,8 @@ Consider the following code:
             values (:1, :2)""", data)
 
 If this example did not call :meth:`~Cursor.setinputsizes()`, then
-python-oracledb would perform five allocations of increasing size and perform
-data copies as it discovered each new, longer string.  However
+python-oracledb performs five allocations of increasing size and perform
+data copies as it discovers each new, longer string.  However,
 ``cursor.setinputsizes(None, 20)`` tells python-oracledb that the maximum size
 of the strings that will be processed is 20 characters.  The first parameter of
 ``None`` tells python-oracledb that its default processing will be sufficient
@@ -178,8 +178,8 @@ Identifying Affected Rows
 
 When executing a DML statement using :meth:`~Cursor.execute()`, the number of
 rows affected can be examined by looking at the attribute
-:attr:`~Cursor.rowcount`. When performing batch executing with
-:meth:`Cursor.executemany()`, however, the row count will return the *total*
+:attr:`~Cursor.rowcount`. When performing batch execution with
+:meth:`Cursor.executemany()`, the row count will return the *total*
 number of rows that were affected. If you want to know the total number of rows
 affected by each row of data that is bound you must set the parameter
 ``arraydmlrowcounts`` to ``True``, as shown:
@@ -206,13 +206,13 @@ is as follows::
 DML RETURNING
 =============
 
-DML statements like INSERT, UPDATE, DELETE and MERGE can return values by using
+DML statements like INSERT, UPDATE, DELETE, and MERGE can return values by using
 the DML RETURNING syntax. A bind variable can be created to accept this data.
 See :ref:`bind` for more information.
 
 If, instead of merely deleting the rows as shown in the previous example, you
 also wanted to know some information about each of the rows that were deleted,
-you could use the following code:
+you can use the following code:
 
 .. code-block:: python
 
@@ -228,7 +228,7 @@ you could use the following code:
         print("Child IDs deleted for parent ID", parent_id, "are",
               child_id_var.getvalue(ix))
 
-The output would then be::
+The output will be::
 
     Child IDs deleted for parent ID 20 are [1002, 1003, 1004]
     Child IDs deleted for parent ID 30 are [1005, 1006]

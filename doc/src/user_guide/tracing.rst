@@ -12,7 +12,7 @@ Application Tracing
 There are multiple approaches for application tracing and monitoring:
 
 - :ref:`End-to-end database tracing <endtoendtracing>` attributes such as
-  :attr:`Connection.action`, and :attr:`Connection.module` are supported in the
+  :attr:`Connection.action` and :attr:`Connection.module` are supported in the
   python-oracledb Thin and Thick modes.  Using these attributes is recommended
   since they aid application monitoring and troubleshooting.
 
@@ -21,10 +21,10 @@ There are multiple approaches for application tracing and monitoring:
   tracing capabilities <https://docs.python.org/3/library/trace.html>`__ can be
   used.
 
-- The Java Debug Wire Protocol (JDWP) for debugging PL/SQL can be used, see :ref:`jdwp`.
+- The Java Debug Wire Protocol (JDWP) for debugging PL/SQL can be used. See :ref:`jdwp`.
 
 - Python-oracledb in Thick mode can dump a trace of SQL statements
-  executed, see :ref:`lowlevelsqltrace`.
+  executed. See :ref:`lowlevelsqltrace`.
 
 .. _endtoendtracing:
 
@@ -45,10 +45,10 @@ The attributes are sent to the database when the next :ref:`round-trip
 executed.
 
 The attribute values will remain set in connections released back to connection
-pools.  When the application re-acquires a connection from the pool it should
+pools.  When the application re-acquires a connection from the pool, it should
 initialize the values to a desired state before using that connection.
 
-The example below shows setting the action, module and client identifier
+The example below shows setting the action, module, and client identifier
 attributes on the connection object:
 
 .. code-block:: python
@@ -75,7 +75,7 @@ id=GUID-14484F86-44F2-4B34-B34E-0C873D323EAD>`__
 or `DBMS_SESSION.SET_IDENTIFIER
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
 id=GUID-988EA930-BDFE-4205-A806-E54F05333562>`__. These incur round-trips to
-the database, however, reducing scalability.
+the database; however, reducing scalability.
 
 .. code-block:: sql
 
@@ -104,7 +104,7 @@ Subclassing Connections
 -----------------------
 
 Subclassing enables applications to add "hooks" for connection and statement
-execution.  This can be used to alter, or log, connection and execution
+execution.  This can be used to alter or log connection and execution
 parameters, and to extend python-oracledb functionality.
 
 The example below demonstrates subclassing a connection to log SQL execution
@@ -159,7 +159,7 @@ instead::
                 where department_id = :id
     ORA-00942: table or view does not exist
 
-In production applications be careful not to log sensitive information.
+In production applications, be careful not to log sensitive information.
 
 See `Subclassing.py
 <https://github.com/oracle/python-oracledb/blob/main/
@@ -173,21 +173,22 @@ Debugging PL/SQL with the Java Debug Wire Protocol
 
 The Java Debug Wire Protocol (JDWP) for debugging PL/SQL can be used.
 
-  The python-oracledb applications that call PL/SQL can step through that PL/SQL code
-  using JDWP in a debugger. This allows Python and PL/SQL code to be debugged in the
-  same debugger environment. You can enable PL/SQL debugging in the python-oracledb
-  modes as follows:
+The python-oracledb applications that call PL/SQL can step through that PL/SQL code
+using JDWP in a debugger. This allows Python and PL/SQL code to be debugged in the
+same debugger environment. You can enable PL/SQL debugging in the python-oracledb
+modes as follows:
 
-    - If you are using python-oracledb Thick mode, set the ``ORA_DEBUG_JDWP`` environment
-      variable to `host=hostname;port=portnum` indicating where the PL/SQL debugger
-      is running.
+- If you are using python-oracledb Thick mode, set the ``ORA_DEBUG_JDWP`` environment
+  variable to `host=hostname;port=portnum` indicating where the PL/SQL debugger
+  is running.
 
-    - In the python-oracledb Thin mode, you can additionally set the connection
-      parameter ``debug_jdwp``. This variable defaults to the value of the
-      ``ORA_DEBUG_JDWP`` environment variable.
+- In the python-oracledb Thin mode, you can additionally set the connection
+  parameter ``debug_jdwp``. This variable defaults to the value of the
+  ``ORA_DEBUG_JDWP`` environment variable.
 
-  See `DBMS_DEBUG_JDWP <https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_DEBUG_JDWP.html>`_ and `Debugging PL/SQL from ASP.NET and Visual
-  Studio <http://cshay.blogspot.com/2006/10/debugging-plsql-from-aspnet-and-visual.html>`_.
+See `DBMS_DEBUG_JDWP <https://docs.oracle.com/en/database/oracle/oracle-database
+/19/arpls/DBMS_DEBUG_JDWP.html>`_ and `Debugging PL/SQL from ASP.NET and Visual
+Studio <http://cshay.blogspot.com/2006/10/debugging-plsql-from-aspnet-and-visual.html>`_.
 
 
 .. _lowlevelsqltrace:
@@ -245,16 +246,16 @@ To see which driver mode is in use you can query the table
         for r, in cursor.execute(sql):
             print(r)
 
-Output is like::
+The output will be::
 
     python-oracledb thn : 1.0.0
 
-In the python-oracledb Thick mode the output would be like::
+In the python-oracledb Thick mode, the output will be::
 
     python-oracledb thk : 1.0.0
 
 The ``CLIENT_DRIVER`` values is configurable in the python-oracledb Thick mode
-with a call like ``init_oracle_client(driver_name='myapp : 2.0.0')``, see
+with a call like ``init_oracle_client(driver_name='myapp : 2.0.0')``. See
 :ref:`otherinit`.
 
 
@@ -337,12 +338,12 @@ Low level tracing is mostly useful to maintainers of python-oracledb.
 
 - The python-oracledb Thick mode can be traced using:
 
-    - dpi_debug_level as documented in `ODPI-C Debugging
-      <https://oracle.github.io/odpi/doc/user_guide/debugging.html>`__.
+  - dpi_debug_level as documented in `ODPI-C Debugging
+    <https://oracle.github.io/odpi/doc/user_guide/debugging.html>`__.
 
-    - Oracle Call Interface (OCI) tracing as directed by Oracle Support.
+  - Oracle Call Interface (OCI) tracing as directed by Oracle Support.
 
-    - Oracle Net services tracing as documented in `Oracle Net Services Tracing
-      Parameters
-      <https://docs.oracle.com/en/database/oracle/oracle-database/21/
-      netrf/parameters-for-the-sqlnet.ora.html>`__
+  - Oracle Net services tracing as documented in `Oracle Net Services Tracing
+    Parameters
+    <https://docs.oracle.com/en/database/oracle/oracle-database/21/
+    netrf/parameters-for-the-sqlnet.ora.html>`__

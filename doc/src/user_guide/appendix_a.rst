@@ -7,10 +7,10 @@ Appendix A: Oracle Database Features Supported by python-oracledb
 By default, python-oracledb runs in a 'Thin' mode which connects directly to
 Oracle Database.  This mode does not need Oracle Client libraries.  However,
 some additional functionality is available when python-oracledb uses them.
-The python-oracledb connections are said to be in 'Thick' mode when Oracle Client
-libraries are used.  Both modes have comprehensive functionality supporting the
-Python Database API v2.0 Specification.  See :ref:`initialization` for how to
-enable Thick mode.
+Python-oracledb is said to be in 'Thick' mode when Oracle Client libraries are
+used.  Both modes have comprehensive functionality supporting the Python
+Database API v2.0 Specification.  See :ref:`initialization` for how to enable
+Thick mode.
 
 The following table summarizes the Oracle Database features supported by
 python-oracledb Thin and Thick modes, and by cx_Oracle 8.3.  For more details
@@ -87,7 +87,7 @@ see :ref:`driverdiff` and :ref:`compatibility`.
       - Yes
     * - Connection mode privileges (see :ref:`connection-authorization-modes`)
       - Yes
-      - Yes
+      - Yes - only :data:`~oracledb.AUTH_MODE_SYSDBA` is supported in Thick mode
       - Yes
     * - Preliminary connections
       - No

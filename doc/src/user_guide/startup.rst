@@ -4,7 +4,7 @@
 Starting and Stopping Oracle Database
 *************************************
 
-This chapter covers how to start up and shutdown Oracle Database using
+This chapter covers how to start up and shut down Oracle Database using
 python-oracledb.
 
 .. note::
@@ -16,7 +16,7 @@ python-oracledb.
 Starting Oracle Database Up
 ===========================
 
-python-oracledb can start up a database instance. A privileged connection is
+Python-oracledb can start up a database instance. A privileged connection is
 required. This example shows a script that could be run as the 'oracle'
 operating system user who administers a local database installation on Linux.
 It assumes that the environment variable ``ORACLE_SID`` has been set to the SID
@@ -45,7 +45,7 @@ by adding a ``SID_LIST_LISTENER`` entry to the database `listener.ora` file.
 Shutting Oracle Database Down
 =============================
 
-python-oracledb has the ability to shutdown the database using a privileged
+Python-oracledb has the ability to shut down the database using a privileged
 connection. This example also assumes that the environment variable
 ``ORACLE_SID`` has been set:
 

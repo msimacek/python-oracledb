@@ -18,7 +18,7 @@ ConnectParams Methods
 
 .. method:: ConnectParams.copy()
 
-  Creates a copy of the parameters and returns it.
+  Creates a copy of the ConnectParams instance and returns it.
 
 .. method:: ConnectParams.get_connect_string()
 
@@ -28,9 +28,9 @@ ConnectParams Methods
 
   Parses the connect string into its components and stores the parameters.
 
-  The connect string can be an Easy Connect string, name-value pairs, or a simple alias
-  which is looked up in ``tnsnames.ora``. Parameters that are found in the connect string
-  override any currently stored values.
+  The ``connect string`` parameter can be an Easy Connect string, name-value
+  pairs, or a simple alias which is looked up in ``tnsnames.ora``. Parameters
+  that are found in the connect string override any currently stored values.
 
 .. method:: ConnectParams.set()
 

@@ -7,7 +7,7 @@ Using Bind Variables
 SQL and PL/SQL statements that pass data to and from Oracle Database should use
 placeholders in SQL and PL/SQL statements that mark where data is supplied or
 returned.  These placeholders are referred to as bind variables or bind
-parameters A bind variable is a colon-prefixed identifier or numeral. For
+parameters. A bind variable is a colon-prefixed identifier or numeral. For
 example, there are two bind variables (``dept_id`` and ``dept_name``) in this
 SQL statement:
 
@@ -43,7 +43,7 @@ a column name or a table name is required.  Bind variables also cannot be used
 in Data Definition Language (DDL) statements, such as CREATE TABLE or ALTER
 statements.
 
-Binding By Name or Position
+Binding by Name or Position
 ===========================
 
 Binding can be done by name or by position. A named bind is performed when the
@@ -148,7 +148,7 @@ For example:
             insert into departments (department_id, department_name)
             values (:dept_id, :dept_name)""", dept_id=280, dept_name=None)
 
-In this specific case, because the ``DEPARTMENT_NAME`` column is defined as a
+In this specific case, since the ``DEPARTMENT_NAME`` column is defined as a
 ``NOT NULL`` column, an error will occur::
 
     oracledb.IntegrityError: ORA-01400: cannot insert NULL into ("HR"."DEPARTMENTS"."DEPARTMENT_NAME")
@@ -163,7 +163,7 @@ variable with the correct type by calling :func:`Cursor.var()`.
 Binding ROWID Values
 ====================
 
-The pseudo-column ``ROWID`` uniquely identifies a row within a table.  In
+The pseudo-column ``ROWID`` uniquely identifies a row in a table.  In
 python-oracledb, ROWID values are represented as strings. The example below shows
 fetching a row and then updating that row by binding its rowid:
 
@@ -205,8 +205,7 @@ the use of OUT bind variables. Consider the following example:
 
 In the above example, since the WHERE clause matches only one row, the output
 contains a single item in the list. If the WHERE clause matched multiple rows,
-however, the output would contain as many items as there were rows that were
-updated.
+the output would contain as many items as there were rows that were updated.
 
 No duplicate binds are allowed in a DML statement with a RETURNING clause, and
 no duplication is allowed between bind variables in the DML section and the
@@ -253,7 +252,7 @@ example, consider the PL/SQL procedure:
     END;
     /
 
-A newly opened cursor can be bound to the REF CURSOR parameter, as shown in the
+A newly opened cursor can be bound to the REF CURSOR parameter as shown in the
 following Python code. After the PL/SQL procedure has been called with
 :meth:`Cursor.callproc()`, the cursor can then be fetched just like any other
 cursor which had executed a SQL query:
@@ -383,12 +382,12 @@ Consider the following PL/SQL package:
     end;
     /
 
-The Python code to process an OUT collection would look as follows. Note the
+The Python code to process an OUT collection will be as follows. Note the
 call to :meth:`Cursor.arrayvar()` which creates space for an array of strings.
-Each string would permit up to 100 bytes and only 10 strings would be
-permitted. If the PL/SQL block exceeds the maximum number of strings allowed
-the error ``ORA-06513: PL/SQL: index for PL/SQL table out of range for host
-language array`` would be raised.
+Each string permits up to 100 bytes and only 10 strings are permitted. If the
+PL/SQL block exceeds the maximum number of strings allowed the error
+``ORA-06513: PL/SQL: index for PL/SQL table out of range for host
+language array`` will be raised.
 
 .. code-block:: python
 
@@ -418,7 +417,7 @@ initial value.
     for val in in_out_array_var.getvalue():
         print(val)
 
-This would produce the following output::
+This will produce the following output::
 
     Converted element #1 originally had length 10
     Converted element #2 originally had length 10
@@ -615,10 +614,10 @@ unexpected values or the Python application segfaulting.
 
 .. _spatial:
 
-Binding Spatial Datatypes
-=========================
+Binding Spatial Data Types
+==========================
 
-Oracle Spatial datatypes objects can be represented by Python objects and their
+Oracle Spatial data types objects can be represented by Python objects and their
 attribute values can be read and updated. The objects can further be bound and
 committed to database. This is similar to the examples above.
 
@@ -706,7 +705,7 @@ If the query is executed multiple times with differing numbers of values, a
 bind variable should be included for each possible value. When the statement is
 executed but the maximum number of values has not been supplied, the value
 ``None`` can be bound for missing values. For example, if the query above is
-used for up to 5 values, the code would be:
+used for up to 5 values, the code will be:
 
 .. code-block:: python
 
@@ -723,7 +722,7 @@ statement like this for a variable number of values, instead of constructing a
 unique statement per set of values, allows best reuse of Oracle Database
 resources.
 
-However, if the statement is not going to be re-executed, or the number of
+However, if the statement is not going to be re-executed or the number of
 values is only going to be known at runtime, then a SQL statement can be built
 up as follows:
 
@@ -742,7 +741,7 @@ statement like::
 
     SELECT ... WHERE col IN ( <something that returns a list of values> )
 
-The best way to do the '<something that returns a list of values>' will depend
+The best way to do the '<something that returns a list of values>' depends
 on how the data is initially represented and the number of items. You might
 look at using CONNECT BY or at using a global temporary table.
 

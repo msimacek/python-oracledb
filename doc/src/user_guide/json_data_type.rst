@@ -1,8 +1,8 @@
 .. _jsondatatype:
 
-*******************************
-Working with the JSON Data Type
-*******************************
+***************
+Using JSON Data
+***************
 
 Native support for JSON data was introduced in Oracle Database 12c.  You can
 use JSON with relational database features, including transactions, indexing,
@@ -33,7 +33,7 @@ The older syntax to create a table with a JSON column is like:
 The check constraint with the clause ``IS JSON`` ensures only JSON data is
 stored in that column.
 
-The older syntax can still be used in Oracle Database 21c, however the
+The older syntax can still be used in Oracle Database 21c; however, the
 recommendation is to move to the new JSON type.  With the old syntax, the
 storage can be BLOB, CLOB, or VARCHAR2.  Of these, BLOB is preferred to avoid
 character set conversion overheads.

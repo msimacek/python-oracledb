@@ -5,7 +5,7 @@ Using CLOB and BLOB Data
 ************************
 
 Oracle Database uses :ref:`LOB objects <lobobj>` to store large data such as text, images,
-videos and other multimedia formats.  The maximum size of a LOB is limited to
+videos, and other multimedia formats.  The maximum size of a LOB is limited to
 the size of the tablespace storing it.
 
 There are four types of LOB (large object):
@@ -26,7 +26,7 @@ LOBs can be streamed to, and from, Oracle Database.
 
 LOBs up to 1 GB in length can be also be handled directly as strings or bytes in
 python-oracledb.  This makes LOBs easy to work with, and has significant performance
-benefits over streaming.  However it requires the entire LOB data to be present
+benefits over streaming.  However, it requires the entire LOB data to be present
 in Python memory, which may not be possible.
 
 See `GitHub <https://github.com/oracle/python-oracledb/tree/main/samples>`__ for LOB examples.
@@ -120,7 +120,7 @@ handler:
 Streaming LOBs (Read)
 ---------------------
 
-Without setting ``oracledb.defaults.fetch_lobs`` to Falase, or without using a
+Without setting ``oracledb.defaults.fetch_lobs`` to False, or without using a
 output type handler, the CLOB and BLOB values are fetched as :ref:`LOB
 objects<lobobj>`. The size of the LOB object can be obtained by calling
 :meth:`LOB.size()` and the data can be read by calling :meth:`LOB.read()`:

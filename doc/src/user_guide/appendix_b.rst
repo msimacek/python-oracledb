@@ -7,10 +7,10 @@ Appendix B: Differences between python-oracledb Thin and Thick Modes
 By default, python-oracledb runs in a 'Thin' mode which connects directly to
 Oracle Database.  This mode does not need Oracle Client libraries.  However,
 some :ref:`additional functionality <featuresummary>` is available when
-python-oracledb uses them.  Python-oracledb connections are said to be in
-'Thick' mode when Oracle Client libraries are used.  See :ref:`enablingthick`.
-Both modes have comprehensive functionality supporting the Python Database API
-v2.0 Specification.
+python-oracledb uses them.  Python-oracledb is said to be in 'Thick' mode when
+Oracle Client libraries are used.  See :ref:`enablingthick`.  Both modes have
+comprehensive functionality supporting the Python Database API v2.0
+Specification.
 
 This section details the differences between the python-oracledb Thin and Thick
 modes.
@@ -18,29 +18,29 @@ modes.
 Connection Handling Differences between Thin and Thick Modes
 ============================================================
 
-Each python-oracledb process can create connections in either the
-python-oracledb Thick mode or the Thin mode. However, only one of these modes
-can be used.
+Python-oracledb can create connections in either a Thin mode or a Thick
+mode. However, only one of these modes can be used in each Python process:
 
-- By default, python-oracledb runs in a 'Thin' mode which connects directly to
+- By default, python-oracledb runs in a Thin mode which connects directly to
   Oracle Database.
 
-- If :func:`oracledb.init_oracle_client()` loads the Oracle Client libraries
-  before any standalone connection or pool is created, then the mode becomes
-  Thick.  See :ref:`enablingthick`.
+- If :func:`oracledb.init_oracle_client()` loads Oracle Client libraries before
+  any standalone connection or pool is created, then the python-oracledb mode
+  becomes Thick.  The client libraries handle communication with Oracle
+  Database. See :ref:`enablingthick`.
 
 - If an application opens a connection or creates a pool and then calls
   :func:`oracledb.init_oracle_client()`, an error will occur.
 
-Once a connection or pool has been opened, or
-:func:`~oracledb.init_oracle_client()` has been called, you cannot change the
-mode.
+- Once a connection or pool has been opened, or
+  :func:`~oracledb.init_oracle_client()` has been called, you cannot change the
+  mode.
 
 .. note::
 
     The parameters of connection and pool creation functions
     :func:`oracledb.connect()` and :func:`oracledb.create_pool()` are now
-    keyword and not positional in both Thin and Thick modes . This change makes
+    keyword and not positional in both Thin and Thick modes. This change makes
     the python-oracledb driver compliant with the Python Database API
     specification PEP 249.  The old usage will cause an error, see
     :ref:`connerrors`.
@@ -51,8 +51,8 @@ Connections to a Local Database
 In Thin mode, there is no concept of a local database.  Bequeath connections
 cannot be made since no Oracle Client libraries are used.  The Thin mode does
 not de-reference environment variables such as ``ORACLE_SID``, ``TWO_TASK``, or
-``LOCAL`` (the latter is specific to Windows).  A connection string must always
-be used.
+``LOCAL`` (the latter is specific to Windows).  A connection string, or
+equivalent, must always be used.
 
 .. _sqlnetclientconfig:
 
@@ -79,7 +79,8 @@ Connection Strings
 ------------------
 
 The python-oracledb Thin mode accepts connection strings in the same formats as
-the Thick mode, but not all Oracle Net keywords will be supported.
+the Oracle Client libraries used by Thick mode does, but not all Oracle Net
+keywords will be supported.
 
 The following table lists the parameters that are recognized in Thin mode
 either in Easy Connect Strings or in Full Connect Descriptor Strings that are
@@ -98,7 +99,7 @@ used in :meth:`oracledb.connect()`, :meth:`oracledb.create_pool()`,
       - Notes
     * - SSL_SERVER_CERT_DN
       - ssl_server_cert_dn
-      - If specified, this value is used for any verfication.  Otherwise the hostname will be used.
+      - If specified, this value is used for any verification.  Otherwise, the hostname will be used.
     * - SSL_SERVER_DN_MATCH
       - ssl_server_dn_match
       - In Thin mode parsing the parameter supports case insensitive on/yes/true values similar to the Thick mode. Any other value is treated as disabling it.
@@ -200,7 +201,7 @@ Connection Pooling Differences between Thin and Thick Modes
 
 Python-oracledb introduced the :ref:`ConnectionPool Object <connpool>` class to
 replace ``SessionPool``.  A new :func:`oracledb.create_pool()` method is now
-the recomended way to create a connection pool.  The use of the equivalent
+the recommended way to create a connection pool.  The use of the equivalent
 ``SessionPool()`` method is :ref:`deprecated <deprecations>`.
 
 The :func:`~oracledb.create_pool()` in the python-oracledb Thin mode differs
@@ -208,15 +209,16 @@ from the python-oracledb Thick mode in the following ways:
 
 * Not all the parameters of the :func:`oracledb.create_pool()` method are applicable
   to the python-oracledb modes.  Each mode ignores unrecognized parameters.
-  The parameters that are ignored in Thin mode include events, tag,
-  matchanytag, appcontext, shardingkey, supershardingkey, and handle parameters.
-  The parameters that are ignored in the Thick mode include wallet_password,
-  disable_oob, config_dir, and debug_jdwp parameters.
+  The parameters that are ignored in Thin mode include ``events``, ``tag``,
+  ``matchanytag``, ``appcontext``, ``shardingkey``, ``supershardingkey``, and
+  ``handle`` parameters.  The parameters that are ignored in the Thick mode include
+  ``wallet_password``, ``disable_oob``, ``config_dir``, and ``debug_jdwp`` parameters.
 
 * The ``getmode`` value :data:`~oracledb.POOL_GETMODE_TIMEDWAIT` is not
   implemented in the python-oracledb Thin mode.
 
-* Only homogeneous pools are supported in the python-oracledb Thin mode.
+* The python-oracledb Thin mode only suppports :ref:`homogeneous
+  <connpooltypes>` pools.
 
 * The python-oracledb Thin mode creates connections in a daemon thread and so
   :func:`oracledb.create_pool()` returns before any or all minimum number of
@@ -256,13 +258,14 @@ from the python-oracledb Thick mode in the following ways:
 * In python-oracledb Thin mode, the connection pool supports all the :ref:`connection
   mode privileges <connection-authorization-modes>`.
 
-  The python-oracledb Thick mode does not support all of these privileges.
+  The python-oracledb Thick mode only supports the :data:`~oracledb.AUTH_MODE_SYSDBA`
+  privilege.
 
-Supported Database Types in Thin and Thick Modes
-================================================
+Supported Database Data Types in Thin and Thick Modes
+=====================================================
 
-The python-oracledb Thin and Thick modes support different Oracle database types.
-See :ref:`supporteddbtypes`.
+The python-oracledb Thin and Thick modes support different Oracle database data
+types.  See :ref:`supporteddbtypes`.
 
 .. _querymetadatadiff:
 
@@ -309,11 +312,12 @@ The python-oracledb Thin and Thick modes handle some errors differently. See
 Globalization in Thin and Thick Modes
 =====================================
 
-All NLS environment variables are ignored by the python-oracledb Thin mode. Use
-Python's capabilities instead.  See :ref:`globalization`.
+All NLS environment variables, and the ``ORA_SDTZ`` and ``ORA_TZFILE``
+variables, are ignored by the python-oracledb Thin mode.  Use Python's
+capabilities instead.  See :ref:`globalization`.
 
 Tracing in Thin and Thick Modes
 ===============================
 
-In python-oracledb Thin mode, low level tracing is different because there is
-no Oracle Client.  See :ref:`tracingsql`.
+In the python-oracledb Thin mode, low level tracing is different because there
+are no Oracle Client libraries.  See :ref:`tracingsql`.

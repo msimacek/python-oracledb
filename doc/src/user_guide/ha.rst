@@ -4,7 +4,7 @@
 Using High Availability with python-oracledb
 *********************************************
 
-Applications can utilize many features for high availability (HA) during planned and
+Applications can use many features for high availability (HA) during planned and
 unplanned outages in order to:
 
 *  Reduce application downtime
@@ -20,11 +20,11 @@ General recommendations for creating highly available python-oracledb programs a
 
 * Tune operating system and Oracle Network parameters to avoid long TCP timeouts, to prevent firewalls killing connections, and to avoid connection storms.
 * Implement application error handling and recovery.
-* Use the most recent version of the Oracle client libraries.  New versions have improvements to features such as dead database server detection, and make it easier to set connection options.
+* Use the most recent version of the Oracle Client libraries.  New versions have improvements to features such as dead database server detection, and make it easier to set connection options.
 * Use the most recent version of Oracle Database.  New database versions introduce, and enhance, features such as Application Continuity (AC) and Transparent Application Continuity (TAC).
-* Utilize Oracle Database technologies such as `RAC <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=RACAD>`__ or standby databases.
+* Use Oracle Database technologies such as `RAC <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=RACAD>`__ or standby databases.
 * Configure database services to emit :ref:`FAN <fan>` events.
-* Use a :ref:`connection pool <connpooling>`, because pools can handle database events and take proactive and corrective action for draining, run time load balancing, and fail over.  Set the minimum and maximum pool sizes to the same values to avoid connection storms. Remove resource manager or user profiles that prematurely close sessions.
+* Use a :ref:`connection pool <connpooling>` because pools can handle database events and take proactive and corrective action for draining, run time load balancing, and fail over.  Set the minimum and maximum pool sizes to the same values to avoid connection storms. Remove resource manager or user profiles that prematurely close sessions.
 * Test all scenarios thoroughly.
 
 .. _hanetwork:
@@ -45,8 +45,8 @@ can be explored.
 
 `Oracle Net Services
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=NETRF>`__ options may
-also be useful for high availability and performance tuning.  For example the
-database's `listener.ora` file can have `RATE_LIMIT
+also be useful for high availability and performance tuning.  For example, the
+database's ``listener.ora`` file can have `RATE_LIMIT
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-F302BF91-64F2-4CE8-A3C7-9FDB5BA6DCF8>`__
 and `QUEUESIZE
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-FF87387C-1779-4CC3-932A-79BB01391C28>`__
@@ -80,7 +80,7 @@ Fast Application Notification (FAN)
 Users of `Oracle Database FAN
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-F3FBE48B-468B-4393-8B0C-D5C8E0E4374D>`__
 must connect to a FAN-enabled database service.  The application should have
-``events`` set to True when connecting.  This value can also be changed via
+``events`` set to `True` when connecting.  This value can also be changed via
 :ref:`Oracle Client Configuration <optclientfiles>`.
 
 .. note::
@@ -111,7 +111,7 @@ Users of Oracle's Data Guard with a broker will get FAN events generated when
 the standby database goes online.  Standalone databases will send FAN events
 when the database restarts.
 
-For a more information on FAN see the `white paper on Fast Application
+For more information on FAN, see the `white paper on Fast Application
 Notification
 <https://www.oracle.com/technetwork/database/options/clustering/applicationcontinuity/learnmore/fastapplicationnotification12c-2538999.pdf>`__.
 
@@ -147,7 +147,7 @@ for more information.
 Transaction Guard
 -----------------
 
-python-oracledb supports `Transaction Guard
+Python-oracledb supports `Transaction Guard
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
 id=GUID-A675AF7B-6FF0-460D-A6E6-C15E7C328C8F>`__ which enables Python
 application to verify the success or failure of the last transaction in the
@@ -177,7 +177,7 @@ id.
 Follow the steps below to use the Transaction Guard feature in Python:
 
 1.  Grant execute privileges to the database users who will be checking the
-    outcome of the commit. Login as SYSDBA and run the following command:
+    outcome of the commit. Log in as SYSDBA and run the following command:
 
     .. code-block:: sql
 
@@ -209,7 +209,7 @@ Follow the steps below to use the Transaction Guard feature in Python:
         END;
         /
 
-Ensure the service is running by examining the output of the following query:
+Ensure that the service is running by examining the output of the following query:
 
     .. code-block:: sql
 

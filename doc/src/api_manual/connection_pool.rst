@@ -8,7 +8,7 @@ API: ConnectionPool Objects
 
     This object is an extension to the DB API.
 
-The new ConnectionPool class is synonomous with SessionPool. The SessionPool class
+The new ConnectionPool class is synonymous with SessionPool. The SessionPool class
 and function ``Oracledb.SessionPool`` is deprecated in python-oracledb.
 (The name SessionPool came from the `Oracle Call Interface (OCI)
 session pool
@@ -50,26 +50,27 @@ ConnectionPool Methods
     Acquires a connection from the session pool and returns a
     :ref:`connection object <connobj>`.
 
-    If the pool is homogeneous, the user and password parameters cannot be
-    specified. If they are, an exception will be raised.
+    If the pool is :ref:`homogeneous <connpooltypes>`, the ``user`` and
+    ``password`` parameters cannot be specified. If they are, an exception will
+    be raised.
 
-    The cclass parameter, if specified, should be a string corresponding to the
+    The ``cclass`` parameter, if specified, should be a string corresponding to the
     connection class for database resident connection pooling (DRCP).
 
-    The purity parameter is expected to be one of
+    The ``purity`` parameter is expected to be one of
     :data:`~oracledb.PURITY_NEW`, :data:`~oracledb.PURITY_ANY`, or
     :data:`~oracledb.PURITY_DEFAULT`.
 
-    The tag parameter, if specified, is expected to be a string with name=value
+    The ``tag`` parameter, if specified, is expected to be a string with name=value
     pairs like "k1=v1;k2=v2" and will limit the connections that can be returned
-    from a connection pool unless the matchanytag parameter is set to True. In
+    from a connection pool unless the ``matchanytag`` parameter is set to True. In
     that case, connections with the specified tag will be preferred over others,
     but if no such connections are available, then a connection with a different tag
     may be returned instead. In any case, untagged connections will always be returned
     if no connections with the specified tag are available. Connections are tagged when
     they are :meth:`released <ConnectionPool.release>` back to the pool.
 
-    The shardingkey and supershardingkey parameters, if specified, are expected
+    The ``shardingkey`` and ``supershardingkey`` parameters, if specified, are expected
     to be a sequence of values which will be used to identify the database
     shard to connect to. The key values can be strings, numbers, bytes or
     dates.
@@ -80,7 +81,7 @@ ConnectionPool Methods
     released, which makes it unusable for further work.
 
     If any connections have been acquired and not released back to the pool,
-    this method will fail unless the force parameter is set to True.
+    this method will fail unless the ``force`` parameter is set to True.
 
 .. method:: ConnectionPool.create_pool(dsn, pool_class, pool_params, conn_params, \
     min, max, increment, connectiontype, getmode, homogeneous, externalauth,timeout, \
@@ -94,20 +95,20 @@ ConnectionPool Methods
 
     Creates a connection pool with the supplied parameters and returns it.
 
-    The dsn parameter (data source name) can be a string in the format
+    The ``dsn`` parameter (data source name) can be a string in the format
     ``user/password@connect_string`` or can simply be a connect string in
     which case the user and password need to be specified separately.
     See :ref:`connstr` for more information.
 
-    The pool_class parameter is a ConnectionPool or a subclass of
+    The ``pool_class`` parameter is a ConnectionPool or a subclass of
     ConnectionPool.
 
-    The pool_params parameter is of type PoolParams and contains
+    The ``pool_params`` parameter is of type PoolParams and contains
     parameters that are used to create the pool. If not specified, a new
     PoolParams object will be created using the additional keyword arguments.
     See :ref:`poolparam` for more information.
 
-    The conn_params parameter is of type ConnectParams and contains
+    The ``conn_params`` parameter is of type ConnectParams and contains
     connection parameters that will be used when creating connections
     in the pool. If not specified, a new ConnectParams object will be created
     using the additional keyword arguments. See :ref:`connparam` for more information.
@@ -224,8 +225,9 @@ ConnectionPool Attributes
 .. attribute:: ConnectionPool.homogeneous
 
     This read-write boolean attribute indicates whether the pool is considered
-    homogeneous or not. If the pool is not homogeneous, different authentication
-    can be used for each connection acquired from the pool.
+    :ref:`homogeneous <connpooltypes>` or not. If the pool is not homogeneous,
+    different authentication can be used for each connection acquired from the
+    pool.
 
 
 .. attribute:: ConnectionPool.increment
@@ -350,6 +352,6 @@ ConnectionPool Attributes
 
     This read-write attribute specifies the time (in milliseconds) that the
     caller should wait for a connection to become available in the pool before
-    returning with an error. This value is only used if the getmode parameter
+    returning with an error. This value is only used if the ``getmode`` parameter
     to :meth:`oracledb.create_pool()` was the value
     :data:`oracledb.POOL_GETMODE_TIMEDWAIT`.

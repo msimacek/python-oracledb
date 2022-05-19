@@ -4,7 +4,7 @@
 Character Sets and Globalization
 ********************************
 
-Data fetched from, and sent to, Oracle Database will be mapped between the
+Data fetched from and sent to Oracle Database will be mapped between the
 database character set and the "Oracle client" character set of the Oracle
 Client libraries used by python-oracledb. If data cannot be correctly mapped between
 client and server character sets, then it may be corrupted or queries may fail
@@ -26,9 +26,9 @@ assist in globalizing applications, see :ref:`thicklocale`.
 
 .. note::
 
-    All NLS_* environment variables are ignored by the python-oracledb Thin
-    mode.  Also the ``ORA_SDTZ`` and ``ORA_TZFILE`` variables are ignored.
-    See :ref:`thindatenumber`.
+    All NLS environment variables are ignored by the python-oracledb Thin mode.
+    Also the ``ORA_SDTZ`` and ``ORA_TZFILE`` variables are ignored.  See
+    :ref:`thindatenumber`.
 
 For more information, see the `Database Globalization Support Guide
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=NLSPG>`__.

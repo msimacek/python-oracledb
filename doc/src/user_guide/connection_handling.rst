@@ -11,10 +11,10 @@ Connections between python-oracledb and Oracle Database are used for executing
 By default, python-oracledb runs in a 'Thin' mode which connects directly to
 Oracle Database.  This mode does not need Oracle Client libraries.  However,
 some :ref:`additional functionality <featuresummary>` is available when
-python-oracledb uses them.  Python-oracledb connections are said to be in
-'Thick' mode when Oracle Client libraries are used.  See :ref:`enablingthick`.
-Both modes have comprehensive functionality supporting the Python Database API
-v2.0 Specification.
+python-oracledb uses them.  Python-oracledb is said to be in 'Thick' mode when
+Oracle Client libraries are used.  See :ref:`enablingthick`.  Both modes have
+comprehensive functionality supporting the Python Database API v2.0
+Specification.
 
 If you intend to use the Thick mode, then you *must* call
 :func:`~oracledb.init_oracle_client()` in the application before any standalone
@@ -57,7 +57,7 @@ a connection can take, or enabling :ref:`network encryption <netencrypt>`.
 
        When using python-oracledb in Thin mode, the ``tnsnames.ora`` file will not
        be automatically located.  The file's directory must explicitly be passed
-       to the appplication, see :ref:`optnetfiles`.
+       to the application, see :ref:`optnetfiles`.
 
 .. _standaloneconnection:
 
@@ -184,7 +184,9 @@ Alternatively, you can explicitly close a connection by calling.
 Common Connection Errors
 ------------------------
 
-Some of the common connection errors that you may encounter are detailed below.
+Some of the common connection errors that you may encounter in the
+python-oracledb's default Thin mode are detailed below.  Also see
+:ref:`errorhandling`.
 
 Use keyword parameters
 ++++++++++++++++++++++
@@ -228,8 +230,9 @@ Use the correct connection string
 If the hostname, port, or service name are incorrect, then the connection will fail
 with the error::
 
-    DPY-6001: cannot connect to database. Service "doesnotexist" is not registered with the listener at host "localhost" port 1521. (Similar to ORA-12514)
-
+    DPY-6001: cannot connect to database. Service "doesnotexist" is not
+    registered with the listener at host "localhost" port 1521. (Similar to
+    ORA-12514)
 
 This error means that Python successfully reached a computer (in this case,
 "localhost" using the default port 1521) that is running a database.  However,
@@ -647,7 +650,7 @@ performance-impacting configuration issues such as firewalls terminating
 connections, and so monitor the connection rate in `AWR
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-56AEF38E-9400-427B-A818-EDEC145F7ACD>`__
 for an unexpectedly large value.  You can explicitly initiate a full round-trip
-ping at anytime with :meth:`Connection.ping()` to check connection liveness but the
+ping at any time with :meth:`Connection.ping()` to check connection liveness but the
 overuse will impact performance and scalability.
 
 Ensure that the :ref:`firewall <hanetwork>`, `resource manager
@@ -661,10 +664,12 @@ Connection Pool Sizing
 ----------------------
 
 The Oracle Real-World Performance Group's recommendation is to use fixed size
-connection pools.  The values of ``min`` and ``max`` should be the same (and
-the ``increment`` equal to zero).  This avoids connection storms which can
-decrease throughput.  See `Guideline for Preventing Connection Storms: Use
-Static Pools
+connection pools.  The values of ``min`` and ``max`` should be the same.  When
+using older versions of Oracle Client libraries the ``increment`` parameter
+will need to be zero, but otherwise you may prefer a larger value so any
+necessary pool re-establishment occurs faster.  Fixed size pools avoid
+connection storms which can decrease throughput.  See `Guideline for Preventing
+Connection Storms: Use Static Pools
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-7DFBA826-7CC0-4D16-B19C-31D168069B54>`__,
 which contains more details about sizing of pools.  Having a fixed size will
 guarantee that the database can handle the upper pool size.  For example, if a
@@ -921,16 +926,17 @@ Heterogeneous and Homogeneous Connection Pools
 ----------------------------------------------
 
 By default, connection pools are 'homogeneous', meaning that all connections
-use the same database credentials.  'Heterogeneous' pools allow different
-credentials to be used each time a connection is acquired from the pool with
-:meth:`~ConnectionPool.acquire()`.
+use the same database credentials.  Both python-oracledb Thin and :ref:`Thick
+<enablingthick>` modes support homogeneous pools.
 
-**Heterogeneous Pools**
+**Creating Heterogeneous Pools**
 
-In the python-oracledb Thick mode, the pool option ``homogeneous`` can be set
-to False at the time of pool creation.  No credentials should be supplied.
-User names and passwords may later be passed to
-:meth:`~ConnectionPool.acquire()`:
+The python-oracledb Thick mode additionally supports Heterogeneous pools,
+allowing different user names and passwords to be passed to each
+:meth:`~ConnectionPool.acquire()` call.
+
+To create an heterogeneous pool, set the :meth:`~oracledb.create_pool()`
+parameter ``homogeneous`` to False:
 
 .. code-block:: python
 
@@ -1008,7 +1014,7 @@ relatively short duration, and then releases it.
 For efficiency, it is recommended that DRCP connections should be used in
 conjunction with python-oracledb's local :ref:`connection pool <connpooling>`.
 Using DRCP with standalone connections is not as efficient as using it in
-conjunction with a python-oracleb connection pool, but does allow the database
+conjunction with a python-oracledb connection pool, but does allow the database
 to reuse database server processes which can provide a performance benefit.
 
 Although applications can choose whether or not to use pooled connections at
