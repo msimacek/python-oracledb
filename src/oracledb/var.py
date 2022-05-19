@@ -37,12 +37,9 @@ from .base_impl import DbType
 class Var:
 
     def __repr__(self):
-        if self._impl.is_array:
-            value = self._impl.values[:self._impl.num_elements_in_array]
-        elif self._impl.num_elements == 1:
-            value = self._impl.values[0]
-        else:
-            value = self._impl.values
+        value = self._impl.get_all_values()
+        if not self._impl.is_array and len(value) == 1:
+            value = value[0]
         typ = self._type
         return f"<oracledb.Var of type {typ.name} with value {repr(value)}>"
 
@@ -174,6 +171,4 @@ class Var:
         getvalue() for each valid position and the length will correspond to
         the value of the actual_elements attribute.
         """
-        if self._impl.is_array:
-            return self._impl.values[:self._impl.num_elements_in_array]
-        return self._impl.values
+        return self._impl.get_all_values()

@@ -126,6 +126,7 @@ class TestCase(test_env.BaseTestCase):
             (4, 'String 4')
         ]
         rows = ref_cursor.fetchall()
+        ref_cursor.close()
         self.assertEqual(rows, expected_value)
         ref_cursor = self.connection.cursor()
         self.cursor.execute(sql, rcursor=ref_cursor, start_value=5,

@@ -266,10 +266,11 @@ cdef class BaseCursorImpl:
                                       uint32_t row_num,
                                       bint defer_type_assignment) except -1
     cdef int _close(self, bint in_del) except -1
-    cdef int _create_fetch_var(self, object cursor, object type_handler,
-                               ssize_t pos, FetchInfo fetch_info) except -1
+    cdef int _create_fetch_var(self, object conn, object cursor,
+                               object type_handler, ssize_t pos,
+                               FetchInfo fetch_info) except -1
     cdef object _create_row(self)
-    cdef BaseVarImpl _create_var_impl(self)
+    cdef BaseVarImpl _create_var_impl(self, object conn)
     cdef int _fetch_rows(self, object cursor) except -1
     cdef BaseConnImpl _get_conn_impl(self)
     cdef object _get_input_type_handler(self)
@@ -308,7 +309,6 @@ cdef class BaseVarImpl:
         readonly bint nulls_allowed
         public uint32_t num_elements_in_array
         readonly DbType dbtype
-        readonly list values
         readonly BaseDbObjectTypeImpl objtype
         int _preferred_num_type
         FetchInfo _fetch_info
@@ -316,15 +316,20 @@ cdef class BaseVarImpl:
 
     cdef int _bind(self, object conn, BaseCursorImpl cursor,
                    uint32_t num_execs, object name, uint32_t pos) except -1
-    cdef int _check_scalar_value(self, object value, bint *can_set) except -1
-    cdef object _check_value(self, object value, bint *can_set)
+    cdef int _check_and_set_scalar_value(self, uint32_t pos, object value,
+                                         bint* was_set) except -1
+    cdef int _check_and_set_value(self, uint32_t pos, object value,
+                                  bint* was_set) except -1
     cdef int _finalize_init(self) except -1
+    cdef list _get_array_value(self)
+    cdef object _get_scalar_value(self, uint32_t pos)
+    cdef int _on_reset_bind(self, uint32_t num_rows) except -1
     cdef int _resize(self, uint32_t new_size) except -1
-    cdef int _set_scalar_value(self, ssize_t pos, object value) except -1
+    cdef int _set_scalar_value(self, uint32_t pos, object value) except -1
+    cdef int _set_num_elements_in_array(self, uint32_t num_elements) except -1
     cdef int _set_type_info_from_type(self, object typ) except -1
     cdef int _set_type_info_from_value(self, object value,
                                        bint is_plsql) except -1
-    cdef int _set_value(self, ssize_t pos, object value) except -1
 
 
 cdef class BaseLobImpl:
@@ -422,16 +427,17 @@ cdef class BindVar:
         ssize_t pos
         bint has_value
 
-    cdef int _create_var_from_type(self, BaseCursorImpl cursor_impl,
+    cdef int _create_var_from_type(self, object conn,
+                                   BaseCursorImpl cursor_impl,
                                    object value) except -1
-    cdef int _create_var_from_value(self, BaseCursorImpl cursor_impl,
-                                    object value,
+    cdef int _create_var_from_value(self, object conn,
+                                    BaseCursorImpl cursor_impl, object value,
                                     uint32_t num_elements) except -1
-    cdef int _set_by_type(self, BaseCursorImpl cursor_impl,
+    cdef int _set_by_type(self, object conn, BaseCursorImpl cursor_impl,
                           object typ) except -1
-    cdef int _set_by_value(self, BaseCursorImpl cursor_impl, object cursor,
-                           object value, object type_handler, ssize_t row_num,
-                           uint32_t num_elements,
+    cdef int _set_by_value(self, object conn, BaseCursorImpl cursor_impl,
+                           object cursor, object value, object type_handler,
+                           uint32_t row_num, uint32_t num_elements,
                            bint defer_type_assignment) except -1
 
 cdef object get_exception_class(int32_t code)
