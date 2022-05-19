@@ -389,9 +389,9 @@ class TestCase(test_env.BaseTestCase):
         self.assertIs(var.type, oracledb.DB_TYPE_NUMBER)
         self.assertEqual(str(var),
                 "<oracledb.Var of type DB_TYPE_NUMBER with value None>")
-        var.setvalue(0, 4)
+        var.setvalue(0, 4.5)
         self.assertEqual(str(var),
-                "<oracledb.Var of type DB_TYPE_NUMBER with value 4>")
+                "<oracledb.Var of type DB_TYPE_NUMBER with value 4.5>")
 
     def test_2231_bind_binary_double(self):
         "2231 - test that binding binary double is possible"

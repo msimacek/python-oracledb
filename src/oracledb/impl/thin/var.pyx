@@ -31,6 +31,7 @@
 
 cdef class ThinVarImpl(BaseVarImpl):
     cdef:
+        list _values
         object _conv_func
         object _last_raw_value
 
@@ -69,12 +70,12 @@ cdef class ThinVarImpl(BaseVarImpl):
         # for variables containing LOBs, create temporary LOBs, if needed
         if self.dbtype._ora_type_num == TNS_DATA_TYPE_CLOB \
                 or self.dbtype._ora_type_num == TNS_DATA_TYPE_BLOB:
-            for idx, value in enumerate(self.values):
+            for idx, value in enumerate(self._values):
                 if value is not None and not isinstance(value, LOB):
                     lob = conn.createlob(self.dbtype)
                     if value:
                         lob.write(value)
-                    self.values[idx] = lob
+                    self._values[idx] = lob
 
         # bind by name
         if name is not None:
@@ -98,3 +99,32 @@ cdef class ThinVarImpl(BaseVarImpl):
                                   expected_num=num_binds, actual_num=num_vars)
             bind_info = bind_info_list[pos - 1]
             stmt._set_var(bind_info, self, thin_cursor_impl)
+
+    cdef int _finalize_init(self) except -1:
+        """
+        Internal method that finalizes initialization of the variable.
+        """
+        BaseVarImpl._finalize_init(self)
+        self._values = [None] * self.num_elements
+
+    cdef list _get_array_value(self):
+        """
+        Internal method to return the value of the array.
+        """
+        return self._values[:self.num_elements_in_array]
+
+    cdef object _get_scalar_value(self, uint32_t pos):
+        """
+        Internal method to return the value of the variable at the given
+        position.
+        """
+        return self._values[pos]
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef int _set_scalar_value(self, uint32_t pos, object value) except -1:
+        """
+        Set the value of the variable at the given position. At this point it
+        is assumed that all checks have been performed!
+        """
+        self._values[pos] = value

@@ -32,7 +32,8 @@
 @cython.freelist(20)
 cdef class BindVar:
 
-    cdef int _create_var_from_type(self, BaseCursorImpl cursor_impl,
+    cdef int _create_var_from_type(self, object conn,
+                                   BaseCursorImpl cursor_impl,
                                    object value) except -1:
         """
         Creates a variable given type information. This may be supplied as a
@@ -41,7 +42,7 @@ cdef class BindVar:
         given length, or as a database type, API type or Python type.
         """
         cdef BaseVarImpl var_impl
-        var_impl = cursor_impl._create_var_impl()
+        var_impl = cursor_impl._create_var_impl(conn)
         var_impl.num_elements = 1
         if isinstance(value, list):
             if len(value) != 2:
@@ -59,8 +60,8 @@ cdef class BindVar:
         if isinstance(value, PY_TYPE_DB_OBJECT_TYPE):
             self.var = PY_TYPE_VAR._from_impl(self.var_impl, value)
 
-    cdef int _create_var_from_value(self, BaseCursorImpl cursor_impl,
-                                    object value,
+    cdef int _create_var_from_value(self, object conn,
+                                    BaseCursorImpl cursor_impl, object value,
                                     uint32_t num_elements) except -1:
         """
         Creates a variable using the value as a template.
@@ -68,7 +69,7 @@ cdef class BindVar:
         cdef:
             bint is_plsql = cursor_impl._is_plsql()
             BaseVarImpl var_impl
-        var_impl = cursor_impl._create_var_impl()
+        var_impl = cursor_impl._create_var_impl(conn)
         if not isinstance(value, list):
             var_impl.num_elements = num_elements
             var_impl._set_type_info_from_value(value, is_plsql)
@@ -84,7 +85,7 @@ cdef class BindVar:
         var_impl._finalize_init()
         self.var_impl = var_impl
 
-    cdef int _set_by_type(self, BaseCursorImpl cursor_impl,
+    cdef int _set_by_type(self, object conn, BaseCursorImpl cursor_impl,
                           object typ) except -1:
         """
         Sets the bind variable information given a type.
@@ -94,11 +95,11 @@ cdef class BindVar:
                 self.var = typ
                 self.var_impl = typ._impl
             else:
-                self._create_var_from_type(cursor_impl, typ)
+                self._create_var_from_type(conn, cursor_impl, typ)
 
-    cdef int _set_by_value(self, BaseCursorImpl cursor_impl, object cursor,
-                           object value, object type_handler, ssize_t row_num,
-                           uint32_t num_elements,
+    cdef int _set_by_value(self, object conn, BaseCursorImpl cursor_impl,
+                           object cursor, object value, object type_handler,
+                           uint32_t row_num, uint32_t num_elements,
                            bint defer_type_assignment) except -1:
         """
         Sets the bind variable information given a value. The row number
@@ -108,7 +109,7 @@ cdef class BindVar:
         that are seen after that.
         """
         cdef:
-            bint can_set = True
+            bint was_set = True
             object var
 
         # a variable can be set directly in which case nothing further needs to
@@ -119,49 +120,45 @@ cdef class BindVar:
                 self.var_impl = value._impl
             return 0
 
-        # if a variable already exists and the value is not null (None), check
-        # to see if the value can be set on that variable; an exception is
-        # raised if a value has been previously set on that bind variable;
-        # otherwise, the variable is replaced with a new one
-        if self.var_impl is not None and value is not None:
+        # if a variable already exists check to see if the value can be set on
+        # that variable; an exception is raised if a value has been previously
+        # set on that bind variable; otherwise, the variable is replaced with a
+        # new one
+        if self.var_impl is not None:
             if self.has_value:
-                value = self.var_impl._check_value(value, NULL)
-            else:
-                value = self.var_impl._check_value(value, &can_set)
-                if not can_set:
-                    self.var_impl = None
-                    self.var = None
+                return self.var_impl._check_and_set_value(row_num, value, NULL)
+            self.var_impl._check_and_set_value(row_num, value, &was_set)
+            if was_set:
+                self.has_value = True
+                return 0
+            self.var_impl = None
+            self.var = None
 
-        # create new variable if one hasn't been created yet
-        if self.var_impl is None:
+        # a new variable needs to be created; if the value is null (None),
+        # however, and type assignment is deferred, nothing to do!
+        if value is None and defer_type_assignment:
+            return 0
 
-            # if the value is null (None), however, and type assignment is
-            # deferred, nothing to do!
-            if value is None and defer_type_assignment:
+        # if an input type handler is specified, call it; the input type
+        # handler should return a variable or None; the value None implies
+        # that the default processing should take place just as if no input
+        # type handler was defined
+        if type_handler is not None:
+            var = type_handler(cursor, value, num_elements)
+            if var is not None:
+                if not isinstance(var, PY_TYPE_VAR):
+                    errors._raise_err(errors.ERR_EXPECTING_VAR)
+                self.var = var
+                self.var_impl = var._impl
+                self.var_impl._check_and_set_value(row_num, value, NULL)
+                self.has_value = True
                 return 0
 
-            # if an input type handler is specified, call it; the input type
-            # handler should return a variable or None; the value None implies
-            # that the default processing should take place just as if no input
-            # type handler was defined
-            if type_handler is not None:
-                var = type_handler(cursor, value, num_elements)
-                if var is not None:
-                    if not isinstance(var, PY_TYPE_VAR):
-                        errors._raise_err(errors.ERR_EXPECTING_VAR)
-                    self.var = var
-                    self.var_impl = var._impl
-                    value = self.var_impl._check_value(value, NULL)
-
-            # otherwise, if no type handler exists or the type handler returned
-            # the value None, create a new variable deriving type information
-            # from the value that is being set
-            if self.var_impl is None:
-                self._create_var_from_value(cursor_impl, value, num_elements)
-
-        # set the value without performing any checks (since these have already
-        # been done earlier)
-        self.var_impl._set_value(row_num, value)
+        # otherwise, if no type handler exists or the type handler returned
+        # the value None, create a new variable deriving type information
+        # from the value that is being set
+        self._create_var_from_value(conn, cursor_impl, value, num_elements)
+        self.var_impl._check_and_set_value(row_num, value, NULL)
         self.has_value = True
 
     def get_value(self, uint32_t pos):

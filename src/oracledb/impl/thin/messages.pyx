@@ -389,7 +389,7 @@ cdef class MessageWithData(Message):
         for bind_info in params:
             if not bind_info._is_return_bind:
                 returning_only = False
-            bind_vals = bind_info._bind_var_impl.values
+            bind_vals = bind_info._bind_var_impl._values
             for i in range(len(bind_vals)):
                 if cpython.PyList_GET_ITEM(bind_vals, i) is not \
                         <cpython.ref.PyObject*> None:
@@ -431,9 +431,9 @@ cdef class MessageWithData(Message):
         cdef:
             ThinCursorImpl cursor_impl = self.cursor_impl
             Statement statement = cursor_impl._statement
+            object type_handler, conn
             ThinVarImpl var_impl
             ssize_t i, num_vals
-            object type_handler
 
         # set values to indicate the start of a new fetch operation
         self.in_fetch = True
@@ -449,12 +449,12 @@ cdef class MessageWithData(Message):
         # if the type handler set on the cursor or connection does not match
         # the one that was used during the last fetch, rebuild the fetch
         # variables in order to take the new type handler into account
+        conn = self.cursor.connection
         type_handler = cursor_impl._get_output_type_handler()
         if type_handler is not statement._last_output_type_handler:
             for i, var_impl in enumerate(cursor_impl.fetch_var_impls):
-                cursor_impl._create_fetch_var(self.cursor,
-                                              type_handler, i,
-                                              var_impl._fetch_info)
+                cursor_impl._create_fetch_var(conn, self.cursor, type_handler,
+                                              i, var_impl._fetch_info)
             statement._last_output_type_handler = type_handler
 
         # the list of output variables is equivalent to the fetch variables
@@ -467,7 +467,7 @@ cdef class MessageWithData(Message):
                 continue
             num_vals = (cursor_impl._fetch_array_size - var_impl.num_elements)
             var_impl.num_elements = cursor_impl._fetch_array_size
-            var_impl.values.extend([None] * num_vals)
+            var_impl._values.extend([None] * num_vals)
 
     cdef int _postprocess(self) except -1:
         """
@@ -486,13 +486,13 @@ cdef class MessageWithData(Message):
             if var_impl.outconverter is None:
                 continue
             var_impl._last_raw_value = \
-                    var_impl.values[self.cursor_impl._last_row_index]
+                    var_impl._values[self.cursor_impl._last_row_index]
             if var_impl.is_array:
                 num_elements = var_impl.num_elements_in_array
             else:
                 num_elements = self.row_index
             for i in range(num_elements):
-                value = var_impl.values[i]
+                value = var_impl._values[i]
                 if value is None:
                     continue
                 if isinstance(value, list):
@@ -501,7 +501,7 @@ cdef class MessageWithData(Message):
                             continue
                         value[j] = var_impl.outconverter(element_value)
                 else:
-                    var_impl.values[i] = var_impl.outconverter(value)
+                    var_impl._values[i] = var_impl.outconverter(value)
 
     cdef int _process_bit_vector(self, ReadBuffer buf) except -1:
         cdef ssize_t num_bytes
@@ -575,7 +575,7 @@ cdef class MessageWithData(Message):
                 column_value = None
             else:
                 if not self.in_fetch:
-                    column_value = var_impl.values[pos]
+                    column_value = var_impl._values[pos]
                 column_value = self._create_cursor_from_describe(buf,
                                                                  column_value)
                 cursor_impl = column_value._impl
@@ -668,9 +668,9 @@ cdef class MessageWithData(Message):
         cdef:
             Statement stmt = cursor_impl._statement
             list prev_fetch_var_impls
+            object type_handler, conn
             uint32_t num_bytes, i
             FetchInfo fetch_info
-            object type_handler
             str message
         buf.skip_ub4()                      # max row size
         buf.read_ub4(&cursor_impl._num_columns)
@@ -679,11 +679,12 @@ cdef class MessageWithData(Message):
         if cursor_impl._num_columns > 0:
             buf.skip_ub1()
         type_handler = cursor_impl._get_output_type_handler()
+        conn = self.cursor.connection
         for i in range(cursor_impl._num_columns):
             fetch_info = self._process_column_info(buf, cursor_impl)
             if prev_fetch_var_impls is not None:
                 self._adjust_fetch_info(prev_fetch_var_impls[i], fetch_info)
-            cursor_impl._create_fetch_var(self.cursor, type_handler, i,
+            cursor_impl._create_fetch_var(conn, self.cursor, type_handler, i,
                                           fetch_info)
         buf.read_ub4(&num_bytes)
         if num_bytes > 0:
@@ -847,23 +848,23 @@ cdef class MessageWithData(Message):
                 buf.read_ub4(&var_impl.num_elements_in_array)
                 for pos in range(var_impl.num_elements_in_array):
                     value = self._process_column_data(buf, var_impl, pos)
-                    var_impl.values[pos] = value
+                    var_impl._values[pos] = value
             elif self.cursor_impl._statement._is_returning:
                 buf.read_ub4(&num_rows)
                 values = [None] * num_rows
                 for j in range(num_rows):
                     values[j] = self._process_column_data(buf, var_impl, j)
-                var_impl.values[self.row_index] = values
+                var_impl._values[self.row_index] = values
             elif self._is_duplicate_data(i):
                 if self.row_index == 0 and var_impl.outconverter is not None:
                     value = var_impl._last_raw_value
                 else:
-                    value = var_impl.values[self.cursor_impl._last_row_index]
-                var_impl.values[self.row_index] = value
+                    value = var_impl._values[self.cursor_impl._last_row_index]
+                var_impl._values[self.row_index] = value
             else:
                 value = self._process_column_data(buf, var_impl,
                                                   self.row_index)
-                var_impl.values[self.row_index] = value
+                var_impl._values[self.row_index] = value
         self.row_index += 1
         if self.in_fetch:
             self.cursor_impl._last_row_index = self.row_index - 1
@@ -1004,11 +1005,11 @@ cdef class MessageWithData(Message):
             if var_impl.is_array:
                 num_elements = var_impl.num_elements_in_array
                 buf.write_ub4(num_elements)
-                for value in var_impl.values[:num_elements]:
+                for value in var_impl._values[:num_elements]:
                     self._write_bind_params_column(buf, var_impl, value)
             else:
                 self._write_bind_params_column(buf, var_impl,
-                                               var_impl.values[pos + offset])
+                                               var_impl._values[pos + offset])
 
     cdef int _write_close_cursors_piggyback(self, WriteBuffer buf) except -1:
         cdef:

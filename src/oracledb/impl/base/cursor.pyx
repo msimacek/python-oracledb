@@ -78,7 +78,9 @@ cdef class BaseCursorImpl:
         """
         cdef:
             BindVar bind_var
+            object conn
             ssize_t pos
+        conn = cursor.connection
         for name, value in params.items():
             bind_var = <BindVar> self.bind_vars_by_name.get(name)
             if bind_var is None:
@@ -90,8 +92,8 @@ cdef class BaseCursorImpl:
                     self.bind_vars.append(bind_var)
                 bind_var.name = name
                 self.bind_vars_by_name[name] = bind_var
-            bind_var._set_by_value(self, cursor, value, type_handler, row_num,
-                                   num_rows, defer_type_assignment)
+            bind_var._set_by_value(conn, self, cursor, value, type_handler,
+                                   row_num, num_rows, defer_type_assignment)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -107,7 +109,9 @@ cdef class BaseCursorImpl:
         """
         cdef:
             BindVar bind_var
+            object conn
             ssize_t i
+        conn = cursor.connection
         for i, value in enumerate(params):
             if i < len(self.bind_vars):
                 bind_var = <BindVar> self.bind_vars[i]
@@ -115,8 +119,8 @@ cdef class BaseCursorImpl:
                 bind_var = BindVar.__new__(BindVar)
                 bind_var.pos = i + 1
                 self.bind_vars.append(bind_var)
-            bind_var._set_by_value(self, cursor, value, type_handler, row_num,
-                                   num_rows, defer_type_assignment)
+            bind_var._set_by_value(conn, self, cursor, value, type_handler,
+                                   row_num, num_rows, defer_type_assignment)
 
     cdef int _close(self, bint in_del) except -1:
         """
@@ -126,8 +130,9 @@ cdef class BaseCursorImpl:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef int _create_fetch_var(self, object cursor, object type_handler,
-                               ssize_t pos, FetchInfo fetch_info) except -1:
+    cdef int _create_fetch_var(self, object conn, object cursor,
+                               object type_handler, ssize_t pos,
+                               FetchInfo fetch_info) except -1:
         """
         Create the fetch variable for the given position and fetch information.
         The output type handler is consulted, if present, to make any necessary
@@ -154,7 +159,7 @@ cdef class BaseCursorImpl:
                 return 0
 
         # otherwise, create a new variable using the provided fetch information
-        var_impl = self._create_var_impl()
+        var_impl = self._create_var_impl(conn)
         var_impl.num_elements = self._fetch_array_size
         var_impl.dbtype = fetch_info._dbtype
         var_impl.objtype = fetch_info._objtype
@@ -200,7 +205,7 @@ cdef class BaseCursorImpl:
         row = cpython.PyTuple_New(num_vars)
         for i in range(num_vars):
             var_impl = self.fetch_var_impls[i]
-            value = var_impl.values[self._buffer_index]
+            value = var_impl._get_scalar_value(self._buffer_index)
             cpython.Py_INCREF(value)
             cpython.PyTuple_SET_ITEM(row, i, value)
         if self.rowfactory is not None:
@@ -210,7 +215,7 @@ cdef class BaseCursorImpl:
         self.rowcount += 1
         return row
 
-    cdef BaseVarImpl _create_var_impl(self):
+    cdef BaseVarImpl _create_var_impl(self, object conn):
         """
         Internal method for creating a variable.
         """
@@ -286,8 +291,8 @@ cdef class BaseCursorImpl:
     cdef int _reset_bind_vars(self, uint32_t num_rows) except -1:
         """
         Reset all of the existing bind variables. If any bind variables don't
-        have enough space to store the number of rows specified, remove the
-        reference to that bind variable.
+        have enough space to store the number of rows specified, expand and
+        then reinitialize that bind variable.
         """
         cdef:
             BindVar bind_var
@@ -295,10 +300,8 @@ cdef class BaseCursorImpl:
         if self.bind_vars is not None:
             for i in range(len(self.bind_vars)):
                 bind_var = <BindVar> self.bind_vars[i]
-                if bind_var.var_impl is not None \
-                        and bind_var.var_impl.num_elements < num_rows:
-                    bind_var.var_impl.num_elements = num_rows
-                    bind_var.var_impl.values = [None] * num_rows
+                if bind_var.var_impl is not None:
+                    bind_var.var_impl._on_reset_bind(num_rows)
                 bind_var.has_value = False
 
     @utils.CheckImpls("setting a cursor OCI attribute")
@@ -360,12 +363,12 @@ cdef class BaseCursorImpl:
         self.fetch_vars = None
         self._close(in_del)
 
-    def create_var(self, object typ, uint32_t size=0,
+    def create_var(self, object conn, object typ, uint32_t size=0,
                    uint32_t num_elements=1, object inconverter=None,
                    object outconverter=None, str encoding_errors=None,
                    bint bypass_decode=False, bint is_array=False):
         cdef BaseVarImpl var_impl
-        var_impl = self._create_var_impl()
+        var_impl = self._create_var_impl(conn)
         var_impl._set_type_info_from_type(typ)
         var_impl.size = size
         var_impl.num_elements = num_elements
@@ -456,7 +459,7 @@ cdef class BaseCursorImpl:
         """
         pass
 
-    def setinputsizes(self, tuple args, dict kwargs):
+    def setinputsizes(self, object conn, tuple args, dict kwargs):
         """
         Sets type information for bind variables in advance of executing a
         statement (and binding values).
@@ -473,12 +476,12 @@ cdef class BaseCursorImpl:
                 bind_var = BindVar.__new__(BindVar)
                 self.bind_vars.append(bind_var)
                 self.bind_vars_by_name[name] = bind_var
-                bind_var._set_by_type(self, value)
+                bind_var._set_by_type(conn, self, value)
                 bind_var.name = name
         else:
             self.bind_style = list
             for pos, value in enumerate(args):
                 bind_var = BindVar.__new__(BindVar)
                 self.bind_vars.append(bind_var)
-                bind_var._set_by_type(self, value)
+                bind_var._set_by_type(conn, self, value)
                 bind_var.pos = pos + 1

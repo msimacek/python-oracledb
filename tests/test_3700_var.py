@@ -44,6 +44,10 @@ class TestCase(test_env.BaseTestCase):
             result = result.read()
         elif isinstance(result, oracledb.Object):
             result = self.get_db_object_as_plain_object(result)
+        if isinstance(expected_value, datetime.date) \
+                and not isinstance(expected_value, datetime.datetime):
+            if isinstance(result, datetime.datetime):
+                result = result.date()
         self.assertEqual(type(result), type(expected_value))
         self.assertEqual(result, expected_value)
 
@@ -55,13 +59,13 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3700_DB_TYPE_NUMBER(self):
         "3700 - setting values on variables of type DB_TYPE_NUMBER"
-        self._test_positive_set_and_get(oracledb.DB_TYPE_NUMBER, 5, 5)
+        self._test_positive_set_and_get(int, 5, 5)
         self._test_positive_set_and_get(oracledb.DB_TYPE_NUMBER, 3.5, 3.5)
-        self._test_positive_set_and_get(oracledb.DB_TYPE_NUMBER,
+        self._test_positive_set_and_get(decimal.Decimal,
                                         decimal.Decimal("24.8"),
                                         decimal.Decimal("24.8"))
-        self._test_positive_set_and_get(oracledb.DB_TYPE_NUMBER, True, 1)
-        self._test_positive_set_and_get(oracledb.DB_TYPE_NUMBER, False, 0)
+        self._test_positive_set_and_get(int, True, 1)
+        self._test_positive_set_and_get(int, False, 0)
         self._test_positive_set_and_get(oracledb.DB_TYPE_NUMBER, None, None)
         self._test_negative_set_and_get(oracledb.DB_TYPE_NUMBER, "abc")
 
@@ -373,8 +377,6 @@ class TestCase(test_env.BaseTestCase):
     def test_3723_DB_TYPE_CURSOR(self):
         "3723 - test setting values on variables of type DB_TYPE_CURSOR"
         cursor = self.connection.cursor()
-        self._test_positive_set_and_get(oracledb.DB_TYPE_CURSOR, cursor,
-                                        cursor)
         self._test_positive_set_and_get(oracledb.DB_TYPE_CURSOR, None, None)
         self._test_negative_set_and_get(oracledb.DB_TYPE_CURSOR, 5)
 

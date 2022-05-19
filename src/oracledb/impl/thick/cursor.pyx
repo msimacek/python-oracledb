@@ -50,21 +50,24 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         Internal method for closing the cursor.
         """
         if self._handle != NULL:
-            if self._conn_impl._handle != NULL \
+            if not in_del and self._conn_impl._handle != NULL \
                     and not self._is_implicit_cursor:
                 if dpiStmt_close(self._handle, NULL, 0) < 0:
-                    if not in_del:
-                        _raise_from_odpi()
+                    _raise_from_odpi()
             dpiStmt_release(self._handle)
             self._handle = NULL
 
-    cdef BaseVarImpl _create_var_impl(self):
+    cdef BaseVarImpl _create_var_impl(self, object conn):
         """
         Internal method for creating a variable.
         """
-        return ThickVarImpl.__new__(ThickVarImpl)
+        cdef ThickVarImpl var_impl = ThickVarImpl.__new__(ThickVarImpl)
+        var_impl._conn = conn
+        var_impl._conn_impl = self._conn_impl
+        var_impl._buf = StringBuffer.__new__(StringBuffer)
+        return var_impl
 
-    cdef int _define_var(self, object cursor, object type_handler,
+    cdef int _define_var(self, object conn, object cursor, object type_handler,
                          ssize_t pos) except -1:
         """
         Internal method that creates the variable using the query info (unless
@@ -103,9 +106,9 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             fetch_info._objtype = typ_impl
 
         # create variable and call define in ODPI-C
-        self._create_fetch_var(cursor, type_handler, pos, fetch_info)
+        self._create_fetch_var(conn, cursor, type_handler, pos, fetch_info)
         var_impl = self.fetch_var_impls[pos]
-        var_impl._create_handle(self._conn_impl)
+        var_impl._create_handle()
         if dpiStmt_define(self._handle, pos + 1, var_impl._handle) < 0:
             _raise_from_odpi()
 
@@ -117,7 +120,6 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             uint32_t temp_buffer_row_index, num_rows_in_buffer
             bint more_rows_to_fetch
             ThickVarImpl var_impl
-            object conn
             int status
         with nogil:
             status = dpiStmt_fetchRows(self._handle,
@@ -127,11 +129,6 @@ cdef class ThickCursorImpl(BaseCursorImpl):
                                        &more_rows_to_fetch)
         if status < 0:
             _raise_from_odpi()
-        conn = cursor.connection
-        for var_impl in self.fetch_var_impls:
-            var_impl._transform_to_python(conn, self._conn_impl,
-                                          num_rows_in_buffer, in_fetch=True,
-                                          offset=temp_buffer_row_index)
         self._buffer_index = 0
         self._buffer_rowcount = num_rows_in_buffer
         self._more_rows_to_fetch = more_rows_to_fetch
@@ -166,7 +163,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         """
         cdef:
             ThickCursorImpl cursor_impl = <ThickCursorImpl> cursor._impl
-            object var, type_handler
+            object var, type_handler, conn
             ThickVarImpl var_impl
             ssize_t i
 
@@ -186,8 +183,9 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         self._fetch_array_size = self.arraysize
         self._init_fetch_vars(num_query_cols)
         type_handler = self._get_output_type_handler()
+        conn = cursor.connection
         for i in range(num_query_cols):
-            self._define_var(cursor, type_handler, i)
+            self._define_var(conn, cursor, type_handler, i)
 
     def _set_oci_attr(self, uint32_t attr_num, uint32_t attr_type,
                       object value):
@@ -205,14 +203,19 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         if dpiStmt_setOciAttr(self._handle, attr_num, oci_value, oci_len) < 0:
             _raise_from_odpi()
 
-    cdef int _transform_binds(self, object conn, uint32_t num_execs) except -1:
+    cdef int _transform_binds(self) except -1:
         cdef:
             ThickVarImpl var_impl
+            uint32_t num_elements
             BindVar bind_var
         if self.bind_vars is not None:
             for bind_var in self.bind_vars:
                 var_impl = <ThickVarImpl> bind_var.var_impl
-                var_impl._transform_to_python(conn, self._conn_impl, num_execs)
+                if var_impl.is_array:
+                    if dpiVar_getNumElementsInArray(var_impl._handle,
+                                                    &num_elements) < 0:
+                        _raise_from_odpi()
+                    var_impl.num_elements_in_array = num_elements
 
     def execute(self, cursor):
         """
@@ -238,7 +241,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
         if num_query_cols > 0:
             self._perform_define(cursor, num_query_cols)
         elif self._stmt_info.isReturning or self._stmt_info.isPLSQL:
-            self._transform_binds(cursor.connection, 1)
+            self._transform_binds()
 
     def executemany(self, cursor, num_execs, batcherrors, arraydmlrowcounts):
         """
@@ -273,7 +276,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
             if status < 0:
                 _raise_from_info(&error_info)
             if self._stmt_info.isReturning or self._stmt_info.isPLSQL:
-                self._transform_binds(cursor.connection, num_execs_int)
+                self._transform_binds()
 
     def get_array_dml_row_counts(self):
         """
@@ -494,11 +497,7 @@ cdef class ThickCursorImpl(BaseCursorImpl):
                 status = dpiStmt_getRowCount(self._handle, &self.rowcount)
         if status < 0:
             _raise_from_odpi()
-        for var_impl in self.fetch_var_impls:
-            var_impl._transform_to_python(conn, self._conn_impl,
-                                          num_rows_in_buffer, in_fetch=True,
-                                          offset=temp_buffer_row_index)
-        self._buffer_index = 0
+        self._buffer_index = temp_buffer_row_index
         self._buffer_rowcount = num_rows_in_buffer
         self._more_rows_to_fetch = more_rows_to_fetch
         self.rowcount -= num_rows_in_buffer

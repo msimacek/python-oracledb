@@ -213,8 +213,8 @@ class Cursor:
             num_elements = value
         else:
             raise TypeError("expecting integer or list of values")
-        var = self._impl.create_var(typ, size=size, num_elements=num_elements,
-                                    is_array=True)
+        var = self._impl.create_var(self.connection, typ, size=size,
+                                    num_elements=num_elements, is_array=True)
         if isinstance(value, list):
             var.setvalue(0, value)
         return var
@@ -717,7 +717,7 @@ class Cursor:
             errors._raise_err(errors.ERR_ARGS_AND_KEYWORD_ARGS)
         elif args or kwargs:
             self._verify_open()
-            self._impl.setinputsizes(args, kwargs)
+            self._impl.setinputsizes(self.connection, args, kwargs)
             self._set_input_sizes = True
             return self._impl.get_bind_vars()
         return []
@@ -799,6 +799,6 @@ class Cursor:
                                   deprecated_name="encodingErrors",
                                   new_name="encoding_errors")
             encoding_errors = encodingErrors
-        return self._impl.create_var(typ, size, arraysize, inconverter,
-                                     outconverter, encoding_errors,
-                                     bypass_decode)
+        return self._impl.create_var(self.connection, typ, size, arraysize,
+                                     inconverter, outconverter,
+                                     encoding_errors, bypass_decode)

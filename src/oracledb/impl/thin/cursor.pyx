@@ -50,7 +50,7 @@ cdef class ThinCursorImpl(BaseCursorImpl):
                 self._conn_impl._return_statement(self._statement)
             self._statement = None
 
-    cdef BaseVarImpl _create_var_impl(self):
+    cdef BaseVarImpl _create_var_impl(self, object conn):
         return ThinVarImpl.__new__(ThinVarImpl)
 
     cdef MessageWithData _create_message(self, type typ, object cursor):
@@ -67,15 +67,16 @@ cdef class ThinCursorImpl(BaseCursorImpl):
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef int _create_fetch_var(self, object cursor, object type_handler,
-                               ssize_t pos, FetchInfo fetch_info) except -1:
+    cdef int _create_fetch_var(self, object conn, object cursor,
+                               object type_handler, ssize_t pos,
+                               FetchInfo fetch_info) except -1:
         """
         Internal method that creates a fetch variable. A check is made after
         the variable is created to determine if a conversion is required and
         therefore a define must be performed.
         """
         cdef ThinVarImpl var_impl
-        BaseCursorImpl._create_fetch_var(self, cursor, type_handler, pos,
+        BaseCursorImpl._create_fetch_var(self, conn, cursor, type_handler, pos,
                                          fetch_info)
         var_impl = self.fetch_var_impls[pos]
         if var_impl.dbtype._ora_type_num != fetch_info._dbtype._ora_type_num:
