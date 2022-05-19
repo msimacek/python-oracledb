@@ -11,7 +11,7 @@ with a considerable number of additions and a couple of exclusions.
 
 The python-oracledb driver is the renamed, major version successor to
 `cx_Oracle 8.3 <https://oracle.github.io/python-cx_Oracle/>`__.  For upgrade
-information, see :ref:`upgrading`.
+information, see :ref:`upgrading83`.
 
 Python-oracledb is typically installed from Python's package repository
 `PyPI <https://pypi.org/project/oracledb/>`__ using `pip

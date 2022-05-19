@@ -70,12 +70,12 @@ PoolParams Attributes
 
 .. attribute:: PoolParams.homogeneous
 
-  This read-only attribute is a boolean which indicates whether the connections are
-  homogeneous (same user) or heterogeneous (multiple users). The default value
-  is True.
+  This read-only attribute is a boolean which indicates whether the connections
+  are :ref:`homogeneous <connpooltypes>` (same user) or heterogeneous (multiple
+  users).  The default value is True.
 
-  This attribute is only supported in the python-oracledb Thick mode. The python-oracledb
-  Thin mode supports only homogeneous modes.
+  This attribute is only supported in the python-oracledb Thick mode. The
+  python-oracledb Thin mode supports only homogeneous modes.
 
 .. attribute:: PoolParams.increment
 
@@ -87,14 +87,14 @@ PoolParams Attributes
 
 .. attribute:: PoolParams.min
 
-  This read-only attribute is an integer that specifies the mininum number of
+  This read-only attribute is an integer that specifies the minimum number of
   connections that the pool should contain. The default value is 1.
 
   This attribute is supported in the python-oracledb Thin and Thick modes.
 
 .. attribute:: PoolParams.max
 
-  This read-only attribute specifies the maxinum number of connections that
+  This read-only attribute specifies the maximum number of connections that
   the pool should contain. The default value is 2.
 
   This attribute is supported in the python-oracledb Thin and Thick modes.

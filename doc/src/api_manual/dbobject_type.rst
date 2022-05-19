@@ -49,8 +49,8 @@ DbObjectType Attributes
 .. attribute:: DbObjectType.element_type
 
     This read-only attribute returns the type of elements found in collections
-    of this type, if :attr:`~DbObjectType.iscollection` is ``True``; otherwise,
-    it returns ``None``. If the collection contains objects, this will be
+    of this type, if :attr:`~DbObjectType.iscollection` is True; otherwise,
+    it returns None. If the collection contains objects, this will be
     another object type; otherwise, it will be one of the
     :ref:`database type constants <dbtypes>`.
 

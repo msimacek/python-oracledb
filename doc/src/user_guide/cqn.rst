@@ -25,7 +25,7 @@ survive database loss, and control over unsubscription.  You can also choose
 whether notification messages will include ROWIDs of affected rows.
 
 By default, object-level notification (previously known as Database Change
-Notification) occurs.  With this mode a Python notification method is invoked
+Notification) occurs.  With this mode, a Python notification method is invoked
 whenever a database transaction is committed that changes an object referenced
 by a registered query.  However if the :meth:`subscription
 <Connection.subscribe>` option ``qos`` is :data:`oracledb.SUBSCR_QOS_QUERY`
@@ -71,7 +71,7 @@ listen for notifications; otherwise, the database chooses values.
 Creating a Subscription
 =======================
 
-Subscriptions allow Python to receives notifications for events that take place
+Subscriptions allow Python to receive notifications for events that take place
 in the database that match the given parameters.
 
 For example, a basic CQN subscription might be created like:

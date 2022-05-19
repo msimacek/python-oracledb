@@ -9,7 +9,7 @@ Database.
 
 Python-oracledb is the new name for the Python `cx_Oracle driver
 <https://oracle.github.io/python-cx_Oracle/>`__.  If you are upgrading from
-cx_Oracle, see :ref:`upgrading`.
+cx_Oracle, see :ref:`upgrading83`.
 
 .. figure:: /images/python-oracledb-thin-arch.png
    :alt: architecture of the python-oracledb driver
@@ -19,10 +19,10 @@ cx_Oracle, see :ref:`upgrading`.
 By default, python-oracledb runs in a 'Thin' mode which connects directly to
 Oracle Database.  This mode does not need Oracle Client libraries.  However,
 some :ref:`additional functionality <featuresummary>` is available when
-python-oracledb uses them.  Python-oracledb connections are said to be in
-'Thick' mode when Oracle Client libraries are used.  See
-:ref:`enablingthick`. Both modes have comprehensive functionality supporting
-the Python Database API v2.0 Specification.
+python-oracledb uses them.  Python-oracledb is said to be in 'Thick' mode when
+Oracle Client libraries are used.  See :ref:`enablingthick`. Both modes have
+comprehensive functionality supporting the Python Database API v2.0
+Specification.
 
 .. _quickstart:
 
@@ -39,10 +39,10 @@ quickly.
   - On macOS, use Python 3.8 to 3.10
   - On Linux, use Python 3.6 to 3.10
 
-  By default, python-oracledb connects directly to Oracle Database so it can be
-  used when Oracle Client libraries are not available or easily installable.
-  This includes in cloud deployments, for Apple M1, or for Alpine Linux. (Note
-  not all environments are tested).
+  By default, python-oracledb connects directly to Oracle Database.  This lets
+  it be used when Oracle Client libraries are not available (such Apple M1 or
+  Alpine Linux), or where the client libraries are not easily installable (such
+  as some cloud environments). Note not all environments are tested.
 
 2. Install python-oracledb from `PyPI <https://pypi.org/project/oracledb/>`__:
 
@@ -83,7 +83,7 @@ quickly.
               for r in cursor.execute(sql):
                   print(r)
 
-4. In your your integrated development environment (IDE) or terminal window, set
+4. In your integrated development environment (IDE) or terminal window, set
    the three environment variables used by the test program.
 
   Simple :ref:`connection <connhandling>` to the database requires an Oracle
@@ -548,7 +548,7 @@ Local Database or Full Oracle Client
 ++++++++++++++++++++++++++++++++++++
 
 Python-oracledb Thick mode applications can use Oracle Client 21, 19, 18, 12,
-or 11.2 libraries libraries from a local Oracle Database or full Oracle Client
+or 11.2 libraries from a local Oracle Database or full Oracle Client
 (such as installed by Oracle's GUI installer).
 
 The Oracle libraries must be either 32-bit or 64-bit, matching your
@@ -594,6 +594,10 @@ to install python-oracledb from Python's package repository `PyPI
 .. code-block:: shell
 
     python -m pip install oracledb
+
+
+To install into the system Python, you may need to use ``/usr/bin/python3``
+instead of ``python``.
 
 The ``--user`` option may be useful if you do not have permission to write to
 system directories:

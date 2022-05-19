@@ -1,8 +1,8 @@
 .. _xmldatatype:
 
-********************
-Working with XMLTYPE
-********************
+******************
+Using XMLTYPE Data
+******************
 
 Oracle XMLType columns are fetched as strings by default.  This is currently
 limited to the maximum length of a ``VARCHAR2`` column.  To return longer XML

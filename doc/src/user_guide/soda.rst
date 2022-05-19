@@ -4,12 +4,9 @@
 Working with Simple Oracle Document Access (SODA)
 *************************************************
 
-Overview
-========
-
 Oracle Database Simple Oracle Document Access (SODA) allows documents to be
 inserted, queried, and retrieved from Oracle Database using a set of
-NoSQL-style python-oracledb methods. Documents are generally JSON data but they can
+NoSQL-style python-oracledb methods. Documents are generally JSON data, but they can
 be any data at all (including video, images, sounds, or other binary content).
 Documents can be fetched from the database by key lookup or by using
 query-by-example (QBE) pattern-matching.
@@ -19,7 +16,7 @@ query-by-example (QBE) pattern-matching.
     SODA is only supported in the python-oracledb Thick mode.  See
     :ref:`enablingthick`.
 
-SODA uses a SQL schema to store documents but you do not need to know SQL or
+SODA uses a SQL schema to store documents, but you do not need to know SQL or
 how the documents are stored. However, access via SQL does allow use of
 advanced Oracle Database functionality such as analytics for reporting.
 
@@ -29,7 +26,7 @@ Oracle SODA implementations are also available in `Node.js
 `PL/SQL <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=ADSDP>`__,
 `Oracle Call Interface
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-23206C89-891E-43D7-827C-5C6367AD62FD>`__
-and via `REST
+and through `REST
 <https://docs.oracle.com/en/database/oracle/simple-oracle-document-access/rest/index.html>`__.
 
 For general information on SODA, see the `SODA home page
@@ -37,11 +34,11 @@ For general information on SODA, see the `SODA home page
 and the Oracle Database `Introduction to Simple Oracle Document Access (SODA)
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=ADSDI>`__ manual.
 
-For specific requirements see the python-oracledb :ref:`SODA requirements <sodarequirements>`.
+For specific requirements, see the python-oracledb :ref:`SODA requirements <sodarequirements>`.
 
-python-oracledb uses the following objects for SODA:
+Python-oracledb uses the following objects for SODA:
 
-* :ref:`SODA Database Object <sodadb>`: The top level object for python-oracledb SODA
+* :ref:`SODA Database Object <sodadb>`: The top-level object for python-oracledb SODA
   operations. This is acquired from an Oracle Database connection.  A 'SODA
   database' is an abstraction, allowing access to SODA collections in that
   'SODA database', which then allow access to documents in those collections.
@@ -52,7 +49,7 @@ python-oracledb uses the following objects for SODA:
 
 * :ref:`SODA Collection Object <sodacoll>`: Represents a collection of SODA
   documents.  By default, collections allow JSON documents to be stored.  This
-  is recommended for most SODA users.  However optional metadata can set
+  is recommended for most SODA users.  However, optional metadata can set
   various details about a collection, such as its database storage, whether it
   should track version and time stamp document components, how such components
   are generated, and what document types are supported. By default, the name of
@@ -209,6 +206,6 @@ partial transaction.
 Note:
 
 - SODA DDL operations do not commit an open transaction the way that SQL always does for DDL statements.
-- When :attr:`~Connection.autocommit` is ``True``, most SODA methods will issue a commit before successful return.
-- SODA provides optimistic locking, see :meth:`SodaOperation.version()`.
+- When :attr:`~Connection.autocommit` is `True`, most SODA methods will issue a commit before successful return.
+- SODA provides optimistic locking. See :meth:`SodaOperation.version()`.
 - When mixing SODA and relational access, any commit or rollback on the connection will affect all work.

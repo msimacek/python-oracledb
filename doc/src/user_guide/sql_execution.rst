@@ -669,7 +669,7 @@ Fetching Raw Data
 -----------------
 
 Sometimes python-oracledb may have problems converting data stored in the database to
-Python strings. This can occur if the data stored in the database doesn't match
+Python strings. This can occur if the data stored in the database does not match
 the character set defined by the database. The `encoding_errors` parameter to
 :meth:`Cursor.var()` permits the data to be returned with some invalid data
 replaced, but for additional control the parameter `bypass_decode` can be set

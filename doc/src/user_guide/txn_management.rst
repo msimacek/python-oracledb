@@ -1,8 +1,8 @@
 .. _txnmgmnt:
 
-**************************
-Working with Transactions
-**************************
+*********************
+Managing Transactions
+*********************
 
 A database transaction is a grouping of SQL statements that make a logical data
 change to the database.
@@ -28,7 +28,7 @@ Autocommitting
 
 An alternative way to commit is to set the attribute
 :attr:`~Connection.autocommit` of the connection to ``True``.  This ensures all
-:ref:`DML <dml>` statements (INSERT, UPDATE etc) are committed as they are
+:ref:`DML <dml>` statements (INSERT, UPDATE, and so on) are committed as they are
 executed.  Unlike :meth:`Connection.commit()`, this does not require an
 additional :ref:`round-trip <roundtrips>` to the database so it is more
 efficient when used appropriately.

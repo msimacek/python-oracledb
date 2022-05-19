@@ -29,8 +29,8 @@ The Thick mode is enabled by:
 - If you are changing from the default Thin mode, then refer to :ref:`featuresummary`
   and :ref:`driverdiff` for other changes that may be needed.
 
-- If you are upgrading a cx_Oracle application to python-oracledb, then refer to
-  :ref:`upgrading` for other changes that may be needed.
+- If you are upgrading a cx_Oracle application to python-oracledb, then refer
+  to :ref:`upgrading83` for other changes that may be needed.
 
 .. note::
 
@@ -318,7 +318,7 @@ For example:
 
 **python-oracledb Thick mode**
 
-In python-oracleb Thick mode, you can also specify the configuration file
+In python-oracledb Thick mode, you can also specify the configuration file
 directory as a parameter in the :meth:`oracledb.init_oracle_client()` call.
 For example, if the file ``/opt/oracle/config/tnsnames.ora`` should be used,
 you can call:

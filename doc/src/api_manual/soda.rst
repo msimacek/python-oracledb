@@ -33,9 +33,9 @@ SODA requires Oracle Client 18.3 or higher and Oracle Database 18.1 and higher.
     If you are using Oracle Database 21c (or later) and create new collections
     you need to do one of the following:
 
-    - Use Oracle Client libraries 21c (or later).
+    - Use Oracle Client libraries 21c (or later)
 
-    - Or, explicitly use collection metadata when creating collections and set
+    - Or explicitly use collection metadata when creating collections and set
       the data storage type to BLOB, for example::
 
         {
@@ -62,9 +62,9 @@ SODA requires Oracle Client 18.3 or higher and Oracle Database 18.1 and higher.
       <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
       id=GUID-A2E90F08-BC9F-4688-A9D0-4A948DD3F7A9>`__ to 19 or lower.
 
-    Otherwise you may get errors such as "ORA-40842: unsupported value JSON in
-    the metadata for the field sqlType" or "ORA-40659: Data type does not match
-    the specification in the collection metadata".
+    Otherwise, you may get errors such as ``ORA-40842: unsupported value JSON in
+    the metadata for the field sqlType`` or ``ORA-40659: Data type does not match
+    the specification in the collection metadata``.
 
 .. _sodadb:
 
@@ -87,19 +87,19 @@ SodaDatabase Methods
     collection, and a collection with the same name and metadata already
     exists, then that existing collection is opened without error.
 
-    If `metadata` is specified, it is expected to be a string containing valid
-    JSON or a dictionary that will be transformed into a JSON string. This JSON
-    permits you to specify the configuration of the collection including
-    storage options; specifying the presence or absence of columns for creation
-    timestamp, last modified timestamp and version; whether the collection can
-    store only JSON documents; and methods of key and version generation. The
-    default metadata creates a collection that only supports JSON documents and
-    uses system generated keys. See this `collection metadata reference
-    <https://www.oracle.com/pls/topic/
-    lookup?ctx=dblatest&id=GUID-49EFF3D3-9FAB-4DA6-BDE2-2650383566A3>`__
-    for more information.
+    If ``metadata`` is specified, it is expected to be a string containing
+    valid JSON or a dictionary that will be transformed into a JSON
+    string. This JSON permits you to specify the configuration of the
+    collection including storage options; specifying the presence or absence of
+    columns for creation timestamp, last modified timestamp and version;
+    whether the collection can store only JSON documents; and methods of key
+    and version generation. The default metadata creates a collection that only
+    supports JSON documents and uses system generated keys. See this
+    `collection metadata reference <https://www.oracle.com/pls/topic/
+    lookup?ctx=dblatest&id=GUID-49EFF3D3-9FAB-4DA6-BDE2-2650383566A3>`__ for
+    more information.
 
-    If the `mapMode` parameter is set to True, the new collection is mapped to an
+    If the ``mapMode`` parameter is set to True, the new collection is mapped to an
     existing table instead of creating a table. If a collection is created in
     this way, dropping the collection will not drop the existing table either.
 
@@ -112,16 +112,17 @@ SodaDatabase Methods
     content directly to SODA write operations. SodaDocument attributes
     'createdOn', 'lastModified' and 'version' will be None.
 
-    The `content` parameter can be a dictionary or list which will be transformed
-    into a JSON string and then UTF-8 encoded. It can also be a string which
-    will be UTF-8 encoded or it can be a bytes object which will be stored
-    unchanged. If a bytes object is provided and the content is expected to be
-    JSON, note that SODA only supports UTF-8, UTF-16LE and UTF-16BE encodings.
+    The ``content`` parameter can be a dictionary or list which will be
+    transformed into a JSON string and then UTF-8 encoded. It can also be a
+    string which will be UTF-8 encoded or it can be a bytes object which will
+    be stored unchanged. If a bytes object is provided and the content is
+    expected to be JSON, note that SODA only supports UTF-8, UTF-16LE and
+    UTF-16BE encodings.
 
-    The `key` parameter should only be supplied if the collection in which the
+    The ``key`` parameter should only be supplied if the collection in which the
     document is to be placed requires client-assigned keys.
 
-    The `mediaType` parameter should only be supplied if the collection in which
+    The ``mediaType`` parameter should only be supplied if the collection in which
     the document is to be placed supports non-JSON documents and the content
     for this document is non-JSON. Using a standard MIME type for this value is
     recommended but any string will be accepted.
@@ -132,11 +133,11 @@ SodaDatabase Methods
     Returns a list of the names of collections in the database that match the
     criteria, in alphabetical order.
 
-    If the `startName` parameter is specified, the list of names returned will
+    If the ``startName`` parameter is specified, the list of names returned will
     start with this value and also contain any names that fall after this value
     in alphabetical order.
 
-    If the `limit` parameter is specified and is non-zero, the number of
+    If the ``limit`` parameter is specified and is non-zero, the number of
     collection names returned will be limited to this value.
 
 
@@ -188,7 +189,7 @@ SodaCollection Methods
 
     Drops the index with the specified name, if it exists.
 
-    The `force` parameter, if set to True, can be used to force the dropping of
+    The ``force`` parameter, if set to True, can be used to force the dropping of
     an index that the underlying Oracle Database domain index doesn't normally
     permit. This is only applicable to spatial and JSON search indexes.
     See `here <https://www.oracle.com/pls/topic/
@@ -236,7 +237,7 @@ SodaCollection Methods
     that it returns a list of :ref:`SODA Document objects <sodadoc>`. Note that
     for performance reasons the returned documents do not contain the content.
 
-    The `hint` parameter, if specified, supplies a hint to the database when
+    The ``hint`` parameter, if specified, supplies a hint to the database when
     processing the SODA operation. This is expected to be a string in the same
     format as a SQL hint but without any comment characters, for example
     ``hint="MONITOR"``. Pass only the hint ``"MONITOR"`` (turn on monitoring)
@@ -269,7 +270,7 @@ SodaCollection Methods
     returns a :ref:`SODA Document object <sodadoc>`. Note that for performance
     reasons the returned document does not contain the content.
 
-    The `hint` parameter, if specified, supplies a hint to the database when
+    The ``hint`` parameter, if specified, supplies a hint to the database when
     processing the SODA operation. This is expected to be a string in the same
     format as a SQL hint but without any comment characters, for example
     ``hint="MONITOR"``. Pass only the hint ``"MONITOR"`` (turn on monitoring)
@@ -305,7 +306,7 @@ SodaCollection Methods
     keys are used, and the document with the specified key already exists in
     the collection, it will be replaced with the input document.
 
-    The `hint` parameter, if specified, supplies a hint to the database when
+    The ``hint`` parameter, if specified, supplies a hint to the database when
     processing the SODA operation. This is expected to be a string in the same
     format as a SQL hint but without any comment characters, for example
     ``hint="MONITOR"``. Pass only the hint ``"MONITOR"`` (turn on monitoring)

@@ -14,10 +14,10 @@ Subscription Methods
 .. method:: Subscription.registerquery(statement, [args])
 
     Registers the query for subsequent notification when tables referenced by
-    the query are changed. This behaves similarly to cursor.execute() but only
-    queries are permitted and the args parameter must be a sequence or
-    dictionary.  If the qos parameter included the flag
-    oracledb.SUBSCR_QOS_QUERY when the subscription was created, then the ID
+    the query are changed. This behaves similarly to :meth:`Cursor.execute()` but only
+    queries are permitted and the ``args`` parameter must be a sequence or
+    dictionary.  If the ``qos`` parameter included the flag
+    :data:`oracledb.SUBSCR_QOS_QUERY` when the subscription was created, then the ID
     for the registered query is returned; otherwise, None is returned.
 
 Subscription Attributes
