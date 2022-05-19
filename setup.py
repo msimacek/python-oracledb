@@ -57,7 +57,7 @@ impl_dir = os.path.join(source_dir, "impl", "thin")
 thin_depends = [os.path.join(impl_dir, n) \
                 for n in sorted(os.listdir(impl_dir))
                 if n.endswith(".pyx") or n.endswith(".pxi")
-                        or n.endswith(".pxd") or n == "bswap.c"]
+                        or n.endswith(".pxd")]
 thin_depends.append(base_pxd)
 
 # if the platform is macOS, add arguments required for cross-compilation for
