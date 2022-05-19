@@ -60,8 +60,10 @@ thin_depends = [os.path.join(impl_dir, n) \
                         or n.endswith(".pxd") or n == "bswap.c"]
 thin_depends.append(base_pxd)
 
-# if the platform is macOS, add arguments requied for cross-compiliation for
+# if the platform is macOS, add arguments required for cross-compilation for
 # both x86_64 and arm64 architectures.
+# Use a Universal2 Python binary to build, or set an archtecture
+# before building, e.g.  export ARCHFLAGS="-arch x86_64"
 extra_compile_args = []
 if sys.platform == "darwin":
     if platform.machine() == "x86_64":
