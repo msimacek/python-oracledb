@@ -254,7 +254,7 @@ SodaCollection Methods
 
         - This method requires Oracle Client 18.5 and higher.
 
-        - Use of the `hint` parameter requires Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
+        - Use of the ``hint`` parameter requires Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
 
 
 .. method:: SodaCollection.insertOne(doc)
@@ -285,7 +285,7 @@ SodaCollection Methods
 
     .. note::
 
-        Use of the `hint` parameter requires Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
+        Use of the ``hint`` parameter requires Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
 
 
 .. method:: SodaCollection.save(doc)
@@ -324,7 +324,7 @@ SodaCollection Methods
 
     .. note::
 
-        Use of the `hint` parameter requires Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
+        Use of the ``hint`` parameter requires Oracle Client 21.3 or higher (or Oracle Client 19 from 19.11).
 
 
 .. method:: SodaCollection.truncate()

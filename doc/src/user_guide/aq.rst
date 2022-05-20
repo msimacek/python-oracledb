@@ -15,7 +15,7 @@ architecture.
     Oracle Advanced Queuing is only supported in the python-oracledb Thick
     mode.  See :ref:`enablingthick`.
 
-python-oracledb uses the updated interface for Oracle Advanced Queuing that
+Python-oracledb uses the updated interface for Oracle Advanced Queuing that
 was first introduced in cx_Oracle 7.2.
 
 There are Advanced Queuing examples in the `GitHub examples
@@ -44,7 +44,7 @@ messages.
 Enqueuing Messages
 ==================
 
-To send messages in Python you connect and get a :ref:`queue <queue>`. The
+To send messages in Python, you connect and get a :ref:`queue <queue>`. The
 queue can be used for enqueuing, dequeuing, or both as needed.
 
 .. code-block:: python

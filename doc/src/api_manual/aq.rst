@@ -43,7 +43,7 @@ Queue Methods
 
 .. method:: Queue.enqmany(messages)
 
-    Enqueues multiple messages into the queue. The messages parameter must be a
+    Enqueues multiple messages into the queue. The ``messages`` parameter must be a
     sequence containing :ref:`message property <msgproperties>` objects which
     have all had their payload attribute set to a value that the queue
     supports.

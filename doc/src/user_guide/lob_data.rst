@@ -120,7 +120,7 @@ handler:
 Streaming LOBs (Read)
 ---------------------
 
-Without setting ``oracledb.defaults.fetch_lobs`` to False, or without using a
+Without setting ``oracledb.defaults.fetch_lobs`` to False, or without using an
 output type handler, the CLOB and BLOB values are fetched as :ref:`LOB
 objects<lobobj>`. The size of the LOB object can be obtained by calling
 :meth:`LOB.size()` and the data can be read by calling :meth:`LOB.read()`:

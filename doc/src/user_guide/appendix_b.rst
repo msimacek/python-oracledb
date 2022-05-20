@@ -202,7 +202,7 @@ Connection Pooling Differences between Thin and Thick Modes
 Python-oracledb introduced the :ref:`ConnectionPool Object <connpool>` class to
 replace ``SessionPool``.  A new :func:`oracledb.create_pool()` method is now
 the recommended way to create a connection pool.  The use of the equivalent
-``SessionPool()`` method is :ref:`deprecated <deprecations>`.
+``SessionPool()`` constructor is :ref:`deprecated <deprecations>`.
 
 The :func:`~oracledb.create_pool()` in the python-oracledb Thin mode differs
 from the python-oracledb Thick mode in the following ways:

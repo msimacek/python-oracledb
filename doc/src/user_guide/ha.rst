@@ -70,7 +70,7 @@ out every 4 minutes, and you cannot alter the firewall settings, then you may
 decide to use ``EXPIRE_TIME`` in your connect string to send a probe every 2
 minutes to the database to keep connections 'alive'::
 
-    connection = oracledb.connect("hr", userpwd, "dbhost.example.com/orclpdb1?expire_time=2")
+    connection = oracledb.connect("hr", userpwd, "dbhost.example.com/orclpdb?expire_time=2")
 
 .. _fan:
 

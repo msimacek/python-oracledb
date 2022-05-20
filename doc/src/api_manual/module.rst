@@ -194,7 +194,7 @@ Oracledb Methods
     the distinguished name (DN) which should be matched with the server. This
     value is ignored if the ``ssl_server_dn_match`` parameter is not set to the
     value True. This value is used in both the python-oracledb Thin and Thick
-    modes. This value is used in both the python-oracledb Thin and Thick modes.
+    modes.
 
     The ``wallet_location`` parameter is expected to be a string that identifies
     the directory where the wallet can be found. In python-oracledb Thin mode,
@@ -209,7 +209,7 @@ Oracledb Methods
     query notification and high availability event notifications. The default
     value is False.
 
-    If the ``mode`` is specified, it must be one of the
+    If the ``mode`` parameter is specified, it must be one of the
     :ref:`connection authorization modes <connection-authorization-modes>`
     which are defined at the module level. This value is used in both the
     python-oracledb Thin and Thick modes.The default value is 0.
@@ -224,10 +224,10 @@ Oracledb Methods
     python-oracledb Thin and Thick modes. The default is the value of
     :attr:`defaults.stmtcachesize`.
 
-    The ``edition`` parameter is expected to be a string that indicates the edition
-    to use for the connection. This parameter cannot be used simultaneously with
-    the ``cclass`` parameter. This value is used in both the python-oracledb
-    Thin and Thick modes.
+    The ``edition`` parameter is expected to be a string that indicates the
+    edition to use for the connection. This parameter cannot be used
+    simultaneously with the ``cclass`` parameter. This value is used in the
+    python-oracledb Thick mode.
 
     The ``tag`` parameter is expected to be a string that identifies the type of
     connection that should be returned from a pool. This value is only used
@@ -242,7 +242,7 @@ Oracledb Methods
     directory in which configuration files (tnsnames.ora) are found. This value
     is only used in python-oracledb Thin mode. The default is the value of
     :attr:`defaults.config_dir`. For python-oracledb Thick mode, use the
-    config_dir parameter of :func:`oracledb.init_oracle_client()`.
+    ``config_dir`` parameter of :func:`oracledb.init_oracle_client()`.
 
     The ``appcontext`` parameter is expected to be a list of 3-tuples that identifies
     the application context used by the connection. This parameter should contain
@@ -385,7 +385,7 @@ Oracledb Methods
     the distinguished name (DN) which should be matched with the server. This
     value is ignored if the ``ssl_server_dn_match`` parameter is not set to the
     value True. This value is used in both the python-oracledb Thin and Thick
-    modes. This value is used in both the python-oracledb Thin and Thick modes.
+    modes.
 
     The ``wallet_location`` parameter is expected to be a string that identifies
     the directory where the wallet can be found. In python-oracledb Thin mode,
@@ -414,10 +414,10 @@ Oracledb Methods
     python-oracledb Thin and Thick modes. The default is the value of
     :attr:`defaults.stmtcachesize`.
 
-    The ``edition`` parameter is expected to be a string that indicates the edition
-    to use for the connection. This parameter cannot be used simultaneously with
-    the ``cclass`` parameter. This value is used in both the python-oracledb
-    Thin and Thick modes.
+    The ``edition`` parameter is expected to be a string that indicates the
+    edition to use for the connection. This parameter cannot be used
+    simultaneously with the ``cclass`` parameter. This value is used in the
+    python-oracledb Thick mode.
 
     The ``tag`` parameter is expected to be a string that identifies the type of
     connection that should be returned from a pool. This value is only used
@@ -432,7 +432,7 @@ Oracledb Methods
     directory in which configuration files (tnsnames.ora) are found. This value
     is only used in python-oracledb Thin mode. The default is the value of
     :attr:`defaults.config_dir`.  For python-oracledb Thick mode, use
-    the config_dir parameter of :func:`oracledb.init_oracle_client()`.
+    the ``config_dir`` parameter of :func:`oracledb.init_oracle_client()`.
 
     The ``appcontext`` parameter is expected to be a list of 3-tuples that identifies
     the application context used by the connection. This parameter should contain
@@ -472,8 +472,9 @@ Oracledb Methods
     stmtcachesize=None, edition=None, tag=None, matchanytag=None, config_dir=None, \
     appcontext=[], shardingkey=[], supershardingkey=[], debug_jdwp=None, handle=0)
 
-    Creates a connection pool with the supplied parameters and returns it.  See
-    :ref:`Connection pooling <connpooling>` for more information.
+    Creates a connection pool with the supplied parameters and returns the
+    :ref:`ConnectionPool object <connpool>` for the pool.  See :ref:`Connection
+    pooling <connpooling>` for more information.
 
     This function is the equivalent of the `cx_Oracle.SessionPool()
     <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`__
@@ -496,10 +497,69 @@ Oracledb Methods
     ``params`` parameter object. Similar precedence rules also apply to other
     values.
 
-    The ``dsn`` (data source name) parameter can be a string in the format
-    ``user/password@connect_string`` or can simply be a connect string in which
-    case the user and password need to be specified separately.  See
-    :ref:`connstr` for more information.
+    The ``user``, ``password`` and ``dsn`` parameters are the same as for
+    :meth:`oracledb.connect()`.
+
+    The ``min``, ``max`` and ``increment`` parameters control pool growth
+    behavior. A fixed pool size where ``min`` equals ``max`` is
+    :ref:`recommended <connpoolsize>` to help prevent connection storms and to
+    help overall system stability. The ``min`` parameter is the number of
+    connections opened when the pool is created. The ``increment`` is the
+    number of connections that are opened whenever a connection request exceeds
+    the number of currently open connections. The ``max`` parameter is the
+    maximum number of connections that can be open in the connection pool.
+
+    If the ``connectiontype`` parameter is specified, all calls to
+    :meth:`ConnectionPool.acquire()` will create connection objects of that
+    type, rather than the base type defined at the module level.
+
+    The ``getmode`` parameter determines the behavior of
+    :meth:`ConnectionPool.acquire()`.  One of the constants
+    :data:`oracledb.POOL_GETMODE_WAIT`, :data:`oracledb.POOL_GETMODE_NOWAIT`,
+    :data:`oracledb.POOL_GETMODE_FORCEGET`, or
+    :data:`oracledb.POOL_GETMODE_TIMEDWAIT`. The default value is
+    :data:`oracledb.POOL_GETMODE_WAIT`.
+
+    The ``homogeneous`` parameter is a boolean that indicates whether the
+    connections are homogeneous (same user) or heterogeneous (multiple
+    users). The default value is True.
+
+    The ``externalauth`` parameter is a boolean that determines whether to use
+    external authentication. The default value is False.
+
+    The ``timeout`` parameter is the length of time (in seconds) that a connection may
+    remain idle in the pool before it is terminated. If the value of this parameter
+    is 0, then the connections are never terminated. The default value is 0.
+
+    The ``wait_timeout`` parameter is the length of time (in milliseconds) that
+    a caller should wait when acquiring a connection from the pool with
+    ``getmode`` set to :data:`oracledb.POOL_GETMODE_TIMEDWAIT`. The default
+    value is 0.
+
+    The ``max_lifetime_session`` parameter is the length of time (in seconds)
+    that connections can remain in the pool. If the value of this parameter is
+    0, then the connections may remain in the pool indefinitely. The default
+    value is 0.
+
+    The ``session_callback`` parameter is a callable that is invoked when a
+    connection is returned from the pool for the first time, or when the
+    connection tag differs from the one requested.
+
+    The ``max_sessions_per_shard`` parameter is the maximum number of
+    connections that may be associated with a particular shard. The default
+    value is 0.
+
+    The ``soda_metadata_cache`` parameter is a boolean that indicates whether
+    or not the SODA metadata cache should be enabled. The default value is
+    False.
+
+    The ``ping_interval`` parameter is the length of time (in seconds) after
+    which an unused connection in the pool will be a candidate for pinging when
+    :meth:`ConnectionPool.acquire()` is called. If the ping to the database
+    indicates the connection is not alive a replacement connection will be
+    returned by :meth:`~ConnectionPool.acquire()`. If ``ping_interval`` is a
+    negative value, then the ping functionality will be disabled. The default
+    value is 60 seconds.
 
     The ``pool_class`` parameter is expected to be a :ref:`ConnectionPool Object
     <connpool>` or a subclass of ConnectionPool.
@@ -513,27 +573,21 @@ Oracledb Methods
     ``params`` parameter will be modified to contain the connection parameters
     found within ``dsn``.
 
-    The ``user`` parameter is expected to be a string which indicates the name of the user to
-    connect to. This value is used in both the python-oracledb Thin and Thick modes.
-
-    The ``proxy_user`` parameter is expected to be a string which indicates the name of the
-    proxy user to connect to. If this value is not specified, it will be parsed out of
-    user if user is in the form "user[proxy_user]". This value is used in both the
-    python-oracledb Thin and Thick modes.
-
-    The ``password`` parameter expected to be a string which indicates the password for
-    the user. This value is used in both the python-oracledb Thin and Thick modes.
+    The ``proxy_user`` parameter is expected to be a string which indicates the
+    name of the proxy user to connect to. If this value is not specified, it
+    will be parsed out of user if user is in the form "user[proxy_user]". This
+    value is used in both the python-oracledb Thin and Thick modes.
 
     The ``newpassword`` parameter is expected to be a string which indicates the new
     password for the user. The new password will take effect immediately upon a
     successful connection to the database. This value is used in both the
     python-oracledb Thin and Thick modes.
 
-    The ``wallet_password`` parameter is expected to be a string which indicates the
-    password to use to decrypt the PEM-encoded wallet, if it is encrypted. This
-    value is only used in python-oracledb Thin mode. The ``wallet_password`` parameter
-    is not needed for cwallet.sso files that are used in the python-oracledb Thick
-    mode.
+    The ``wallet_password`` parameter is expected to be a string which
+    indicates the password to use to decrypt the PEM-encoded wallet, if it is
+    encrypted. This value is only used in python-oracledb Thin mode. The
+    ``wallet_password`` parameter is not needed for cwallet.sso files that are
+    used in the python-oracledb Thick mode.
 
     The ``host`` parameter is expected to be a string which specifies the name or IP
     address of the machine hosting the listener, which handles the initial
@@ -612,7 +666,7 @@ Oracledb Methods
     the distinguished name (DN) which should be matched with the server. This
     value is ignored if the ``ssl_server_dn_match`` parameter is not set to the
     value True. This value is used in both the python-oracledb Thin and Thick
-    modes. This value is used in both the python-oracledb Thin and Thick modes.
+    modes.
 
     The ``wallet_location`` parameter is expected to be a string that identifies
     the directory where the wallet can be found. In python-oracledb Thin mode,
@@ -627,7 +681,7 @@ Oracledb Methods
     query notification and high availability event notifications. The default
     value is False.
 
-    If the ``mode`` is specified, it must be one of the
+    If the ``mode`` parameter is specified, it must be one of the
     :ref:`connection authorization modes <connection-authorization-modes>`
     which are defined at the module level. This value is used in both the
     python-oracledb Thin and Thick modes.The default value is 0.
@@ -642,10 +696,10 @@ Oracledb Methods
     python-oracledb Thin and Thick modes. The default is the value of
     :attr:`defaults.stmtcachesize`.
 
-    The ``edition`` parameter is expected to be a string that indicates the edition
-    to use for the connection. This parameter cannot be used simultaneously with
-    the cclass parameter. This value is used in both the python-oracledb
-    Thin and Thick modes.
+    The ``edition`` parameter is expected to be a string that indicates the
+    edition to use for the connection. This parameter cannot be used
+    simultaneously with the ``cclass`` parameter. This value is used in the
+    python-oracledb Thick mode.
 
     The ``tag`` parameter is expected to be a string that identifies the type of
     connection that should be returned from a pool. This value is only used
@@ -660,7 +714,7 @@ Oracledb Methods
     directory in which configuration files (tnsnames.ora) are found. This value
     is only used in python-oracledb Thin mode. The default is the value of
     :attr:`defaults.config_dir`. For python-oracledb Thick mode, use
-    the config_dir parameter of :func:`oracledb.init_oracle_client()`.
+    the ``config_dir`` parameter of :func:`oracledb.init_oracle_client()`.
 
     The ``appcontext`` parameter is expected to be a list of 3-tuples that identifies
     the application context used by the connection. This parameter should contain
@@ -827,7 +881,7 @@ Oracledb Methods
     is 0, then the connections are never terminated. The default value is 0.
 
     The ``wait_timeout`` parameter is the length of time (in milliseconds) that a caller
-    should wait when acquiring a connection from the pool with getmode set to
+    should wait when acquiring a connection from the pool with ``getmode`` set to
     :data:`oracledb.POOL_GETMODE_TIMEDWAIT`. The default value is 0.
 
     The ``max_lifetime_session`` parameter is the length of time (in seconds) that
@@ -949,7 +1003,7 @@ Oracledb Methods
     the distinguished name (DN) which should be matched with the server. This
     value is ignored if the ssl_server_dn_match parameter is not set to the
     value True. This value is used in both the python-oracledb Thin and Thick
-    modes. This value is used in both the python-oracledb Thin and Thick modes.
+    modes.
 
     The ``wallet_location`` parameter is expected to be a string that identifies
     the directory where the wallet can be found. In python-oracledb Thin mode,
@@ -978,10 +1032,10 @@ Oracledb Methods
     python-oracledb Thin and Thick modes. The default is the value of
     :attr:`defaults.stmtcachesize`.
 
-    The ``edition`` parameter is expected to be a string that indicates the edition
-    to use for the connection. This parameter cannot be used simultaneously with
-    the cclass parameter. This value is used in both the python-oracledb
-    Thin and Thick modes.
+    The ``edition`` parameter is expected to be a string that indicates the
+    edition to use for the connection. This parameter cannot be used
+    simultaneously with the ``cclass`` parameter. This value is used in the
+    python-oracledb Thick mode.
 
     The ``tag`` parameter is expected to be a string that identifies the type of
     connection that should be returned from a pool. This value is only used
@@ -996,7 +1050,7 @@ Oracledb Methods
     directory in which configuration files (tnsnames.ora) are found. This value
     is only used in python-oracledb Thin mode. The default is the value of
     :attr:`defaults.config_dir`. For python-oracledb Thick mode, use the
-    config_dir parameter of :func:`oracledb.init_oracle_client()`.
+    ``config_dir`` parameter of :func:`oracledb.init_oracle_client()`.
 
     The ``appcontext`` parameter is expected to be a list of 3-tuples that identifies
     the application context used by the connection. This parameter should contain
@@ -1091,8 +1145,8 @@ General
     locking.
 
     Note that in order to make use of multiple threads in a program which
-    intends to connect and disconnect in different threads, the threaded
-    parameter to :meth:`connect()` must be `True`.
+    intends to connect and disconnect in different threads, the ``threaded``
+    parameter to :meth:`connect()` must be True.
 
 
 .. data:: version
@@ -1110,13 +1164,13 @@ Advanced Queuing: Delivery Modes
 
 These constants are extensions to the DB API definition. They are possible
 values for the :attr:`~DeqOptions.deliverymode` attribute of the
-:ref:`dequeue options object <deqoptions>` passed as the options parameter to
+:ref:`dequeue options object <deqoptions>` passed as the ``options`` parameter to
 the :meth:`Queue.deqone()` or :meth:`Queue.deqmany()` methods as well as the
 :attr:`~EnqOptions.deliverymode` attribute of the
-:ref:`enqueue options object <enqoptions>` passed as the options parameter to
+:ref:`enqueue options object <enqoptions>` passed as the ``options`` parameter to
 the :meth:`Queue.enqone()` or :meth:`Queue.enqmany()` methods. They are also
 possible values for the :attr:`~MessageProperties.deliverymode` attribute of the
-:ref:`message properties object <msgproperties>` passed as the msgproperties
+:ref:`message properties object <msgproperties>` passed as the ``msgproperties``
 parameter to the :meth:`Queue.deqone()` or :meth:`Queue.deqmany()` and
 :meth:`Queue.enqone()` or :meth:`Queue.enqmany()` methods.
 
@@ -1335,7 +1389,7 @@ constants used in advanced queuing.
 Connection Authorization Modes
 ------------------------------
 
-These constants are extensions to the DB API definition and have replaced the
+These constants are extensions to the DB API definition and have deprecated the
 `authorization modes <https://cx-oracle.readthedocs.io/en/latest/api_manual/
 module.html#connection-authorization-modes>`_ used in cx_Oracle 8.3. They are
 possible values for the ``mode`` parameter of the :meth:`connect()` method.
@@ -1348,7 +1402,9 @@ possible values for the ``mode`` parameter of the :meth:`connect()` method.
 
     .. note::
 
-        This constant can only be used in the python-oracledb Thin mode.
+        This constant can be used for standalone and pooled connections in the
+        python-oracledb Thin mode, and for standalone connections in the Thick
+        mode.
 
         This constant deprecates the ``DEFAULT_AUTH`` constant that was used in
         cx_Oracle 8.3.
@@ -1360,7 +1416,8 @@ possible values for the ``mode`` parameter of the :meth:`connect()` method.
 
     .. note::
 
-        This constant can only be used in the python-oracledb Thin mode.
+        This constant can only be used in the python-oracledb Thick mode for
+        standalone connections.
 
         This constant deprecates the ``PRELIM_AUTH`` constant that was used in
         cx_Oracle 8.3.
@@ -1371,7 +1428,9 @@ possible values for the ``mode`` parameter of the :meth:`connect()` method.
 
     .. note::
 
-        This constant can only be used in the python-oracledb Thin mode.
+        This constant can be used for standalone and pooled connections in the
+        python-oracledb Thin mode, and for standalone connections in the Thick
+        mode.
 
         This constant deprecates the ``SYSASM`` constant that was used in
         cx_Oracle 8.3.
@@ -1382,7 +1441,9 @@ possible values for the ``mode`` parameter of the :meth:`connect()` method.
 
     .. note::
 
-        This constant can only be used in the python-oracledb Thin mode.
+        This constant can be used for standalone and pooled connections in the
+        python-oracledb Thin mode, and for standalone connections in the Thick
+        mode.
 
         This constant deprecates the ``SYSBKP`` constant that was used in
         cx_Oracle 8.3.
@@ -1393,7 +1454,9 @@ possible values for the ``mode`` parameter of the :meth:`connect()` method.
 
     .. note::
 
-        This constant can be used in both the python-oracledb Thin and Thick modes.
+        This constant can be used for standalone and pooled connections in the
+        python-oracledb Thin mode, and for standalone connections in the Thick
+        mode.
 
         This constant deprecates the ``SYSDBA`` constant that was used in
         cx_Oracle 8.3.
@@ -1404,7 +1467,9 @@ possible values for the ``mode`` parameter of the :meth:`connect()` method.
 
     .. note::
 
-        This constant can only be used in the python-oracledb Thin mode.
+        This constant can be used for standalone and pooled connections in the
+        python-oracledb Thin mode, and for standalone connections in the Thick
+        mode.
 
         This constant deprecates the ``SYSDGD`` constant that was used in
         cx_Oracle 8.3.
@@ -1415,7 +1480,9 @@ possible values for the ``mode`` parameter of the :meth:`connect()` method.
 
     .. note::
 
-        This constant can only be used in the python-oracledb Thin mode.
+        This constant can be used for standalone and pooled connections in the
+        python-oracledb Thin mode, and for standalone connections in the Thick
+        mode.
 
         This constant deprecates the ``SYSKMT`` constant that was used in
         cx_Oracle 8.3.
@@ -1426,7 +1493,9 @@ possible values for the ``mode`` parameter of the :meth:`connect()` method.
 
     .. note::
 
-        This constant can only be used in the python-oracledb Thin mode.
+        This constant can be used for standalone and pooled connections in the
+        python-oracledb Thin mode, and for standalone connections in the Thick
+        mode.
 
         This constant deprecates the ``SYSOPER`` constant that was used in
         cx_Oracle 8.3.
@@ -1437,7 +1506,9 @@ possible values for the ``mode`` parameter of the :meth:`connect()` method.
 
     .. note::
 
-        This constant can only be used in the python-oracledb Thin mode.
+        This constant can be used for standalone and pooled connections in the
+        python-oracledb Thin mode, and for standalone connections in the Thick
+        mode.
 
         This constant deprecates the ``SYSRAC`` constant that was used in
         cx_Oracle 8.3.
@@ -1602,7 +1673,7 @@ also used by the :attr:`MessageTable.operation` or
 Connection Pool Get Modes
 -------------------------
 
-These constants are extensions to the DB API definition and have replaced the
+These constants are extensions to the DB API definition and have deprecated the
 `Session Pool Get Modes <https://cx-oracle.readthedocs.io/en/latest/api_manual/
 module.html#session-pool-get-modes>`_ constants that were used in cx_Oracle
 8.3.  They are possible values for the ``getmode`` parameter of the
@@ -1661,7 +1732,7 @@ module.html#session-pool-get-modes>`_ constants that were used in cx_Oracle
 Connection Pool Purity Constants
 --------------------------------
 
-These constants are extensions to the DB API definition and have replaced the
+These constants are extensions to the DB API definition and have deprecated the
 `Session Pool Purity <https://cx-oracle.readthedocs.io/en/latest/api_manual/
 module.html#session-pool-purity>`_ constants that were used in cx_Oracle 8.3.
 They are possible values for the ``purity`` parameter of the :meth:`connect()`
@@ -2010,15 +2081,15 @@ when binding data.
 
 .. data:: DB_TYPE_LONG_NVARCHAR
 
-    Describes columns, attributes, or array elements in a database that are of
-    type LONG NVARCHAR. It will compare equal to the DB API type :data:`STRING`.
-
     This constant can be used in output type handlers when fetching NCLOB
     columns as a string. (Note a type handler is not needed if
     :ref:`oracledb.defaults.fetch_lobs <defaults>` is set to False).  For IN
     binds, this constant can be used to create a bind variable in
-    ``cursor.var`` or via ``setinputsizes()``.  The ``DB_TYPE_LONG_NVARCHAR``
-    value won't be shown in query metadata since it is not a database type.
+    :meth:`Cursor.var()` or via :meth:`Cursor.setinputsizes()`.  The
+    ``DB_TYPE_LONG_NVARCHAR`` value won't be shown in query metadata since it
+    is not a database type.
+
+    It will compare equal to the DB API type :data:`STRING`.
 
 .. data:: DB_TYPE_NCHAR
 

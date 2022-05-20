@@ -670,10 +670,10 @@ Fetching Raw Data
 
 Sometimes python-oracledb may have problems converting data stored in the database to
 Python strings. This can occur if the data stored in the database does not match
-the character set defined by the database. The `encoding_errors` parameter to
+the character set defined by the database. The ``encoding_errors`` parameter to
 :meth:`Cursor.var()` permits the data to be returned with some invalid data
-replaced, but for additional control the parameter `bypass_decode` can be set
-to `True` and python-oracledb will bypass the decode step and return `bytes` instead
+replaced, but for additional control the parameter ``bypass_decode`` can be set
+to True and python-oracledb will bypass the decode step and return `bytes` instead
 of `str` for data stored in the database as strings. The data can then be
 examined and corrected as required. This approach should only be used for
 troubleshooting and correcting invalid data, not for general use!
@@ -718,7 +718,7 @@ using a Python string, you will need to create a variable using
     .. code-block:: python
 
         with oracledb.connect(user="hr", password=userpwd,
-                               dsn="dbhost.example.com/orclpdb1") as conn:
+                               dsn="dbhost.example.com/orclpdb") as conn:
             with conn.cursor() cursor:
                 var = cursor.var(oracledb.DB_TYPE_VARCHAR)
                 var.setvalue(0, b"Fianc\xc4\x9b")
@@ -750,7 +750,7 @@ then:
     .. code-block:: python
 
         connection = oracledb.connect(user="hr", password=userpwd,
-                                       dsn="dbhost.example.com/orclpdb1",
+                                       dsn="dbhost.example.com/orclpdb",
                                        encoding="UTF-8", nencoding="UTF-8")
 
 * Check for corrupt data in the database.
