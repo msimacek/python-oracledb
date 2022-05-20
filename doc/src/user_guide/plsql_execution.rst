@@ -286,8 +286,10 @@ Different versions of the database objects are associated with an "edition".
 
 .. note::
 
-    Edition-Based Redefinition (EBR) is only supported in the python-oracledb
-    Thick mode.  See :ref:`enablingthick`.
+    Setting the Edition-Based Redefinition (EBR) edition at connection time is
+    only supported in the python-oracledb Thick mode.  See
+    :ref:`enablingthick`.  In python-oracledb Thin mode, the edition can be
+    changed with ALTER SESSION after connecting.
 
 The simplest way to set an edition is to pass the ``edition`` parameter to
 :meth:`oracledb.connect()` or :meth:`oracledb.create_pool()`:
@@ -295,7 +297,7 @@ The simplest way to set an edition is to pass the ``edition`` parameter to
 .. code-block:: python
 
     connection = oracledb.connect(user="hr", password=userpwd,
-                                   dsn="dbhost.example.com/orclpdb1",
+                                   dsn="dbhost.example.com/orclpdb",
                                    edition="newsales", encoding="UTF-8")
 
 
@@ -360,7 +362,7 @@ function as shown:
 .. code-block:: python
 
     connection = oracledb.connect(user=user, password=password,
-                                   dsn="dbhost.example.com/orclpdb1",
+                                   dsn="dbhost.example.com/orclpdb",
                                    encoding="UTF-8")
     print("Edition is:", repr(connection.edition))
 
@@ -370,7 +372,7 @@ function as shown:
 
     # Use the edition parameter for the connection
     connection = oracledb.connect(user=user, password=password,
-                                   dsn="dbhost.example.com/orclpdb1",
+                                   dsn="dbhost.example.com/orclpdb",
                                    edition="demo", encoding="UTF-8")
     print("Edition is:", repr(connection.edition))
 

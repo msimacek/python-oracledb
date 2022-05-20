@@ -17,7 +17,7 @@ query-by-example (QBE) pattern-matching.
     :ref:`enablingthick`.
 
 SODA uses a SQL schema to store documents, but you do not need to know SQL or
-how the documents are stored. However, access via SQL does allow use of
+how the documents are stored. However, access through SQL does allow use of
 advanced Oracle Database functionality such as analytics for reporting.
 
 Oracle SODA implementations are also available in `Node.js
@@ -170,8 +170,8 @@ you will find it more efficient to use logic similar to:
 
 If collection metadata changes are made externally, the cache can become
 invalid. If this happens, the cache can be cleared by calling
-:meth:`ConnectionPool.reconfigure()` with ``soda_metadata_cache`` set to `False`,
-or by setting the attribute :attr:`ConnectionPool.soda_metadata_cache` to `False`.
+:meth:`ConnectionPool.reconfigure()` with ``soda_metadata_cache`` set to False,
+or by setting the attribute :attr:`ConnectionPool.soda_metadata_cache` to False.
 Use a second call to ``reconfigure()`` or set ``soda_metadata_cache`` to
 re-enable the cache.
 
@@ -206,6 +206,6 @@ partial transaction.
 Note:
 
 - SODA DDL operations do not commit an open transaction the way that SQL always does for DDL statements.
-- When :attr:`~Connection.autocommit` is `True`, most SODA methods will issue a commit before successful return.
+- When :attr:`~Connection.autocommit` is True, most SODA methods will issue a commit before successful return.
 - SODA provides optimistic locking. See :meth:`SodaOperation.version()`.
 - When mixing SODA and relational access, any commit or rollback on the connection will affect all work.

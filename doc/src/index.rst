@@ -1,8 +1,9 @@
 Welcome to python-oracledb's documentation!
 ===========================================
 
-The **python-oracledb** driver is the new and upgraded release of cx_Oracle.
-The driver an open source module that enables Python programs to access Oracle
+Python-oracledb is the new name for the Python `cx_Oracle driver
+<https://oracle.github.io/python-cx_Oracle/>`__.  The python-oracledb driver is
+an open source module that enables Python programs to access Oracle
 Database. It conforms to the `Python Database API v2.0 Specification
 <https://www.python.org/dev/peps/pep-0249/>`__ with a considerable number of
 additions and a couple of exclusions.

@@ -45,20 +45,20 @@ Before using CQN, users must have appropriate permissions:
 
     GRANT CHANGE NOTIFICATION TO <user-name>;
 
-To use CQN, connections must have ``events`` mode set to ``True``, for
+To use CQN, connections must have ``events`` mode set to True, for
 example:
 
 .. code-block:: python
 
     connection = oracledb.connect(user=user, password=password,
-                                   dsn="dbhost.example.com/orclpdb1",
+                                   dsn="dbhost.example.com/orclpdb",
                                    events=True)
 
 The default CQN connection mode means the database must be able to connect back
 to the application using python-oracledb in order to receive notification events.
 Alternatively, when using Oracle Database and Oracle client libraries 19.4, or
 later, subscriptions can set the optional ``client_initiated`` parameter to
-``True``, see ``Connection.subscribe()`` below.
+True, see ``Connection.subscribe()`` below.
 
 The default CQN connection mode typically means that the machine running
 python-oracledb needs a fixed IP address.  Note :meth:`Connection.subscribe()` does
@@ -137,7 +137,7 @@ changes is:
     subscr.registerquery("select * from regions")
     input("Hit enter to stop CQN demo\n")
 
-Running the above script, shows the initial output as::
+Running the above script shows the initial output as::
 
     Hit enter to stop CQN demo
 

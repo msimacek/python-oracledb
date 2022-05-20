@@ -4,12 +4,12 @@
 Using JSON Data
 ***************
 
-Native support for JSON data was introduced in Oracle Database 12c.  You can
-use JSON with relational database features, including transactions, indexing,
-declarative querying, and views.  You can project JSON data relationally,
-making it available for relational processes and tools.  Also see
-:ref:`Simple Oracle Document Access (SODA) <sodausermanual>`, which allows
-access to JSON documents through a set of NoSQL-style APIs.
+Native support for JavaScript Object Notation (JSON) data was introduced in
+Oracle Database 12c.  You can use JSON with relational database features,
+including transactions, indexing, declarative querying, and views.  You can
+project JSON data relationally, making it available for relational processes
+and tools.  Also see :ref:`Simple Oracle Document Access (SODA) <sodausermanual>`,
+which allows access to JSON documents through a set of NoSQL-style APIs.
 
 For more information about using JSON in Oracle Database see the `Database JSON
 Developer's Guide
@@ -165,7 +165,7 @@ for a runnable example.
 IN Bind Type Mapping
 ====================
 
-When binding to a JSON value, the type parameter for the variable must be
+When binding to a JSON value, the ``type`` parameter for the variable must be
 specified as :data:`oracledb.DB_TYPE_JSON`. Python values are converted to
 JSON values as shown in the following table.  The 'SQL Equivalent' syntax can
 be used in SQL INSERT and UPDATE statements if specific attribute types are
@@ -353,7 +353,7 @@ in the Oracle JSON Developer's Guide.
 Accessing Relational Data as JSON
 =================================
 
-In Oracle Database 12.2, or later, the `JSON_OBJECT
+In Oracle Database 12.2 or later, the `JSON_OBJECT
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-1EF347AE-7FDA-4B41-AFE0-DD5A49E8B370>`__
 function is a great way to convert relational table data to JSON:
 

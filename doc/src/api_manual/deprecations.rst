@@ -18,64 +18,64 @@ if applicable. The most recent deprecations are listed first.
 
     * - Name
       - Comments
-    * - The `SessionPool class <https://cx-oracle.readthedocs.io/en/latest/api_manual/session_pool.html#sessionpool-object>`_ and `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_ function
-      - Replace by the equivalent :ref:`ConnectionPool Class <connpool>` and function  :meth:`~oracledb.create_pool()`
+    * - `SessionPool class <https://cx-oracle.readthedocs.io/en/latest/api_manual/session_pool.html#sessionpool-object>`_ and use of `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_.
+      - Replace by the equivalent :ref:`ConnectionPool Class <connpool>`. Use the new method :meth:`oracledb.create_pool()` to create connection pools.
     * - :meth:`Connection.begin()`
-      - Replace by the new :ref:`tcp` functionality
+      - Replace by the new :ref:`tcp` functionality.
     * - :meth:`Connection.prepare()`
-      - Replace by the new :ref:`tcp` functionality
-    * - The :func:`oracledb.connect()`, :func:`oracledb.create_pool()` and ``Oracledb.SessionPool()``  parameters ``encoding`` and ``nencoding``
+      - Replace by the new :ref:`tcp` functionality.
+    * - Parameters ``encoding`` and ``nencoding`` of the :func:`oracledb.connect()`, :func:`oracledb.create_pool()` and ``oracledb.SessionPool()`` methods
       - The encodings in use are always UTF-8.
-    * - :meth:`oracledb.connect()` parameter ``threaded``
-      - This was used to allow the Oracle Client libraries to support threaded applications. This value is ignored in python-oracledb because the threaded OCI is always enabled in the Thick mode, and the option is not relevant to the Thin mode. The equivalent parameter was already deprecated for `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_ in cx_Oracle 8.2
-    * - The attribute :attr:`Connection.maxBytesPerCharacter` of the Connection object
+    * - Parameter ``threaded`` of the :meth:`oracledb.connect()` method
+      - This was used to allow the Oracle Client libraries to support threaded applications. This value is ignored in python-oracledb because the threaded OCI is always enabled in the Thick mode, and the option is not relevant to the Thin mode. The equivalent parameter was already deprecated for `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_ in cx_Oracle 8.2.
+    * - Attribute :attr:`Connection.maxBytesPerCharacter` of the Connection object
       - This was previously deprecated.  In python-oracledb 1.0 it will return a constant value of 4 since encodings are always UTF-8.
-    * - The size argument, ``numRows`` of the :meth:`Cursor.fetchmany()` method
-      - Rename the parameter to ``size``
+    * - Size argument, ``numRows`` of the :meth:`Cursor.fetchmany()` method
+      - Rename the parameter to ``size``.
     * - `cx_Oracle.makedsn() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.makedsn>`_
       - Pass the connection string components as connection creation, or pool creation, parameters.  Or use a :ref:`ConnectParams Class <connparam>` object.
     * - oracledb.Connection()
       - This method is no longer recommended for creating connections. Use the equivalent function :meth:`oracledb.connect()` instead.
-    * - The attribute ``Cursor.bindarraysize``
+    * - Attribute ``Cursor.bindarraysize`` of the Cursor object
       - Remove this attribute since it is no longer needed.
     * - Constant :data:`~oracledb.ATTR_PURITY_DEFAULT`
-      - Replace by :data:`~oracledb.PURITY_DEFAULT`
+      - Replace by :data:`~oracledb.PURITY_DEFAULT`.
     * - Constant :data:`~oracledb.ATTR_PURITY_NEW`
-      - Replace by :data:`~oracledb.PURITY_NEW`
+      - Replace by :data:`~oracledb.PURITY_NEW`.
     * - Constant :data:`~oracledb.ATTR_PURITY_SELF`
-      - Replace by :data:`~oracledb.PURITY_SELF`
+      - Replace by :data:`~oracledb.PURITY_SELF`.
     * - Constant :data:`~oracledb.SPOOL_ATTRVAL_WAIT`
-      - Replace by :data:`~oracledb.POOL_GETMODE_WAIT`
+      - Replace by :data:`~oracledb.POOL_GETMODE_WAIT`.
     * - Constant :data:`~oracledb.SPOOL_ATTRVAL_NOWAIT`
-      - Replace by :data:`~oracledb.POOL_GETMODE_NOWAIT`
+      - Replace by :data:`~oracledb.POOL_GETMODE_NOWAIT`.
     * - Constant :data:`~oracledb.SPOOL_ATTRVAL_FORCEGET`
-      - Replace by :data:`~oracledb.POOL_GETMODE_FORCEGET`
+      - Replace by :data:`~oracledb.POOL_GETMODE_FORCEGET`.
     * - Constant :data:`~oracledb.SPOOL_ATTRVAL_TIMEDWAIT`
-      - Replace by :data:`~oracledb.POOL_GETMODE_TIMEDWAIT`
+      - Replace by :data:`~oracledb.POOL_GETMODE_TIMEDWAIT`.
     * - Constant :data:`~oracledb.DEFAULT_AUTH`
-      - Replace by :data:`~oracledb.AUTH_MODE_DEFAULT`
+      - Replace by :data:`~oracledb.AUTH_MODE_DEFAULT`.
     * - Constant :data:`~oracledb.SYSASM`
-      - Replace by :data:`~oracledb.AUTH_MODE_SYSASM`
+      - Replace by :data:`~oracledb.AUTH_MODE_SYSASM`.
     * - Constant :data:`~oracledb.SYSBKP`
-      - Replace by :data:`~oracledb.AUTH_MODE_SYSBKP`
+      - Replace by :data:`~oracledb.AUTH_MODE_SYSBKP`.
     * - Constant :data:`~oracledb.SYSDBA`
-      - Replace by :data:`~oracledb.AUTH_MODE_SYSDBA`
+      - Replace by :data:`~oracledb.AUTH_MODE_SYSDBA`.
     * - Constant :data:`~oracledb.SYSDGD`
-      - Replace by :data:`~oracledb.AUTH_MODE_SYSDGD`
+      - Replace by :data:`~oracledb.AUTH_MODE_SYSDGD`.
     * - Constant :data:`~oracledb.SYSKMT`
-      - Replace by :data:`~oracledb.AUTH_MODE_SYSKMT`
+      - Replace by :data:`~oracledb.AUTH_MODE_SYSKMT`.
     * - Constant :data:`~oracledb.SYSOPER`
-      - Replace by :data:`~oracledb.AUTH_MODE_SYSOPER`
+      - Replace by :data:`~oracledb.AUTH_MODE_SYSOPER`.
     * - Constant :data:`~oracledb.SYSRAC`
-      - Replace by :data:`~oracledb.AUTH_MODE_SYSRAC`
+      - Replace by :data:`~oracledb.AUTH_MODE_SYSRAC`.
     * - Constant :data:`~oracledb.PRELIM_AUTH`
-      - Replace by :data:`~oracledb.AUTH_MODE_PRELIM`
+      - Replace by :data:`~oracledb.AUTH_MODE_PRELIM`.
     * - Constant :data:`~oracledb.SUBSCR_PROTO_OCI`
-      - Replace by :data:`~oracledb.SUBSCR_PROTO_CALLBACK`
+      - Replace by :data:`~oracledb.SUBSCR_PROTO_CALLBACK`.
     * - Class name `ObjectType <https://cx-oracle.readthedocs.io/en/latest/api_manual/object_type.html#object-type-objects>`_
-      - Replace by the equivalent :ref:`DbObjectType<dbobjecttype>`
+      - Replace by the equivalent :ref:`DbObjectType<dbobjecttype>`.
     * - Class name `Object <https://cx-oracle.readthedocs.io/en/latest/api_manual/object_type.html#object-objects>`_
-      - Replace by the equivalent :ref:`DbObject <dbobject>`
+      - Replace by the equivalent :ref:`DbObject <dbobject>`.
 
 Many of the usages deprecated in cx_Oracle (see tables below) are still
 supported by python-oracledb to ease upgrade from cx_Oracle.  However, these
@@ -119,17 +119,17 @@ python-oracledb are listed below:
 
     * - Name
       - Comments
-    * - `encoding` parameter to `cx_Oracle.connect() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.connect>`_
+    * - ``encoding`` parameter to `cx_Oracle.connect() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.connect>`_
       - No longer needed as the use of encodings other than UTF-8 is
         deprecated. Encoding is handled internally between python-oracledb and Oracle
         Database.
-    * - `nencoding` parameter to `cx_Oracle.connect() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.connect>`_
+    * - ``nencoding`` parameter to `cx_Oracle.connect() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.connect>`_
       - No longer needed as the use of encodings other than UTF-8 is
         deprecated.
-    * - `encoding` parameter to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
+    * - ``encoding`` parameter to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
       - No longer needed as the use of encodings other than UTF-8 is
         deprecated.
-    * - `nencoding` parameter to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
+    * - ``nencoding`` parameter to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
       - No longer needed as the use of encodings other than UTF-8 is
         deprecated.
     * - Connection.maxBytesPerCharacter
@@ -141,69 +141,69 @@ python-oracledb are listed below:
     * - Positional parameters to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
       - Replace with keyword parameters in order to comply with the Python
         database API.
-    * - `threaded` parameter to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
+    * - ``threaded`` parameter to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
       - The value of this parameter is ignored. Threading is now always used.
-    * - `waitTimeout` parameter to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
-      - Replace with parameter name `wait_timeout`
-    * - `maxLifetimeSession` parameter to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
-      - Replace with parameter name `max_lifetime_session`
-    * - `sessionCallback` parameter to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
-      - Replace with parameter name `session_callback`
-    * - `maxSessionsPerShard` parameter to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
-      - Replace with parameter name `max_sessions_per_shard`
-    * - `SessionPool.tnsentry`
+    * - ``waitTimeout`` parameter to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
+      - Replace with parameter name ``wait_timeout``
+    * - ``maxLifetimeSession`` parameter to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
+      - Replace with parameter name ``max_lifetime_session``
+    * - ``sessionCallback`` parameter to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
+      - Replace with parameter name ``session_callback``
+    * - ``maxSessionsPerShard`` parameter to `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.SessionPool>`_
+      - Replace with parameter name ``max_sessions_per_shard``
+    * - ``SessionPool.tnsentry``
       - Replace with `SessionPool.dsn <https://cx-oracle.readthedocs.io/en/latest/api_manual/session_pool.html#SessionPool.dsn>`_
-    * - `payloadType` parameter to `Connection.queue() <https://cx-oracle.readthedocs.io/en/latest/api_manual/connection.html#Connection.queue>`_
-      - Replace with parameter name `payload_type` if using keyword parameters.
-    * - `ipAddress` parameter to `Connection.subscribe() <https://cx-oracle.readthedocs.io/en/latest/api_manual/connection.html#Connection.subscribe>`_
-      - Replace with parameter name `ip_address`
-    * - `groupingClass` parameter to `Connection.subscribe() <https://cx-oracle.readthedocs.io/en/latest/api_manual/connection.html#Connection.subscribe>`_
-      - Replace with parameter name `grouping_class`
-    * - `groupingValue` parameter to `Connection.subscribe() <https://cx-oracle.readthedocs.io/en/latest/api_manual/connection.html#Connection.subscribe>`_
-      - Replace with parameter name `grouping_value`
-    * - `groupingType` parameter to `Connection.subscribe() <https://cx-oracle.readthedocs.io/en/latest/api_manual/connection.html#Connection.subscribe>`_
-      - Replace with parameter name `grouping_type`
-    * - `clientInitiated` parameter to `Connection.subscribe() <https://cx-oracle.readthedocs.io/en/latest/api_manual/connection.html#Connection.subscribe>`_
-      - Replace with parameter name `client_initiated`
-    * - `Connection.callTimeout`
+    * - ``payloadType`` parameter to `Connection.queue() <https://cx-oracle.readthedocs.io/en/latest/api_manual/connection.html#Connection.queue>`_
+      - Replace with parameter name ``payload_type`` if using keyword parameters.
+    * - ``ipAddress`` parameter to `Connection.subscribe() <https://cx-oracle.readthedocs.io/en/latest/api_manual/connection.html#Connection.subscribe>`_
+      - Replace with parameter name ``ip_address``
+    * - ``groupingClass`` parameter to `Connection.subscribe() <https://cx-oracle.readthedocs.io/en/latest/api_manual/connection.html#Connection.subscribe>`_
+      - Replace with parameter name ``grouping_class``
+    * - ``groupingValue`` parameter to `Connection.subscribe() <https://cx-oracle.readthedocs.io/en/latest/api_manual/connection.html#Connection.subscribe>`_
+      - Replace with parameter name ``grouping_value``
+    * - ``groupingType`` parameter to `Connection.subscribe() <https://cx-oracle.readthedocs.io/en/latest/api_manual/connection.html#Connection.subscribe>`_
+      - Replace with parameter name ``grouping_type``
+    * - ``clientInitiated`` parameter to `Connection.subscribe() <https://cx-oracle.readthedocs.io/en/latest/api_manual/connection.html#Connection.subscribe>`_
+      - Replace with parameter name ``client_initiated``
+    * - ``Connection.callTimeout``
       - Replace with `Connection.call_timeout <https://cx-oracle.readthedocs.io/en/latest/api_manual/connection.html#Connection.call_timeout>`_
-    * - `Connection.tnsentry`
+    * - ``Connection.tnsentry``
       - Replace with `Connection.dsn <https://cx-oracle.readthedocs.io/en/latest/api_manual/connection.html#Connection.dsn>`_
     * - `keywordParameters` parameter to `Cursor.callfunc() <https://cx-oracle.readthedocs.io/en/latest/api_manual/cursor.html#Cursor.callfunc>`_
-      - Replace with parameter name `keyword_parameters`
-    * - `keywordParameters` parameter to `Cursor.callproc() <https://cx-oracle.readthedocs.io/en/latest/api_manual/cursor.html#Cursor.callproc>`_
-      - Replace with parameter name `keyword_parameters`
-    * - `encodingErrors` parameter to `Cursor.var() <https://cx-oracle.readthedocs.io/en/latest/api_manual/cursor.html#Cursor.var>`_
-      - Replace with parameter name `encoding_errors`
-    * - `Cursor.fetchraw()`
+      - Replace with parameter name ``keyword_parameters``
+    * - ``keywordParameters`` parameter to `Cursor.callproc() <https://cx-oracle.readthedocs.io/en/latest/api_manual/cursor.html#Cursor.callproc>`_
+      - Replace with parameter name ``keyword_parameters``
+    * - ``encodingErrors`` parameter to `Cursor.var() <https://cx-oracle.readthedocs.io/en/latest/api_manual/cursor.html#Cursor.var>`_
+      - Replace with parameter name ``encoding_errors``
+    * - ``Cursor.fetchraw()``
       - Replace with `Cursor.fetchmany() <https://cx-oracle.readthedocs.io/en/latest/api_manual/cursor.html#Cursor.fetchmany>`_
-    * - `newSize` parameter to `LOB.trim() <https://cx-oracle.readthedocs.io/en/latest/api_manual/lob.html#LOB.trim>`_
-      - Replace with parameter name `new_size`
-    * - `Queue.deqMany`
+    * - ``newSize`` parameter to `LOB.trim() <https://cx-oracle.readthedocs.io/en/latest/api_manual/lob.html#LOB.trim>`_
+      - Replace with parameter name ``new_size``
+    * - ``Queue.deqMany``
       - Replace with `Queue.deqmany() <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html#Queue.deqmany>`_
-    * - `Queue.deqOne`
+    * - ``Queue.deqOne``
       - Replace with `Queue.deqone() <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html#Queue.deqone>`_
-    * - `Queue.enqMany`
+    * - ``Queue.enqMany``
       - Replace with `Queue.enqmany() <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html#Queue.enqmany>`_
-    * - `Queue.enqOne`
+    * - ``Queue.enqOne``
       - Replace with `Queue.enqone() <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html#Queue.enqone>`_
-    * - `Queue.deqOptions`
+    * - ``Queue.deqOptions``
       - Replace with `Queue.deqoptions <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html#Queue.deqoptions>`_
-    * - `Queue.enqOptions`
+    * - ``Queue.enqOptions``
       - Replace with `Queue.enqoptions <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html#Queue.enqoptions>`_
-    * - `Queue.payloadType`
+    * - ``Queue.payloadType``
       - Replace with `Queue.payload_type <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html#Queue.payload_type>`_
-    * - `Subscription.ipAddress`
+    * - ``Subscription.ipAddress``
       - Replace with `Subscription.ip_address <https://cx-oracle.readthedocs.io/en/latest/api_manual/subscription.html#Subscription.ip_address>`_
-    * - `Message.consumerName`
+    * - ``Message.consumerName``
       - Replace with `Message.consumer_name <https://cx-oracle.readthedocs.io/en/latest/api_manual/subscription.html?highlight=Message.consumer_name#Message.consumer_name>`_
-    * - `Message.queueName`
+    * - ``Message.queueName``
       - Replace with `Message.queue_name <https://cx-oracle.readthedocs.io/en/latest/api_manual/subscription.html?highlight=Message.consumer_name#Message.queue_name>`_
-    * - `Variable.actualElements`
+    * - ``Variable.actualElements``
       - Replace with `Variable.actual_elements <https://cx-oracle.readthedocs.io/en/latest/api_manual/variable.html#Variable.actual_elements>`_
-    * - `Variable.bufferSize`
+    * - ``Variable.bufferSize``
       - Replace with `Variable.buffer_size <https://cx-oracle.readthedocs.io/en/latest/api_manual/variable.html#Variable.buffer_size>`_
-    * - `Variable.numElements`
+    * - ``Variable.numElements``
       - Replace with `Variable.num_elements <https://cx-oracle.readthedocs.io/en/latest/api_manual/variable.html#Variable.num_elements>`_
 
 
@@ -216,37 +216,37 @@ python-oracledb are listed below:
 
     * - Name
       - Comments
-    * - cx_Oracle.BFILE
+    * - ``cx_Oracle.BFILE``
       - Replace with `cx_Oracle.DB_TYPE_BFILE <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_BFILE>`_
-    * - oracledb.BLOB
+    * - ``cx_Oracle.BLOB``
       - Replace with `cx_Oracle.DB_TYPE_BLOB <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_BLOB>`_
-    * - oracledb.BOOLEAN
+    * - ``cx_Oracle.BOOLEAN``
       - Replace with `cx_Oracle.DB_TYPE_BOOLEAN <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_BOOLEAN>`_
-    * - oracledb.CLOB
+    * - ``cx_Oracle.CLOB``
       - Replace with `cx_Oracle.DB_TYPE_CLOB <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_CLOB>`_
-    * - oracledb.CURSOR
+    * - ``cx_Oracle.CURSOR``
       - Replace with `cx_Oracle.DB_TYPE_CURSOR <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_CURSOR>`_
-    * - oracledb.FIXED_CHAR
+    * - ``cx_Oracle.FIXED_CHAR``
       - Replace with `cx_Oracle.DB_TYPE_CHAR <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_CHAR>`_
-    * - oracledb.FIXED_NCHAR
+    * - ``cx_Oracle.FIXED_NCHAR``
       - Replace with `cx_Oracle.DB_TYPE_NCHAR <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_NCHAR>`_
-    * - oracledb.INTERVAL
+    * - ``cx_Oracle.INTERVAL``
       - Replace with `cx_Oracle.DB_TYPE_INTERVAL_DS <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_INTERVAL_DS>`_
-    * - oracledb.LONG_BINARY
+    * - ``cx_Oracle.LONG_BINARY``
       - Replace with `cx_Oracle.DB_TYPE_LONG_RAW <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_LONG_RAW>`_
-    * - oracledb.LONG_STRING
+    * - ``cx_Oracle.LONG_STRING``
       - Replace with `cx_Oracle.DB_TYPE_LONG <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_LONG>`_
-    * - oracledb.NATIVE_FLOAT
+    * - ``cx_Oracle.NATIVE_FLOAT``
       - Replace with `cx_Oracle.DB_TYPE_BINARY_DOUBLE <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_BINARY_DOUBLE>`_
-    * - oracledb.NATIVE_INT
+    * - ``cx_Oracle.NATIVE_INT``
       - Replace with `cx_Oracle.DB_TYPE_BINARY_INTEGER <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_BINARY_INTEGER>`_
-    * - oracledb.NCHAR
+    * - ``cx_Oracle.NCHAR``
       - Replace with `cx_Oracle.DB_TYPE_NVARCHAR <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_NVARCHAR>`_
-    * - oracledb.NCLOB
+    * - ``cx_Oracle.NCLOB``
       - Replace with `cx_Oracle.DB_TYPE_NCLOB <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_NCLOB>`_
-    * - oracledb.OBJECT
+    * - ``cx_Oracle.OBJECT``
       - Replace with `cx_Oracle.DB_TYPE_OBJECT <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_OBJECT>`_
-    * - oracledb.TIMESTAMP
+    * - ``cx_Oracle.TIMESTAMP``
       - Replace with `cx_Oracle.DB_TYPE_TIMESTAMP <https://cx-oracle.readthedocs.io/en/latest/api_manual/module.html#cx_Oracle.DB_TYPE_TIMESTAMP>`_
 
 
@@ -259,13 +259,13 @@ python-oracledb are listed below:
 
     * - Name
       - Comments
-    * - Connection.deq()
+    * - ``Connection.deq()``
       - Replace with `Queue.deqone() <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html#Queue.deqone>`_ or `Queue.deqmany() <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html#Queue.deqmany>`_.
-    * - Connection.deqoptions()
+    * - ``Connection.deqoptions()``
       - Replace with attribute `Queue.deqoptions <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html#Queue.deqoptions>`_.
-    * - Connection.enq()
+    * - ``Connection.enq()``
       - Replace with `Queue.enqone() <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html#Queue.enqone>`_ or `Queue.enqmany() <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html#Queue.enqmany>`_.
-    * - Connection.enqoptions()
+    * - ``Connection.enqoptions()``
       - Replace with attribute `Queue.enqoptions <https://cx-oracle.readthedocs.io/en/latest/api_manual/aq.html#Queue.enqoptions>`_.
 
 
@@ -278,5 +278,5 @@ python-oracledb are listed below:
 
     * - Name
       - Comments
-    * - Cursor.executemanyprepared()
+    * - ``Cursor.executemanyprepared()``
       - Replace with `~Cursor.executemany() <https://cx-oracle.readthedocs.io/en/latest/api_manual/cursor.html#Cursor.executemany>`_     with  None for the statement argument and an integer for the parameters argument.

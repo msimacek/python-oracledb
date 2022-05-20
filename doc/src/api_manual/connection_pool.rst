@@ -8,19 +8,20 @@ API: ConnectionPool Objects
 
     This object is an extension to the DB API.
 
-The new ConnectionPool class is synonymous with SessionPool. The SessionPool class
-and function ``Oracledb.SessionPool`` is deprecated in python-oracledb.
-(The name SessionPool came from the `Oracle Call Interface (OCI)
-session pool
+The new ConnectionPool class is synonymous with SessionPool. The SessionPool
+class is deprecated in python-oracledb.  The preferred function to create pools
+is now :meth:`oracledb.create_pool()`.  (The name SessionPool came from the
+`Oracle Call Interface (OCI) session pool
 <https://docs.oracle.com/en/database/oracle/oracle-database/19/lnoci/session-and-
-connection-pooling.html#GUID-F9662FFB-EAEF-495C-96FC-49C6D1D9625C>`__.
-This implementation is only used in the python-oracledb Thick mode
-and is not available in the python-oracledb Thin mode).
+connection-pooling.html#GUID-F9662FFB-EAEF-495C-96FC-49C6D1D9625C>`__.  This
+implementation is only used in the python-oracledb Thick mode and is not
+available in the python-oracledb Thin mode).
 
 In python-oracledb, the type `pool` will show the class `oracledb.ConnectionPool`.
 This only affects the name.
 
-The following code will continue to work providing backward compatibility:
+The following code will continue to work providing backward compatibility with
+cx_Oracle:
 
 .. code-block:: python
 
@@ -36,8 +37,8 @@ The following code will also work:
 
    isinstance(pool, oracledb.ConnectionPool) == True
 
-The function :meth:`oracledb.SessionPool` that is used to create pools
-is deprecated in python-oracledb 1.0 and has been replaced by the function
+The function :meth:`oracledb.SessionPool` that is used to create pools is
+deprecated in python-oracledb 1.0 and has been deprecated by the function
 :meth:`oracledb.create_pool`.
 
 ConnectionPool Methods

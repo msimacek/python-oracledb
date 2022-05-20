@@ -117,7 +117,7 @@ in the custom subclass, so application code does not need to supply them.
         log_file_name = "log.txt"
 
         def __init__(self):
-            connect_string = "hr/hr_password@dbhost.example.com/orclpdb1"
+            connect_string = "hr/hr_password@dbhost.example.com/orclpdb"
             self._log("Connect to the database")
             return super(Connection, self).__init__(connect_string)
 

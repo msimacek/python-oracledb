@@ -131,7 +131,7 @@ Message Objects
 
     This read-only attribute returns a list of message query objects that give
     information about query result sets changed for this notification. This
-    attribute will be None if the qos parameter did not include the flag
+    attribute will be None if the ``qos`` parameter did not include the flag
     :data:`~oracledb.SUBSCR_QOS_QUERY` when the subscription was created.
 
 
@@ -165,7 +165,7 @@ Message Objects
 
     This read-only attribute returns a list of message table objects that give
     information about the tables changed for this notification. This
-    attribute will be None if the qos parameter included the flag
+    attribute will be None if the ``qos`` parameter included the flag
     :data:`~oracledb.SUBSCR_QOS_QUERY` when the subscription was created.
 
 
@@ -206,7 +206,7 @@ MessageTable Objects
 
     This read-only attribute returns a list of message row objects that give
     information about the rows changed on the table. This value is only filled
-    in if the qos parameter to the :meth:`Connection.subscribe()` method
+    in if the ``qos`` parameter to the :meth:`Connection.subscribe()` method
     included the flag :data:`~oracledb.SUBSCR_QOS_ROWIDS`.
 
 
