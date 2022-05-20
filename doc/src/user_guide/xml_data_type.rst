@@ -44,7 +44,7 @@ as shown:
                    id=2, xml=clob)
 
 Fetching XML data can be done simply for values that are shorter than the
-length of a VARCHAR2 column, as shown:
+length of a VARCHAR2 column as shown:
 
 .. code-block:: python
 

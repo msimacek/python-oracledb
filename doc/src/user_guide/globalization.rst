@@ -37,8 +37,8 @@ Setting the Client Character Set
 ================================
 
 In python-oracledb, the encoding used for all character data is "UTF-8".  The
-``encoding`` and ``nencoding`` parameters for the :meth:`oracledb.connect`
-and :meth:`oracledb.create_pool` are ignored.
+``encoding`` and ``nencoding`` parameters of the :meth:`oracledb.connect`
+and :meth:`oracledb.create_pool` methods are ignored.
 
 .. _findingcharset:
 

@@ -93,7 +93,7 @@ Connection Methods
 .. method:: Connection.createlob(lobType)
 
     Creates and returns a new temporary :ref:`LOB object <lobobj>` of the
-    specified type. The lobType parameter should be one of
+    specified type. The ``lobType`` parameter should be one of
     :data:`oracledb.CLOB`, :data:`oracledb.BLOB` or :data:`oracledb.NCLOB`.
 
     .. note::
@@ -188,10 +188,10 @@ Connection Methods
     Creates a :ref:`queue <queue>` which is used to enqueue and dequeue
     messages in Advanced Queuing.
 
-    The name parameter is expected to be a string identifying the queue in
+    The ``name`` parameter is expected to be a string identifying the queue in
     which messages are to be enqueued or dequeued.
 
-    The payload_type parameter, if specified, is expected to be an
+    The ``payload_type`` parameter, if specified, is expected to be an
     :ref:`object type <dbobjecttype>` that identifies the type of payload the
     queue expects. If not specified, RAW data is enqueued and dequeued.
 
@@ -239,7 +239,7 @@ Connection Methods
     :data:`~oracledb.SYSOPER` with the :data:`~oracledb.PRELIM_AUTH` option
     specified for this to work.
 
-    The pfile parameter, if specified, is expected to be a string identifying
+    The ``pfile`` parameter, if specified, is expected to be a string identifying
     the location of the parameter file (PFILE) which will be used instead of
     the stored parameter file (SPFILE).
 
@@ -271,31 +271,31 @@ Connection Methods
     notifications for events that take place in the database that match the
     given parameters.
 
-    The namespace parameter specifies the namespace the subscription uses. It
+    The ``namespace`` parameter specifies the namespace the subscription uses. It
     can be one of :data:`oracledb.SUBSCR_NAMESPACE_DBCHANGE` or
     :data:`oracledb.SUBSCR_NAMESPACE_AQ`.
 
-    The protocol parameter specifies the protocol to use when notifications are
+    The ``protocol`` parameter specifies the protocol to use when notifications are
     sent. Currently the only valid value is :data:`oracledb.SUBSCR_PROTO_OCI`.
 
-    The callback is expected to be a callable that accepts a single parameter.
+    The ``callback`` is expected to be a callable that accepts a single parameter.
     A :ref:`message object <msgobjects>` is passed to this callback whenever a
     notification is received.
 
-    The timeout value specifies that the subscription expires after the given
+    The ``timeout`` value specifies that the subscription expires after the given
     time in seconds. The default value of 0 indicates that the subscription
     never expires.
 
-    The operations parameter enables filtering of the messages that are sent
+    The ``operations`` parameter enables filtering of the messages that are sent
     (insert, update, delete). The default value will send notifications for all
     operations. This parameter is only used when the namespace is set to
     :data:`oracledb.SUBSCR_NAMESPACE_DBCHANGE`.
 
-    The port parameter specifies the listening port for callback notifications
+    The ``port`` parameter specifies the listening port for callback notifications
     from the database server. If not specified, an unused port will be selected
     by the Oracle Client libraries.
 
-    The qos parameter specifies quality of service options. It should be one or
+    The ``qos`` parameter specifies quality of service options. It should be one or
     more of the following flags, OR'ed together:
     :data:`oracledb.SUBSCR_QOS_RELIABLE`,
     :data:`oracledb.SUBSCR_QOS_DEREG_NFY`,
@@ -303,20 +303,20 @@ Connection Methods
     :data:`oracledb.SUBSCR_QOS_QUERY`,
     :data:`oracledb.SUBSCR_QOS_BEST_EFFORT`.
 
-    The ip_address parameter specifies the IP address (IPv4 or IPv6) in
+    The ``ip_address`` parameter specifies the IP address (IPv4 or IPv6) in
     standard string notation to bind for callback notifications from the
     database server. If not specified, the client IP address will be determined
     by the Oracle Client libraries.
 
-    The grouping_class parameter specifies what type of grouping of
+    The ``grouping_class`` parameter specifies what type of grouping of
     notifications should take place. Currently, if set, this value can only be
     set to the value :data:`oracledb.SUBSCR_GROUPING_CLASS_TIME`, which
     will group notifications by the number of seconds specified in the
-    grouping_value parameter. The grouping_type parameter should be one of the
+    ``grouping_value`` parameter. The ``grouping_type`` parameter should be one of the
     values :data:`oracledb.SUBSCR_GROUPING_TYPE_SUMMARY` (the default) or
     :data:`oracledb.SUBSCR_GROUPING_TYPE_LAST`.
 
-    The name parameter is used to identify the subscription and is specific to
+    The ``name`` parameter is used to identify the subscription and is specific to
     the selected namespace. If the namespace parameter is
     :data:`oracledb.SUBSCR_NAMESPACE_DBCHANGE` then the name is optional and
     can be any value. If the namespace parameter is
@@ -326,7 +326,7 @@ Connection Methods
     the queue that will be monitored for messages. The queue name may include
     the schema, if needed.
 
-    The client_initiated parameter is used to determine if client initiated
+    The ``client_initiated`` parameter is used to determine if client initiated
     connections or server initiated connections (the default) will be
     established. Client initiated connections are only available in Oracle
     Client 19.4 and Oracle Database 19.4 and higher.
@@ -356,10 +356,10 @@ Connection Methods
     Begins a Two-Phase Commit (TPC) on a global transaction using the specified
     transaction identifier (xid).
 
-    The xid parameter should be an object returned by the :meth:`~Connection.xid()`
+    The ``xid`` parameter should be an object returned by the :meth:`~Connection.xid()`
     method.
 
-    The flags parameter is one of the constants :data:`oracledb.TPC_BEGIN_JOIN`,
+    The ``flags`` parameter is one of the constants :data:`oracledb.TPC_BEGIN_JOIN`,
     :data:`oracledb.TPC_BEGIN_NEW`, :data:`oracledb.TPC_BEGIN_PROMOTE`, or
     :data:`oracledb.TPC_BEGIN_RESUME`. The default is :data:`oracledb.TPC_BEGIN_NEW`.
 
@@ -378,14 +378,14 @@ Connection Methods
     is not called, a single phase commit is performed. A transaction manager may choose
     to do this if only a single resource is participating in the global transaction.
 
-    If an xid parameter is passed, then an object should be returned by the
+    If an ``xid`` parameter is passed, then an object should be returned by the
     :meth:`~Connection.xid()` function. This form should be called outside of a
     transaction and is intended for use in recovery.
 
-    The one_phase parameter is a boolean identifying whether to perform a one-phase
-    or two-phase commit. If one_phase parameter is True, a single-phase commit is performed.
+    The ``one_phase`` parameter is a boolean identifying whether to perform a one-phase
+    or two-phase commit. If ``one_phase`` parameter is True, a single-phase commit is performed.
     The default value is False. This parameter is only examined if a value is provided
-    for the xid parameter. Otherwise, the driver already knows whether
+    for the ``xid`` parameter. Otherwise, the driver already knows whether
     :meth:`~Connection.tpc_prepare()` was called for the transaction and whether a
     one-phase or two-phase commit is required.
 
@@ -401,11 +401,11 @@ Connection Methods
     Ends or suspends work on a global transaction. This function is only intended
     for use by transaction managers.
 
-    If an xid parameter is passed, then an object should be returned by the
+    If an ``xid`` parameter is passed, then an object should be returned by the
     :meth:`~Connection.xid()` function. If no xid parameter is passed, then the
     transaction identifier used by the previous :meth:`~Connection.tpc_begin()` is used.
 
-    The flags is one of the constants :data:`oracledb.TPC_END_NORMAL` or
+    The ``flags`` parameter is one of the constants :data:`oracledb.TPC_END_NORMAL` or
     :data:`oracledb.TPC_END_SUSPEND`. The default is :data:`oracledb.TPC_END_NORMAL`.
 
     If the flag is :data:`oracledb.TPC_END_SUSPEND` then the transaction may be
@@ -424,7 +424,7 @@ Connection Methods
     Causes the database to forget a heuristically completed TPC transaction. This
     function is only intended to be called by transaction managers.
 
-    The xid parameter is mandatory and should be an object should be returned by
+    The ``xid`` parameter is mandatory and should be an object should be returned by
     the :meth:`~Connection.xid()` function.
 
     The following code sample demonstrates the ``tpc_forget()`` function::
@@ -445,7 +445,7 @@ Connection Methods
     commit when not needed, then it results in the error ``ORA-24756: transaction does not
     exist``.
 
-    If an xid parameter is passed, then an object should be returned by the
+    If an ``xid`` parameter is passed, then an object should be returned by the
     :meth:`~Connection.xid()` function. If an xid parameter is not passed, then the
     transaction identifier used by the previous :meth:`~Connection.tpc_begin()` is used.
 
@@ -477,10 +477,10 @@ Connection Methods
 
     Rolls back a global transaction.
 
-    If an xid parameter is not passed, then it rolls back the transaction that was previously
+    If an ``xid`` parameter is not passed, then it rolls back the transaction that was previously
     started with :meth:`~Connection.tpc_begin()`.
 
-    If an xid parameter is passed, then an object should be returned by
+    If an ``xid`` parameter is passed, then an object should be returned by
     :meth:`~Connection.xid()` and the specified transaction is rolled back. This form
     should be called outside of a transaction and is intended for use in recovery.
 
@@ -503,16 +503,16 @@ Connection Methods
     Returns a global transaction identifier (xid) that can be used with the
     Two-Phase Commit (TPC) functions.
 
-    The xid contains a format identifier, a global transaction identifier, and
+    The ``xid`` contains a format identifier, a global transaction identifier, and
     a branch identifier. There are no checks performed at the Python level. The
     values are checked by ODPI-C when they are passed to the relevant functions.
     .. When this functionality is also supported in the thin driver the checks will be performed at the Python level as well.
 
-    The format_id parameter should be a positive 32-bit integer. This value identifies
+    The ``format_id`` parameter should be a positive 32-bit integer. This value identifies
     the format of the global_transaction_id and branch_qualifier parameters and the
     value is determined by the Transaction Manager (TM), if one is in use.
 
-    The global_transaction_id and branch_qualifier parameters should be of type
+    The ``global_transaction_id`` and branch_qualifier parameters should be of type
     bytes or string. If a value of type string is passed, then this value will be
     UTF-8 encoded to bytes. The values cannot exceed 64 bytes in length.
 
@@ -776,7 +776,7 @@ Connection Attributes
     This read-write attribute initially contains the actual tag of the session
     that was acquired from a pool by :meth:`ConnectionPool.acquire()`. If the
     connection was not acquired from a pool or no tagging parameters were
-    specified (tag and matchanytag) when the connection was acquired from the
+    specified (``tag`` and ``matchanytag``) when the connection was acquired from the
     pool, this value will be None. If the value is changed, it must be a string
     containing name=value pairs like "k1=v1;k2=v2".
 

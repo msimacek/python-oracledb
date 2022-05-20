@@ -345,7 +345,7 @@ given a file ``/opt/oracle/config/tnsnames.ora`` with the following contents::
         )
       )
 
-Then you could connect using the following code:
+Then you could connect in python-oracledb Thin mode by using the following code:
 
 .. code-block:: python
 
@@ -353,7 +353,8 @@ Then you could connect using the following code:
                                   config_dir="/opt/oracle/config")
 
 More options for how python-oracledb locates ``tnsnames.ora`` files is detailed
-in :ref:`optnetfiles`.
+in :ref:`optnetfiles`.  Note in python-oracledb Thick mode, the configuration
+directory must be set during initialization, not at connection time.
 
 For more information about Net Service Names, see
 `Database Net Services Reference
@@ -660,6 +661,8 @@ or user profile `IDLE_TIME
 do not expire idle sessions, since this will require connections to be recreated
 which will impact performance and scalability.
 
+.. _connpoolsize:
+
 Connection Pool Sizing
 ----------------------
 
@@ -837,7 +840,7 @@ is not present in the pool, then a new connection, or an existing connection
 with cleaned session state, will be chosen by the pool and the session callback
 procedure will be invoked.  The callback can then set desired session state and
 update the connection's tag.  However, if the ``matchanytag`` parameter of
-:meth:`~ConnectionPool.acquire()` is *True*, then any other tagged connection may
+:meth:`~ConnectionPool.acquire()` is True, then any other tagged connection may
 be chosen by the pool and the callback procedure should parse the actual and
 requested tags to determine which bits of session state should be reset.
 
@@ -952,7 +955,7 @@ The :ref:`PoolParams class <poolparam>` allows you to define connection and
 pool parameters in a single place.  The :func:`oracledb.PoolParams()` function
 returns a ``PoolParams`` object.  This is a subclass of the :ref:`ConnectParams
 class <connparam>` with additional pool-specific attributes such as the pool
-size.  A `PoolParams` object can be passed to
+size.  A ``PoolParams`` object can be passed to
 :func:`oracledb.create_pool()`. For example:
 
 .. code-block:: python

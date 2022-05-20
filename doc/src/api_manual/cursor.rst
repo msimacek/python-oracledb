@@ -378,7 +378,7 @@ Cursor Methods
     cannot be determined automatically from the Python object passed in or for
     use in input and output type handlers defined on cursors or connections.
 
-    The typ parameter specifies the type of data that should be stored in the
+    The ``typ`` parameter specifies the type of data that should be stored in the
     variable. This should be one of the :ref:`database type constants
     <dbtypes>`, :ref:`DB API constants <types>`, an object type returned from
     the method :meth:`Connection.gettype()` or one of the following Python

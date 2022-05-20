@@ -30,16 +30,12 @@ Defaults Attributes
 .. attribute:: defaults.config_dir
 
     The directory in which optional configuration files such as
-    ``tnsnames.ora`` will be read from.
+    ``tnsnames.ora`` will be read in python-oracledb Thin mode.  This attribute
+    takes its initial value from the environment variable ``TNS_ADMIN``.
 
-    If the ``TNS_ADMIN`` environment variable is not set, then the default
-    value is None in the python-oracledb Thin mode and no ``tnsnames.ora`` file
-    will be read.  If this attribute is None in the python-oracledb Thick mode,
-    then the usual Oracle Client search path behavior for configuration files
-    is used. This is described in :ref:`optnetfiles`.
-
-    This attribute takes its initial value from the environment variable
-    ``TNS_ADMIN``.
+    This attribute is not used by the python-oracledb Thick mode: the usual
+    Oracle Client search path behavior for configuration files is followed, see
+    :ref:`optnetfiles`.
 
 .. attribute:: defaults.fetch_decimals
 

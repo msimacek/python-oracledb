@@ -318,10 +318,11 @@ For example:
 
 **python-oracledb Thick mode**
 
-In python-oracledb Thick mode, you can also specify the configuration file
-directory as a parameter in the :meth:`oracledb.init_oracle_client()` call.
-For example, if the file ``/opt/oracle/config/tnsnames.ora`` should be used,
-you can call:
+In python-oracledb Thick mode, the files are loaded from default locations
+(shown below), from the directory also specified in the ``$TNS_ADMIN``
+environment variable, or from the directory specified as a parameter in the
+:meth:`oracledb.init_oracle_client()` call.  For example, if the file
+``/opt/oracle/config/tnsnames.ora`` should be used, you can call:
 
 .. code-block:: python
 
@@ -338,9 +339,8 @@ you can call:
 .. note::
 
     In python-oracledb Thick mode, once an application has created its first
-    connection, changing :attr:`defaults.config_dir`, or using a different
-    ``config_dir`` parameter when connecting, or altering the ``TNS_ADMIN``
-    value may have no effect.
+    connection, trying to change the configuration directory will not have any
+    effect.
 
 If :meth:`~oracledb.init_oracle_client()` is called to enable Thick mode but
 ``config_dir`` is not specified, then default directories are searched for the

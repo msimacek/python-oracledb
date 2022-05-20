@@ -24,7 +24,7 @@ python-oracledb 1.0 (TBD)
 #)  The function :func:`oracledb.init_oracle_client()` must now always be called
     to load Oracle Client libraries, which enables Thick mode.
 #)  Allow :meth:`oracledb.init_oracle_client` to be called multiple times in
-    each process.
+    each process as long as the same parameters are used each time.
 #)  Improved some :ref:`connection and binding error messages <errorhandling>`
     (Thin mode only).
 #)  Added :ref:`oracledb.defaults <defaults>` containing attributes that can
@@ -993,7 +993,7 @@ cx_Oracle 6.0 (August 2017)
     -   On platforms other than Windows, if the regular method for loading the
         Oracle Client libraries fails, try using $ORACLE_HOME/lib/libclntsh.so
         (`ODPI-C issue 20 <https://github.com/oracle/odpi/issues/20>`__).
-    -   Use the environment variable DPI_DEBUG_LEVEL at runtime, not compile
+    -   Use the environment variable ``DPI_DEBUG_LEVEL`` at runtime, not compile
         time.
     -   Added support for DPI_DEBUG_LEVEL_ERRORS (reports errors and has the
         value 8) and DPI_DEBUG_LEVEL_SQL (reports prepared SQL statement text
@@ -1003,7 +1003,7 @@ cx_Oracle 6.0 (August 2017)
 
 #)  Delay initialization of the ODPI-C library until the first standalone
     connection or session pool is created so that manipulation of the
-    environment variable NLS_LANG can be performed after the module has been
+    environment variable ``NLS_LANG`` can be performed after the module has been
     imported; this also has the added benefit of reducing the number of errors
     that can take place when the module is imported.
 #)  Prevent binding of null values from generating the exception "ORA-24816:
@@ -1082,7 +1082,7 @@ cx_Oracle 6.0 beta 2 (May 2017)
 #)  Enable temporary LOB caching in order to avoid disk I/O as
     `suggested <https://github.com/oracle/odpi/issues/10>`__.
 #)  Added support for setting the debug level in ODPI-C, if desirable, by
-    setting environment variable DPI_DEBUG_LEVEL prior to building cx_Oracle.
+    setting environment variable ``DPI_DEBUG_LEVEL`` prior to building cx_Oracle.
 #)  Correct processing of strings in :meth:`Cursor.executemany` when a
     larger string is found after a shorter string in the list of data bound to
     the statement.
@@ -1201,7 +1201,7 @@ cx_Oracle 5.3 (March 2017)
 #)  Corrected support for setting the encoding and nencoding parameters when
     :meth:`creating a connection <cx_Oracle.Connection>` and added support for
     setting these when creating a session pool. These can now be used instead
-    of setting the environment variables NLS_LANG and NLS_NCHAR.
+    of setting the environment variables ``NLS_LANG`` and ``NLS_NCHAR``.
 #)  Use None instead of 0 for items in the :attr:`Cursor.description` attribute
     that do not have any validity.
 #)  Changed driver name to match informal driver name standard used by Oracle
@@ -1263,7 +1263,7 @@ cx_Oracle 5.2.1 (January 2016)
     based or other external authentication mechanisms to be used.
 #)  Use the national character set encoding when required (when char set form
     is SQLCS_NCHAR); otherwise, the wrong encoding would be used if the
-    environment variable NLS_NCHAR is set.
+    environment variable ``NLS_NCHAR`` is set.
 #)  Added support for binding boolean values to PL/SQL blocks and stored
     procedures (available in Oracle 12.1).
 
@@ -1610,7 +1610,7 @@ cx_Oracle 4.3.2 (August 2007)
     each row that is returned; this is about 20% faster than calling the method
     in Python using the idiom [method(\*r) for r in cursor].
 #)  Attempt to locate an Oracle installation by looking at the PATH if the
-    environment variable ORACLE_HOME is not set; this is of primary use on
+    environment variable ``ORACLE_HOME`` is not set; this is of primary use on
     Windows where this variable should not normally be set.
 #)  Added support for autocommit mode as requested by Ian Kelly.
 #)  Added support for connection.stmtcachesize which allows for both reading

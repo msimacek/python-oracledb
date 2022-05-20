@@ -58,13 +58,13 @@ Some general tuning tips are:
 Tuning Fetch Performance
 ========================
 
-To tune queries you can adjust python-oracledb's internal buffer sizes to improve the
+To tune queries, you can adjust python-oracledb's internal buffer sizes to improve the
 speed of fetching rows across the network from the database, and to optimize
 memory usage.  Regardless of which python-oracledb method is used to get query
 results, internally all rows are fetched in batches from the database and
 buffered before being returned to the application.  The internal buffer sizes
-can have a significant performance impact.  The sizes do not affect how, or
-when, rows are returned to your application.  They do not affect the minimum or
+can have a significant performance impact.  The sizes do not affect how or
+when rows are returned to your application.  They do not affect the minimum or
 maximum number of rows returned by a query.
 
 For best performance, tune "array fetching" with :attr:`Cursor.arraysize` and
@@ -287,7 +287,7 @@ and after doing some work can be used for this:
 Statement Caching
 =================
 
-python-oracledb's :meth:`Cursor.execute()` and :meth:`Cursor.executemany()` functions
+Python-oracledb's :meth:`Cursor.execute()` and :meth:`Cursor.executemany()` functions
 use the `Oracle Call Interface statement cache
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-4947CAE8-1F00-4897-BB2B-7F921E495175>`__
 for efficient re-execution of statements.  Statement caching lets Oracle
@@ -382,11 +382,11 @@ re-executions of the statement on that connection to succeed.
 
 When it is inconvenient to pass statement text through an application, the
 :meth:`Cursor.prepare()` call can be used to avoid statement re-parsing.
-If the `cache_statement` parameter in the :meth:`Cursor.prepare()` method is True and the statement cache size
+If the ``cache_statement`` parameter in the :meth:`Cursor.prepare()` method is True and the statement cache size
 is greater than 0, then the statements will be added to the cache, if not already present.
-If the `cache_statement` parameter in the :meth:`Cursor.prepare()` method is False and the statement cache size
+If the ``cache_statement`` parameter in the :meth:`Cursor.prepare()` method is False and the statement cache size
 is greater than 0, then the statement will be removed from the statement cache (if present)
-or will not be cached (if not present). The subsequent ``execute()`` calls use the value ``None`` instead of the SQL text.
+or will not be cached (if not present). The subsequent ``execute()`` calls use the value None instead of the SQL text.
 
 This feature can prevent a rarely executed statement from flushing a potential more frequently executed one from a full cache.
 For example, if a statement will only ever be executed once:
@@ -412,7 +412,7 @@ cache.
 Client Result Caching (CRC)
 ===========================
 
-python-oracledb applications can use Oracle Database's `Client Result Cache
+Python-oracledb applications can use Oracle Database's `Client Result Cache
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-35CB2592-7588-4C2D-9075-6F639F25425E>`__.
 The CRC enables client-side caching of SQL query (SELECT statement) results in
 client memory for immediate use when the same query is re-executed.  This is
