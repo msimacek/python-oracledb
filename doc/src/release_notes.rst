@@ -8,21 +8,22 @@ python-oracledb Release Notes
 For deprecations, see :ref:`Deprecations <deprecations>`.
 
 
-python-oracledb 1.0 (TBD)
--------------------------
+oracledb 1.0 (May 2022)
+-----------------------
 
 #)  Renamed cx_Oracle to python-oracledb.  See :ref:`upgradecomparison`.
 #)  Introduced a 'Thin' mode that connects directly to Oracle Database without
     needing Oracle Client libraries.  Thin mode is the default. To use Thick
     mode, see :ref:`enablingthick`.
-#)  Added a :attr:`Connection.thin` attribute which shows whether the connection was
-    established in the python-oracledb Thin mode or Thick mode.
+#)  Added a :attr:`Connection.thin` attribute which shows whether the
+    connection was established in the python-oracledb Thin mode or Thick mode.
 #)  Creating connections or connection pools now requires :ref:`keyword
     parameters <connectdiffs>` be passed.  This brings python-oracledb into
     compliance with the Python Database API specification PEP 249.
-#)  Threaded mode is now always enabled for standalone connections (Thick mode).
-#)  The function :func:`oracledb.init_oracle_client()` must now always be called
-    to load Oracle Client libraries, which enables Thick mode.
+#)  Threaded mode is now always enabled for standalone connections (Thick
+    mode).
+#)  The function :func:`oracledb.init_oracle_client()` must now always be
+    called to load Oracle Client libraries, which enables Thick mode.
 #)  Allow :meth:`oracledb.init_oracle_client` to be called multiple times in
     each process as long as the same parameters are used each time.
 #)  Improved some :ref:`connection and binding error messages <errorhandling>`
@@ -31,10 +32,10 @@ python-oracledb 1.0 (TBD)
     be used to adjust the default behavior of the python-oracledb driver.  In
     particular ``oracledb.defaults.fetch_lobs`` obsoletes the need for a
     :ref:`LOB type handler <directlobs>` .
-#)  Added a :ref:`ConnectParams Class <connparam>` which provides the ability to
-    define connection parameters in one place.
-#)  Added a :ref:`PoolParams Class <poolparam>` which provides the ability to define
-    pool parameters in one place.
+#)  Added a :ref:`ConnectParams Class <connparam>` which provides the ability
+    to define connection parameters in one place.
+#)  Added a :ref:`PoolParams Class <poolparam>` which provides the ability to
+    define pool parameters in one place.
 #)  Added a :ref:`ConnectionPool Class <connpool>` which is equivalent to the
     SessionPool class previously used in cx_Oracle.  The new
     :func:`oracledb.create_pool()` function is now the preferred method for
@@ -55,6 +56,7 @@ python-oracledb 1.0 (TBD)
 #)  Added a :attr:`~oracledb._Error.full_code` attribute to the Error object
     giving the top-level error prefix and the error number.
 #)  Added a :data:`~oracledb.DB_TYPE_LONG_NVARCHAR` constant.
+
 
 cx_Oracle 8.3 (November 2021)
 -----------------------------
