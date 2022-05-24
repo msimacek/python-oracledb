@@ -21,14 +21,14 @@ more information.
 Architecture
 ============
 
-The python-oracledb driver can run in either the Thin mode or Thick mode,
-which is determined by an application setting.
+Python-oracledb is a 'Thin' driver with an optional 'Thick' mode enabled by an
+application setting.
 
 python-oracledb Thin Mode Architecture
 --------------------------------------
 
-By default, python-oracledb runs in a 'Thin' mode which connects directly to
-Oracle Database 12.1 or later.  This mode does not need Oracle Client libraries.
+By default, python-oracledb allows connecting directly to Oracle Database 12.1
+or later.  This Thin mode does not need Oracle Client libraries.
 
 .. _thinarchfig:
 .. figure:: /images/python-oracledb-thin-arch.png
@@ -40,8 +40,7 @@ The figure shows the architecture of python-oracledb.  Users interact with a
 Python application, for example by making web requests. The application program
 makes calls to python-oracledb functions. The connection from python-oracledb
 Thin mode to the Oracle Database is established directly.  The database can be
-on the same machine as Python, or it can be remote. This mode of
-python-oracledb can connect to Oracle Database 12.1 or later.
+on the same machine as Python, or it can be remote.
 
 The Oracle Net behavior can optionally be configured by using a
 ``tnsnames.ora`` file and with application settings. See :ref:`optnetfiles`.
@@ -49,9 +48,9 @@ The Oracle Net behavior can optionally be configured by using a
 python-oracledb Thick Mode Architecture
 ---------------------------------------
 
-Python-oracledb is said to be in 'Thick' mode when Oracle Client libraries are
-used.  An application script runtime option enables this mode by loading the
-libraries, see :ref:`enablingthick`.  This gives you some :ref:`additional
+Python-oracledb is said to be in 'Thick' mode when it links with Oracle Client
+libraries.  An application script runtime option enables this mode by loading
+the libraries, see :ref:`enablingthick`.  This gives you some :ref:`additional
 functionality <featuresummary>`. Depending on the version of the Oracle Client
 libraries, this mode of python-oracledb can connect to Oracle Database 9.2 or
 later.
@@ -100,7 +99,7 @@ The python-oracledb feature highlights are:
 
     *   Easy installation from PyPI
     *   Support for multiple Oracle Database versions
-    *   Works with common frameworks and ORMs
+    *   Supports the `Python Database API v2.0 Specification <https://www.python.org/dev/peps/pep-0249/>`__ with a considerable number of additions and a couple of exclusions.    *   Works with common frameworks and ORMs
     *   Execution of SQL and PL/SQL statements
     *   Extensive Oracle data type support, including JSON, large objects (``CLOB`` and
         ``BLOB``) and binding of SQL objects
