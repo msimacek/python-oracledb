@@ -15,7 +15,7 @@ information, see :ref:`upgrading83`.
 
 Python-oracledb is typically installed from Python's package repository
 `PyPI <https://pypi.org/project/oracledb/>`__ using `pip
-<https://pip.pypa.io/en/latest/installing/>`__. See :ref:`installation` for
+<https://pip.pypa.io/en/latest/installation/>`__. See :ref:`installation` for
 more information.
 
 Architecture
@@ -40,7 +40,8 @@ The figure shows the architecture of python-oracledb.  Users interact with a
 Python application, for example by making web requests. The application program
 makes calls to python-oracledb functions. The connection from python-oracledb
 Thin mode to the Oracle Database is established directly.  The database can be
-on the same machine as Python, or it can be remote.
+on the same machine as Python, or it can be remote. This mode of
+python-oracledb can connect to Oracle Database 12.1 or later.
 
 The Oracle Net behavior can optionally be configured by using a
 ``tnsnames.ora`` file and with application settings. See :ref:`optnetfiles`.
@@ -123,5 +124,5 @@ Runnable examples are in the `GitHub samples directory
 <https://github.com/oracle/python-oracledb/tree/main/samples>`__.
 A tutorial `Python and Oracle Database Tutorial: The New Wave of Scripting
 <https://oracle.github.io/python-oracledb
-/samples/tutorial/Python-and-Oracle-Database-Scripting-for-the-Future.html>`__
+/samples/tutorial/Python-and-Oracle-Database-The-New-Wave-of-Scripting.html>`__
 is also available.
