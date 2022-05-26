@@ -182,7 +182,7 @@ Install python-oracledb
 
 The generic way to install python-oracledb on Linux is to use Python's `pip
 <https://pip.pypa.io/en/latest/>`__ package to install from Python's package
-repository `PyPI <https://pypi.org/project/python-oracledb/>`__:
+repository `PyPI <https://pypi.org/project/oracledb/>`__:
 
 .. code-block:: shell
 
