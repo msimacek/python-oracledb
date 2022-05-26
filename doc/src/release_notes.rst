@@ -16,7 +16,7 @@ oracledb 1.0.1 (TBD)
 
 
 oracledb 1.0.0 (May 2022)
------------------------
+-------------------------
 
 #)  Renamed cx_Oracle to python-oracledb.  See :ref:`upgradecomparison`.
 #)  Python-oracledb is a 'Thin' driver by default that connects directly
