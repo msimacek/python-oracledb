@@ -715,7 +715,8 @@ code:
 
 - Cython Package: Cython is a standard Python package from PyPI.
 
-- The Python cryptography package.  This will need to be installed manually before building python-oracle. For example install with ``pip``.
+- The Python cryptography package.  This will need to be installed manually
+  before building python-oracledb. For example install with ``pip``.
 
 - C Compiler: A C99 compiler is needed.
 
