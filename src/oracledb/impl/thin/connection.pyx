@@ -81,10 +81,13 @@ cdef class ThinConnImpl(BaseConnImpl):
             elif stmt._cursor_id != 0:
                 self._add_cursor_to_close(stmt)
 
-    cdef object _connect_with_description(self, Description description):
+    cdef object _connect_with_description(self, Description description,
+                                          ConnectParamsImpl params,
+                                          bint final_desc):
         cdef:
             double timeout = description.tcp_connect_timeout
-            bint load_balance = description.load_balance, raise_exc
+            bint load_balance = description.load_balance
+            bint raise_exc = False
             list address_lists = description.address_lists
             uint32_t i, j, k, num_addresses, idx1, idx2
             uint32_t num_attempts = description.retry_count + 1
@@ -116,13 +119,18 @@ cdef class ThinConnImpl(BaseConnImpl):
                     else:
                         idx2 = k
                     address = address_list.addresses[idx2]
-                    raise_exc = i == num_attempts - 1
-                    sock = self._get_socket(address, timeout, raise_exc)
-                    if sock is None:
+                    if final_desc:
+                        raise_exc = i == num_attempts - 1
+                    redirect_params = self._get_socket(address, description,
+                                                       params, timeout,
+                                                       raise_exc)
+                    if redirect_params:
+                        return redirect_params
+                    if not self._protocol._connect_status:
                         continue
                     address_list.lru_index = (idx1 + 1) % num_addresses
                     description.lru_index = (idx2 + 1) % num_lists
-                    return (sock, address)
+                    return
             time.sleep(description.retry_delay)
 
     cdef ConnectParamsImpl _connect_with_params(self,
@@ -139,34 +147,22 @@ cdef class ThinConnImpl(BaseConnImpl):
             Description description
             Address address
             tuple ret_tuple
+            bint final_desc = False
         for i in range(num_descriptions):
+            if i == num_descriptions - 1:
+                final_desc = True
             if description_list.load_balance:
                 idx = (i + description_list.lru_index) % num_descriptions
             else:
                 idx = i
             description = descriptions[idx]
-            ret_tuple = self._connect_with_description(description)
-            if ret_tuple is not None:
-                sock, address = ret_tuple
+            redirect_params = self._connect_with_description(description,
+                                                             params,
+                                                             final_desc)
+            if redirect_params is not None or self._protocol._connect_status:
                 description_list.lru_index = (idx + 1) % num_descriptions
                 break
-        if description.expire_time > 0:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            if hasattr(socket, "TCP_KEEPIDLE") \
-                    and hasattr(socket, "TCP_KEEPINTVL") \
-                    and hasattr(socket, "TCP_KEEPCNT"):
-                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE,
-                                description.expire_time * 60)
-                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 6)
-                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)
-        sock.settimeout(None)
-        if address.protocol == "tcps":
-            sock = get_ssl_socket(sock, params, description, address)
-        self._drcp_enabled = description.server_type == "pooled"
-        if self._cclass is None:
-            self._cclass = description.cclass
-        self._protocol = Protocol(sock)
-        return self._protocol._connect(self, params, description, address)
+        return redirect_params
 
     cdef Message _create_message(self, type typ):
         """
@@ -182,7 +178,9 @@ cdef class ThinConnImpl(BaseConnImpl):
         self._pool = None
         self._protocol._force_close()
 
-    cdef object _get_socket(self, object address,
+    cdef object _get_socket(self, Address address,
+                            Description description,
+                            ConnectParamsImpl params,
                             double tcp_connect_timeout,
                             bint raise_exception):
         """
@@ -199,19 +197,42 @@ cdef class ThinConnImpl(BaseConnImpl):
         try:
             sock = socket.create_connection(connect_info,
                                             tcp_connect_timeout)
-        except (socket.gaierror, ConnectionRefusedError):
+            if use_proxy:
+                data = f"CONNECT {address.host}:{address.port} HTTP/1.0\r\n\r\n"
+                sock.send(data.encode())
+                reply = sock.recv(1024)
+                match = re.search('HTTP/1.[01]\\s+(\\d+)\\s+', reply.decode())
+                if match is None or match.groups()[0] != '200':
+                    errors._raise_err(errors.ERR_PROXY_FAILURE,
+                                    response=reply.decode())
+            if description.expire_time > 0:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                if hasattr(socket, "TCP_KEEPIDLE") \
+                        and hasattr(socket, "TCP_KEEPINTVL") \
+                        and hasattr(socket, "TCP_KEEPCNT"):
+                    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE,
+                                    description.expire_time * 60)
+                    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 6)
+                    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)
+            sock.settimeout(None)
+            if address.protocol == "tcps":
+                sock = get_ssl_socket(sock, params, description, address)
+            self._drcp_enabled = description.server_type == "pooled"
+            if self._cclass is None:
+                self._cclass = description.cclass
+            self._protocol = Protocol(sock)
+            redirect_params = self._protocol._connect_phase_one(self, params,
+                                                       description,
+                                                       address)
+            if redirect_params is not None:
+                return redirect_params
+        except (socket.gaierror, ConnectionRefusedError, exceptions.DatabaseError):
             if raise_exception:
                 raise
             return None
-        if use_proxy:
-            data = f"CONNECT {address.host}:{address.port} HTTP/1.0\r\n\r\n"
-            sock.send(data.encode())
-            reply = sock.recv(1024)
-            match = re.search('HTTP/1.[01]\\s+(\\d+)\\s+', reply.decode())
-            if match is None or match.groups()[0] != '200':
-                errors._raise_err(errors.ERR_PROXY_FAILURE,
-                                  response=reply.decode())
-        return sock
+        if self._protocol._connect_status:
+            self._protocol._connect_phase_two(self, address, description,
+                                                params)
 
     cdef Statement _get_statement(self, str sql, bint cache_statement):
         """

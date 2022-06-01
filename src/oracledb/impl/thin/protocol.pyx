@@ -41,6 +41,7 @@ cdef class Protocol:
         bint _in_connect
         bint _txn_in_progress
         bint _break_in_progress
+        bint _connect_status
 
     def __init__(self, sock):
         self._caps = Capabilities()
@@ -118,13 +119,18 @@ cdef class Protocol:
                     self._process_message(message)
                 self._final_close(self._write_buf)
 
-    cdef ConnectParamsImpl _connect(self, ThinConnImpl conn_impl,
-                                    ConnectParamsImpl params,
-                                    Description description, Address address):
+    cdef ConnectParamsImpl _connect_phase_one(self, ThinConnImpl conn_impl,
+                                              ConnectParamsImpl params,
+                                              Description description,
+                                              Address address):
+        """
+        Method for performing the required steps for establishing a connection
+        within the scope of a retry. If any of the steps in this method fail,
+        a retry will be performed, if retry_count is set.
+        """
         cdef:
             ConnectMessage connect_message
-            object temp_sock, ssl_context
-            AuthMessage auth_message
+            object ssl_context
             uint8_t packet_type
             str connect_string
 
@@ -157,8 +163,11 @@ cdef class Protocol:
                 params._process_redirect_data(connect_message.redirect_data)
                 return params
             if connect_message.packet_type == TNS_PACKET_TYPE_ACCEPT:
+                self._connect_status = True
                 break
-
+            elif connect_message.packet_type == TNS_PACKET_TYPE_REFUSE:
+                self._connect_status = False
+                break
             # for TCPS connections, OOB processing is not supported; if a
             # wallet is required, the socket must be rewrapped in order to
             # be usable; disable the check on the host name, however, as that
@@ -172,6 +181,16 @@ cdef class Protocol:
                     sock = ssl_context.wrap_socket(sock)
                     self.__set_socket(sock)
 
+    cdef int _connect_phase_two(self, ThinConnImpl conn_impl, Address address,
+                                Description description,
+                                ConnectParamsImpl params) except -1:
+        """"
+        Method for perfoming the required steps for establishing a connection
+        oustide the scope of a retry. If any of the steps in this method fail,
+        an exception will be raised.
+        """
+        cdef:
+            AuthMessage auth_message
         # check if the protocol version supported by the database is high
         # enough; if not, reject the connection immediately
         if self._caps.protocol_version < TNS_VERSION_MIN_ACCEPTED:
