@@ -58,7 +58,7 @@ Use a gist for long code: see https://gist.github.com/
 Format code by using three backticks on a line before and after code snippets, for example:
 
 ```
-import python-oracledb
+import oracledb
 ```
 
 -->

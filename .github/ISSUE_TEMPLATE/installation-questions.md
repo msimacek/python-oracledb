@@ -50,8 +50,14 @@ Also run Python and show the output of:
 
 <!-- Cut and paste text showing the command you ran.  No screenshots. -->
 
-3. Show the directory listing where your Oracle Client libraries are installed (e.g. the Instant Client directory).  Is it 64-bit or 32-bit?
+3. If you are trying to use Oracle Client libraries then:
 
-4. Show what the `PATH` environment variable (on Windows) or `LD_LIBRARY_PATH` (on Linux) is set to?
+   3a. What version, and where are they installed (e.g. the Instant Client directory)?
 
-5. Show any Oracle environment variables set (e.g. ORACLE_HOME, ORACLE_BASE).
+   3b. Are they 64-bit or 32-bit?
+
+   3c. On Windows, what is the version of your VS Redistributable?
+
+   3d. Show the `PATH` environment variable (on Windows) or `LD_LIBRARY_PATH` (on Linux) values?
+
+4. Show any Oracle environment variables set (e.g. TNS_ADMIN, ORACLE_HOME, ORACLE_BASE).
