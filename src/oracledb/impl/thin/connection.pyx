@@ -234,12 +234,12 @@ cdef class ThinConnImpl(BaseConnImpl):
             return
         except (socket.gaierror, ConnectionRefusedError) as e:
             if raise_exception:
-                errors._raise_err(errors.ERR_CONNECTION_ESTABLISHMENT_FAILED,
-                                  cause=e)
+                errors._raise_err(errors.ERR_CONNECTION_FAILED, cause=e,
+                                  exception=str(e))
             return
         except Exception as e:
-            errors._raise_err(errors.ERR_CONNECTION_ESTABLISHMENT_FAILED,
-                              cause=e)
+            errors._raise_err(errors.ERR_CONNECTION_FAILED, cause=e,
+                              exception=str(e))
             return
         self._protocol._connect_phase_two(self, description, params)
 

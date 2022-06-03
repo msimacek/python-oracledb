@@ -216,7 +216,7 @@ ERR_INVALID_SERVICE_NAME = 6001
 ERR_INVALID_SERVER_CERT_DN = 6002
 ERR_INVALID_SID = 6003
 ERR_PROXY_FAILURE = 6004
-ERR_CONNECTION_ESTABLISHMENT_FAILED = 6005
+ERR_CONNECTION_FAILED = 6005
 
 # Oracle error number cross reference
 ERR_ORACLE_ERROR_XREF = {
@@ -242,7 +242,7 @@ ERR_DPI_ERROR_XREF = {
 # dead connection errors
 ERR_CONNECTION_ERROR_SET = set([
     ERR_CONNECTION_CLOSED,
-    ERR_CONNECTION_ESTABLISHMENT_FAILED,
+    ERR_CONNECTION_FAILED,
     ERR_INVALID_SERVICE_NAME,
     ERR_INVALID_SID,
     ERR_LISTENER_REFUSED_CONNECTION
@@ -278,8 +278,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_COLUMN_TRUNCATED:
             'column truncated to {col_value_len} {unit}. '
             'Untruncated was {actual_len}',
-    ERR_CONNECTION_ESTABLISHMENT_FAILED:
-            'failure during connection establishment.',
+    ERR_CONNECTION_FAILED:
+            'cannot connect to database. Connection failed with "{exception}"',
     ERR_CONTENT_INVALID_AFTER_NUMBER:
             'invalid number (content after number)',
     ERR_CURSOR_NOT_OPEN:
