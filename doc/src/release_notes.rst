@@ -16,6 +16,10 @@ oracledb 1.0.1 (TBD)
     (`issue 3 <https://github.com/oracle/python-oracledb/issues/3>`__).
 #)  Ensured the name of wrapped functions are the same as the function being
     wrapped in order to improve error messages that reference them.
+#)  Added exception class (oracledb.ConnectionError) as a subclass of
+    oracledb.DatabaseError in order to aid the handling of connection errors
+    during creation or use (where the connection is no longer usable or could
+    not be established).
 
 
 oracledb 1.0.0 (May 2022)
