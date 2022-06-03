@@ -68,7 +68,7 @@ class _Error:
                     args = re.search(pattern, message).groupdict()
                 else:
                     driver_error_num = driver_error_info
-                if driver_error_num == ERR_CONNECTION_CLOSED:
+                if driver_error_num in ERR_CONNECTION_ERROR_SET:
                     self.is_session_dead = True
                 driver_error = _get_error_text(driver_error_num, **args)
                 self.message = f"{driver_error}\n{self.message}"
@@ -99,7 +99,10 @@ def _raise_err(error_num: int, context_error_message: str=None,
     message = _get_error_text(error_num, **args)
     if context_error_message is not None:
         message = f"{message}\n{context_error_message}"
-    exc_type = ERR_EXCEPTION_TYPES[error_num // 1000]
+    if error_num in ERR_CONNECTION_ERROR_SET:
+        exc_type = exceptions.ConnectionError
+    else:
+        exc_type = ERR_EXCEPTION_TYPES[error_num // 1000]
     raise exc_type(_Error(message)) from cause
 
 
@@ -233,6 +236,14 @@ ERR_DPI_ERROR_XREF = {
     1067: (ERR_CALL_TIMEOUT_EXCEEDED, "call timeout of (?P<timeout>\d+) ms"),
     1080: ERR_CONNECTION_CLOSED,
 }
+
+# dead connection errors
+ERR_CONNECTION_ERROR_SET = set([
+    ERR_CONNECTION_CLOSED,
+    ERR_INVALID_SERVICE_NAME,
+    ERR_INVALID_SID,
+    ERR_LISTENER_REFUSED_CONNECTION
+])
 
 # error message exception types (multiples of 1000)
 ERR_EXCEPTION_TYPES = {
