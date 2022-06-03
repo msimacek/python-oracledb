@@ -208,6 +208,7 @@ ERR_BUFFER_LENGTH_INSUFFICIENT = 5001
 ERR_INTEGER_TOO_LARGE = 5002
 ERR_UNEXPECTED_NEGATIVE_INTEGER = 5003
 ERR_UNEXPECTED_DATA = 5004
+ERR_UNEXPECTED_REFUSE = 5005
 
 # error numbers that result in OperationalError
 ERR_LISTENER_REFUSED_CONNECTION = 6000
@@ -215,6 +216,7 @@ ERR_INVALID_SERVICE_NAME = 6001
 ERR_INVALID_SERVER_CERT_DN = 6002
 ERR_INVALID_SID = 6003
 ERR_PROXY_FAILURE = 6004
+ERR_CONNECTION_ESTABLISHMENT_FAILED = 6005
 
 # Oracle error number cross reference
 ERR_ORACLE_ERROR_XREF = {
@@ -240,6 +242,7 @@ ERR_DPI_ERROR_XREF = {
 # dead connection errors
 ERR_CONNECTION_ERROR_SET = set([
     ERR_CONNECTION_CLOSED,
+    ERR_CONNECTION_ESTABLISHMENT_FAILED,
     ERR_INVALID_SERVICE_NAME,
     ERR_INVALID_SID,
     ERR_LISTENER_REFUSED_CONNECTION
@@ -275,6 +278,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_COLUMN_TRUNCATED:
             'column truncated to {col_value_len} {unit}. '
             'Untruncated was {actual_len}',
+    ERR_CONNECTION_ESTABLISHMENT_FAILED:
+            'failure during connection establishment.',
     ERR_CONTENT_INVALID_AFTER_NUMBER:
             'invalid number (content after number)',
     ERR_CURSOR_NOT_OPEN:
@@ -428,6 +433,9 @@ ERR_MESSAGE_FORMATS = {
     ERR_UNEXPECTED_NEGATIVE_INTEGER:
             'internal error: read a negative integer when expecting a '
             'positive integer',
+    ERR_UNEXPECTED_REFUSE:
+            'the listener refused the connection but an unexpected error '
+            'format was returned',
     ERR_UNSUPPORTED_INBAND_NOTIFICATION:
             'unsupported in-band notification with error number {err_num}',
     ERR_UNSUPPORTED_PYTHON_TYPE_FOR_VAR:
