@@ -80,8 +80,8 @@ Oracledb Methods
 
     The ``dsn`` (data source name) parameter can be a string in the format
     ``user/password@connect_string`` or can simply be the connect string (in
-    which case the user and password need to be specified separately).  See
-    :ref:`connstr` for more information.
+    which case authentication credentials such as the username and password
+    need to be specified separately). See :ref:`connstr` for more information.
 
     The ``pool`` parameter is expected to be a pool object. The use of this
     parameter is the equivalent of calling :meth:`ConnectionPool.acquire()`.
@@ -91,8 +91,15 @@ Oracledb Methods
 
     The ``params`` parameter is expected to be of type :ref:`ConnectParams
     <connparam>` and contains connection parameters that will be used when
-    establishing the connection.  See :ref:`usingconnparams` for more
-    information.
+    establishing the connection. If this parameter is not specified, the
+    additional keyword parameters will be used to create an instance of
+    ConnectParams. If both the params parameter and additional keyword
+    parameters are specified, the values in the keyword parameters have
+    precedence. Note that if a ``dsn`` is also supplied, then in the
+    python-oracledb Thin mode, the values of the parameters specified (if any)
+    within the ``dsn`` will override the values passed as additional keyword
+    parameters, which themselves override the values set in the ``params``
+    parameter object.
 
     The ``user`` parameter is expected to be a string which indicates the name
     of the user to connect to. This value is used in both the python-oracledb
@@ -504,13 +511,15 @@ Oracledb Methods
     <connpool>` or a subclass of ConnectionPool.
 
     The ``params`` parameter is expected to be of type :ref:`PoolParams
-    <poolparam>` and contains parameters that are used to create the pool.  If
-    this parameter is not specified, the additional keyword arguments will be
-    used to create an instance of PoolParams. If both the params parameter and
-    the additional keyword parameters are specified, then an exception is
-    raised. Note that if a ``dsn`` parameter is also specified, then the
-    ``params`` parameter will be modified to contain the connection parameters
-    found within ``dsn``.
+    <poolparam>` and contains parameters that are used to create the pool.
+    If this parameter is not specified, the additional keyword parameters will
+    be used to create an instance of PoolParams. If both the params parameter
+    and additional keyword parameters are specified, the values in the keyword
+    parameters have precedence. Note that if a ``dsn`` is also supplied, then
+    in the python-oracledb Thin mode, the values of the parameters specified
+    (if any) within the ``dsn`` will override the values passed as additional
+    keyword parameters, which themselves override the values set in the
+    ``params`` parameter object.
 
     The ``min``, ``max`` and ``increment`` parameters control pool growth
     behavior. A fixed pool size where ``min`` equals ``max`` is
