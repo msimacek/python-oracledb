@@ -84,8 +84,8 @@ ConnectionPool Methods
     If any connections have been acquired and not released back to the pool,
     this method will fail unless the ``force`` parameter is set to True.
 
-.. method:: ConnectionPool.create_pool(dsn, pool_class, pool_params, conn_params, \
-    min, max, increment, connectiontype, getmode, homogeneous, externalauth,timeout, \
+.. method:: ConnectionPool.create_pool(dsn, pool_class, params, min, max, \
+    increment, connectiontype, getmode, homogeneous, externalauth, timeout, \
     wait_timeout, max_lifetime_session, session_callback, max_sessions_per_shard, \
     soda_metadata_cache, ping_interval, user, proxy_user, password, newpassword, \
     wallet_password, host, port, protocol, https_proxy, https_proxy_port, service_name, \
@@ -97,24 +97,23 @@ ConnectionPool Methods
     Creates a connection pool with the supplied parameters and returns it.
 
     The ``dsn`` parameter (data source name) can be a string in the format
-    ``user/password@connect_string`` or can simply be a connect string in
-    which case the user and password need to be specified separately.
-    See :ref:`connstr` for more information.
+    ``user/password@connect_string`` or can simply be a connect string (in
+    which case authentication credentials such as the username and password
+    need to be specified separately. See :ref:`connstr` for more information.
 
     The ``pool_class`` parameter is a ConnectionPool or a subclass of
     ConnectionPool.
 
-    The ``pool_params`` parameter is of type PoolParams and contains
-    parameters that are used to create the pool. If not specified, a new
-    PoolParams object will be created using the additional keyword arguments.
-    See :ref:`poolparam` for more information.
-
-    The ``conn_params`` parameter is of type ConnectParams and contains
-    connection parameters that will be used when creating connections
-    in the pool. If not specified, a new ConnectParams object will be created
-    using the additional keyword arguments. See :ref:`connparam` for more information.
-    If a dsn is supplied, it will modify the connection parameters to include the
-    parameters supplied in the dsn.
+    The ``params`` parameter is expected to be of type :ref:`PoolParams
+    <poolparam>` and contains parameters that are used to create the pool.
+    If this parameter is not specified, the additional keyword parameters will
+    be used to create an instance of PoolParams. If both the params parameter
+    and additional keyword parameters are specified, the values in the keyword
+    parameters have precedence. Note that if a ``dsn`` is also supplied, then
+    in the python-oracledb Thin mode, the values of the parameters specified
+    (if any) within the ``dsn`` will override the values passed as additional
+    keyword parameters, which themselves override the values set in the
+    ``params`` parameter object.
 
 
 .. method:: ConnectionPool.drop(connection)
