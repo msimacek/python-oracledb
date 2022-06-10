@@ -15,18 +15,17 @@ Thin Mode Changes
 
 #)  Added support for multiple aliases in one entry in tnsnames.ora
     (`issue 3 <https://github.com/oracle/python-oracledb/issues/3>`__).
-#)  Return the same value for TIMESTAMP WITH TIME ZONE columns as thick
-    mode
-    (`issue 7 <https://github.com/oracle/python-oracledb/issues/7>`__).
-#)  Fixed connection retry count handling to work in cases where the
-    database listener is running but the service is down
+#)  Fixed connection retry count handling to work in cases where the database
+    listener is running but the service is down
     (`issue 3 <https://github.com/oracle/python-oracledb/issues/3>`__).
-#)  If an error occurs during the creation of a connection to the
-    database, the error is wrapped by DPY-6005 as an instance of
-    oracledb.ConnectionError.
+#)  Return the same value for TIMESTAMP WITH TIME ZONE columns as thick mode
+    (`issue 7 <https://github.com/oracle/python-oracledb/issues/7>`__).
 #)  Fixed order in which bind data is sent to the server when LONG and
     non-LONG column data is interspersed
     (`issue 12 <https://github.com/oracle/python-oracledb/issues/12>`__).
+#)  If an error occurs during the creation of a connection to the database, the
+    error is wrapped by DPY-6005 (so that it can be caught with an exception
+    handler on class oracledb.DatabaseError).
 #)  Ensured that errors occurring during fetch are detected consistently.
 #)  Fixed issue when fetching null values in implicit results.
 #)  Small performance optimization when sending column metadata.
@@ -34,7 +33,7 @@ Thin Mode Changes
 Thick Mode Changes
 ++++++++++++++++++
 
-#)  Restored support for bequeath connections to local database.
+#)  Restored support for bequeath connections to a local database.
 #)  Fixed issue fetching NCLOB columns with
     `oracledb.defaults.fetch_lobs = False`.
 
@@ -46,12 +45,8 @@ Common Changes
     (`issue 15 <https://github.com/oracle/python-oracledb/issues/15>`__).
 #)  Ensured connection error messages contain the function name instead of
     ``wrapped()``.
-#)  Added exception class (oracledb.ConnectionError) as a subclass of
-    oracledb.DatabaseError in order to aid the handling of connection errors
-    during creation or use (where the connection is no longer usable or could
-    not be established).
-#)  Improved samples, including adding a Dockerfile that starts a container with
-    a running database and the samples.
+#)  Improved samples, including adding a Dockerfile that starts a container
+    with a running database and the samples.
 #)  Improved documentation.
 
 
