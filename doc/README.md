@@ -6,11 +6,11 @@ This directory contains the documentation source.  It is written using reST
 (re-Structured Text). The source files are processed using Sphinx and can be
 turned into HTML, PDF or ePub documentation.
 
-If you wish to build documentation yourself, install Sphinx.  It is available
-on many Linux distributions as a pre-built package. You can also install it
-using the Python package manager "pip", for example::
+If you wish to build documentation yourself, install Sphinx and the Read the Docs theme.
+Sphinx is available on many Linux distributions as a pre-built package. You can also install
+Sphinx and the Read the Docs theme using the Python package manager "pip", for example::
 
-    python -m pip install Sphinx
+    python -m pip install Sphinx sphinx-rtd-theme
 
 For more information on Sphinx, please visit this page:
 
