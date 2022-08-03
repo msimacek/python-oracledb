@@ -23,6 +23,7 @@ Thin Mode Changes
     needs to be closed and a new one established).
 #)  Internally make use of the `TCP_NODELAY` socket option to remove delays
     in socket reads.
+#)  Fixed bug when calling cursor.parse() multiple times with the same SQL.
 
 Thick Mode Changes
 ++++++++++++++++++
