@@ -182,17 +182,16 @@ Token Based Authentication
 
 In the python-oracledb Thin mode:
 
-- The ``config_dir``, ``wallet_location``, and ``wallet_password`` parameters
-  need to be explicitly set in :func:`~oracledb.connect` or
-  :func:`~oracledb.create_pool()` if connecting to
-  :ref:`Oracle Cloud Autonomous Database<autonomousdb>` using mutual TLS (mTLS).
+- When connecting to Oracle Cloud Database with mutual TLS (mTLS) using OAuth2
+  tokens, you need to explicitly set the ``config_dir``, ``wallet_location``,
+  and ``wallet_password`` parameters of :func:`~oracledb.connect` or
+  :func:`~oracledb.create_pool()`. See, :ref:`autonomousdb`.
 
-- :ref:`Open Authorization (OAuth 2.0) token based authentication connection strings
-  <oauth2connstr>` and :ref:`Oracle Cloud Infrastructure (OCI) Identity and Access
-  Management (IAM) token based authentication connection strings <iamauthconnstr>`
-  are not supported.
-
-See :ref:`tokenauth`.
+- :ref:`Open Authorization (OAuth 2.0) token based authentication connection
+  strings <oauth2connstr>` and :ref:`Oracle Cloud Infrastructure (OCI) Identity
+  and Access Management (IAM) token based authentication connection strings
+  <iamauthconnstr>` are not supported. Use ``access_token`` parameter of
+  :func:`oracledb.ConnectParams()` instead. See :ref:`tokenauth`.
 
 Transport Layer Security (TLS) Support
 --------------------------------------
