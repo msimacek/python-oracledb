@@ -421,7 +421,8 @@ ERR_MESSAGE_FORMATS = {
     ERR_CONNECTION_CLOSED:
             'the database or network closed the connection',
     ERR_SERVER_LOGON_TYPE_NOT_SUPPORTED:
-            'server logon version is not supported',
+            'server logon version is not supported by python-oracledb in '
+            'thin mode',
     ERR_SERVER_VERSION_NOT_SUPPORTED:
             'connections to this database server version are not supported '
             'by python-oracledb in thin mode',
