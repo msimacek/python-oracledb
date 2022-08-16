@@ -157,6 +157,7 @@ ERR_INVALID_LOB_OFFSET = 2030
 ERR_INVALID_ACCESS_TOKEN_PARAM = 2031
 ERR_INVALID_ACCESS_TOKEN_RETURNED = 2032
 ERR_EXPIRED_ACCESS_TOKEN = 2033
+ERR_ACCESS_TOKEN_REQUIRES_TCPS = 2034
 
 # error numbers that result in NotSupportedError
 ERR_TIME_NOT_SUPPORTED = 3000
@@ -254,6 +255,8 @@ ERR_EXCEPTION_TYPES = {
 
 # error message formats
 ERR_MESSAGE_FORMATS = {
+    ERR_ACCESS_TOKEN_REQUIRES_TCPS:
+            'access_token requires use of the tcps protocol',
     ERR_ARGS_MUST_BE_LIST_OR_TUPLE:
             'arguments must be a list or tuple',
     ERR_ARGS_AND_KEYWORD_ARGS:
