@@ -24,8 +24,8 @@ Thin Mode Changes
 #)  Internally make use of the `TCP_NODELAY` socket option to remove delays
     in socket reads.
 #)  Fixed bug when calling cursor.parse() multiple times with the same SQL.
-#)  Clarified error message ``DPY-3011: server logon version is not supported
-    by python-oracledb in thin mode``.
+#)  Eliminated unnecessary restriction that resulted in error
+    ``DPY-3011: server logon version is not supported``.
 
 Thick Mode Changes
 ++++++++++++++++++
