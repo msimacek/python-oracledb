@@ -308,13 +308,13 @@ ERR_MESSAGE_FORMATS = {
             'internal error: read integer of length {length} when expecting '
             'integer of no more than length {max_length}',
     ERR_INVALID_ACCESS_TOKEN_PARAM:
-            'invalid access token: value must be a string (OAuth), a 2-tuple '
-            'containing the token and private key (IAM) or a callable that '
-            'returns a string or 2-tuple',
+            'invalid access token: value must be a string (for OAuth), a '
+            '2-tuple containing the token and private key strings (for IAM), '
+            'or a callable that returns a string or 2-tuple',
     ERR_INVALID_ACCESS_TOKEN_RETURNED:
             'invalid access token returned from callable: value must be a '
-            'string (OAuth) or a 2-tuple containing the token and private key '
-            '(IAM)',
+            'string (for OAuth) or a 2-tuple containing the token and private '
+            'key strings (for IAM)',
     ERR_INVALID_BIND_NAME:
             'no bind placeholder named ":{name}" was found in the SQL text',
     ERR_INVALID_CONN_CLASS:
