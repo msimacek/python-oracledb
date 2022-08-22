@@ -15,7 +15,7 @@ Thin Mode Changes
 
 #)  Added support for getting the LOB chunk size
     (`issue 14 <https://github.com/oracle/python-oracledb/issues/14>`__).
-#)  The error ``DPY-2030: LOB offset must be greater than zero`` is now raised
+#)  The error `DPY-2030: LOB offset must be greater than zero` is now raised
     when the offset parameter to :func:`LOB.read()` is zero or negative
     (`issue 13 <https://github.com/oracle/python-oracledb/issues/13>`__).
 #)  Internally, before a connection is returned from a pool, check for control
@@ -23,7 +23,8 @@ Thin Mode Changes
     needs to be closed and a new one established).
 #)  Internally make use of the `TCP_NODELAY` socket option to remove delays
     in socket reads.
-#)  Fixed bug when calling cursor.parse() multiple times with the same SQL.
+#)  Fixed bug when calling :func:`Cursor.parse()` multiple times with the same
+    SQL statement.
 #)  Fixed bug that prevented connecting to Oracle Database 12.1.0.1.
 
 Thick Mode Changes
