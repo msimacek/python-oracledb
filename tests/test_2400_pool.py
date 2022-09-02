@@ -700,7 +700,7 @@ class TestCase(test_env.BaseTestCase):
         "2429 - test soda_metadata_cache parameter"
         pool = test_env.get_pool(min=0, max=2, increment=2)
         self.assertEqual(pool.soda_metadata_cache, False)
-        pool = test_env.get_pool(min=0, max=2, increment=2, 
+        pool = test_env.get_pool(min=0, max=2, increment=2,
                                  soda_metadata_cache=True)
         self.assertEqual(pool.soda_metadata_cache, True)
         pool.soda_metadata_cache = False
