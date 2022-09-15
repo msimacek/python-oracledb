@@ -801,7 +801,7 @@ in "python-oracledb-main/src/oracledb/impl/thick/odpi".
 Python-oracledb source code is also available from opensource.oracle.com.  This
 can be installed with::
 
-    git clone --recurse-submodules git://opensource.oracle.com/git/oracle/python-oracledb.git
+    git clone --recurse-submodules https://opensource.oracle.com/git/oracle/python-oracledb.git
     cd python-oracledb
     python setup.py build
     python setup.py install
