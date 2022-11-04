@@ -1,4 +1,4 @@
-# Makefile to generate cx_Oracle documentation using Sphinx
+# Makefile to generate python-oracledb documentation using Sphinx
 
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
