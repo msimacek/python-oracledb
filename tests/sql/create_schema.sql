@@ -61,6 +61,9 @@ to &main_user
 grant aq_administrator_role to &main_user
 /
 
+grant select on v_$session to &main_user
+/
+
 begin
 
     for r in

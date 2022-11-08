@@ -104,8 +104,11 @@ def get_admin_connection():
     admin_user = get_value("ADMIN_USER", "Administrative user", "admin")
     admin_password = get_value("ADMIN_PASSWORD", f"Password for {admin_user}",
                                password=True)
-    return oracledb.connect(dsn=get_connect_string(),
-                            params=get_connect_params(),
+    params = get_connect_params()
+    if admin_user and admin_user.upper() == "SYS":
+        params = params.copy()
+        params.set(mode=oracledb.AUTH_MODE_SYSDBA)
+    return oracledb.connect(dsn=get_connect_string(), params=params,
                             user=admin_user, password=admin_password)
 
 def get_charset_ratios():
