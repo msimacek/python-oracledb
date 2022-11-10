@@ -478,7 +478,7 @@ ERR_MESSAGE_FORMATS = {
             'the listener refused the connection but an unexpected error '
             'format was returned',
     ERR_UNEXPECTED_XML_TYPE:
-            'unexpected XML type with flag {flag}',
+            'unexpected XMLType with flag {flag}',
     ERR_UNSUPPORTED_INBAND_NOTIFICATION:
             'unsupported in-band notification with error number {err_num}',
     ERR_UNSUPPORTED_PYTHON_TYPE_FOR_DB_TYPE:
