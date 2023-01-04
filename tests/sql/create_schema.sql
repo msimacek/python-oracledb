@@ -968,6 +968,9 @@ create or replace package &main_user..pkg_TestBooleans as
         a_Value                         udt_BooleanList
     ) return number;
 
+    function TestOutValueNull
+    return boolean;
+
     procedure TestOutArrays (
         a_NumElements                   number,
         a_Value                         out nocopy udt_BooleanList
@@ -1009,6 +1012,12 @@ create or replace package body &main_user..pkg_TestBooleans as
             end if;
         end loop;
         return t_Result;
+    end;
+
+    function TestOutValueNull
+    return boolean is
+    begin
+        return null;
     end;
 
     procedure TestOutArrays (

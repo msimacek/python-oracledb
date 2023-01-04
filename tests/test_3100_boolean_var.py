@@ -89,5 +89,11 @@ class TestCase(test_env.BaseTestCase):
                                       (True,))
         self.assertEqual(result, "TRUE")
 
+    def test_3108_bind_out_null(self):
+        "3108 - test binding out a boolean value (None)"
+        result = self.cursor.callfunc("pkg_TestBooleans.TestOutValueNull",
+                                      bool)
+        self.assertEqual(result, None)
+
 if __name__ == "__main__":
     test_env.run_test_cases()

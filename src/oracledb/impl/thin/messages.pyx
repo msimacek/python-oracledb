@@ -615,7 +615,9 @@ cdef class MessageWithData(Message):
                               name=var_impl.dbtype.name)
         if not self.in_fetch:
             buf.read_sb4(&actual_num_bytes)
-            if actual_num_bytes != 0 and column_value is not None:
+            if actual_num_bytes < 0 and column_value is False:
+                column_value = None
+            elif actual_num_bytes != 0 and column_value is not None:
                 unit_type = "bytes" if isinstance(column_value, bytes) \
                             else "characters"
                 errors._raise_err(errors.ERR_COLUMN_TRUNCATED,
