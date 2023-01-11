@@ -539,5 +539,16 @@ class TestCase(test_env.BaseTestCase):
                          for e in self.cursor.getbatcherrors()]
         self.assertEqual(actual_errors, expected_errors)
 
+    def test_3228_record_based_on_table_type(self):
+        "3228 - test %ROWTYPE record type"
+        type_obj = self.connection.gettype("TESTTEMPTABLE%ROWTYPE")
+        self.assertEqual(type_obj.attributes[3].name, "NUMBERCOL")
+
+    def test_3229_collection_of_records_based_on_table_type(self):
+        "3229 - test collection of %ROWTYPE record type"
+        type_name = "PKG_TESTBINDOBJECT.UDT_COLLECTIONROWTYPE"
+        type_obj = self.connection.gettype(type_name)
+        self.assertEqual(type_obj.element_type.attributes[3].name, "NUMBERCOL")
+
 if __name__ == "__main__":
     test_env.run_test_cases()
