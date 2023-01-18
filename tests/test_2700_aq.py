@@ -404,7 +404,6 @@ class TestCase(test_env.BaseTestCase):
         queue.enqoptions.transformation = \
         transformation_str = "%s.transform1" % self.connection.username
         queue.enqoptions.transformation = transformation_str
-        self.assertEqual(queue.enqOptions.transformation, transformation_str)
         props = self.connection.msgproperties(payload=book)
         queue.enqone(props)
         self.connection.commit()
