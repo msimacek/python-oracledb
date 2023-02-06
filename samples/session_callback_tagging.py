@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2019, 2022, Oracle and/or its affiliates.
+# Copyright (c) 2019, 2023, Oracle and/or its affiliates.
 #
 # This software is dual-licensed to you under the Universal Permissive License
 # (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
@@ -23,18 +23,18 @@
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# session_callback.py
+# session_callback_tagging.py
 #
 # Demonstrates how to use a connection pool session callback written in
 # Python. The callback is invoked whenever a newly created session is acquired
 # from the pool, or when the requested tag does not match the tag that is
 # associated with the session. It is generally used to set session state, so
-# that the application can count on known session state, which allows the
-# application to reduce the number of round trips made to the database.
-# If all your connections should have the same session state, you can simplify
-# the session callback by removing the tagging logic.
+# that the application can count on known session state. This allows the
+# application to reduce the number of round-trips made to the database.  If all
+# your connections should have the same session state, you can simplify the
+# session callback by removing the tagging logic.
 #
-# Also see session_callback_plsql.py
+# Also see session_callback.py and session_callback_plsql.py
 #------------------------------------------------------------------------------
 
 import oracledb
