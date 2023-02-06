@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2019, 2022, Oracle and/or its affiliates.
+# Copyright (c) 2019, 2023, Oracle and/or its affiliates.
 #
 # This software is dual-licensed to you under the Universal Permissive License
 # (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
@@ -28,15 +28,16 @@
 # Demonstrates how to use a connection pool session callback written in
 # PL/SQL. The callback is invoked whenever the tag requested by the application
 # does not match the tag associated with the session in the pool. It should be
-# used to set session state, so that the application can count on known session
-# state, which allows the application to reduce the number of round trips to the
+# used to set session state so that the application can count on known session
+# state. This allows the application to reduce the number of round-trips to the
 # database.
 #
 # The primary advantage to this approach over the equivalent approach shown in
-# session_callback.py is when DRCP is used, as the callback is invoked on the
-# server and no round trip is required to set state.
+# session_callback.py and session_callback_tagging.py is when DRCP is used, as
+# the callback is invoked on the server and no round trip is required to set
+# state.
 #
-# Also see session_callback.py
+# Also see session_callback.py and session_callback_tagging.py
 #------------------------------------------------------------------------------
 
 import oracledb
