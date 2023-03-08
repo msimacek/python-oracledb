@@ -13,7 +13,7 @@ oracledb 1.3.0 (TBD)
 Thin Mode Changes
 +++++++++++++++++
 
-#)  Added support for 23c feature: boolean columns.
+#)  Added support for the Oracle Database 23c BOOLEAN column type.
 #)  Added internal support for prefetching the LOB size and chunk size, thereby
     eliminating a :ref:`round-trip<roundtrips>` when calling
     :meth:`LOB.size()` and :meth:`LOB.getchunksize()`.
