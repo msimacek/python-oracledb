@@ -318,16 +318,14 @@ cdef class ThinPoolImpl(BasePoolImpl):
                 conn_impl._time_in_pool = time.monotonic()
             self._busy_conn_impls.remove(conn_impl)
             self._condition.notify()
-    
+
     cdef int _timeout_helper(self, list conn_impls_to_check) except -1:
         """
-        Helper method which checks the free and used connection lists before 
+        Helper method which checks the free and used connection lists before
         acquiring to drop off timed out connections
         """
-        cdef:
-            ThinConnImpl conn_impl
-
-        current_time = time.monotonic()  
+        cdef ThinConnImpl conn_impl
+        current_time = time.monotonic()
         while self.get_open_count() > self.min and conn_impls_to_check:
             conn_impl = conn_impls_to_check[0]
             if current_time - conn_impl._time_in_pool > self._timeout:
