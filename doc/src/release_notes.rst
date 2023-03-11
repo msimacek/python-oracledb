@@ -18,9 +18,8 @@ Thin Mode Changes
     eliminating a :ref:`round-trip<roundtrips>` when calling
     :meth:`LOB.size()` and :meth:`LOB.getchunksize()`.
 #)  Added implementation for :data:`ConnectionPool.timeout`.
-#)  Connections returned to the pool are now the first to be returned when
-    calling :meth:`ConnectionPool.acquire()` afterwards. This helps reduce the
-    number of times the session callback must be invoked, if one is used.
+#)  Made the pool implementation LIFO to improve locality and reduce the number
+    of times any session callback must be invoked.
 #)  Added check to prevent adding too many elements to bounded database
     collections.
 #)  Removed internally set fixed size for database collections. Collections of
