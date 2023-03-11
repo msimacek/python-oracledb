@@ -14,7 +14,7 @@ Some general tuning tips are:
   For multi-user applications, make use of connection pooling.  Create the pool
   once during application initialization.  Do not oversize the pool, see
   :ref:`connpooling` .  Use a session callback function to set session state, see
-  :ref:`Session CallBacks for Setting Pooled Connection State <sessioncallback>`.
+  :ref:`Session Callbacks for Setting Pooled Connection State <sessioncallback>`.
 
   Make use of efficient python-oracledb functions.  For example, to insert
   multiple rows use :meth:`Cursor.executemany()` instead of
@@ -326,7 +326,7 @@ Some general tips for reducing round-trips are:
 * Tune :attr:`Cursor.arraysize` and :attr:`Cursor.prefetchrows` for each query.
 * Use :meth:`Cursor.executemany()` for optimal DML execution.
 * Only commit when necessary.  Use :attr:`Connection.autocommit` on the last statement of a transaction.
-* For connection pools, use a callback to set connection state, see :ref:`Session CallBacks for Setting Pooled Connection State <sessioncallback>`.
+* For connection pools, use a callback to set connection state, see :ref:`Session Callbacks for Setting Pooled Connection State <sessioncallback>`.
 * Make use of PL/SQL procedures which execute multiple SQL statements instead of executing them individually from python-oracledb.
 * Use scalar types instead of Oracle Database object types.
 * Avoid overuse of :meth:`Connection.ping()`.

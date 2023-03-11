@@ -803,7 +803,7 @@ can be set directly, for example:
 
 .. _sessioncallback:
 
-Session CallBacks for Setting Pooled Connection State
+Session Callbacks for Setting Pooled Connection State
 -----------------------------------------------------
 
 Applications can set "session" state in each connection.  Examples of session
