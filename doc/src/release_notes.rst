@@ -18,14 +18,10 @@ Thin Mode Changes
     eliminating a :ref:`round-trip<roundtrips>` when calling
     :meth:`LOB.size()` and :meth:`LOB.getchunksize()`.
 #)  Added implementation for :data:`ConnectionPool.timeout`.
-#)  Made the pool implementation LIFO to improve locality and reduce the number
-    of times any session callback must be invoked.
 #)  Added check to prevent adding too many elements to bounded database
     collections.
 #)  Removed internally set fixed size for database collections. Collections of
     any size supported by the database can now be created.
-#)  Removed packet for negotiating network services which are not supported in
-    thin mode.
 #)  Fixed bug when calling :meth:`Cursor.executemany()` with PL/SQL when the
     size of the bound data increases on subsequent calls
     (`issue 132 <https://github.com/oracle/python-oracledb/issues/132>`__).
@@ -37,6 +33,14 @@ Thin Mode Changes
 #)  Fixed bug with SQL containing multibyte characters with certain database
     character sets
     (`issue 133 <https://github.com/oracle/python-oracledb/issues/133>`__).
+#)  Implementation changes:
+
+    - Made the pool implementation LIFO to improve locality, reduce the number
+      of times any session callback must be invoked, and allow connections to
+      be timed out.
+    - Removed packet for negotiating network services which are not supported
+      in thin mode.
+
 
 Thick Mode Changes
 ++++++++++++++++++
