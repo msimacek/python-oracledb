@@ -17,7 +17,8 @@ Thin Mode Changes
 #)  Added internal support for prefetching the LOB size and chunk size, thereby
     eliminating a :ref:`round-trip<roundtrips>` when calling
     :meth:`LOB.size()` and :meth:`LOB.getchunksize()`.
-#)  Added implementation for :data:`ConnectionPool.timeout`.
+#)  Added implementation for :data:`ConnectionPool.timeout` to allow pools to
+    shrink to ``min`` connections.
 #)  Added check to prevent adding too many elements to bounded database
     collections.
 #)  Removed internally set fixed size for database collections. Collections of
