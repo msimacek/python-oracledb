@@ -242,7 +242,7 @@ a re-executed statement, create a new cursor.  For example, to change
 Avoiding Premature Prefetching
 ++++++++++++++++++++++++++++++
 
-There are two cases that will benefit from setting ``prefetchrows`` to 0:
+There are two cases that will benefit from setting ``prefetchrows`` to zero:
 
 * When passing REF CURSORS into PL/SQL packages.  Setting ``prefetchrows`` to 0
   can stop rows being prematurely (and silently) fetched into the
@@ -254,32 +254,6 @@ There are two cases that will benefit from setting ``prefetchrows`` to 0:
   intermittent intervals.  By default, several rows needs to be emitted by the
   function before python-oracledb can return them to the application.  Setting
   ``prefetchrows`` to 0 helps give a consistent flow of data to the application.
-
-Tuning Data Copies between Databases
-------------------------------------
-
-One place where increasing ``arraysize`` is particularly useful is in copying
-data from one database to another:
-
-.. code-block:: python
-
-    # setup cursors
-    source_cursor = source_connection.cursor()
-    source_cursor.arraysize = 1000
-    target_cursor = target_connection.cursor()
-
-    # perform fetch and bulk insertion
-    source_cursor.execute("select * from MyTable")
-    while True:
-        rows = source_cursor.fetchmany()
-        if not rows:
-            break
-        target_cursor.executemany("insert into MyTable values (:1, :2)", rows)
-        target_connection.commit()
-
-Note that it may be preferable to use database links between the databases and
-use an INSERT INTO SELECT statement so that data is not copied to, and from,
-Python.
 
 Tuning Fetching from REF CURSORS
 --------------------------------
@@ -345,13 +319,42 @@ Sometimes you may wish to find the number of round-trips used for a
 specific application.  Snapshots of the ``V$SESSTAT`` view taken before
 and after doing some work can be used for this:
 
-.. code-block:: sql
+.. code-block:: python
 
-    SELECT ss.value, sn.display_name
-    FROM v$sesstat ss, v$statname sn
-    WHERE ss.sid = SYS_CONTEXT('USERENV','SID')
-    AND ss.statistic# = sn.statistic#
-    AND sn.name LIKE '%roundtrip%client%';
+    # Get the connection's session id
+    def get_session_id(connection):
+        sql = "select sys_context('userenv','sid') from dual"
+        result, = connection.cursor().execute(sql).fetchone()
+        return result
+
+     # Get the number of round-trips a session has made so far
+     def get_round_trips(systemconn, sid):
+         sql = """select
+                      ss.value
+                  from
+                      v$sesstat  ss,
+                      v$statname sn
+                  where
+                      ss.sid = :sid
+                      and ss.statistic# = sn.statistic#
+                      and sn.name like '%roundtrip%client%'"""
+         round_trips, = systemconn.cursor().execute(sql, [sid]).fetchone()
+         return round_trips
+
+
+    systemconn = oracledb.connect(user="system", password=spw, dsn=cs)
+    connection = oracledb.connect(user=un, password=pw, dsn=cs)
+
+    sid = get_session_id(connection)
+    round_trips_before = get_round_trips(systemconn, sid)
+
+    # Do some "work"
+    cursor.execute("select ...")
+    rows = cursor.fetchall()
+
+    round_trips_after = get_round_trips(systemconn, sid)
+
+    print(f"Round-trips required for query: {round_trips_after - round_trips_before}")
 
 .. _stmtcache:
 
