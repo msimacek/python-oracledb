@@ -95,6 +95,8 @@ insert JSON strings like:
 
 .. code-block:: python
 
+    import json
+
     data = dict(name="Rod", dept="Sales", location="Germany")
     inssql = "insert into CustomersAsBlob values (:1, :2)"
 
@@ -197,10 +199,12 @@ using SQL is:
 .. code-block:: python
 
     cursor.execute("""
-            insert into mytab (myjsoncol) values
-            (json_object(key 'mydocument' value json_scalar(to_clob(:b))
-                    returning json))""",
-            ['A short CLOB'])
+        insert into mytab (
+            myjsoncol
+        ) values (
+            json_object(key 'mydocument' value json_scalar(to_clob(:b)) returning json)
+        )""",
+        ['A short CLOB'])
 
 When `mytab` is queried in python-oracledb, the CLOB data will be returned as a
 Python string, as shown by the following table.  Output might be like::
@@ -280,10 +284,16 @@ some JSON data.  To look for JSON entries that have a ``location`` field:
 
 .. code-block:: python
 
+    import json
+
     for blob, in cursor.execute("""
-            select json_data
-            from customers
-            where json_exists(json_data, '$.location')"""):
+        select
+            json_data
+        from
+            customers
+        where
+            json_exists(json_data,
+            '$.location')"""):
         data = json.loads(blob.read())
         print(data)
 
@@ -312,10 +322,15 @@ function is a great way to convert relational table data to JSON:
 .. code-block:: python
 
     cursor.execute("""
-            select json_object('deptId' is d.department_id, 'name' is d.department_name) department
-            from departments d
-            where department_id < :did
-            order by d.department_id""",
+        select
+            json_object('deptId' is d.department_id,
+                        'name' is d.department_name) department
+        from
+            departments d
+        where
+            department_id < :did
+        order by
+            d.department_id""",
             [50]);
     for row in cursor:
         print(row)
@@ -327,19 +342,29 @@ This produces::
     ('{"deptId":30,"name":"Purchasing"}',)
     ('{"deptId":40,"name":"Human Resources"}',)
 
-To select a result set as a single object you can use ``JSON_ARRAYAGG``, for example:
+To select a result set from a relational query as a single object you can use
+`JSON_ARRAYAGG
+<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-6D56077D-78DE-4CC0-9498-225DDC42E054>`__,
+for example:
 
 .. code-block:: python
 
     oracledb.defaults.fetch_lobs = False
 
     cursor.execute("""
-        select json_arrayagg(
-                   json_object('deptId' is d.department_id,
-                               'name' is d.department_name) returning clob)
-        from departments d
-        where department_id < :did
-        """,
+        select
+            json_arrayagg(
+                json_object('deptid' is d.department_id,
+                            'name' is d.department_name) returning clob)
+        from
+            departments d
+        where
+            department_id < :did""",
        [50]);
     j, = cursor.fetchone()
     print(j)
+
+
+This produces::
+
+    [{"deptid":10,"name":"Administration"},{"deptid":20,"name":"Marketing"},{"deptid":30,"name":"Purchasing"},{"deptid":40,"name":"Human Resources"}]
