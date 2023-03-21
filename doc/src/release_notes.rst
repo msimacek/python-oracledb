@@ -35,7 +35,7 @@ Thin Mode Changes
     character sets
     (`issue 133 <https://github.com/oracle/python-oracledb/issues/133>`__).
 #)  Fixed bug with ordering of binds in PL/SQL when the bind variable may
-    exceed the 32767 byte limit but the actual value bound does not
+    potentially exceed the 32767 byte limit but the actual value bound does not
     (`issue 146 <https://github.com/oracle/python-oracledb/issues/146>`__).
 #)  Fixed bug connecting to an IPv6 address with IAM tokens.
 #)  Implementation changes:
