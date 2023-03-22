@@ -1312,7 +1312,7 @@ cdef class AuthMessage(Message):
         """
 
         # encrypt password
-        salt = bytes(16) # secrets.token_bytes(16)
+        salt = secrets.token_bytes(16)
         password_with_salt = salt + self.password
         encrypted_password = encrypt_cbc(self.conn_impl._combo_key,
                                          password_with_salt)
