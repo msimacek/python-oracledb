@@ -48,6 +48,11 @@ Thin Mode Changes
     - Removed packet for negotiating network services which are not supported
       in thin mode.
     - Removed unneeded packet for changing the password of the connected user.
+    - error ``DPY-6005: cannot connect to database`` is now raised for all
+      failures to connect to the database and the phrase ``cannot connect to
+      database`` is removed from all other error messages (since this cn be
+      confusing when these errors are raised from
+      :meth:`ConnectParams.parse_connect_string()`)
 
 
 Thick Mode Changes
