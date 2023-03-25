@@ -13,16 +13,18 @@ oracledb 1.3.0 (TBD)
 Thin Mode Changes
 +++++++++++++++++
 
-#)  Added support for the Oracle Database 23c BOOLEAN column type.
-#)  Added internal support for prefetching the LOB size and chunk size, thereby
-    eliminating a :ref:`round-trip<roundtrips>` when calling
-    :meth:`LOB.size()` and :meth:`LOB.getchunksize()`.
 #)  Added implementation for :data:`ConnectionPool.timeout` to allow pools to
     shrink to ``min`` connections.
 #)  Added check to prevent adding too many elements to bounded database
     collections.
 #)  Removed internally set fixed size for database collections. Collections of
     any size supported by the database can now be created.
+#)  Improved BOOLEAN handling.
+#)  Error ``DPY-6005: cannot connect to database`` is now raised for all
+    failures to connect to the database and the phrase ``cannot connect to
+    database`` is removed from all other error messages (since this cn be
+    confusing when these errors are raised from
+    :meth:`ConnectParams.parse_connect_string()`)
 #)  Fixed bug when calling :meth:`Cursor.executemany()` with PL/SQL when the
     size of the bound data increases on subsequent calls
     (`issue 132 <https://github.com/oracle/python-oracledb/issues/132>`__).
@@ -40,19 +42,17 @@ Thin Mode Changes
     potentially exceed the 32767 byte limit but the actual value bound does not
     (`issue 146 <https://github.com/oracle/python-oracledb/issues/146>`__).
 #)  Fixed bug connecting to an IPv6 address with IAM tokens.
-#)  Implementation changes:
+#)  Internal implementation changes:
 
+    - Added internal support for prefetching the LOB size and chunk size,
+      thereby eliminating a :ref:`round-trip<roundtrips>` when calling
+      :meth:`LOB.size()` and :meth:`LOB.getchunksize()`.
     - Made the pool implementation LIFO to improve locality, reduce the number
       of times any session callback must be invoked, and allow connections to
       be timed out.
     - Removed packet for negotiating network services which are not supported
       in thin mode.
     - Removed unneeded packet for changing the password of the connected user.
-    - error ``DPY-6005: cannot connect to database`` is now raised for all
-      failures to connect to the database and the phrase ``cannot connect to
-      database`` is removed from all other error messages (since this cn be
-      confusing when these errors are raised from
-      :meth:`ConnectParams.parse_connect_string()`)
 
 
 Thick Mode Changes
@@ -66,15 +66,15 @@ Thick Mode Changes
     for a type containing an attribute or element with an unsupported data type
     until the first attempt to reference the attribute or element with the
     unsupported data type.
-#)  Fixed bug when attempting to create bequeath connections using the DSN
-    parameter with credentials.
+#)  Fixed bug when attempting to create bequeath connections when the DSN
+    contains credentials.
 
 Common Changes
 ++++++++++++++
 
 #)  Improved type annotations.
-#)  Added method for parsing a DSN with credentials by calling
-    :meth:`ConnectParams.parse_dsn_with_credentials()`.
+#)  Added method :meth:`ConnectParams.parse_dsn_with_credentials()` for parsing
+    a DSN that contains credentials.
 #)  Error ``DPY-2038: element at index {index} does not exist`` is now raised
     whenever an element in a database collection is missing. Previously, thick
     mode raised ``DPI-1024: element at index {index} does not exist`` and thin
