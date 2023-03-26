@@ -22,7 +22,7 @@ Thin Mode Changes
 #)  Improved BOOLEAN handling.
 #)  Error ``DPY-6005: cannot connect to database`` is now raised for all
     failures to connect to the database and the phrase ``cannot connect to
-    database`` is removed from all other error messages (since this cn be
+    database`` is removed from all other error messages (since this can be
     confusing when these errors are raised from
     :meth:`ConnectParams.parse_connect_string()`)
 #)  Fixed bug when calling :meth:`Cursor.executemany()` with PL/SQL when the
