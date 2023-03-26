@@ -13,6 +13,8 @@ oracledb 1.3.0 (TBD)
 Thin Mode Changes
 +++++++++++++++++
 
+#)  Added direct support for the Oracle Database 21c JSON data type, removing
+    the need to use an output type handler.
 #)  Added implementation for :data:`ConnectionPool.timeout` to allow pools to
     shrink to ``min`` connections.
 #)  Added check to prevent adding too many elements to bounded database
