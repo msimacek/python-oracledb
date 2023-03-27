@@ -28,7 +28,7 @@ Thin Mode Changes
     failures to connect to the database and the phrase ``cannot connect to
     database`` is removed from all other error messages (since this can be
     confusing when these errors are raised from
-    :meth:`ConnectParams.parse_connect_string()`)
+    :meth:`ConnectParams.parse_connect_string()`).
 #)  Fixed bug when calling :meth:`Cursor.executemany()` with PL/SQL when the
     size of the bound data increases on subsequent calls
     (`issue 132 <https://github.com/oracle/python-oracledb/issues/132>`__).
