@@ -309,7 +309,7 @@ class Cursor:
 
     def execute(self, statement: Union[str, None],
                 parameters: Union[list, tuple, dict]=None,
-                **keyword_parameters: Any) -> Union["Cursor", None]:
+                **keyword_parameters: Any) -> Any:
         """
         Execute a statement against the database.
 
