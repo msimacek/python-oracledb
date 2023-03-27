@@ -15,6 +15,8 @@ Thin Mode Changes
 
 #)  Added direct support for the Oracle Database 21c JSON data type, removing
     the need to use an output type handler.
+#)  Added support for connecting to databases that accept passwords longer than
+    30 UTF-8 encoded bytes.
 #)  Added implementation for :data:`ConnectionPool.timeout` to allow pools to
     shrink to ``min`` connections.
 #)  Added check to prevent adding too many elements to bounded database
