@@ -524,5 +524,30 @@ class TestCase(test_env.BaseTestCase):
                                coll.find().skip(10).count)
         coll.drop()
 
+    def test_3425_map_mode(self):
+        "3425 - test mapMode parameter"
+        soda_db = self.get_soda_database()
+        data = [
+             {"a": 3},
+             {"b": 4}
+        ]
+        expected_data = data * 2
+        for mapMode in [False, True]:
+            coll = soda_db.createCollection("TestSodaMapMode", mapMode=mapMode)
+            coll.insertMany(data)
+        fetched_data = list(d.getContent() for d in coll.find().getDocuments())
+        self.assertEqual(fetched_data, expected_data)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40626",
+                               coll.drop)
+        self.connection.commit()
+        coll.drop()
+
+    def test_3426_negative_map_mode(self):
+        "3426 - test mapping a new collection from an non-existent table"
+        soda_db = self.get_soda_database()
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40623",
+                               soda_db.createCollection,
+                               "TestSodaMapNonExistent", mapMode=True)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
