@@ -487,5 +487,42 @@ class TestCase(test_env.BaseTestCase):
             self.assertEqual(doc.getContent(), expected_doc.getContent())
         coll.drop()
 
+    def test_3422_close_cursor(self):
+        """3422 - test close SodaDocCursor and confirm an exception is raised
+                  after closing a SodaDocCursor"""
+        soda_db = self.get_soda_database()
+        coll = soda_db.createCollection("TestCloseSodaDocCursor")
+        cursor = coll.find().getCursor()
+        cursor.close()
+        self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1006",
+                               cursor.close)
+        coll.drop()
+
+    def test_3423_limit(self):
+        "3423 - test limit to get specific amount of documents"
+        soda_db = self.get_soda_database()
+        coll = soda_db.createCollection("TestSodaLimit")
+        data = [{"group": "Camila"} for i in range(20)]
+        coll.insertMany(data)
+        self.connection.commit()
+        docs = coll.find().getDocuments()
+        self.assertEqual(len(docs), len(data))
+        docs = coll.find().limit(3).getDocuments()
+        self.assertEqual(len(docs), 3)
+        coll.drop()
+
+    def test_3424_count_negative(self):
+        "3424 - get count exceptions when using limit and skip"
+        soda_db = self.get_soda_database()
+        coll = soda_db.createCollection("TestSodaCountExceptions")
+        data = [{"song": "WYMCA"} for i in range(20)]
+        coll.insertMany(data)
+        self.connection.commit()
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40748:",
+                               coll.find().limit(5).count)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40748:",
+                               coll.find().skip(10).count)
+        coll.drop()
+
 if __name__ == "__main__":
     test_env.run_test_cases()
