@@ -18,6 +18,9 @@ Thin Mode Changes
 #)  Added support for shrinking the pool back to the minimum number of
     connections allowed in the pool when the pool is idle for
     :data:`ConnectionPool.timeout` seconds.
+#)  Adjusted fetching of REF cursors so that the cursor's arraysize attribute
+    is consistently taken into account before each internal fetch is performed.
+    This ensures that the number of round trips can be easily determined.
 
 Thick Mode Changes
 ++++++++++++++++++
@@ -29,6 +32,9 @@ Thick Mode Changes
 Common Changes
 ++++++++++++++
 
+#)  When fetching REF cursors, only the cursor's arraysize attribute is
+    considered (previously, the cursor's prefetchrows attribute was also
+    considered, but in differing ways between thin and thick modes.
 #)  Improved test suite.
 
 
