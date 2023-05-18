@@ -27,8 +27,8 @@ Thick Mode Changes
 #)  Fixed bug when using external authentication with a Net Service Name
     connection string
     (`issue 178 <https://github.com/oracle/python-oracledb/issues/178>`__).
-#)  Fixed bug when using external authentication with an Easy Connect connection
-    string.
+#)  Fixed bug when using external authentication with an Easy Connect
+    connection string.
 
 Common Changes
 ++++++++++++++
