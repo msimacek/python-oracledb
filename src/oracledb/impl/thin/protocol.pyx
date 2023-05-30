@@ -396,7 +396,6 @@ cdef class Protocol:
             self._write_buf._packet_sent = False
             buf.skip_raw_bytes(2)
             buf.read_uint16(&refuse_message_len)
-            print("len:", refuse_message_len)
             if refuse_message_len == 0:
                 message.error_info.message = None
             else:
