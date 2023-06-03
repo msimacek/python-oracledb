@@ -761,9 +761,9 @@ cdef class MessageWithData(Message):
             self.error_occurred = False
         elif self.retry:
             self.retry = False
-        elif self.error_info.num == TNS_ERR_VAR_NOT_IN_SELECT_LIST \
-                or (self.error_info.num == TNS_ERR_INCONSISTENT_DATA_TYPES
-                    and cursor_impl._statement._is_query):
+        elif cursor_impl._statement._is_query \
+                and self.error_info.num in (TNS_ERR_VAR_NOT_IN_SELECT_LIST,
+                                            TNS_ERR_INCONSISTENT_DATA_TYPES):
             self.retry = True
             conn_impl._add_cursor_to_close(cursor_impl._statement)
             cursor_impl._statement._cursor_id = 0
