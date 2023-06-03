@@ -29,6 +29,10 @@ Thin Mode Changes
     to the database.
 #)  Fixed bug which could cause a redirect loop with improperly configured
     listener redirects.
+#)  Added support for automatically retrying a query if the error
+    ``ORA-00932: inconsistent data types`` is raised (which can occur if a
+    table or view is recreated with a data type that is incompatible with
+    the column's previous data type).
 
 Thick Mode Changes
 ++++++++++++++++++
