@@ -136,6 +136,7 @@ class TestCase(test_env.BaseTestCase):
         sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
         connection = test_env.get_connection()
         connection.inputtypehandler = self.input_type_handler
+        self.assertEqual(connection.inputtypehandler, self.input_type_handler)
         cursor_one = connection.cursor()
         cursor_two = connection.cursor()
         cursor_one.execute(sql, (building_one.building_id, building_one))
