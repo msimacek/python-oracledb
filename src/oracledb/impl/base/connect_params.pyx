@@ -791,6 +791,8 @@ cdef class Description:
             temp_parts.append(f"(POOL_PURITY={self.purity})")
         if cid is not None:
             temp_parts.append(f"(CID={cid})")
+        if self.connection_id is not None:
+            temp_parts.append(f"(CONNECTION_ID={self.connection_id})")
         if temp_parts:
             parts.append(f'(CONNECT_DATA={"".join(temp_parts)})')
 
@@ -842,6 +844,7 @@ cdef class Description:
         _set_server_type_param(args, "server_type", self)
         _set_str_param(args, "cclass", self)
         _set_purity_param(args, "purity", &self.purity)
+        _set_str_param(args, "connection_id_prefix", self)
 
     def set_from_description_args(self, dict args):
         """
