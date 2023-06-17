@@ -832,6 +832,7 @@ cdef class Description:
         description.ssl_server_dn_match = self.ssl_server_dn_match
         description.ssl_server_cert_dn = self.ssl_server_cert_dn
         description.wallet_location = self.wallet_location
+        description.connection_id_prefix = self.connection_id_prefix
         return description
 
     def set_from_connect_data_args(self, dict args):
