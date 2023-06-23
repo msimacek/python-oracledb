@@ -211,6 +211,7 @@ cdef class Protocol:
             DataTypesMessage data_types_message
             ProtocolMessage protocol_message
             AuthMessage auth_message
+            bint sent_cookie = False
 
         # check if the protocol version supported by the database is high
         # enough; if not, reject the connection immediately
@@ -240,12 +241,13 @@ cdef class Protocol:
             cookie_message.data_types_message = data_types_message
             cookie_message.auth_message = auth_message
             self._process_message(cookie_message)
+            sent_cookie = True
         else:
             self._process_message(protocol_message)
 
         # if database is not 23c or later, or renegotiation has been requested,
         # use the regular approach for the remaining messages
-        if cookie is None or not cookie.populated:
+        if not sent_cookie or not cookie.populated:
             self._process_message(data_types_message)
             self._process_message(auth_message)
             if cookie is not None and not cookie.populated:
