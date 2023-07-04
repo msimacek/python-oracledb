@@ -183,6 +183,10 @@ class TestCase(test_env.BaseTestCase):
                                "^ORA-01017:|^ORA-00988:",
                                connection.changepassword,
                                test_env.get_main_password(), new_password)
+        self.assertRaisesRegex(oracledb.DatabaseError,
+                               "^ORA-28008:|^ORA-00988:",
+                               connection.changepassword,
+                               "incorrect old password", new_password)
 
     def test_1109_parse_password(self):
         "1109 - test connecting with password containing / and @ symbols"
