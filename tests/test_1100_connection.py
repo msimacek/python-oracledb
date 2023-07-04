@@ -184,7 +184,7 @@ class TestCase(test_env.BaseTestCase):
                                connection.changepassword,
                                test_env.get_main_password(), new_password)
         self.assertRaisesRegex(oracledb.DatabaseError,
-                               "^ORA-28008:|^ORA-00988:",
+                               "^ORA-01017:|^ORA-28008:|^ORA-00988:",
                                connection.changepassword,
                                "incorrect old password", new_password)
 
