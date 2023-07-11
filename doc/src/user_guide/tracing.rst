@@ -243,11 +243,10 @@ documentation on ``DPI_DEBUG_LEVEL``.
 Using Connection Identifiers
 ----------------------------
 
-If you are using Oracle Database 21c or later, a unique connection identifier
-(``CONNECTION_ID``) is generated for each connection to the Oracle Database.
-The connection identifier is shown in some Oracle Network error messages and
-Oracle Database logs, which helps in better tracing and diagnosing of
-connection failures. For example::
+A unique connection identifier (``CONNECTION_ID``) is generated for each
+connection to the Oracle Database. The connection identifier is shown in some
+Oracle Network error messages and logs, which helps in better tracing and
+diagnosing of connection failures. For example::
 
     DPY-6005: cannot connect to database (CONNECTION_ID=m0PfUY6hYSmWPcgrHZCQIQ==)
 
@@ -280,9 +279,12 @@ a connection string. For example::
              (ADDRESS_LIST= (ADDRESS=...) (ADDRESS=...))
              (CONNECT_DATA=
                 (SERVICE_NAME=sales.us.example.com)
-                ((CONNECTION_ID_PREFIX=MYAPP))
+                (CONNECTION_ID_PREFIX=MYAPP)
              )
            )
+
+Depending on the Oracle Database version in use, the information that is shown
+in logs varies.
 
 See `Troubleshooting Oracle Net Services <https://www.oracle.com/pls/topic/
 lookup?ctx=dblatest&id=GUID-3F42D057-C9AC-4747-B48B-5A5FF7672E5D>`_ for more
