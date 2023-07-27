@@ -759,7 +759,8 @@ cdef enum:
     TNS_VERIFIER_TYPE_12C = 0x4815
 
 # UDS flags
-DEF TNS_UDS_FLAGS_IS_JSON = 0x00000100
+cdef enum:
+    TNS_UDS_FLAGS_IS_JSON = 0x00000100
 
 # other constants
 cdef enum:
