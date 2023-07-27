@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2021, 2022, Oracle and/or its affiliates.
+# Copyright (c) 2021, 2023, Oracle and/or its affiliates.
 #
 # This software is dual-licensed to you under the Universal Permissive License
 # (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
@@ -115,6 +115,48 @@ class TestCase(test_env.BaseTestCase):
                 from TestTempTable
                 order by IntCol""")
         self.assertEqual(self.cursor.fetchall(), [(1, 'tesName')])
+
+    def test_4404_tpc_begin_resume(self):
+        "4404 - test resuming a transaction"
+        self.cursor.execute("truncate table TestTempTable")
+        xid1 = self.connection.xid(3939, "txn3939", "branch39")
+        xid2 = self.connection.xid(3940, "txn3940", "branch40")
+        values = [
+            [xid1, (1, "User Info")],
+            [xid2, (2, "Other User Info")]
+        ]
+        for xid, data in values:
+            self.connection.tpc_begin(xid)
+            self.cursor.execute("""
+                    insert into TestTempTable (IntCol, StringCol1)
+                    values (:1, :2)""", data)
+            self.connection.tpc_end()
+        for xid, _ in values:
+            self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-24757:",
+                                   self.connection.tpc_begin, xid)
+        for xid, data in values:
+            self.connection.tpc_begin(xid, oracledb.TPC_BEGIN_RESUME)
+            self.cursor.execute(
+                    "select IntCol, StringCol1 from TestTempTable")
+            res, = self.cursor.fetchall()
+            self.assertEqual(res, data)
+            self.connection.tpc_rollback(xid)
+
+    def test_4405_tpc_begin_promote(self):
+        "4405 - test promoting a local transaction to a tpc transaction"
+        self.cursor.execute("truncate table TestTempTable")
+        xid = self.connection.xid(3941, "txn3941", "branch41")
+        values = (1, "String 1")
+        self.cursor.execute(
+                """insert into TestTempTable (IntCol, StringCol1)
+                   values (:1, :2)""", values)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-24776",
+                               self.connection.tpc_begin, xid)
+        self.connection.tpc_begin(xid, oracledb.TPC_BEGIN_PROMOTE)
+        self.cursor.execute("select IntCol, StringCol1 from TestTempTable")
+        res, = self.cursor.fetchall()
+        self.assertEqual(res, values)
+        self.connection.tpc_rollback(xid)
 
 if __name__ == "__main__":
     test_env.run_test_cases()
