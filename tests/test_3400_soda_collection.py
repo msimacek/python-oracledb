@@ -615,6 +615,8 @@ class TestCase(test_env.BaseTestCase):
         "3429 - test getting indexes on a collection"
         soda_db = self.get_soda_database()
         coll = soda_db.createCollection("TestSodaGetIndexes")
+        coll.drop()
+        coll = soda_db.createCollection("TestSodaGetIndexes")
         index_1 =  {
             'name': 'ix_3428-1',
             'fields': [
