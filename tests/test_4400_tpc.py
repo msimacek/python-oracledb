@@ -158,5 +158,67 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(res, values)
         self.connection.tpc_rollback(xid)
 
+    def test_4406_tpc_end_with_xid(self):
+        "4406 - test ending a transaction with parameter xid"
+        self.cursor.execute("truncate table TestTempTable")
+        xid1 = self.connection.xid(4406, "txn4406a", "branch3")
+        xid2 = self.connection.xid(4406, "txn4406b", "branch4")
+        self.connection.tpc_begin(xid1)
+        self.cursor.execute("""
+                insert into TestTempTable (IntCol, StringCol1)
+                values (1, 'test4406a')""")
+        self.connection.tpc_begin(xid2)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-24758:",
+                               self.connection.tpc_end, xid1)
+        self.cursor.execute("""
+                insert into TestTempTable (IntCol, StringCol1)
+                values (2, 'test4406b')""")
+        self.connection.tpc_end(xid2)
+        self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-25352:",
+                               self.connection.tpc_end, xid1)
+        self.connection.tpc_rollback(xid1)
+        self.connection.tpc_rollback(xid2)
+
+    def test_4407_tpc_recover(self):
+        "4407 - test tpc_recover()"
+        self.cursor.execute("truncate table TestTempTable")
+        n_xids = 10
+        for i in range(n_xids):
+            xid = self.connection.xid(4407 + i, f"txn4407{i}", f"branch{i}")
+            self.connection.tpc_begin(xid)
+            self.cursor.execute("""
+                    insert into TestTempTable (IntCol, StringCol1)
+                    values (:1, 'test4407')""", [i + 1])
+            self.connection.tpc_prepare(xid)
+        recovers = self.connection.tpc_recover()
+        self.assertEqual(len(recovers), n_xids)
+
+        self.cursor.execute("select * from DBA_PENDING_TRANSACTIONS")
+        self.assertEqual(self.cursor.fetchall(), recovers)
+
+        for format_id, txn, branch in recovers:
+            if format_id % 2 == 0:
+                xid = self.connection.xid(format_id, txn, branch)
+                self.connection.tpc_commit(xid)
+        recovers = self.connection.tpc_recover()
+        self.assertEqual(len(recovers), n_xids // 2)
+
+        for format_id, txn, branch in recovers:
+            xid = self.connection.xid(format_id, txn, branch)
+            self.connection.tpc_rollback(xid)
+        recovers = self.connection.tpc_recover()
+        self.assertEqual(len(recovers), 0)
+
+    def test_4408_tpc_recover_read_only(self):
+        "4408 - test tpc_recover() with read-only transaction"
+        self.cursor.execute("truncate table TestTempTable")
+        for i in range(4):
+            xid = self.connection.xid(4408 + i, f"txn4408{i}", f"branch{i}")
+            self.connection.tpc_begin(xid)
+            self.cursor.execute("select * from TestTempTable")
+            self.connection.tpc_prepare(xid)
+        recovers = self.connection.tpc_recover()
+        self.assertEqual(len(recovers), 0)
+
 if __name__ == "__main__":
     test_env.run_test_cases()
