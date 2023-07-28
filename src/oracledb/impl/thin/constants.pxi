@@ -691,7 +691,7 @@ cdef enum:
     TNS_CCAP_TTC3 = 37
     TNS_CCAP_TTC4 = 40
     TNS_CCAP_LOB2 = 42
-    TNS_CCAP_MAX = 45
+    TNS_CCAP_MAX = 51
 
 # compile time capability values
 cdef enum:
@@ -744,7 +744,7 @@ cdef enum:
 cdef enum:
     TNS_RCAP_COMPAT = 0
     TNS_RCAP_TTC = 6
-    TNS_RCAP_MAX = 7
+    TNS_RCAP_MAX = 11
 
 # runtime capability values
 cdef enum:
