@@ -76,8 +76,9 @@ Common Changes
     Oracle Database instance name associated with the connection. This is the
     same value as the SQL expression
     ``sys_context('userenv', 'instance_name')``.
-#)  Added support for the embedded OIDs found in SODA documents in Oracle
-    Database 23c.
+#)  Added support for relational queries on the underlying tables of SODA
+    collections created in Oracle Database 23c if they contain JSON documents
+    with embedded OIDs.
 #)  Automatically retry a query if the error ``ORA-00932: inconsistent data
     types`` is raised (which can occur if a table or view is recreated with a
     data type that is incompatible with the column's previous data type).
