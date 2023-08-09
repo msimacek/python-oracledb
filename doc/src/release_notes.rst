@@ -74,7 +74,7 @@ Common Changes
     have the "IS JSON" check constraint enabled) in the same way as columns of
     type JSON (which requires Oracle Database 21c or higher) are fetched. In
     thick mode this requires Oracle Client 19c or higher. The attribute
-    ``oracledb.__future__.old_json_col_as_obj`` must be set to the value
+    :attr:`oracledb.__future__.old_json_col_as_obj` must be set to the value
     ``True`` for this behavior to occur. In version 2.0 this will become the
     normal behavior and setting this attribute will no longer be needed.
 #)  Added new property :attr:`Connection.instance_name` which provides the
