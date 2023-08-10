@@ -435,8 +435,8 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3730_convert_nulls(self):
         "3730 - test calling of outconverter with null values"
-        def type_handler(cursor, name, default_type, size, precision, scale):
-            return cursor.var(default_type,
+        def type_handler(cursor, metadata):
+            return cursor.var(metadata.type_code,
                               outconverter=lambda v: f"|{v}|" if v else '',
                               convert_nulls=True, arraysize=cursor.arraysize)
         self.cursor.outputtypehandler = type_handler
