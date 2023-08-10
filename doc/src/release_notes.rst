@@ -46,7 +46,7 @@ Thin Mode Changes
     :meth:`ConnectionPool.acquire()` and the ping check fails due to the
     connection being dead.
 #)  Fixed bug when an output type handler is used and the value of
-    cursor.prefetchrows exceeds cursor.arraysize
+    :attr:`Cursor.prefetchrows` exceeds :attr:`Cursor.arraysize`
     (`issue 173 <https://github.com/oracle/python-oracledb/issues/173>`__).
 #)  Fixed bug when an Application Continuity replay context is returned during
     connection to the database
@@ -58,7 +58,7 @@ Thin Mode Changes
 Thick Mode Changes
 ++++++++++++++++++
 
-#)  Added function :meth:`SodaCollection.getIndexes()` for getting the indexes
+#)  Added function :meth:`SodaCollection.listIndexes()` for getting the indexes
     on a SODA collection.
 #)  Added support for specifying if documents should be locked when fetched
     from SODA collections. A new non-terminal method

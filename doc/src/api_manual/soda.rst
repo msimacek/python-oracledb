@@ -560,10 +560,10 @@ SodaOperation Methods
     If this method is specified in conjunction with a write operation this
     method is ignored.
 
-    This method is only supported in Oracle Client 21.3 and higher (also
-    available in Oracle Client 19 from 19.11).
+    This method is only supported in Oracle Client 21.3 (or later). Also,
+    available in Oracle Client 19 from 19.11.
 
-    .. versionadded:: 1.4
+    .. versionadded:: 1.4.0
 
 .. method:: SodaOperation.key(value)
 
