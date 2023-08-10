@@ -511,6 +511,12 @@ Cursor Attributes
     or if the cursor has not had an operation invoked via the
     :meth:`~Cursor.execute()` method yet.
 
+    .. versionchanged:: 1.4.0
+
+        Previously, this attribute was a sequence of 7-item sequences.  Each
+        of these sequences contained information describing one result column:
+        (name, type, display_size, internal_size, precision, scale, null_ok).
+
 .. attribute:: Cursor.fetchvars
 
     This read-only attribute specifies the list of variables created for the
@@ -554,7 +560,7 @@ Cursor Attributes
 
     See :ref:`outputtypehandlers`.
 
-    .. versionchanged:: 1.4
+    .. versionchanged:: 1.4.0
 
         The method signature was changed. The previous signature
         handler(cursor, name, default_type, length, precision, scale) will
