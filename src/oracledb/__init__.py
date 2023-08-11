@@ -36,9 +36,7 @@ if sys.version_info[:2] < (3, 8):
     warnings.warn(
         version + " is no longer supported by the Python core team. "
         "Therefore, support for it is deprecated in python-oracledb and will "
-        "be removed in a future release",
-        FutureWarning,
-        stacklevel=2)
+        "be removed in a future release")
 
 from .version import (
     __version__ as __version__
