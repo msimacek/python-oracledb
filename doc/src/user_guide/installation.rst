@@ -966,20 +966,20 @@ If using python-oracledb fails:
     file in the ``/etc/ld.so.conf.d`` directory contains the path to the
     Instant Client directory, and then run ``ldconfig``.
 
-- If you get the error ``DPY-3010: connections to this database server
-  version are not supported by python-oracledb in thin mode`` when
-  connecting to Oracle Database 11.2, then you need to enable Thick mode by
+- If you get the error ``DPY-3010: connections to this database server version
+  are not supported by python-oracledb in thin mode`` when connecting to Oracle
+  Database 11.2, then you need to enable python-oracledb's Thick mode by
   installing Oracle Client libraries and calling
-  :meth:`oracledb.init_oracle_client()` in your code.  Alternatively,
-  upgrade your database.
+  :meth:`oracledb.init_oracle_client()` in your code.  Alternatively, upgrade
+  your database.
 
 - If you get the error ``DPI-1072: the Oracle Client library version is
-  unsupported``, then review the installation requirements.  The Thick
-  mode of python-oracledb needs Oracle Client libraries 11.2 or later.
-  Note that version 19 is not supported on Windows 7.  Similar steps shown
-  above for ``DPI-1047`` may help.  You may be able to use Thin mode which
-  can be done by removing calls :meth:`oracledb.init_oracle_client()` from
-  your code.
+  unsupported``, then review the installation requirements.  The Thick mode of
+  python-oracledb needs Oracle Client libraries 11.2 or later.  Note that
+  version 19 is not supported on Windows 7.  Similar steps shown above for
+  ``DPI-1047`` may help.  You may be able to use python-oracledb Thin mode
+  which can be done by removing calls :meth:`oracledb.init_oracle_client()`
+  from your code.
 
 - If you get the error ``DPY-3015: password verifier type 0x939 is not
   supported by python-oracledb in thin mode``, then either :ref:`enable Thick
@@ -1008,3 +1008,11 @@ If using python-oracledb fails:
     the 10G Password Version
     <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-D7B09DFE-F55D-449A-8F8A-174D89936304>`__
     for more information.
+
+- If you get the error ``DPY-4011: the database or network closed the
+  connection`` in python-oracledb's default Thin mode, check if the database
+  requires the use of Native Network Encryption (NNE).  The python-oracledb
+  documentation on :ref:`nne` shows a query from V$SESSION_CONNECT_INFO and
+  sample output to confirm this.  To resolve the error, either change the
+  architecture to use TLS instead of NNE, or :ref:`enable python-oracledb Thick
+  mode <enablingthick>`.
