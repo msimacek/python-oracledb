@@ -50,18 +50,18 @@ class TestCase(test_env.BaseTestCase):
                         raise_application_error(-20101, 'Test!');
                     end;""")
         error_obj, = cm.exception.args
-        self.assertEqual(type(error_obj), oracledb._Error)
-        self.assertTrue("Test!" in error_obj.message)
+        self.assertIsInstance(error_obj, oracledb._Error)
+        self.assertIn("Test!", error_obj.message)
         self.assertEqual(error_obj.code, 20101)
         self.assertEqual(error_obj.offset, 0)
-        self.assertTrue(isinstance(error_obj.isrecoverable, bool))
+        self.assertIsInstance(error_obj.isrecoverable, bool)
         new_error_obj = pickle.loads(pickle.dumps(error_obj))
-        self.assertEqual(type(new_error_obj), oracledb._Error)
-        self.assertTrue(new_error_obj.message == error_obj.message)
-        self.assertTrue(new_error_obj.code == error_obj.code)
-        self.assertTrue(new_error_obj.offset == error_obj.offset)
-        self.assertTrue(new_error_obj.context == error_obj.context)
-        self.assertTrue(new_error_obj.isrecoverable == error_obj.isrecoverable)
+        self.assertIsInstance(new_error_obj, oracledb._Error)
+        self.assertEqual(new_error_obj.message, error_obj.message)
+        self.assertEqual(new_error_obj.code, error_obj.code)
+        self.assertEqual(new_error_obj.offset, error_obj.offset)
+        self.assertEqual(new_error_obj.context, error_obj.context)
+        self.assertEqual(new_error_obj.isrecoverable, error_obj.isrecoverable)
 
     def test_1702_error_full_code(self):
         "1702 - test generation of full_code for ORA, DPI and DPY errors"
