@@ -80,8 +80,8 @@ class TestCase(test_env.BaseTestCase):
                 if actual_value is None:
                     raise ValueError("Key %s only supports values: %s" % \
                                      (key, ", ".join(value_dict)))
-                state_parts.append("%s = %s" % (key, actual_value))
-            sql = "alter session set %s" % " ".join(state_parts)
+                state_parts.append(f"{key} = {actual_value}")
+            sql = f"alter session set {' '.join(state_parts)}"
             cursor = conn.cursor()
             cursor.execute(sql)
         conn.tag = requested_tag
@@ -175,20 +175,20 @@ class TestCase(test_env.BaseTestCase):
         "2401 - test that proxy authentication is possible"
         pool = test_env.get_pool(min=2, max=8, increment=3,
                                  getmode=oracledb.POOL_GETMODE_WAIT)
-        self.assertEqual(pool.homogeneous, True,
-                         "homogeneous should be True by default")
+        self.assertTrue(pool.homogeneous,
+                        "homogeneous should be True by default")
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPI-1012:",
                                pool.acquire, user="missing_proxyuser")
         pool = test_env.get_pool(min=2, max=8, increment=3,
                                  getmode=oracledb.POOL_GETMODE_WAIT,
                                  homogeneous=False)
         msg = "homogeneous should be False after setting it in the constructor"
-        self.assertEqual(pool.homogeneous, False, msg)
+        self.assertFalse(pool.homogeneous, msg)
         connection = pool.acquire(user=test_env.get_proxy_user())
         cursor = connection.cursor()
         cursor.execute('select user from dual')
-        result, = cursor.fetchone()
-        self.assertEqual(result, test_env.get_proxy_user().upper())
+        user, = cursor.fetchone()
+        self.assertEqual(user, test_env.get_proxy_user().upper())
         connection.close()
 
     def test_2403_rollback_on_release(self):
@@ -262,7 +262,7 @@ class TestCase(test_env.BaseTestCase):
         cursor = connection.cursor()
         cursor.execute("select sys_context('userenv', 'action') from dual")
         result, = cursor.fetchone()
-        self.assertEqual(result, None)
+        self.assertIsNone(result)
         cursor.close()
         pool.release(connection)
 
@@ -284,8 +284,7 @@ class TestCase(test_env.BaseTestCase):
                             test_env.get_proxy_password())
         self.__verify_connection(conn, test_env.get_proxy_user())
         conn.close()
-        user_str = "%s[%s]" % \
-                   (test_env.get_main_user(), test_env.get_proxy_user())
+        user_str = f"{test_env.get_main_user()}[{test_env.get_proxy_user()}]"
         conn = pool.acquire(user_str, test_env.get_main_password())
         self.__verify_connection(conn, test_env.get_proxy_user(),
                                  test_env.get_main_user())
@@ -307,8 +306,7 @@ class TestCase(test_env.BaseTestCase):
                             test_env.get_proxy_password())
         self.__verify_connection(conn, test_env.get_proxy_user())
         conn.close()
-        user_str = "%s[%s]" % \
-                   (test_env.get_main_user(), test_env.get_proxy_user())
+        user_str = f"{test_env.get_main_user()}[{test_env.get_proxy_user()}]"
         conn = pool.acquire(user_str, test_env.get_main_password())
         self.__verify_connection(conn, test_env.get_proxy_user(),
                                  test_env.get_main_user())
@@ -330,16 +328,15 @@ class TestCase(test_env.BaseTestCase):
         "2410 - test tagging a session"
         pool = test_env.get_pool(min=2, max=8, increment=3,
                                  getmode=oracledb.POOL_GETMODE_NOWAIT)
-
         tag_mst = "TIME_ZONE=MST"
         tag_utc = "TIME_ZONE=UTC"
 
         conn = pool.acquire()
-        self.assertEqual(conn.tag, None)
+        self.assertIsNone(conn.tag)
         pool.release(conn, tag=tag_mst)
 
         conn = pool.acquire()
-        self.assertEqual(conn.tag, None)
+        self.assertIsNone(conn.tag)
         conn.tag = tag_utc
         conn.close()
 
@@ -555,7 +552,7 @@ class TestCase(test_env.BaseTestCase):
             cursor = conn.cursor()
             cursor.execute("select to_char(2021-05-20) from dual")
             result, = cursor.fetchone()
-            self.assertEqual(self.session_called, True)
+            self.assertTrue(self.session_called)
 
         # acquiring a connection with the same tag should not invoke the
         # session callback
@@ -564,7 +561,7 @@ class TestCase(test_env.BaseTestCase):
             cursor = conn.cursor()
             cursor.execute("select to_char(2021-05-20) from dual")
             result, = cursor.fetchone()
-            self.assertEqual(self.session_called, False)
+            self.assertFalse(self.session_called)
 
         # acquiring a connection with a new tag should invoke the session
         # callback
@@ -573,7 +570,7 @@ class TestCase(test_env.BaseTestCase):
             cursor = conn.cursor()
             cursor.execute("select to_char(current_date) from dual")
             result, = cursor.fetchone()
-            self.assertEqual(self.session_called, True)
+            self.assertTrue(self.session_called)
 
         # acquiring a connection with a new tag and specifying that a
         # connection with any tag can be acquired should invoke the session
@@ -584,7 +581,7 @@ class TestCase(test_env.BaseTestCase):
             cursor = conn.cursor()
             cursor.execute("select to_char(current_date) from dual")
             result, = cursor.fetchone()
-            self.assertEqual(self.session_called, True)
+            self.assertTrue(self.session_called)
 
         # new connection with no tag should invoke the session callback
         self.session_called = False
@@ -592,7 +589,7 @@ class TestCase(test_env.BaseTestCase):
             cursor = conn.cursor()
             cursor.execute("select to_char(current_date) from dual")
             result, = cursor.fetchone()
-            self.assertEqual(self.session_called, True)
+            self.assertTrue(self.session_called)
 
     def test_2421_pool_close_normal_no_connections(self):
         "2421 - test closing a pool normally with no connections checked out"
@@ -724,8 +721,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_2431_proxy_user_in_create(self):
         "2431 - test creating a pool using a proxy user"
-        user_str = "%s[%s]" % \
-                (test_env.get_main_user(), test_env.get_proxy_user())
+        user_str = f"{test_env.get_main_user()}[{test_env.get_proxy_user()}]"
         pool = test_env.get_pool(user=user_str)
         self.__verify_connection(pool.acquire(), test_env.get_proxy_user(),
                                  test_env.get_main_user())
@@ -736,7 +732,7 @@ class TestCase(test_env.BaseTestCase):
                                  getmode=oracledb.POOL_GETMODE_WAIT)
         sql = "select sys_context('userenv', 'sid') from dual"
         conns = [pool.acquire() for i in range(3)]
-        sids = [c.cursor().execute(sql).fetchone()[0] for c in conns]
+        sids = [conn.cursor().execute(sql).fetchone()[0] for conn in conns]
 
         conns[1].close()
         conns[2].close()
