@@ -43,21 +43,21 @@ class TestCase(test_env.BaseTestCase):
             time_in_ticks = time.mktime(time_tuple) + i * 86400 + i * 8640
             date_col = oracledb.TimestampFromTicks(int(time_in_ticks))
             if i % 2:
-                time_in_ticks = time.mktime(time_tuple) + i * 86400 * 2 + \
-                        i * 12960
+                time_in_ticks = time.mktime(time_tuple) + i * 86400 * 2 \
+                                + i * 12960
                 nullable_col = oracledb.TimestampFromTicks(int(time_in_ticks))
             else:
                 nullable_col = None
-            tuple = (i, date_col, nullable_col)
-            self.raw_data.append(tuple)
-            self.data_by_key[i] = tuple
+            data_tuple = (i, date_col, nullable_col)
+            self.raw_data.append(data_tuple)
+            self.data_by_key[i] = data_tuple
 
     def test_1400_bind_date(self):
         "1400 - test binding in a date"
         self.cursor.execute("""
                 select * from TestDates
                 where DateCol = :value""",
-                value = oracledb.Timestamp(2002, 12, 13, 9, 36, 0))
+                value=oracledb.Timestamp(2002, 12, 13, 9, 36, 0))
         self.assertEqual(self.cursor.fetchall(), [self.data_by_key[4]])
 
     def test_1401_bind_datetime(self):
@@ -83,7 +83,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("""
                 select * from TestDates
                 where DateCol = :value""",
-                value = oracledb.Timestamp(2002, 12, 14, 12, 0, 0))
+                value=oracledb.Timestamp(2002, 12, 14, 12, 0, 0))
         self.assertEqual(self.cursor.fetchall(), [self.data_by_key[5]])
 
     def test_1404_bind_null(self):
@@ -92,7 +92,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("""
                 select * from TestDates
                 where DateCol = :value""",
-                value = None)
+                value=None)
         self.assertEqual(self.cursor.fetchall(), [])
 
     def test_1405_bind_date_array_direct(self):
@@ -106,11 +106,13 @@ class TestCase(test_env.BaseTestCase):
                 end;"""
         self.cursor.execute(statement, return_value=return_value,
                             start_value=5,
-                            base_date=oracledb.Date(2002, 12, 12), array=array)
+                            base_date=oracledb.Date(2002, 12, 12),
+                            array=array)
         self.assertEqual(return_value.getvalue(), 35.5)
-        array = array + array[:5]
+        array += array[:5]
         self.cursor.execute(statement, start_value=7,
-                            base_date=oracledb.Date(2002, 12, 13), array=array)
+                            base_date=oracledb.Date(2002, 12, 13),
+                            array=array)
         self.assertEqual(return_value.getvalue(), 24.0)
 
     def test_1406_bind_date_array_by_sizes(self):
@@ -156,13 +158,14 @@ class TestCase(test_env.BaseTestCase):
                 end;""",
                 num_elems=5,
                 array=array)
-        self.assertEqual(array.getvalue(),
-                [ oracledb.Timestamp(2002, 12, 17, 2, 24, 0),
-                  oracledb.Timestamp(2002, 12, 18, 4, 48, 0),
-                  oracledb.Timestamp(2002, 12, 19, 7, 12, 0),
-                  oracledb.Timestamp(2002, 12, 20, 9, 36, 0),
-                  oracledb.Timestamp(2002, 12, 21, 12, 0, 0) ] + \
-                original_data[5:])
+        expected_value = [
+                oracledb.Timestamp(2002, 12, 17, 2, 24, 0),
+                oracledb.Timestamp(2002, 12, 18, 4, 48, 0),
+                oracledb.Timestamp(2002, 12, 19, 7, 12, 0),
+                oracledb.Timestamp(2002, 12, 20, 9, 36, 0),
+                oracledb.Timestamp(2002, 12, 21, 12, 0, 0)
+        ] + original_data[5:]
+        self.assertEqual(array.getvalue(), expected_value)
 
     def test_1409_bind_out_date_array_by_var(self):
         "1409 - test binding out a date array (with arrayvar)"
@@ -173,13 +176,15 @@ class TestCase(test_env.BaseTestCase):
                 end;""",
                 num_elems=6,
                 array=array)
-        self.assertEqual(array.getvalue(),
-                [ oracledb.Timestamp(2002, 12, 13, 4, 48, 0),
-                  oracledb.Timestamp(2002, 12, 14, 9, 36, 0),
-                  oracledb.Timestamp(2002, 12, 15, 14, 24, 0),
-                  oracledb.Timestamp(2002, 12, 16, 19, 12, 0),
-                  oracledb.Timestamp(2002, 12, 18, 0, 0, 0),
-                  oracledb.Timestamp(2002, 12, 19, 4, 48, 0) ])
+        expected_value = [
+                oracledb.Timestamp(2002, 12, 13, 4, 48, 0),
+                oracledb.Timestamp(2002, 12, 14, 9, 36, 0),
+                oracledb.Timestamp(2002, 12, 15, 14, 24, 0),
+                oracledb.Timestamp(2002, 12, 16, 19, 12, 0),
+                oracledb.Timestamp(2002, 12, 18, 0, 0, 0),
+                oracledb.Timestamp(2002, 12, 19, 4, 48, 0)
+        ]
+        self.assertEqual(array.getvalue(), expected_value)
 
     def test_1410_bind_out_set_input_sizes(self):
         "1410 - test binding out with set input sizes defined"
@@ -260,7 +265,7 @@ class TestCase(test_env.BaseTestCase):
                 order by IntCol""")
         self.assertEqual(self.cursor.fetchone(), self.data_by_key[3])
         self.assertEqual(self.cursor.fetchone(), self.data_by_key[4])
-        self.assertEqual(self.cursor.fetchone(), None)
+        self.assertIsNone(self.cursor.fetchone())
 
 if __name__ == "__main__":
     test_env.run_test_cases()
