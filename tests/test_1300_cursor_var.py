@@ -34,7 +34,7 @@ class TestCase(test_env.BaseTestCase):
     def test_1300_bind_cursor(self):
         "1300 - test binding in a cursor"
         cursor = self.connection.cursor()
-        self.assertEqual(cursor.description, None)
+        self.assertIsNone(cursor.description)
         self.cursor.execute("""
                 begin
                     open :cursor for select 'X' StringValue from dual;
@@ -51,7 +51,7 @@ class TestCase(test_env.BaseTestCase):
     def test_1301_bind_cursor_in_package(self):
         "1301 - test binding in a cursor from a package"
         cursor = self.connection.cursor()
-        self.assertEqual(cursor.description, None)
+        self.assertIsNone(cursor.description)
         self.cursor.callproc("pkg_TestRefCursors.TestOutCursor", (2, cursor))
         varchar_ratio, nvarchar_ratio = test_env.get_charset_ratios()
         expected_value = [
@@ -118,25 +118,24 @@ class TestCase(test_env.BaseTestCase):
                         from TestStrings where IntCol
                         between :start_value and :end_value;
                 end;"""
-        self.cursor.execute(sql, rcursor=ref_cursor, start_value=2,
-                            end_value=4)
         expected_value = [
             (2, 'String 2'),
             (3, 'String 3'),
             (4, 'String 4')
         ]
-        rows = ref_cursor.fetchall()
+        self.cursor.execute(sql, rcursor=ref_cursor, start_value=2,
+                            end_value=4)
+        self.assertEqual(ref_cursor.fetchall(), expected_value)
         ref_cursor.close()
-        self.assertEqual(rows, expected_value)
-        ref_cursor = self.connection.cursor()
-        self.cursor.execute(sql, rcursor=ref_cursor, start_value=5,
-                            end_value=6)
+
         expected_value = [
             (5, 'String 5'),
             (6, 'String 6')
         ]
-        rows = ref_cursor.fetchall()
-        self.assertEqual(rows, expected_value)
+        ref_cursor = self.connection.cursor()
+        self.cursor.execute(sql, rcursor=ref_cursor, start_value=5,
+                            end_value=6)
+        self.assertEqual(ref_cursor.fetchall(), expected_value)
 
     def test_1306_refcursor_round_trips(self):
         "1306 - test round trips using a REF cursor"
@@ -187,8 +186,8 @@ class TestCase(test_env.BaseTestCase):
         with self.connection.cursor() as cursor:
             ref_cursor = cursor.callfunc("pkg_TestRefCursors.TestReturnCursor",
                                          oracledb.DB_TYPE_CURSOR, [2])
-            rows = ref_cursor.fetchall()
-            self.assertEqual(rows, [(1, 'String 1'), (2, 'String 2')])
+            self.assertEqual(ref_cursor.fetchall(),
+                             [(1, 'String 1'), (2, 'String 2')])
 
     def test_1309_output_type_handler_with_ref_cursor(self):
         "1309 - test using an output type handler with a REF cursor"
