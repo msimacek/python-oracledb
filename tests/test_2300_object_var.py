@@ -50,7 +50,7 @@ class TestCase(test_env.BaseTestCase):
         "2300 - test binding a null value (IN)"
         var = self.cursor.var(oracledb.DB_TYPE_OBJECT, typename="UDT_OBJECT")
         result = self.cursor.callfunc("pkg_TestBindObject.GetStringRep", str,
-                                      (var,))
+                                      [var])
         self.assertEqual(result, "null")
 
     def test_2301_bind_object_in(self):
@@ -60,7 +60,7 @@ class TestCase(test_env.BaseTestCase):
         obj.NUMBERVALUE = 13
         obj.STRINGVALUE = "Test String"
         result = self.cursor.callfunc("pkg_TestBindObject.GetStringRep", str,
-                                      (obj,))
+                                      [obj])
         exp = "udt_Object(13, 'Test String', null, null, null, null, null)"
         self.assertEqual(result, exp)
         obj.NUMBERVALUE = None
@@ -68,13 +68,13 @@ class TestCase(test_env.BaseTestCase):
         obj.DATEVALUE = datetime.datetime(2016, 2, 10)
         obj.TIMESTAMPVALUE = datetime.datetime(2016, 2, 10, 14, 13, 50)
         result = self.cursor.callfunc("pkg_TestBindObject.GetStringRep", str,
-                                      (obj,))
-        self.assertEqual(result,
-                         "udt_Object(null, 'Test With Dates', null, " \
+                                      [obj])
+        expected_value ="udt_Object(null, 'Test With Dates', null, " \
                          "to_date('2016-02-10', 'YYYY-MM-DD'), " \
                          "to_timestamp('2016-02-10 14:13:50', " \
                                  "'YYYY-MM-DD HH24:MI:SS'), " \
-                         "null, null)")
+                         "null, null)"
+        self.assertEqual(result, expected_value)
         obj.DATEVALUE = None
         obj.TIMESTAMPVALUE = None
         sub_type_obj = self.connection.gettype("UDT_SUBOBJECT")
@@ -83,10 +83,10 @@ class TestCase(test_env.BaseTestCase):
         sub_obj.SUBSTRINGVALUE = "Sub String"
         obj.SUBOBJECTVALUE = sub_obj
         result = self.cursor.callfunc("pkg_TestBindObject.GetStringRep", str,
-                                      (obj,))
-        self.assertEqual(result,
-                         "udt_Object(null, 'Test With Dates', null, null, " \
-                         "null, udt_SubObject(18.25, 'Sub String'), null)")
+                                      [obj])
+        expected_value = "udt_Object(null, 'Test With Dates', null, null, " \
+                         "null, udt_SubObject(18.25, 'Sub String'), null)"
+        self.assertEqual(result, expected_value)
 
     def test_2302_copy_object(self):
         "2302 - test copying an object"
@@ -181,7 +181,7 @@ class TestCase(test_env.BaseTestCase):
     def test_2305_get_object_type(self):
         "2305 - test getting object type"
         type_obj = self.connection.gettype("UDT_OBJECT")
-        self.assertEqual(type_obj.iscollection, False)
+        self.assertFalse(type_obj.iscollection)
         self.assertEqual(type_obj.schema, self.connection.username.upper())
         self.assertEqual(type_obj.name, "UDT_OBJECT")
         sub_object_value_type = self.connection.gettype("UDT_SUBOBJECT")
@@ -210,7 +210,7 @@ class TestCase(test_env.BaseTestCase):
             "SUBOBJECTVALUE",
             "SUBOBJECTARRAY"
         ]
-        actual_attr_names = [a.name for a in type_obj.attributes]
+        actual_attr_names = [attr.name for attr in type_obj.attributes]
         self.assertEqual(actual_attr_names, expected_attr_names)
         expected_attr_types = [
             oracledb.DB_TYPE_NUMBER,
@@ -236,7 +236,7 @@ class TestCase(test_env.BaseTestCase):
             sub_object_value_type,
             sub_object_array_type
         ]
-        actual_attr_types = [a.type for a in type_obj.attributes]
+        actual_attr_types = [attr.type for attr in type_obj.attributes]
         self.assertEqual(actual_attr_types, expected_attr_types)
         self.assertEqual(sub_object_array_type.iscollection, True)
         self.assertEqual(sub_object_array_type.attributes, [])
@@ -259,16 +259,13 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("truncate table TestNClobs")
         self.cursor.execute("truncate table TestBlobs")
         self.cursor.execute("""
-                insert into TestClobs
-                (IntCol, ClobCol)
+                insert into TestClobs (IntCol, ClobCol)
                 values (1, 'A short CLOB')""")
         self.cursor.execute("""
-                insert into TestNClobs
-                (IntCol, NClobCol)
+                insert into TestNClobs (IntCol, NClobCol)
                 values (1, 'A short NCLOB')""")
         self.cursor.execute("""
-                insert into TestBlobs
-                (IntCol, BlobCol)
+                insert into TestBlobs (IntCol, BlobCol)
                 values (1, utl_raw.cast_to_raw('A short BLOB'))""")
         self.connection.commit()
         self.cursor.execute("select CLOBCol from TestClobs")
@@ -304,8 +301,9 @@ class TestCase(test_env.BaseTestCase):
         sub_obj.SUBNUMBERVALUE = 23
         sub_obj.SUBSTRINGVALUE = "Substring value"
         obj.SUBOBJECTVALUE = sub_obj
-        self.cursor.execute("insert into TestObjects (IntCol, ObjectCol) " \
-                            "values (4, :obj)", obj=obj)
+        self.cursor.execute("""
+                insert into TestObjects (IntCol, ObjectCol)
+                values (4, :obj)""", obj=obj)
         self.cursor.execute("""
                 select IntCol, ObjectCol, ArrayCol
                 from TestObjects
@@ -338,8 +336,9 @@ class TestCase(test_env.BaseTestCase):
         obj.CLOBVALUE = "A short CLOB (modified)"
         obj.NCLOBVALUE = "A short NCLOB (modified)"
         obj.BLOBVALUE = "A short BLOB (modified)"
-        self.cursor.execute("insert into TestObjects (IntCol, ObjectCol) " \
-                            "values (5, :obj)", obj = obj)
+        self.cursor.execute("""
+                insert into TestObjects (IntCol, ObjectCol)
+                values (5, :obj)""", obj=obj)
         self.cursor.execute("""
                 select IntCol, ObjectCol, ArrayCol
                 from TestObjects
@@ -438,7 +437,7 @@ class TestCase(test_env.BaseTestCase):
         obj_type = self.connection.gettype("UDT_OBJECT")
         user = test_env.get_main_user()
         self.assertEqual(str(obj_type),
-                "<oracledb.DbObjectType %s.UDT_OBJECT>" % user.upper())
+                         f"<oracledb.DbObjectType {user.upper()}.UDT_OBJECT>")
         self.assertEqual(str(obj_type.attributes[0]),
                          "<oracledb.DbObjectAttr NUMBERVALUE>")
 
@@ -472,10 +471,10 @@ class TestCase(test_env.BaseTestCase):
         typ = self.connection.gettype("UDT_OBJECTARRAY")
         self.assertEqual(typ.schema, user.upper())
         self.assertEqual(typ.name, "UDT_OBJECTARRAY")
-        self.assertEqual(typ.package_name, None)
+        self.assertIsNone(typ.package_name)
         self.assertEqual(typ.element_type.schema, user.upper())
         self.assertEqual(typ.element_type.name, "UDT_SUBOBJECT")
-        self.assertEqual(typ.element_type.package_name, None)
+        self.assertIsNone(typ.element_type.package_name)
 
     def test_2317_plsql_type_metadata(self):
         "2317 - test the metadata of a PL/SQL type"
@@ -501,17 +500,17 @@ class TestCase(test_env.BaseTestCase):
         "2320 - test if an element exists in a collection"
         array_type = self.connection.gettype("UDT_ARRAY")
         array_obj = array_type.newobject()
-        self.assertEqual(array_obj.exists(0), False)
+        self.assertFalse(array_obj.exists(0))
         array_obj.append(40)
-        self.assertEqual(array_obj.exists(0), True)
-        self.assertEqual(array_obj.exists(1), False)
+        self.assertTrue(array_obj.exists(0))
+        self.assertFalse(array_obj.exists(1))
 
     def test_2321_first_and_last_indexes(self):
         "2321 - test first and last methods"
         array_type = self.connection.gettype("UDT_ARRAY")
         array_obj = array_type.newobject()
-        self.assertEqual(array_obj.first(), None)
-        self.assertEqual(array_obj.last(), None)
+        self.assertIsNone(array_obj.first())
+        self.assertIsNone(array_obj.last())
         for i in range(7):
             array_obj.append(i)
         self.assertEqual(array_obj.first(), 0)
@@ -530,14 +529,14 @@ class TestCase(test_env.BaseTestCase):
         "2323 - test prev and next methods"
         array_type = self.connection.gettype("UDT_ARRAY")
         array_obj = array_type.newobject()
-        self.assertEqual(array_obj.prev(0), None)
-        self.assertEqual(array_obj.next(0), None)
+        self.assertIsNone(array_obj.prev(0))
+        self.assertIsNone(array_obj.next(0))
         for i in range(2):
             array_obj.append(i)
-        self.assertEqual(array_obj.prev(0), None)
+        self.assertIsNone(array_obj.prev(0))
         self.assertEqual(array_obj.prev(1), 0)
         self.assertEqual(array_obj.next(0), 1)
-        self.assertEqual(array_obj.next(1), None)
+        self.assertIsNone(array_obj.next(1))
 
     def test_2324_set_get_element(self):
         "2324 - test setting and getting elements from a collection"
