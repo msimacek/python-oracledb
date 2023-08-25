@@ -40,7 +40,7 @@ class TestCase(test_env.BaseTestCase):
         "3200 - test executing with arraydmlrowcounts mode disabled"
         self.cursor.execute("truncate table TestArrayDML")
         rows = [(1, "First"), (2, "Second")]
-        sql = "insert into TestArrayDML (IntCol,StringCol) values (:1,:2)"
+        sql = "insert into TestArrayDML (IntCol, StringCol) values (:1, :2)"
         self.cursor.executemany(sql, rows, arraydmlrowcounts=False)
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4006:",
                                self.cursor.getarraydmlrowcounts)
@@ -59,9 +59,11 @@ class TestCase(test_env.BaseTestCase):
             (4, "Fourth", 300),
             (5, "Fifth", 300)
         ]
-        sql = "insert into TestArrayDML (IntCol,StringCol,IntCol2) " \
-              "values (:1,:2,:3)"
-        self.cursor.executemany(sql, rows, arraydmlrowcounts=True)
+        self.cursor.executemany("""
+                insert into TestArrayDML (IntCol, StringCol, IntCol2)
+                values (:1, :2, :3)""",
+                rows,
+                arraydmlrowcounts=True)
         self.connection.commit()
         self.assertEqual(self.cursor.getarraydmlrowcounts(), [1, 1, 1, 1, 1])
         self.cursor.execute("select count(*) from TestArrayDML")
@@ -75,7 +77,7 @@ class TestCase(test_env.BaseTestCase):
         obj.setelement(1, True)
         obj.extend([True, False, True, True, False, True])
         result = self.cursor.callfunc("pkg_TestBooleans.TestInArrays", int,
-                                      (obj,))
+                                      [obj])
         self.assertEqual(result, 5)
 
     def test_3203_bind_plsql_boolean_collection_out(self):
@@ -133,8 +135,8 @@ class TestCase(test_env.BaseTestCase):
         obj = type_obj.newobject()
         obj.setelement(1, 10)
         obj.extend([20, 30, 40, 50])
-        result = self.cursor.callfunc("pkg_TestNumberArrays.TestInArrays", int,
-                                      (5, obj))
+        result = self.cursor.callfunc("pkg_TestNumberArrays.TestInArrays",
+                                      int, (5, obj))
         self.assertEqual(result, 155)
 
     def test_3208_bind_plsql_number_collection_in_out(self):
@@ -163,7 +165,7 @@ class TestCase(test_env.BaseTestCase):
         for i in range(3):
             obj = rec_type.newobject()
             obj.NUMBERVALUE = i + 1
-            obj.STRINGVALUE = "String in record #%d" % (i + 1)
+            obj.STRINGVALUE = f"String in record #{i + 1}"
             obj.DATEVALUE = datetime.datetime(2017, i + 1, 1)
             obj.TIMESTAMPVALUE = datetime.datetime(2017, 1, i + 1)
             obj.BOOLEANVALUE = (i % 2) == 1
@@ -171,9 +173,8 @@ class TestCase(test_env.BaseTestCase):
             obj.BINARYINTEGERVALUE = i * 2
             array_obj.append(obj)
         result = self.cursor.callfunc("pkg_TestRecords.TestInArrays", str,
-                                      (array_obj,))
-        self.assertEqual(result,
-                         "udt_Record(1, 'String in record #1', " \
+                                      [array_obj])
+        expected_value = "udt_Record(1, 'String in record #1', " \
                          "to_date('2017-01-01', 'YYYY-MM-DD'), " \
                          "to_timestamp('2017-01-01 00:00:00', " \
                          "'YYYY-MM-DD HH24:MI:SS'), false, 0, 0); " \
@@ -184,7 +185,8 @@ class TestCase(test_env.BaseTestCase):
                          "udt_Record(3, 'String in record #3', " \
                          "to_date('2017-03-01', 'YYYY-MM-DD'), " \
                          "to_timestamp('2017-01-03 00:00:00', " \
-                         "'YYYY-MM-DD HH24:MI:SS'), false, 10, 4)")
+                         "'YYYY-MM-DD HH24:MI:SS'), false, 10, 4)"
+        self.assertEqual(result, expected_value)
 
     def test_3211_bind_plsql_record_in(self):
         "3211 - test binding a PL/SQL record (in)"
@@ -198,12 +200,12 @@ class TestCase(test_env.BaseTestCase):
         obj.PLSINTEGERVALUE = 21
         obj.BINARYINTEGERVALUE = 5
         result = self.cursor.callfunc("pkg_TestRecords.GetStringRep", str,
-                                      (obj,))
-        self.assertEqual(result,
-                         "udt_Record(18, 'A string in a record', " \
+                                      [obj])
+        expected_value = "udt_Record(18, 'A string in a record', " \
                          "to_date('2016-02-15', 'YYYY-MM-DD'), " \
                          "to_timestamp('2016-02-12 14:25:36', " \
-                         "'YYYY-MM-DD HH24:MI:SS'), false, 21, 5)")
+                         "'YYYY-MM-DD HH24:MI:SS'), false, 21, 5)"
+        self.assertEqual(result, expected_value)
 
     def test_3212_bind_plsql_record_out(self):
         "3212 - test binding a PL/SQL record (out)"
@@ -216,7 +218,7 @@ class TestCase(test_env.BaseTestCase):
         obj.BOOLEANVALUE = False
         obj.PLSINTEGERVALUE = 23
         obj.BINARYINTEGERVALUE = 9
-        self.cursor.callproc("pkg_TestRecords.TestOut", (obj,))
+        self.cursor.callproc("pkg_TestRecords.TestOut", [obj])
         self.assertEqual(obj.NUMBERVALUE, 25)
         self.assertEqual(obj.STRINGVALUE, "String in record")
         self.assertEqual(obj.DATEVALUE, datetime.datetime(2016, 2, 16))
@@ -234,8 +236,8 @@ class TestCase(test_env.BaseTestCase):
         obj.setelement(1, "First element")
         obj.setelement(2, "Second element")
         obj.setelement(3, "Third element")
-        result = self.cursor.callfunc("pkg_TestStringArrays.TestInArrays", int,
-                                      (5, obj))
+        result = self.cursor.callfunc("pkg_TestStringArrays.TestInArrays",
+                                      int, (5, obj))
         self.assertEqual(result, 45)
 
     def test_3214_bind_plsql_string_collection_in_out(self):
@@ -248,9 +250,9 @@ class TestCase(test_env.BaseTestCase):
         obj.append("The third and final element")
         self.cursor.callproc("pkg_TestStringArrays.TestInOutArrays", (3, obj))
         expected_values = [
-            'Converted element # 1 originally had length 17',
-            'Converted element # 2 originally had length 18',
-            'Converted element # 3 originally had length 27'
+            "Converted element # 1 originally had length 17",
+            "Converted element # 2 originally had length 18",
+            "Converted element # 3 originally had length 27"
         ]
         self.assertEqual(obj.aslist(), expected_values)
 
@@ -260,12 +262,7 @@ class TestCase(test_env.BaseTestCase):
         type_obj = self.connection.gettype(type_name)
         obj = type_obj.newobject()
         self.cursor.callproc("pkg_TestStringArrays.TestOutArrays", (4, obj))
-        expected_values = [
-            'Test out element # 1',
-            'Test out element # 2',
-            'Test out element # 3',
-            'Test out element # 4'
-        ]
+        expected_values = [f"Test out element # {i + 1}" for i in range(4)]
         self.assertEqual(obj.aslist(), expected_values)
 
     def test_3216_bind_plsql_string_collection_out_with_holes(self):
@@ -273,15 +270,15 @@ class TestCase(test_env.BaseTestCase):
         type_name = "PKG_TESTSTRINGARRAYS.UDT_STRINGLIST"
         type_obj = self.connection.gettype(type_name)
         obj = type_obj.newobject()
-        self.cursor.callproc("pkg_TestStringArrays.TestIndexBy", (obj,))
+        self.cursor.callproc("pkg_TestStringArrays.TestIndexBy", [obj])
         self.assertEqual(obj.first(), -1048576)
         self.assertEqual(obj.last(), 8388608)
         self.assertEqual(obj.next(-576), 284)
         self.assertEqual(obj.prev(284), -576)
         self.assertEqual(obj.size(), 4)
-        self.assertEqual(obj.exists(-576), True)
-        self.assertEqual(obj.exists(-577), False)
-        self.assertEqual(obj.getelement(284), 'Third element')
+        self.assertTrue(obj.exists(-576))
+        self.assertFalse(obj.exists(-577))
+        self.assertEqual(obj.getelement(284), "Third element")
         expected_list = [
             "First element",
             "Second element",
@@ -290,10 +287,10 @@ class TestCase(test_env.BaseTestCase):
         ]
         self.assertEqual(obj.aslist(), expected_list)
         expected_dict = {
-            -1048576: 'First element',
-            -576: 'Second element',
-            284: 'Third element',
-            8388608: 'Fourth element'
+            -1048576: "First element",
+            -576: "Second element",
+            284: "Third element",
+            8388608: "Fourth element"
         }
         self.assertEqual(obj.asdict(), expected_dict)
         obj.delete(-576)
@@ -333,12 +330,16 @@ class TestCase(test_env.BaseTestCase):
             (7, "Seventh", 400),
             (8, "Eighth", 500)
         ]
-        sql = "insert into TestArrayDML (IntCol,StringCol,IntCol2) " \
-              "values (:1, :2, :3)"
-        self.cursor.executemany(sql, rows)
+        self.cursor.executemany("""
+                insert into TestArrayDML (IntCol, StringCol, IntCol2)
+                values (:1, :2, :3)""",
+                rows)
         rows = [(200,), (300,), (400,)]
-        statement = "delete from TestArrayDML where IntCol2 = :1"
-        self.cursor.executemany(statement, rows, arraydmlrowcounts=True)
+        self.cursor.executemany("""
+                delete from TestArrayDML
+                where IntCol2 = :1""",
+                rows,
+                arraydmlrowcounts=True)
         self.assertEqual(self.cursor.getarraydmlrowcounts(), [1, 3, 2])
         self.assertEqual(self.cursor.rowcount, 6)
 
@@ -355,17 +356,21 @@ class TestCase(test_env.BaseTestCase):
             (7, "Seventh",400),
             (8, "Eighth",500)
         ]
-        sql = "insert into TestArrayDML (IntCol,StringCol,IntCol2) " \
-              "values (:1, :2, :3)"
-        self.cursor.executemany(sql, rows)
+        self.cursor.executemany("""
+                insert into TestArrayDML (IntCol, StringCol, IntCol2)
+                values (:1, :2, :3)""",
+                rows)
         rows = [
             ("One", 100),
             ("Two", 200),
             ("Three", 300),
             ("Four", 400)
         ]
-        sql = "update TestArrayDML set StringCol = :1 where IntCol2 = :2"
-        self.cursor.executemany(sql, rows, arraydmlrowcounts=True)
+        self.cursor.executemany("""
+                update TestArrayDML set StringCol = :1
+                where IntCol2 = :2""",
+                rows,
+                arraydmlrowcounts=True)
         self.assertEqual(self.cursor.getarraydmlrowcounts(), [1, 1, 3, 2])
         self.assertEqual(self.cursor.rowcount, 7)
 
@@ -413,30 +418,24 @@ class TestCase(test_env.BaseTestCase):
             (4, "Fourth", 400),
             (5, "Fourth", 1000)
         ]
-        sql = "insert into TestArrayDML (IntCol, StringCol, IntCol2) " \
-              "values (:1, :2, :3)"
-        self.cursor.executemany(sql, rows, batcherrors=True,
-                                arraydmlrowcounts=True)
+        self.cursor.executemany("""
+                insert into TestArrayDML (IntCol, StringCol, IntCol2)
+                values (:1, :2, :3)""",
+                rows,
+                batcherrors=True,
+                arraydmlrowcounts=True)
         user = test_env.get_main_user()
-        expected_errors = [
-            (4, "ORA-01438"),
-            (2, "ORA-00001")
-        ]
-        actual_errors = [(e.offset, e.full_code) \
-                         for e in self.cursor.getbatcherrors()]
-        self.assertEqual(actual_errors, expected_errors)
+        actual_errors = [(error.offset, error.full_code) \
+                         for error in self.cursor.getbatcherrors()]
+        self.assertEqual(actual_errors, [(4, "ORA-01438"), (2, "ORA-00001")])
         self.assertEqual(self.cursor.getarraydmlrowcounts(), [1, 1, 0, 1, 0])
 
     def test_3223_batch_error_false(self):
         "3223 - test batcherrors mode set to False"
         self.cursor.execute("truncate table TestArrayDML")
-        rows = [
-            (1, "First", 100),
-            (2, "Second", 200),
-            (2, "Third", 300)
-        ]
-        sql = "insert into TestArrayDML (IntCol, StringCol, IntCol2) " \
-              "values (:1, :2, :3)"
+        rows = [(1, "First", 100), (2, "Second", 200), (2, "Third", 300)]
+        sql = """insert into TestArrayDML (IntCol, StringCol, IntCol2)
+                 values (:1, :2, :3)"""
         self.assertRaisesRegex(oracledb.IntegrityError, "^ORA-00001:",
                                self.cursor.executemany, sql, rows,
                                batcherrors=False)
@@ -454,13 +453,14 @@ class TestCase(test_env.BaseTestCase):
             (6, "Seventh", 400),
             (8, "Eighth", 100)
         ]
-        sql = "insert into TestArrayDML (IntCol, StringCol, IntCol2) " \
-              "values (:1, :2, :3)"
-        self.cursor.executemany(sql, rows, batcherrors=True)
-        expected_errors = [(6, "ORA-00001")]
-        actual_errors = [(e.offset, e.full_code) \
-                         for e in self.cursor.getbatcherrors()]
-        self.assertEqual(actual_errors, expected_errors)
+        self.cursor.executemany("""
+                insert into TestArrayDML (IntCol, StringCol, IntCol2)
+                values (:1, :2, :3)""",
+                rows,
+                batcherrors=True)
+        actual_errors = [(error.offset, error.full_code) \
+                         for error in self.cursor.getbatcherrors()]
+        self.assertEqual(actual_errors, [(6, "ORA-00001")])
         rows = [
             (101, "First"),
             (201, "Second"),
@@ -468,13 +468,15 @@ class TestCase(test_env.BaseTestCase):
             (900, "Ninth"),
             (301, "Third")
         ]
-        sql = "update TestArrayDML set IntCol2 = :1 where StringCol = :2"
-        self.cursor.executemany(sql, rows, arraydmlrowcounts=True,
-                                batcherrors=True)
-        expected_errors = [(2, "ORA-01438")]
-        actual_errors = [(e.offset, e.full_code) \
-                         for e in self.cursor.getbatcherrors()]
-        self.assertEqual(actual_errors, expected_errors)
+        self.cursor.executemany("""
+                update TestArrayDML set IntCol2 = :1
+                where StringCol = :2""",
+                rows,
+                arraydmlrowcounts=True,
+                batcherrors=True)
+        actual_errors = [(error.offset, error.full_code) \
+                         for error in self.cursor.getbatcherrors()]
+        self.assertEqual(actual_errors, [(2, "ORA-01438")])
         self.assertEqual(self.cursor.getarraydmlrowcounts(), [1, 2, 0, 0, 1])
         self.assertEqual(self.cursor.rowcount, 4)
 
@@ -495,22 +497,19 @@ class TestCase(test_env.BaseTestCase):
         results = cursor.getimplicitresults()
         self.assertEqual(len(results), 1)
         self.assertEqual([n for n, in results[0]], [3.75, 5, 6.25])
-        results[0].execute("select :1 from dual", (7,))
+        results[0].execute("select :1 from dual", [7])
         row, = results[0].fetchone()
         self.assertEqual(row, 7)
 
     def test_3226_batch_error_no_errors(self):
         "3226 - test batcherrors mode without any errors produced"
         self.cursor.execute("truncate table TestArrayDML")
-        rows = [
-            (1, "First", 100),
-            (2, "Second", 200),
-            (3, "Third", 300)
-        ]
-        sql = """
+        rows = [(1, "First", 100), (2, "Second", 200), (3, "Third", 300)]
+        self.cursor.executemany("""
                 insert into TestArrayDML (IntCol, StringCol, IntCol2)
-                values (:1, :2, :3)"""
-        self.cursor.executemany(sql, rows, batcherrors=True)
+                values (:1, :2, :3)""",
+                rows,
+                batcherrors=True)
         self.assertEqual(self.cursor.getbatcherrors(), [])
 
     def test_3227_batch_error_multiple_execute(self):
@@ -530,15 +529,13 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestArrayDML (IntCol, StringCol, IntCol2)
                 values (:1, :2, :3)"""
         self.cursor.executemany(sql, rows_1, batcherrors=True)
-        expected_errors = [(2, "ORA-00001")]
-        actual_errors = [(e.offset, e.full_code) \
-                         for e in self.cursor.getbatcherrors()]
-        self.assertEqual(actual_errors, expected_errors)
+        actual_errors = [(error.offset, error.full_code) \
+                         for error in self.cursor.getbatcherrors()]
+        self.assertEqual(actual_errors, [(2, "ORA-00001")])
         self.cursor.executemany(sql, rows_2, batcherrors=True)
-        expected_errors = [(1, "ORA-00001")]
-        actual_errors = [(e.offset, e.full_code) \
-                         for e in self.cursor.getbatcherrors()]
-        self.assertEqual(actual_errors, expected_errors)
+        actual_errors = [(error.offset, error.full_code) \
+                         for error in self.cursor.getbatcherrors()]
+        self.assertEqual(actual_errors, [(1, "ORA-00001")])
 
     def test_3228_record_based_on_table_type(self):
         "3228 - test %ROWTYPE record type"
@@ -554,14 +551,14 @@ class TestCase(test_env.BaseTestCase):
     def test_3230_batcherrors_with_plsql(self):
         "3230 - enabling batcherrors parameter with PL/SQL"
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-2040:",
-                               self.cursor.executemany, "begin null; end;", 30,
-                               batcherrors=True)
+                               self.cursor.executemany, "begin null; end;",
+                               30, batcherrors=True)
 
     def test_3231_arraydmlrowcounts_with_plsql(self):
         "3230 - enabling arraydmlrowcountsbatcherrors parameter with PL/SQL"
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-2040:",
-                               self.cursor.executemany, "begin null; end;", 31,
-                               arraydmlrowcounts=True)
+                               self.cursor.executemany, "begin null; end;",
+                               31, arraydmlrowcounts=True)
 
 if __name__ == "__main__":
     test_env.run_test_cases()
