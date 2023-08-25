@@ -74,18 +74,18 @@ class TestCase(test_env.BaseTestCase):
                 messages = queue.deqmany(5)
                 if not messages:
                     break
-                for m in messages:
-                    results.append(m.payload.decode())
+                for message in messages:
+                    results.append(message.payload.decode())
             connection.commit()
 
     def test_2800_enq_and_deq(self):
         "2800 - test bulk enqueue and dequeue"
         queue = self.get_and_clear_queue(RAW_QUEUE_NAME)
-        messages = [self.connection.msgproperties(payload=d) \
-                    for d in RAW_PAYLOAD_DATA]
+        messages = [self.connection.msgproperties(payload=data) \
+                    for data in RAW_PAYLOAD_DATA]
         queue.enqmany(messages)
         messages = queue.deqmany(len(RAW_PAYLOAD_DATA))
-        data = [m.payload.decode() for m in messages]
+        data = [message.payload.decode() for message in messages]
         self.connection.commit()
         self.assertEqual(data, RAW_PAYLOAD_DATA)
 
@@ -103,8 +103,8 @@ class TestCase(test_env.BaseTestCase):
         results = []
         thread = threading.Thread(target=self.__deq_in_thread, args=(results,))
         thread.start()
-        messages = [self.connection.msgproperties(payload=d) \
-                    for d in RAW_PAYLOAD_DATA]
+        messages = [self.connection.msgproperties(payload=data) \
+                    for data in RAW_PAYLOAD_DATA]
         queue.enqoptions.visibility = oracledb.ENQ_IMMEDIATE
         queue.enqmany(messages)
         thread.join()
@@ -115,15 +115,15 @@ class TestCase(test_env.BaseTestCase):
         queue = self.get_and_clear_queue(RAW_QUEUE_NAME)
         data_to_enqueue = RAW_PAYLOAD_DATA
         for num in (2, 6, 4):
-            messages = [self.connection.msgproperties(payload=d) \
-                        for d in data_to_enqueue[:num]]
+            messages = [self.connection.msgproperties(payload=data) \
+                        for data in data_to_enqueue[:num]]
             data_to_enqueue = data_to_enqueue[num:]
             queue.enqmany(messages)
         self.connection.commit()
         all_data = []
         for num in (3, 5, 10):
             messages = queue.deqmany(num)
-            all_data.extend(m.payload.decode() for m in messages)
+            all_data.extend(message.payload.decode() for message in messages)
         self.connection.commit()
         self.assertEqual(all_data, RAW_PAYLOAD_DATA)
 
@@ -160,35 +160,34 @@ class TestCase(test_env.BaseTestCase):
     def test_2805_messages_with_no_payload(self):
         "2805 - test error for messages with no payload"
         queue = self.get_and_clear_queue(RAW_QUEUE_NAME)
-        messages = [self.connection.msgproperties() \
-                    for d in RAW_PAYLOAD_DATA]
+        messages = [self.connection.msgproperties() for _ in RAW_PAYLOAD_DATA]
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2000:",
                                queue.enqmany, messages)
 
     def test_2806_verify_msgid(self):
         "2806 - verify that the msgid property is returned correctly"
         queue = self.get_and_clear_queue(RAW_QUEUE_NAME)
-        messages = [self.connection.msgproperties(payload=d) \
-                    for d in RAW_PAYLOAD_DATA]
+        messages = [self.connection.msgproperties(payload=data) \
+                    for data in RAW_PAYLOAD_DATA]
         queue.enqmany(messages)
         self.cursor.execute("select msgid from raw_queue_tab")
         actual_msgids = set(m for m, in self.cursor)
-        msgids = set(m.msgid for m in messages)
+        msgids = set(message.msgid for message in messages)
         self.assertEqual(msgids, actual_msgids)
         messages = queue.deqmany(len(RAW_PAYLOAD_DATA))
-        msgids = set(m.msgid for m in messages)
+        msgids = set(message.msgid for message in messages)
         self.assertEqual(msgids, actual_msgids)
 
     def test_2807_json_enq_deq(self):
         "4800 - test enqueuing and dequeuing JSON message"
         queue = self.get_and_clear_queue(JSON_QUEUE_NAME, "JSON")
-        props = [self.connection.msgproperties(payload=d) \
-                 for d in JSON_DATA_PAYLOAD]
+        props = [self.connection.msgproperties(payload=data) \
+                 for data in JSON_DATA_PAYLOAD]
         queue.enqmany(props)
         self.connection.commit()
         queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
         messages = queue.deqmany(5)
-        actual_data = [m.payload for m in messages]
+        actual_data = [message.payload for message in messages]
         self.assertEqual(actual_data, JSON_DATA_PAYLOAD)
 
     def test_2808_no_json_payload(self):
