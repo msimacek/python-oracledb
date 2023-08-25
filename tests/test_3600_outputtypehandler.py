@@ -58,26 +58,22 @@ class TestCase(test_env.BaseTestCase):
             in_value = in_value.encode()
         self.cursor.execute(f"truncate table Test{lob_type}s")
         self.cursor.execute(f"""
-                insert into Test{lob_type}s
-                (IntCol, {lob_type}Col)
+                insert into Test{lob_type}s (IntCol, {lob_type}Col)
                 values(1, :val)""",
                 val=in_value)
         self.connection.commit()
         self.cursor.execute(f"""
-                select
-                    {lob_type}Col,
-                    IntCol,
-                    {lob_type}Col
+                select {lob_type}Col, IntCol, {lob_type}Col
                 from Test{lob_type}s""")
         self.assertEqual(self.cursor.fetchone(), (in_value, 1, in_value))
 
     def setUp(self):
         super().setUp()
-        stmt = "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'" \
-               "NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF6'" \
-               "NLS_TIMESTAMP_TZ_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF6'" \
-               "time_zone='Europe/London'"
-        self.cursor.execute(stmt)
+        self.cursor.execute("""
+                ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'
+                NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF6'
+                NLS_TIMESTAMP_TZ_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF6'
+                time_zone='Europe/London'""")
 
     def test_3600_VARCHAR_to_NUMBER(self):
         "3600 - output type handler conversion from VARCHAR to NUMBER"
@@ -206,7 +202,8 @@ class TestCase(test_env.BaseTestCase):
         "3619 - output type handler conversion from TIMESTAMP to VARCHAR"
         in_val = datetime.datetime(2002, 12, 17, 1, 2, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP,
-                                 oracledb.DB_TYPE_VARCHAR, in_val, str(in_val))
+                                 oracledb.DB_TYPE_VARCHAR, in_val,
+                                 str(in_val))
 
     def test_3620_TIMESTAMP_to_CHAR(self):
         "3620 - output type handler conversion from TIMESTAMP to CHAR"
@@ -224,7 +221,8 @@ class TestCase(test_env.BaseTestCase):
         "3622 - output type handler conversion from TIMESTAMP_TZ to VARCHAR"
         in_val = datetime.datetime(2002, 12, 17, 1, 2, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP_TZ,
-                                 oracledb.DB_TYPE_VARCHAR, in_val, str(in_val))
+                                 oracledb.DB_TYPE_VARCHAR, in_val,
+                                 str(in_val))
 
     def test_3623_TIMESTAMP_TZ_to_CHAR(self):
         "3623 - output type handler conversion from TIMESTAMP_TZ to CHAR"
@@ -242,7 +240,8 @@ class TestCase(test_env.BaseTestCase):
         "3625 - output type handler conversion from TIMESTAMP_LTZ to VARCHAR"
         in_val = datetime.datetime(2002, 12, 17, 1, 2, 16, 400000)
         self.__test_type_handler(oracledb.DB_TYPE_TIMESTAMP_LTZ,
-                                 oracledb.DB_TYPE_VARCHAR, in_val, str(in_val))
+                                 oracledb.DB_TYPE_VARCHAR, in_val,
+                                 str(in_val))
 
     def test_3626_TIMESTAMP_LTZ_to_CHAR(self):
         "3626 - output type handler conversion from TIMESTAMP_LTZ to CHAR"
