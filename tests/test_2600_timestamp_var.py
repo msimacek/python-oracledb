@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2022, Oracle and/or its affiliates.
+# Copyright (c) 2020, 2023, Oracle and/or its affiliates.
 #
 # This software is dual-licensed to you under the Universal Permissive License
 # (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
@@ -67,7 +67,8 @@ class TestCase(test_env.BaseTestCase):
         "2600 - test binding in a timestamp"
         self.cursor.setinputsizes(value=oracledb.DB_TYPE_TIMESTAMP)
         self.cursor.execute("""
-                select * from TestTimestamps
+                select *
+                from TestTimestamps
                 where TimestampCol = :value""",
                 value=oracledb.Timestamp(2002, 12, 14, 0, 0, 10, 250000))
         self.assertEqual(self.cursor.fetchall(), [self.data_by_key[5]])
@@ -76,7 +77,8 @@ class TestCase(test_env.BaseTestCase):
         "2601 - test binding in a null"
         self.cursor.setinputsizes(value=oracledb.DB_TYPE_TIMESTAMP)
         self.cursor.execute("""
-                select * from TestTimestamps
+                select *
+                from TestTimestamps
                 where TimestampCol = :value""",
                 value=None)
         self.assertEqual(self.cursor.fetchall(), [])
@@ -122,7 +124,7 @@ class TestCase(test_env.BaseTestCase):
                 begin
                     :value := :value + 5.25;
                 end;""",
-                value = var)
+                value=var)
         self.assertEqual(var.getvalue(),
                          oracledb.Timestamp(2002, 12, 14, 12, 0, 0))
 
@@ -161,7 +163,7 @@ class TestCase(test_env.BaseTestCase):
                 order by IntCol""")
         self.assertEqual(self.cursor.fetchone(), self.data_by_key[3])
         self.assertEqual(self.cursor.fetchone(), self.data_by_key[4])
-        self.assertEqual(self.cursor.fetchone(), None)
+        self.assertIsNone(self.cursor.fetchone())
 
     def test_2610_bind_timestamp_with_zero_fseconds(self):
         "2610 - test binding a timestamp with zero fractional seconds"
