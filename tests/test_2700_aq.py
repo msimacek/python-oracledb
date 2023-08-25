@@ -131,7 +131,7 @@ class TestCase(test_env.BaseTestCase):
                                          self.book_type_name)
         queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
         props = queue.deqone()
-        self.assertTrue(props is None)
+        self.assertIsNone(props)
 
     def test_2701_deq_enq(self):
         "2701 - test enqueuing and dequeuing multiple messages"
@@ -162,18 +162,15 @@ class TestCase(test_env.BaseTestCase):
         queue = self.get_and_clear_queue(self.book_queue_name,
                                          self.book_type_name)
         book = queue.payload_type.newobject()
-        title, authors, price = self.book_data[1]
-        book.TITLE = title
-        book.AUTHORS = authors
-        book.PRICE = price
+        book.TITLE, book.AUTHORS, book.PRICE = self.book_data[1]
         props = self.connection.msgproperties(payload=book)
         queue.enqone(props)
         queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
         queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
         queue.deqoptions.mode = oracledb.DEQ_REMOVE_NODATA
         props = queue.deqone()
-        self.assertTrue(props is not None)
-        self.assertTrue(props.payload.TITLE is None)
+        self.assertIsNotNone(props)
+        self.assertIsNone(props.payload.TITLE)
 
     def test_2703_deq_options(self):
         "2703 - test getting/setting dequeue options attributes"
@@ -251,10 +248,10 @@ class TestCase(test_env.BaseTestCase):
         queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
         queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
         props = queue.deqone()
-        self.assertTrue(props is None)
+        self.assertIsNone(props)
         self.connection.commit()
         props = queue.deqone()
-        self.assertTrue(props is not None)
+        self.assertIsNotNone(props)
 
     def test_2709_visibility_mode_immediate(self):
         "2709 - test enqueue visibility option - ENQ_IMMEDIATE"
@@ -369,7 +366,7 @@ class TestCase(test_env.BaseTestCase):
         queue.deqoptions.visibility = oracledb.DEQ_IMMEDIATE
         queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
         props = queue.deqone()
-        self.assertTrue(props is None)
+        self.assertIsNone(props)
 
     def test_2714_dequeue_transformation(self):
         "2714 - test dequeue transformation"
@@ -387,7 +384,7 @@ class TestCase(test_env.BaseTestCase):
         queue = other_connection.queue(self.book_queue_name, books_type)
         queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
         queue.deqoptions.visibility = oracledb.DEQ_IMMEDIATE
-        transformation_str = "%s.transform2" % self.connection.username
+        transformation_str = f"{self.connection.username}.transform2"
         queue.deqoptions.transformation = transformation_str
         self.assertEqual(queue.deqOptions.transformation, transformation_str)
         queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
@@ -402,7 +399,7 @@ class TestCase(test_env.BaseTestCase):
         book.TITLE, book.AUTHORS, book.PRICE = self.book_data[0]
         expected_price = book.PRICE + 5
         queue.enqoptions.transformation = \
-        transformation_str = "%s.transform1" % self.connection.username
+        transformation_str = f"{self.connection.username}.transform1"
         queue.enqoptions.transformation = transformation_str
         if test_env.get_client_version() >= (23, 1):
             self.assertEqual(queue.enqoptions.transformation,
@@ -446,7 +443,7 @@ class TestCase(test_env.BaseTestCase):
         book = queue.payload_type.newobject()
         book.TITLE, book.AUTHORS, book.PRICE = self.book_data[0]
         props = self.connection.msgproperties(payload=book)
-        self.assertEqual(props.msgid, None)
+        self.assertIsNone(props.msgid)
         queue.enqone(props)
         self.cursor.execute("select msgid from book_queue_tab")
         actual_msgid, = self.cursor.fetchone()
@@ -474,7 +471,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(results, self.book_data[0])
         queue.deqoptions.consumername = "sub1"
         props1 = queue.deqone()
-        self.assertTrue(props1 is None)
+        self.assertIsNone(props1)
 
     def test_2720_aq_message_attributes(self):
         "2720 - verify attributes of AQ message which spawned notification"
@@ -488,7 +485,7 @@ class TestCase(test_env.BaseTestCase):
             self.cursor.execute("select msgid from book_queue_tab")
             actual_msgid, = self.cursor.fetchone()
             self.assertEqual(message.msgid, actual_msgid)
-            self.assertEqual(message.consumer_name, None)
+            self.assertIsNone(message.consumer_name)
             main_user = test_env.get_main_user().upper()
             self.assertEqual(message.queue_name,
                              f'"{main_user}"."{queue.name}"')
@@ -496,8 +493,8 @@ class TestCase(test_env.BaseTestCase):
             with condition:
                 condition.notify()
         sub = connection.subscribe(namespace=oracledb.SUBSCR_NAMESPACE_AQ,
-                                   name=self.book_queue_name,
-                                   callback=notification_callback, timeout=300)
+                                   name=self.book_queue_name, timeout=300,
+                                   callback=notification_callback)
         book = queue.payload_type.newobject()
         book.TITLE, book.AUTHORS, book.PRICE = self.book_data[0]
         props = self.connection.msgproperties(payload=book)
@@ -527,8 +524,8 @@ class TestCase(test_env.BaseTestCase):
     def test_2722_no_json_payload(self):
         "2722 - test enqueuing to a JSON queue without a JSON payload"
         queue = self.get_and_clear_queue(self.json_queue_name, "JSON")
-        random_string = "This is a string message"
-        props = self.connection.msgproperties(payload=random_string)
+        string_message = "This is a string message"
+        props = self.connection.msgproperties(payload=string_message)
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPI-1071:",
                                queue.enqone, props)
 
