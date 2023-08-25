@@ -41,7 +41,7 @@ class TestCase(test_env.BaseTestCase):
             soda_db.openCollection(name).drop()
 
     def __verify_doc(self, doc, raw_content, str_content=None, content=None,
-                     key=None, media_type='application/json'):
+                     key=None, media_type="application/json"):
         self.assertEqual(doc.getContentAsBytes(), raw_content)
         if str_content is not None:
             self.assertEqual(doc.getContentAsString(), str_content)
@@ -49,9 +49,9 @@ class TestCase(test_env.BaseTestCase):
             self.assertEqual(doc.getContent(), content)
         self.assertEqual(doc.key, key)
         self.assertEqual(doc.mediaType, media_type)
-        self.assertEqual(doc.version, None)
-        self.assertEqual(doc.lastModified, None)
-        self.assertEqual(doc.createdOn, None)
+        self.assertIsNone(doc.version)
+        self.assertIsNone(doc.lastModified)
+        self.assertIsNone(doc.createdOn)
 
     def test_3300_create_document_with_json(self):
         "3300 - test creating documents with JSON data"
@@ -103,7 +103,7 @@ class TestCase(test_env.BaseTestCase):
         soda_db = self.connection.getSodaDatabase()
         self.__drop_existing_collections(soda_db)
         coll = soda_db.openCollection("CollectionThatDoesNotExist")
-        self.assertEqual(coll, None)
+        self.assertIsNone(coll)
         created_coll = soda_db.createCollection("TestOpenCollection")
         coll = soda_db.openCollection(created_coll.name)
         self.assertEqual(coll.name, created_coll.name)
