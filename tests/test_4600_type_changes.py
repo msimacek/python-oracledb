@@ -44,8 +44,8 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(self.cursor.fetchall(), [(query_value_1,)])
         self.cursor.execute(f"""
                 create or replace view TestTypesChanged as
-                select {query_frag_2} as value
-                from dual""")
+                    select {query_frag_2} as value
+                    from dual""")
         self.cursor.execute("select * from TestTypesChanged")
         self.assertEqual(self.cursor.fetchall(), [(query_value_2,)])
 
