@@ -66,8 +66,8 @@ JSON_DATA_PAYLOAD = [
 class TestCase(test_env.BaseTestCase):
 
     def __deq_in_thread(self, results):
-        with test_env.get_connection() as connection:
-            queue = connection.queue(RAW_QUEUE_NAME)
+        with test_env.get_connection() as conn:
+            queue = conn.queue(RAW_QUEUE_NAME)
             queue.deqoptions.wait = 10
             queue.deqoptions.navigation = oracledb.DEQ_FIRST_MSG
             while len(results) < len(RAW_PAYLOAD_DATA):
@@ -76,7 +76,7 @@ class TestCase(test_env.BaseTestCase):
                     break
                 for message in messages:
                     results.append(message.payload.decode())
-            connection.commit()
+            conn.commit()
 
     def test_2800_enq_and_deq(self):
         "2800 - test bulk enqueue and dequeue"
