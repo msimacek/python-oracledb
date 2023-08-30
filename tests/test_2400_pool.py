@@ -36,15 +36,15 @@ class TestCase(test_env.BaseTestCase):
     require_connection = False
 
     def __connect_and_drop(self):
-        with self.pool.acquire() as connection:
-            cursor = connection.cursor()
+        with self.pool.acquire() as conn:
+            cursor = conn.cursor()
             cursor.execute("select count(*) from TestNumbers")
             count, = cursor.fetchone()
             self.assertEqual(count, 10)
 
     def __connect_and_generate_error(self):
-        with self.pool.acquire() as connection:
-            cursor = connection.cursor()
+        with self.pool.acquire() as conn:
+            cursor = conn.cursor()
             self.assertRaisesRegex(oracledb.DatabaseError,"^ORA-01476:",
                                    cursor.execute, "select 1 / 0 from dual")
 
@@ -104,7 +104,7 @@ class TestCase(test_env.BaseTestCase):
         reconfigure_args[parameter_name] = parameter_value
 
         pool = test_env.get_pool(**creation_args)
-        connection = pool.acquire()
+        conn = pool.acquire()
         pool.reconfigure(**reconfigure_args)
         actual_args = dict(min=pool.min, max=pool.max,
                            increment=pool.increment, timeout=pool.timeout,
@@ -144,17 +144,17 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(pool.min, 2, "min differs")
         self.assertEqual(pool.increment, 3, "increment differs")
         self.assertEqual(pool.busy, 0, "busy not 0 at start")
-        connection_1 = pool.acquire()
+        conn1 = pool.acquire()
         self.assertEqual(pool.busy, 1, "busy not 1 after acquire")
-        connection_2 = oracledb.connect(pool=pool)
+        conn2 = oracledb.connect(pool=pool)
         self.assertEqual(pool.busy, 2, "busy not 2 after acquire")
         self.assertEqual(pool.opened, 2, "opened differs")
-        connection_3 = pool.acquire()
+        conn3 = pool.acquire()
         self.assertEqual(pool.busy, 3, "busy not 3 after acquire")
-        pool.release(connection_3)
+        pool.release(conn3)
         self.assertEqual(pool.busy, 2, "busy not 2 after release")
-        pool.release(connection_1)
-        connection_2.close()
+        pool.release(conn1)
+        conn2.close()
         self.assertEqual(pool.busy, 0, "busy not 0 after release")
         pool.getmode = oracledb.POOL_GETMODE_NOWAIT
         self.assertEqual(pool.getmode, oracledb.POOL_GETMODE_NOWAIT)
@@ -184,29 +184,29 @@ class TestCase(test_env.BaseTestCase):
                                  homogeneous=False)
         msg = "homogeneous should be False after setting it in the constructor"
         self.assertFalse(pool.homogeneous, msg)
-        connection = pool.acquire(user=test_env.get_proxy_user())
-        cursor = connection.cursor()
+        conn = pool.acquire(user=test_env.get_proxy_user())
+        cursor = conn.cursor()
         cursor.execute('select user from dual')
         user, = cursor.fetchone()
         self.assertEqual(user, test_env.get_proxy_user().upper())
-        connection.close()
+        conn.close()
 
     def test_2403_rollback_on_release(self):
         "2403 - connection rolls back before released back to the pool"
         pool = test_env.get_pool(getmode=oracledb.POOL_GETMODE_WAIT)
-        connection = pool.acquire()
-        cursor = connection.cursor()
+        conn = pool.acquire()
+        cursor = conn.cursor()
         cursor.execute("truncate table TestTempTable")
         cursor.execute("insert into TestTempTable (IntCol) values (1)")
         cursor.close()
-        pool.release(connection)
+        pool.release(conn)
         pool = test_env.get_pool(getmode=oracledb.POOL_GETMODE_WAIT)
-        connection = pool.acquire()
-        cursor = connection.cursor()
+        conn = pool.acquire()
+        cursor = conn.cursor()
         cursor.execute("select count(*) from TestTempTable")
         count, = cursor.fetchone()
         self.assertEqual(count, 0)
-        connection.close()
+        conn.close()
 
     def test_2404_threading(self):
         "2404 - test session pool with multiple threads"
@@ -239,32 +239,32 @@ class TestCase(test_env.BaseTestCase):
 
         # get connection and set the action
         action = "TEST_ACTION"
-        connection = pool.acquire()
-        connection.action = action
-        cursor = connection.cursor()
+        conn = pool.acquire()
+        conn.action = action
+        cursor = conn.cursor()
         cursor.execute("select 1 from dual")
         cursor.close()
-        pool.release(connection)
+        pool.release(conn)
         self.assertEqual(pool.opened, 1, "opened (1)")
 
         # verify that the connection still has the action set on it
-        connection = pool.acquire()
-        cursor = connection.cursor()
+        conn = pool.acquire()
+        cursor = conn.cursor()
         cursor.execute("select sys_context('userenv', 'action') from dual")
         result, = cursor.fetchone()
         self.assertEqual(result, action)
         cursor.close()
-        pool.release(connection)
+        pool.release(conn)
         self.assertEqual(pool.opened, 1, "opened (2)")
 
         # get a new connection with new purity (should not have state)
-        connection = pool.acquire(purity=oracledb.ATTR_PURITY_NEW)
-        cursor = connection.cursor()
+        conn = pool.acquire(purity=oracledb.ATTR_PURITY_NEW)
+        cursor = conn.cursor()
         cursor.execute("select sys_context('userenv', 'action') from dual")
         result, = cursor.fetchone()
         self.assertIsNone(result)
         cursor.close()
-        pool.release(connection)
+        pool.release(conn)
 
     @unittest.skipIf(test_env.get_is_thin(),
                      "thin mode doesn't support proxy users yet")
@@ -424,14 +424,14 @@ class TestCase(test_env.BaseTestCase):
         "2414 - test to ensure pure connections are being created correctly"
         pool = test_env.get_pool(min=1, max=2, increment=1,
                                  getmode=oracledb.POOL_GETMODE_WAIT)
-        connection_1 = pool.acquire()
-        connection_2 = pool.acquire()
+        conn1 = pool.acquire()
+        conn2 = pool.acquire()
         self.assertEqual(pool.opened, 2, "opened (1)")
-        pool.release(connection_1)
-        pool.release(connection_2)
-        connection_3 = pool.acquire(purity=oracledb.ATTR_PURITY_NEW)
+        pool.release(conn1)
+        pool.release(conn2)
+        conn3 = pool.acquire(purity=oracledb.ATTR_PURITY_NEW)
         self.assertEqual(pool.opened, 2, "opened (2)")
-        pool.release(connection_3)
+        pool.release(conn3)
 
     @unittest.skipIf(test_env.get_is_thin(),
                      "thin mode doesn't support pool reconfigure yet")
@@ -624,8 +624,8 @@ class TestCase(test_env.BaseTestCase):
         "2425 - using the pool beyond max limit raises an error"
         pool = test_env.get_pool(min=1, max=2, increment=1,
                                  getmode=oracledb.POOL_GETMODE_WAIT)
-        connection_1 = pool.acquire()
-        connection_2 = pool.acquire()
+        conn1 = pool.acquire()
+        conn2 = pool.acquire()
         pool.getmode = oracledb.POOL_GETMODE_NOWAIT
         self.assertRaisesRegex(oracledb.DatabaseError, "^DPY-4005:",
                                pool.acquire)
@@ -686,7 +686,7 @@ class TestCase(test_env.BaseTestCase):
             conn.close()
         self.assertEqual(pool.opened, 2)
 
-    def test_2428_acquire_conn_from_empty_pool(self):
+    def test_2428_acquire_connection_from_empty_pool(self):
         "2428 - acquire a connection from an empty pool (min=0)"
         pool = test_env.get_pool(min=0, max=2, increment=2)
         with pool.acquire() as conn:
@@ -789,7 +789,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2027:",
                                oracledb.create_pool, params="bad params")
 
-    def test_2437_conn_release_and_drop_negative(self):
+    def test_2437_connection_release_and_drop_negative(self):
         "2437 - test releasing and dropping an invalid connection"
         pool = test_env.get_pool()
         self.assertRaises(TypeError, pool.release, ["invalid connection"])

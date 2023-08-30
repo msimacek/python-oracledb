@@ -111,11 +111,11 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3304_repr(self):
         "3304 - test SodaDatabase representation"
-        con1 = self.connection
-        con2 = test_env.get_connection()
+        conn1 = self.connection
+        conn2 = test_env.get_connection()
         soda_db1 = self.connection.getSodaDatabase()
-        soda_db2 = con1.getSodaDatabase()
-        soda_db3 = con2.getSodaDatabase()
+        soda_db2 = conn1.getSodaDatabase()
+        soda_db3 = conn2.getSodaDatabase()
         self.assertEqual(str(soda_db1), str(soda_db2))
         self.assertEqual(str(soda_db2), str(soda_db3))
 
