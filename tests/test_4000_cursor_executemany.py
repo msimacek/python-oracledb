@@ -38,8 +38,10 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("truncate table TestTempTable")
         rows = [{"value": n} for n in range(250)]
         self.cursor.arraysize = 100
-        statement = "insert into TestTempTable (IntCol) values (:value)"
-        self.cursor.executemany(statement, rows)
+        self.cursor.executemany("""
+                insert into TestTempTable (IntCol)
+                values (:value)""",
+                rows)
         self.connection.commit()
         self.cursor.execute("select count(*) from TestTempTable")
         count, = self.cursor.fetchone()
@@ -50,8 +52,10 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("truncate table TestTempTable")
         rows = [[n] for n in range(230)]
         self.cursor.arraysize = 100
-        statement = "insert into TestTempTable (IntCol) values (:1)"
-        self.cursor.executemany(statement, rows)
+        self.cursor.executemany("""
+                insert into TestTempTable (IntCol)
+                values (:1)""",
+                rows)
         self.connection.commit()
         self.cursor.execute("select count(*) from TestTempTable")
         count, = self.cursor.fetchone()
@@ -62,8 +66,9 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("truncate table TestTempTable")
         rows = [[n] for n in range(225)]
         self.cursor.arraysize = 100
-        statement = "insert into TestTempTable (IntCol) values (:1)"
-        self.cursor.prepare(statement)
+        self.cursor.prepare("""
+                insert into TestTempTable (IntCol)
+                values (:1)""")
         self.cursor.executemany(None, rows)
         self.connection.commit()
         self.cursor.execute("select count(*) from TestTempTable")
@@ -107,8 +112,10 @@ class TestCase(test_env.BaseTestCase):
             (4, 2 ** 65),
             (5, decimal.Decimal("24.5"))
         ]
-        sql = "insert into TestTempTable (IntCol, NumberCol) values (:1, :2)"
-        self.cursor.executemany(sql, data)
+        self.cursor.executemany("""
+                insert into TestTempTable (IntCol, NumberCol)
+                values (:1, :2)""",
+                data)
         self.cursor.execute("""
                 select IntCol, NumberCol
                 from TestTempTable
@@ -127,14 +134,15 @@ class TestCase(test_env.BaseTestCase):
             (6, "Sixth"),
             (7, "Seventh and the longest one")
         ]
-        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
-        self.cursor.executemany(sql, rows)
+        self.cursor.executemany("""
+                insert into TestTempTable (IntCol, StringCol1)
+                values (:1, :2)""",
+                rows)
         self.cursor.execute("""
                 select IntCol, StringCol1
                 from TestTempTable
                 order by IntCol""")
-        fetched_rows = self.cursor.fetchall()
-        self.assertEqual(fetched_rows, rows)
+        self.assertEqual(self.cursor.fetchall(), rows)
 
     def test_4008_executemany_with_exception(self):
         "4008 - test executing a statement multiple times (with exception)"
@@ -147,7 +155,9 @@ class TestCase(test_env.BaseTestCase):
 
     def test_4009_executemany_with_invalid_parameters(self):
         "4009 - test calling executemany() with invalid parameters"
-        sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
+        sql = """
+                insert into TestTempTable (IntCol, StringCol1)
+                values (:1, :2)"""
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2004:",
                                self.cursor.executemany, sql,
                                "These are not valid parameters")
@@ -237,43 +247,39 @@ class TestCase(test_env.BaseTestCase):
                     from TestTempTable;
 
                     insert into TestTempTable (IntCol, StringCol1)
-                    values (t_Id, 'Test String ' || t_Id) returning
-                    IntCol into :out_bind;
+                    values (t_Id, 'Test String ' || t_Id)
+                    returning IntCol into :out_bind;
                 end;""", num_rows)
         self.assertEqual(out_var.values, [1, 2, 3, 4, 5])
 
     def test_4017_executemany_pl_sql_with_in_and_out_binds(self):
         "4017 - test executemany() with pl/sql in binds and out binds"
         self.cursor.execute("truncate table TestTempTable")
-        int_values = [5, 8, 17, 24, 6]
-        str_values = ["Test 5", "Test 8", "Test 17", "Test 24", "Test 6"]
+        values = [5, 8, 17, 24, 6]
+        data = [(i, f"Test {i}") for i in values]
         out_bind = self.cursor.var(oracledb.NUMBER, arraysize=5)
         self.cursor.setinputsizes(None, None, out_bind)
-        data = list(zip(int_values, str_values))
         self.cursor.executemany("""
             begin
                 insert into TestTempTable (IntCol, StringCol1)
                 values (:int_val, :str_val)
                 returning IntCol into :out_bind;
-            end;""", data)
-        self.assertEqual(out_bind.values, [5, 8, 17, 24, 6])
+            end;""",
+            data)
+        self.assertEqual(out_bind.values, values)
 
     def test_4018_executemany_pl_sql_out_bind(self):
         "4018 - test executemany() with pl/sql outbinds"
         self.cursor.execute("truncate table TestTempTable")
         out_bind = self.cursor.var(oracledb.NUMBER, arraysize=5)
         self.cursor.setinputsizes(out_bind)
-        self.cursor.executemany("""
-            begin
-                :out_var := 5;
-            end;""", 5)
+        self.cursor.executemany("begin :out_var := 5; end;", 5)
         self.assertEqual(out_bind.values, [5, 5, 5, 5, 5])
 
     def test_4019_re_executemany_pl_sql_with_in_and_out_binds(self):
         "4019 - test re-executemany() with pl/sql in binds and out binds"
-        int_values = [5, 8, 17, 24, 6]
-        str_values = ["Test 5", "Test 8", "Test 17", "Test 24", "Test 6"]
-        data = list(zip(int_values, str_values))
+        values = [5, 8, 17, 24, 6]
+        data = [(i, f"Test {i}") for i in values]
         for i in range(2):
             self.cursor.execute("truncate table TestTempTable")
             out_bind = self.cursor.var(oracledb.NUMBER, arraysize=5)
@@ -283,15 +289,15 @@ class TestCase(test_env.BaseTestCase):
                     insert into TestTempTable (IntCol, StringCol1)
                     values (:int_val, :str_val)
                     returning IntCol into :out_bind;
-                end;""", data)
-            self.assertEqual(out_bind.values, [5, 8, 17, 24, 6])
+                end;""",
+                data)
+            self.assertEqual(out_bind.values, values)
 
     def test_4020_executemany_with_plsql_single_row(self):
         "4020 - test PL/SQL statement with single row bind"
         value = 4020
         var = self.cursor.var(int)
-        data = [[var, value]]
-        self.cursor.executemany("begin :1 := :2; end;", data)
+        self.cursor.executemany("begin :1 := :2; end;", [[var, value]])
         self.assertEqual(var.values, [value])
 
     def test_4021_defer_type_assignment(self):
@@ -307,8 +313,7 @@ class TestCase(test_env.BaseTestCase):
                 select IntCol, NumberCol
                 from TestTempTable
                 order by IntCol""")
-        fetched_data = self.cursor.fetchall()
-        self.assertEqual(data, fetched_data)
+        self.assertEqual(self.cursor.fetchall(), data)
 
     def test_4022_plsql_large_number_of_binds(self):
         "4022 - test PL/SQL with a lerge number of binds"
@@ -332,9 +337,14 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.executemany(sql, all_bind_values)
         init_val = 6
         for var in out_binds:
-            expected = [init_val, init_val + 3, init_val + 6, init_val + 9,
-                        init_val + 12]
-            self.assertEqual(var.values, expected)
+            expected_values = [
+                init_val,
+                init_val + 3,
+                init_val + 6,
+                init_val + 9,
+                init_val + 12
+            ]
+            self.assertEqual(var.values, expected_values)
             init_val += 6
 
     def test_4023_execute_no_statement(self):

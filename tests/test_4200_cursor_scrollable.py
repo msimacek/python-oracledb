@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2020, 2022, Oracle and/or its affiliates.
+# Copyright (c) 2020, 2023, Oracle and/or its affiliates.
 #
 # This software is dual-licensed to you under the Universal Permissive License
 # (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
@@ -69,8 +69,8 @@ class TestCase(test_env.BaseTestCase):
         self.assertTrue(cursor.arraysize > 1,
                 "array size must exceed 1 for this test to work correctly")
         cursor.scroll(1, mode="absolute")
-        row = cursor.fetchone()
-        self.assertEqual(row[0], 1.25)
+        value, = cursor.fetchone()
+        self.assertEqual(value, 1.25)
         self.assertEqual(cursor.rowcount, 1)
 
     def test_4203_scroll_absolute_not_in_buffer(self):
@@ -82,8 +82,8 @@ class TestCase(test_env.BaseTestCase):
                 from TestNumbers
                 order by IntCol""")
         cursor.scroll(6, mode="absolute")
-        row = cursor.fetchone()
-        self.assertEqual(row[0], 7.5)
+        value, = cursor.fetchone()
+        self.assertEqual(value, 7.5)
         self.assertEqual(cursor.rowcount, 6)
 
     def test_4204_scroll_first_in_buffer(self):
@@ -96,8 +96,8 @@ class TestCase(test_env.BaseTestCase):
                 order by IntCol""")
         cursor.fetchmany()
         cursor.scroll(mode="first")
-        row = cursor.fetchone()
-        self.assertEqual(row[0], 1.25)
+        value, = cursor.fetchone()
+        self.assertEqual(value, 1.25)
         self.assertEqual(cursor.rowcount, 1)
 
     def test_4205_scroll_first_not_in_buffer(self):
@@ -111,8 +111,8 @@ class TestCase(test_env.BaseTestCase):
         cursor.fetchmany()
         cursor.fetchmany()
         cursor.scroll(mode="first")
-        row = cursor.fetchone()
-        self.assertEqual(row[0], 1.25)
+        value, = cursor.fetchone()
+        self.assertEqual(value, 1.25)
         self.assertEqual(cursor.rowcount, 1)
 
     def test_4206_scroll_last(self):
@@ -124,8 +124,8 @@ class TestCase(test_env.BaseTestCase):
                 from TestNumbers
                 order by IntCol""")
         cursor.scroll(mode="last")
-        row = cursor.fetchone()
-        self.assertEqual(row[0], 12.5)
+        value, = cursor.fetchone()
+        self.assertEqual(value, 12.5)
         self.assertEqual(cursor.rowcount, 10)
 
     def test_4207_scroll_relative_exception_after(self):
@@ -162,8 +162,8 @@ class TestCase(test_env.BaseTestCase):
         message = "array size must exceed 1 for this test to work correctly"
         self.assertTrue(cursor.arraysize > 1, message)
         cursor.scroll(2 - cursor.rowcount)
-        row = cursor.fetchone()
-        self.assertEqual(row[0], 2.5)
+        value, = cursor.fetchone()
+        self.assertEqual(value, 2.5)
         self.assertEqual(cursor.rowcount, 2)
 
     def test_4210_scroll_relative_not_in_buffer(self):
@@ -179,8 +179,8 @@ class TestCase(test_env.BaseTestCase):
         message = "array size must exceed 1 for this test to work correctly"
         self.assertTrue(cursor.arraysize > 1, message)
         cursor.scroll(3 - cursor.rowcount)
-        row = cursor.fetchone()
-        self.assertEqual(row[0], 3.75)
+        value, = cursor.fetchone()
+        self.assertEqual(value, 3.75)
         self.assertEqual(cursor.rowcount, 3)
 
     def test_4211_scroll_no_rows(self):
@@ -202,9 +202,9 @@ class TestCase(test_env.BaseTestCase):
             self.cursor.execute("""
                     insert into TestTempTable (IntCol, StringCol1)
                     values (:1, null)""",
-                    (i + 1,))
+                    [i + 1])
         for arraysize in range(1, 6):
-            cursor = self.connection.cursor(scrollable = True)
+            cursor = self.connection.cursor(scrollable=True)
             cursor.arraysize = arraysize
             cursor.execute("select IntCol from TestTempTable order by IntCol")
             for num_rows in range(1, arraysize + 1):
