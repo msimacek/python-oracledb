@@ -27,7 +27,6 @@
 """
 
 import datetime
-import time
 
 import oracledb
 import test_env
@@ -39,13 +38,16 @@ class TestCase(test_env.BaseTestCase):
         self.raw_data = []
         self.data_by_key = {}
         for i in range(1, 11):
-            time_tuple = (2002, 12, 9, 0, 0, 0, 0, 0, -1)
-            time_in_ticks = time.mktime(time_tuple) + i * 86400 + i * 8640
-            date_col = oracledb.TimestampFromTicks(int(time_in_ticks))
+            base_date = datetime.datetime(2002, 12, 9)
+            date_interval = datetime.timedelta(days=i,
+                                               hours=i * 2,
+                                               minutes=i * 24)
+            date_col = base_date + date_interval
             if i % 2:
-                time_in_ticks = time.mktime(time_tuple) + i * 86400 * 2 \
-                                + i * 12960
-                nullable_col = oracledb.TimestampFromTicks(int(time_in_ticks))
+                date_interval = datetime.timedelta(days=i * 2,
+                                                   hours=i * 3,
+                                                   minutes=i * 36)
+                nullable_col = base_date + date_interval
             else:
                 nullable_col = None
             data_tuple = (i, date_col, nullable_col)
@@ -57,7 +59,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("""
                 select * from TestDates
                 where DateCol = :value""",
-                value=oracledb.Timestamp(2002, 12, 13, 9, 36, 0))
+                value=datetime.datetime(2002, 12, 13, 9, 36, 0))
         self.assertEqual(self.cursor.fetchall(), [self.data_by_key[4]])
 
     def test_1401_bind_datetime(self):
@@ -83,7 +85,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("""
                 select * from TestDates
                 where DateCol = :value""",
-                value=oracledb.Timestamp(2002, 12, 14, 12, 0, 0))
+                value=datetime.datetime(2002, 12, 14, 12, 0, 0))
         self.assertEqual(self.cursor.fetchall(), [self.data_by_key[5]])
 
     def test_1404_bind_null(self):
@@ -159,11 +161,11 @@ class TestCase(test_env.BaseTestCase):
                 num_elems=5,
                 array=array)
         expected_value = [
-                oracledb.Timestamp(2002, 12, 17, 2, 24, 0),
-                oracledb.Timestamp(2002, 12, 18, 4, 48, 0),
-                oracledb.Timestamp(2002, 12, 19, 7, 12, 0),
-                oracledb.Timestamp(2002, 12, 20, 9, 36, 0),
-                oracledb.Timestamp(2002, 12, 21, 12, 0, 0)
+                datetime.datetime(2002, 12, 17, 2, 24, 0),
+                datetime.datetime(2002, 12, 18, 4, 48, 0),
+                datetime.datetime(2002, 12, 19, 7, 12, 0),
+                datetime.datetime(2002, 12, 20, 9, 36, 0),
+                datetime.datetime(2002, 12, 21, 12, 0, 0)
         ] + original_data[5:]
         self.assertEqual(array.getvalue(), expected_value)
 
@@ -177,12 +179,12 @@ class TestCase(test_env.BaseTestCase):
                 num_elems=6,
                 array=array)
         expected_value = [
-                oracledb.Timestamp(2002, 12, 13, 4, 48, 0),
-                oracledb.Timestamp(2002, 12, 14, 9, 36, 0),
-                oracledb.Timestamp(2002, 12, 15, 14, 24, 0),
-                oracledb.Timestamp(2002, 12, 16, 19, 12, 0),
-                oracledb.Timestamp(2002, 12, 18, 0, 0, 0),
-                oracledb.Timestamp(2002, 12, 19, 4, 48, 0)
+                datetime.datetime(2002, 12, 13, 4, 48, 0),
+                datetime.datetime(2002, 12, 14, 9, 36, 0),
+                datetime.datetime(2002, 12, 15, 14, 24, 0),
+                datetime.datetime(2002, 12, 16, 19, 12, 0),
+                datetime.datetime(2002, 12, 18, 0, 0, 0),
+                datetime.datetime(2002, 12, 19, 4, 48, 0)
         ]
         self.assertEqual(array.getvalue(), expected_value)
 
@@ -194,7 +196,7 @@ class TestCase(test_env.BaseTestCase):
                     :value := to_date(20021209, 'YYYYMMDD');
                 end;""")
         self.assertEqual(bind_vars["value"].getvalue(),
-                         oracledb.Timestamp(2002, 12, 9))
+                         datetime.datetime(2002, 12, 9))
 
     def test_1411_bind_in_out_set_input_sizes(self):
         "1411 - test binding in/out with set input sizes defined"
@@ -203,9 +205,9 @@ class TestCase(test_env.BaseTestCase):
                 begin
                     :value := :value + 5.25;
                 end;""",
-                value=oracledb.Timestamp(2002, 12, 12, 10, 0, 0))
+                value=datetime.datetime(2002, 12, 12, 10, 0, 0))
         self.assertEqual(bind_vars["value"].getvalue(),
-                         oracledb.Timestamp(2002, 12, 17, 16, 0, 0))
+                         datetime.datetime(2002, 12, 17, 16, 0, 0))
 
     def test_1412_bind_out_var(self):
         "1412 - test binding out with cursor.var() method"
@@ -217,19 +219,19 @@ class TestCase(test_env.BaseTestCase):
                 end;""",
                 value=var)
         self.assertEqual(var.getvalue(),
-                         oracledb.Timestamp(2002, 12, 31, 12, 31, 0))
+                         datetime.datetime(2002, 12, 31, 12, 31, 0))
 
     def test_1413_bind_in_out_var_direct_set(self):
         "1413 - test binding in/out with cursor.var() method"
         var = self.cursor.var(oracledb.DATETIME)
-        var.setvalue(0, oracledb.Timestamp(2002, 12, 9, 6, 0, 0))
+        var.setvalue(0, datetime.datetime(2002, 12, 9, 6, 0, 0))
         self.cursor.execute("""
                 begin
                     :value := :value + 5.25;
                 end;""",
                 value=var)
         self.assertEqual(var.getvalue(),
-                         oracledb.Timestamp(2002, 12, 14, 12, 0, 0))
+                         datetime.datetime(2002, 12, 14, 12, 0, 0))
 
     def test_1414_cursor_description(self):
         "1414 - test cursor description is accurate"
