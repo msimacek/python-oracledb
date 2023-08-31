@@ -26,7 +26,7 @@
 2600 - Module for testing timestamp variables
 """
 
-import time
+import datetime
 
 import oracledb
 import test_env
@@ -38,24 +38,25 @@ class TestCase(test_env.BaseTestCase):
         self.raw_data = []
         self.data_by_key = {}
         for i in range(1, 11):
-            time_tuple = (2002, 12, 9, 0, 0, 0, 0, 0, -1)
-            time_in_ticks = time.mktime(time_tuple) + i * 86400
-            date_value = oracledb.TimestampFromTicks(int(time_in_ticks))
+            base_date = datetime.datetime(2002, 12, 9)
+            date_interval = datetime.timedelta(days=i)
+            date_value = base_date + date_interval
             str_value = str(i * 50)
             fsecond = int(str_value + "0" * (6 - len(str_value)))
-            date_col = oracledb.Timestamp(date_value.year, date_value.month,
+            date_col = datetime.datetime(date_value.year, date_value.month,
                                           date_value.day, date_value.hour,
                                           date_value.minute, i * 2, fsecond)
             if i % 2:
-                time_in_ticks = time.mktime(time_tuple) + i * 86400 + 86400
-                date_value = oracledb.TimestampFromTicks(int(time_in_ticks))
+                date_interval = datetime.timedelta(days=i + 1)
+                date_value = base_date + date_interval
                 str_value = str(i * 125)
                 fsecond = int(str_value + "0" * (6 - len(str_value)))
-                nullable_col = oracledb.Timestamp(date_value.year,
+                nullable_col = datetime.datetime(date_value.year,
                                                   date_value.month,
                                                   date_value.day,
                                                   date_value.hour,
-                                                  date_value.minute, i * 3,
+                                                  date_value.minute,
+                                                  i * 3,
                                                   fsecond)
             else:
                 nullable_col = None
@@ -70,7 +71,7 @@ class TestCase(test_env.BaseTestCase):
                 select *
                 from TestTimestamps
                 where TimestampCol = :value""",
-                value=oracledb.Timestamp(2002, 12, 14, 0, 0, 10, 250000))
+                value=datetime.datetime(2002, 12, 14, 0, 0, 10, 250000))
         self.assertEqual(self.cursor.fetchall(), [self.data_by_key[5]])
 
     def test_2601_bind_null(self):
@@ -91,7 +92,7 @@ class TestCase(test_env.BaseTestCase):
                     :value := to_timestamp('20021209', 'YYYYMMDD');
                 end;""")
         self.assertEqual(bind_vars["value"].getvalue(),
-                         oracledb.Timestamp(2002, 12, 9))
+                         datetime.datetime(2002, 12, 9))
 
     def test_2603_bind_in_out_set_input_sizes(self):
         "2603 - test binding in/out with set input sizes defined"
@@ -100,9 +101,9 @@ class TestCase(test_env.BaseTestCase):
                 begin
                     :value := :value + 5.25;
                 end;""",
-                value = oracledb.Timestamp(2002, 12, 12, 10, 0, 0))
+                value=datetime.datetime(2002, 12, 12, 10, 0, 0))
         self.assertEqual(bind_vars["value"].getvalue(),
-                         oracledb.Timestamp(2002, 12, 17, 16, 0, 0))
+                         datetime.datetime(2002, 12, 17, 16, 0, 0))
 
     def test_2604_bind_out_var(self):
         "2604 - test binding out with cursor.var() method"
@@ -114,19 +115,19 @@ class TestCase(test_env.BaseTestCase):
                 end;""",
                 value=var)
         self.assertEqual(var.getvalue(),
-                         oracledb.Timestamp(2002, 12, 31, 12, 31, 0))
+                         datetime.datetime(2002, 12, 31, 12, 31, 0))
 
     def test_2605_bind_in_out_var_direct_set(self):
         "2605 - test binding in/out with cursor.var() method"
         var = self.cursor.var(oracledb.DB_TYPE_TIMESTAMP)
-        var.setvalue(0, oracledb.Timestamp(2002, 12, 9, 6, 0, 0))
+        var.setvalue(0, datetime.datetime(2002, 12, 9, 6, 0, 0))
         self.cursor.execute("""
                 begin
                     :value := :value + 5.25;
                 end;""",
                 value=var)
         self.assertEqual(var.getvalue(),
-                         oracledb.Timestamp(2002, 12, 14, 12, 0, 0))
+                         datetime.datetime(2002, 12, 14, 12, 0, 0))
 
     def test_2606_cursor_description(self):
         "2606 - test cursor description is accurate"
@@ -172,7 +173,7 @@ class TestCase(test_env.BaseTestCase):
                 select *
                 from TestTimestamps
                 where trunc(TimestampCol) = :value""",
-                value=oracledb.Timestamp(2002, 12, 14))
+                value=datetime.datetime(2002, 12, 14))
         self.assertEqual(self.cursor.fetchall(), [self.data_by_key[5]])
 
 if __name__ == "__main__":
