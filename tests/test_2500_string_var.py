@@ -342,7 +342,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestTempTable (IntCol, StringCol1)
                 values (:1, :2)""",
                 (1, supplemental_chars))
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select StringCol1 from TestTempTable")
         value, = self.cursor.fetchone()
         self.assertEqual(value, supplemental_chars)
@@ -355,7 +355,7 @@ class TestCase(test_env.BaseTestCase):
         long_string = "long string " * 30
         self.cursor.execute(sql, (1, short_string))
         self.cursor.execute(sql, (2, long_string))
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("""
                 select IntCol, StringCol1
                 from TestTempTable
@@ -365,7 +365,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_2528_issue_50(self):
         "2528 - test issue 50 - avoid error ORA-24816"
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         try:
             cursor.execute("drop table issue_50 purge")
         except oracledb.DatabaseError:
@@ -385,7 +385,7 @@ class TestCase(test_env.BaseTestCase):
                 values (:arg0, :arg1, :arg2, :arg3, :arg4, :arg5)
                 returning id into :arg6""",
                 [1, "555a4c78", "f319ef0e", "23009914", "", "", id_var])
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         cursor.execute("""
                 insert into issue_50 (Id, Str2, Str3, NClob1, NClob2, Str1)
                 values (:arg0, :arg1, :arg2, :arg3, :arg4, :arg5)
@@ -443,15 +443,15 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("truncate table TestTempTable")
         string_val = "I bought a cafetière on the Champs-Élysées"
         sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.execute(sql, (1, string_val))
             cursor.execute("select IntCol, StringCol1 from TestTempTable")
             self.assertEqual(cursor.fetchone(), (1, string_val))
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.outputtypehandler = self.__return_strings_as_bytes
             cursor.execute("select IntCol, StringCol1 from TestTempTable")
             self.assertEqual(cursor.fetchone(), (1, string_val.encode()))
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.outputtypehandler = None
             cursor.execute("select IntCol, StringCol1 from TestTempTable")
             self.assertEqual(cursor.fetchone(), (1, string_val))
@@ -465,7 +465,7 @@ class TestCase(test_env.BaseTestCase):
         random_string = "".join(random.choice(chars) for _ in range(32768))
         int_val = 2534
         xml_string = f"<data>{random_string}</data>"
-        lob = self.connection.createlob(oracledb.DB_TYPE_CLOB)
+        lob = self.conn.createlob(oracledb.DB_TYPE_CLOB)
         lob.write(xml_string)
         self.cursor.execute("""
                 insert into TestTempXML (IntCol, XMLCol)

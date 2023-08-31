@@ -206,7 +206,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_1607_insert_and_return_object(self):
         "1607 - test inserting an object with DML returning"
-        type_obj = self.connection.gettype("UDT_OBJECT")
+        type_obj = self.conn.gettype("UDT_OBJECT")
         string_value = "The string that will be verified"
         obj = type_obj.newobject()
         obj.STRINGVALUE = string_value
@@ -218,7 +218,7 @@ class TestCase(test_env.BaseTestCase):
                 obj=obj, outObj=out_var)
         result, = out_var.getvalue()
         self.assertEqual(result.STRINGVALUE, string_value)
-        self.connection.rollback()
+        self.conn.rollback()
 
     def test_1608_insert_and_return_rowid(self):
         "1608 - test inserting a row and returning a rowid"
@@ -240,7 +240,7 @@ class TestCase(test_env.BaseTestCase):
         "1609 - test inserting with a REF cursor and returning a rowid"
         self.cursor.execute("truncate table TestTempTable")
         var = self.cursor.var(oracledb.ROWID)
-        in_cursor = self.connection.cursor()
+        in_cursor = self.conn.cursor()
         in_cursor.execute("""
                 select StringCol
                 from TestStrings
@@ -360,7 +360,7 @@ class TestCase(test_env.BaseTestCase):
                 int_val=5,
                 add_val=18,
                 out_val=out_var)
-        self.connection.commit()
+        self.conn.commit()
         self.assertEqual(out_var.getvalue(), [23])
 
     def test_1618_dml_returning_with_lob_and_outconverter(self):
@@ -375,7 +375,7 @@ class TestCase(test_env.BaseTestCase):
                 returning CLOBCol into :out_val""",
                 in_val=lob_value,
                 out_val=out_var)
-        self.connection.commit()
+        self.conn.commit()
         self.assertEqual(out_var.getvalue(), [lob_value])
 
     def test_1619_dml_returning_with_clob_converted_to_long(self):
@@ -390,7 +390,7 @@ class TestCase(test_env.BaseTestCase):
                 returning CLOBCol into :out_val""",
                 in_val=lob_value,
                 out_val=out_var)
-        self.connection.commit()
+        self.conn.commit()
         self.assertEqual(out_var.getvalue(), [lob_value])
 
     def test_1620_dml_returning_with_index_organized_table(self):

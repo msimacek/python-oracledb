@@ -40,7 +40,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3901_execute_no_statement_with_args(self):
         "3901 - test executing a None statement with bind variables"
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2001:",
                                cursor.execute, None, x=5)
 
@@ -198,7 +198,7 @@ class TestCase(test_env.BaseTestCase):
                     insert into TestTempTable (IntCol, StringCol1)
                     values (:1, :2)""",
                     row)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select IntCol, StringCol1 from TestTempTable")
         self.assertEqual(self.cursor.fetchall(), data)
 
@@ -207,12 +207,12 @@ class TestCase(test_env.BaseTestCase):
         data_to_insert = [(i + 1, f"Test String #{i + 1}") for i in range(3)]
         self.cursor.execute("truncate table TestTempTable")
         for row in data_to_insert:
-            with self.connection.cursor() as cursor:
+            with self.conn.cursor() as cursor:
                 cursor.execute("""
                         insert into TestTempTable (IntCol, StringCol1)
                         values (:1, :2)""",
                         row)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("""
                 select IntCol, StringCol1
                 from TestTempTable
@@ -279,7 +279,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute("""
                 insert into TestTempTable (IntCol, StringCol1)
                 values (1, 'Test 1')""")
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select IntCol, StringCol1 from TestTempTable")
         column_names = [col[0] for col in self.cursor.description]
         rowfactory_func = lambda *row: dict(zip(column_names, row))
@@ -296,7 +296,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestTempTable (IntCol, StringCol1)
                 values (:1, :2)""",
                 data)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select IntCol, StringCol1 from TestTempTable")
         column_names = [col[0] for col in self.cursor.description]
         self.cursor.rowfactory = lambda *row: dict(zip(column_names, row))
@@ -313,7 +313,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestTempTable (IntCol, StringCol1)
                 values (:1, :2)""",
                 data)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select IntCol, StringCol1 from TestTempTable")
         column_names = [col[0] for col in self.cursor.description]
         self.cursor.rowfactory = lambda *row: dict(zip(column_names, row))
@@ -326,7 +326,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3926_rowfactory_on_refcursor(self):
         "3926 - test setting rowfactory on a REF cursor"
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             sql_function = "pkg_TestRefCursors.TestReturnCursor"
             ref_cursor = cursor.callfunc(sql_function,
                                          oracledb.DB_TYPE_CURSOR, [2])

@@ -84,7 +84,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.executemany("""
                 insert into TestJson values (:1, :2)
                 returning JsonCol into :json_out""", bind_data)
-        self.connection.commit()
+        self.conn.commit()
         self.assertEqual(out_var.values, [[value] for value in data])
 
     def test_3500_insert_and_fetch_single_json(self):

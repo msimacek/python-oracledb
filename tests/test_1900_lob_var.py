@@ -34,7 +34,7 @@ import test_env
 class TestCase(test_env.BaseTestCase):
 
     def __get_temp_lobs(self, sid):
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         cursor.execute("""
                 select cache_lobs + nocache_lobs + abstract_lobs
                 from v$temporary_lobs
@@ -64,7 +64,7 @@ class TestCase(test_env.BaseTestCase):
                     values (:integer_value, :long_string)""",
                     integer_value=i,
                     long_string=bind_value)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute(f"""
                 select IntCol, {lob_type}Col
                 from Test{lob_type}s
@@ -79,7 +79,7 @@ class TestCase(test_env.BaseTestCase):
             main_col = main_col.encode()
             extra_col_1 = extra_col_1.encode()
             extra_col_2 = extra_col_2.encode()
-        self.connection.stmtcachesize = 0
+        self.conn.stmtcachesize = 0
         self.cursor.execute(f"truncate table Test{lob_type}s")
         data = (1, main_col, 8, extra_col_1, 15, extra_col_2)
         self.cursor.execute(f"""
@@ -171,7 +171,7 @@ class TestCase(test_env.BaseTestCase):
         if lob_type == "BLOB":
             value = value.encode("ascii")
         db_type = getattr(oracledb, "DB_TYPE_" + lob_type)
-        lob = self.connection.createlob(db_type)
+        lob = self.conn.createlob(db_type)
         lob.write(value)
         pickled_data = pickle.dumps(lob)
         unpickled_value = pickle.loads(pickled_data)
@@ -183,7 +183,7 @@ class TestCase(test_env.BaseTestCase):
         if lob_type == "BLOB":
             value = value.encode("ascii")
         db_type = getattr(oracledb, f"DB_TYPE_{lob_type}")
-        lob = self.connection.createlob(db_type)
+        lob = self.conn.createlob(db_type)
         lob.write(value)
         self.cursor.execute(f"""
                 insert into Test{lob_type}s (IntCol, {lob_type}Col)
@@ -348,7 +348,7 @@ class TestCase(test_env.BaseTestCase):
                 from dual""")
         sid, = self.cursor.fetchone()
         temp_lobs = self.__get_temp_lobs(sid)
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.arraysize = 27
             self.assertEqual(temp_lobs, 0)
             cursor.execute("""
@@ -378,14 +378,14 @@ class TestCase(test_env.BaseTestCase):
                                 𠽌 𠾴 𠾼 𠿪 𡁜 𡁯 𡁵 𡁶 𡁻 𡃁 𡃉 𡇙 𢃇 𢞵 𢫕 𢭃 𢯊 𢱑 𢱕 𢳂 𢴈
                                 𢵌 𢵧 𢺳 𣲷 𤓓 𤶸 𤷪 𥄫 𦉘 𦟌 𦧲 𦧺 𧨾 𨅝 𨈇 𨋢 𨳊 𨳍 𨳒 𩶘"""
         self.cursor.execute("truncate table TestCLOBs")
-        lob = self.connection.createlob(oracledb.DB_TYPE_CLOB)
+        lob = self.conn.createlob(oracledb.DB_TYPE_CLOB)
         lob.write(supplemental_chars)
         self.cursor.execute("""
                 insert into TestCLOBs
                 (IntCol, ClobCol)
                 values (1, :val)""",
                 [lob])
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select ClobCol from TestCLOBs")
         lob, = self.cursor.fetchone()
         self.assertEqual(lob.read(), supplemental_chars)
@@ -475,7 +475,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_1933_create_lob_with_invalid_type(self):
         "1933 - test creating a lob with an invalid type"
-        self.assertRaises(TypeError, self.connection.createlob,
+        self.assertRaises(TypeError, self.conn.createlob,
                           oracledb.DB_TYPE_NUMBER)
 
 if __name__ == "__main__":

@@ -42,7 +42,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestTempTable (IntCol)
                 values (:value)""",
                 rows)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select count(*) from TestTempTable")
         count, = self.cursor.fetchone()
         self.assertEqual(count, len(rows))
@@ -56,7 +56,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestTempTable (IntCol)
                 values (:1)""",
                 rows)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select count(*) from TestTempTable")
         count, = self.cursor.fetchone()
         self.assertEqual(count, len(rows))
@@ -70,7 +70,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestTempTable (IntCol)
                 values (:1)""")
         self.cursor.executemany(None, rows)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select count(*) from TestTempTable")
         count, = self.cursor.fetchone()
         self.assertEqual(count, len(rows))
@@ -83,14 +83,14 @@ class TestCase(test_env.BaseTestCase):
         statement = "insert into TestTempTable (IntCol) values (:1)"
         self.cursor.executemany(statement, rows[:50])
         self.cursor.executemany(statement, rows[50:])
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select count(*) from TestTempTable")
         count, = self.cursor.fetchone()
         self.assertEqual(count, len(rows))
 
     def test_4004_executemany_with_input_sizes_wrong(self):
         "4004 - test executing multiple times (with input sizes wrong)"
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         cursor.setinputsizes(oracledb.NUMBER)
         data = [[decimal.Decimal("25.8")], [decimal.Decimal("30.0")]]
         cursor.executemany("declare t number; begin t := :1; end;", data)
@@ -308,7 +308,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestTempTable
                 (IntCol, NumberCol)
                 values (:1, :2)""", data)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("""
                 select IntCol, NumberCol
                 from TestTempTable
@@ -349,7 +349,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_4023_execute_no_statement(self):
         "3901 - test executing a None statement"
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2001:",
                                cursor.executemany, None, [1, 2])
 

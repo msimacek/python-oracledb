@@ -40,7 +40,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_4300_prepare(self):
         "4300 - test preparing a statement and executing it multiple times"
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         self.assertEqual(cursor.statement, None)
         statement = "begin :value := :value + 5; end;"
         cursor.prepare(statement)
@@ -86,7 +86,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_4304_bind_names(self):
         "4304 - test that bindnames() works correctly."
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2002:",
                                cursor.bindnames)
         cursor.prepare("begin null; end;")
@@ -227,7 +227,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_4319_var_type_with_object_type(self):
         "4319 - test that an object type can be used as type in cursor.var()"
-        obj_type = self.connection.gettype("UDT_OBJECT")
+        obj_type = self.conn.gettype("UDT_OBJECT")
         var = self.cursor.var(obj_type)
         self.cursor.callproc("pkg_TestBindObject.BindObjectOut",
                              (28, "Bind obj out", var))
@@ -306,24 +306,24 @@ class TestCase(test_env.BaseTestCase):
         self.setup_round_trip_checker()
 
         # perform simple query and verify only one round trip is needed
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.execute("select sysdate from dual").fetchall()
             self.assertRoundTrips(1)
 
         # set prefetchrows to 1 and verify that two round trips are now needed
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.prefetchrows = 1
             cursor.execute("select sysdate from dual").fetchall()
             self.assertRoundTrips(2)
 
         # simple DDL only requires a single round trip
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.execute("truncate table TestTempTable")
             self.assertRoundTrips(1)
 
         # array execution only requires a single round trip
         num_rows = 590
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             data = [(n + 1,) for n in range(num_rows)]
             cursor.executemany("""
                     insert into TestTempTable (IntCol)
@@ -333,14 +333,14 @@ class TestCase(test_env.BaseTestCase):
 
         # setting prefetch and array size to 1 requires a round-trip for each
         # row
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.prefetchrows = 1
             cursor.arraysize = 1
             cursor.execute("select IntCol from TestTempTable").fetchall()
             self.assertRoundTrips(num_rows + 1)
 
         # setting prefetch and array size to 300 requires 2 round-trips
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.prefetchrows = 300
             cursor.arraysize = 300
             cursor.execute("select IntCol from TestTempTable").fetchall()
@@ -352,7 +352,7 @@ class TestCase(test_env.BaseTestCase):
 
         # Set prefetch rows on an existing cursor
         num_rows = 590
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.execute("truncate table TestTempTable")
             self.assertRoundTrips(1)
             data = [(n + 1,) for n in range(num_rows)]
@@ -439,14 +439,14 @@ class TestCase(test_env.BaseTestCase):
 
         # with statement cache enabled, only one parse should take place
         for i in range(num_iters):
-            with self.connection.cursor() as cursor:
+            with self.conn.cursor() as cursor:
                 cursor.execute(sql)
         self.assertParseCount(1)
 
         # with statement cache disabled for the statement, parse count should
         # be the same as the number of iterations
         for i in range(num_iters):
-            with self.connection.cursor() as cursor:
+            with self.conn.cursor() as cursor:
                 cursor.prepare(sql, cache_statement=False)
                 cursor.execute(None)
         self.assertParseCount(num_iters - 1)
@@ -485,7 +485,7 @@ class TestCase(test_env.BaseTestCase):
     def test_4347_arraysize_lt_prefetchrows(self):
         "4347 - test array size less than prefetch rows"
         for i in range(2):
-            with self.connection.cursor() as cursor:
+            with self.conn.cursor() as cursor:
                 cursor.arraysize = 1
                 cursor.execute("select 1 from dual union select 2 from dual")
                 self.assertEqual(cursor.fetchall(), [(1,), (2,)])
@@ -496,7 +496,7 @@ class TestCase(test_env.BaseTestCase):
             if metadata.type_code is oracledb.DB_TYPE_BLOB:
                 return cursor.var(bytes, arraysize=cursor.arraysize)
 
-        self.connection.outputtypehandler = type_handler
+        self.conn.outputtypehandler = type_handler
         blob_data = b"An arbitrary set of blob data for test case 4348"
         self.cursor.execute("truncate table TestBLOBs")
         self.cursor.execute("""
@@ -532,23 +532,23 @@ class TestCase(test_env.BaseTestCase):
 
     def test_4351_variable_not_in_select_list(self):
         "4351 - test executing a statement that raises ORA-01007"
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.execute("""
                     create or replace view ora_1007 as
                         select 1 as SampleNumber, 'String' as SampleString,
                             'Another String' as AnotherString
                         from dual""")
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.execute("select * from ora_1007")
             self.assertEqual(cursor.fetchone(),
                              (1, 'String', 'Another String'))
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.execute("""
                     create or replace view ora_1007 as
                         select 1 as SampleNumber,
                             'Another String' as AnotherString
                         from dual""")
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.execute("select * from ora_1007")
             self.assertEqual(cursor.fetchone(), (1, 'Another String'))
 
@@ -574,11 +574,11 @@ class TestCase(test_env.BaseTestCase):
                 union all
                 select 'A', 'B', 'C' from dual"""
         expected_data = [('A', 'B', 'C')] * 3
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.prefetchrows = 0
             cursor.execute(sql)
             self.assertEqual(cursor.fetchall(), expected_data)
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.prefetchrows = 0
             cursor.execute(sql)
             self.assertEqual(cursor.fetchall(), expected_data)
@@ -655,7 +655,7 @@ class TestCase(test_env.BaseTestCase):
         "4360 - fetchmany() with and without parameters"
         sql_part = "select user from dual"
         sql = " union all ".join([sql_part] * 10)
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.arraysize = 6
             cursor.execute(sql)
             rows = cursor.fetchmany()
@@ -672,7 +672,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_4361_rowcount_after_close(self):
         "4361 - access cursor.rowcount after closing cursor"
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.execute("select user from dual")
             cursor.fetchall()
             self.assertEqual(cursor.rowcount, 1)
@@ -718,12 +718,12 @@ class TestCase(test_env.BaseTestCase):
         data = ('val 1', 'val 2')
         self.cursor.execute(f"create table {table_name} (col1 varchar2(10))")
         self.cursor.execute(f"insert into {table_name} values (:1)", [data[0]])
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute(f"select * from {table_name}")
         self.assertEqual(self.cursor.fetchall(), [(data[0],)])
         self.cursor.execute(f"alter table {table_name} add col2 varchar2(10)")
         self.cursor.execute(f"update {table_name} set col2 = :1", [data[1]])
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute(f"select * from {table_name}")
         self.assertEqual(self.cursor.fetchall(), [data])
 
@@ -778,7 +778,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.execute(sql, rows[0])
         plsql = f"begin {sql}; end;"
         self.cursor.execute(plsql, rows[1])
-        self.connection.commit()
+        self.conn.commit()
         with test_env.FetchLobsContextManager(False):
             self.cursor.execute("""
                 select IntCol, CLOBCol, ExtraNumCol1

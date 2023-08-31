@@ -44,7 +44,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestUniversalRowids 
                 values (:1, :2, :3)""",
                 data)
-        self.connection.commit()
+        self.conn.commit()
 
     def __test_select_rowids(self, table_name):
         self.cursor.execute(f"select rowid, IntCol from {table_name}")
@@ -77,7 +77,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestRowids (IntCol, UrowidCol)
                 select IntCol, rowid
                 from TestNumbers""")
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select IntCol, UrowidCol from TestRowids")
         for int_val, rowid in self.cursor.fetchall():
             self.cursor.execute("""
@@ -94,7 +94,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestRowids (IntCol, RowidCol)
                 select IntCol, rowid
                 from TestNumbers""")
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select IntCol, RowidCol from TestRowids")
         for int_val, rowid in self.cursor.fetchall():
             self.cursor.execute("""
@@ -118,7 +118,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestTempTable (IntCol, StringCol1)
                 values (:1, :2)""",
                 insert_data)
-        self.connection.commit()
+        self.conn.commit()
         ridvar = self.cursor.var(oracledb.ROWID)
         self.cursor.execute("""
             begin
@@ -132,7 +132,7 @@ class TestCase(test_env.BaseTestCase):
             insert into TestRowids (IntCol, RowidCol)
             values(1, :r1)""",
             r1=ridvar)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select IntCol, RowidCol from TestRowids")
         int_val, rowid = self.cursor.fetchone()
         self.cursor.execute("""
@@ -157,7 +157,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestUniversalRowids
                 values (:1, :2, :3)""",
                 insert_data)
-        self.connection.commit()
+        self.conn.commit()
         ridvar = self.cursor.var(oracledb.DB_TYPE_UROWID)
         self.cursor.execute("""
             begin
@@ -171,7 +171,7 @@ class TestCase(test_env.BaseTestCase):
             insert into TestRowids (IntCol, UrowidCol)
             values(1, :r1)""",
             r1=ridvar)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select IntCol, UrowidCol from TestRowids")
         int_val, rowid = self.cursor.fetchone()
         self.cursor.execute("""
@@ -186,7 +186,7 @@ class TestCase(test_env.BaseTestCase):
         "2907 - fetching a null rowid"
         self.cursor.execute("truncate table TestRowids")
         self.cursor.execute("insert into TestRowids (IntCol) values (1)")
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select * from TestRowids")
         self.assertEqual(self.cursor.fetchone(), (1, None, None))
 

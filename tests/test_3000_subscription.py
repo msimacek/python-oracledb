@@ -166,20 +166,20 @@ class TestCase(test_env.BaseTestCase):
     def test_3001_deprecations(self):
         "3001 - test to verify deprecations"
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
-                               self.connection.subscribe,
+                               self.conn.subscribe,
                                ip_address='www.oracle.in',
                                ipAddress='www.oracle.in')
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
-                               self.connection.subscribe, grouping_class=1,
+                               self.conn.subscribe, grouping_class=1,
                                groupingClass=1)
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
-                               self.connection.subscribe, grouping_value=3,
+                               self.conn.subscribe, grouping_value=3,
                                groupingValue=3)
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
-                               self.connection.subscribe, grouping_type=2,
+                               self.conn.subscribe, grouping_type=2,
                                groupingType=2)
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2014:",
-                               self.connection.subscribe,
+                               self.conn.subscribe,
                                client_initiated=True, clientInitiated=True)
 
     @unittest.skipIf(test_env.get_client_version() < (23, 1),
@@ -188,11 +188,11 @@ class TestCase(test_env.BaseTestCase):
         "3002 - test subscription for AQ"
 
         # create queue and clear it of all messages
-        queue = self.connection.queue("TEST_RAW_QUEUE")
+        queue = self.conn.queue("TEST_RAW_QUEUE")
         queue.deqoptions.wait = oracledb.DEQ_NO_WAIT
         while queue.deqone():
             pass
-        self.connection.commit()
+        self.conn.commit()
 
         # set up subscription
         data = AQSubscriptionData(1)
@@ -202,8 +202,8 @@ class TestCase(test_env.BaseTestCase):
                                    callback=data.callback_handler)
 
         # enqueue a message
-        queue.enqone(self.connection.msgproperties(payload="Some data"))
-        self.connection.commit()
+        queue.enqone(self.conn.msgproperties(payload="Some data"))
+        self.conn.commit()
 
         # wait for all messages to be sent
         data.wait_for_messages()

@@ -204,7 +204,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3713_DB_TYPE_BLOB(self):
         "3713 - setting values on variables of type DB_TYPE_BLOB"
         value = b"Short temp BLOB value"
-        temp_blob = self.connection.createlob(oracledb.DB_TYPE_BLOB)
+        temp_blob = self.conn.createlob(oracledb.DB_TYPE_BLOB)
         temp_blob.write(value)
         self._test_positive_set_and_get(oracledb.DB_TYPE_BLOB, temp_blob,
                                         value)
@@ -218,7 +218,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3714_DB_TYPE_CLOB(self):
         "3714 - setting values on variables of type DB_TYPE_CLOB"
         value = "Short temp CLOB value"
-        temp_clob = self.connection.createlob(oracledb.DB_TYPE_CLOB)
+        temp_clob = self.conn.createlob(oracledb.DB_TYPE_CLOB)
         temp_clob.write(value)
         self._test_positive_set_and_get(oracledb.DB_TYPE_CLOB, temp_clob,
                                         value)
@@ -232,7 +232,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3715_DB_TYPE_NCLOB(self):
         "3715 - setting values on variables of type DB_TYPE_NCLOB"
         value = "Short temp NCLOB value"
-        temp_nclob = self.connection.createlob(oracledb.DB_TYPE_NCLOB)
+        temp_nclob = self.conn.createlob(oracledb.DB_TYPE_NCLOB)
         temp_nclob.write(value)
         self._test_positive_set_and_get(oracledb.DB_TYPE_NCLOB, temp_nclob,
                                         value)
@@ -300,7 +300,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3721_DB_TYPE_OBJECT(self):
         "3721 - setting values on variables of type DB_TYPE_OBJECT"
-        obj_type = self.connection.gettype("UDT_OBJECT")
+        obj_type = self.conn.gettype("UDT_OBJECT")
         obj = obj_type.newobject()
         plain_obj = self.get_db_object_as_plain_object(obj)
         self._test_positive_set_and_get(oracledb.DB_TYPE_OBJECT, obj,
@@ -313,7 +313,7 @@ class TestCase(test_env.BaseTestCase):
                                         "UDT_OBJECT")
         self._test_negative_set_and_get(oracledb.DB_TYPE_OBJECT, obj,
                                         "UDT_OBJECTARRAY")
-        wrong_obj_type = self.connection.gettype("UDT_OBJECTARRAY")
+        wrong_obj_type = self.conn.gettype("UDT_OBJECTARRAY")
         self._test_negative_set_and_get(wrong_obj_type, obj)
 
     @unittest.skipIf(test_env.get_client_version() < (21, 0),
@@ -372,7 +372,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3723_DB_TYPE_CURSOR(self):
         "3723 - test setting values on variables of type DB_TYPE_CURSOR"
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         self._test_positive_set_and_get(oracledb.DB_TYPE_CURSOR, None, None)
         self._test_negative_set_and_get(oracledb.DB_TYPE_CURSOR, 5)
 
