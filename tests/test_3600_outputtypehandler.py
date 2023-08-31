@@ -61,7 +61,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into Test{lob_type}s (IntCol, {lob_type}Col)
                 values(1, :val)""",
                 val=in_value)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute(f"""
                 select {lob_type}Col, IntCol, {lob_type}Col
                 from Test{lob_type}s""")
@@ -480,7 +480,7 @@ class TestCase(test_env.BaseTestCase):
         "3671 - execute raises an error if an incorrect arraysize is used"
         def type_handler(cursor, metadata):
             return cursor.var(str)
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         cursor.arraysize = 100
         cursor.outputtypehandler = type_handler
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2016:",
@@ -490,7 +490,7 @@ class TestCase(test_env.BaseTestCase):
         "3672 - execute raises an error if a var is not returned"
         def type_handler(cursor, metadata):
             return "incorrect_return"
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         cursor.outputtypehandler = type_handler
         self.assertRaisesRegex(oracledb.ProgrammingError, "^DPY-2015:",
                                cursor.execute, "select :1 from dual", [5])
@@ -506,10 +506,10 @@ class TestCase(test_env.BaseTestCase):
         "3674 - use of output type handler does not affect description"
         def type_handler(cursor, metadata):
             return cursor.var(str, arraysize=cursor.arraysize)
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.execute("select user from dual")
             desc_before = cursor.description
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.outputtypehandler = type_handler
             cursor.execute("select user from dual")
             self.assertEqual(cursor.description, desc_before)
@@ -518,7 +518,7 @@ class TestCase(test_env.BaseTestCase):
         "3675 - use the old signature for an output type handler"
         def type_handler(cursor, name, default_type, size, precision, scale):
             return cursor.var(str, arraysize=cursor.arraysize)
-        with self.connection.cursor() as cursor:
+        with self.conn.cursor() as cursor:
             cursor.outputtypehandler = type_handler
             cursor.execute("select 1 from dual")
             self.assertEqual(cursor.fetchall(), [('1',)])

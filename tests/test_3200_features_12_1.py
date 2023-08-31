@@ -64,7 +64,7 @@ class TestCase(test_env.BaseTestCase):
                 values (:1, :2, :3)""",
                 rows,
                 arraydmlrowcounts=True)
-        self.connection.commit()
+        self.conn.commit()
         self.assertEqual(self.cursor.getarraydmlrowcounts(), [1, 1, 1, 1, 1])
         self.cursor.execute("select count(*) from TestArrayDML")
         count, = self.cursor.fetchone()
@@ -72,7 +72,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3202_bind_plsql_boolean_collection_in(self):
         "3202 - test binding a boolean collection (in)"
-        type_obj = self.connection.gettype("PKG_TESTBOOLEANS.UDT_BOOLEANLIST")
+        type_obj = self.conn.gettype("PKG_TESTBOOLEANS.UDT_BOOLEANLIST")
         obj = type_obj.newobject()
         obj.setelement(1, True)
         obj.extend([True, False, True, True, False, True])
@@ -82,14 +82,14 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3203_bind_plsql_boolean_collection_out(self):
         "3203 - test binding a boolean collection (out)"
-        type_obj = self.connection.gettype("PKG_TESTBOOLEANS.UDT_BOOLEANLIST")
+        type_obj = self.conn.gettype("PKG_TESTBOOLEANS.UDT_BOOLEANLIST")
         obj = type_obj.newobject()
         self.cursor.callproc("pkg_TestBooleans.TestOutArrays", (6, obj))
         self.assertEqual(obj.aslist(), [True, False, True, False, True, False])
 
     def test_3204_bind_plql_date_collection_in(self):
         "3204 - test binding a PL/SQL date collection (in)"
-        type_obj = self.connection.gettype("PKG_TESTDATEARRAYS.UDT_DATELIST")
+        type_obj = self.conn.gettype("PKG_TESTDATEARRAYS.UDT_DATELIST")
         obj = type_obj.newobject()
         obj.setelement(1, datetime.datetime(2016, 2, 5))
         obj.append(datetime.datetime(2016, 2, 8, 12, 15, 30))
@@ -101,7 +101,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3205_bind_plqsl_date_collection_in_out(self):
         "3205 - test binding a PL/SQL date collection (in/out)"
-        type_obj = self.connection.gettype("PKG_TESTDATEARRAYS.UDT_DATELIST")
+        type_obj = self.conn.gettype("PKG_TESTDATEARRAYS.UDT_DATELIST")
         obj = type_obj.newobject()
         obj.setelement(1, datetime.datetime(2016, 1, 1))
         obj.append(datetime.datetime(2016, 1, 7))
@@ -118,7 +118,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3206_bind_plsql_date_collection_out(self):
         "3206 - test binding a PL/SQL date collection (out)"
-        type_obj = self.connection.gettype("PKG_TESTDATEARRAYS.UDT_DATELIST")
+        type_obj = self.conn.gettype("PKG_TESTDATEARRAYS.UDT_DATELIST")
         obj = type_obj.newobject()
         self.cursor.callproc("pkg_TestDateArrays.TestOutArrays", (3, obj))
         expected_values = [
@@ -131,7 +131,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3207_bind_plsql_number_collection_in(self):
         "3207 - test binding a PL/SQL number collection (in)"
         type_name = "PKG_TESTNUMBERARRAYS.UDT_NUMBERLIST"
-        type_obj = self.connection.gettype(type_name)
+        type_obj = self.conn.gettype(type_name)
         obj = type_obj.newobject()
         obj.setelement(1, 10)
         obj.extend([20, 30, 40, 50])
@@ -142,7 +142,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3208_bind_plsql_number_collection_in_out(self):
         "3208 - test binding a PL/SQL number collection (in/out)"
         type_name = "PKG_TESTNUMBERARRAYS.UDT_NUMBERLIST"
-        type_obj = self.connection.gettype(type_name)
+        type_obj = self.conn.gettype(type_name)
         obj = type_obj.newobject()
         obj.setelement(1, 5)
         obj.extend([8, 3, 2])
@@ -152,15 +152,15 @@ class TestCase(test_env.BaseTestCase):
     def test_3209_bind_plsql_number_collection_out(self):
         "3209 - test binding a PL/SQL number collection (out)"
         type_name = "PKG_TESTNUMBERARRAYS.UDT_NUMBERLIST"
-        type_obj = self.connection.gettype(type_name)
+        type_obj = self.conn.gettype(type_name)
         obj = type_obj.newobject()
         self.cursor.callproc("pkg_TestNumberArrays.TestOutArrays", (3, obj))
         self.assertEqual(obj.aslist(), [100, 200, 300])
 
     def test_3210_bind_plsql_record_array(self):
         "3210 - test binding an array of PL/SQL records (in)"
-        rec_type = self.connection.gettype("PKG_TESTRECORDS.UDT_RECORD")
-        array_type = self.connection.gettype("PKG_TESTRECORDS.UDT_RECORDARRAY")
+        rec_type = self.conn.gettype("PKG_TESTRECORDS.UDT_RECORD")
+        array_type = self.conn.gettype("PKG_TESTRECORDS.UDT_RECORDARRAY")
         array_obj = array_type.newobject()
         for i in range(3):
             obj = rec_type.newobject()
@@ -190,7 +190,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3211_bind_plsql_record_in(self):
         "3211 - test binding a PL/SQL record (in)"
-        type_obj = self.connection.gettype("PKG_TESTRECORDS.UDT_RECORD")
+        type_obj = self.conn.gettype("PKG_TESTRECORDS.UDT_RECORD")
         obj = type_obj.newobject()
         obj.NUMBERVALUE = 18
         obj.STRINGVALUE = "A string in a record"
@@ -209,7 +209,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3212_bind_plsql_record_out(self):
         "3212 - test binding a PL/SQL record (out)"
-        type_obj = self.connection.gettype("PKG_TESTRECORDS.UDT_RECORD")
+        type_obj = self.conn.gettype("PKG_TESTRECORDS.UDT_RECORD")
         obj = type_obj.newobject()
         obj.NUMBERVALUE = 5
         obj.STRINGVALUE = "Test value"
@@ -231,7 +231,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3213_bind_plsql_string_collection_in(self):
         "3213 - test binding a PL/SQL string collection (in)"
         type_name = "PKG_TESTSTRINGARRAYS.UDT_STRINGLIST"
-        type_obj = self.connection.gettype(type_name)
+        type_obj = self.conn.gettype(type_name)
         obj = type_obj.newobject()
         obj.setelement(1, "First element")
         obj.setelement(2, "Second element")
@@ -243,7 +243,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3214_bind_plsql_string_collection_in_out(self):
         "3214 - test binding a PL/SQL string collection (in/out)"
         type_name = "PKG_TESTSTRINGARRAYS.UDT_STRINGLIST"
-        type_obj = self.connection.gettype(type_name)
+        type_obj = self.conn.gettype(type_name)
         obj = type_obj.newobject()
         obj.setelement(1, "The first element")
         obj.append("The second element")
@@ -259,7 +259,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3215_bind_plsql_string_collection_out(self):
         "3215 - test binding a PL/SQL string collection (out)"
         type_name = "PKG_TESTSTRINGARRAYS.UDT_STRINGLIST"
-        type_obj = self.connection.gettype(type_name)
+        type_obj = self.conn.gettype(type_name)
         obj = type_obj.newobject()
         self.cursor.callproc("pkg_TestStringArrays.TestOutArrays", (4, obj))
         expected_values = [f"Test out element # {i + 1}" for i in range(4)]
@@ -268,7 +268,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3216_bind_plsql_string_collection_out_with_holes(self):
         "3216 - test binding a PL/SQL string collection (out with holes)"
         type_name = "PKG_TESTSTRINGARRAYS.UDT_STRINGLIST"
-        type_obj = self.connection.gettype(type_name)
+        type_obj = self.conn.gettype(type_name)
         obj = type_obj.newobject()
         self.cursor.callproc("pkg_TestStringArrays.TestIndexBy", [obj])
         self.assertEqual(obj.first(), -1048576)
@@ -404,7 +404,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3221_implicit_results_no_statement(self):
         "3221 - test getimplicitresults() without executing a statement"
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         self.assertRaisesRegex(oracledb.InterfaceError, "^DPY-1004:",
                                cursor.getimplicitresults)
 
@@ -482,7 +482,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3225_implicit_results(self):
         "3225 - test using implicit cursors to execute new statements"
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         cursor.execute("""
                 declare
                     c1 sys_refcursor;
@@ -539,13 +539,13 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3228_record_based_on_table_type(self):
         "3228 - test %ROWTYPE record type"
-        type_obj = self.connection.gettype("TESTTEMPTABLE%ROWTYPE")
+        type_obj = self.conn.gettype("TESTTEMPTABLE%ROWTYPE")
         self.assertEqual(type_obj.attributes[3].name, "NUMBERCOL")
 
     def test_3229_collection_of_records_based_on_table_type(self):
         "3229 - test collection of %ROWTYPE record type"
         type_name = "PKG_TESTBINDOBJECT.UDT_COLLECTIONROWTYPE"
-        type_obj = self.connection.gettype(type_name)
+        type_obj = self.conn.gettype(type_name)
         self.assertEqual(type_obj.element_type.attributes[3].name, "NUMBERCOL")
 
     def test_3230_batcherrors_with_plsql(self):

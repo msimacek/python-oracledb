@@ -55,7 +55,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3300_create_document_with_json(self):
         "3300 - test creating documents with JSON data"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         val = {"testKey1": "testValue1", "testKey2": "testValue2"}
         str_val = json.dumps(val)
         bytes_val = str_val.encode()
@@ -70,7 +70,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3301_create_document_with_raw(self):
         "3301 - test creating documents with raw data"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         val = b"<html/>"
         key = "MyRawKey"
         media_type = "text/html"
@@ -83,7 +83,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3302_get_collection_names(self):
         "3302 - test getting collection names from the database"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         self.__drop_existing_collections(soda_db)
         self.assertEqual(soda_db.getCollectionNames(), [])
         names = ["zCol", "dCol", "sCol", "aCol", "gCol"]
@@ -100,7 +100,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3303_open_collection(self):
         "3303 - test opening a collection"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         self.__drop_existing_collections(soda_db)
         coll = soda_db.openCollection("CollectionThatDoesNotExist")
         self.assertIsNone(coll)
@@ -111,9 +111,9 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3304_repr(self):
         "3304 - test SodaDatabase representation"
-        conn1 = self.connection
+        conn1 = self.conn
         conn2 = test_env.get_connection()
-        soda_db1 = self.connection.getSodaDatabase()
+        soda_db1 = self.conn.getSodaDatabase()
         soda_db2 = conn1.getSodaDatabase()
         soda_db3 = conn2.getSodaDatabase()
         self.assertEqual(str(soda_db1), str(soda_db2))
@@ -121,7 +121,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3305_negative(self):
         "3305 - test negative cases for SODA database methods"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         self.assertRaises(TypeError, soda_db.createCollection)
         self.assertRaises(TypeError, soda_db.createCollection, 1)
         self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40658:",

@@ -65,12 +65,12 @@ class TestCase(test_env.BaseTestCase):
 
     def test_1702_error_full_code(self):
         "1702 - test generation of full_code for ORA, DPI and DPY errors"
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         with self.assertRaises(oracledb.Error) as cm:
             cursor.execute(None)
         error_obj, = cm.exception.args
         self.assertEqual(error_obj.full_code, "DPY-2001")
-        if not self.connection.thin:
+        if not self.conn.thin:
             with self.assertRaises(oracledb.Error) as cm:
                 cursor.execute("truncate table TestTempTable")
                 int_var = cursor.var(int)
@@ -88,7 +88,7 @@ class TestCase(test_env.BaseTestCase):
                      "unsupported client")
     def test_1703_error_help_url(self):
         "1703 - test generation of error help portal URL"
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         with self.assertRaises(oracledb.Error) as cm:
             cursor.execute("select 1 / 0 from dual")
         error_obj, = cm.exception.args

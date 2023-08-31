@@ -103,7 +103,7 @@ class TestCase(test_env.BaseTestCase):
                 [building.building_id, building])
         self.assertEqual(self.cursor.bindvars[1].inconverter,
                          self.building_in_converter)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select IntCol, StringCol1 from TestTempTable")
         self.assertEqual(self.cursor.fetchall(),
                          [(building.building_id, building.to_json())])
@@ -114,11 +114,11 @@ class TestCase(test_env.BaseTestCase):
         building_one = Building(1, "The First Building", 5)
         building_two = Building(2, "The Second Building", 87)
         sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
-        cursor_one = self.connection.cursor()
-        cursor_two = self.connection.cursor()
+        cursor_one = self.conn.cursor()
+        cursor_two = self.conn.cursor()
         cursor_one.inputtypehandler = self.input_type_handler
         cursor_one.execute(sql, [building_one.building_id, building_one])
-        self.connection.commit()
+        self.conn.commit()
 
         cursor_one.execute("select IntCol, StringCol1 from TestTempTable")
         self.assertEqual(cursor_one.fetchall(),
@@ -161,7 +161,7 @@ class TestCase(test_env.BaseTestCase):
 
         cursor_two.execute("select IntCol, StringCol1 from TestTempTable")
         self.assertEqual(cursor_two.fetchall(), expected_data)
-        other_cursor = self.connection.cursor()
+        other_cursor = self.conn.cursor()
         self.assertRaisesRegex(oracledb.NotSupportedError, "^DPY-3002:",
                                other_cursor.execute, sql,
                                (building_one.building_id, building_one))
@@ -174,7 +174,7 @@ class TestCase(test_env.BaseTestCase):
                 insert into TestTempTable (IntCol, StringCol1)
                 values (:1, :2)""",
                 data_to_insert)
-        self.connection.commit()
+        self.conn.commit()
 
         def converter(value):
             return "CONVERTED"
@@ -215,7 +215,7 @@ class TestCase(test_env.BaseTestCase):
             dict(name="Sam", city="Mumbai")
         ]
         data_to_insert = list(enumerate(json_data))
-        json_as_string = self.connection.thin or \
+        json_as_string = self.conn.thin or \
                 test_env.get_client_version() < (21, 0)
         if json_as_string:
             # insert data as JSON string

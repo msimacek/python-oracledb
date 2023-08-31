@@ -55,7 +55,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3400_invalid_json(self):
         "3400 - test inserting invalid JSON value into SODA collection"
         invalid_json = "{testKey:testValue}"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("InvalidJSON")
         doc = soda_db.createDocument(invalid_json)
         self.assertRaisesRegex(oracledb.DatabaseError,
@@ -64,7 +64,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3401_insert_documents(self):
         "3401 - test inserting documents into a SODA collection"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("TestInsertDocs")
         coll.find().remove()
         values_to_insert = [
@@ -77,7 +77,7 @@ class TestCase(test_env.BaseTestCase):
         for value in values_to_insert:
             doc = coll.insertOneAndGet(value)
             inserted_keys.append(doc.key)
-        self.connection.commit()
+        self.conn.commit()
         self.assertEqual(coll.find().count(), len(values_to_insert))
         for key, value in zip(inserted_keys, values_to_insert):
             doc = coll.find().key(key).getOne().getContent()
@@ -87,7 +87,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3402_skip_documents(self):
         "3402 - test skipping documents in a SODA collection"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("TestSkipDocs")
         coll.find().remove()
         values_to_insert = [
@@ -98,7 +98,7 @@ class TestCase(test_env.BaseTestCase):
         ]
         for value in values_to_insert:
             coll.insertOne(value)
-        self.connection.commit()
+        self.conn.commit()
         self.__test_skip(coll, 0, values_to_insert[3])
         self.__test_skip(coll, 1, values_to_insert[2])
         self.__test_skip(coll, 3, values_to_insert[0])
@@ -107,14 +107,14 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3403_replace_document(self):
         "3403 - test replace documents in SODA collection"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("TestReplaceDoc")
         coll.find().remove()
         content = {"name": "John", "address": {"city": "Sydney"}}
         doc = coll.insertOneAndGet(content)
         new_content = {"name": "John", "address": {"city":"Melbourne"}}
         coll.find().key(doc.key).replaceOne(new_content)
-        self.connection.commit()
+        self.conn.commit()
         doc = coll.find().key(doc.key).getOne().getContent()
         self.__normalize_docs([doc])
         self.assertEqual(doc, new_content)
@@ -122,7 +122,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3404_search_documents_with_content(self):
         "3404 - test search documents with content using $like and $regex"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("TestSearchDocContent")
         coll.find().remove()
         data = [
@@ -135,7 +135,7 @@ class TestCase(test_env.BaseTestCase):
         ]
         for value in data:
             coll.insertOne(value)
-        self.connection.commit()
+        self.conn.commit()
         filter_specs = [
             ({"name": {"$like": "And%"}}, 1),
             ({"name": {"$like": "J%n"}}, 3),
@@ -159,7 +159,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3405_document_remove(self):
         "3405 - test removing documents"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("TestRemoveDocs")
         coll.find().remove()
         data = [
@@ -179,7 +179,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(coll.find().count(), len(data) - 3)
         coll.find().filter({"name": {"$regex": "J.*"}}).remove()
         self.assertEqual(coll.find().count(), len(data) - 4)
-        self.connection.commit()
+        self.conn.commit()
         coll.drop()
 
     def test_3406_create_and_drop_index(self):
@@ -195,10 +195,10 @@ class TestCase(test_env.BaseTestCase):
                 }
             ]
         }
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("TestIndexes")
         coll.find().remove()
-        self.connection.commit()
+        self.conn.commit()
         coll.dropIndex(index_name)
         coll.createIndex(index_spec)
         self.assertRaises(TypeError, coll.createIndex, 3)
@@ -210,8 +210,8 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3407_get_documents(self):
         "3407 - test getting documents from Collection"
-        self.connection.autocommit = True
-        soda_db = self.connection.getSodaDatabase()
+        self.conn.autocommit = True
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("TestGetDocs")
         coll.find().remove()
         data = [
@@ -228,8 +228,8 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3408_cursor(self):
         "3408 - test fetching documents from a cursor"
-        self.connection.autocommit = True
-        soda_db = self.connection.getSodaDatabase()
+        self.conn.autocommit = True
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("TestFindViaCursor")
         coll.find().remove()
         data = [
@@ -244,7 +244,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3409_multiple_document_remove(self):
         "3409 - test removing multiple documents using multiple keys"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("TestRemoveMultipleDocs")
         coll.find().remove()
         data = [
@@ -260,12 +260,12 @@ class TestCase(test_env.BaseTestCase):
         num_removed = coll.find().keys(keys).remove()
         self.assertEqual(num_removed, len(keys))
         self.assertEqual(coll.find().count(), len(data) - len(keys))
-        self.connection.commit()
+        self.conn.commit()
         coll.drop()
 
     def test_3410_document_version(self):
         "3410 - test using version to get documents and remove them"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("TestDocumentVersion")
         coll.find().remove()
         content = {"name": "John", "address": {"city": "Bangalore"}}
@@ -286,12 +286,12 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(coll.find().key(key).version(version).remove(), 0)
         self.assertEqual(coll.find().key(key).version(new_version).remove(), 1)
         self.assertEqual(coll.find().count(), 0)
-        self.connection.commit()
+        self.conn.commit()
         coll.drop()
 
     def test_3411_get_cursor(self):
         "3411 - test keys with GetCursor"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("TestKeysWithGetCursor")
         coll.find().remove()
         values_to_insert = [
@@ -306,12 +306,12 @@ class TestCase(test_env.BaseTestCase):
         keys = [docs[i].key for i in (2, 4, 5)]
         fetched_keys = [doc.key for doc in coll.find().keys(keys).getCursor()]
         self.assertEqual(list(sorted(fetched_keys)), list(sorted(keys)))
-        self.connection.commit()
+        self.conn.commit()
         coll.drop()
 
     def test_3412_created_on(self):
         "3412 - test createdOn attribute of Document"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("CreatedOn")
         coll.find().remove()
         data = {"name": "John", "address": {"city": "Bangalore"}}
@@ -322,7 +322,7 @@ class TestCase(test_env.BaseTestCase):
                      "unsupported client")
     def test_3413_soda_truncate(self):
         "3413 - test Soda truncate"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("TestTruncateDocs")
         coll.find().remove()
         values_to_insert = [
@@ -333,7 +333,7 @@ class TestCase(test_env.BaseTestCase):
         ]
         for value in values_to_insert:
             coll.insertOne(value)
-        self.connection.commit()
+        self.conn.commit()
         self.assertEqual(coll.find().count(), len(values_to_insert))
         coll.truncate()
         self.assertEqual(coll.find().count(), 0)
@@ -341,8 +341,8 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3414_soda_hint(self):
         "3414 - verify hints are reflected in the executed SQL statement"
-        soda_db = self.connection.getSodaDatabase()
-        cursor = self.connection.cursor()
+        soda_db = self.conn.getSodaDatabase()
+        cursor = self.conn.cursor()
         statement = """
                 SELECT
                     ( SELECT t2.sql_fulltext
@@ -375,7 +375,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3415_soda_hint_with_invalid_type(self):
         "3415 - test error for invalid type for soda hint"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         coll = soda_db.createCollection("InvalidSodaHint")
         self.assertRaises(TypeError, coll.insertOneAndGet,
                           dict(name="Fred", age=16), hint=5)
@@ -387,7 +387,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3416_collection_name_and_metadata(self):
         "3416 - test name and metadata attribute"
-        soda_db = self.connection.getSodaDatabase()
+        soda_db = self.conn.getSodaDatabase()
         collection_name = "TestCollectionMetadata"
         coll = soda_db.createCollection(collection_name)
         self.assertEqual(coll.name, collection_name)
@@ -403,7 +403,7 @@ class TestCase(test_env.BaseTestCase):
             soda_db.createDocument(dict(name="Lucas", age=47))
         ]
         coll.insertMany(values_to_insert)
-        self.connection.commit()
+        self.conn.commit()
         fetched_values = [doc.getContent() for doc in coll.find().getCursor()]
         fetched_values.sort(key=lambda x: x["name"])
         for fetched_val, expected_val in zip(fetched_values, values_to_insert):
@@ -425,7 +425,7 @@ class TestCase(test_env.BaseTestCase):
         ]
         for value in values_to_save:
             coll.save(value)
-        self.connection.commit()
+        self.conn.commit()
         fetched_docs = coll.find().getDocuments()
         for fetched_doc, expected_doc in zip(fetched_docs, values_to_save):
             if isinstance(expected_doc, dict):
@@ -437,7 +437,7 @@ class TestCase(test_env.BaseTestCase):
     def test_3419_save_and_get_with_hint(self):
         "3419 - test saveAndGet with hint"
         soda_db = self.get_soda_database(minclient=(19, 11))
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         statement = """
                 SELECT
                     ( SELECT t2.sql_fulltext
@@ -477,7 +477,7 @@ class TestCase(test_env.BaseTestCase):
             doc = coll.saveAndGet(value)
             inserted_keys.append(doc.key)
         fetched_docs = coll.find().getDocuments()
-        self.connection.commit()
+        self.conn.commit()
         self.assertEqual(coll.find().count(), len(values_to_save))
         for key, fetched_doc in zip(inserted_keys, fetched_docs):
             doc = coll.find().key(key).getOne()
@@ -496,7 +496,7 @@ class TestCase(test_env.BaseTestCase):
         ]
         docs = coll.insertManyAndGet(values_to_insert)
         inserted_keys = [doc.key for doc in docs]
-        self.connection.commit()
+        self.conn.commit()
         self.assertEqual(coll.find().count(), len(values_to_insert))
         for key, expected_doc in zip(inserted_keys, values_to_insert):
             if isinstance(expected_doc, dict):
@@ -525,7 +525,7 @@ class TestCase(test_env.BaseTestCase):
         coll = soda_db.createCollection("TestSodaLimit")
         values_to_insert = [{"group": "Camila"} for i in range(20)]
         coll.insertMany(values_to_insert)
-        self.connection.commit()
+        self.conn.commit()
         docs = coll.find().getDocuments()
         self.assertEqual(len(docs), len(values_to_insert))
         docs = coll.find().limit(3).getDocuments()
@@ -538,7 +538,7 @@ class TestCase(test_env.BaseTestCase):
         coll = soda_db.createCollection("TestSodaCountExceptions")
         data = [{"song": "WYMCA"} for i in range(20)]
         coll.insertMany(data)
-        self.connection.commit()
+        self.conn.commit()
         self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40748:",
                                coll.find().limit(5).count)
         self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40748:",
@@ -558,7 +558,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(fetched_data, expected_data)
         self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40626",
                                coll.drop)
-        self.connection.commit()
+        self.conn.commit()
         coll.drop()
 
     def test_3426_negative_map_mode(self):
@@ -587,7 +587,7 @@ class TestCase(test_env.BaseTestCase):
         coll.find().remove()
         for i in range(90):
             coll.save({"name": "Emmanuel", "age": i + 1})
-        self.connection.commit()
+        self.conn.commit()
 
         self.setup_round_trip_checker()
         # setting array size to 0 will use the default value of 100

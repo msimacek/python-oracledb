@@ -150,7 +150,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_2208_bind_decimal_after_number(self):
         "2208 - test binding in a decimal after setting input sizes to number"
-        cursor = self.connection.cursor()
+        cursor = self.conn.cursor()
         value = decimal.Decimal("319438950232418390.273596")
         cursor.setinputsizes(value=oracledb.NUMBER)
         cursor.outputtypehandler = self.output_type_handler_decimal

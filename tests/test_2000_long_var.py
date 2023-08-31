@@ -54,7 +54,7 @@ class TestCase(test_env.BaseTestCase):
                     values (:integer_value, :long_string)""",
                     integer_value=i,
                     long_string=bind_value)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute(f"""
                 select *
                 from Test{name_part}s
@@ -87,7 +87,7 @@ class TestCase(test_env.BaseTestCase):
             long_str = char * (32768 * (i + 1))
             data.append((i + 1, long_str))
         self.cursor.executemany("insert into TestLongs values (:1, :2)", data)
-        self.connection.commit()
+        self.conn.commit()
         self.cursor.execute("select * from TestLongs order by IntCol")
         self.assertEqual(self.cursor.fetchall(), data)
 
