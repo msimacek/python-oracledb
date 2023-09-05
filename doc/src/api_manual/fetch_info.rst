@@ -26,8 +26,8 @@ FetchInfo Attributes
     This read-only attribute returns a dictionary containing the `annotations
     <https://docs.oracle.com/en/database/oracle/oracle-database/23/sqlrf/annotations_clause.html#GUID-1AC16117-BBB6-4435-8794-2B99F8F68052>`__
     associated with the fetched column. If there are no annotations, the value
-    ``None`` is returned. If using thick mode, Oracle Client 23c or higher is
-    also required.
+    ``None`` is returned. Annotations require Oracle Database 23c. If using
+    thick mode, Oracle Client 23c or higher is also required.
 
     .. versionadded:: 2.0.0
 
