@@ -564,15 +564,15 @@ class TestCase(test_env.BaseTestCase):
         class MyConnection(oracledb.Connection):
             pass
         conn = test_env.get_connection(conn_class=MyConnection)
-        expected_regex = f"^<{__name__}.TestCase.test_1137_connection_repr." \
+        expected_value = f"<{__name__}.TestCase.test_1137_connection_repr." \
                          f"<locals>.MyConnection to {conn.username}@" \
-                         f"{conn.dsn}>$"
-        self.assertRegex(repr(conn), expected_regex)
+                         f"{conn.dsn}>"
+        self.assertEqual(repr(conn), expected_value)
 
-        expected_regex = f"^<{__name__}.TestCase.test_1137_connection_repr." \
-                         "<locals>.MyConnection disconnected>$"
         conn.close()
-        self.assertRegex(repr(conn), expected_regex)
+        expected_value = f"<{__name__}.TestCase.test_1137_connection_repr." \
+                         "<locals>.MyConnection disconnected>"
+        self.assertEqual(repr(conn), expected_value)
 
     def test_1138_get_write_only_attributes(self):
         "1138 - test getting write-only attributes"
