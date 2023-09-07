@@ -665,7 +665,7 @@ cdef class MessageWithData(Message):
             fetch_info.scale = scale
         buf.read_ub4(&fetch_info.buffer_size)
         buf.skip_ub4()                      # max number of array elements
-        buf.skip_ub4()                      # cont flags
+        buf.skip_ub8()                      # cont flags
         buf.read_ub4(&num_bytes)            # OID
         if num_bytes > 0:
             oid = buf.read_bytes()
