@@ -103,7 +103,7 @@ cdef class Message:
         buf.skip_ub2()                      # array elem error
         buf.read_ub2(&info.cursor_id)       # cursor id
         buf.read_ub2(&info.pos)             # error position
-        buf.skip_ub1()                      # sql type
+        buf.skip_ub1()                      # sql type (19c and earlier)
         buf.skip_ub1()                      # fatal?
         buf.skip_ub2()                      # flags
         buf.skip_ub2()                      # user cursor options
@@ -158,6 +158,13 @@ cdef class Message:
 
         buf.read_ub4(&info.num)             # error number (extended)
         buf.read_ub8(&info.rowcount)        # row number (extended)
+
+        # fields added in Oracle Database 20c
+        if buf._caps.ttc_field_version >= TNS_CCAP_FIELD_VERSION_20_1:
+            buf.skip_ub4()                  # sql type
+            buf.skip_ub4()                  # server checksum
+
+        # error message
         if info.num != 0:
             self.error_occurred = True
             info.message = buf.read_str(TNS_CS_IMPLICIT).rstrip()
