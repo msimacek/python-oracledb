@@ -303,6 +303,7 @@ class TestCase(test_env.BaseTestCase):
         # set prefetchrows to 1 and verify that two round trips are now needed
         with self.conn.cursor() as cursor:
             cursor.prefetchrows = 1
+            self.assertEqual(cursor.prefetchrows, 1)
             cursor.execute("select sysdate from dual").fetchall()
             self.assertRoundTrips(2)
 
@@ -324,15 +325,17 @@ class TestCase(test_env.BaseTestCase):
         # setting prefetch and array size to 1 requires a round-trip for each
         # row
         with self.conn.cursor() as cursor:
-            cursor.prefetchrows = 1
             cursor.arraysize = 1
+            cursor.prefetchrows = 1
+            self.assertEqual(cursor.prefetchrows, 1)
             cursor.execute("select IntCol from TestTempTable").fetchall()
             self.assertRoundTrips(num_rows + 1)
 
         # setting prefetch and array size to 300 requires 2 round-trips
         with self.conn.cursor() as cursor:
-            cursor.prefetchrows = 300
             cursor.arraysize = 300
+            cursor.prefetchrows = 300
+            self.assertEqual(cursor.prefetchrows, 300)
             cursor.execute("select IntCol from TestTempTable").fetchall()
             self.assertRoundTrips(2)
 
