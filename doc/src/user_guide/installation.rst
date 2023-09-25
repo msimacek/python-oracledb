@@ -113,7 +113,7 @@ This section contains the steps needed to install python-oracledb.
       (datetime.datetime(2023, 9, 21, 8, 24, 4),)
 
 If you run into installation trouble, refer to detailed instructions below, or
-see `Troubleshooting`_.
+see :ref:`troubleshooting`.
 
 You can learn more about python-oracledb from the `python-oracledb
 documentation <https://python-oracledb.readthedocs.io/en/latest/index.html>`__
@@ -154,6 +154,8 @@ determine which Oracle Database version a connection is accessing. These can
 then be used to adjust the application behavior accordingly. Any attempt to
 use Oracle features that are not supported by a particular mode or client
 library/database combination will result in runtime errors.
+
+.. _instreq:
 
 Installation Requirements
 =========================
@@ -810,6 +812,8 @@ code:
 
 - C Compiler: A C99 compiler is needed.
 
+.. _installgh:
+
 Install Using GitHub
 --------------------
 
@@ -852,175 +856,3 @@ If you do not have access to system directories, the ``--user`` option can be
 used to install into a local directory::
 
     python setup.py install --user
-
-.. _troubleshooting:
-
-Troubleshooting
-===============
-
-Installation Troubleshooting
-----------------------------
-
-If installation fails:
-
-- An error such as ``not a supported wheel on this platform.`` indicates that
-  you may be using an older `pip` version. Upgrade it with the following
-  command:
-
-  .. code-block:: shell
-
-      python -m pip install pip --upgrade --user
-
-- Use option ``-v`` with pip. Review your output and logs. Try to install
-  using a different method. **Google anything that looks like an error.**
-  Try some potential solutions.
-
-- If there was a network connection error, check if you need to set the
-  environment variables ``http_proxy`` and/or ``https_proxy``  or
-  try ``python -m pip install --proxy=http://proxy.example.com:80 oracledb
-  --upgrade``.
-
-- If the upgrade did not give any errors but the old version is still
-  installed, try ``python -m pip install oracledb --upgrade
-  --force-reinstall``.
-
-- If you do not have access to modify your system version of
-  Python, then use ``python -m pip install oracledb --upgrade --user``
-  or venv.
-
-- If you get the error ``No module named pip``, it means that the pip module
-  that is built into Python may sometimes be removed by the OS. Use the venv
-  module (built into Python 3.x) or virtualenv module instead.
-
-- If you get the error ``fatal error: dpi.h: No such file or directory``
-  when building from source code, then ensure that your source installation has
-  a subdirectory called "odpi" containing files. If this is missing, review the
-  section on `Install Using GitHub`_.
-
-.. _runtimetroubleshooting:
-
-Runtime Error Troubleshooting
------------------------------
-
-If using python-oracledb fails:
-
-- If you have multiple versions of Python installed, ensure that you are
-  using the correct python and pip (or python3 and pip3) executables.
-
-- If ``import oracledb`` gives a warning like ``Python 3.6 is no longer
-  supported by the Python core team. Therefore, support for it is deprecated in
-  python-oracledb and will be removed in a future release`` then plan to
-  upgrade Python. You can temporarily suppress the warning by importing the
-  `warnings <https://docs.python.org/3/library/warnings.html>`__ module and
-  adding a call like ``warnings.filterwarnings(action='ignore',
-  module="oracledb")`` *before* importing ``oracledb``.
-
-- If you get the error ``DPI-1047: Oracle Client library cannot be
-  loaded`` then:
-
-  - Review the :ref:`features available in python-oracledb's default Thin mode
-    <featuresummary>`.  If Thin mode suits your requirements, then remove calls
-    in your application to :meth:`oracledb.init_oracle_client()` since this
-    loads the Oracle Client library to enable Thick mode.
-
-  - On Windows and macOS, pass the ``lib_dir`` library directory parameter
-    in your :meth:`oracledb.init_oracle_client()` call.  The parameter
-    should be the location of your Oracle Client libraries. Do not pass
-    this parameter on Linux.
-
-  - Check that the Python process has permission to open the Oracle Client
-    libraries.  OS restrictions may prevent the opening of libraries installed
-    in unsafe paths, such as from a user directory.  On Linux you may need to
-    install the Oracle Client libraries under a directory like ``/opt`` or
-    ``/usr/local``.
-
-  - Check if Python and your Oracle Client libraries are both 64-bit or
-    both 32-bit.  The ``DPI-1047`` message will tell you whether the 64-bit
-    or 32-bit Oracle Client is needed for your Python.
-
-  - Set the environment variable ``DPI_DEBUG_LEVEL`` to 64 and restart
-    python-oracledb.  The trace messages will show how and where
-    python-oracledb is looking for the Oracle Client libraries.
-
-    At a Windows command prompt, this could be done with::
-
-        set DPI_DEBUG_LEVEL=64
-
-    On Linux and macOS, you might use::
-
-        export DPI_DEBUG_LEVEL=64
-
-  - On Windows, if you have a full database installation, ensure that this
-    database is the `currently configured database
-    <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-33D575DD-47FF-42B1-A82F-049D3F2A8791>`__.
-
-  - On Windows, if you are not using passing a library directory parameter
-    to :meth:`oracledb.init_oracle_client()`, then restart your command
-    prompt and use ``set PATH`` to check if the environment variable has the
-    correct Oracle Client listed before any other Oracle directories.
-
-  - On Windows, use the ``DIR`` command to verify that ``OCI.DLL`` exists in
-    the directory passed to :meth:`oracledb.init_oracle_client()` or set in
-    ``PATH``.
-
-  - On Windows, check that the correct `Windows Redistributables
-    <https://oracle.github.io/odpi/doc/installation.html#windows>`__ have
-    been installed.
-
-  - On Linux, check if the ``LD_LIBRARY_PATH`` environment variable contains
-    the Oracle Client library directory.  Some environments such as web servers
-    and daemons reset environment variables.  If you are using Oracle Instant
-    Client, a preferred alternative to ``LD_LIBRARY_PATH`` is to ensure that a
-    file in the ``/etc/ld.so.conf.d`` directory contains the path to the
-    Instant Client directory, and then run ``ldconfig``.
-
-- If you get the error ``DPY-3010: connections to this database server version
-  are not supported by python-oracledb in thin mode`` when connecting to Oracle
-  Database 11.2, then you need to enable python-oracledb's Thick mode by
-  installing Oracle Client libraries and calling
-  :meth:`oracledb.init_oracle_client()` in your code.  Alternatively, upgrade
-  your database.
-
-- If you get the error ``DPI-1072: the Oracle Client library version is
-  unsupported``, then review the installation requirements.  The Thick mode of
-  python-oracledb needs Oracle Client libraries 11.2 or later.  Note that
-  version 19 is not supported on Windows 7.  Similar steps shown above for
-  ``DPI-1047`` may help.  You may be able to use python-oracledb Thin mode
-  which can be done by removing calls :meth:`oracledb.init_oracle_client()`
-  from your code.
-
-- If you get the error ``DPY-3015: password verifier type 0x939 is not
-  supported by python-oracledb in thin mode``, then either :ref:`enable Thick
-  mode <enablingthick>` or:
-
-  1. Make sure the database initialization parameter
-     ``sec_case_sensitive_logon`` is not FALSE. To check the value, connect as
-     SYSDBA in SQL*Plus and run ``show parameter sec_case_sensitive_logon``.
-     Note this parameter has been `removed in Oracle Database 21c
-     <https://docs.oracle.com/en/database/oracle/oracle-database/21/nfcon/security-solutions.html#GUID-FAF4C7A6-A2CD-4B9B-9A64-3705F693ECF0>`__
-     so only step 2 is required for this, or subsequent, database versions.
-
-  2. Regenerate passwords for users who have old password verifiers.  You can
-     find such users with the query:
-
-     .. code-block:: sql
-
-        select username from dba_users
-        where (password_versions = '10G ' or password_versions = '10G HTTP ')
-        and username <> 'ANONYMOUS';
-
-     You can reset passwords for these users with commands like ``alter user
-     x identified by y``.
-
-    See the Oracle documentation `Finding and Resetting User Passwords That Use
-    the 10G Password Version
-    <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-D7B09DFE-F55D-449A-8F8A-174D89936304>`__
-    for more information.
-
-- If you get the error ``DPY-4011: the database or network closed the
-  connection`` in python-oracledb's default Thin mode, check if the database
-  requires the use of Native Network Encryption (NNE).  The python-oracledb
-  documentation on :ref:`nne` shows a query from V$SESSION_CONNECT_INFO and
-  sample output to confirm this.  To resolve the error, either change the
-  architecture to use TLS instead of NNE, or :ref:`enable python-oracledb Thick
-  mode <enablingthick>`.
