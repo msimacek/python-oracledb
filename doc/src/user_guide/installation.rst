@@ -29,26 +29,23 @@ Specification.
 Quick Start python-oracledb Installation
 ========================================
 
-This section contains the steps that you need to perform to install python-oracledb
-quickly.
+This section contains the steps needed to install python-oracledb.
 
-1. Install `Python 3 <https://www.python.org/downloads>`__, if it is not already
+1. Install `Python 3 <https://www.python.org/downloads>`__ if it is not already
    available. Use any version from Python 3.7 through 3.12.
 
-  By default, python-oracledb connects directly to Oracle Database.  This lets
-  it be used when Oracle Client libraries are not available (such Apple M1 or
-  Alpine Linux), or where the client libraries are not easily installable (such
-  as some cloud environments). Note not all environments are tested.
-
-2. Install python-oracledb from `PyPI <https://pypi.org/project/oracledb/>`__:
+2. Install python-oracledb from `PyPI <https://pypi.org/project/oracledb/>`__,
+   for example:
 
   .. code-block:: shell
 
       python -m pip install oracledb --upgrade
 
-  If a binary package is not available for your platform, the source package
-  will be downloaded instead.  This will be compiled and the resulting binary
-  installed.
+  On some platforms the binary may be called ``python3`` instead of ``python``.
+
+  If a python-oracledb binary package is not available for your platform, the
+  source package will be downloaded.  This will be compiled and the resulting
+  binary installed.
 
   The ``--user`` option may be useful if you do not have permission to write to
   system directories:
@@ -57,21 +54,27 @@ quickly.
 
       python -m pip install oracledb --upgrade --user
 
-  If you are behind a proxy, add a proxy server to the command, for example add
-  ``--proxy=http://proxy.example.com:80``
+  If you are behind a proxy, use the ``--proxy`` option. For example:
+
+  .. code-block:: shell
+
+      python -m pip install oracledb --upgrade --proxy=http://proxy.example.com:80
+
+  By default, python-oracledb connects directly to Oracle Database.  This lets
+  it be used immediately without needing any additional installation of Oracle
+  Client libraries.
 
 3. Create a file ``test.py`` such as:
 
   .. code-block:: python
 
-      # test.py
+      import getpass
 
       import oracledb
-      import os
 
-      un = os.environ.get('PYTHON_USERNAME')
-      pw = os.environ.get('PYTHON_PASSWORD')
-      cs = os.environ.get('PYTHON_CONNECTSTRING')
+      un = 'scott'
+      cs = 'localhost/orclpdb'
+      pw = getpass.getpass(f'Enter password for {un}@{cs}: ')
 
       with oracledb.connect(user=un, password=pw, dsn=cs) as connection:
           with connection.cursor() as cursor:
@@ -79,32 +82,42 @@ quickly.
               for r in cursor.execute(sql):
                   print(r)
 
-4. In your integrated development environment (IDE) or terminal window, set
-   the three environment variables used by the test program.
+4. Edit ``test.py`` and set the ``un`` and ``cs`` variables to your own
+   database username and the database connection string, respectively.
 
-  A simple :ref:`connection <connhandling>` to the database requires an Oracle
-  Database `user name and password
-  <https://www.youtube.com/watch?v=WDJacg0NuLo>`_ and a database
-  :ref:`connection string <connstr>`. Set the environment variables to your
-  values.  For python-oracledb, the connection string is commonly of the format
-  ``hostname/servicename``, using the host name where the database is running
-  and the Oracle Database service name of the database instance.  The database
-  can be on-premises or in the Cloud.  It should be version 12.1 or later.  The
-  python-oracledb driver does not include a database.
+   A simple :ref:`connection <connhandling>` to the database requires an Oracle
+   Database `user name and password
+   <https://www.youtube.com/watch?v=WDJacg0NuLo>`_ and a database
+   :ref:`connection string <connstr>`.  For python-oracledb, a common
+   connection string format is ``hostname:port/servicename``, using the host
+   name where the database is running, the Oracle Database service name of the
+   database instance, and the port that the database is using. If the default
+   port 1521 is being used, then this component of the connection string is
+   often omitted.
+
+   The database can be on-premises or in the Cloud.  The python-oracledb driver
+   does not include a database.
 
 5. Run the program as shown below:
 
-  .. code-block:: shell
+   .. code-block:: shell
 
       python test.py
 
-  The date will be shown.
+   Enter the database password when prompted and the queried date will be shown,
+   for example:
+
+   .. code-block:: shell
+
+      Enter password for cj@localhost/orclpdb: xxxxxxxxxx
+      (datetime.datetime(2023, 9, 21, 8, 24, 4),)
+
+If you run into installation trouble, refer to detailed instructions below, or
+see `Troubleshooting`_.
 
 You can learn more about python-oracledb from the `python-oracledb
 documentation <https://python-oracledb.readthedocs.io/en/latest/index.html>`__
 and `samples <https://github.com/oracle/python-oracledb/tree/main/samples>`__.
-
-If you run into installation trouble, see `Troubleshooting`_.
 
 Supported Oracle Database Versions
 ==================================
@@ -113,14 +126,15 @@ When python-oracledb is used in the default Thin mode, it connects directly to
 the Oracle Database and does not require Oracle Client libraries.  Connections
 in this mode can be made to Oracle Database 12.1 or later.
 
-To use the :ref:`Thick mode features <featuresummary>` of python-oracledb,
-additional Oracle Client libraries must be installed, as detailed in the
-subsequent sections.  Connections in this mode can be made to Oracle
-Database 9.2, or later, depending on the Oracle Client library version.
+To connect to older Oracle Database releases you must have Oracle Client
+libraries installed, and enable python-oracledb's :ref:`Thick mode
+<enablingthick>`. Connections in this mode can be made to Oracle Database 9.2,
+or later, depending on the Oracle Client library version.
 
-Oracle's standard client-server network interoperability allows connections
-between different versions of Oracle Client libraries and Oracle Database.  For
-currently certified configurations, see Oracle Support's `Doc ID 207303.1
+In python-oracledb Thick mode, Oracle Database's standard client-server network
+interoperability allows connections between different versions of Oracle Client
+libraries and Oracle Database.  For current or previously certified
+configurations, see Oracle Support's `Doc ID 207303.1
 <https://support.oracle.com/epmos/faces/DocumentDisplay?id=207303.1>`__.  In
 summary:
 
@@ -142,7 +156,7 @@ use Oracle features that are not supported by a particular mode or client
 library/database combination will result in runtime errors.
 
 Installation Requirements
-==========================
+=========================
 
 To use python-oracledb, you need:
 
@@ -180,7 +194,7 @@ repository `PyPI <https://pypi.org/project/oracledb/>`__:
 
 .. code-block:: shell
 
-    python -m pip install oracledb
+    python -m pip install oracledb --upgrade
 
 This will download and install a pre-compiled binary from `PyPI
 <https://pypi.org/project/oracledb/>`__ if one is available for your
@@ -194,7 +208,7 @@ install with:
 
 .. code-block:: shell
 
-    python3 -m pip install oracledb --user
+    python3 -m pip install oracledb --upgrade --user
 
 The ``--user`` option is useful when you do not have permission to write to
 system directories.
@@ -202,8 +216,11 @@ system directories.
 Other versions of Python can be used on Oracle Linux, see `Python for Oracle
 Linux <https://yum.oracle.com/oracle-linux-python.html>`__.
 
-If you are behind a proxy, add a proxy server to the command, for example add
-``--proxy=http://proxy.example.com:80``
+If you are behind a proxy, use the ``--proxy`` option. For example:
+
+.. code-block:: shell
+
+    python -m pip install oracledb --upgrade --proxy=http://proxy.example.com:80
 
 
 Optionally Install Oracle Client
@@ -221,8 +238,8 @@ Oracle Client libraries installed.  Oracle Client versions 21, 19, 18, 12 and
   or "Basic Light" package for your operating system architecture.
 
 - Alternatively, use the client libraries already available in a locally
-  installed database such as the free `Oracle Database Express Edition ("XE")
-  <https://www.oracle.com/database/technologies/appdev/xe.html>`__ release.
+  installed database such as the free `Oracle Database 23c Free
+  <https://www.oracle.com/database/free/>`__ release.
 
 To use python-oracledb in Thick mode you must call
 :meth:`oracledb.init_oracle_client()` in your application, see
@@ -447,14 +464,13 @@ Use Python's `pip <https://pip.pypa.io/en/latest/installation/>`__ package
 to install python-oracledb from Python's package repository `PyPI
 <https://pypi.org/project/oracledb/>`__::
 
-    python -m pip install oracledb
+    python -m pip install oracledb --upgrade
 
-If you are behind a proxy, add a proxy server to the command, for example add
-``--proxy=http://proxy.example.com:80``
+If you are behind a proxy, use the ``--proxy`` option. For example:
 
 .. code-block:: shell
 
-   python -m pip install oracledb --proxy=http://proxy.example.com:80 --upgrade
+    python -m pip install oracledb --upgrade --proxy=http://proxy.example.com:80
 
 This will download and install a pre-compiled binary `if one is available
 <https://pypi.org/project/oracledb/>`__ for your architecture.  If a
@@ -641,27 +657,27 @@ to install python-oracledb from Python's package repository `PyPI
 
 .. code-block:: shell
 
-    python -m pip install oracledb
+    python -m pip install oracledb --upgrade
 
 The ``--user`` option may be useful if you do not have permission to write to
 system directories:
 
 .. code-block:: shell
 
-    python -m pip install oracledb --user
+    python -m pip install oracledb --upgrade --user
+
+If you are behind a proxy, use the ``--proxy`` option. For example:
+
+.. code-block:: shell
+
+    python -m pip install oracledb --upgrade --proxy=http://proxy.example.com:80
 
 To install into the system Python, you may need to use ``/usr/bin/python3``
 instead of ``python``:
 
 .. code-block:: shell
 
-    /usr/bin/python3 -m pip install oracledb --user
-
-If you are behind a proxy, add a proxy server to the command, for example add
-``--proxy=http://proxy.example.com:80``
-
-The source will be downloaded, compiled, and the resulting binary
-installed.
+    /usr/bin/python3 -m pip install oracledb --upgrade --user
 
 Optionally Install Oracle Client
 --------------------------------
