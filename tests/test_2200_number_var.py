@@ -577,7 +577,7 @@ class TestCase(test_env.BaseTestCase):
 
     def test_2237_fetch_number_with_lobs_default_false(self):
         "2237 - fetch a number with oracledb.defaults.fetch_lobs = False"
-        with test_env.FetchLobsContextManager(False):
+        with test_env.DefaultsContextManager("fetch_lobs", False):
             self.cursor.execute("select 1 from dual")
             (result,) = self.cursor.fetchone()
             self.assertIsInstance(result, int)
