@@ -540,8 +540,8 @@ Connection Attributes
 .. attribute:: Connection.action
 
     This write-only attribute sets the action column in the v$session table. It
-    is a string attribute and cannot be set to None -- use the empty string
-    instead.
+    is a string attribute but the value None is accepted and treated as an
+    empty string.
 
     .. note::
 
