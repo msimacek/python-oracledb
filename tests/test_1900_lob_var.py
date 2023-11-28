@@ -349,9 +349,7 @@ class TestCase(test_env.BaseTestCase):
     def test_1912_multiple_fetch(self):
         "1912 - test retrieving data from a CLOB after multiple fetches"
         self.cursor.arraysize = 1
-        self.cursor.execute("select * from TestCLOBS")
-        rows = self.cursor.fetchall()
-        self.__validate_query(rows, "CLOB")
+        self.__perform_test("CLOB", oracledb.DB_TYPE_CLOB)
 
     def test_1913_nclob_cursor_description(self):
         "1913 - test cursor description is accurate for NCLOBs"
