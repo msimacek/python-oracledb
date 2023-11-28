@@ -288,6 +288,8 @@ ConnectParams Attributes
 
     This attribute is only supported in the python-oracledb Thin mode.
 
+    .. versionadded:: 2.0.0
+
 .. attribute:: ConnectParams.ssl_server_cert_dn
 
     This read-only attribute is a string that returns the distinguished name
