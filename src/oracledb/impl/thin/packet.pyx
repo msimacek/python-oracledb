@@ -295,6 +295,7 @@ cdef class ReadBuffer(Buffer):
             Buffer buf
         buf = Buffer.__new__(Buffer)
         buf._populate_from_bytes(packet.buf)
+        buf.skip_raw_bytes(8)               # skip packet header
         buf.read_uint16(&control_type)
         if control_type == TNS_CONTROL_TYPE_RESET_OOB:
             self._caps.supports_oob = False

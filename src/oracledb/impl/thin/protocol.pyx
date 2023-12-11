@@ -678,6 +678,7 @@ cdef class BaseAsyncProtocol(BaseProtocol):
 
         # mark protocol to indicate that connect is no longer in progress; this
         # allows the normal break/reset mechanism to fire
+        conn_impl.warning = auth_message.warning
         self._in_connect = False
 
     async def _connect_tcp(self, ConnectParamsImpl params,
