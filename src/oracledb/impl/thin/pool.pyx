@@ -312,13 +312,19 @@ cdef class BaseThinPoolImpl(BasePoolImpl):
         self._check_timeout()
         self._condition.notify()
 
+    cdef int _start_timeout_task(self) except -1:
+        """
+        Starts the task for checking timeouts (differs for sync and async).
+        """
+        pass
+
     cdef int _timeout_helper(self, list conn_impls_to_check) except -1:
         """
         Helper method which checks the list of connections to see if any
         connections have expired (while maintaining the minimum number of
         connections in the pool).
         """
-        cdef ThinConnImpl conn_impl
+        cdef BaseThinConnImpl conn_impl
         current_time = time.monotonic()
         while self.get_open_count() > self.min and conn_impls_to_check:
             conn_impl = conn_impls_to_check[0]
@@ -838,7 +844,7 @@ cdef class AsyncThinPoolImpl(BaseThinPoolImpl):
         by a second to allow for small time discrepancies.
         """
         async def process_timeout():
-            asyncio.sleep(self._timeout + 1)
+            await asyncio.sleep(self._timeout + 1)
             async with self._condition:
                 self._process_timeout()
         self._timeout_task = asyncio.create_task(process_timeout())
