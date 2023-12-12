@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # json_direct_async.py
 #
+# An asynchronous version of json_direct.py
+#
 # Demonstrates the use of some JSON features with the JSON type that is
 # available in Oracle Database 21c and higher.
 #

@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # call_timeout_async.py
 #
+# An asynchronous version of call_timeout.py
+#
 # Demonstrates the use of the feature that enables round trips to the database
 # to time out if a specified amount of time (in milliseconds) has passed
 # without a response from the database.

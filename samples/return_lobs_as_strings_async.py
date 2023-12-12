@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # return_lobs_as_strings_async.py
 #
+# An asynchronous version of return_lobs_as_strings.py
+#
 # Returns all CLOB values as strings and BLOB values as bytes. The
 # performance of this technique is significantly better than fetching the LOBs
 # and then reading the contents of the LOBs as it avoids round-trips to the

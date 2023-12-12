@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # rows_as_instance_async.py
 #
+# An asynchronous version of rows_as_instance.py
+#
 # Returns rows as instances instead of tuples. See the ceDatabase.Row class
 # in the cx_PyGenLib project (http://cx-pygenlib.sourceforge.net) for a more
 # advanced example.

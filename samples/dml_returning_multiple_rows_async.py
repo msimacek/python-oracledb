@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # dml_returning_multiple_rows_async.py
 #
+# An asynchronous version of dml_returning_multiple_rows.py
+#
 # Demonstrates the use of DML returning with multiple rows being returned at
 # once.
 # -----------------------------------------------------------------------------

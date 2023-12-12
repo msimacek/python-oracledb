@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # plsql_record_async.py
 #
+# An asynchronous version of plsql_record.py
+#
 # Demonstrates how to bind (IN and OUT) a PL/SQL record.
 #
 # This feature is only available in Oracle Database 12.1 and higher.

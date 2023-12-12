@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # batch_errors_async.py
 #
+# An asynchronous version of batch_errors.py
+#
 # Demonstrates the use of the Oracle Database 12.1 feature that allows
 # cursor.executemany() to complete successfully, even if errors take
 # place during the execution of one or more of the individual

@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # query_strings_as_bytes_async.py
 #
+# An asynchronous version of query_strings_as_bytes.py
+#
 # Demonstrates how to query strings as bytes (bypassing decoding of the bytes
 # into a Python string). This can be useful when attempting to fetch data that
 # was stored in the database in the wrong encoding.

@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # object_dump_async.py
 #
+# An asynchronous version of object_dump.py
+#
 # Shows how to pretty-print an Oracle object or collection.
 # Also shows how to insert a Python object to an Oracle object column.
 # -----------------------------------------------------------------------------

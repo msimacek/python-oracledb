@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # plsql_collection_async.py
 #
+# An asynchronous version of plsql_collection.py
+#
 # Demonstrates how to get the value of a PL/SQL collection from a stored
 # procedure.
 #

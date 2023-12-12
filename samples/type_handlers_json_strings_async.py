@@ -23,7 +23,9 @@
 # -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
-# type_handlers_json_strings.py
+# type_handlers_json_strings_async.py
+#
+# An asynchronous version of type_handlers_json_strings.py
 #
 # Demonstrates the use of input and output type handlers as well as variable
 # input and output converters. These methods can be used to extend

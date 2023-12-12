@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # insert_geometry_async.py
 #
+# An asynchronous version of insert_geometry.py
+#
 # Demonstrates the ability to create Oracle objects (this example uses
 # SDO_GEOMETRY) and insert them into a table.
 # -----------------------------------------------------------------------------

@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # bind_query_async.py
 #
+# An asynchronous version of bind_query.py
+#
 # Demonstrates the use of bind variables in queries. Binding is important for
 # scalability and security.  Since the text of a query that is re-executed is
 # unchanged, no additional parsing is required, thereby reducing overhead and

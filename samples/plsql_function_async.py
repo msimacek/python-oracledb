@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # plsql_function_async.py
 #
+# An asynchronous version of plsql_function.py
+#
 # Demonstrates how to call a PL/SQL function and get its return value.
 # -----------------------------------------------------------------------------
 

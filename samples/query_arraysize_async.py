@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # query_arraysize_async.py
 #
+# An asynchronous version of query_arraysize.py
+#
 # Demonstrates how to alter the arraysize and prefetchrows values in order to
 # tune the performance of fetching data from the database.  Increasing these
 # values can reduce the number of network round trips and overhead required to

@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # implicit_results_async.py
 #
+# An asynchronous version of implicit_results.py
+#
 # Demonstrates the use of the Oracle Database 12.1 feature that allows PL/SQL
 # procedures to return result sets implicitly, without having to explicitly
 # define them.

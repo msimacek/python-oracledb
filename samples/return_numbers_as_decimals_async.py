@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # return_numbers_as_decimals_async.py
 #
+# An asynchronous version of return_numbers_as_decimals.py
+#
 # Returns all numbers as decimals. This is needed if the full decimal
 # precision of Oracle numbers is required by the application. See this article
 # (http://blog.reverberate.org/2016/02/06/floating-point-demystified-part2.html)
