@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # dbms_output_async.py
 #
+# An asynchronous version of dbms_output.py
+#
 # Demonstrates one method of fetching the lines produced by the DBMS_OUTPUT
 # package.
 # -----------------------------------------------------------------------------

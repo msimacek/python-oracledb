@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # bind_insert_async.py
 #
+# An asynchronous version of bind_insert.py
+#
 # Demonstrates how to insert rows into a table using bind variables.
 # -----------------------------------------------------------------------------
 

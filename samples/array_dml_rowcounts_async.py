@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # array_dml_rowcounts_async.py
 #
+# An asynchronous version of array_dml_rowcounts.py
+#
 # Demonstrates the use of the 12.1 feature that allows cursor.executemany()
 # to return the number of rows affected by each individual execution as a list.
 # The parameter "arraydmlrowcounts" must be set to True in the call to

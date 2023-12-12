@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # json_blob_async.py
 #
+# An asynchronous version of json_blob.py
+#
 # Demonstrates how to use a BLOB as a JSON column store.
 #
 # Note: Oracle Database 12c lets JSON be stored in VARCHAR2 or LOB columns.

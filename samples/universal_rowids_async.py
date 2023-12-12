@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # universal_rowids_async.py
 #
+# An asynchronous version of universal_rowids.py
+#
 # Demonstrates the use of universal rowids. Universal rowids are used to
 # identify rows in index organized tables.
 # -----------------------------------------------------------------------------

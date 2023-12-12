@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # type_handlers_objects_async.py
 #
+# An asynchronous version of type_handlers_objects.py
+#
 # Demonstrates the use of input and output type handlers as well as variable
 # input and output converters. These methods can be used to extend
 # python-oracledb in many ways. This script demonstrates the binding and

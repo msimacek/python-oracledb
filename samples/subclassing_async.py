@@ -23,7 +23,9 @@
 # -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
-# subclassing.py
+# subclassing_async.py
+#
+# An asynchronous version of subclassing.py
 #
 # Demonstrates how to subclass connections and cursors in order to add
 # additional functionality (like logging) or create specialized interfaces for

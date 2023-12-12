@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # query_async.py
 #
+# An asynchronous version of query.py
+#
 # Demonstrates different ways of fetching rows from a query with asyncio.
 # -----------------------------------------------------------------------------
 

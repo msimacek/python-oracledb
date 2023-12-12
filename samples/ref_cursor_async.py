@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # ref_cursor_async.py
 #
+# An asynchronous version of ref_cursor.py
+#
 # Demonstrates the use of REF CURSORS.
 # -----------------------------------------------------------------------------
 

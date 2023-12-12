@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # generic_row_factory_async.py
 #
+# An asynchronous version of generic_row_factory.py
+#
 # Demonstrates the ability to return named tuples for all queries using a
 # subclassed cursor and row factory.
 # -----------------------------------------------------------------------------

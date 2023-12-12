@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # plsql_procedure_async.py
 #
+# An asynchronous version of plsql_procedure.py
+#
 # Demonstrates how to call a PL/SQL stored procedure and get the results of an
 # OUT variable.
 # -----------------------------------------------------------------------------

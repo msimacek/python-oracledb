@@ -25,6 +25,8 @@
 # -----------------------------------------------------------------------------
 # last_rowid_async.py
 #
+# An asynchronous version of last_rowid.py
+#
 # Demonstrates the use of the cursor.lastrowid attribute.
 # -----------------------------------------------------------------------------
 
