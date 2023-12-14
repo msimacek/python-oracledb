@@ -102,7 +102,8 @@ Common Changes
     :meth:`Cursor.executemany()` with the parameter ``batcherrors`` set to the
     value ``True``. Note that in thick mode this error is not raised unless the
     number of batch errors is a multiple of 65536; instead, the number of batch
-    errors returned is modulo 65536.
+    errors returned is modulo 65536
+    (`issue 262 <https://github.com/oracle/python-oracledb/issues/262>`__).
 #)  Black is now used to format Python code and ruff to lint Python code.
 
 
