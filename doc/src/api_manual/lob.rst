@@ -4,7 +4,8 @@
 API: LOB Objects
 ****************
 
-See :ref:`lobdata` for more information about using LOBs.
+A LOB object can be created with :meth:`Connection.createlob()`. See
+:ref:`lobdata` for more information about using LOBs.
 
 .. note::
 
@@ -20,30 +21,25 @@ LOB Methods
     associated with the LOB can be updated -- but only if :meth:`~LOB.open()`
     was called first.
 
-
 .. method:: LOB.fileexists()
 
     Returns a boolean indicating if the file referenced by the BFILE type LOB
     exists.
-
 
 .. method:: LOB.getchunksize()
 
     Returns the chunk size for the internal LOB. Reading and writing to the LOB
     in chunks of multiples of this size will improve performance.
 
-
 .. method:: LOB.getfilename()
 
     Returns a two-tuple consisting of the directory alias and file name for a
     BFILE type LOB.
 
-
 .. method:: LOB.isopen()
 
     Returns a boolean indicating if the LOB has been opened using the method
     :meth:`~LOB.open()`.
-
 
 .. method:: LOB.open()
 
@@ -51,7 +47,6 @@ LOB Methods
     LOB in chunks and there are functional or extensible indexes associated
     with the LOB. If this method is not called, each write will perform an open
     internally followed by a close after the write has been completed.
-
 
 .. method:: LOB.read([offset=1, [amount]])
 
@@ -62,11 +57,9 @@ LOB Methods
     characters are in the LOB, the offset and amount will have to be chosen
     carefully to avoid splitting a character.
 
-
 .. method:: LOB.setfilename(dirAlias, name)
 
     Sets the directory alias and name of the BFILE type LOB.
-
 
 .. method:: LOB.size()
 
@@ -75,11 +68,9 @@ LOB Methods
     number of UCS-2 code points. UCS-2 code points are equivalent to characters
     for all but supplemental characters.
 
-
 .. method:: LOB.trim(new_size=0)
 
     Trims the LOB to the new size.
-
 
 .. method:: LOB.write(data, offset=1)
 
@@ -92,7 +83,7 @@ LOB Methods
     :meth:`~LOB.trim()` function.
 
 LOB Attributes
-===============
+==============
 
 .. attribute:: LOB.type
 
