@@ -4,7 +4,7 @@
 API: Cursor Objects
 *******************
 
-A cursor object can be created with :meth:`Connection.cursor`.
+A cursor object can be created with :meth:`Connection.cursor()`.
 
 Cursor Methods
 ==============
@@ -26,6 +26,14 @@ Cursor Methods
 
         This method is an extension to the DB API definition.
 
+.. method:: Cursor.__iter__()
+
+    Returns the cursor itself to be used as an iterator.
+
+    .. note::
+
+        This method is an extension to the DB API definition but it is
+        mentioned in PEP 249 as an optional extension.
 
 .. method:: Cursor.arrayvar(typ, value, [size])
 
@@ -48,7 +56,6 @@ Cursor Methods
     .. note::
 
         The DB API definition does not define this method.
-
 
 .. method:: Cursor.bindnames()
 
@@ -85,7 +92,6 @@ Cursor Methods
         If you intend to call :meth:`Cursor.setinputsizes()` on the cursor
         prior to making this call, then note that the first item in the
         parameter list refers to the return value of the function.
-
 
 .. method:: Cursor.callproc(name, parameters=[], keyword_parameters={})
 
@@ -138,7 +144,7 @@ Cursor Methods
     that are not passed in during subsequent executions will retain the value
     passed in during the last execution that contained them.
 
-    For maximum efficiency when reusing an statement, it is best to use the
+    For maximum efficiency when reusing a statement, it is best to use the
     :meth:`~Cursor.setinputsizes()` method to specify the parameter types and
     sizes ahead of time; in particular, None is assumed to be a string of
     length 1 so any values that are later bound as numbers or dates will raise
@@ -151,7 +157,6 @@ Cursor Methods
     .. note::
 
         The DB API definition does not define the return value of this method.
-
 
 .. method:: Cursor.executemany(statement, parameters, batcherrors=False, \
         arraydmlrowcounts=False)
@@ -190,7 +195,6 @@ Cursor Methods
     length 1 so any values that are later bound as numbers or dates will raise
     a TypeError exception.
 
-
 .. method:: Cursor.fetchall()
 
     Fetches all (remaining) rows of a query result, returning them as a list of
@@ -203,7 +207,6 @@ Cursor Methods
     did not produce any result set or no call was issued yet.
 
     See :ref:`fetching` for an example.
-
 
 .. method:: Cursor.fetchmany(size=cursor.arraysize)
 
@@ -231,7 +234,6 @@ Cursor Methods
 
     See :ref:`fetching` for an example.
 
-
 .. method:: Cursor.getarraydmlrowcounts()
 
     Retrieves the DML row counts after a call to :meth:`~Cursor.executemany()`
@@ -242,8 +244,7 @@ Cursor Methods
     .. note::
 
         The DB API definition does not define this method and it is only
-        available for Oracle 12.1 and higher.
-
+        available for Oracle 12.1 and later.
 
 .. method:: Cursor.getbatcherrors()
 
@@ -255,7 +256,6 @@ Cursor Methods
     .. note::
 
         The DB API definition does not define this method.
-
 
 .. method:: Cursor.getimplicitresults()
 
@@ -277,21 +277,11 @@ Cursor Methods
         the current result set), this method returns cursors which can be
         fetched independently of each other.
 
-
-.. method:: Cursor.__iter__()
-
-    Returns the cursor itself to be used as an iterator.
-
-    .. note::
-
-        This method is an extension to the DB API definition but it is
-        mentioned in PEP 249 as an optional extension.
-
-
 .. method:: Cursor.parse(statement)
 
-    This can be used to parse a statement without actually executing it (this
-    step is done automatically by Oracle when a statement is executed).
+    This can be used to parse a statement without actually executing it
+    (parsing step is done automatically by Oracle when a statement is
+    :meth:`executed <Cursor.execute>`).
 
     .. note::
 
@@ -301,7 +291,6 @@ Cursor Methods
 
         You can parse any DML or DDL statement. DDL statements are executed
         immediately and an implied commit takes place.
-
 
 .. method:: Cursor.prepare(statement, tag, cache_statement=True)
 
@@ -324,7 +313,6 @@ Cursor Methods
 
         The DB API definition does not define this method.
 
-
 .. method:: Cursor.scroll(value=0, mode="relative")
 
     Scrolls the cursor in the result set to a new position according to the
@@ -344,8 +332,7 @@ Cursor Methods
         This method is an extension to the DB API definition but it is
         mentioned in PEP 249 as an optional extension.
 
-
-.. method:: Cursor.setinputsizes(\*args, \*\*keywordArgs)
+.. method:: Cursor.setinputsizes(*args, **keywordArgs)
 
     This can be used before a call to :meth:`~Cursor.execute()`,
     :meth:`~Cursor.executemany()`, :meth:`~Cursor.callfunc()` or
@@ -362,13 +349,11 @@ Cursor Methods
         If you plan to use :meth:`~Cursor.callfunc()` then be aware that the
         first parameter in the list refers to the return value of the function.
 
-
 .. method:: Cursor.setoutputsize(size, [column])
 
     This method does nothing and is retained solely for compatibility with the
     DB API. The module automatically allocates as much space as needed to fetch
     LONG and LONG RAW columns (or CLOB as string and BLOB as bytes).
-
 
 .. method:: Cursor.var(typ, [size, arraysize, inconverter, outconverter, \
         typename, encoding_errors, bypass_decode, convert_nulls])
@@ -504,7 +489,7 @@ Cursor Attributes
         This attribute is an extension to the DB API definition but it is
         mentioned in PEP 249 as an optional extension.
 
-.. data:: Cursor.description
+.. attribute:: Cursor.description
 
     This read-only attribute is a sequence of :ref:`FetchInfo<fetchinfoobj>`
     objects. This attribute will be None for operations that do not return rows
@@ -542,12 +527,11 @@ Cursor Attributes
 
         This attribute is an extension to the DB API definition.
 
-.. data:: Cursor.lastrowid
+.. attribute:: Cursor.lastrowid
 
     This read-only attribute returns the rowid of the last row modified by the
     cursor. If no row was modified by the last operation performed on the
     cursor, the value None is returned.
-
 
 .. attribute:: Cursor.outputtypehandler
 
@@ -597,7 +581,6 @@ Cursor Attributes
     affected by the operation (for insert, update, delete and merge
     statements), or the number of successful executions of the statement
     (for PL/SQL statements).
-
 
 .. attribute:: Cursor.rowfactory
 
