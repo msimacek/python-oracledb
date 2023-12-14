@@ -2232,6 +2232,8 @@ All of these types are extensions to the DB API definition. They are found in
 query and object metadata. They can also be used to specify the database type
 when binding data.
 
+Also see the table :ref:`supporteddbtypes`.
+
 .. data:: DB_TYPE_BFILE
 
     Describes columns, attributes or array elements in a database that are of
