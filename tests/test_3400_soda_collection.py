@@ -769,6 +769,27 @@ class TestCase(test_env.BaseTestCase):
         self.conn.commit()
         coll.drop()
 
+    def test_3434_replace_one_and_get_negative(self):
+        "3434 - replaceOne() and replaceOneAndGet() with invalid scenarios"
+        conn = test_env.get_connection()
+        soda_db = conn.getSodaDatabase()
+        coll = soda_db.createCollection("TestReplaceOneNegative")
+        coll.find().remove()
+        coll.insertMany([{"Wisdom": 1.7} for d in range(2)])
+        keys = [d.key for d in coll.find().getDocuments()]
+        self.assertRaisesRegex(
+            oracledb.DatabaseError,
+            "^ORA-40734:",
+            coll.find().keys(keys).replaceOne,
+            {"data": "new"},
+        )
+        self.assertRaisesRegex(
+            oracledb.DatabaseError,
+            "^ORA-40734:",
+            coll.find().keys(keys).replaceOneAndGet,
+            {"data": "new"},
+        )
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()
