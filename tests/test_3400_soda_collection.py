@@ -752,6 +752,23 @@ class TestCase(test_env.BaseTestCase):
         self.assertTrue(mapped_coll.drop())
         self.assertFalse(original_coll.drop())
 
+    def test_3433_replace_one_returns(self):
+        "3433 - test that replaceOne() returns a correct boolean"
+        soda_db = self.get_soda_database()
+        coll = soda_db.createCollection("TestReplaceDocReturns")
+        coll.find().remove()
+        doc = coll.insertOneAndGet({"address": {"city": "Sydney"}})
+
+        new_content = {"address": {"city": "Melbourne"}}
+        self.assertTrue(coll.find().key(doc.key).replaceOne(new_content))
+
+        unregistered_key = "DB4A2628F1E0985C891F3F4836"
+        self.assertFalse(
+            coll.find().key(unregistered_key).replaceOne(new_content)
+        )
+        self.conn.commit()
+        coll.drop()
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()
