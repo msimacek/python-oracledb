@@ -790,6 +790,54 @@ class TestCase(test_env.BaseTestCase):
             {"data": "new"},
         )
 
+    def test_3435_write_read_only_coll_negative(self):
+        "3435 - test writting a read-only collection"
+        soda_db = self.get_soda_database()
+        metadata = {
+            "readOnly": True,
+        }
+        coll = soda_db.createCollection("TestCollReadOnly", metadata)
+
+        methods = [
+            coll.insertOne,
+            coll.insertOneAndGet,
+            coll.insertMany,
+            coll.insertManyAndGet,
+            coll.save,
+            coll.saveAndGet,
+        ]
+        for method in methods:
+            with self.subTest(method=method):
+                self.assertRaisesRegex(
+                    oracledb.DatabaseError,
+                    "^ORA-40663:",
+                    method,
+                    {"Song 1": "No end"},
+                )
+
+    def test_3436_create_collection_same_metadata(self):
+        "3436 - createCollection() with the same name and metadata"
+        soda_db = self.get_soda_database()
+        coll_name = "TestCollSameMetadata"
+        coll1 = soda_db.createCollection(coll_name, {"readOnly": True})
+        coll2 = soda_db.createCollection(coll_name, {"readOnly": True})
+        self.assertTrue(coll1.drop())
+        self.assertFalse(coll2.drop())
+
+    def test_3437_create_collection_different_metadata(self):
+        "3437 - createCollection() with the same name but different metadata"
+        soda_db = self.get_soda_database()
+        coll_name = "TestCollDifferentMetadata"
+        coll = soda_db.createCollection(coll_name)
+        with self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40669:"):
+            soda_db.createCollection(coll_name, {"readOnly": False})
+        coll.drop()
+
+        coll = soda_db.createCollection(coll_name, {"readOnly": True})
+        with self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40669:"):
+            soda_db.createCollection(coll_name, {"readOnly": False})
+        coll.drop()
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()
