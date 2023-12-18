@@ -1017,7 +1017,7 @@ class TestCase(test_env.BaseTestCase):
         self.cursor.executemany(
             "insert into TestTempTable (IntCol) values (:1)", values
         )
-        self.cursor.execute("select IntCol from TestTempTable")
+        self.cursor.execute("select IntCol from TestTempTable order by IntCol")
         # fetch first 20 elements
         fetched_values = self.cursor.fetchmany()
         self.assertEqual(fetched_values, values[: self.cursor.arraysize])
