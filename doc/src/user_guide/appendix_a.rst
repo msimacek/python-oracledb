@@ -282,6 +282,10 @@ see :ref:`driverdiff` and :ref:`compatibility`.
       - No
       - Yes
       - Yes
+    * - Concurrent programming with asyncio (see :ref:`asyncio`)
+      - Yes
+      - No
+      - No
     * - End-to-end monitoring and tracing attributes (see :ref:`tracingsql`)
       - Yes
       - Yes

@@ -13,7 +13,7 @@ oracledb 2.0.0 (TBD)
 Thin Mode Changes
 +++++++++++++++++
 
-#)  Added support for asyncio
+#)  Added support for :ref:`concurrent programming with asyncio <asyncio>`
     (`issue 6 <https://github.com/oracle/python-oracledb/issues/6>`__).
 #)  Added parameter :attr:`ConnectParams.sdu` for configuring the Session Data
     Unit (SDU) size for sizing internal buffers used for tuning communication
