@@ -7,16 +7,18 @@ python-oracledb Release Notes
 
 For deprecations, see :ref:`Deprecations <deprecations>`.
 
-oracledb 2.0.1 (TBD)
---------------------
+oracledb 2.0.1 (January 2024)
+-----------------------------
 
 Thin Mode Changes
 +++++++++++++++++
 
 #)  Added support for using alternative event loop implementations such as
-    uvloop with :ref:`asyncio <dbobject>`
+    uvloop with :ref:`asyncio <asyncio>`
     (`issue 276 <https://github.com/oracle/python-oracledb/issues/276>`__).
-#)  Added support for the asynchronous context manager protocol on the
+#)  Added support for the `asynchronous context manager protocol
+    <https://docs.python.org/3/reference/datamodel.html?
+    highlight=aenter#asynchronous-context-managers>`__ on the
     :ref:`AsyncCursor class <asynccursorobj>` as a convenience.
 #)  Fixed regression when connecting to a database using listener redirects
     with either a :ref:`connection pool <connpooling>` or using
@@ -29,10 +31,10 @@ Thin Mode Changes
 #)  Fixed bug when fetch variables contain output converters and a query is
     re-executed
     (`issue 271 <https://github.com/oracle/python-oracledb/issues/271>`__).
-#)  Internal change to ensure that pools are closed gracefully when the main
-    thread terminates.
-#)  Internal change to slightly improve performance of LOB reads and writes.
 #)  Corrected typing declaration for :meth:`oracledb.connect_async()`.
+#)  Internal change to ensure that connection pools are closed gracefully when
+    the main thread terminates.
+#)  Internal change to slightly improve performance of LOB reads and writes.
 
 Common Changes
 ++++++++++++++
