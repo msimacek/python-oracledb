@@ -50,6 +50,22 @@ class ListTableWithSummary(tables.ListTable):
 
 
 class HTMLTranslator(sphinx.writers.html5.HTML5Translator):
+    def visit_paragraph(self, node):
+        children = node.children
+        if len(children) == 1 and children[0].astext() == "No relevant notes":
+            atts = {"style": "clip: rect(1px, 1px, 1px, 1px);"
+                             "clip-path: inset(50%);"
+                             "height: 1px;"
+                             "overflow: hidden;"
+                             "position: absolute;"
+                             "white-space: nowrap;"
+                             "width: 1px;"
+                   }
+            self.body.append(self.starttag(node, 'p', '', **atts))
+        else:
+            super().visit_paragraph(node)
+
+
     def visit_table(self, node):
         if version.parse(sphinx.__version__) > version.parse("4.2.0"):
             self._table_row_indices = [0]
