@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# Copyright (c) 2021, 2023, Oracle and/or its affiliates.
+# Copyright (c) 2021, 2024, Oracle and/or its affiliates.
 #
 # This software is dual-licensed to you under the Universal Permissive License
 # (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
@@ -28,6 +28,7 @@
 
 import os
 import tempfile
+import random
 
 import oracledb
 import test_env
@@ -745,6 +746,23 @@ class TestCase(test_env.BaseTestCase):
         parts = [f"{name}={value!r}" for name, value in values]
         expected_value = f"ConnectParams({', '.join(parts)})"
         self.assertEqual(repr(params), expected_value)
+
+    def test_4565_sdu(self):
+        "4565 - connect descriptor with SDU"
+        connect_string = """
+            (DESCRIPTION=(SDU=65535)(ADDRESS=(PROTOCOL=TCP)
+            (HOST=my_host1)(PORT=1589)))"""
+        params = oracledb.ConnectParams()
+        params.parse_connect_string(connect_string)
+        self.assertEqual(params.sdu, 65535)
+
+    def test_4566_sdu_invalid_sizes(self):
+        "4566 - test that SDU is set correctly with invalid sizes"
+        params = oracledb.ConnectParams()
+        params.set(sdu=random.randint(0, 511))
+        self.assertEqual(params.sdu, 512)
+        params.set(sdu=2097153)
+        self.assertEqual(params.sdu, 2097152)
 
 
 if __name__ == "__main__":
