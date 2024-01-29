@@ -505,7 +505,6 @@ class TestCase(test_env.BaseTestCase):
                 10,
                 None,
                 False,
-                False,
                 "INTCOL",
                 False,
                 9,
@@ -517,7 +516,6 @@ class TestCase(test_env.BaseTestCase):
                 "select ObjectCol from TestObjects",
                 None,
                 None,
-                False,
                 False,
                 "OBJECTCOL",
                 True,
@@ -531,7 +529,6 @@ class TestCase(test_env.BaseTestCase):
                 4000,
                 4000 * varchar_ratio,
                 True,
-                False,
                 "JSONVARCHAR",
                 False,
                 None,
@@ -544,7 +541,6 @@ class TestCase(test_env.BaseTestCase):
                 127,
                 None,
                 False,
-                False,
                 "FLOATCOL",
                 False,
                 126,
@@ -553,28 +549,11 @@ class TestCase(test_env.BaseTestCase):
                 oracledb.DB_TYPE_NUMBER,
             ),
         ]
-        if test_env.get_server_version() >= (19, 0):
-            test_values.append(
-                (
-                    "select OSONCOL from TestOsonCols",
-                    None,
-                    None,
-                    False,
-                    True,
-                    "OSONCOL",
-                    False,
-                    None,
-                    None,
-                    oracledb.DB_TYPE_BLOB,
-                    oracledb.DB_TYPE_BLOB,
-                )
-            )
         for (
             sql,
             display_size,
             internal_size,
             is_json,
-            is_oson,
             name,
             null_ok,
             precision,
@@ -588,7 +567,6 @@ class TestCase(test_env.BaseTestCase):
             self.assertEqual(fetch_info.display_size, display_size)
             self.assertEqual(fetch_info.internal_size, internal_size)
             self.assertEqual(fetch_info.is_json, is_json)
-            self.assertEqual(fetch_info.is_oson, is_oson)
             self.assertEqual(fetch_info.name, name)
             self.assertEqual(fetch_info.null_ok, null_ok)
             self.assertEqual(fetch_info.precision, precision)
