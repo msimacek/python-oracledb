@@ -503,6 +503,8 @@ class TestCase(test_env.BaseTestCase):
             with self.conn.cursor() as cursor:
                 cursor.prepare(sql, cache_statement=False)
                 cursor.execute(None)
+        if not self.conn.thin:
+            num_iters -= 1
         self.assertParseCount(num_iters)
 
     def test_4334(self):
