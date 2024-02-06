@@ -314,7 +314,7 @@ class BaseCursor:
         attribute. In particular, elements should not be removed or replaced.
         """
         self._verify_open()
-        return self._impl.fetch_vars
+        return self._impl.get_fetch_vars()
 
     def getarraydmlrowcounts(self) -> list:
         """

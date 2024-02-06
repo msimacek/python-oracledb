@@ -225,7 +225,6 @@ cdef class BaseCursorImpl:
         # finalize variable and store in arrays
         var_impl._finalize_init()
         self.fetch_var_impls[pos] = var_impl
-        self.fetch_vars[pos] = PY_TYPE_VAR._from_impl(var_impl)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -477,11 +476,21 @@ cdef class BaseCursorImpl:
         return dict([(bind_var.name, bind_var.var) \
                 for bind_var in self.bind_vars])
 
-    def get_description(self):
+    def get_fetch_vars(self):
         """
-        Internal method for populating the cursor description.
+        Return a list of fetch variables. Initially the list contains all
+        empty values except where a fetch type handler was used. This will
+        populate any remaining fetch variables that are needed.
         """
-        return [v._impl.get_description() for v in self.fetch_vars]
+        cdef:
+            BaseVarImpl var_impl
+            ssize_t i
+        if self.fetch_vars is not None:
+            for i, var in enumerate(self.fetch_vars):
+                if var is None:
+                    var_impl = <BaseVarImpl> self.fetch_var_impls[i]
+                    self.fetch_vars[i] = PY_TYPE_VAR._from_impl(var_impl)
+        return self.fetch_vars
 
     @utils.CheckImpls("getting implicit results from PL/SQL")
     def get_implicit_results(self, connection):
