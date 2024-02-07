@@ -115,6 +115,18 @@ cdef class DbType:
     cdef DbType _from_ora_type_and_csfrm(uint8_t ora_type_num, uint8_t csfrm)
 
 
+cdef class DefaultsImpl:
+    cdef:
+        public uint32_t arraysize
+        public str config_dir
+        public bint fetch_lobs
+        public bint fetch_decimals
+        public uint32_t prefetchrows
+        public uint32_t stmtcachesize
+
+cdef DefaultsImpl C_DEFAULTS
+
+
 cdef class Buffer:
     cdef:
         ssize_t _max_size, _size, _pos

@@ -203,7 +203,7 @@ cdef class BaseCursorImpl:
         # applicable
         db_type_num = var_impl.dbtype.num
         if db_type_num == DB_TYPE_NUM_NUMBER:
-            if defaults.fetch_decimals:
+            if C_DEFAULTS.fetch_decimals:
                 var_impl._preferred_num_type = NUM_TYPE_DECIMAL
             elif var_impl.scale == 0 \
                     or (var_impl.scale == -127 and var_impl.precision == 0):
@@ -214,7 +214,7 @@ cdef class BaseCursorImpl:
             var_impl.outconverter = conn_impl.decode_oson
         elif fetch_info.is_json and db_type_num != DB_TYPE_NUM_JSON:
             var_impl.outconverter = self._build_json_converter_fn()
-        elif not defaults.fetch_lobs:
+        elif not C_DEFAULTS.fetch_lobs:
             if db_type_num == DB_TYPE_NUM_BLOB:
                 var_impl.dbtype = DB_TYPE_LONG_RAW
             elif db_type_num == DB_TYPE_NUM_CLOB:

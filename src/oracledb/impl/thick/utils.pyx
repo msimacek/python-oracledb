@@ -468,7 +468,7 @@ def init_oracle_client(lib_dir=None, config_dir=None, error_url=None,
         encoding_bytes = constants.ENCODING.encode()
         params.defaultEncoding = encoding_bytes
         if config_dir is None:
-            config_dir = defaults.config_dir
+            config_dir = C_DEFAULTS.config_dir
         if lib_dir is not None:
             lib_dir_bytes = lib_dir.encode()
             params.oracleClientLibDir = lib_dir_bytes
