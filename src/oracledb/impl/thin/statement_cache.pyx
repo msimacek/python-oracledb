@@ -113,12 +113,15 @@ cdef class StatementCache:
                     self._cached_statements[sql] = stmt
                     self._adjust_cache()
                 self._open_cursors.add(stmt)
-            elif force_new or not cache_statement or stmt._in_use:
+            elif force_new or stmt._in_use:
                 if not cache_statement:
                     self._add_cursor_to_close(stmt)
                     del self._cached_statements[sql]
                 stmt = stmt.copy()
                 self._open_cursors.add(stmt)
+            elif not cache_statement:
+                del self._cached_statements[sql]
+                stmt._return_to_cache = False
             else:
                 self._cached_statements.move_to_end(sql)
         stmt._in_use = True
