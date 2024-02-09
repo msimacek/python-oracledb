@@ -66,6 +66,7 @@ from .base_impl cimport (
     C_DEFAULTS,
     ConnectParamsImpl,
     DbType,
+    DB_TYPE_NUM_CURSOR,
     FetchInfoImpl,
     PoolParamsImpl,
     get_preferred_num_type,

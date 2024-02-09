@@ -29,8 +29,10 @@
 # base_impl.pyx).
 #------------------------------------------------------------------------------
 
+@cython.freelist(20)
 cdef class FetchInfoImpl:
     pass
+
 
 cdef class BaseCursorImpl:
 
@@ -61,7 +63,7 @@ cdef class BaseCursorImpl:
                 self.bind_style = list
             elif self.bind_style is not list:
                 errors._raise_err(errors.ERR_MIXED_POSITIONAL_AND_NAMED_BINDS)
-            self._bind_values_by_position(cursor, type_handler, <dict> params,
+            self._bind_values_by_position(cursor, type_handler, params,
                                           num_rows, row_num,
                                           defer_type_assignment)
         else:
@@ -145,10 +147,10 @@ cdef class BaseCursorImpl:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef int _create_fetch_var(self, object conn, object cursor,
-                               object type_handler, bint uses_fetch_info,
-                               ssize_t pos,
-                               FetchInfoImpl fetch_info) except -1:
+    cdef BaseVarImpl _create_fetch_var(self, object conn, object cursor,
+                                       object type_handler, bint
+                                       uses_fetch_info, ssize_t pos,
+                                       FetchInfoImpl fetch_info):
         """
         Create the fetch variable for the given position and fetch information.
         The output type handler is consulted, if present, to make any necessary
@@ -185,7 +187,7 @@ cdef class BaseCursorImpl:
                     var_impl._finalize_init()
                 self.fetch_vars[pos] = var
                 self.fetch_var_impls[pos] = var_impl
-                return 0
+                return var_impl
 
         # otherwise, create a new variable using the provided fetch information
         var_impl = self._create_var_impl(conn)
@@ -225,6 +227,7 @@ cdef class BaseCursorImpl:
         # finalize variable and store in arrays
         var_impl._finalize_init()
         self.fetch_var_impls[pos] = var_impl
+        return var_impl
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -335,6 +338,62 @@ cdef class BaseCursorImpl:
                 bind_var.var_impl._bind(conn, self, num_execs, bind_var.name,
                                         bind_var.pos)
 
+    cdef int _prepare(self, str statement, str tag,
+                      bint cache_statement) except -1:
+        """
+        Prepares a statement for execution.
+        """
+        self.statement = statement
+        self.rowfactory = None
+        self.fetch_vars = None
+        if not self.set_input_sizes:
+            self.bind_vars = None
+            self.bind_vars_by_name = None
+            self.bind_style = None
+
+    def _prepare_for_execute(self, object cursor, str statement,
+                             object parameters, object keyword_parameters):
+        """
+        Internal method for preparing a statement for execution.
+        """
+        cdef:
+            bint prepare_needed
+
+        # verify parameters
+        if statement is None and self.statement is None:
+            errors._raise_err(errors.ERR_NO_STATEMENT)
+        if keyword_parameters:
+            if parameters:
+                errors._raise_err(errors.ERR_ARGS_AND_KEYWORD_ARGS)
+            parameters = keyword_parameters
+        elif parameters is not None and not isinstance(
+            parameters, (list, tuple, dict)
+        ):
+            errors._raise_err(errors.ERR_WRONG_EXECUTE_PARAMETERS_TYPE)
+        prepare_needed = statement and statement != self.statement
+        if (
+            not (prepare_needed and not self.set_input_sizes)
+            and self.bind_vars is not None
+            and parameters is not None
+        ):
+            if (
+                self.bind_style is dict and not isinstance(parameters, dict)
+                or self.bind_style is not dict and isinstance(parameters, dict)
+            ):
+                errors._raise_err(errors.ERR_MIXED_POSITIONAL_AND_NAMED_BINDS)
+
+        # prepare statement, if necessary
+        if prepare_needed:
+            self._prepare(statement, None, True)
+
+        # perform bind
+        self.set_input_sizes = False
+        if parameters is not None:
+            self.bind_one(cursor, parameters)
+
+        # clear any warning
+        self.warning = None
+
     cdef int _reset_bind_vars(self, uint32_t num_rows) except -1:
         """
         Reset all of the existing bind variables. If any bind variables don't
@@ -384,7 +443,7 @@ cdef class BaseCursorImpl:
             self._bind_values(cursor, type_handler, params_row, num_rows, i,
                               defer_type_assignment)
 
-    def bind_one(self, cursor, parameters):
+    cdef int bind_one(self, object cursor, object parameters) except -1:
         """
         Internal method used for binding a single row of data.
         """
@@ -508,9 +567,11 @@ cdef class BaseCursorImpl:
     def parse(self, cursor):
         pass
 
-    @utils.CheckImpls("preparing a statement")
     def prepare(self, str statement, str tag, bint cache_statement):
-        pass
+        """
+        Prepares a statement for execution.
+        """
+        self._prepare(statement, tag, cache_statement)
 
     @utils.CheckImpls("scrolling a scrollable cursor")
     def scroll(self, conn, value, mode):
@@ -529,6 +590,7 @@ cdef class BaseCursorImpl:
             BindVar bind_var
             ssize_t pos
         self.bind_vars = []
+        self.set_input_sizes = True
         if kwargs:
             self.bind_style = dict
             self.bind_vars_by_name = {}
@@ -545,3 +607,4 @@ cdef class BaseCursorImpl:
                 self.bind_vars.append(bind_var)
                 bind_var._set_by_type(conn, self, value)
                 bind_var.pos = pos + 1
+        return self.get_bind_vars()
