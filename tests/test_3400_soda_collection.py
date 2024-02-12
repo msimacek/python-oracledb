@@ -152,7 +152,14 @@ class TestCase(test_env.BaseTestCase):
         ]
         coll.insertMany(data)
         self.conn.commit()
+
+        # create index so $contains works
+        index = {"name": "js_ix_3404"}
+        coll.createIndex(index)
+
         filter_specs = [
+            ({"name": {"$contains": "John"}}, 1),
+            ({"age": {"$contains": "45"}}, 1),
             ({"name": {"$like": "J%n"}}, 2),
             ({"name": {"$regex": ".*[ho]n"}}, 2),
             ("""{"locations.city": {"$regex": "^Ban.*"}}""", 2),
