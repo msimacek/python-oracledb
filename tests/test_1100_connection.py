@@ -831,6 +831,16 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(conn.username, test_env.get_main_user())
         self.assertEqual(conn.proxy_user, proxy_user)
 
+    @unittest.skipIf(
+        not test_env.get_is_thin(), "thick mode doesn't support SDU yet"
+    )
+    def test_1144(self):
+        "1144 - test connection.sdu"
+        conn = test_env.get_connection()
+        sdu = random.randint(512, conn.sdu)
+        conn = test_env.get_connection(sdu=sdu)
+        self.assertEqual(conn.sdu, sdu)
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()
