@@ -206,7 +206,7 @@ def get_client_version():
     value = PARAMETERS.get(name)
     if value is None:
         if get_is_thin():
-            value = (23, 2)
+            value = (23, 4)
         else:
             value = oracledb.clientversion()[:2]
         PARAMETERS[name] = value
