@@ -42,6 +42,8 @@ Common Changes
     columns which have the check constraint ``IS JSON FORMAT OSON`` enabled.
 #)  Added boolean property :data:`FetchInfo.is_oson` which is set when a column
     has the check constraint "IS JSON FORMAT OSON" enabled.
+#)  Added support for columns of type vector (currently requires access to a
+    limited availability release of the database).
 #)  A number of performance improvements were made.
 #)  Error ``DPY-2045: arraysize must be an integer greater than zero`` is now
     raised when an invalid value is specified for the attribute
