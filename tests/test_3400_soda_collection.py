@@ -28,7 +28,6 @@
 
 import unittest
 
-import oracledb
 import test_env
 
 
@@ -58,12 +57,8 @@ class TestCase(test_env.BaseTestCase):
         soda_db = self.get_soda_database()
         coll = soda_db.createCollection("InvalidJSON")
         doc = soda_db.createDocument(invalid_json)
-        self.assertRaisesRegex(
-            oracledb.DatabaseError,
-            "^ORA-40780:|^ORA-02290:",
-            coll.insertOne,
-            doc,
-        )
+        with self.assertRaisesFullCode("ORA-40780", "ORA-02290"):
+            coll.insertOne(doc)
 
     def test_3401(self):
         "3401 - test inserting documents into a SODA collection"
@@ -235,9 +230,8 @@ class TestCase(test_env.BaseTestCase):
         coll.dropIndex(index_name)
         coll.createIndex(index_spec)
         self.assertRaises(TypeError, coll.createIndex, 3)
-        self.assertRaisesRegex(
-            oracledb.DatabaseError, "^ORA-40733:", coll.createIndex, index_spec
-        )
+        with self.assertRaisesFullCode("ORA-40733"):
+            coll.createIndex(index_spec)
         self.assertTrue(coll.dropIndex(index_name))
         self.assertFalse(coll.dropIndex(index_name))
 
@@ -437,9 +431,8 @@ class TestCase(test_env.BaseTestCase):
             if not isinstance(expected_val, dict):
                 expected_val = expected_val.getContent()
             self.assertEqual(fetched_val, fetched_val)
-        self.assertRaisesRegex(
-            oracledb.DatabaseError, "^DPI-1031:", coll.insertMany, []
-        )
+        with self.assertRaisesFullCode("DPI-1031"):
+            coll.insertMany([])
 
     def test_3418(self):
         "3418 - test save"
@@ -535,12 +528,10 @@ class TestCase(test_env.BaseTestCase):
         coll = soda_db.createCollection("TestCloseSodaDocCursor")
         cursor = coll.find().getCursor()
         cursor.close()
-        self.assertRaisesRegex(
-            oracledb.InterfaceError, "^DPY-1006", cursor.close
-        )
-        self.assertRaisesRegex(
-            oracledb.InterfaceError, "^DPY-1006:", next, cursor
-        )
+        with self.assertRaisesFullCode("DPY-1006"):
+            cursor.close()
+        with self.assertRaisesFullCode("DPY-1006"):
+            next(cursor)
 
     def test_3423(self):
         "3423 - test limit to get specific amount of documents"
@@ -561,12 +552,10 @@ class TestCase(test_env.BaseTestCase):
         data = [{"song": "WYMCA"} for i in range(20)]
         coll.insertMany(data)
         self.conn.commit()
-        self.assertRaisesRegex(
-            oracledb.DatabaseError, "^ORA-40748:", coll.find().limit(5).count
-        )
-        self.assertRaisesRegex(
-            oracledb.DatabaseError, "^ORA-40748:", coll.find().skip(10).count
-        )
+        with self.assertRaisesFullCode("ORA-40748"):
+            coll.find().limit(5).count()
+        with self.assertRaisesFullCode("ORA-40748"):
+            coll.find().skip(10).count()
 
     def test_3425(self):
         "3425 - test mapMode parameter"
@@ -585,9 +574,8 @@ class TestCase(test_env.BaseTestCase):
             )
             self.__normalize_docs(fetched_data)
             self.assertEqual(fetched_data, expected_data)
-            self.assertRaisesRegex(
-                oracledb.DatabaseError, "^ORA-40626", coll.drop
-            )
+            with self.assertRaisesFullCode("ORA-40626"):
+                coll.drop()
         self.conn.commit()
         self.assertTrue(original_coll.drop())
         self.assertFalse(mapped_coll.drop())
@@ -595,13 +583,8 @@ class TestCase(test_env.BaseTestCase):
     def test_3426(self):
         "3426 - test mapping a new collection from an non-existent table"
         soda_db = self.get_soda_database()
-        self.assertRaisesRegex(
-            oracledb.DatabaseError,
-            "^ORA-40623",
-            soda_db.createCollection,
-            "TestSodaMapNonExistent",
-            mapMode=True,
-        )
+        with self.assertRaisesFullCode("ORA-40623"):
+            soda_db.createCollection("TestSodaMapNonExistent", mapMode=True)
 
     def test_3427(self):
         "3427 - test negative cases for SodaOperation methods"
@@ -739,18 +722,10 @@ class TestCase(test_env.BaseTestCase):
         coll = soda_db.createCollection("TestReplaceOneNegative")
         coll.insertMany([{"Wisdom": 1.7} for d in range(2)])
         keys = [d.key for d in coll.find().getDocuments()]
-        self.assertRaisesRegex(
-            oracledb.DatabaseError,
-            "^ORA-40734:",
-            coll.find().keys(keys).replaceOne,
-            {"data": "new"},
-        )
-        self.assertRaisesRegex(
-            oracledb.DatabaseError,
-            "^ORA-40734:",
-            coll.find().keys(keys).replaceOneAndGet,
-            {"data": "new"},
-        )
+        with self.assertRaisesFullCode("ORA-40734"):
+            coll.find().keys(keys).replaceOne({"data": "new"})
+        with self.assertRaisesFullCode("ORA-40734"):
+            coll.find().keys(keys).replaceOneAndGet({"data": "new"})
 
     def test_3435(self):
         "3435 - test writting a read-only collection"
@@ -770,12 +745,8 @@ class TestCase(test_env.BaseTestCase):
         ]
         for method in methods:
             with self.subTest(method=method):
-                self.assertRaisesRegex(
-                    oracledb.DatabaseError,
-                    "^ORA-40663:",
-                    method,
-                    {"Song 1": "No end"},
-                )
+                with self.assertRaisesFullCode("ORA-40663"):
+                    method({"Song 1": "No end"})
 
     def test_3436(self):
         "3436 - createCollection() with the same name and metadata"
@@ -791,12 +762,12 @@ class TestCase(test_env.BaseTestCase):
         soda_db = self.get_soda_database()
         coll_name = "TestCollDifferentMetadata"
         coll = soda_db.createCollection(coll_name)
-        with self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40669:"):
+        with self.assertRaisesFullCode("ORA-40669"):
             soda_db.createCollection(coll_name, {"readOnly": False})
         coll.drop()
 
         coll = soda_db.createCollection(coll_name, {"readOnly": True})
-        with self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40669:"):
+        with self.assertRaisesFullCode("ORA-40669"):
             soda_db.createCollection(coll_name, {"readOnly": False})
 
     def test_3438(self):
@@ -875,7 +846,7 @@ class TestCase(test_env.BaseTestCase):
             "dataguide": "off",
         }
         coll.createIndex(index)
-        with self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40582:"):
+        with self.assertRaisesFullCode("ORA-40582"):
             coll.getDataGuide()
 
     def test_3440(self):
@@ -889,7 +860,7 @@ class TestCase(test_env.BaseTestCase):
         "3441 - test getDataGuide() without a json search index"
         soda_db = self.get_soda_database()
         coll = soda_db.createCollection("TestSodaDataGuideWithoutIndex")
-        with self.assertRaisesRegex(oracledb.DatabaseError, "^ORA-40582:"):
+        with self.assertRaisesFullCode("ORA-40582"):
             coll.getDataGuide()
 
 
