@@ -52,6 +52,10 @@ Common Changes
     has the check constraint "IS JSON FORMAT OSON" enabled.
 #)  Added support for columns of type vector (currently requires access to a
     limited availability release of the database).
+#)  Errors raised when calling :meth:`Cursor.executemany()` with PL/SQL now
+    have the :data:`oracledb._Error.offset` attribute populated with the last
+    iteration that succeeded
+    (`issue 283 <https://github.com/oracle/python-oracledb/issues/283>`__).
 #)  A number of performance improvements were made.
 #)  Error ``DPY-2045: arraysize must be an integer greater than zero`` is now
     raised when an invalid value is specified for the attribute
@@ -68,6 +72,7 @@ Common Changes
     circumstances.
 #)  Connection parameters that are strings now treat an empty string in the
     same way as the value ``None``.
+
 
 
 oracledb 2.0.1 (January 2024)
