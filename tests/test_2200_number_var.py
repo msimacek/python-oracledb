@@ -452,8 +452,8 @@ class TestCase(test_env.BaseTestCase):
             decimal.Decimal("-inf"),
             decimal.Decimal("NaN"),
         ]
-        no_rep_err = "^DPY-4003:"
-        invalid_err = "^DPY-4004:"
+        no_rep_err = "DPY-4003"
+        invalid_err = "DPY-4004"
         expected_errors = [
             no_rep_err,
             no_rep_err,
@@ -467,13 +467,8 @@ class TestCase(test_env.BaseTestCase):
             invalid_err,
         ]
         for in_value, error in zip(in_values, expected_errors):
-            self.assertRaisesRegex(
-                oracledb.DatabaseError,
-                error,
-                self.cursor.execute,
-                "select :1 from dual",
-                [in_value],
-            )
+            with self.assertRaisesFullCode(error):
+                self.cursor.execute("select :1 from dual", [in_value])
 
     def test_2229(self):
         "2229 - test that fetching the result of division returns a float"
