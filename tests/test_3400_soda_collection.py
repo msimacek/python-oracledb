@@ -298,8 +298,8 @@ class TestCase(test_env.BaseTestCase):
         self.__normalize_docs([doc])
         self.assertEqual(doc, content)
         new_content = {"name": "James", "address": {"city": "Delhi"}}
-        replacedDoc = coll.find().key(key).replaceOneAndGet(new_content)
-        new_version = replacedDoc.version
+        replaced_doc = coll.find().key(key).replaceOneAndGet(new_content)
+        new_version = replaced_doc.version
         doc = coll.find().key(key).version(version).getOne()
         self.assertIsNone(doc)
         doc = coll.find().key(key).version(new_version).getOne().getContent()
@@ -434,6 +434,10 @@ class TestCase(test_env.BaseTestCase):
         with self.assertRaisesFullCode("DPI-1031"):
             coll.insertMany([])
 
+    @unittest.skipIf(
+        test_env.get_client_version() > (23, 0),
+        "save() is not implemented in Oracle Database 23c",
+    )
     def test_3418(self):
         "3418 - test save"
         soda_db = self.get_soda_database(minclient=(19, 9))
@@ -454,6 +458,10 @@ class TestCase(test_env.BaseTestCase):
                 fetched_doc.getContent(), expected_doc.getContent()
             )
 
+    @unittest.skipIf(
+        test_env.get_client_version() > (23, 0),
+        "save() is not implemented in Oracle Database 23c",
+    )
     def test_3419(self):
         "3419 - test saveAndGet with hint"
         soda_db = self.get_soda_database(minclient=(19, 11))
@@ -481,6 +489,10 @@ class TestCase(test_env.BaseTestCase):
             (result,) = cursor.fetchone()
             self.assertIn(hint, result.read())
 
+    @unittest.skipIf(
+        test_env.get_client_version() > (23, 0),
+        "save() is not implemented in Oracle Database 23c",
+    )
     def test_3420(self):
         "3420 - test saveAndGet"
         soda_db = self.get_soda_database(minclient=(19, 9))
@@ -557,6 +569,10 @@ class TestCase(test_env.BaseTestCase):
         with self.assertRaisesFullCode("ORA-40748"):
             coll.find().skip(10).count()
 
+    @unittest.skipIf(
+        test_env.get_client_version() > (23, 0),
+        "map mode not supported with native collections in Oracle Database 23",
+    )
     def test_3425(self):
         "3425 - test mapMode parameter"
         soda_db = self.get_soda_database()
@@ -580,6 +596,10 @@ class TestCase(test_env.BaseTestCase):
         self.assertTrue(original_coll.drop())
         self.assertFalse(mapped_coll.drop())
 
+    @unittest.skipIf(
+        test_env.get_client_version() > (23, 0),
+        "map mode not supported with native collections in Oracle Database 23",
+    )
     def test_3426(self):
         "3426 - test mapping a new collection from an non-existent table"
         soda_db = self.get_soda_database()
@@ -693,6 +713,10 @@ class TestCase(test_env.BaseTestCase):
         # the collection has already been dropped
         self.assertFalse(coll.drop())
 
+    @unittest.skipIf(
+        test_env.get_client_version() > (23, 0),
+        "map mode not supported with native collections in Oracle Database 23",
+    )
     def test_3432(self):
         "3432 - test drop with an empty mapped collection"
         soda_db = self.get_soda_database()
