@@ -603,7 +603,7 @@ class TestCase(test_env.BaseTestCase):
         soda_db = self.get_soda_database(minclient=(19, 5))
         coll = soda_db.createCollection("TestSodaFetchArraySize")
         for i in range(90):
-            coll.save({"name": "Emmanuel", "age": i + 1})
+            coll.insertOne({"name": "Emmanuel", "age": i + 1})
         self.conn.commit()
 
         self.setup_round_trip_checker()
@@ -815,7 +815,7 @@ class TestCase(test_env.BaseTestCase):
             )
             self.assertRegex(
                 data_guide["properties"][name]["o:preferred_column_name"],
-                f"(JSON_DOCUMENT|DATA)\${name}",
+                f"(JSON_DOCUMENT|DATA)\\${name}",
             )
         self.assertEqual(data_guide["properties"]["members"]["type"], "array")
 
@@ -831,7 +831,7 @@ class TestCase(test_env.BaseTestCase):
             )
             self.assertRegex(
                 members_items["properties"][name]["o:preferred_column_name"],
-                f"(JSON_DOCUMENT|DATA)\${name}",
+                f"(JSON_DOCUMENT|DATA)\\${name}",
             )
 
     def test_3439(self):

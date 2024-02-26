@@ -591,7 +591,7 @@ class TestCase(test_env.BaseTestCase):
             self.cursor.executemany("begin null; end;", 30, batcherrors=True)
 
     def test_3231(self):
-        "3230 - enabling arraydmlrowcountsbatcherrors parameter with PL/SQL"
+        "3231 - enabling arraydmlrowcountsbatcherrors parameter with PL/SQL"
         with self.assertRaisesFullCode("DPY-2040"):
             self.cursor.executemany(
                 "begin null; end;", 31, arraydmlrowcounts=True

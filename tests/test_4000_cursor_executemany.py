@@ -289,7 +289,7 @@ class TestCase(test_env.BaseTestCase):
         data = [(i, f"Test {i}") for i in values]
         for i in range(2):
             self.cursor.execute("truncate table TestTempTable")
-            out_bind = self.cursor.var(oracledb.NUMBER, arraysize=5)
+            out_bind = self.cursor.var(oracledb.NUMBER, arraysize=len(values))
             self.cursor.setinputsizes(None, None, out_bind)
             self.cursor.executemany(
                 """
@@ -370,7 +370,7 @@ class TestCase(test_env.BaseTestCase):
         "3901 - test executing a None statement"
         cursor = self.conn.cursor()
         with self.assertRaisesFullCode("DPY-2001"):
-            cursor.executemany(None, [1, 2])
+            cursor.executemany(None, [(1,), (2,)])
 
     def test_4024(self):
         """
