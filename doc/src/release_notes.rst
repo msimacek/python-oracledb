@@ -37,8 +37,9 @@ Thin Mode Changes
 #)  Fixed bug when connecting to a database using listener redirects when using
     :ref:`asyncio <asyncio>`
     (`issue 285 <https://github.com/oracle/python-oracledb/issues/285>`__).
-#)  Fixed type declaration for the ``connectiontype`` parameter to
-    :meth:`oracledb.create_pool_async()`.
+#)  Fixed type declaration for the `connectiontype` parameter to
+    :meth:`oracledb.create_pool_async()` and the return value of
+    :meth:`AsyncConnectionPool.acquire()`.
 
 
 Thick Mode Changes
