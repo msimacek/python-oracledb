@@ -887,6 +887,52 @@ class TestCase(test_env.BaseTestCase):
         with self.assertRaisesFullCode("ORA-40582"):
             coll.getDataGuide()
 
+    def test_3442(self):
+        "3442 - test mapMode parameter with metadata"
+        soda_db = self.get_soda_database()
+        data = [{"price": 4900}, {"price": 8}]
+        expected_data = data * 2
+        coll_name = "TestCollOriginal"
+
+        metadata = {
+            "tableName": coll_name,
+            "keyColumn": {"name": "ID"},
+            "contentColumn": {"name": "JSON_DOCUMENT", "sqlType": "BLOB"},
+            "versionColumn": {"name": "VERSION", "method": "UUID"},
+            "lastModifiedColumn": {"name": "LAST_MODIFIED"},
+            "creationTimeColumn": {"name": "CREATED_ON"},
+        }
+
+        original_coll = soda_db.createCollection(coll_name, metadata=metadata)
+        original_coll.insertMany(data)
+        mapped_coll = soda_db.createCollection(
+            "TestCollMapMode", metadata=metadata, mapMode=True
+        )
+        mapped_coll.insertMany(data)
+
+        for coll in [original_coll, mapped_coll]:
+            fetched_data = list(
+                doc.getContent() for doc in coll.find().getDocuments()
+            )
+            self.__normalize_docs(fetched_data)
+            self.assertEqual(fetched_data, expected_data)
+
+        with self.assertRaisesFullCode("ORA-40626"):
+            original_coll.drop()
+        self.assertTrue(mapped_coll.drop())
+        self.conn.commit()
+        self.assertTrue(original_coll.drop())
+        self.assertFalse(mapped_coll.drop())
+
+    def test_3443(self):
+        "3443 - test mapping a new collection from an non-existent table"
+        soda_db = self.get_soda_database()
+        metadata = {"tableName": "TestNone"}
+        with self.assertRaisesFullCode("ORA-40623"):
+            soda_db.createCollection(
+                "TestSodaMapNonExistent", metadata=metadata, mapMode=True
+            )
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()
