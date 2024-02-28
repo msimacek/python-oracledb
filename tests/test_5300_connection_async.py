@@ -126,7 +126,7 @@ class TestCase(test_env.BaseAsyncTestCase):
         with self.assertRaisesFullCode(
             "DPY-4000", "DPY-4026", "DPY-4027", "ORA-12154"
         ):
-            await oracledb.connect_async(test_env.get_main_user())
+            await oracledb.connect_async("not a valid connect string!!")
         with self.assertRaisesFullCode("DPY-4000", "DPY-4001"):
             await oracledb.connect(
                 test_env.get_main_user() + "@" + test_env.get_connect_string()
