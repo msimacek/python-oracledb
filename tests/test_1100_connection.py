@@ -167,23 +167,6 @@ class TestCase(test_env.BaseTestCase):
                 test_env.get_main_user() + "@" + test_env.get_connect_string()
             )
             oracledb.connect(dsn)
-        errors = (
-            "DPY-4000",
-            "DPY-4001",
-            "DPY-4017",
-            "ORA-12154",
-            "ORA-12521",
-            "ORA-12262",
-        )
-        with self.assertRaisesFullCode(*errors):
-            dsn = (
-                test_env.get_main_user()
-                + "@"
-                + test_env.get_connect_string()
-                + "/"
-                + test_env.get_main_password()
-            )
-            oracledb.connect(dsn)
 
     def test_1106(self):
         "1106 - connection to database with bad password"

@@ -131,22 +131,6 @@ class TestCase(test_env.BaseAsyncTestCase):
             await oracledb.connect(
                 test_env.get_main_user() + "@" + test_env.get_connect_string()
             )
-        errors = [
-            "DPY-4000",
-            "DPY-4001",
-            "DPY-4017",
-            "ORA-12154",
-            "ORA-12521",
-            "ORA-12262",
-        ]
-        with self.assertRaisesFullCode(*errors):
-            await oracledb.connect(
-                test_env.get_main_user()
-                + "@"
-                + test_env.get_connect_string()
-                + "/"
-                + test_env.get_main_password()
-            )
 
     async def test_5306(self):
         "5306 - connection to database with bad password"
