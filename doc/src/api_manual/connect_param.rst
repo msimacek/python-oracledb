@@ -51,7 +51,8 @@ ConnectParams Methods
         externalauth=None, mode=None, disable_oob=None, stmtcachesize=None, \
         edition=None, tag=None, matchanytag=None, config_dir=None, \
         appcontext=[], shardingkey=[], supershardingkey=[], debug_jdwp=None, \
-        connection_id_prefix=None, ssl_context=None, sdu=None, handle=None)
+        connection_id_prefix=None, ssl_context=None, sdu=None, \
+        pool_boundary=None, handle=None)
 
     Sets the default values for one or more of the parameters of an empty
     ConnectParams object.  A default will be overriden when a connection string
@@ -198,6 +199,24 @@ ConnectParams Attributes
     to use. The default value is :data:`~oracledb.AUTH_MODE_DEFAULT`.
 
     This attribute is supported in the python-oracledb Thin and Thick modes.
+
+.. attribute:: ConnectParams.pool_boundary
+
+    This read-only attribute is one of the strings "statement" or
+    "transaction" which indicates when pooled DRCP or PRCP connections can be
+    returned to the pool. If the value is "statement", then pooled DRCP or
+    PRCP connections are implicitly released back to the DRCP or PRCP pool
+    when the connection is stateless (that is, there are no active cursors,
+    active transactions, temporary tables, or temporary LOBs). If the value is
+    "transaction", then pooled DRCP or PRCP connections are implicitly
+    released back to the DRCP or PRCP pool when either one of the methods
+    :meth:`Connection.commit()` or :meth:`Connection.rollback()` are called.
+    This attribute requires the use of DRCP or PRCP with Oracle Database 23c
+    (or later). See :ref:`implicitconnpool` for more information.
+
+    This attribute is supported in the python-oracledb Thin and Thick modes.
+
+    .. versionadded:: 2.1.0
 
 .. attribute:: ConnectParams.port
 
