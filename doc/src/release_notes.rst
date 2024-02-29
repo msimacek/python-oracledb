@@ -13,7 +13,8 @@ oracledb 2.1.0 (TBD)
 Thin Mode Changes
 +++++++++++++++++
 
-#)  Added support for Oracle Database 23c feature: implicit pooling with DRCP.
+#)  Added support for Oracle Database 23c :ref:`implicit connection pooling
+    with DRCP and PRCP <implicitconnpool>` feature.
 #)  Added support for Oracle Database 23c feature that can improve the
     performance of connection creation by reducing the number of round trips
     required for all connections created.
