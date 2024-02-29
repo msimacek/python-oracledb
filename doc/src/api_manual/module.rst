@@ -48,7 +48,8 @@ Oracledb Methods
         edition=None, tag=None, matchanytag=False, \
         config_dir=oracledb.defaults.config_dir, appcontext=[], \
         shardingkey=[], supershardingkey=[], debug_jdwp=None, \
-        connection_id_prefix=None, ssl_context=None, sdu=8192, handle=0)
+        connection_id_prefix=None, ssl_context=None, sdu=8192, \
+        pool_boundary=None, handle=0)
 
     Constructor for creating a connection to the database. Returns a
     :ref:`Connection Object <connobj>`. All parameters are optional and can be
@@ -315,6 +316,20 @@ Oracledb Methods
     77949C8A2B04>`__ for more details. This value is used in both the
     python-oracledb Thin and Thick modes. The default value is 8192 bytes.
 
+    The ``pool_boundary`` parameter is expected to be one of the strings
+    "statement" or "transaction" which indicates when pooled DRCP or PRCP
+    connections can be returned to the pool.  If the value is "statement",
+    then pooled DRCP or PRCP connections are implicitly released back to the
+    DRCP or PRCP pool when the connection is stateless (that is, there are no
+    active cursors, active transactions, temporary tables, or temporary LOBs).
+    If the value is "transaction", then pooled DRCP or PRCP connections are
+    implicitly released back to the DRCP or PRCP pool when either one of the
+    methods :meth:`Connection.commit()` or :meth:`Connection.rollback()` are
+    called.  This parameter requires the use of DRCP or PRCP with Oracle
+    Database 23c (or later).  See :ref:`implicitconnpool` for more
+    information.  This value is used in both the python-oracledb Thin and
+    Thick modes.
+
     If the ``handle`` parameter is specified, it must be of type OCISvcCtx\*
     and is only of use when embedding Python in an application (like
     PowerBuilder) which has already made the connection. The connection thus
@@ -322,6 +337,10 @@ Oracledb Methods
     destroyed. This value is only used in the python-oracledb Thick mode and
     is ignored in the Thin mode.  It should be used with extreme caution. The
     default value is 0.
+
+    .. versionchanged:: 2.1.0
+
+        The ``pool_boundary`` parameter was added.
 
     .. versionchanged:: 2.0.0
 
@@ -340,7 +359,8 @@ Oracledb Methods
         edition=None, tag=None, matchanytag=False, \
         config_dir=oracledb.defaults.config_dir, appcontext=[], \
         shardingkey=[], supershardingkey=[], debug_jdwp=None, \
-        connection_id_prefix=None, ssl_context=None, sdu=8192, handle=0)
+        connection_id_prefix=None, ssl_context=None, sdu=8192, \
+        pool_boundary=None, handle=0)
 
     Constructor for creating a connection to the database. Returns an
     :ref:`AsyncConnection Object <asyncconnobj>`. All parameters are optional
@@ -545,7 +565,25 @@ Oracledb Methods
     com/pls/topic/lookup?ctx=dblatest&id=GUID-86D61D6F-AD26-421A-BABA-
     77949C8A2B04>`__ for more details. The default value is 8192 bytes.
 
+    The ``pool_boundary`` parameter is expected to be one of the strings
+    "statement" or "transaction" which indicates when pooled DRCP or PRCP
+    connections can be returned to the pool.  If the value is "statement",
+    then pooled DRCP or PRCP connections are implicitly released back to the
+    DRCP or PRCP pool when the connection is stateless (that is, there are no
+    active cursors, active transactions, temporary tables, or temporary LOBs).
+    If the value is "transaction", then pooled DRCP or PRCP connections are
+    implicitly released back to the DRCP or PRCP pool when either one of the
+    methods :meth:`AsyncConnection.commit()` or
+    :meth:`AsyncConnection.rollback()` are called.  This parameter requires
+    the use of DRCP or PRCP with Oracle Database 23c (or later).  See
+    :ref:`implicitconnpool` for more information.  This value is used in both
+    the python-oracledb Thin and Thick modes.
+
     The ``handle`` parameter is ignored in the python-oracledb Thin mode.
+
+    .. versionchanged:: 2.1.0
+
+        The ``pool_boundary`` parameter was added.
 
 .. function:: ConnectParams(user=None, proxy_user=None, password=None, \
         newpassword=None, wallet_password=None, access_token=None, host=None, \
@@ -559,7 +597,8 @@ Oracledb Methods
         edition=None, tag=None, matchanytag=False, \
         config_dir=oracledb.defaults.config_dir, appcontext=[], \
         shardingkey=[], supershardingkey=[], debug_jdwp=None, \
-        connection_id_prefix=None, ssl_context=None, sdu=8192, handle=0)
+        connection_id_prefix=None, ssl_context=None, sdu=8192, \
+        pool_boundary=None, handle=0)
 
     Contains all the parameters that can be used to establish a connection to
     the database.
@@ -790,10 +829,28 @@ Oracledb Methods
     77949C8A2B04>`__ for more details. This value is used in both the
     python-oracledb Thin and Thick modes. The default value is 8192 bytes.
 
+    The ``pool_boundary`` parameter is expected to be one of the strings
+    "statement" or "transaction" which indicates when pooled DRCP or PRCP
+    connections can be returned to the pool.  If the value is "statement",
+    then pooled DRCP or PRCP connections are implicitly released back to the
+    DRCP or PRCP pool when the connection is stateless (that is, there are no
+    active cursors, active transactions, temporary tables, or temporary LOBs).
+    If the value is "transaction", then pooled DRCP or PRCP connections are
+    implicitly released back to the DRCP or PRCP pool when either one of the
+    methods :meth:`Connection.commit()` or :meth:`Connection.rollback()` are
+    called.  This parameter requires the use of DRCP or PRCP with Oracle
+    Database 23c (or later).  See :ref:`implicitconnpool` for more
+    information.  This value is used in both  the python-oracledb Thin and
+    Thick modes.
+
     The ``handle`` parameter is expected to be an integer which represents a
     pointer to a valid service context handle. This value is only used in the
     python-oracledb Thick mode.  It should be used with extreme caution. The
     default value is 0.
+
+    .. versionchanged:: 2.1.0
+
+        The ``pool_boundary`` parameter was added.
 
     .. versionchanged:: 2.0.0
 
@@ -817,7 +874,8 @@ Oracledb Methods
         edition=None, tag=None, matchanytag=False, \
         config_dir=oracledb.defaults.config_dir, appcontext=[], \
         shardingkey=[], supershardingkey=[], debug_jdwp=None, \
-        connection_id_prefix=None, ssl_context=None, sdu=8192, handle=0)
+        connection_id_prefix=None, ssl_context=None, sdu=8192, \
+        pool_boundary=None, handle=0)
 
     Creates a connection pool with the supplied parameters and returns the
     :ref:`ConnectionPool object <connpool>` for the pool.  See :ref:`Connection
@@ -1133,6 +1191,20 @@ Oracledb Methods
     77949C8A2B04>`__ for more details. This value is used in both the
     python-oracledb Thin and Thick modes. The default value is 8192 bytes.
 
+    The ``pool_boundary`` parameter is expected to be one of the strings
+    "statement" or "transaction" which indicates when pooled DRCP or PRCP
+    connections can be returned to the pool.  If the value is "statement",
+    then pooled DRCP or PRCP connections are implicitly released back to the
+    DRCP or PRCP pool when the connection is stateless (that is, there are no
+    active cursors, active transactions, temporary tables, or temporary LOBs).
+    If the value is "transaction", then pooled DRCP or PRCP connections are
+    implicitly released back to the DRCP or PRCP pool when either one of the
+    methods :meth:`Connection.commit()` or :meth:`Connection.rollback()` are
+    called.  This parameter requires the use of DRCP or PRCP with Oracle
+    Database 23c (or later).  See :ref:`implicitconnpool` for more
+    information.  This value is used in both the python-oracledb Thin and
+    Thick modes.
+
     If the ``handle`` parameter is specified, it must be of type OCISvcCtx\*
     and is only of use when embedding Python in an application (like
     PowerBuilder) which has already made the connection. The connection thus
@@ -1147,6 +1219,10 @@ Oracledb Methods
     This allows python-oracledb applications to support features like
     `Application Continuity <https://www.oracle.com/pls/topic/lookup?
     ctx=dblatest&id=GUID-A8DD9422-2F82-42A9-9555-134296416E8F>`__.
+
+    .. versionchanged:: 2.1.0
+
+        The ``pool_boundary`` parameter was added.
 
     .. versionchanged:: 2.0.0
 
@@ -1170,7 +1246,8 @@ Oracledb Methods
         edition=None, tag=None, matchanytag=False, \
         config_dir=oracledb.defaults.config_dir, appcontext=[], \
         shardingkey=[], supershardingkey=[], debug_jdwp=None, \
-        connection_id_prefix=None, ssl_context=None, sdu=8192, handle=0)
+        connection_id_prefix=None, ssl_context=None, sdu=8192, \
+        pool_boundary=None, handle=0)
 
     Creates a connection pool with the supplied parameters and returns the
     :ref:`AsyncConnectionPool object <asyncconnpoolobj>` for the pool.
@@ -1422,7 +1499,25 @@ Oracledb Methods
     com/pls/topic/lookup?ctx=dblatest&id=GUID-86D61D6F-AD26-421A-BABA-
     77949C8A2B04>`__ for more details. The default value is 8192 bytes.
 
+    The ``pool_boundary`` parameter is expected to be one of the strings
+    "statement" or "transaction" which indicates when pooled DRCP or PRCP
+    connections can be returned to the pool.  If the value is "statement",
+    then pooled DRCP or PRCP connections are implicitly released back to the
+    DRCP or PRCP pool when the connection is stateless (that is, there are no
+    active cursors, active transactions, temporary tables, or temporary LOBs).
+    If the value is "transaction", then pooled DRCP or PRCP connections are
+    implicitly released back to the DRCP or PRCP pool when either one of the
+    methods :meth:`AsyncConnection.commit()` or
+    :meth:`AsyncConnection.rollback()` are called.  This parameter requires
+    the use of DRCP or PRCP with Oracle Database 23c (or later).  See
+    :ref:`implicitconnpool` for more information.  This value is used in both
+    the python-oracledb Thin and Thick modes.
+
     The ``handle`` parameter is ignored in the python-oracledb Thin mode.
+
+    .. versionchanged:: 2.1.0
+
+        The ``pool_boundary`` parameter was added.
 
 .. function:: Cursor(connection)
 
@@ -1544,7 +1639,8 @@ Oracledb Methods
         edition=None, tag=None, matchanytag=False, \
         config_dir=oracledb.defaults.config_dir, appcontext=[], \
         shardingkey=[], supershardingkey=[], debug_jdwp=None, \
-        connection_id_prefix=None, ssl_context=None, sdu=8192, handle=0)
+        connection_id_prefix=None, ssl_context=None, sdu=8192, \
+        pool_boundary=None, handle=0)
 
     Creates and returns a :ref:`PoolParams Object <poolparam>`. The object
     can be passed to :meth:`oracledb.create_pool()`.
@@ -1827,10 +1923,28 @@ Oracledb Methods
     77949C8A2B04>`__ for more details. This value is used in both the
     python-oracledb Thin and Thick modes. The default value is 8192 bytes.
 
+    The ``pool_boundary`` parameter is expected to be one of the strings
+    "statement" or "transaction" which indicates when pooled DRCP or PRCP
+    connections can be returned to the pool.  If the value is "statement",
+    then pooled DRCP or PRCP connections are implicitly released back to the
+    DRCP or PRCP pool when the connection is stateless (that is, there are no
+    active cursors, active transactions, temporary tables, or temporary LOBs).
+    If the value is "transaction", then pooled DRCP or PRCP connections are
+    implicitly released back to the DRCP or PRCP pool when either one of the
+    methods :meth:`Connection.commit()` or :meth:`Connection.rollback()` are
+    called.  This parameter requires the use of DRCP or PRCP with Oracle
+    Database 23c (or later).  See :ref:`implicitconnpool` for more
+    information.  This value is used in both the python-oracledb Thin and
+    Thick modes.
+
     The ``handle`` parameter is expected to be an integer which represents a
     pointer to a valid service context handle. This value is only used in the
     python-oracledb Thick mode. It should be used with extreme caution. The
     default value is 0.
+
+    .. versionchanged:: 2.1.0
+
+        The ``pool_boundary`` parameter was added.
 
     .. versionchanged:: 2.0.0
 
