@@ -24,6 +24,8 @@ Thin Mode Changes
 #)  Added support for writing UTF-8 encoded bytes to CLOB and NCLOB values and
     writing strings to BLOB values in order to be consistent with what is done
     for string variables.
+#)  The support for :ref:`asyncio <asyncio>` is no longer considered
+    pre-release.
 #)  User-defined errors raised by the database no longer display an error help
     portal URL.
 #)  Improved handling of packets with :ref:`asyncio <asyncio>` for recent
