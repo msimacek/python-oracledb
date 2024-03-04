@@ -49,7 +49,7 @@ Oracledb Methods
         config_dir=oracledb.defaults.config_dir, appcontext=[], \
         shardingkey=[], supershardingkey=[], debug_jdwp=None, \
         connection_id_prefix=None, ssl_context=None, sdu=8192, \
-        pool_boundary=None, handle=0)
+        pool_boundary=None, use_tcp_fast_open=False, handle=0)
 
     Constructor for creating a connection to the database. Returns a
     :ref:`Connection Object <connobj>`. All parameters are optional and can be
@@ -330,6 +330,15 @@ Oracledb Methods
     information.  This value is used in both the python-oracledb Thin and
     Thick modes.
 
+    The ``use_tcp_fast_open`` parameter is expected to be a boolean which
+    indicates whether to use an `Oracle Autonomous Database Serverless (ADB-S)
+    <https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/
+    adbsb/adbsb-overview.html#GUID-A7435462-9D74-44B4-8240-4A6F06E92348>`__
+    specific feature that can reduce the latency in round-trips to the
+    database after a connection has been established.  This feature is only
+    available with certain versions of ADB-S.  This value is used in both
+    python-oracledb Thin and Thick modes.  The default value is False.
+
     If the ``handle`` parameter is specified, it must be of type OCISvcCtx\*
     and is only of use when embedding Python in an application (like
     PowerBuilder) which has already made the connection. The connection thus
@@ -340,7 +349,7 @@ Oracledb Methods
 
     .. versionchanged:: 2.1.0
 
-        The ``pool_boundary`` parameter was added.
+        The ``pool_boundary`` and ``use_tcp_fast_open`` parameters were added.
 
     .. versionchanged:: 2.0.0
 
@@ -360,7 +369,7 @@ Oracledb Methods
         config_dir=oracledb.defaults.config_dir, appcontext=[], \
         shardingkey=[], supershardingkey=[], debug_jdwp=None, \
         connection_id_prefix=None, ssl_context=None, sdu=8192, \
-        pool_boundary=None, handle=0)
+        pool_boundary=None, use_tcp_fast_open=False, handle=0)
 
     Constructor for creating a connection to the database. Returns an
     :ref:`AsyncConnection Object <asyncconnobj>`. All parameters are optional
@@ -573,11 +582,20 @@ Oracledb Methods
     :ref:`implicitconnpool` for more information.  This value is used in both
     the python-oracledb Thin and Thick modes.
 
+    The ``use_tcp_fast_open`` parameter is expected to be a boolean which
+    indicates whether to use an `Oracle Autonomous Database Serverless (ADB-S)
+    <https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/
+    adbsb/adbsb-overview.html#GUID-A7435462-9D74-44B4-8240-4A6F06E92348>`__
+    specific feature that can reduce the latency in round-trips to the
+    database after a connection has been established.  This feature is only
+    available with certain versions of ADB-S.  This value is used in both
+    python-oracledb Thin and Thick modes.  The default value is False.
+
     The ``handle`` parameter is ignored in the python-oracledb Thin mode.
 
     .. versionchanged:: 2.1.0
 
-        The ``pool_boundary`` parameter was added.
+        The ``pool_boundary`` and ``use_tcp_fast_open`` parameters were added.
 
 .. function:: ConnectParams(user=None, proxy_user=None, password=None, \
         newpassword=None, wallet_password=None, access_token=None, host=None, \
@@ -592,7 +610,7 @@ Oracledb Methods
         config_dir=oracledb.defaults.config_dir, appcontext=[], \
         shardingkey=[], supershardingkey=[], debug_jdwp=None, \
         connection_id_prefix=None, ssl_context=None, sdu=8192, \
-        pool_boundary=None, handle=0)
+        pool_boundary=None, use_tcp_fast_open=False, handle=0)
 
     Contains all the parameters that can be used to establish a connection to
     the database.
@@ -837,6 +855,15 @@ Oracledb Methods
     information.  This value is used in both  the python-oracledb Thin and
     Thick modes.
 
+    The ``use_tcp_fast_open`` parameter is expected to be a boolean which
+    indicates whether to use an `Oracle Autonomous Database Serverless (ADB-S)
+    <https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/
+    adbsb/adbsb-overview.html#GUID-A7435462-9D74-44B4-8240-4A6F06E92348>`__
+    specific feature that can reduce the latency in round-trips to the
+    database after a connection has been established.  This feature is only
+    available with certain versions of ADB-S.  This value is used in both
+    python-oracledb Thin and Thick modes.  The default value is False.
+
     The ``handle`` parameter is expected to be an integer which represents a
     pointer to a valid service context handle. This value is only used in the
     python-oracledb Thick mode.  It should be used with extreme caution. The
@@ -844,7 +871,7 @@ Oracledb Methods
 
     .. versionchanged:: 2.1.0
 
-        The ``pool_boundary`` parameter was added.
+        The ``pool_boundary`` and ``use_tcp_fast_open`` parameters were added.
 
     .. versionchanged:: 2.0.0
 
@@ -869,7 +896,7 @@ Oracledb Methods
         config_dir=oracledb.defaults.config_dir, appcontext=[], \
         shardingkey=[], supershardingkey=[], debug_jdwp=None, \
         connection_id_prefix=None, ssl_context=None, sdu=8192, \
-        pool_boundary=None, handle=0)
+        pool_boundary=None, use_tcp_fast_open=False, handle=0)
 
     Creates a connection pool with the supplied parameters and returns the
     :ref:`ConnectionPool object <connpool>` for the pool.  See :ref:`Connection
@@ -1199,6 +1226,15 @@ Oracledb Methods
     information.  This value is used in both the python-oracledb Thin and
     Thick modes.
 
+    The ``use_tcp_fast_open`` parameter is expected to be a boolean which
+    indicates whether to use an `Oracle Autonomous Database Serverless (ADB-S)
+    <https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/
+    adbsb/adbsb-overview.html#GUID-A7435462-9D74-44B4-8240-4A6F06E92348>`__
+    specific feature that can reduce the latency in round-trips to the database
+    after a connection has been established.  This feature is only available
+    with certain versions of ADB-S.  This value is used in both python-oracledb
+    Thin and Thick modes.  The default value is False.
+
     If the ``handle`` parameter is specified, it must be of type OCISvcCtx\*
     and is only of use when embedding Python in an application (like
     PowerBuilder) which has already made the connection. The connection thus
@@ -1216,7 +1252,7 @@ Oracledb Methods
 
     .. versionchanged:: 2.1.0
 
-        The ``pool_boundary`` parameter was added.
+        The ``pool_boundary`` and ``use_tcp_fast_open`` parameters were added.
 
     .. versionchanged:: 2.0.0
 
@@ -1241,7 +1277,7 @@ Oracledb Methods
         config_dir=oracledb.defaults.config_dir, appcontext=[], \
         shardingkey=[], supershardingkey=[], debug_jdwp=None, \
         connection_id_prefix=None, ssl_context=None, sdu=8192, \
-        pool_boundary=None, handle=0)
+        pool_boundary=None, use_tcp_fast_open=False, handle=0)
 
     Creates a connection pool with the supplied parameters and returns the
     :ref:`AsyncConnectionPool object <asyncconnpoolobj>` for the pool.
@@ -1501,11 +1537,20 @@ Oracledb Methods
     :ref:`implicitconnpool` for more information.  This value is used in both
     the python-oracledb Thin and Thick modes.
 
+    The ``use_tcp_fast_open`` parameter is expected to be a boolean which
+    indicates whether to use an `Oracle Autonomous Database Serverless (ADB-S)
+    <https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/
+    adbsb/adbsb-overview.html#GUID-A7435462-9D74-44B4-8240-4A6F06E92348>`__
+    specific feature that can reduce the latency in round-trips to the database
+    after a connection has been established.  This feature is only available
+    with certain versions of ADB-S.  This value is used in both python-oracledb
+    Thin and Thick modes.  The default value is False.
+
     The ``handle`` parameter is ignored in the python-oracledb Thin mode.
 
     .. versionchanged:: 2.1.0
 
-        The ``pool_boundary`` parameter was added.
+        The ``pool_boundary`` and ``use_tcp_fast_open`` parameters were added.
 
 .. function:: Cursor(connection)
 
@@ -1628,7 +1673,7 @@ Oracledb Methods
         config_dir=oracledb.defaults.config_dir, appcontext=[], \
         shardingkey=[], supershardingkey=[], debug_jdwp=None, \
         connection_id_prefix=None, ssl_context=None, sdu=8192, \
-        pool_boundary=None, handle=0)
+        pool_boundary=None, use_tcp_fast_open=False, handle=0)
 
     Creates and returns a :ref:`PoolParams Object <poolparam>`. The object
     can be passed to :meth:`oracledb.create_pool()`.
@@ -1925,6 +1970,15 @@ Oracledb Methods
     information.  This value is used in both the python-oracledb Thin and
     Thick modes.
 
+    The ``use_tcp_fast_open`` parameter is expected to be a boolean which
+    indicates whether to use an `Oracle Autonomous Database Serverless (ADB-S)
+    <https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/
+    adbsb/adbsb-overview.html#GUID-A7435462-9D74-44B4-8240-4A6F06E92348>`__
+    specific feature that can reduce the latency in round-trips to the database
+    after a connection has been established.  This feature is only available
+    with certain versions of ADB-S.  This value is used in both python-oracledb
+    Thin and Thick modes.  The default value is False.
+
     The ``handle`` parameter is expected to be an integer which represents a
     pointer to a valid service context handle. This value is only used in the
     python-oracledb Thick mode. It should be used with extreme caution. The
@@ -1932,7 +1986,7 @@ Oracledb Methods
 
     .. versionchanged:: 2.1.0
 
-        The ``pool_boundary`` parameter was added.
+        The ``pool_boundary`` and ``use_tcp_fast_open`` parameters were added.
 
     .. versionchanged:: 2.0.0
 
