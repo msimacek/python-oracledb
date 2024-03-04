@@ -355,6 +355,10 @@ Oracledb Methods
 
         The ``ssl_context`` and ``sdu`` parameters were added.
 
+    .. versionchanged:: 1.4.0
+
+        The ``connection_id_prefix`` parameter was added.
+
 .. function:: connect_async(dsn=None, pool=None, conn_class=None, params=None, \
         user=None, proxy_user=None, password=None, newpassword=None, \
         wallet_password=None, access_token=None, host=None, port=1521, \
@@ -596,6 +600,14 @@ Oracledb Methods
     .. versionchanged:: 2.1.0
 
         The ``pool_boundary`` and ``use_tcp_fast_open`` parameters were added.
+
+    .. versionchanged:: 2.0.0
+
+        The ``ssl_context`` and ``sdu`` parameters were added.
+
+    .. versionchanged:: 1.4.0
+
+        The ``connection_id_prefix`` parameter was added.
 
 .. function:: ConnectParams(user=None, proxy_user=None, password=None, \
         newpassword=None, wallet_password=None, access_token=None, host=None, \
@@ -876,6 +888,10 @@ Oracledb Methods
     .. versionchanged:: 2.0.0
 
         The ``ssl_context`` and ``sdu`` parameters were added.
+
+    .. versionchanged:: 1.4.0
+
+        The ``connection_id_prefix`` parameter was added.
 
 .. function:: create_pool(dsn=None, pool_class=oracledb.ConnectionPool, \
         params=None, min=1, max=2, increment=1, \
@@ -1258,6 +1274,10 @@ Oracledb Methods
 
         The ``ssl_context`` and ``sdu`` parameters were added.
 
+    .. versionchanged:: 1.4.0
+
+        The ``connection_id_prefix`` parameter was added.
+
 .. function:: create_pool_async(dsn=None, pool_class=oracledb.AsyncConnectionPool, \
         params=None, min=1, max=2, increment=1, \
         connectiontype=oracledb.AsyncConnection, \
@@ -1551,6 +1571,14 @@ Oracledb Methods
     .. versionchanged:: 2.1.0
 
         The ``pool_boundary`` and ``use_tcp_fast_open`` parameters were added.
+
+    .. versionchanged:: 2.0.0
+
+        The ``ssl_context`` and ``sdu`` parameters were added.
+
+    .. versionchanged:: 1.4.0
+
+        The ``connection_id_prefix`` parameter was added.
 
 .. function:: Cursor(connection)
 
@@ -1991,6 +2019,10 @@ Oracledb Methods
     .. versionchanged:: 2.0.0
 
         The ``ssl_context`` and ``sdu`` parameters were added.
+
+    .. versionchanged:: 1.4.0
+
+        The ``connection_id_prefix`` parameter was added.
 
 .. function:: Time(hour, minute, second)
 

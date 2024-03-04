@@ -64,6 +64,14 @@ ConnectParams Methods
 
         The ``pool_boundary`` and ``use_tcp_fast_open`` parameters were added.
 
+    .. versionchanged:: 2.0.0
+
+        The ``ssl_context`` and ``sdu`` parameters were added.
+
+    .. versionchanged:: 1.4.0
+
+        The ``connection_id_prefix`` parameter was added.
+
 
 .. _connparamsattr:
 
