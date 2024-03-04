@@ -367,12 +367,6 @@ Oracledb Methods
     and can be specified as keyword parameters.  See
     :ref:`standaloneconnection` information about connections.
 
-    .. note::
-
-        The asyncio support in python-oracledb 2.0.0 is a pre-release and may
-        change in the next version. This method can only be used in
-        python-oracledb Thin mode.
-
     .. versionadded:: 2.0.0
 
     Some values, such as the database host name, can be specified as
@@ -1253,12 +1247,6 @@ Oracledb Methods
     :ref:`AsyncConnectionPool object <asyncconnpoolobj>` for the pool.
     ``create_pool_async()`` is a synchronous method. See
     :ref:`Connection pooling <asyncconnpool>` for more information.
-
-    .. note::
-
-        The asyncio support in python-oracledb 2.0.0 is a pre-release and may
-        change in the next version. This method can only used in
-        python-oracledb Thin mode.
 
     .. versionadded:: 2.0.0
 
