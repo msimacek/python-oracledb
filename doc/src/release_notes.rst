@@ -28,8 +28,8 @@ Thin Mode Changes
     pre-release.
 #)  User-defined errors raised by the database no longer display an error help
     portal URL.
-#)  Improved handling of packets with :ref:`asyncio <asyncio>` for recent
-    database versions.
+#)  Internal change to improve handling of packets with :ref:`asyncio
+    <asyncio>` for recent database versions.
 #)  Fixed potential cursor issues when using :ref:`drcp`.
 #)  Fixed regression when using :ref:`IAM token authentication <iamauth>`
     (`issue 288 <https://github.com/oracle/python-oracledb/issues/288>`__).
@@ -65,15 +65,15 @@ Thick Mode Changes
 Common Changes
 ++++++++++++++
 
+#)  Added boolean property :data:`FetchInfo.is_oson` which is set when a column
+    has the check constraint ``IS JSON FORMAT OSON`` enabled.
 #)  Added methods :meth:`Connection.decode_oson()` and
     :meth:`Connection.encode_oson()` to support fetching and inserting into
     columns which have the check constraint ``IS JSON FORMAT OSON`` enabled.
-#)  Added boolean property :data:`FetchInfo.is_oson` which is set when a column
-    has the check constraint "IS JSON FORMAT OSON" enabled.
 #)  Added class :ref:`oracledb.JsonId <jsonid>` to represent JSON ID values
     returned by SODA in Oracle Database 23.4 and higher in the ``_id``
     attribute of documents stored in native collections.
-#)  Added support for columns of type vector (currently requires access to a
+#)  Added support for columns of type VECTOR (currently requires access to a
     limited availability release of the database).
 #)  Errors raised when calling :meth:`Cursor.executemany()` with PL/SQL now
     have the :data:`oracledb._Error.offset` attribute populated with the last
@@ -81,7 +81,7 @@ Common Changes
     (`issue 283 <https://github.com/oracle/python-oracledb/issues/283>`__).
 #)  A number of performance improvements were made.
 #)  Error ``DPY-2045: arraysize must be an integer greater than zero`` is now
-    raised when an invalid value is specified for the attribute
+    raised when an invalid value is used for the attribute
     :data:`Cursor.arraysize`. Previously, a variety of errors (``TypeError``,
     ``OverflowError`` or ``ORA-03147: missing mandatory TTC field``) were
     raised.
