@@ -16,11 +16,15 @@ Thin Mode Changes
 #)  Oracle Database 23c feature support:
 
     - Added support for
-      :ref:`implicit connection pooling with DRCP and PRCP <implicitconnpool>`.
+      :ref:`implicit connection pooling with DRCP and PRCP <implicitconnpool>`,
+      enabled by the new ``pool_boundary`` parameter to
+      :meth:`oracledb.connect()`.
     - Improved the performance of connection creation by reducing the number of
       round trips required for all connections.
     - Added support for TCP fast open for applications connecting from within
-      the OCI Cloud network to Oracle Autonomous Database Serverless (ADB-S).
+      the OCI Cloud network to Oracle Autonomous Database Serverless (ADB-S),
+      enabled by the new ``use_tcp_fast_open`` parameter to
+      :meth:`oracledb.connect()`.
 
 #)  :ref:`asyncio <asyncio>` changes:
 
@@ -67,8 +71,8 @@ Thick Mode Changes
 Common Changes
 ++++++++++++++
 
-#)  Added a boolean property :data:`FetchInfo.is_oson` which is set when a column
-    has the check constraint ``IS JSON FORMAT OSON`` enabled.
+#)  Added a boolean property :data:`FetchInfo.is_oson` which is set when a
+    column has the check constraint ``IS JSON FORMAT OSON`` enabled.
 #)  Added methods :meth:`Connection.decode_oson()` and
     :meth:`Connection.encode_oson()` to support fetching and inserting into
     columns which have the check constraint ``IS JSON FORMAT OSON`` enabled.
