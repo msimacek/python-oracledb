@@ -18,13 +18,15 @@ Thin Mode Changes
     - Added support for
       :ref:`implicit connection pooling with DRCP and PRCP <implicitconnpool>`,
       enabled by the new ``pool_boundary`` parameter to
-      :meth:`oracledb.connect()`.
+      :meth:`oracledb.connect()`, :meth:`oracledb.connect_async()`,
+      :meth:`oracledb.create_pool()` and :meth:`oracledb.create_pool_async()`.
     - Improved the performance of connection creation by reducing the number of
       round trips required for all connections.
     - Added support for TCP fast open for applications connecting from within
       the OCI Cloud network to Oracle Autonomous Database Serverless (ADB-S),
       enabled by the new ``use_tcp_fast_open`` parameter to
-      :meth:`oracledb.connect()`.
+      :meth:`oracledb.connect()`, :meth:`oracledb.connect_async()`,
+      :meth:`oracledb.create_pool()` and :meth:`oracledb.create_pool_async()`.
 
 #)  :ref:`asyncio <asyncio>` changes:
 
