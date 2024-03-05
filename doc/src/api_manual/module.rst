@@ -2058,17 +2058,20 @@ Oracledb Methods
 
 .. _jsonid:
 
-oracledb.JsonId Class
+Oracledb JsonId Class
 =====================
 
-Objects of this class are returned by SODA in Oracle Database 23.4 and higher
-in the ``_id`` attribute of documents stored in native collections. It is a
-subclass of the ``bytes`` class.
+Objects of this class are returned by :ref:`SODA <soda>` in the ``_id``
+attribute of documents stored in native collections when using Oracle Database
+23.4 (and later). It is a subclass of the `bytes <https://docs.python.org/3/
+library/stdtypes.html#bytes>`__ class.
+
+.. versionadded:: 2.1.0
 
 
 .. _futureobj:
 
-Oracledb.__future__ Object
+Oracledb __future__ Object
 ==========================
 
 Special object that contains attributes which control the behavior of
@@ -3399,7 +3402,7 @@ See :ref:`exception` for usage information.
 
 .. _exchandling:
 
-Oracledb._Error Objects
+Oracledb _Error Objects
 =======================
 
 See :ref:`exception` for usage information.
