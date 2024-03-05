@@ -24,7 +24,7 @@ Thin Mode Changes
 
 #)  :ref:`asyncio <asyncio>` changes:
 
-    - Support for asyncio is no longer considered pre-release.
+    - Support for asyncio is no longer considered a pre-release.
     - Internal change to improve handling of packets.
     - Fixed bug when using :ref:`DRCP <drcp>`.
     - Fixed bug in processing metadata that spans multiple packets.
@@ -67,13 +67,13 @@ Thick Mode Changes
 Common Changes
 ++++++++++++++
 
-#)  Added boolean property :data:`FetchInfo.is_oson` which is set when a column
+#)  Added a boolean property :data:`FetchInfo.is_oson` which is set when a column
     has the check constraint ``IS JSON FORMAT OSON`` enabled.
 #)  Added methods :meth:`Connection.decode_oson()` and
     :meth:`Connection.encode_oson()` to support fetching and inserting into
     columns which have the check constraint ``IS JSON FORMAT OSON`` enabled.
 #)  Added class :ref:`oracledb.JsonId <jsonid>` to represent JSON ID values
-    returned by SODA in Oracle Database 23.4 and higher in the ``_id``
+    returned by SODA in Oracle Database 23.4 and later in the ``_id``
     attribute of documents stored in native collections.
 #)  Added support for columns of type VECTOR (currently requires access to a
     limited availability release of the database).
@@ -106,7 +106,8 @@ Common Changes
     calls to :meth:`oracledb.connect()` and :meth:`oracledb.create_pool()` that
     made use of the DSN with credentials format.
 #)  The error ``DPY-2047: LOB amount must be greater than zero`` is now raised
-    when the amount parameter to :meth:`LOB.read()` is zero or negative.
+    when the ``amount`` parameter in :meth:`LOB.read()` is set to zero or
+    negative.
 #)  Fixed bug in the calculation of :data:`Cursor.rowcount` under some
     circumstances.
 #)  Connection parameters that are strings now treat an empty string in the
