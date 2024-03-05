@@ -13,38 +13,40 @@ oracledb 2.1.0 (TBD)
 Thin Mode Changes
 +++++++++++++++++
 
-#)  Added support for Oracle Database 23c feature:
-    :ref:`implicit connection pooling with DRCP and PRCP <implicitconnpool>`.
-#)  Added support for Oracle Database 23c feature: improving the performance of
-    connection creation by reducing the number of round trips required for all
-    connections created.
-#)  Added support for Oracle Database 23c feature: use of TCP fast open for
-    clients connecting from within the OCI Cloud network.
-#)  Added support for Easy Connect strings found in tnsnames.ora files.
+#)  Oracle Database 23c feature support:
+
+    - Added support for
+      :ref:`implicit connection pooling with DRCP and PRCP <implicitconnpool>`.
+    - Improved the performance of connection creation by reducing the number of
+      round trips required for all connections.
+    - Added support for TCP fast open for applications connecting from within
+      the OCI Cloud network to Oracle Autonomous Database Serverless (ADB-S).
+
+#)  :ref:`asyncio <asyncio>` changes:
+
+    - Support for asyncio is no longer considered pre-release.
+    - Internal change to improve handling of packets.
+    - Fixed bug when using :ref:`DRCP <drcp>`.
+    - Fixed bug in processing metadata that spans multiple packets.
+    - Fixed bug when connecting to a database using listener redirects
+      (`issue 285 <https://github.com/oracle/python-oracledb/issues/285>`__).
+
+#)  Added support for Easy Connect strings found in
+    :ref:`tnsnames.ora <optnetfiles>` files.
 #)  Added support for writing UTF-8 encoded bytes to CLOB and NCLOB values and
     writing strings to BLOB values in order to be consistent with what is done
     for string variables.
-#)  The support for :ref:`asyncio <asyncio>` is no longer considered
-    pre-release.
 #)  User-defined errors raised by the database no longer display an error help
     portal URL.
-#)  Internal change to improve handling of packets with :ref:`asyncio
-    <asyncio>` for recent database versions.
 #)  Fixed potential cursor issues when using :ref:`drcp`.
 #)  Fixed regression when using :ref:`IAM token authentication <iamauth>`
     (`issue 288 <https://github.com/oracle/python-oracledb/issues/288>`__).
 #)  Fixed bug connecting to databases that are only mounted and not opened
     (`issue 294 <https://github.com/oracle/python-oracledb/issues/294>`__).
-#)  Fixed bug when using :ref:`DRCP <drcp>` with :ref:`asyncio <asyncio>`.
 #)  Fixed bug in identifying bind variables in SQL statements containing a
     single line comment at the end of the statement.
 #)  Fixed bug in determining the list of attributes for PL/SQL collections.
 #)  Fixed bug in calculating the :data:`Connection.thin` attribute.
-#)  Fixed bug in processing metadata that spans multiple packets when using
-    :ref:`asyncio <asyncio>`.
-#)  Fixed bug when connecting to a database using listener redirects when using
-    :ref:`asyncio <asyncio>`
-    (`issue 285 <https://github.com/oracle/python-oracledb/issues/285>`__).
 #)  Fixed type declaration for the ``connectiontype`` parameter to
     :meth:`oracledb.create_pool_async()` and the return value of
     :meth:`AsyncConnectionPool.acquire()`.
