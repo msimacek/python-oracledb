@@ -1492,10 +1492,16 @@ Implicit Connection Pooling with DRCP and PRCP
 Starting from Oracle Database 23c, Python applications that use
 :ref:`DRCP <drcp>` and Oracle Connection Manager in Traffic Director Mode's
 (CMAN-TDM) pooling capability `Proxy Resident Connection Pooling (PRCP)
-<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-E5586BC8-6311-
-434D-B605-204560D3A777>`__ can enable implicit connection pooling with DRCP
-and PRCP.  With this feature, applications do not need to explicitly close or
-release a connection to return the connection back to the DRCP or PRCP pool.
+<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-E0032017-03B1-
+4F14-AF9B-BCC87C982DA8>`__ can enable `implicit connection pooling <https://
+www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-A9D74994-D81A-47BF-BAF2-
+E4E1A354CA99>`__ with DRCP and PRCP.  For more information on PRCP, see the
+Oracle technical brief `CMAN-TDM — An Oracle Database connection proxy for
+scalable and highly available applications <https://download.oracle.com/
+ocomdocs/global/CMAN_TDM_Oracle_DB_Connection_Proxy_for_scalable_apps.pdf>`__.
+
+With implicit connection pooling, applications do not need to explicitly close
+or release a connection to return the connection back to the DRCP or PRCP pool.
 Applications that do not use client-side connection pooling can take advantage
 of the implicit connection pooling feature with either Thin or Thick mode.
 Thick mode requires Oracle 23c Client libraries for implicit connection
