@@ -120,7 +120,6 @@ Common Changes
     same way as the value ``None``.
 
 
-
 oracledb 2.0.1 (January 2024)
 -----------------------------
 
