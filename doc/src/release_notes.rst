@@ -16,9 +16,10 @@ Thin Mode Changes
 #)  Fixed bug when calling :meth:`~Connection.gettype()` with an object type
     name containing ``%ROWTYPE``
     (`issue 304 <https://github.com/oracle/python-oracledb/issues/304>`__).
-#)  Tightened up code looking for the end of a database request.
-#)  Packet output is now immediately flushed in order to avoid losing output
-    due to buffering when multiple threads are running.
+#)  Internal change: tightened up code looking for the end of a database
+    request.
+#)  Internal change: packet output is now immediately flushed in order to avoid
+    losing output due to buffering when multiple threads are running.
 #)  Restored error message raised when attempting to connect to Oracle Database
     11g.
 
