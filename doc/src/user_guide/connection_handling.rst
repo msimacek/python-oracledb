@@ -544,6 +544,29 @@ the username, password and connection string from a DSN:
 
 Empty values are returned as ``None``.
 
+The :meth:`ConnectParams.get_network_service_names()` can be used to get a
+list of the network service names that are defined in the
+:ref:`tnsnames.ora <optnetfiles>` file. The directory that contains the
+tnsnames.ora file can be specified in the :attr:`~ConnectParams.config_dir`
+attribute.
+
+.. code-block:: python
+
+    cp = oracledb.ConnectParams(host="my_host", port=my_port, dsn="orclpdb",
+                                config_dir="/opt/oracle/config")
+    cp.get_network_service_names()
+
+If the :meth:`ConnectParams.get_network_service_names()` method is called but
+a tnsnames.ora file does not exist, then an error such as the following is
+returned::
+
+    DPY-4026: file tnsnames.ora not found in /opt/oracle/config
+
+If :attr:`~ConnectParams.config_dir` is not specified, then the following
+error is returned::
+
+    DPY-4027: no configuration directory to search for tnsnames.ora
+
 When creating a standalone connection or connection pool the equivalent
 internal extraction is done automatically when a value is passed to the ``dsn``
 parameter of :meth:`oracledb.connect()` or :meth:`oracledb.create_pool()` but
