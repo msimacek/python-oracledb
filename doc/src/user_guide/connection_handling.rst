@@ -315,7 +315,9 @@ id=GUID-8C85D289-6AF3-41BC-848B-BF39D32648BA>`__ syntax allows the use of
 multiple hosts or ports, along with optional entries for the wallet location,
 the distinguished name of the database server, and even allows some network
 configuration options be set. This means that a :ref:`sqlnet.ora <optnetfiles>`
-file is not needed for some common connection scenarios.
+file is not needed for some common connection scenarios. See Oracle's
+`Technical Paper on Easy Connect Plus Syntax <https://download.oracle.com/
+ocomdocs/global/Oracle-Net-Easy-Connect-Plus.pdf>`__ for more information.
 
 In python-oracledb Thin mode, any unknown Easy Connect options are ignored and
 are not passed to the database.  See :ref:`Connection String Differences
