@@ -859,6 +859,13 @@ class TestCase(test_env.BaseTestCase):
         pool = test_env.get_pool(pool_class=MyPool)
         self.assertIsInstance(pool, MyPool)
 
+    def test_2437(self):
+        "2437 - test connectiontype with an invalid connection class"
+        with self.assertRaisesFullCode("DPY-2023"):
+            test_env.get_pool(connectiontype=oracledb.AsyncConnection)
+        with self.assertRaisesFullCode("DPY-2023"):
+            test_env.get_pool(connectiontype=int)
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()
