@@ -51,6 +51,19 @@ insert into &main_user..TableWithDomainAndAnnotations values (1, 25)
 commit
 /
 
+create table &main_user..TestVectors (
+    IntCol                  number(9) not null,
+    VectorFlexAllCol        vector,
+    VectorFlexTypeCol       vector(2),
+    VectorFlex8Col          vector(*, int8),
+    VectorFlex32Col         vector(*, float32),
+    VectorFlex64Col         vector(*, float64),
+    Vector32Col             vector(10, float32),
+    Vector64Col             vector(10, float64),
+    Vector8Col              vector(10, int8)
+)
+/
+
 create table &main_user..TestCompressedJson (
     IntCol number(9) not null,
     JsonCol json not null
