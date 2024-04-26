@@ -576,6 +576,14 @@ class TestCase(test_env.BaseTestCase):
         ]
         self.assertEqual(self.cursor.fetchall(), expected_value)
 
+    def test_6436(self):
+        "6436 - vector with zero dimensions"
+        with self.assertRaisesFullCode("DPY-4031"):
+            self.cursor.setinputsizes(oracledb.DB_TYPE_VECTOR)
+            self.cursor.execute("select :1", [[]])
+        with self.assertRaisesFullCode("DPY-4031"):
+            self.cursor.execute("select :1", [array.array("d", [])])
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()
