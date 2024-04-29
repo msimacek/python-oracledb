@@ -34,7 +34,7 @@ Thick Mode Changes
 Common Changes
 ++++++++++++++
 
-#)  Added support for columns of type VECTOR.
+#)  Added support for columns of type :ref:`VECTOR <vectors>`.
 #)  Added support for database type :data:`oracledb.DB_TYPE_INTERVAL_YM` which
     is represented in Python by instances of the new
     :ref:`oracledb.IntervalYM <interval_ym>` class
