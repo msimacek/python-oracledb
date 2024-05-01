@@ -21,8 +21,8 @@ Thin Mode Changes
     ``%ROWTYPE``
     (`issue 325 <https://github.com/oracle/python-oracledb/issues/325>`__).
 #)  Fixed bug that would cause pooled connections to be marked checked out but
-    be unavailable for use permanently (`issue 221
-    <https://github.com/oracle/python-oracledb/issues/221>`__).
+    be unavailable for use permanently
+    (`issue 221 <https://github.com/oracle/python-oracledb/issues/221>`__).
 #)  Fixed bug that would cause an internal error to be raised when attempting
     to close a connection that has been forcibly closed by the database.
 #)  Internal change: further efforts to tighten code looking for the end of a
@@ -36,9 +36,9 @@ Common Changes
 
 #)  Added support for columns of type :ref:`VECTOR <vectors>`.
 #)  Added support for columns of type INTERVAL YEAR TO MONTH which can be
-    represented in Python by instances of the new :ref:`oracledb.IntervalYM
-    <interval_ym>` class (`issue 310
-    <https://github.com/oracle/python-oracledb/issues/310>`__).
+    represented in Python by instances of the new
+    :ref:`oracledb.IntervalYM <interval_ym>` class
+    (`issue 310 <https://github.com/oracle/python-oracledb/issues/310>`__).
 #)  Added support for processing :ref:`tnsnames.ora files <optnetfiles>`
     containing ``IFILE`` directives
     (`issue 311 <https://github.com/oracle/python-oracledb/issues/311>`__).
