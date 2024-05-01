@@ -35,10 +35,10 @@ Common Changes
 ++++++++++++++
 
 #)  Added support for columns of type :ref:`VECTOR <vectors>`.
-#)  Added support for database type :data:`oracledb.DB_TYPE_INTERVAL_YM` which
-    is represented in Python by instances of the new
-    :ref:`oracledb.IntervalYM <interval_ym>` class
-    (`issue 310 <https://github.com/oracle/python-oracledb/issues/310>`__).
+#)  Added support for columns of type INTERVAL YEAR TO MONTH which can be
+    represented in Python by instances of the new :ref:`oracledb.IntervalYM
+    <interval_ym>` class (`issue 310
+    <https://github.com/oracle/python-oracledb/issues/310>`__).
 #)  Added support for processing :ref:`tnsnames.ora files <optnetfiles>`
     containing ``IFILE`` directives
     (`issue 311 <https://github.com/oracle/python-oracledb/issues/311>`__).
