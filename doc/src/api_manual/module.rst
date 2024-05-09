@@ -3364,19 +3364,6 @@ attribute.
     This constant is used to represent the storage format of vector columns
     using 8-bit signed integers.
 
-.. _vectormetadataconstants:
-
-Vector Metadata Constants
--------------------------
-
-The vector metadata constants are listed below.
-
-.. versionadded:: 2.2.0
-
-.. data:: VECTOR_META_FLAG_FLEXIBLE_DIM
-
-    The vector metadata constant for flexible dimensions.
-
 .. _exceptions:
 
 Oracledb Exceptions
