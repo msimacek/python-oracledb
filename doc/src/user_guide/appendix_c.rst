@@ -115,6 +115,11 @@ and cx_Oracle drivers are:
   attribute is True if the connection was established in the Thin mode. In
   Thick mode, the value of this attribute is False.
 
+- The new method signature of :attr:`Connection.outputtypehandler` is
+  ``handler(cursor,metadata)``. The old signature ``handler(cursor, name,
+  default_type, length, precision, scale)`` was deprecated in python-oracledb
+  1.4 but will still work and will be removed in a future version.
+
 See :ref:`connattrs` for more information.
 
 Pooling Differences from cx_Oracle
@@ -153,9 +158,9 @@ SessionPool>`_ as follows:
 - The default mode is :data:`~oracledb.POOL_GETMODE_WAIT` instead of
   :data:`~oracledb.POOL_GETMODE_NOWAIT`. If the mode
   :data:`~oracledb.POOL_GETMODE_NOWAIT` is truly desired, modify any pool
-  creation code to specify this value instead.  Note the namespace of constant
-  has been improved.  Old names like ``SPOOL_ATTRVAL_NOWAIT`` can be used but
-  are now deprecated.
+  creation code to specify this value instead.  Note the namespace of
+  constants has been improved.  Old names like ``SPOOL_ATTRVAL_NOWAIT`` can be
+  used but are now deprecated.
 
 - A new optional parameter ``params`` of type :ref:`PoolParams <poolparam>`
   can be used to encapsulate connection properties. See :ref:`usingconnparams`
@@ -208,6 +213,45 @@ python-oracledb and cx_Oracle drivers are:
   :meth:`Cursor.executemany()` with PL/SQL statements, ``Cursor.rowcount``
   will return 0. If the cursor or connection are not open, then the value -1
   will be returned as required by the Python Database API.
+
+- :attr:`Cursor.description`: This attribute was previously a sequence of
+  7-item sequences in cx_Oracle and python-oracledb. Each of these sequences
+  contained information describing one result column, that is, (name, type,
+  display_size, internal_size, precision, scale, null_ok). In
+  python-oracledb 1.4, this attribute was changed to a sequence of
+  :ref:`FetchInfo <fetchinfoobj>` objects. Each FetchInfo object describes one
+  result column and can behave as a 7-tuple like before, but contains
+  additional information that may be helpful when using
+  :ref:`output type handlers <outputtypehandlers>`.
+
+- :attr:`Cursor.outputtypehandler`: The new method signature of this attribute
+  is ``handler(cursor,metadata)``. The old signature ``handler(cursor, name,
+  default_type, length, precision, scale)`` was deprecated in python-oracledb
+  1.4 but will still work and will be removed in a future version.
+
+.. _fetchisjson:
+
+Fetching IS JSON Column Differences from cx_Oracle
+--------------------------------------------------
+
+In python-oracledb, VARCHAR2 and LOB columns that have the ``IS JSON``
+constraint enabled are fetched as Python objects. These columns are fetched in
+the same way that :ref:`JSON type columns <json21fetch>` are fetched when
+using Oracle Database 21c (or later). The returned value varies depending on
+the JSON data. If the JSON data is an object, then a dictionary is returned.
+If it is an array, then a list is returned. If it is a scalar value, then that
+particular scalar value is returned.
+
+In cx_Oracle, VARCHAR2 and LOB columns that have the ``IS JSON`` constraint
+enabled are fetched as strings and LOB objects respectively. To enable this
+same fetch behavior in python-oracledb, you must use an
+:ref:`output type handler <outputtypehandlers>` as shown below.
+
+.. code-block:: python
+
+    def type_handler(cursor, fetch_info):
+        if fetch_info.is_json:
+            return cursor.var(fetch_info.type_code, fetch_info.internal_size, cursor.arraysize)
 
 Advanced Queuing (AQ) Differences from cx_Oracle
 ------------------------------------------------
@@ -504,7 +548,20 @@ following steps:
    as :data:`~oracledb.POOL_GETMODE_NOWAIT` and :data:`~oracledb.PURITY_SELF`
    are now preferred.  The old namespaces still work.
 
-7. Review the following sections to see if your application requirements are
+7. The method signature of the :ref:`output type handler <outputtypehandlers>`
+   which can be specified on a
+   :attr:`connection <Connection.outputtypehandler>` or on a
+   :attr:`cursor <Cursor.outputtypehandler>` is ``handler(cursor, metadata)``.
+   The old signature ``handler(cursor, name, default_type, length, precision,
+   scale)`` was deprecated in python-oracledb 1.4 but will still work and will
+   be removed in a future version.
+
+8. VARCHAR2 and LOB columns that have the ``IS JSON`` constraint enabled are
+   fetched by default as Python objects in python-oracledb. In cx_Oracle,
+   VARCHAR2 and LOB columns that contain JSON data are fetched as strings and
+   LOB objects by default in cx_Oracle. See :ref:`fetchisjson`.
+
+9. Review the following sections to see if your application requirements are
    satisfied by the python-oracledb Thin mode:
 
    - :ref:`featuresummary`
@@ -513,14 +570,14 @@ following steps:
    If your application requirements are not supported by the Thin mode, then
    use the python-oracledb Thick mode.
 
-8. Review :ref:`compatibility`.
+10. Review :ref:`compatibility`.
 
    If your code base uses an older cx_Oracle version, review the previous
    :ref:`release notes <releasenotes>` for additional changes to modernize
    the code.
 
-9. Modernize code as needed or desired.  See :ref:`deprecations` for the list
-   of deprecations in python-oracledb.
+11. Modernize code as needed or desired.  See :ref:`deprecations` for the list
+    of deprecations in python-oracledb.
 
 Additional Upgrade Steps to use python-oracledb Thin Mode
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
