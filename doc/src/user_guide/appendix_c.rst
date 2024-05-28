@@ -558,8 +558,8 @@ following steps:
 
 8. VARCHAR2 and LOB columns that have the ``IS JSON`` constraint enabled are
    fetched by default as Python objects in python-oracledb. In cx_Oracle,
-   VARCHAR2 and LOB columns that contain JSON data are fetched as strings and
-   LOB objects by default in cx_Oracle. See :ref:`fetchisjson`.
+   VARCHAR2 and LOB columns that contain JSON data are fetched by default as
+   strings and LOB objects respectively. See :ref:`fetchisjson`.
 
 9. Review the following sections to see if your application requirements are
    satisfied by the python-oracledb Thin mode:
