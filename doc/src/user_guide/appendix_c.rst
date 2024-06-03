@@ -48,8 +48,8 @@ See :ref:`enablingthick` for more information.
 Calling the ``init_oracle_client()`` method immediately loads Oracle Client
 libraries.  To emulate the cx_Oracle behavior of deferring library loading
 until the creation of the first connection (in the case when
-``init_oracle_client()`` is not called), your application will need to defer
-calling ``init_oracle_client()`` as appropriate.
+``init_oracle_client()`` is not called), your application will need to
+explicitly defer calling ``init_oracle_client()`` as appropriate.
 
 In python-oracledb, ``init_oracle_client()`` can now be called multiple times
 in the one Python process as long as its arguments are the same each time.
@@ -79,11 +79,11 @@ from cx_Oracle:
   specification PEP 249.  See
   :ref:`Standalone Connections <standaloneconnection>` and :ref:`connerrors`.
 
-- New keyword arguments can be passed to :func:`~oracledb.connect()`.  For
-  example you can pass the hostname, port and servicename as separate
+- New optional keyword arguments can be passed to :func:`~oracledb.connect()`.
+  For example you can pass the hostname, port and servicename as separate
   parameters instead of using an Easy Connect connection string.  In
-  python-oracledb Thin mode, some of the new arguments replace ``sqlnet.ora``
-  settings.
+  python-oracledb Thin mode, some of the new arguments replace :ref:`sqlnet.ora
+  <optnetfiles>` settings.
 
 - A new optional parameter ``params`` of type :ref:`ConnectParams <connparam>`
   can be used to encapsulate connection properties. See :ref:`usingconnparams`
@@ -102,6 +102,11 @@ The use of the class constructor method ``oracledb.Connection()`` to create
 connections is no longer recommended for creating connections.  Use
 :func:`~oracledb.connect()` instead.
 
+The :meth:`oracledb.makedsn()` method for creating the ``dsn`` value has been
+deprecated.  New code should use :meth:`oracledb.ConnectParams()` or use the
+new keyword arguments in :func:`oracledb.connect()`.
+
+
 Connection Object Differences
 +++++++++++++++++++++++++++++
 
@@ -116,7 +121,7 @@ and cx_Oracle drivers are:
   Thick mode, the value of this attribute is False.
 
 - The new method signature of :attr:`Connection.outputtypehandler` is
-  ``handler(cursor,metadata)``. The old signature ``handler(cursor, name,
+  ``handler(cursor, metadata)``. The old signature ``handler(cursor, name,
   default_type, length, precision, scale)`` was deprecated in python-oracledb
   1.4 but will still work and will be removed in a future version.
 
@@ -125,9 +130,9 @@ See :ref:`connattrs` for more information.
 Pooling Differences from cx_Oracle
 ----------------------------------
 
-It is recommended to use the new equivalent :ref:`ConnectionPool Object
-<connpool>` instead of the SessionPool object, which is deprecated.  To create
-a connection pool, use :meth:`oracledb.create_pool()`, which is equivalent to
+It is recommended to use the new :ref:`ConnectionPool Object <connpool>`
+instead of the equivalent SessionPool object, which is deprecated.  To create a
+connection pool, use :meth:`oracledb.create_pool()`, which is equivalent to
 calling `cx_Oracle.SessionPool() <https://cx-oracle.readthedocs.io/en/latest/
 api_manual/module.html#cx_Oracle.SessionPool>`__.
 
@@ -149,11 +154,15 @@ SessionPool>`_ as follows:
   password is now supported in the same way as :func:`oracledb.connect()`. For
   example ``dsn="un/pw@cs"`` can be used.
 
-- New keyword arguments can be passed to :func:`~oracledb.create_pool()`.  For
-  example you can pass the hostname, port and servicename as separate
-  parameters instead of using an Easy Connect connection string.  In
-  python-oracledb Thin mode, some of the new arguments replace ``sqlnet.ora``
-  settings.
+- New optional keyword arguments can be passed to
+  :func:`~oracledb.create_pool()`.  For example you can pass the hostname, port
+  and servicename as separate parameters instead of using an Easy Connect
+  connection string.  In python-oracledb Thin mode, some of the new arguments
+  replace :ref:`sqlnet.ora <optnetfiles>` settings.
+
+- A new optional parameter ``params`` of type :ref:`PoolParams <poolparam>`
+  can be used to encapsulate connection properties. See :ref:`usingconnparams`
+  for more information.
 
 - The default mode is :data:`~oracledb.POOL_GETMODE_WAIT` instead of
   :data:`~oracledb.POOL_GETMODE_NOWAIT`. If the mode
@@ -162,15 +171,15 @@ SessionPool>`_ as follows:
   constants has been improved.  Old names like ``SPOOL_ATTRVAL_NOWAIT`` can be
   used but are now deprecated.
 
-- A new optional parameter ``params`` of type :ref:`PoolParams <poolparam>`
-  can be used to encapsulate connection properties. See :ref:`usingconnparams`
-  for more information.
-
-- The ``encoding`` and ``decoding`` parameters are deprecated and ignored. The
-  encodings in use are always UTF-8.
+- The ``encoding`` and ``nenecoding`` parameters are deprecated and
+  ignored. The encodings in use are always UTF-8.
 
 - New keyword arguments that are used internally to create a :ref:`PoolParams
   object <connparam>` before creating the connection.
+
+The :meth:`oracledb.makedsn()` method for creating the ``dsn`` value has been
+deprecated.  New code should use :meth:`oracledb.ConnectParams()` or use the
+new keyword arguments to :func:`oracledb.create_pool()`.
 
 SessionPool Object Differences
 ++++++++++++++++++++++++++++++
@@ -206,7 +215,7 @@ python-oracledb and cx_Oracle drivers are:
   :meth:`Cursor.executemany()`, by passing None for the statement argument and
   an integer for the parameters argument.
 
-- ``Cursor.bindarraysize``: This attribute is deprecated and removed in
+- ``Cursor.bindarraysize``: This attribute is desupported and removed in
   python-oracledb. It is not needed in the application code.
 
 - :attr:`Cursor.rowcount`: After :meth:`Cursor.execute()` or
@@ -225,7 +234,7 @@ python-oracledb and cx_Oracle drivers are:
   :ref:`output type handlers <outputtypehandlers>`.
 
 - :attr:`Cursor.outputtypehandler`: The new method signature of this attribute
-  is ``handler(cursor,metadata)``. The old signature ``handler(cursor, name,
+  is ``handler(cursor, metadata)``. The old signature ``handler(cursor, name,
   default_type, length, precision, scale)`` was deprecated in python-oracledb
   1.4 but will still work and will be removed in a future version.
 
@@ -251,25 +260,24 @@ same fetch behavior in python-oracledb, you must use an
 
     def type_handler(cursor, fetch_info):
         if fetch_info.is_json:
-            return cursor.var(fetch_info.type_code, fetch_info.internal_size, cursor.arraysize)
+            return cursor.var(fetch_info.type_code, cursor.arraysize)
 
 Advanced Queuing (AQ) Differences from cx_Oracle
 ------------------------------------------------
 
-The old Advanced Queuing (AQ) API is not available in python-oracledb since it
-was deprecated in cx_Oracle 7.2. Use the
-:ref:`new Advanced Queuing (AQ) <aqusermanual>`. Note that AQ is only
-available in the Thick mode.
+Use the new :ref:`Advanced Queuing (AQ) <aqusermanual>` API instead of the
+older API which was deprecated in cx_Oracle 7.2 and is not available in
+python-oracledb. Note that AQ is only available in python-oracledb Thick mode.
 
 Replace:
 
-- :meth:`Connection.deq()` with :meth:`Queue.deqone()` or :meth:`Queue.deqmany()`
-- :meth:`Connection.deqoptions()` with attribute :attr:`Queue.deqoptions`
-- :meth:`Connection.enq()` with :meth:`Queue.enqone()` or :meth:`Queue.enqmany()`
-- :meth:`Connection.deqoptions()` with attribute :attr:`Queue.deqoptions`
+- ``Connection.deq()`` with :meth:`Queue.deqone()` or :meth:`Queue.deqmany()`
+- ``Connection.deqoptions()`` with attribute :attr:`Queue.deqoptions`
+- ``Connection.enq()`` with :meth:`Queue.enqone()` or :meth:`Queue.enqmany()`
+- ``Connection.enqoptions()`` with attribute :attr:`Queue.enqoptions`
 
-The AQ feature in the python-oracledb driver differs from cx_Oracle as
-follows:
+The AQ support in python-oracledb has the following enhancements from
+cx_Oracle:
 
 - AQ messages can be enqueued and dequeued as a JSON payload type
 - Recipient lists can be enqueued and dequeued
@@ -285,10 +293,10 @@ Error Handling Differences from cx_Oracle
 In python-oracledb Thick mode, error messages generated by the Oracle Client
 libraries and the `ODPI-C <https://oracle.github.io/odpi/>`_ layer used by
 cx_Oracle and python-oracledb in Thick mode are mostly returned unchanged from
-cx_Oracle 8.3 with the exceptions shown below.
+cx_Oracle 8.3. Some exceptions shown below.
 
-Note that the python-oracledb driver error messages can vary between Thin and
-Thick modes. See :ref:`errorhandling`.
+Note that the python-oracledb driver error messages can also vary between Thin
+and Thick modes. See :ref:`errorhandling`.
 
 ConnectionPool.acquire() Message Differences
 ++++++++++++++++++++++++++++++++++++++++++++
@@ -423,19 +431,20 @@ to python-oracledb:
   containing the file, or set :attr:`defaults.config_dir`, or set the
   ``config_dir`` parameter when connecting.
 
-  Only python-oracledb Thick mode will read ``sqlnet.ora`` files.  The Thin
-  mode lets equivalent properties be set in the application when connecting.
+  Only python-oracledb Thick mode will read :ref:`sqlnet.ora <optnetfiles>`
+  files.  The Thin mode lets equivalent properties be set in the application
+  when connecting.
 
   Configuration files in a "default" location such as the Instant Client
   ``network/admin/`` subdirectory, in ``$ORACLE_HOME/network/admin/``, or in
   ``$ORACLE_BASE/homes/XYZ/network/admin/`` (in a read-only Oracle Database
-  home) is not automatically loaded in Thin mode.  Default locations are
-  automatically searched by Thick mode.
+  home) are not automatically loaded in Thin mode.  Default locations are
+  only automatically searched in Thick mode.
 
 - To use the python-oracledb Thin mode in an ORACLE_HOME database installation
-  environment, you use an explicit connection string since the ``ORACLE_SID``,
-  ``TWO_TASK`` and ``LOCAL`` environment variables are not used.  They are
-  used in Thick mode.
+  environment, you must use an explicit connection string since the
+  ``ORACLE_SID``, ``TWO_TASK``, and ``LOCAL`` environment variables are not
+  used.  They are used in Thick mode.
 
 - This is a major release so some previously deprecated features are no longer
   available. See :ref:`deprecations`.
