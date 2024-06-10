@@ -595,6 +595,11 @@ class TestCase(test_env.BaseAsyncTestCase):
                 conn_class=oracledb.ConnectionPool
             )
 
+    async def test_5344(self):
+        "5344 - test connection with an invalid pool"
+        with self.assertRaises(TypeError):
+            await oracledb.connect_async(pool="not a pool object")
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()
