@@ -891,6 +891,11 @@ class TestCase(test_env.BaseTestCase):
         with pool.acquire() as conn:
             self.assertEqual(conn.call_timeout, 0)
 
+    def test_2440(self):
+        "2440 - test connection with an invalid pool"
+        with self.assertRaises(TypeError):
+            oracledb.connect(pool="not a pool object")
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()
