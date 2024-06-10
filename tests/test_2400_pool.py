@@ -202,7 +202,6 @@ class TestCase(test_env.BaseTestCase):
             pool.homogeneous, "homogeneous should be True by default"
         )
         with self.assertRaisesFullCode("DPI-1012"):
-
             pool.acquire(user="missing_proxyuser")
         pool = test_env.get_pool(
             min=2,
