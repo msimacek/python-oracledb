@@ -18,7 +18,7 @@ Thin Mode Changes
 +++++++++++++++++
 
 #)  Added support for :ref:`two-phase commits <tpc>`.
-#)  Added support for data of type :data:`~oracledb.DB_TYPE_BFILE`.
+#)  Added support for columns of type BFILE.
 #)  When calling :meth:`ConnectionPool.acquire()` or
     :meth:`AsyncConnectionPool.acquire()`, the connection pool ``mode``
     :data:`oracledb.POOL_GETMODE_TIMEDWAIT` now always honors the
