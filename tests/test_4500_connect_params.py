@@ -697,6 +697,7 @@ class TestCase(test_env.BaseTestCase):
             ("sdu", 32768),
             ("pool_boundary", "transaction"),
             ("use_tcp_fast_open", False),
+            ("ssl_version", ssl.TLSVersion.TLSv1_2),
         ]
         params.set(**dict(new_values))
         parts = [f"{name}={value!r}" for name, value in new_values]
