@@ -1588,7 +1588,7 @@ that are alike.
 
 The DRCP and PRCP "purity" used by Implicit Connection Pooling defaults to
 SELF, which allows reuse of the server process session memory for best
-performanace. Adding the connection string parameter ``pool_purity=new`` will
+performance. Adding the connection string parameter ``pool_purity=new`` will
 change this and cause each use of a connection to recreate the session memory.
 
 .. _useimplicitconnpool:
