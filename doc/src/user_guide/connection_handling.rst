@@ -1559,7 +1559,7 @@ work.  They are internally released back to pool when not in use.  This may
 occur between the application's explicit :meth:`oracledb.connect()` call and
 :meth:`Connection.close()` (or the application's equivalent connection release
 at end-of-scope).  The internal connection release can be controlled by the
-value of the ``pool_boundary`` connection string parameter, which can be be
+value of the ``pool_boundary`` connection string parameter, which can be
 either:
 
 - *statement*: If this boundary is specified, then the connection is released
@@ -1656,9 +1656,9 @@ To use implicit connection pooling in python-oracledb with DRCP:
 
    .. note::
 
-       - Implicit connection pooling is not enabled if the application sets the
-         ``pool_boundary`` attribute to *transaction* or *statement* but does
-         not specify to use a pooled server.
+        Implicit connection pooling is not enabled if the application sets the
+        ``pool_boundary`` attribute to *transaction* or *statement* but does
+        not specify to use a pooled server.
 
 4. Set the connection class in:
 
