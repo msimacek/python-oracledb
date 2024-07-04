@@ -187,7 +187,7 @@ see :ref:`driverdiff` and :ref:`compatibility`.
       - Yes
       - Yes
     * - SQL execution (see :ref:`sqlexecution`)
-      - Yes - bind and fetch all types except BFILE and JSON
+      - Yes
       - Yes
       - Yes
     * - PL/SQL execution (see :ref:`plsqlexecution`)
@@ -458,8 +458,8 @@ values.
       - :ref:`oracledb.LOB <lobobj>`, bytes, str
     * - BFILE
       - :data:`~oracledb.DB_TYPE_BFILE`
-      - No relevant notes
-      - Cannot be set
+      - Can fetch a BFILE object and insert that object in a table. Cannot create BFILE objects.
+      - :ref:`oracledb.LOB <lobobj>`, bytes
     * - JSON
       - :data:`~oracledb.DB_TYPE_JSON`
       - No relevant notes
