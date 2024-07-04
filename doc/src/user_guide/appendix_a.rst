@@ -238,6 +238,10 @@ see :ref:`driverdiff` and :ref:`compatibility`.
       - No
       - Yes
       - Yes
+    * - Oracle Database 23ai JSON-Relational Duality Views (see :ref:`jsondualityviews`)
+      - Yes
+      - Yes
+      - No
     * - Continuous Query Notification (CQN) (see :ref:`cqn`)
       - No
       - Yes
