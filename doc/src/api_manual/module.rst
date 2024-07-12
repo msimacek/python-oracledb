@@ -347,7 +347,7 @@ Oracledb Methods
     parameter can be specified when establishing connections with the protocol
     "tcps".  This parameter is used in both python-oracledb Thin and Thick
     modes.  The value "ssl.TLSVersion.TLSv1_3" requires Oracle Database 23ai
-    and for Thick mode, Oracle Client 19c (or later) is additionally required.
+    and for Thick mode, Oracle Client 23ai is additionally required.
 
     If the ``handle`` parameter is specified, it must be of type OCISvcCtx\*
     and is only of use when embedding Python in an application (like
@@ -620,7 +620,7 @@ Oracledb Methods
     parameter can be specified when establishing connections with the protocol
     "tcps".  This parameter is used in both python-oracledb Thin and Thick
     modes.  The value "ssl.TLSVersion.TLSv1_3" requires Oracle Database 23ai
-    and for Thick mode, Oracle Client 19c (or later) is additionally required.
+    and for Thick mode, Oracle Client 23ai is additionally required.
 
     The ``handle`` parameter is ignored in the python-oracledb Thin mode.
 
@@ -918,7 +918,7 @@ Oracledb Methods
     parameter can be specified when establishing connections with the protocol
     "tcps".  This parameter is used in both python-oracledb Thin and Thick
     modes.  The value "ssl.TLSVersion.TLSv1_3" requires Oracle Database 23ai
-    and for Thick mode, Oracle Client 19c (or later) is additionally required.
+    and for Thick mode, Oracle Client 23ai is additionally required.
 
     The ``handle`` parameter is expected to be an integer which represents a
     pointer to a valid service context handle. This value is only used in the
@@ -1318,7 +1318,7 @@ Oracledb Methods
     parameter can be specified when establishing connections with the protocol
     "tcps".  This parameter is used in both python-oracledb Thin and Thick
     modes.  The value "ssl.TLSVersion.TLSv1_3" requires Oracle Database 23ai
-    and for Thick mode, Oracle Client 19c (or later) is additionally required.
+    and for Thick mode, Oracle Client 23ai is additionally required.
 
     If the ``handle`` parameter is specified, it must be of type OCISvcCtx\*
     and is only of use when embedding Python in an application (like
@@ -1658,7 +1658,7 @@ Oracledb Methods
     parameter can be specified when establishing connections with the protocol
     "tcps".  This parameter is used in both python-oracledb Thin and Thick
     modes.  The value "ssl.TLSVersion.TLSv1_3" requires Oracle Database 23ai
-    and for Thick mode, Oracle Client 19c (or later) is additionally required.
+    and for Thick mode, Oracle Client 23ai is additionally required.
 
     The ``handle`` parameter is ignored in the python-oracledb Thin mode.
 
@@ -2125,7 +2125,7 @@ Oracledb Methods
     parameter can be specified when establishing connections with the protocol
     "tcps".  This parameter is used in both python-oracledb Thin and Thick
     modes.  The value "ssl.TLSVersion.TLSv1_3" requires Oracle Database 23ai
-    and for Thick mode, Oracle Client 19c (or later) is additionally required.
+    and for Thick mode, Oracle Client 23ai is additionally required.
 
     The ``handle`` parameter is expected to be an integer which represents a
     pointer to a valid service context handle. This value is only used in the
