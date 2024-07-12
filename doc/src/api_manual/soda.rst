@@ -10,6 +10,11 @@ allows documents to be inserted, queried, and retrieved from Oracle Database
 using a set of NoSQL-style python-oracledb methods. By default, documents are JSON
 strings. See the :ref:`user manual <sodausermanual>` for examples.
 
+.. note::
+
+    SODA is only supported in the python-oracledb Thick mode.  See
+    :ref:`enablingthick`.
+
 .. _sodarequirements:
 
 SODA Requirements
