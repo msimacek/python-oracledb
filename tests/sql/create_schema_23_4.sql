@@ -78,3 +78,67 @@ create table &main_user..TestBooleans (
     BooleanCol2             boolean
 )
 /
+
+--create tables for json duality views
+create table &main_user..projects (
+    proj_id           number PRIMARY KEY,
+    proj_name         varchar2(100),
+    proj_status       varchar2(100)
+)
+/
+
+create table &main_user..specifications (
+    proj_id           number,
+    spec_id           number PRIMARY KEY,
+    spec_name         varchar2(100),
+    spec_url          varchar2(100),
+    last_mod          timestamp,
+    foreign key(proj_id) references &main_user..projects(proj_id)
+)
+/
+
+create or replace json relational duality view &main_user..proj_dualv as
+    select json {
+        proj_id,
+        proj_name,
+        proj_status,
+        'specs' : (
+            select JSON_ArrayAgg(JSON{spec_id, spec_name, last_mod})
+            from &main_user..specifications s with (insert, update, delete)
+            where p.proj_id = s.proj_id
+        ) NULL ON NULL
+    }
+    from &main_user..projects p with (insert, update, delete)
+/
+
+--create tables with proj_id as varchar2
+create table &main_user..projects2 (
+    proj_id           varchar2(100) PRIMARY KEY,
+    proj_name         varchar2(100),
+    proj_status       varchar2(100)
+)
+/
+
+create table &main_user..specifications2 (
+    proj_id           varchar2(100),
+    spec_id           number PRIMARY KEY,
+    spec_name         varchar2(100),
+    spec_url          varchar2(100),
+    last_mod          timestamp,
+    foreign key(proj_id) references &main_user..projects2(proj_id)
+)
+/
+
+create or replace json relational duality view &main_user..proj_dualv2 as
+    select json {
+        proj_id,
+        proj_name,
+        proj_status,
+        'specs' : (
+            select JSON_ArrayAgg(JSON{spec_id, spec_name, last_mod})
+            from &main_user..specifications2 s with (insert, update, delete)
+            where p.proj_id = s.proj_id
+        ) NULL ON NULL
+    }
+    from &main_user..projects2 p with (insert, update, delete)
+/
