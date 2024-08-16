@@ -205,7 +205,7 @@ cdef class ThinCursorImpl(BaseThinCursorImpl):
         # iteration in order to allow the determination of input/output binds
         # to be completed; after that, an execution of the remaining iterations
         # can be performed (but only if the cursor remains intact)
-        if stmt._is_plsql and (stmt._cursor_id == 0 or stmt._binds_changed):
+        if stmt.requires_single_execute():
             message.num_execs = 1
             while num_execs > 0:
                 num_execs -= 1
@@ -293,7 +293,7 @@ cdef class AsyncThinCursorImpl(BaseThinCursorImpl):
         # iteration in order to allow the determination of input/output binds
         # to be completed; after that, an execution of the remaining iterations
         # can be performed (but only if the cursor remains intact)
-        if stmt._is_plsql and (stmt._cursor_id == 0 or stmt._binds_changed):
+        if stmt.requires_single_execute():
             message.num_execs = 1
             while num_execs > 0:
                 num_execs -= 1
