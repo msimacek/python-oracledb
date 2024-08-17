@@ -60,6 +60,10 @@ Pipeline Methods
     Adds an operation that executes a statement multiple times with the given
     parameter mappings or sequences found in the sequence parameters.
 
+    If there are no parameters, the number of iterations can be specified as an
+    integer instead of needing to provide a list of empty mappings or
+    sequences.
+
 .. method:: Pipeline.add_fetchall(statement, parameters=None, arraysize=None, rowfactory=None)
 
     Adds an operation that executes a query and returns all of the rows from
