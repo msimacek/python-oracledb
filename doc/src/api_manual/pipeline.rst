@@ -108,8 +108,9 @@ Pipeline Methods
     :attr:`Cursor.arraysize` sizes will be set to 1.
 
     Since only one fetch is performed for a query operation, consider adding a
-    ``FETCH NEXT`` clause to the statement to prevent the database processing
-    rows that will never be fetched, see :ref:`rowlimit`.
+    ``WHERE`` condition or using a ``FETCH NEXT`` clause in the statement to
+    prevent the database processing rows that will never be fetched, see
+    :ref:`rowlimit`.
 
 Pipeline Attributes
 -------------------

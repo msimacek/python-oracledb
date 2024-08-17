@@ -364,8 +364,8 @@ query records, up to the limit specified by the method's ``num_rows``
 parameter. Similarly for :meth:`~Pipeline.add_fetchone()` only the first row
 can ever be fetched. It is not possible to fetch more data from these
 operations. To prevent the database processing rows that cannot be fetched by
-the application, consider adding a ``FETCH NEXT`` clause to the statement, see
-:ref:`rowlimit`.
+the application, consider adding appropriate ``WHERE`` conditions or using a
+``FETCH NEXT`` clause in the statement, see :ref:`rowlimit`.
 
 Query results or :ref:`OUT binds <bind>` from one operation cannot be passed to
 subsequent operations in the same pipeline.
