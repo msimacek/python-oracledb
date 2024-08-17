@@ -367,7 +367,8 @@ operations. To prevent the database processing rows that cannot be fetched by
 the application, consider adding a ``FETCH NEXT`` clause to the statement, see
 :ref:`rowlimit`.
 
-Query results from one operation cannot be passed to subsequent operations.
+Query results or :ref:`OUT binds <bind>` from one operation cannot be passed to
+subsequent operations in the same pipeline.
 
 To execute the pipeline, call :meth:`AsyncConnection.run_pipeline()`.
 
