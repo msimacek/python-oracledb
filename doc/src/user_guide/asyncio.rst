@@ -461,7 +461,7 @@ Output will be like::
 
     run_thing_one
     run_thing_two
-    [('PYTHONDEMO',)]
+    [('HR',)]
     [(datetime.datetime(2024, 8, 15, 6, 42, 30),)]
 
 See `pipelining2.py
@@ -486,7 +486,7 @@ pipelined operation.  For example:
 
     pipeline.add_execute("""
         begin
-          :1 := TRUE;
+          :1 := true;
           :2 := 'Python';
         end;
         """, [v1, v2])
