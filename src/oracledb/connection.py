@@ -1650,6 +1650,7 @@ class AsyncConnection(BaseConnection):
         with self.cursor() as cursor:
             if arraysize is not None:
                 cursor.arraysize = arraysize
+            cursor.prefetchrows = cursor.arraysize
             await cursor.execute(statement, parameters)
             cursor.rowfactory = rowfactory
             return await cursor.fetchall()
@@ -1666,6 +1667,11 @@ class AsyncConnection(BaseConnection):
         the rows are fetched, the cursor is closed.
         """
         with self.cursor() as cursor:
+            if num_rows is None:
+                num_rows = cursor.arraysize
+            elif num_rows <= 0:
+                return []
+            cursor.arraysize = cursor.prefetchrows = num_rows
             await cursor.execute(statement, parameters)
             cursor.rowfactory = rowfactory
             return await cursor.fetchmany(num_rows)
@@ -1682,7 +1688,7 @@ class AsyncConnection(BaseConnection):
         is closed.
         """
         with self.cursor() as cursor:
-            cursor.prefetchrows = cursor.arraysize = 2
+            cursor.prefetchrows = cursor.arraysize = 1
             await cursor.execute(statement, parameters)
             cursor.rowfactory = rowfactory
             return await cursor.fetchone()
