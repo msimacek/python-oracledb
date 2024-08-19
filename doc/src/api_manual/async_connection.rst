@@ -175,8 +175,8 @@ AsyncConnection Methods
     The ``continue_on_error`` parameter determines whether operations should
     continue to run after an error has occurred. If this parameter is set to
     True, then the :attr:`PipelineOpResult.error` attribute will be populated
-    with an :ref:`_Error <exchandling>` instance which identifies the error that
-    occurred. If this parameter is set to False, then an exception will be
+    with an :ref:`_Error <exchandling>` instance which identifies the error
+    that occurred. If this parameter is set to False, then an exception will be
     raised as soon as an error is detected and all subsequent operations will
     be terminated. The default value is False.
 
@@ -189,11 +189,11 @@ AsyncConnection Methods
 
         True pipelining requires Oracle Database 23ai.
 
-        When you connect to an older database, operations are sequentially executed
-        by python-oracledb. Each operation concludes before the next is sent to the
-        database. There is no reduction in round-trips and no performance
-        benefit. This usage is only recommended for code portability such as when
-        preparing for a database upgrade.
+        When you connect to an older database, operations are sequentially
+        executed by python-oracledb. Each operation concludes before the next
+        is sent to the database. There is no reduction in round-trips and no
+        performance benefit. This usage is only recommended for code
+        portability such as when preparing for a database upgrade.
 
     .. versionadded:: 2.4.0
 
