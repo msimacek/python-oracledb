@@ -95,9 +95,6 @@ cdef class Message:
         """
         pass
 
-    cdef int _preprocess(self) except -1:
-        pass
-
     cdef int _process_error_info(self, ReadBuffer buf) except -1:
         cdef:
             uint32_t num_bytes, i, offset, num_offsets
@@ -326,11 +323,13 @@ cdef class Message:
     async def postprocess_async(self):
         pass
 
+    cdef int preprocess(self) except -1:
+        pass
+
     cdef int process(self, ReadBuffer buf) except -1:
         cdef uint8_t message_type
         self.end_of_response = False
         self.flush_out_binds = False
-        self._preprocess()
         while not self.end_of_response:
             buf.save_point()
             buf.read_ub1(&message_type)
@@ -453,19 +452,6 @@ cdef class MessageWithData(Message):
                 buf.write_uint8(TNS_MSG_TYPE_ROW_DATA)
                 self._write_bind_params_row(buf, params, i)
 
-    cdef int _preprocess(self) except -1:
-        cdef:
-            Statement statement = self.cursor_impl._statement
-            BindInfo bind_info
-        if statement._is_returning and not self.parse_only:
-            self.out_var_impls = []
-            for bind_info in statement._bind_info_list:
-                if not bind_info._is_return_bind:
-                    continue
-                self.out_var_impls.append(bind_info._bind_var_impl)
-        elif statement._is_query:
-            self._preprocess_query()
-
     cdef int _preprocess_query(self) except -1:
         """
         Actions that takes place before query data is processed.
@@ -504,15 +490,6 @@ cdef class MessageWithData(Message):
 
         # the list of output variables is equivalent to the fetch variables
         self.out_var_impls = cursor_impl.fetch_var_impls
-
-        # resize fetch variables, if necessary, to allow room in each variable
-        # for the fetch array size
-        for var_impl in self.out_var_impls:
-            if var_impl.num_elements >= cursor_impl._fetch_array_size:
-                continue
-            num_vals = (cursor_impl._fetch_array_size - var_impl.num_elements)
-            var_impl.num_elements = cursor_impl._fetch_array_size
-            var_impl._values.extend([None] * num_vals)
 
     cdef int _process_bit_vector(self, ReadBuffer buf) except -1:
         cdef ssize_t num_bytes
@@ -1441,6 +1418,19 @@ cdef class MessageWithData(Message):
                         value = await value
                     var_impl._values[i] = value
 
+    cdef int preprocess(self) except -1:
+        cdef:
+            Statement statement = self.cursor_impl._statement
+            BindInfo bind_info
+        if statement._is_returning and not self.parse_only:
+            self.out_var_impls = []
+            for bind_info in statement._bind_info_list:
+                if not bind_info._is_return_bind:
+                    continue
+                self.out_var_impls.append(bind_info._bind_var_impl)
+        elif statement._is_query:
+            self._preprocess_query()
+
 
 cdef class AuthMessage(Message):
     cdef:
@@ -2054,7 +2044,7 @@ cdef class ExecuteMessage(MessageWithData):
                     num_iters = self.cursor_impl.prefetchrows
                 else:
                     num_iters = self.cursor_impl.arraysize
-                self.cursor_impl._fetch_array_size = num_iters
+                self.cursor_impl._set_fetch_array_size(num_iters)
                 if num_iters > 0 and not stmt._no_prefetch:
                     options |= TNS_EXEC_OPTION_FETCH
         if not stmt._is_plsql and not self.parse_only:
@@ -2174,7 +2164,7 @@ cdef class ExecuteMessage(MessageWithData):
             BindInfo info
 
         if params:
-            if not stmt._is_query:
+            if not stmt._is_query and not stmt._is_returning:
                 self.out_var_impls = [info._bind_var_impl \
                                       for info in params \
                                       if info.bind_dir != TNS_BIND_DIR_INPUT]
@@ -2184,7 +2174,7 @@ cdef class ExecuteMessage(MessageWithData):
         if self.function_code == TNS_FUNC_REEXECUTE_AND_FETCH:
             exec_flags_1 |= TNS_EXEC_OPTION_EXECUTE
             num_iters = self.cursor_impl.prefetchrows
-            self.cursor_impl._fetch_array_size = num_iters
+            self.cursor_impl._set_fetch_array_size(num_iters)
         else:
             if self.conn_impl.autocommit:
                 exec_flags_2 |= TNS_EXEC_OPTION_COMMIT_REEXECUTE
@@ -2268,7 +2258,7 @@ cdef class FetchMessage(MessageWithData):
         self.function_code = TNS_FUNC_FETCH
 
     cdef int _write_message(self, WriteBuffer buf) except -1:
-        self.cursor_impl._fetch_array_size = self.cursor_impl.arraysize
+        self.cursor_impl._set_fetch_array_size(self.cursor_impl.arraysize)
         self._write_function_code(buf)
         if self.cursor_impl._statement._cursor_id == 0:
             errors._raise_err(errors.ERR_CURSOR_HAS_BEEN_CLOSED)

@@ -127,6 +127,24 @@ cdef class BaseThinCursorImpl(BaseCursorImpl):
                 errors._raise_err(errors.ERR_MISSING_BIND_VALUE,
                                   name=bind_info._bind_name)
 
+    cdef int _set_fetch_array_size(self, uint32_t value):
+        """
+        Internal method for setting the fetch array size. This also ensures
+        that any fetch variables have enough space to store the fetched rows
+        that are returned.
+        """
+        cdef:
+            ThinVarImpl var_impl
+            uint32_t num_vals
+        self._fetch_array_size = value
+        if self.fetch_var_impls is not None:
+            for var_impl in self.fetch_var_impls:
+                if var_impl.num_elements >= self._fetch_array_size:
+                    continue
+                num_vals = (self._fetch_array_size - var_impl.num_elements)
+                var_impl.num_elements = self._fetch_array_size
+                var_impl._values.extend([None] * num_vals)
+
     def get_array_dml_row_counts(self):
         if self._dmlrowcounts is None:
             errors._raise_err(errors.ERR_ARRAY_DML_ROW_COUNTS_NOT_ENABLED)

@@ -436,6 +436,7 @@ cdef class Protocol(BaseProtocol):
         """
         Process a single message within a request.
         """
+        message.preprocess()
         with self._request_lock:
             self._process_message(message)
             if message.resend:
@@ -803,6 +804,7 @@ cdef class BaseAsyncProtocol(BaseProtocol):
         """
         Process a single message within a request.
         """
+        message.preprocess()
         async with self._request_lock:
             await self._process_message(message)
             if message.resend:
@@ -914,6 +916,7 @@ cdef class BaseAsyncProtocol(BaseProtocol):
                     await self._receive_packet(message,
                                                check_request_boundary=True,
                                                in_pipeline=True)
+                    message.preprocess()
                     message.process(self._read_buf)
                     self._process_call_status(conn_impl, message.call_status)
                     message._check_and_raise_exception()
