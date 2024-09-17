@@ -21,7 +21,7 @@ Thin Mode Changes
     function that will be called when a particular protocol is detected in an
     Easy Connect string.
 #)  Fixed bug when calling :meth:`ConnectParams.parse_dsn_with_credentials()`
-    with an easy connect string containing a protocol.
+    with an Easy Connect string containing a protocol.
 
 Thick Mode Changes
 ++++++++++++++++++
