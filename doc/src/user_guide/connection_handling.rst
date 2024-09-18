@@ -1876,14 +1876,18 @@ Connecting Using External Authentication
 
 Instead of storing the database username and password in Python scripts or
 environment variables, database access can be authenticated by an outside
-system.  External Authentication allows applications to validate user access by
-an external password store (such as an Oracle Wallet), by the operating system,
-or with an external authentication service.
+system.  External Authentication allows applications to validate user access
+with an external password store (such as an
+:ref:`Oracle Wallet <extauthwithwallet>`), with the
+:ref:`operating system <opsysauth>`, or with an external authentication
+service.
 
 .. note::
 
     Connecting to Oracle Database using external authentication is only
     supported in the python-oracledb Thick mode. See :ref:`enablingthick`.
+
+:ref:`extauthwithwallet`
 
 Using an Oracle Wallet for External Authentication
 --------------------------------------------------
@@ -1961,21 +1965,28 @@ your DBA, skip to step 3.
     set to the directory containing them.  See :ref:`optnetfiles`.
 
 With an Oracle wallet configured, and readable by you, your scripts
-can connect using:
+can connect to Oracle Database with:
 
-.. code-block:: python
+- Standalone connections by setting the ``externalauth`` parameter to *True*
+  in :meth:`oracledb.connect()` as shown below:
+
+  .. code-block:: python
 
     connection = oracledb.connect(externalauth=True, dsn="mynetalias")
 
-or:
+- Or pooled connections by setting the ``externalauth`` parameter to *True*
+  in :meth:`oracledb.create_pool()`.  Additionally in python-oracledb Thick
+  mode, you must set the ``homogeneous`` parameter to *False* as shown below
+  since heterogeneous pools can only be used with external authentication:
 
-.. code-block:: python
+  .. code-block:: python
 
     pool = oracledb.create_pool(externalauth=True, homogeneous=False,
                                 dsn="mynetalias")
     pool.acquire()
 
-The ``dsn`` must match the one used in the wallet.
+The ``dsn`` used in :meth:`oracledb.connect()` and
+:meth:`oracledb.create_pool()` must match the one used in the wallet.
 
 After connecting, the query::
 
@@ -2046,13 +2057,15 @@ The following usage is not supported:
                                 homogeneous=False, dsn="mynetalias")
     pool.acquire()
 
+.. _opsysauth:
 
 Operating System Authentication
 -------------------------------
 
-With Operating System authentication, Oracle allows user authentication to be
-performed by the operating system.  The following steps give an overview of how
-to implement OS Authentication on Linux.
+With `Operating System <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
+id=GUID-37BECE32-58D5-43BF-A098-97936D66968F>`__ authentication, Oracle allows
+user authentication to be performed by the operating system.  The following
+steps give an overview of how to implement OS Authentication on Linux.
 
 1.  Log in to your computer. The commands used in these steps assume the
     operating system user name is "oracle".

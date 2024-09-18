@@ -1221,8 +1221,11 @@ Oracledb Methods
     notifications. The default value is False.
 
     The ``externalauth`` parameter is a boolean that determines whether to use
-    external authentication. This value is only used in the python-oracledb
-    Thick mode and is ignored in the Thin mode. The default value is False.
+    external authentication. This value is only used in python-oracledb Thick
+    mode and is ignored in Thin mode. The default value is False. For pooled
+    connections in Thick mode, external authentication requires the use of a
+    heterogeneous pool. For this reason, you must set the ``homogeneous``
+    parameter to False. See :ref:`extauth`.
 
     If the ``mode`` parameter is specified, it must be one of the
     :ref:`connection authorization modes <connection-authorization-modes>`
