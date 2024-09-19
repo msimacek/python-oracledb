@@ -1887,7 +1887,7 @@ service.
     Connecting to Oracle Database using external authentication is only
     supported in the python-oracledb Thick mode. See :ref:`enablingthick`.
 
-:ref:`extauthwithwallet`
+.. _extauthwithwallet:
 
 Using an Oracle Wallet for External Authentication
 --------------------------------------------------
