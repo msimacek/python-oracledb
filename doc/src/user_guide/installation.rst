@@ -919,100 +919,92 @@ To use python-oracledb without the cryptography package:
 Installing from Source Code
 ===========================
 
-The following dependencies are required to build python-oracledb from source
-code:
-
-- Cython Package: Cython is a standard Python package from PyPI.
-
-- The Python cryptography package.  This will need to be installed manually
-  before building python-oracledb. For example install with ``pip``.
-
-- C Compiler: A C99 compiler is needed.
-
-**Optional Compilation Arguments**
-
-Before building python-oracledb, the optional environment variable
-``PYO_COMPILE_ARGS`` can be set to change the compilation arguments.  For
-example, to build stripped binaries on Linux, first set::
-
-    export PYO_COMPILE_ARGS='-g0'
-
-After this, one of the following installation methods can be used.
+You can build and install python-oracledb either
+:ref:`locally from source code <installgh>`, or
+by using a :ref:`presupplied GitHub Action <installghactions>` which builds
+packages for all architectures and Python versions.
 
 .. _installgh:
 
-Install Using GitHub
---------------------
+Building a python-oracledb package locally
+------------------------------------------
 
-To install python-oracledb using the source on GitHub, run the following
-commands::
+1. Install a C99 compliant C compiler.
 
-    git clone --recurse-submodules https://github.com/oracle/python-oracledb.git
-    cd python-oracledb
-    python -m pip install setuptools
-    python setup.py build
-    python setup.py install
+2. Download the source code using one of the following options:
 
-If you do not have access to system directories, the ``--user`` option can be
-used to install into a local directory::
+   - You can clone the source code from `GitHub
+     <https://github.com/oracle/python-oracledb>`__::
 
-    python setup.py install --user
+         git clone --recurse-submodules https://github.com/oracle/python-oracledb.git
 
-Note that if you download a source zip file directly from GitHub then you will
-also need to download an `ODPI-C <https://github.com/oracle/odpi>`__ source zip
-file and put the extracted contents inside the "odpi" subdirectory, for example
-in "python-oracledb-main/src/oracledb/impl/thick/odpi".
+   - Alternatively, you can manually download a `source zip
+     <https://github.com/oracle/python-oracledb/archive/refs/heads/main.zip>`__
+     file from GitHub.
 
-.. _whlpkg:
+     In this case, you will also need to download an `ODPI-C
+     <https://github.com/oracle/odpi>`__ source zip file and put the
+     extracted contents inside the ``odpi`` subdirectory, for example in
+     ``python-oracledb-main/src/oracledb/impl/thick/odpi``.
 
-**Creating a package for installation**
+   - Alternatively, clone the source from `opensource.oracle.com
+     <https://opensource.oracle.com/>`__, which mirrors GitHub::
 
-To create a package suitable for installing on other computers, run the
-following commands::
+         git clone --recurse-submodules https://opensource.oracle.com/git/oracle/python-oracledb.git
+         git checkout main
 
-    git clone --recurse-submodules https://github.com/oracle/python-oracledb.git
-    cd python-oracledb
-    python -m pip install build
-    python -m build
+   - Alternatively, a python-oracledb source package can manually be downloaded
+     from PyPI.
 
-A wheel package (.whl) is created in the ``dist`` subdirectory, for example
-dist/oracledb-2.2.0-cp312-cp312-macosx_10_9_universal2.whl. You can copy this
-wheel package to other computers which have the same architecture and Python
-version. To install the wheel, run::
+     Navigate to the `PyPI python-oracledb download files
+     <https://pypi.org/project/oracledb/#files>`__ page, download the source
+     package archive, and extract it.
 
-    python -m pip install oracledb-2.2.0-cp312-cp312-macosx_10_9_universal2.whl
+3. With the source code available, build a python-oracledb package by running::
 
+       cd python-oracledb               # the name may vary depending on the download
+       python -m pip install build
+       # export PYO_COMPILE_ARGS='-g0'  # optionally set any compilation arguments
+       python -m build
 
-Install Using opensource.oracle.com
------------------------------------
+   A python-oracledb wheel package is created in the ``dist`` subdirectory.
+   For example when using Python 3.12 on macOS you might have the file
+   ``dist/oracledb-2.5.0-cp312-cp312-macosx_10_9_universal2.whl``.
 
-Python-oracledb source code is mirrored from GitHub to `opensource.oracle.com
-<https://opensource.oracle.com/>`__.  This can be installed with::
+4. Install this package::
 
-    git clone --recurse-submodules https://opensource.oracle.com/git/oracle/python-oracledb.git
-    cd python-oracledb
-    python -m pip install setuptools
-    python setup.py build
-    python setup.py install
+       python -m pip install dist/oracledb-2.5.0-cp312-cp312-macosx_10_9_universal2.whl
 
-You can also create a package suitable for installing on other computers as
-detailed in this :ref:`section <whlpkg>`.
+   The package can also be installed on any computer which has the same
+   architecture and Python version as the build machine.
 
-Install Using Source from PyPI
-------------------------------
+.. _installghactions:
 
-The python-oracledb source package can be downloaded manually from `PyPI
-python-oracledb download files <https://pypi.org/project/oracledb/#files>`__
-and extracted, after which the following commands should be run::
+Building python-oracledb packages using GitHub Actions
+------------------------------------------------------
 
-    python -m pip install setuptools
-    python setup.py build
-    python setup.py install
+The python-oracledb GitHub repository has a builder Action that uses GitHub
+infrastructure to build python-oracledb packages for all architectures and
+Python versions.
 
-If you do not have access to system directories, the ``--user`` option can be
-used to install into a local directory::
+1. Fork the `python-oracledb repository
+   <https://github.com/oracle/python-oracledb/fork>`__.  Additionally fork the
+   `ODPI-C repository <https://github.com/oracle/odpi/fork>`__, keeping the
+   default name.
 
-    python setup.py install --user
+2. In your python-oracledb fork, go to the Actions tab
+   ``https://github.com/<your name>/python-oracledb/actions/``.  If this is
+   your first time using Actions, confirm enabling them.
 
-You can also create a package suitable for installing on other computers as
-detailed in this :ref:`section <whlpkg>`.
+3. In the "All workflows" list on the left-hand side, select the "build" entry.
+
+4. Navigate to the "Run workflow" drop-down, select the branch to build from
+   (for example, "main"), and run the workflow.
+
+   This builds packages for all supported architectures and Python versions.
+
+5. When the build has completed, download the "python-oracledb-wheels"
+   artifact, unzip it, and install the one for your architecture and Python
+   version.  For example, when using Python 3.12 on macOS, install::
+
+       python -m pip install oracledb-2.5.0-cp312-cp312-macosx_10_13_universal2.whl
