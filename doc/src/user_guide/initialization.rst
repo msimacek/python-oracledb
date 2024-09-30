@@ -11,22 +11,23 @@ python-oracledb uses them.  Python-oracledb is said to be in 'Thick' mode when
 Oracle Client libraries are used.  Both modes have comprehensive functionality
 supporting the Python Database API v2.0 Specification.
 
+All connections in an application use the same mode.  See :ref:`vsessconinfo`
+to verify which mode is in use.
+
+If you are upgrading a cx_Oracle application to python-oracledb, then refer to
+:ref:`upgrading83` for changes that may be needed.
+
 .. _enablingthick:
 
 Enabling python-oracledb Thick mode
 ===================================
 
-If you are upgrading a cx_Oracle application to python-oracledb, then refer to
-:ref:`upgrading83` for changes that may be needed.
-
 To change from the default Thin mode to the Thick mode:
 
-- Oracle Client libraries must be available to handle communication to your
-  database.  These need to be installed separately, see :ref:`installation`.
+1. Oracle Client libraries must be available to handle communication to your
+   database.  These need to be installed separately, see :ref:`installation`.
 
-  Various versions of Oracle Client libraries can be used. They do not have to
-  match the version of Oracle Database.  Python-oracledb can use the Client
-  Libraries from:
+  Various installations of Oracle Client libraries can be used.  You can use:
 
   - an installation of `Oracle Instant Client
     <https://www.oracle.com/database/technologies/instant-client.html>`__
@@ -37,39 +38,39 @@ To change from the default Thin mode to the Thick mode:
   - or an Oracle Database installation, if Python is running on the same
     machine as the database
 
-- Your application *must* call the function
-  :meth:`oracledb.init_oracle_client()`. For example, if the Oracle Instant
-  Client libraries are in ``C:\oracle\instantclient_19_17`` on Windows or
-  ``$HOME/Downloads/instantclient_19_8`` on macOS (Intel x86), then you can
-  use:
+  The Client library version does not always have to match the Oracle Database
+  version.
 
-  .. code-block:: python
+2. Your application *must* call the function
+   :meth:`oracledb.init_oracle_client()` to load the client libraries. For
+   example, if the Oracle Instant Client libraries are in
+   ``C:\oracle\instantclient_23_5`` on Windows or
+   ``$HOME/Downloads/instantclient_23_3`` on macOS, then you can use:
+
+   .. code-block:: python
 
       import os
       import platform
 
       import oracledb
 
-      d = None  # default suitable for Linux
-      if platform.system() == "Darwin" and platform.machine() == "x86_64":   # macOS
-        d = os.environ.get("HOME")+("/Downloads/instantclient_19_8")
-      elif platform.system() == "Windows":
-        d = r"C:\oracle\instantclient_19_18"
+      d = None                               # On Linux, no directory should be passed
+      if platform.system() == "Darwin":      # macOS
+        d = os.environ.get("HOME")+("/Downloads/instantclient_23_3")
+      elif platform.system() == "Windows":   # Windows
+        d = r"C:\oracle\instantclient_23_5"
       oracledb.init_oracle_client(lib_dir=d)
 
   The use of a ‘raw’ string ``r"..."`` on Windows means that backslashes are
   treated as directory separators.
 
-  More details and options are shown in the later sections
-  :ref:`wininit`, :ref:`macinit`, and :ref:`linuxinit`.
+More details and options are shown in the later sections:
 
-All connections in an application use the same mode.
+- :ref:`wininit`
 
-Once the Thick mode is enabled, you cannot go back to the Thin mode except by
-removing calls to :meth:`~oracledb.init_oracle_client()` and restarting the
-application.
+- :ref:`macinit`
 
-See :ref:`vsessconinfo` to verify which mode is in use.
+- :ref:`linuxinit`
 
 **Notes on calling init_oracle_client()**
 
@@ -78,11 +79,18 @@ See :ref:`vsessconinfo` to verify which mode is in use.
   :ref:`connection pool <connpooling>` is created. If a connection or pool
   is first created, then the Thick mode cannot be enabled.
 
-- If you call :meth:`~oracledb.init_oracle_client()` with a ``lib_dir`` parameter,
-  the Oracle Client libraries are loaded immediately from that directory. If
-  you call :meth:`~oracledb.init_oracle_client()` but do *not* set the ``lib_dir``
-  parameter, the Oracle Client libraries are loaded immediately using the
-  search heuristics discussed in later sections.
+- If you call :meth:`~oracledb.init_oracle_client()` with a ``lib_dir``
+  parameter, the Oracle Client libraries are loaded immediately from that
+  directory. If you call :meth:`~oracledb.init_oracle_client()` but do *not*
+  set the ``lib_dir`` parameter, the Oracle Client libraries are loaded
+  immediately using the search heuristics discussed in later sections. Note if
+  you set ``lib_dir`` on Linux and related platforms, you must still have
+  configured the system library search path to include that directory *before*
+  starting Python.
+
+- Once the Thick mode is enabled, you cannot go back to the Thin mode except by
+  removing calls to :meth:`~oracledb.init_oracle_client()` and restarting the
+  application.
 
 - If Oracle Client libraries cannot be loaded then
   :meth:`~oracledb.init_oracle_client()` will raise an error ``DPI-1047:
@@ -91,10 +99,6 @@ See :ref:`vsessconinfo` to verify which mode is in use.
   Alternatively, remove the call to :meth:`~oracledb.init_oracle_client()` and
   use Thin mode. The features supported by Thin mode can be found in
   :ref:`driverdiff`.
-
-- If you set ``lib_dir`` on Linux and related platforms, you must still have
-  configured the system library search path to include that directory before
-  starting Python.
 
 - On any operating system, if you set ``lib_dir`` to the library directory of a
   full database or full client installation (such as from running
@@ -121,10 +125,10 @@ On Windows, the alternative ways to enable Thick mode are:
 
       import oracledb
 
-      oracledb.init_oracle_client(lib_dir=r"C:\instantclient_19_18")
+      oracledb.init_oracle_client(lib_dir=r"C:\instantclient_23_5")
 
   On Windows, when the path contains backslashes, use a 'raw' string like
-  ``r"C:\instantclient_19_18"``.
+  ``r"C:\instantclient_23_5"``.
 
   This directory should contain the libraries from an unzipped `Instant Client
   'Basic' or 'Basic Light' <https://www.oracle.com/au/database/technologies/
@@ -174,7 +178,7 @@ On macOS, the alternative ways to enable Thick mode are:
 
       import oracledb
 
-      oracledb.init_oracle_client(lib_dir="/Users/your_username/Downloads/instantclient_19_8")
+      oracledb.init_oracle_client(lib_dir="/Users/your_username/Downloads/instantclient_23_3")
 
   This directory should contain the libraries from an unzipped `Instant Client
   'Basic' or 'Basic Light' <https://www.oracle.com/au/database/technologies/
@@ -207,7 +211,7 @@ On macOS, the alternative ways to enable Thick mode are:
   contains the binary module ``thick_impl.cpython-39-darwin.so`` you could then
   run these commands in a terminal window::
 
-      CLIENT_DIR=~/Downloads/instantclient_19_8
+      CLIENT_DIR=~/Downloads/instantclient_23_3
       DPY_DIR=~/.pyenv/versions/3.9.6/lib/python3.9/site-packages/oracledb
       ln -s $CLIENT_DIR/libclntsh.dylib $DPY_DIR
 
@@ -215,7 +219,7 @@ On macOS, the alternative ways to enable Thick mode are:
 
   .. code-block:: python
 
-      CLIENT_DIR = "~/Downloads/instantclient_19_8"
+      CLIENT_DIR = "~/Downloads/instantclient_23_3"
       LIB_NAME = "libclntsh.dylib"
 
       import os
@@ -255,10 +259,11 @@ parameter.
 
 Oracle Client libraries are looked for in the operating system library search
 path, such as configured with ``ldconfig`` or set in the environment variable
-``LD_LIBRARY_PATH``.  Web servers and other daemons commonly reset environment
-variables so using ``ldconfig`` is generally preferred instead.  On some UNIX
-platforms an OS specific equivalent, such as ``LIBPATH`` or ``SHLIB_PATH``, is
-used instead of ``LD_LIBRARY_PATH``.
+``LD_LIBRARY_PATH``.  This must be configured *prior* to running the Python
+process. Web servers and other daemons commonly reset environment variables so
+using ``ldconfig`` is generally preferred instead.  On some UNIX platforms an
+OS specific equivalent, such as ``LIBPATH`` or ``SHLIB_PATH``, is used instead
+of ``LD_LIBRARY_PATH``.
 
 If libraries are not found in the system library search path, then libraries
 in ``$ORACLE_HOME/lib`` will be used.  Note that the environment variable
@@ -420,7 +425,7 @@ In python-oracledb Thin mode, you must specify the directory that contains the
                                   config_dir="/opt/oracle/config")
 
 On Windows, when the path contains backslashes, use a 'raw' string like
-``r"C:\instantclient_19_18"``.
+``r"C:\instantclient_23_5"``.
 
 .. note::
 
@@ -443,7 +448,7 @@ be explicitly specified or a default location will be used. Do one of:
         oracledb.init_oracle_client(config_dir="/opt/oracle/config")
 
   On Windows, when the path contains backslashes, use a 'raw' string like
-  ``r"C:\instantclient_19_18"``.
+  ``r"C:\instantclient_23_5"``.
 
 .. note::
 
@@ -461,10 +466,10 @@ be explicitly specified or a default location will be used. Do one of:
 
   - For Oracle Instant Client ZIP files, the ``network/admin`` subdirectory of
     Instant Client, for example
-    ``/opt/oracle/instantclient_19_18/network/admin``.
+    ``/opt/oracle/instantclient_23_5/network/admin``.
 
   - For Oracle Instant RPMs, the ``network/admin`` subdirectory of Instant
-    Client, for example ``/usr/lib/oracle/19.18/client64/lib/network/admin``.
+    Client, for example ``/usr/lib/oracle/23.5/client64/lib/network/admin``.
 
   - When using libraries from a local Oracle Database or full client
     installation, in ``$ORACLE_HOME/network/admin`` or
@@ -507,7 +512,7 @@ first connection is established.  System environment variables like
     * - LD_LIBRARY_PATH
       - The library search path for platforms like Linux should include the
         Oracle libraries, for example ``$ORACLE_HOME/lib`` or
-        ``/opt/instantclient_19_18``. This variable is not needed if the
+        ``/opt/instantclient_23_5``. This variable is not needed if the
         libraries are located by an alternative method, such as with
         ``ldconfig``. On other UNIX platforms, you may need to set an OS
         specific equivalent such as ``LIBPATH`` or ``SHLIB_PATH``.
