@@ -29,17 +29,22 @@ Specification.
 Quick Start python-oracledb Installation
 ========================================
 
+Python-oracledb is typically installed from Python's package repository
+`PyPI <https://pypi.org/project/oracledb/>`__ using `pip
+<https://pip.pypa.io/en/latest/installation/>`__.
+
 1. Install `Python 3 <https://www.python.org/downloads>`__ if it is not already
    available.
 
    Use any version from Python 3.8 through 3.13.
 
-2. Install python-oracledb from `PyPI <https://pypi.org/project/oracledb/>`__,
-   for example:
+2. Install python-oracledb, for example:
 
   .. code-block:: shell
 
       python -m pip install oracledb --upgrade --user
+
+  Note the module name is simply ``oracledb``.
 
   On some platforms the Python binary may be called ``python3`` instead of
   ``python``.
