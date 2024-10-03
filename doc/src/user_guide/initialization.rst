@@ -528,7 +528,7 @@ first connection is established.  System environment variables like
     * - ORA_SDTZ
       - The default session time zone.
     * - ORA_TZFILE
-      - The name of the Oracle time zone file to use.  See below.
+      - The name of the Oracle time zone file to use. See :ref:`timezonefiles`.
     * - ORACLE_HOME
       - The directory containing the Oracle Database software. The directory
         and various configuration files must be readable by the Python process.
@@ -543,31 +543,6 @@ first connection is established.  System environment variables like
       - Often set in Python applications to force a consistent date format
         independent of the locale. The variables are ignored if the environment
         variable ``NLS_LANG`` is not set.
-
-Oracle Instant Client includes a small and big time zone file, for example
-``timezone_32.dat`` and ``timezlrg_32.dat``.  The versions can be shown by running
-the utility ``genezi -v`` located in the Instant Client directory.  The small file
-contains only the most commonly used time zones.  By default, the larger
-``timezlrg_n.dat`` file is used.  If you want to use the smaller ``timezone_n.dat``
-file, then set the ``ORA_TZFILE`` environment variable to the name of the file
-without any directory prefix. For example ``export ORA_TZFILE=timezone_32.dat``.
-From Oracle Instant Client 12.2, you can also use an external time zone file.
-Create a subdirectory ``oracore/zoneinfo`` under the Instant Client directory,
-and move the file into it.  Then set ``ORA_TZFILE`` to the file name, without
-any directory prefix.  The ``genezi -v`` utility will show the time zone file
-in use. With Oracle Instant Client 19.18 (or later), you can alternatively
-place the external time zone file in any directory and then set the
-``ORA_TZFILE`` environment variable to the absolute path of the file.
-
-If python-oracledb Thick mode is using Oracle Client libraries from an Oracle
-Database or full Oracle Client software installation (such as installed with
-Oracle's GUI installer), and you want to use a non-default time zone file, then
-set ``ORA_TZFILE`` to the file name with a directory prefix. For example:
-``export ORA_TZFILE=/opt/oracle/myconfig/timezone_31.dat``.
-
-The Oracle Database documentation contains more information about time zone
-files, see `Choosing a Time Zone File <https://www.oracle.com/pls/topic/
-lookup?ctx=dblatest&id=GUID-805AB986-DE12-4FEA-AF56-5AABCD2132DF>`__.
 
 .. _otherinit:
 
