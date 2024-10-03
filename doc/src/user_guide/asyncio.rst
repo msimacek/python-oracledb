@@ -318,6 +318,9 @@ when the network to the database is slow. This is because of its reduction in
 SQL statements were individually executed with calls like
 :meth:`AsyncCursor.execute()`.
 
+Pipelining is only supported in python-oracledb Thin mode with
+:ref:`asyncio <concurrentprogramming>`.
+
 See `Oracle Call Interface Pipelining
 <https://www.oracle.com/pls/topic/lookup?ctx=
 dblatest&id=GUID-D131842B-354E-431D-A1B3-26A001289806>`__ for more information
@@ -327,11 +330,11 @@ about Oracle Database Pipelining.
 
     True pipelining only occurs when you are connected to Oracle Database 23ai.
 
-    When you connect to an older database, operations are sequentially executed
-    by python-oracledb. Each operation concludes before the next is sent to the
-    database. There is no reduction in round-trips and no performance
-    benefit. This usage is only recommended for code portability such as when
-    preparing for a database upgrade.
+    When you connect to an older database, operations are sequentially
+    executed by python-oracledb. Each operation concludes before the next is
+    sent to the database. There is no reduction in round-trips and no
+    performance benefit. This usage is only recommended for code portability
+    such as when preparing for a database upgrade.
 
 Using Pipelines
 ---------------
