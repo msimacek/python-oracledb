@@ -5,8 +5,10 @@ Connecting to Oracle Database
 *****************************
 
 Connections between python-oracledb and Oracle Database are used for executing
-:ref:`SQL <sqlexecution>`, :ref:`PL/SQL <plsqlexecution>`, and :ref:`SODA
-<sodausermanual>`.
+:ref:`SQL <sqlexecution>` and :ref:`PL/SQL <plsqlexecution>`, for calling
+:ref:`SODA <sodausermanual>` functions, for receiving database
+:ref:`notifications <cqn>` and :ref:`messages <aqusermanual>`, and for
+:ref:`starting and stopping <startup>` the database.
 
 By default, python-oracledb runs in a 'Thin' mode which connects directly to
 Oracle Database.  This mode does not need Oracle Client libraries.  However,
@@ -269,15 +271,20 @@ Connection Strings
 ==================
 
 The data source name parameter ``dsn`` of :meth:`oracledb.connect()` and
-:meth:`oracledb.create_pool()` is the Oracle Database connection string
-that identifies which database service to connect to.  The ``dsn`` string can be
-one of:
+:meth:`oracledb.create_pool()` is the Oracle Database connection string that
+identifies which database service to connect to.  The ``dsn`` value can be one
+of Oracle's naming methods:
 
-* An Oracle Easy Connect string
-* An Oracle Net Connect Descriptor string
-* A Net Service Name mapping to a connect descriptor
+* An Oracle :ref:`Easy Connect<easyconnect>` string
+* A :ref:`Net Service Name <netservice>` mapping to a connect descriptor
+* An Oracle Net :ref:`Connect Descriptor <conndescriptor>`
+* An :ref:`LDAP URL <ldapurl>`
 
-For more information about naming methods, see `Oracle Net Service Reference
+Connection strings used for JDBC and Oracle SQL Developer need to be altered to
+be usable as the ``dsn`` value, see :ref:`jdbcconnstring`.
+
+For more information about naming methods, see the `Database Net Services
+Administrator's Guide
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-E5358DEA-D619-4B7B-A799-3D2F802500F1>`__.
 
 .. _easyconnect:
@@ -311,7 +318,7 @@ If the database is using a non-default port, it must be specified:
 The Easy Connect syntax supports Oracle Database service names.  It cannot be
 used with the older System Identifiers (SID).
 
-The latest `Easy Connect Plus
+The latest `Easy Connect
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&
 id=GUID-8C85D289-6AF3-41BC-848B-BF39D32648BA>`__ syntax allows the use of
 multiple hosts or ports, along with optional entries for the wallet location,
@@ -367,6 +374,8 @@ For more information about Net Service Names, see
 `Database Net Services Reference
 <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-12C94B15-2CE1-4B98-9D0C-8226A9DDF4CB>`__.
 
+.. _conndescriptor:
+
 Oracle Net Connect Descriptor Strings
 -------------------------------------
 
@@ -398,6 +407,14 @@ This prints::
 
     (DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=tcp)(HOST=dbhost.example.com)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=orclpdb))(SECURITY=(SSL_SERVER_DN_MATCH=True)))
 
+.. _ldapurl:
+
+LDAP URL Connection Strings
+---------------------------
+
+See :ref:`ldapconnections`.
+
+.. _jdbcconnstring:
 
 JDBC and Oracle SQL Developer Connection Strings
 ------------------------------------------------
@@ -419,8 +436,8 @@ then use Oracle's Easy Connect syntax in python-oracledb:
     connection = oracledb.connect(user="hr", password=userpwd,
                                   dsn="dbhost.example.com:1521/orclpdb")
 
-Alternatively, if a JDBC connection string uses an old-style Oracle Database
-SID "system identifier", and the database does not have a service name::
+If a JDBC connection string uses an old-style Oracle Database SID "system
+identifier", and the database does not have a service name::
 
     jdbc:oracle:thin:@hostname:port:sid
 
@@ -435,7 +452,7 @@ then connect by using the ``sid`` parameter:
     connection = oracledb.connect(user="hr", password=userpwd,
                                   host="dbhost.example.com", port=1521, sid="orcl")
 
-Alternatively, create a ``tnsnames.ora`` (see :ref:`optnetfiles`) entry, for
+Alternatively, create a ``tnsnames.ora`` entry (see :ref:`optnetfiles`), for
 example::
 
     finance =
@@ -602,14 +619,14 @@ could connect using:
 
 .. code-block:: python
 
-    cs = "ldaps://ldapserver.example.com/cn=orcl,cn=OracleContext,dc=example,dc=com"
-    connection = oracledb.connect(user="scott", password=pw, dsn=cs)
+    ldapurl = "ldaps://ldapserver.example.com/cn=orcl,cn=OracleContext,dc=example,dc=com"
+    connection = oracledb.connect(user="scott", password=pw, dsn=ldapurl)
 
 **Thin Mode**
 
 To use LDAP in python-oracledb Thin mode, specify an LDAP URL as the DSN and
-call :meth:`oracledb.register_protocol()` to register a user function that gets
-the connect descriptor from the LDAP server. For example:
+call :meth:`oracledb.register_protocol()` to register your own user function
+that gets the connect descriptor from your LDAP server. For example:
 
 .. code-block:: python
 
