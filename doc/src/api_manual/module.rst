@@ -282,7 +282,8 @@ Oracledb Methods
     specified, are expected to be a sequence of values which identifies the
     database shard to connect to. The key values can be a list of strings,
     numbers, bytes, or dates.  These values are only used in the
-    python-oracledb Thick mode and are ignored in the Thin mode.
+    python-oracledb Thick mode and are ignored in the Thin mode. See
+    :ref:`connsharding`.
 
     The ``debug_jdwp`` parameter is expected to be a string with the format
     `host=<host>;port=<port>` that specifies the host and port of the PL/SQL
@@ -851,13 +852,12 @@ Oracledb Methods
     should be a string.  This value is only used inthe python-oracledb Thick
     mode.
 
-    The ``shardingkey`` parameter is expected to be a list of strings, numbers,
-    bytes or dates that identifies the database shard to connect to. This value
-    is only used in the python-oracledb Thick mode.
-
-    The ``supershardingkey`` parameter is expected to be a list of strings,
-    numbers, bytes or dates that identifies the database shard to connect to.
-    This value is only used in the python-oracledb Thick mode.
+    The ``shardingkey`` parameter and ``supershardingkey`` parameters, if
+    specified, are expected to be a sequence of values which identifies the
+    database shard to connect to. The key values can be a list of strings,
+    numbers, bytes, or dates.  These values are only used in the
+    python-oracledb Thick mode and are ignored in the Thin mode.  See
+    :ref:`connsharding`.
 
     The ``debug_jdwp`` parameter is expected to be a string with the format
     `host=<host>;port=<port>` that specifies the host and port of the PL/SQL
@@ -1274,7 +1274,8 @@ Oracledb Methods
     specified, are expected to be a sequence of values which identifies the
     database shard to connect to. The key values can be a list of strings,
     numbers, bytes, or dates.  These values are only used in the
-    python-oracledb Thick mode and are ignored in the Thin mode.
+    python-oracledb Thick mode and are ignored in the Thin mode.  See
+    :ref:`connsharding`.
 
     The ``debug_jdwp`` parameter is expected to be a string with the format
     `host=<host>;port=<port>` that specifies the host and port of the PL/SQL
@@ -2088,13 +2089,12 @@ Oracledb Methods
     should be a string.  This value is only used inthe python-oracledb Thick
     mode.
 
-    The ``shardingkey`` parameter is expected to be a list of strings, numbers,
-    bytes or dates that identifies the database shard to connect to. This value
-    is only used in the python-oracledb Thick mode.
-
-    The ``supershardingkey`` parameter is expected to be a list of strings,
-    numbers, bytes or dates that identifies the database shard to connect to.
-    This value is only used in the python-oracledb Thick mode.
+    The ``shardingkey`` parameter and ``supershardingkey`` parameters, if
+    specified, are expected to be a sequence of values which identifies the
+    database shard to connect to. The key values can be a list of strings,
+    numbers, bytes, or dates.  These values are only used in the
+    python-oracledb Thick mode and are ignored in the Thin mode. See
+    :ref:`connsharding`.
 
     The ``debug_jdwp`` parameter is expected to be a string with the format
     `host=<host>;port=<port>` that specifies the host and port of the PL/SQL

@@ -3243,22 +3243,29 @@ typically the same directory where the ``wallet.zip`` file was extracted.
 
 .. _connsharding:
 
-Connecting to Sharded Databases
-===============================
+Connecting to Oracle Globally Distributed Database
+==================================================
 
-`Oracle Sharding
-<https://www.oracle.com/database/technologies/high-availability/sharding.html>`__
-can be used to horizontally partition data across independent databases.  A
-database table can be split so each shard contains a table with the same columns
-but a different subset of rows.  These tables are known as sharded tables.
-Sharding is configured in Oracle Database, see the `Oracle Sharding
-<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=SHARD>`__ manual.
-Sharding requires Oracle Database and Oracle Client libraries 12.2, or later.
+`Oracle Globally Distributed Database
+<https://www.oracle.com/database/distributed-database/>`__ is a feature of
+Oracle Database that lets you automatically distribute and replicate data
+across a pool of Oracle databases that share no hardware or software.  It was
+previously known as Oracle Sharding.  It allows a database table to be split so
+each database contains a table with the same columns but a different subset of
+rows.  These tables are known as sharded tables.  From the perspective of an
+application, a sharded table in Oracle Globally Distributed Database looks like
+a single table: the distribution of data across those shards is completely
+transparent to the application.
+
+Sharding is configured in
+Oracle Database, see the `Oracle Globally Distributed Database
+<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=SHARD>`__ manual.  It
+requires Oracle Database and Oracle Client libraries 12.2, or later.
 
 .. note::
 
-    Sharding is only supported in the python-oracledb Thick mode.  See
-    :ref:`enablingthick`.
+    Oracle Globally Distributed Database is only supported in the
+    python-oracledb Thick mode.  See :ref:`enablingthick`.
 
 The :meth:`oracledb.connect()` and :meth:`ConnectionPool.acquire()` functions
 accept ``shardingkey`` and ``supershardingkey`` parameters that are a sequence

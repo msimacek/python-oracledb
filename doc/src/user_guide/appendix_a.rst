@@ -118,7 +118,7 @@ see :ref:`driverdiff` and :ref:`compatibility`.
       - Yes
       - Yes
       - Yes
-    * - Oracle Sharded Databases (see :ref:`connsharding`)
+    * - Oracle Globally Distributed Database - previously known as Oracle Sharded Databases (see :ref:`connsharding`)
       - No
       - Yes - No TIMESTAMP support
       - Yes - No TIMESTAMP support
