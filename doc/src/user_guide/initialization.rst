@@ -404,7 +404,7 @@ In python-oracledb Thin mode, you must specify the directory that contains the
 
 - Setting the `TNS_ADMIN <https://www.oracle.com/pls/topic/lookup?ctx=dblatest
   &id=GUID-12C94B15-2CE1-4B98-9D0C-8226A9DDF4CB>`__ environment variable to the
-  directory containing the file
+  directory containing the file.
 
 - Or setting :attr:`defaults.config_dir` to the directory containing the file.
   For example:
@@ -468,8 +468,9 @@ be explicitly specified or a default location will be used. Do one of:
     Instant Client, for example
     ``/opt/oracle/instantclient_23_5/network/admin``.
 
-  - For Oracle Instant RPMs, the ``network/admin`` subdirectory of Instant
-    Client, for example ``/usr/lib/oracle/23.5/client64/lib/network/admin``.
+  - For Oracle Instant Client RPMs, the ``network/admin`` subdirectory of
+    Instant Client, for example
+    ``/usr/lib/oracle/23.5/client64/lib/network/admin``.
 
   - When using libraries from a local Oracle Database or full client
     installation, in ``$ORACLE_HOME/network/admin`` or

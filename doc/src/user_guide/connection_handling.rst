@@ -275,7 +275,7 @@ The data source name parameter ``dsn`` of :meth:`oracledb.connect()` and
 identifies which database service to connect to.  The ``dsn`` value can be one
 of Oracle's naming methods:
 
-* An Oracle :ref:`Easy Connect<easyconnect>` string
+* An Oracle :ref:`Easy Connect <easyconnect>` string
 * A :ref:`Net Service Name <netservice>` mapping to a connect descriptor
 * An Oracle Net :ref:`Connect Descriptor <conndescriptor>`
 * An :ref:`LDAP URL <ldapurl>`
@@ -435,6 +435,9 @@ then use Oracle's Easy Connect syntax in python-oracledb:
 
     connection = oracledb.connect(user="hr", password=userpwd,
                                   dsn="dbhost.example.com:1521/orclpdb")
+
+You may need to remove JDBC-specific parameters from the connection string and
+use python-oracledb alternatives.
 
 If a JDBC connection string uses an old-style Oracle Database SID "system
 identifier", and the database does not have a service name::
@@ -1485,22 +1488,22 @@ allocated each time :meth:`~ConnectionPool.acquire()` is called:
 
 **Setting the Connection Class and Purity in the Connection String**
 
-Using python-oracledb Thin mode with Oracle Database 21c, you can specify the
-class and purity in the connection string itself.  This removes the need to
-modify an existing application when you want to use DRCP:
+Using python-oracledb Thin mode with Oracle Database 21c, or later, you can
+specify the class and purity in the connection string itself.  This removes the
+need to modify an existing application when you want to use DRCP:
 
 .. code-block:: python
 
     dsn = "localhost/orclpdb:pooled?pool_connection_class=MYAPP&pool_purity=self"
 
 For python-oracledb Thick mode, this syntax is supported if you are using
-Oracle Database 21c and Oracle Client 19c (or later). However, explicitly
-specifying the purity as *SELF* in this way may cause some unusable connections
-in a python-oracledb Thick mode connection pool to not be terminated.  In
-summary, if you cannot programmatically set the class name and purity, or
-cannot use python-oracledb Thin mode, then avoid explicitly setting the purity
-as a connection string parameter when using a python-oracledb connection
-pooling in Thick mode.
+Oracle Database 21c (or later) and Oracle Client 19c (or later). However,
+explicitly specifying the purity as *SELF* in this way may cause some unusable
+connections in a python-oracledb Thick mode connection pool to not be
+terminated.  In summary, if you cannot programmatically set the class name and
+purity, or cannot use python-oracledb Thin mode, then avoid explicitly setting
+the purity as a connection string parameter when using a python-oracledb
+connection pooling in Thick mode.
 
 **Closing Connections when using DRCP**
 
@@ -3091,12 +3094,12 @@ name you plan to use, for example::
 Using the Easy Connect Syntax with Autonomous Database
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-When python-oracledb is using Oracle Client libraries 19c or later, you can
-optionally use the :ref:`Easy Connect <easyconnect>` syntax to connect to
-Oracle Autonomous Database.
+When python-oracledb is using Oracle Client libraries 19c, or later, you can
+optionally use :ref:`Easy Connect <easyconnect>` syntax to connect to Oracle
+Autonomous Database.
 
-The mapping from the cloud ``tnsnames.ora`` entries to an Easy Connect Plus
-string is::
+The mapping from the cloud ``tnsnames.ora`` entries to an Easy Connect string
+is::
 
     protocol://host:port/service_name?wallet_location=/my/dir&retry_count=N&retry_delay=N
 
@@ -3118,7 +3121,7 @@ Then your applications can connect using the connection string:
 The ``wallet_location`` parameter needs to be set to the directory containing
 the ``cwallet.sso`` or ``ewallet.pem`` file from the wallet zip.  The other
 wallet files, including ``tnsnames.ora``, are not needed when you use the Easy
-Connect Plus syntax.
+Connect syntax.
 
 You can add other Easy Connect parameters to the connection string, for example::
 
@@ -3254,9 +3257,10 @@ typically the same directory where the ``wallet.zip`` file was extracted.
 
 .. note::
 
-       Use Oracle Client libraries 19.17, or later, or use Oracle Client 21c.
-       They contain important bug fixes for using multiple wallets in the one
-       process.
+       Use Oracle Client libraries 19.17, or later, or use Oracle Client 21c or
+       23ai.  They contain important bug fixes for using multiple wallets in
+       the one process.
+
 
 .. _connsharding:
 
