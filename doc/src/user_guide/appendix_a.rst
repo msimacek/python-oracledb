@@ -142,7 +142,7 @@ see :ref:`driverdiff` and :ref:`compatibility`.
       - Not applicable
       - Yes
       - Yes
-    * - Easy Connect Plus connection strings
+    * - Easy Connect connection strings (see :ref:`easyconnect`)
       - Yes - mostly supported. Unknown settings are ignored and not passed to Oracle Database.
       - Yes
       - Yes
