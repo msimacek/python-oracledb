@@ -706,6 +706,18 @@ id=GUID-F9662FFB-EAEF-495C-96FC-49C6D1D9625C>`__ which supports additional
 Oracle Database features, for example some advanced :ref:`high availability
 <highavailability>` features.
 
+.. note::
+
+    Python-oracledb connection pools must be created, used and closed within
+    the same process. Sharing pools or connections across processes has
+    unpredictable behavior.
+
+    Using connection pools in multi-threaded architectures is supported.
+
+    Multi-process architectures that cannot be converted to threading may get
+    some benefit from :ref:`drcp`.
+
+
 Creating a Connection Pool
 --------------------------
 
@@ -3040,59 +3052,8 @@ its own directory.  For each connection use different connection string
 file.  It is recommended to use Oracle Client libraries 19.17 (or later) when
 using :ref:`multiple wallets <connmultiwallets>`.
 
-Access Through a Proxy
-+++++++++++++++++++++++
-
-If you are behind a firewall, you can tunnel TLS/SSL connections via a proxy
-using `HTTPS_PROXY
-<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-C672E92D-CE32-4759-9931-92D7960850F7>`__
-in the connect descriptor or setting connection attributes.  Successful
-connection depends on specific proxy configurations.  Oracle does not recommend
-doing this when performance is critical.
-
-**In python-oracledb Thin mode**
-
-The proxy settings can be passed during connection creation:
-
-.. code-block:: python
-
-    connection = oracledb.connect(user="admin", password=pw, dsn="mydb_low",
-                                  config_dir="/opt/OracleCloud/MYDB",
-                                  wallet_location="/opt/OracleCloud/MYDB", wallet_password=wp,
-                                  https_proxy='myproxy.example.com', https_proxy_port=80)
-
-Alternatively, edit ``tnsnames.ora`` and add an ``HTTPS_PROXY`` proxy name and
-``HTTPS_PROXY_PORT`` port to the connect descriptor address list of any service
-name you plan to use, for example::
-
-    mydb_low = (description=
-        (address=
-        (https_proxy=myproxy.example.com)(https_proxy_port=80)
-        (protocol=tcps)(port=1522)(host= . . . )
-
-.. code-block:: python
-
-    connection = oracledb.connect(user="admin", password=pw, dsn="mydb_low",
-                                  config_dir="/opt/OracleCloud/MYDB",
-                                  wallet_location="/opt/OracleCloud/MYDB", wallet_password=wp)
-
-**In python-oracledb Thick mode**
-
-Edit ``sqlnet.ora`` and add a line::
-
-    SQLNET.USE_HTTPS_PROXY=on
-
-Edit ``tnsnames.ora`` and add an ``HTTPS_PROXY`` proxy name and
-``HTTPS_PROXY_PORT`` port to the connect descriptor address list of any service
-name you plan to use, for example::
-
-    mydb_high = (description=
-        (address=
-        (https_proxy=myproxy.example.com)(https_proxy_port=80)
-        (protocol=tcps)(port=1522)(host= . . . )
-
-Using the Easy Connect Syntax with Autonomous Database
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Using the Easy Connect Syntax with Oracle Autonomous Database
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 When python-oracledb is using Oracle Client libraries 19c, or later, you can
 optionally use :ref:`Easy Connect <easyconnect>` syntax to connect to Oracle
@@ -3205,6 +3166,73 @@ location as the ``wallet_location`` parameter to :func:`oracledb.connect()` or
         for cert in additional_certificates:
             f.write(cert.public_bytes(Encoding.PEM))
     print("PEM file", pem_file_name, "written.")
+
+.. _firewallproxy:
+
+Connecting Through a Firewall via a Proxy
+=========================================
+
+If you are behind a firewall, you can tunnel TLS/SSL connections via a proxy by
+setting connection attributes, or by making `HTTPS_PROXY <https://www.oracle.
+com/pls/topic/lookup?ctx=dblatest&id=GUID-C672E92D-CE32-4759-9931-
+92D7960850F7>`__ proxy name and `HTTPS_PROXY_PORT <https://www.oracle.com/pls/
+topic/lookup?ctx=dblatest&id=GUID-E69D27B7-2B59-4946-89B3-5DDD491C2D9A>`__
+port parameters available in your :ref:`connection string <connstr>`.
+
+.. note::
+
+    Oracle does not recommend connecting through a firewall via a proxy when
+    performance is critical.
+
+**In python-oracledb Thin mode**
+
+- Proxy settings ``https_proxy`` and ``https_proxy_port`` can be passed during
+  connection or pool creation.  Use appropriate values for your proxy:
+
+  .. code-block:: python
+
+      connection = oracledb.connect(user="admin", password=pw, dsn="mydb_low",
+                                    config_dir="/opt/OracleCloud/MYDB",
+                                    wallet_location="/opt/OracleCloud/MYDB", wallet_password=wp,
+                                    https_proxy="myproxy.example.com", https_proxy_port=80)
+
+- Alternatively, add the parameters to your :ref:`Easy Connect <easyconnect>`
+  string::
+
+      localhost/orclpdb&https_proxy=myproxy.example.com&https_proxy_port=80
+
+- Alternatively, update the :ref:`connect descriptor <conndescriptor>` (either
+  being passed directly during connection or contained in your
+  :ref:`tnsnames.ora <netservice>` file). If you are using a :ref:`tnsnames.ora
+  <netservice>` file, a modified entry might look like::
+
+      mydb_low = (description=
+                   (address=
+                     (https_proxy=myproxy.example.com)(https_proxy_port=80)
+                     (protocol=tcps)(port=1522)(host= . . . )
+
+**In python-oracledb Thick mode**
+
+- If you are using an :ref:`Easy Connect <easyconnect>` string, add
+  ``HTTPS_PROXY`` and ``HTTPS_PROXY_PORT`` parameters with appropriate values for
+  your proxy. For example, you might pass parameters like::
+
+      localhost/orclpdb&https_proxy=myproxy.example.com&https_proxy_port=80
+
+- Alternatively, update the :ref:`connect descriptor <conndescriptor>` (either
+  being passed directly during connection or contained in your
+  :ref:`tnsnames.ora <netservice>` file). If you are using a :ref:`tnsnames.ora
+  <netservice>` file, a modified entry might look like::
+
+      mydb_low = (description=
+                   (address=
+                     (https_proxy=myproxy.example.com)(https_proxy_port=80)
+                     (protocol=tcps)(port=1522)(host= . . . )
+
+  Additionally create, or edit, a :ref:`sqlnet.ora <optnetfiles>` file and add
+  a line::
+
+      SQLNET.USE_HTTPS_PROXY=on
 
 .. _connmultiwallets:
 

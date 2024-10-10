@@ -1009,6 +1009,19 @@ Oracledb Methods
     ``params`` parameter object. Similar precedence rules also apply to other
     values.
 
+    Python-oracledb connection pools must be created, used and closed within
+    the same process. Sharing pools or connections across processes has
+    unpredictable behavior.  Using connection pools in multi-threaded
+    architectures is supported.  Multi-process architectures that cannot be
+    converted to threading may get some benefit from :ref:`drcp`.
+
+    In python-oracledb Thick mode, connection pooling is handled by Oracle's
+    `Session pooling <https://www.oracle.com/pls/topic/lookup?
+    ctx=dblatest&id=GUID-F9662FFB-EAEF-495C-96FC-49C6D1D9625C>`__ technology.
+    This allows python-oracledb applications to support features like
+    `Application Continuity <https://www.oracle.com/pls/topic/lookup?
+    ctx=dblatest&id=GUID-A8DD9422-2F82-42A9-9555-134296416E8F>`__.
+
     The ``user``, ``password``, and ``dsn`` parameters are the same as for
     :meth:`oracledb.connect()`.
 
@@ -1351,13 +1364,6 @@ Oracledb Methods
     destroyed. This value is only used in the python-oracledb Thick mode and
     is ignored in the Thin mode. It should be used with extreme caution. The
     default value is 0.
-
-    In the python-oracledb Thick mode, connection pooling is handled by
-    Oracle's `Session pooling <https://www.oracle.com/pls/topic/lookup?
-    ctx=dblatest&id=GUID-F9662FFB-EAEF-495C-96FC-49C6D1D9625C>`__ technology.
-    This allows python-oracledb applications to support features like
-    `Application Continuity <https://www.oracle.com/pls/topic/lookup?
-    ctx=dblatest&id=GUID-A8DD9422-2F82-42A9-9555-134296416E8F>`__.
 
     .. versionchanged:: 2.3.0
 

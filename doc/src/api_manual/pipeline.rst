@@ -70,15 +70,21 @@ Pipeline Methods
 
 .. method:: Pipeline.add_executemany(statement, parameters)
 
-    Adds an operation that executes a statement multiple times with the given
-    parameter mappings or sequences found in the sequence parameters.  The
-    created :ref:`PipelineOp object <pipelineopobjs>` is also returned from
+    Adds an operation that executes a SQL statement once using all bind value
+    mappings or sequences found in the sequence parameters. This can be used to
+    insert, update, or delete multiple rows in a table. It can also invoke a
+    PL/SQL procedure multiple times. See :ref:`batchstmnt`.
+
+    The created :ref:`PipelineOp object <pipelineopobjs>` is also returned from
     this function. :ref:`pipelineopattrs` can be used to examine the operation,
     if needed.
 
-    If there are no parameters, the number of iterations can be specified as an
-    integer instead of needing to provide a list of empty mappings or
-    sequences.
+    The ``parameters`` parameter can be a list of tuples, where each tuple item
+    maps to one bind variable placeholder in ``statement``. It can also be a
+    list of dictionaries, where the keys match the bind variable placeholder
+    names in ``statement``. If there are no bind values, or values have
+    previously been bound, the ``parameters`` value can be an integer
+    specifying the number of iterations.
 
 .. method:: Pipeline.add_fetchall(statement, parameters=None, arraysize=None, rowfactory=None)
 

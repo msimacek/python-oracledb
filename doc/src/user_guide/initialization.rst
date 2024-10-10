@@ -27,15 +27,17 @@ To change from the default Thin mode to the Thick mode:
 1. Oracle Client libraries must be available to handle communication to your
    database.  These need to be installed separately, see :ref:`installation`.
 
-  Various installations of Oracle Client libraries can be used.  You can use:
+   Oracle Client libraries from one of the following can be used:
 
-  - an installation of `Oracle Instant Client
-    <https://www.oracle.com/database/technologies/instant-client.html>`__
+  - An `Oracle Instant Client
+    <https://www.oracle.com/database/technologies/instant-client.html>`__ Basic
+    or Basic Light package. This is generally the easiest if you do not already
+    have Oracle software installed.
 
-  - or a full Oracle Client installation (installed by running the Oracle
+  - A full Oracle Client installation (installed by running the Oracle
     Universal installer ``runInstaller``)
 
-  - or an Oracle Database installation, if Python is running on the same
+  - An Oracle Database installation, if Python is running on the same
     machine as the database
 
   The Client library version does not always have to match the Oracle Database
@@ -62,7 +64,9 @@ To change from the default Thin mode to the Thick mode:
       oracledb.init_oracle_client(lib_dir=d)
 
   The use of a ‘raw’ string ``r"..."`` on Windows means that backslashes are
-  treated as directory separators.
+  treated as directory separators.  On Linux, the libraries must be in the
+  system library search path *before* the Python process starts, preferably
+  configured with ``ldconfig``.
 
 More details and options are shown in the later sections:
 
