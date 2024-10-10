@@ -312,10 +312,11 @@ concurrently. When all the pipelined operations have executed, their results
 are returned to the application.
 
 Effective use of Oracle Database Pipelining can increase the responsiveness of
-an application and improve overall system throughput. Pipelining is beneficial
-when the network to the database is slow. This is because of its reduction in
-:ref:`round-trips <roundtrips>` compared with those required if the equivalent
-SQL statements were individually executed with calls like
+an application and improve overall system throughput. Pipelining is useful when
+many small operations are being performed in rapid succession. It is most
+beneficial when the network to the database is slow. This is because of its
+reduction in :ref:`round-trips <roundtrips>` compared with those required if
+the equivalent SQL statements were individually executed with calls like
 :meth:`AsyncCursor.execute()`.
 
 Pipelining is only supported in python-oracledb Thin mode with

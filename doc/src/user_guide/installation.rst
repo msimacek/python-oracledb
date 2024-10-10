@@ -164,13 +164,13 @@ To use python-oracledb, you need:
 
 - Optionally, Oracle Client libraries can be installed to enable some
   additional advanced functionality. These can be from the free `Oracle Instant
-  Client <https://www.oracle.com/database/technologies/instant-client.html>`__,
-  from a full Oracle Client installation (such as installed by Oracle's GUI
-  installer), or from those included in Oracle Database if Python is on the
-  same machine as the database.  Oracle Client libraries versions 23, 21, 19,
-  18, 12, and 11.2 are supported where available on Linux, Windows and macOS.
-  Oracle's standard client-server version interoperability allows connection to
-  both older and newer databases.
+  Client <https://www.oracle.com/database/technologies/instant-client.html>`__
+  Basic or Basic Light packages, from a full Oracle Client installation (such
+  as installed by Oracle's GUI installer), or from those included in Oracle
+  Database if Python is on the same machine as the database.  Oracle Client
+  libraries versions 23, 21, 19, 18, 12, and 11.2 are supported where available
+  on Linux, Windows and macOS.  Oracle's standard client-server version
+  interoperability allows connection to both older and newer databases.
 
 - An Oracle Database either local or remote, on-premises or in the Cloud.
 
