@@ -27,14 +27,15 @@
  *
  * Performs the actual work of creating and populating the schemas with the
  * database objects used by the python-oracledb samples that require Oracle
- * Database 23.4 or higher. It is executed by the Python script
+ * Database 23.5 or higher. It is executed by the Python script
  * create_schema.py.
  *---------------------------------------------------------------------------*/
 
 create table &main_user..SampleVectorTab (
-    v32 vector(3, float32),
-    v64 vector(3, float64),
-    v8  vector(3, int8)
+    v32  vector(3, float32),
+    v64  vector(3, float64),
+    v8   vector(3, int8),
+    vbin vector(24, binary)
 )
 /
 
