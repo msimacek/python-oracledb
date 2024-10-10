@@ -52,26 +52,20 @@ create table &main_user..SampleJRDVBookTab (
 )
 /
 
-insert into &main_user..SampleJRDVAuthorTab values (1, 'Isabel M. Rich')
-/
-insert into &main_user..SampleJRDVAuthorTab values (2, 'Bobbie Cool')
-/
-insert into &main_user..SampleJRDVAuthorTab values (3, 'Charlie Shore')
+insert into &main_user..SampleJRDVAuthorTab values
+    (1, 'Isabel M. Rich'),
+    (2, 'Bobbie Cool'),
+    (3, 'Charlie Shore')
 /
 
-insert into &main_user..SampleJRDVBookTab values (1, 'The Mysterious Dog', 1)
-/
-insert into &main_user..SampleJRDVBookTab values (2, 'The Mysterious Pony', 1)
-/
-insert into &main_user..SampleJRDVBookTab values (3, 'The Mysterious Tiger', 1)
-/
-insert into &main_user..SampleJRDVBookTab values (4, 'Self Help for Programmers', 2)
-/
-insert into &main_user..SampleJRDVBookTab values (5, 'More Self Help for Programmers', 2)
-/
-insert into &main_user..SampleJRDVBookTab values (6, 'Travel Guide Volume I', 3)
-/
-insert into &main_user..SampleJRDVBookTab values (7, 'Travel Guide Volume II', 3)
+insert into &main_user..SampleJRDVBookTab values
+    (1, 'The Mysterious Dog', 1),
+    (2, 'The Mysterious Pony', 1),
+    (3, 'The Mysterious Tiger', 1),
+    (4, 'Self Help for Programmers', 2),
+    (5, 'More Self Help for Programmers', 2),
+    (6, 'Travel Guide Volume I', 3),
+    (7, 'Travel Guide Volume II', 3)
 /
 
 commit
