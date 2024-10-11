@@ -797,11 +797,53 @@ class TestCase(test_env.BaseAsyncTestCase):
 
         pipeline2 = oracledb.create_pipeline()
         pipeline2.add_execute("insert into TestTempTable (IntCol) values (2)")
+        pipeline2.add_commit()
         pipeline2.add_fetchall("select IntCol from TestTempTable")
 
         await conn1.run_pipeline(pipeline1)
         results = await conn2.run_pipeline(pipeline2)
         self.assertEqual(results[-1].rows, [(1,), (2,)])
+
+    async def test_7640(self):
+        "7640 - test DML returning"
+        out_value = self.cursor.var(str, arraysize=2)
+        pipeline = oracledb.create_pipeline()
+        pipeline.add_execute("truncate table TestTempTable")
+        pipeline.add_execute(
+            """
+            insert into TestTempTable (IntCol, StringCol1)
+            values (1, 'Value for first row')
+            """
+        )
+        pipeline.add_execute(
+            """
+            insert into TestTempTable (IntCol, StringCol1)
+            values (2, 'Value for second row')
+            """
+        )
+        pipeline.add_execute(
+            """
+            update TestTempTable set
+                StringCol1 = StringCol1 || ' (Modified)'
+            returning StringCol1 into :1
+            """,
+            [out_value],
+        )
+        pipeline.add_execute("update TestTempTable set StringCol1 = 'Fixed'")
+        pipeline.add_commit()
+        pipeline.add_fetchall(
+            "select IntCol, StringCol1 from TestTempTable order by IntCol"
+        )
+        results = await self.conn.run_pipeline(pipeline)
+        expected_data = [(1, "Fixed"), (2, "Fixed")]
+        self.assertEqual(results[-1].rows, expected_data)
+        self.assertEqual(
+            out_value.getvalue(),
+            [
+                "Value for first row (Modified)",
+                "Value for second row (Modified)",
+            ],
+        )
 
 
 if __name__ == "__main__":
