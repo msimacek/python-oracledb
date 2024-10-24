@@ -30,7 +30,8 @@ Thin Mode Changes
     program name, and terminal name respectively. The ``driver_name``,
     ``machine``, ``osuser``, ``program``, and ``terminal`` parameters were also
     added to :meth:`oracledb.connect()`, :meth:`oracledb.connect_async()`,
-    :meth:`oracledb.create_pool()`, and :meth:`oracledb.create_pool_async()`.
+    :meth:`oracledb.create_pool()`, and :meth:`oracledb.create_pool_async()`
+    (`issue 343 <https://github.com/oracle/python-oracledb/issues/343>`__).
 #)  Added :meth:`oracledb.register_protocol()` to allow users to register a
     function that will be called when a particular protocol is detected in a
     connection string.
