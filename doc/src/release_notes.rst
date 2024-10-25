@@ -41,8 +41,8 @@ Thin Mode Changes
     method is mostly useful for applications with multiple threads concurrently
     creating connections to databases when the application starts
     (`issue 408 <https://github.com/oracle/python-oracledb/issues/408>`__).
-#)  Fixed bug causing connections to remain in the busy connection list
-    permanently under some circumstances
+#)  Fixed bug causing some pooled connections to be permanently marked as busy
+    and unavailable for reuse
     (`issue 392 <https://github.com/oracle/python-oracledb/issues/392>`__).
 #)  Fixed bug with error handling when calling :meth:`Connection.gettype()` for
     a type that exists but on which the user has insufficient privileges to
