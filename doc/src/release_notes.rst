@@ -46,6 +46,7 @@ Thin Mode Changes
     operation.
 #)  Added attribute :data:`PipelineOpResult.columns` to provide information
     about any query column metadata returned from a pipeline operation.
+#)  Added support for setting the edition when connecting to the database.
 #)  Fixed bug causing some pooled connections to be permanently marked as busy
     and unavailable for reuse
     (`issue 392 <https://github.com/oracle/python-oracledb/issues/392>`__).
