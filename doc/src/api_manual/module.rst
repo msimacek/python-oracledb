@@ -436,6 +436,8 @@ Oracledb Methods
 
     This method can only be used in python-oracledb Thin mode.
 
+    When connecting to Oracle Autonomous Database, use Python 3.11, or later.
+
     .. versionadded:: 2.0.0
 
     Some values, such as the database host name, can be specified as
@@ -1543,6 +1545,8 @@ Oracledb Methods
     :ref:`Connection pooling <asyncconnpool>` for more information.
 
     This method can only be used in python-oracledb Thin mode.
+
+    When connecting to Oracle Autonomous Database, use Python 3.11, or later.
 
     .. versionadded:: 2.0.0
 
