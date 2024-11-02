@@ -689,8 +689,9 @@ Oracledb Methods
 
     .. versionchanged:: 2.5.0
 
-        The ``edition``, ``program``, ``machine``, ``terminal``, ``osuser``,
-        and ``driver_name`` parameters were added.
+        The ``program``, ``machine``, ``terminal``, ``osuser``, and
+        ``driver_name`` parameters were added. Support for ``edition`` was
+        added to python-oracledb Thin mode.
 
     .. versionchanged:: 2.3.0
 
@@ -1851,8 +1852,9 @@ Oracledb Methods
 
     .. versionchanged:: 2.5.0
 
-        The ``edition``, ``program``, ``machine``, ``terminal``, ``osuser``,
-        and ``driver_name`` parameters were added.
+        The ``program``, ``machine``, ``terminal``, ``osuser``, and
+        ``driver_name`` parameters were added. Support for ``edition`` was
+        added to python-oracledb Thin mode.
 
     .. versionchanged:: 2.3.0
 

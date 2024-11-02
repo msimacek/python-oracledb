@@ -488,8 +488,6 @@ AsyncConnection Attributes
     This read-only attribute gets the session edition and is only available
     with Oracle Database 11.2, or later.
 
-    .. versionadded:: 2.5.0
-
 .. attribute:: AsyncConnection.external_name
 
     This read-write attribute specifies the external name that is used by the

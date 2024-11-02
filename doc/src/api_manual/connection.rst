@@ -680,10 +680,6 @@ Connection Attributes
     This read-only attribute gets the session edition and is only available
     with Oracle Database 11.2, or later.
 
-    .. versionchanged:: 2.5.0
-
-        Support was added to python-oracledb Thin mode.
-
     .. note::
 
         This attribute is an extension to the DB API definition.
