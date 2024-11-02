@@ -253,9 +253,9 @@ Oracledb Methods
     :attr:`defaults.stmtcachesize`.
 
     The ``edition`` parameter is expected to be a string that indicates the
-    edition to use for the connection. This parameter cannot be used
-    simultaneously with the ``cclass`` parameter. This value is only used in
-    the python-oracledb Thick mode and is ignored in the Thin mode.
+    edition to use for the connection. It requires Oracle Database 11.2, or
+    later. This parameter cannot be used simultaneously with the ``cclass``
+    parameter.
 
     The ``tag`` parameter is expected to be a string that identifies the type
     of connection that should be returned from a pool. This value is only used
@@ -389,7 +389,8 @@ Oracledb Methods
     .. versionchanged:: 2.5.0
 
         The ``program``, ``machine``, ``terminal``, ``osuser``, and
-        ``driver_name`` parameters were added.
+        ``driver_name`` parameters were added. Support for ``edition`` was
+        added to python-oracledb Thin mode.
 
     .. versionchanged:: 2.3.0
 
@@ -433,6 +434,8 @@ Oracledb Methods
     :ref:`AsyncConnection Object <asyncconnobj>`. All parameters are optional
     and can be specified as keyword parameters.  See
     :ref:`standaloneconnection` information about connections.
+
+    This method can only be used in python-oracledb Thin mode.
 
     .. versionadded:: 2.0.0
 
@@ -584,8 +587,6 @@ Oracledb Methods
     specifies the initial size of the statement cache. The default is the
     value of :attr:`defaults.stmtcachesize`.
 
-    The ``edition`` parameter is ignored in the python-oracledb Thin mode.
-
     The ``tag`` parameter is ignored in the python-oracledb Thin mode.
 
     The ``matchanytag`` parameter is ignored in the python-oracledb Thin mode.
@@ -688,8 +689,8 @@ Oracledb Methods
 
     .. versionchanged:: 2.5.0
 
-        The ``program``, ``machine``, ``terminal``, ``osuser``, and
-        ``driver_name`` parameters were added.
+        The ``edition``, ``program``, ``machine``, ``terminal``, ``osuser``,
+        and ``driver_name`` parameters were added.
 
     .. versionchanged:: 2.3.0
 
@@ -891,9 +892,9 @@ Oracledb Methods
     :attr:`defaults.stmtcachesize`.
 
     The ``edition`` parameter is expected to be a string that indicates the
-    edition to use for the connection. This parameter cannot be used
-    simultaneously with the ``cclass`` parameter. This value is used in the
-    python-oracledb Thick mode.
+    edition to use for the connection. It requires Oracle Database 11.2, or
+    later. This parameter cannot be used simultaneously with the ``cclass``
+    parameter.
 
     The ``tag`` parameter is expected to be a string that identifies the type of
     connection that should be returned from a pool. This value is only used
@@ -1023,7 +1024,8 @@ Oracledb Methods
     .. versionchanged:: 2.5.0
 
         The ``program``, ``machine``, ``terminal``, ``osuser``, and
-        ``driver_name`` parameters were added.
+        ``driver_name`` parameters were added. Support for ``edition`` was
+        added to python-oracledb Thin mode.
 
     .. versionchanged:: 2.3.0
 
@@ -1352,9 +1354,9 @@ Oracledb Methods
     :attr:`defaults.stmtcachesize`.
 
     The ``edition`` parameter is expected to be a string that indicates the
-    edition to use for the connection. This parameter cannot be used
-    simultaneously with the ``cclass`` parameter. This value is used in the
-    python-oracledb Thick mode and is ignored in the Thin mode.
+    edition to use for the connection. It requires Oracle Database 11.2, or
+    later. This parameter cannot be used simultaneously with the ``cclass``
+    parameter.
 
     The ``tag`` parameter is expected to be a string that identifies the type
     of connection that should be returned from a pool. This value is only used
@@ -1488,7 +1490,8 @@ Oracledb Methods
     .. versionchanged:: 2.5.0
 
         The ``program``, ``machine``, ``terminal``, ``osuser``, and
-        ``driver_name`` parameters were added.
+        ``driver_name`` parameters were added. Support for ``edition`` was
+        added to python-oracledb Thin mode.
 
     .. versionchanged:: 2.3.0
 
@@ -1537,6 +1540,8 @@ Oracledb Methods
     :ref:`AsyncConnectionPool object <asyncconnpoolobj>` for the pool.
     ``create_pool_async()`` is a synchronous method. See
     :ref:`Connection pooling <asyncconnpool>` for more information.
+
+    This method can only be used in python-oracledb Thin mode.
 
     .. versionadded:: 2.0.0
 
@@ -1744,8 +1749,6 @@ Oracledb Methods
     specifies the initial size of the statement cache. The default is the
     value of :attr:`defaults.stmtcachesize`.
 
-    The ``edition`` parameter is ignored in the python-oracledb Thin mode.
-
     The ``tag`` parameter is ignored in the python-oracledb Thin mode.
 
     The ``matchanytag`` parameter is ignored in the python-oracledb Thin mode.
@@ -1848,8 +1851,8 @@ Oracledb Methods
 
     .. versionchanged:: 2.5.0
 
-        The ``program``, ``machine``, ``terminal``, ``osuser``, and
-        ``driver_name`` parameters were added.
+        The ``edition``, ``program``, ``machine``, ``terminal``, ``osuser``,
+        and ``driver_name`` parameters were added.
 
     .. versionchanged:: 2.3.0
 
@@ -2271,9 +2274,9 @@ Oracledb Methods
     :attr:`defaults.stmtcachesize`.
 
     The ``edition`` parameter is expected to be a string that indicates the
-    edition to use for the connection. This parameter cannot be used
-    simultaneously with the ``cclass`` parameter. This value is used in the
-    python-oracledb Thick mode.
+    edition to use for the connection. It requires Oracle Database 11.2, or
+    later. This parameter cannot be used simultaneously with the ``cclass``
+    parameter.
 
     The ``tag`` parameter is expected to be a string that identifies the type
     of connection that should be returned from a pool. This value is only used
@@ -2403,7 +2406,8 @@ Oracledb Methods
     .. versionchanged:: 2.5.0
 
         The ``program``, ``machine``, ``terminal``, ``osuser``, and
-        ``driver_name`` parameters were added.
+        ``driver_name`` parameters were added. Support for ``edition`` was
+        added to python-oracledb Thin mode.
 
     .. versionchanged:: 2.3.0
 
