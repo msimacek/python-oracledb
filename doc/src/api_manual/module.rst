@@ -3247,20 +3247,28 @@ Connection Pool Get Modes
 -------------------------
 
 These constants belong to the enumeration called ``PoolGetMode``. They are
-possible values for the ``getmode`` parameter of
-:meth:`oracledb.create_pool()` and :meth:`oracledb.create_pool_async()`. They
-have deprecated the Session Pool mode constants that were used in cx_Oracle
-8.3. The constants are extensions to the DB API definition.
+possible values for the ``getmode`` parameters of
+:meth:`oracledb.create_pool()`, :meth:`oracledb.create_pool_async()`,
+:meth:`PoolParams.set()`, and for related attributes. They have deprecated the
+Session Pool mode constants that were used in cx_Oracle 8.3. The constants are
+extensions to the DB API definition
 
 .. versionchanged:: 2.3.0
 
-    The integer constants for the connection pool get modes were replaced
-    with the enumeration ``PoolGetMode``.
+    The integer constants for the connection pool creation, reconfiguration,
+    and acquisition ``getmode`` parameters were replaced with the enumeration
+    ``PoolGetMode``.
 
 .. data:: POOL_GETMODE_FORCEGET
 
-    This constant is used to specify that a new connection will be returned if
-    there are no free sessions available in the pool.
+    This constant is used to specify that a new connection should be created
+    and returned by :meth:`ConnectionPool.acquire()` if there are no free
+    connections available in the pool and the pool is already at its maximum
+    size.
+
+    When a connection acquired in this mode is eventually released back to the
+    pool, it will be dropped and not added to the pool if the pool is still at
+    its maximum size.
 
     This enumerated value can also be identified by
     ``oracledb.PoolGetMode.FORCEGET``.
@@ -3273,8 +3281,13 @@ have deprecated the Session Pool mode constants that were used in cx_Oracle
 
 .. data:: POOL_GETMODE_NOWAIT
 
-    This constant is used to specify that an exception should be raised if
-    there are no free sessions available in the pool.
+    This constant is used to specify that an exception should be raised by
+    :meth:`ConnectionPool.acquire()` if there are no free connections available
+    in the pool.
+
+    Note an exception may be raised if the pool is smaller than its maximum
+    size but there are no free connections and the pool needs to grow to
+    satisfy the connection request.
 
     This enumerated value can also be identified by
     ``oracledb.PoolGetMode.NOWAIT``.
@@ -3287,9 +3300,9 @@ have deprecated the Session Pool mode constants that were used in cx_Oracle
 
 .. data:: POOL_GETMODE_WAIT
 
-    This constant is used to specify that the caller should wait until a
-    session is available if there are no free sessions available in the pool.
-    This is the default value.
+    This constant is used to specify that :meth:`ConnectionPool.acquire()`
+    should wait until a connection is available if there are currently no free
+    connections available in the pool.  This is the default value.
 
     This enumerated value can also be identified by
     ``oracledb.PoolGetMode.WAIT``.
@@ -3302,9 +3315,10 @@ have deprecated the Session Pool mode constants that were used in cx_Oracle
 
 .. data:: POOL_GETMODE_TIMEDWAIT
 
-    This constant is used to specify that the caller should wait for a period
-    of time (defined by the ``wait_timeout`` parameter) for a session to become
-    available before returning with an error.
+    This constant is used to specify that :meth:`ConnectionPool.acquire()`
+    should wait for a period of time (defined by the ``wait_timeout``
+    parameter) for a connection to become available before returning with an
+    error.
 
     This enumerated value can also be identified by
     ``oracledb.PoolGetMode.TIMEDWAIT``.
@@ -3320,9 +3334,11 @@ Connection Pool Purity Constants
 --------------------------------
 
 These constants belong to the enumeration called ``Purity``. They are possible
-values for the ``purity`` parameter of :meth:`connect()` used for :ref:`drcp`.
-They have deprecated the Session Pool purity constants that were used in
-cx_Oracle 8.3. The constants are extensions to the DB API definition.
+values for the :ref:`drcp` ``purity`` parameter of
+:meth:`oracledb.create_pool()`, :meth:`ConnectionPool.acquire()`, and
+:meth:`oracledb.connect()`. They have deprecated the Session Pool purity
+constants that were used in cx_Oracle 8.3. The constants are extensions to the
+DB API definition.
 
 .. versionchanged:: 2.3.0
 
