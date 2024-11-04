@@ -330,7 +330,7 @@ see :ref:`driverdiff` and :ref:`compatibility`.
       - Yes
       - Yes
       - Yes
-    * - Application Contexts
+    * - Application Contexts (see :ref:`appcontext`)
       - Yes
       - Yes
       - Yes
