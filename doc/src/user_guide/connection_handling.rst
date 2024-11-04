@@ -707,6 +707,18 @@ prints::
     In myhook: protocol=tcp arg=localhost/orclpdb
     host is localhost, port is 1234, service name is orclpdb
 
+If you have an application that can run in either python-oracledb Thin or Thick
+modes, and you want a registered connection hook function to be used in both
+modes, your connection code can be like:
+
+.. code-block:: python
+
+    dsn = "tcp://localhost/orclpdb"
+
+    cp = oracledb.ConnectParams()
+    cp.parse_connect_string(dsn)
+    connection = oracledb.connect(params=params)
+
 .. _ldapconnections:
 
 LDAP Directory Naming
