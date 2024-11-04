@@ -1028,7 +1028,8 @@ Oracledb Methods
     .. versionchanged:: 2.5.0
 
         The ``program``, ``machine``, ``terminal``, ``osuser``, and
-        ``driver_name`` parameters were added.
+        ``driver_name`` parameters were added. Support for ``edition`` and
+        ``appcontext`` was added to python-oracledb Thin mode.
 
     .. versionchanged:: 2.3.0
 
@@ -1380,8 +1381,7 @@ Oracledb Methods
     The ``appcontext`` parameter is expected to be a list of 3-tuples that
     identifies the application context used by the connection. This parameter
     should contain namespace, name, and value and each entry in the tuple
-    should be a string.  This value is only used in the python-oracledb Thick
-    mode and is ignored in the Thin mode.
+    should be a string.
 
     The ``shardingkey`` parameter and ``supershardingkey`` parameters, if
     specified, are expected to be a sequence of values which identifies the
@@ -2305,8 +2305,7 @@ Oracledb Methods
     The ``appcontext`` parameter is expected to be a list of 3-tuples that
     identifies the application context used by the connection. This parameter
     should contain namespace, name, and value and each entry in the tuple
-    should be a string.  This value is only used inthe python-oracledb Thick
-    mode.
+    should be a string.
 
     The ``shardingkey`` parameter and ``supershardingkey`` parameters, if
     specified, are expected to be a sequence of values which identifies the
@@ -2415,7 +2414,8 @@ Oracledb Methods
     .. versionchanged:: 2.5.0
 
         The ``program``, ``machine``, ``terminal``, ``osuser``, and
-        ``driver_name`` parameters were added.
+        ``driver_name`` parameters were added. Support for ``edition`` and
+        ``appcontext`` was added to python-oracledb Thin mode.
 
     .. versionchanged:: 2.3.0
 
