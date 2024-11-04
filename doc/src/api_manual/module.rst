@@ -3285,9 +3285,9 @@ extensions to the DB API definition
     :meth:`ConnectionPool.acquire()` if there are no free connections available
     in the pool.
 
-    Note an exception may be raised if the pool is smaller than its maximum
-    size but there are no free connections and the pool needs to grow to
-    satisfy the connection request.
+    Note an exception may be raised when all open connections are currently in
+    use by the application, regardless of whether the pool is smaller than its
+    maximum size.
 
     This enumerated value can also be identified by
     ``oracledb.PoolGetMode.NOWAIT``.
