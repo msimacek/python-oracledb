@@ -835,10 +835,10 @@ Connection Attributes
 
 .. attribute:: Connection.serial_num
 
-    This read-only attribute specifies the session serial number associated with
-    the connection. It is the same value returned by the SQL
-    ``SELECT SERIAL# FROM V$SESSION``. It is available only in python-oracledb
-    Thin mode.
+    This read-only attribute specifies the session serial number associated
+    with the connection. It is the same value returned by the SQL
+    ``SELECT SERIAL# FROM V$SESSION WHERE SID=SYS_CONTEXT('USERENV', 'SID')``.
+    It is available only in python-oracledb Thin mode.
 
     .. versionadded:: 2.5.0
 
@@ -868,8 +868,8 @@ Connection Attributes
 
     This read-only attribute specifies the session identifier associated with
     the connection. It is the same value returned by the SQL
-    ``SELECT SID FROM V$SESSION``. It is available only in python-oracledb
-    Thin mode.
+    ``SELECT SYS_CONTEXT('USERENV', 'SID') FROM DUAL``. It is available
+    only in python-oracledb Thin mode.
 
     .. versionadded:: 2.5.0
 
