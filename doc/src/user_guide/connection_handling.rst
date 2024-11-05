@@ -656,7 +656,7 @@ establish the database connection:
 
     oracledb.register_protocol("tcp", myhook)
 
-    connection = oracledb.connect(user="scott", password=pw,
+    connection = oracledb.connect(user="scott", password=userpwd,
                                   dsn="tcp://localhost/orclpdb")
 
     with connection.cursor() as cursor:
@@ -717,7 +717,7 @@ modes, your connection code can be like:
 
     cp = oracledb.ConnectParams()
     cp.parse_connect_string(dsn)
-    connection = oracledb.connect(params=cp)
+    connection = oracledb.connect(user="hr", password=userpwd, params=cp)
 
 .. _ldapconnections:
 
