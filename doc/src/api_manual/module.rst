@@ -3282,12 +3282,10 @@ extensions to the DB API definition
 .. data:: POOL_GETMODE_NOWAIT
 
     This constant is used to specify that an exception should be raised by
-    :meth:`ConnectionPool.acquire()` if there are no free connections available
-    in the pool.
-
-    Note an exception may be raised when all open connections are currently in
-    use by the application, regardless of whether the pool is smaller than its
-    maximum size.
+    :meth:`ConnectionPool.acquire()` when all currently created connections are
+    already in use and so :meth:`~ConnectionPool.acquire()` cannot immediately
+    return a connection. Note the exception may occur even if the pool is
+    smaller than its maximum size.
 
     This enumerated value can also be identified by
     ``oracledb.PoolGetMode.NOWAIT``.
