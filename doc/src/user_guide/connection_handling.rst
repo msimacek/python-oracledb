@@ -717,7 +717,7 @@ modes, your connection code can be like:
 
     cp = oracledb.ConnectParams()
     cp.parse_connect_string(dsn)
-    connection = oracledb.connect(params=params)
+    connection = oracledb.connect(params=cp)
 
 .. _ldapconnections:
 
