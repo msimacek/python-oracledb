@@ -2876,8 +2876,8 @@ definition.
         python-oracledb Thin mode, and for standalone connections in the Thick
         mode.
 
-        This constant deprecates the ``DEFAULT_AUTH`` constant that was used in
-        cx_Oracle 8.3.
+    This constant deprecates the ``DEFAULT_AUTH`` constant that was used in
+    cx_Oracle 8.3, and was the default ``mode`` value.
 
 .. data:: AUTH_MODE_PRELIM
 
@@ -2892,8 +2892,8 @@ definition.
         This constant can only be used in the python-oracledb Thick mode for
         standalone connections.
 
-        This constant deprecates the ``PRELIM_AUTH`` constant that was used in
-        cx_Oracle 8.3.
+    This constant deprecates the ``PRELIM_AUTH`` constant that was used in
+    cx_Oracle 8.3.
 
 .. data:: AUTH_MODE_SYSASM
 
@@ -2908,8 +2908,8 @@ definition.
         python-oracledb Thin mode, and for standalone connections in the Thick
         mode.
 
-        This constant deprecates the ``SYSASM`` constant that was used in
-        cx_Oracle 8.3.
+    This constant deprecates the ``SYSASM`` constant that was used in
+    cx_Oracle 8.3.
 
 .. data:: AUTH_MODE_SYSBKP
 
@@ -2924,8 +2924,8 @@ definition.
         python-oracledb Thin mode, and for standalone connections in the Thick
         mode.
 
-        This constant deprecates the ``SYSBKP`` constant that was used in
-        cx_Oracle 8.3.
+    This constant deprecates the ``SYSBKP`` constant that was used in
+    cx_Oracle 8.3.
 
 .. data:: AUTH_MODE_SYSDBA
 
@@ -2940,8 +2940,8 @@ definition.
         python-oracledb Thin mode, and for standalone connections in the Thick
         mode.
 
-        This constant deprecates the ``SYSDBA`` constant that was used in
-        cx_Oracle 8.3.
+    This constant deprecates the ``SYSDBA`` constant that was used in
+    cx_Oracle 8.3.
 
 .. data:: AUTH_MODE_SYSDGD
 
@@ -2956,8 +2956,8 @@ definition.
         python-oracledb Thin mode, and for standalone connections in the Thick
         mode.
 
-        This constant deprecates the ``SYSDGD`` constant that was used in
-        cx_Oracle 8.3.
+    This constant deprecates the ``SYSDGD`` constant that was used in
+    cx_Oracle 8.3.
 
 .. data:: AUTH_MODE_SYSKMT
 
@@ -2972,8 +2972,8 @@ definition.
         python-oracledb Thin mode, and for standalone connections in the Thick
         mode.
 
-        This constant deprecates the ``SYSKMT`` constant that was used in
-        cx_Oracle 8.3.
+    This constant deprecates the ``SYSKMT`` constant that was used in
+    cx_Oracle 8.3.
 
 .. data:: AUTH_MODE_SYSOPER
 
@@ -2988,8 +2988,8 @@ definition.
         python-oracledb Thin mode, and for standalone connections in the Thick
         mode.
 
-        This constant deprecates the ``SYSOPER`` constant that was used in
-        cx_Oracle 8.3.
+    This constant deprecates the ``SYSOPER`` constant that was used in
+    cx_Oracle 8.3.
 
 .. data:: AUTH_MODE_SYSRAC
 
@@ -3004,8 +3004,8 @@ definition.
         python-oracledb Thin mode, and for standalone connections in the Thick
         mode.
 
-        This constant deprecates the ``SYSRAC`` constant that was used in
-        cx_Oracle 8.3.
+    This constant deprecates the ``SYSRAC`` constant that was used in
+    cx_Oracle 8.3.
 
 .. _pipeline-operation-types:
 
@@ -3273,10 +3273,8 @@ extensions to the DB API definition
     This enumerated value can also be identified by
     ``oracledb.PoolGetMode.FORCEGET``.
 
-    .. note::
-
-        This constant deprecates the ``SPOOL_ATTRVAL_FORCEGET`` constant that
-        was used in cx_Oracle 8.3.
+    This constant deprecates the ``SPOOL_ATTRVAL_FORCEGET`` constant that was
+    used in cx_Oracle 8.3.
 
 
 .. data:: POOL_GETMODE_NOWAIT
@@ -3290,10 +3288,8 @@ extensions to the DB API definition
     This enumerated value can also be identified by
     ``oracledb.PoolGetMode.NOWAIT``.
 
-    .. note::
-
-        This constant deprecates the ``SPOOL_ATTRVAL_NOWAIT`` constant that was
-        used in cx_Oracle 8.3.
+    This constant deprecates the ``SPOOL_ATTRVAL_NOWAIT`` constant that was
+    used in cx_Oracle 8.3, and was the default ``getmode`` value.
 
 
 .. data:: POOL_GETMODE_WAIT
@@ -3305,10 +3301,8 @@ extensions to the DB API definition
     This enumerated value can also be identified by
     ``oracledb.PoolGetMode.WAIT``.
 
-    .. note::
-
-        This constant deprecates the ``SPOOL_ATTRVAL_WAIT`` constant that was
-        used in cx_Oracle 8.3.
+    This constant deprecates the ``SPOOL_ATTRVAL_WAIT`` constant that was
+    used in cx_Oracle 8.3.
 
 
 .. data:: POOL_GETMODE_TIMEDWAIT
@@ -3321,10 +3315,8 @@ extensions to the DB API definition
     This enumerated value can also be identified by
     ``oracledb.PoolGetMode.TIMEDWAIT``.
 
-    .. note::
-
-        This constant deprecates the ``SPOOL_ATTRVAL_TIMEDWAIT`` constant that
-        was used in cx_Oracle 8.3.
+    This constant deprecates the ``SPOOL_ATTRVAL_TIMEDWAIT`` constant that was
+    used in cx_Oracle 8.3.
 
 .. _drcppurityconsts:
 
@@ -3352,10 +3344,8 @@ DB API definition.
     This enumerated value can also be identified by
     ``oracledb.Purity.DEFAULT``.
 
-    .. note::
-
-        This constant deprecates the ``ATTR_PURITY_DEFAULT`` constant that was
-        used in cx_Oracle 8.3.
+    This constant deprecates the ``ATTR_PURITY_DEFAULT`` constant that was used
+    in cx_Oracle 8.3, and was the default ``purity`` value.
 
 .. data:: PURITY_NEW
 
@@ -3364,10 +3354,8 @@ DB API definition.
 
     This enumerated value can also be identified by ``oracledb.Purity.NEW``.
 
-    .. note::
-
-        This constant deprecates the ``ATTR_PURITY_NEW`` constant that was used
-        in cx_Oracle 8.3.
+    This constant deprecates the ``ATTR_PURITY_NEW`` constant that was used in
+    cx_Oracle 8.3.
 
 
 .. data:: PURITY_SELF
@@ -3377,10 +3365,8 @@ DB API definition.
 
     This enumerated value can also be identified by ``oracledb.Purity.SELF``.
 
-    .. note::
-
-        This constant deprecates the ``ATTR_PURITY_SELF`` constant that was
-        used in cx_Oracle 8.3.
+    This constant deprecates the ``ATTR_PURITY_SELF`` constant that was used in
+    cx_Oracle 8.3.
 
 Subscription Grouping Classes
 -----------------------------
