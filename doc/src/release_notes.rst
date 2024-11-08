@@ -176,7 +176,6 @@ Thin Mode Changes
     aliases found on separate lines (`issue 362
     <https://github.com/oracle/python-oracledb/issues/362>`__).
 
-
 Thick Mode Changes
 ++++++++++++++++++
 
