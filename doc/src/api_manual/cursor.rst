@@ -66,7 +66,7 @@ Cursor Methods
 
         The DB API definition does not define this method.
 
-.. method:: Cursor.callfunc(name, returnType, parameters=[], \
+.. method:: Cursor.callfunc(name, return_type, parameters=[], \
         keyword_parameters={})
 
     Calls a function with the given name. The return type is specified in the
