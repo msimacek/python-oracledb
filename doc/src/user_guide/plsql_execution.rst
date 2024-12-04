@@ -51,13 +51,11 @@ PL/SQL Stored Functions
 
 The :meth:`Cursor.callfunc()` method is used to call PL/SQL functions.
 
-The first parameter to :meth:`~Cursor.callfunc()` is the function name. The
-second parameter represents the PL/SQL function return value and is expected to
-be a Python type, one of the :ref:`oracledb types <types>` or an :ref:`Object
-Type <dbobjecttype>`. Any following sequence of values or named parameters are
-passed as PL/SQL function arguments.
+The ``return_type`` parameter for :meth:`~Cursor.callfunc()` is
+expected to be a Python type, one of the :ref:`oracledb types <types>` or
+an :ref:`Object Type <dbobjecttype>`.
 
-If a PL/SQL function with the following definition exists:
+If a function with the following definition exists:
 
 .. code-block:: sql
 
@@ -120,9 +118,7 @@ See :ref:`bind` for information on binding.
 Anonymous PL/SQL Blocks
 -----------------------
 
-An `anonymous PL/SQL block
-<https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-826B070B-4888-4398-889B-61A3C6B91349>`__
-can be called as shown:
+An anonymous PL/SQL block can be called as shown:
 
 .. code-block:: python
 
