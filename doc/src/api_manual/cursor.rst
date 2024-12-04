@@ -69,19 +69,21 @@ Cursor Methods
 .. method:: Cursor.callfunc(name, return_type, parameters=[], \
         keyword_parameters={})
 
-    Calls a function with the given name. The return type is specified in the
-    same notation as is required by :meth:`Cursor.setinputsizes()`. The
-    sequence of parameters must contain one entry for each parameter that the
-    function expects. Any keyword parameters will be included after the
-    positional parameters. The result of the call is the return value of the
-    function.
+    Calls a PL/SQL function with the given name and returns its value.
+
+    The ``return_type`` parameter for :meth:`~Cursor.callfunc()` is expected to
+    be a Python type, one of the :ref:`oracledb types <types>` or an
+    :ref:`Object Type <dbobjecttype>`.
+
+    The sequence of parameters must contain one entry for each parameter that
+    the PL/SQL function expects. Any keyword parameters will be included after
+    the positional parameters.
 
     See :ref:`plsqlfunc` for an example.
 
-    For consistency and compliance with the PEP 8 naming style, the
-    parameter `keywordParameters` was renamed to `keyword_parameters`. The
-    old name will continue to work as a keyword parameter for a period of
-    time.
+    For consistency and compliance with the PEP 8 naming style, the parameter
+    ``keywordParameters`` was renamed to ``keyword_parameters``. The old name
+    will continue to work for a period of time.
 
     .. note::
 
@@ -89,25 +91,27 @@ Cursor Methods
 
     .. note::
 
-        If you intend to call :meth:`Cursor.setinputsizes()` on the cursor
-        prior to making this call, then note that the first item in the
-        parameter list refers to the return value of the function.
+        It is not recommended to call :meth:`Cursor.setinputsizes()` prior to
+        calling :meth:`~Cursor.callfunc()` but if you do, then note that the
+        first item in the :meth:`~Cursor.setinputsizes()` parameter list refers
+        to the return value of the PL/SQL function.
 
 .. method:: Cursor.callproc(name, parameters=[], keyword_parameters={})
 
-    Calls a procedure with the given name. The sequence of parameters must
-    contain one entry for each parameter that the procedure expects. The result
-    of the call is a modified copy of the input sequence. Input parameters are
-    left untouched; output and input/output parameters are replaced with
-    possibly new values. Keyword parameters will be included after the
-    positional parameters and are not returned as part of the output sequence.
+    Calls a PL/SQL procedure with the given name.
+
+    The sequence of parameters must contain one entry for each parameter that
+    the procedure expects. The result of the call is a modified copy of the
+    input sequence. Input parameters are left untouched; output and
+    input/output parameters are replaced with possibly new values. Keyword
+    parameters will be included after the positional parameters and are not
+    returned as part of the output sequence.
 
     See :ref:`plsqlproc` for an example.
 
-    For consistency and compliance with the PEP 8 naming style, the
-    parameter `keywordParameters` was renamed to `keyword_parameters`. The
-    old name will continue to work as a keyword parameter for a period of
-    time.
+    For consistency and compliance with the PEP 8 naming style, the parameter
+    ``keywordParameters`` was renamed to ``keyword_parameters``. The old name
+    will continue to work for a period of time.
 
     .. note::
 
@@ -455,9 +459,9 @@ Cursor Methods
     ``outconverter`` is only called when non-null values are fetched from the
     database.
 
-    For consistency and compliance with the PEP 8 naming style, the
-    parameter `encodingErrors` was renamed to `encoding_errors`. The old
-    name will continue to work as a keyword parameter for a period of time.
+    For consistency and compliance with the PEP 8 naming style, the parameter
+    ``encodingErrors`` was renamed to ``encoding_errors``. The old name will
+    continue to work as a keyword parameter for a period of time.
 
     .. versionchanged:: 1.4.0
 
