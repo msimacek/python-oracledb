@@ -241,10 +241,7 @@ cdef object convert_oracle_data_to_python(OracleMetadata from_metadata,
 
         # Oracle NUMBER
         if ora_type_num == ORA_TYPE_NUM_NUMBER:
-            num = &data.buffer.as_number
-            if num.is_max_negative_value:
-                return -1.0e126
-            return float(num.chars[:num.num_chars])
+            return convert_number_to_python_float(&data.buffer)
 
         # Oracle BINARY_DOUBLE
         elif ora_type_num == ORA_TYPE_NUM_BINARY_DOUBLE:
