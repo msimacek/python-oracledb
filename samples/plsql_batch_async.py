@@ -126,17 +126,16 @@ async def main():
 
     # Setup
 
-    pipeline = oracledb.create_pipeline()
-
-    pipeline.add_execute(
-        """create or replace procedure myproc2
+    with connection.cursor() as cursor:
+        stmt = """create or replace procedure myproc2
                          (p1 in number, p2 in out varchar2) as
-           begin
-               p2 := p2 || ' ' || p1;
-           end;"""
-    )
-
-    await connection.run_pipeline(pipeline)
+                  begin
+                      p2 := p2 || ' ' || p1;
+                  end;"""
+        await cursor.execute(stmt)
+        if cursor.warning:
+            print(cursor.warning)
+            print(stmt)
 
     # Example 3: positional binds
 
