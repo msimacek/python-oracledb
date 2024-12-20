@@ -1017,6 +1017,32 @@ class TestCase(test_env.BaseTestCase):
         with self.assertRaisesFullCode("DPY-2054"):
             oracledb.connect(pool_alias=alias)
 
+    def test_2452(self):
+        "2452 - test acquire() with pool alias and stmtcachesize"
+        alias = "pool_2452"
+        stmtcachesize = 35
+        test_env.get_pool(pool_alias=alias, stmtcachesize=stmtcachesize)
+        with oracledb.connect(pool_alias=alias) as conn:
+            self.assertEqual(conn.stmtcachesize, stmtcachesize)
+        oracledb.get_pool(alias).close()
+
+    def test_2453(self):
+        "2453 - test pool alias is case sensitive"
+        alias = "pool_2458"
+        test_env.get_pool(pool_alias=alias)
+        self.assertIsNone(oracledb.get_pool(alias.upper()))
+        with self.assertRaisesFullCode("DPY-2054"):
+            test_env.get_connection(pool_alias=alias.upper())
+        oracledb.get_pool(alias).close()
+
+    def test_2454(self):
+        "2454 - test pool alias with invalid types"
+        aliases = [5, set(), dict(), bytearray(1)]
+        for alias in aliases:
+            with self.subTest(alias=alias):
+                with self.assertRaises(TypeError):
+                    test_env.get_pool(pool_alias=alias)
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()
