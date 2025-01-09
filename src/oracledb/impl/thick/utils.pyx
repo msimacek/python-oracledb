@@ -209,6 +209,8 @@ cdef int _convert_from_python(object value, OracleMetadata metadata,
             value = sparse_impl.values
         else:
             vector_info.numDimensions = <uint32_t> len(value)
+            vector_info.numSparseValues = 0
+            vector_info.sparseIndices = NULL
         if value.typecode == 'd':
             vector_info.format = DPI_VECTOR_FORMAT_FLOAT64
         elif value.typecode == 'f':
