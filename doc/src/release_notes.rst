@@ -33,8 +33,8 @@ Thin Mode Changes
 #)  The thread that closes connection pools on interpreter shutdown is now only
     started when the first pool is created and not at module import
     (`issue 426 <https://github.com/oracle/python-oracledb/issues/426>`__).
-#)  Added support for Transaction Guard by adding support to get the value of
-    :attr:`Connection.ltxid`.
+#)  Added support for Transaction Guard by adding support to get the values of
+    :attr:`Connection.ltxid` and :attr:`oracledb._Error.isrecoverable`.
 #)  Fixed hang when attempting to use pipelining against a database that
     doesn't support the end of response flag.
 #)  Fixed hang when using asyncio and a connection is unexpectedly closed by
@@ -66,6 +66,9 @@ Thin Mode Changes
 Thick Mode Changes
 ++++++++++++++++++
 
+#)  Fixed bug that caused :attr:`oracledb._Error.isrecoverable` to always be
+    `False`.
+
 Common Changes
 ++++++++++++++
 
@@ -96,8 +99,6 @@ Common Changes
 #)  All Oracle errors that result in the connection no longer being usable will
     be raised as ``DPY-4011: the database or network closed the connection``
     with the underlying reason being included in the error message.
-#)  Fixed bug that caused :attr:`oracledb._Error.isrecoverable` to always be
-    `False`.
 #)  Error ``DPY-2056: registered handler for protocol "{protocol}" failed for
     arg "{arg}"`` is now raised when an exception occurs when calling the
     registered handler for a protocol.
