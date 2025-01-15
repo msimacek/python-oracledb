@@ -233,14 +233,18 @@ query:
 
 In the Python application code:
 
-* Connect to the enabled database service.
-* Use the connection attribute :attr:`~Connection.ltxid` to find the
+* Connect to the appropriately enabled database service. If the connection is
+  TAF, AC or TAC enabled, then do not proceed with TG.
+* Check :attr:`oracledb._Error.isrecoverable` to confirm the error is
+  recoverable. If not, do not proceed with TG.
+* Use the connection attribute :attr:`Connection.ltxid` to find the
   logical transaction id.
 * Call the `DBMS_APP_CONT.GET_LTXID_OUTCOME
   <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-03CEB530-D3A5-40B1-87C8-5BF1BB5D5D54>`__
   PL/SQL procedure with the logical transaction id.  This returns a boolean
   value indicating if the last transaction was committed and whether the last
   call was completed successfully or not.
+* Take any necessary action to re-do uncommitted work.
 
 See the `Transaction Guard Sample
 <https://github.com/oracle/python-oracledb/blob/main/
