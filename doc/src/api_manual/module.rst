@@ -364,7 +364,7 @@ Oracledb Methods
 
     The ``use_sni`` parameter is expected to be a boolean which indicates
     whether to use the TLS Server Name Indicator (SNI) extension to bypass the
-    second TLS neogiation that would otherwise be required. This parameter is
+    second TLS negotiation that would otherwise be required. This parameter is
     used in both python-oracledb Thin and Thick modes. The default value is
     False.
 
@@ -697,7 +697,7 @@ Oracledb Methods
 
     The ``use_sni`` parameter is expected to be a boolean which indicates
     whether to use the TLS Server Name Indicator (SNI) extension to bypass the
-    second TLS neogiation that would otherwise be required. This parameter is
+    second TLS negotiation that would otherwise be required. This parameter is
     used in both python-oracledb Thin and Thick modes. The default value is
     False.
 
@@ -1041,7 +1041,7 @@ Oracledb Methods
 
     The ``use_sni`` parameter is expected to be a boolean which indicates
     whether to use the TLS Server Name Indicator (SNI) extension to bypass the
-    second TLS neogiation that would otherwise be required. This parameter is
+    second TLS negotiation that would otherwise be required. This parameter is
     used in both python-oracledb Thin and Thick modes. The default value is
     False.
 
@@ -1522,7 +1522,7 @@ Oracledb Methods
 
     The ``use_sni`` parameter is expected to be a boolean which indicates
     whether to use the TLS Server Name Indicator (SNI) extension to bypass the
-    second TLS neogiation that would otherwise be required. This parameter is
+    second TLS negotiation that would otherwise be required. This parameter is
     used in both python-oracledb Thin and Thick modes. The default value is
     False.
 
@@ -1919,7 +1919,7 @@ Oracledb Methods
 
     The ``use_sni`` parameter is expected to be a boolean which indicates
     whether to use the TLS Server Name Indicator (SNI) extension to bypass the
-    second TLS neogiation that would otherwise be required. This parameter is
+    second TLS negotiation that would otherwise be required. This parameter is
     used in both python-oracledb Thin and Thick modes. The default value is
     False.
 
@@ -2496,7 +2496,7 @@ Oracledb Methods
 
     The ``use_sni`` parameter is expected to be a boolean which indicates
     whether to use the TLS Server Name Indicator (SNI) extension to bypass the
-    second TLS neogiation that would otherwise be required. This parameter is
+    second TLS negotiation that would otherwise be required. This parameter is
     used in both python-oracledb Thin and Thick modes. The default value is
     False.
 
