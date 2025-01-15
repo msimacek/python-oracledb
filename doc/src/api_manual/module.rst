@@ -2123,7 +2123,8 @@ Oracledb Methods
     ``is_thin_mode()`` will never change for the lifetime of the process.
 
     The attribute :attr:`Connection.thin` can be used to check a connection's
-    mode.
+    mode. The attribute :attr:`ConnectionPool.thin` can be used to check a
+    pool's mode.
 
     .. note::
 
