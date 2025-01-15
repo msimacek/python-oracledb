@@ -96,6 +96,8 @@ Common Changes
 #)  All Oracle errors that result in the connection no longer being usable will
     be raised as ``DPY-4011: the database or network closed the connection``
     with the underlying reason being included in the error message.
+#)  Fixed bug that caused :attr:`oracledb._Error.isrecoverable` to always be
+    `False`.
 #)  Error ``DPY-2056: registered handler for protocol "{protocol}" failed for
     arg "{arg}"`` is now raised when an exception occurs when calling the
     registered handler for a protocol.
