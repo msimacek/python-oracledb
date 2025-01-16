@@ -1232,8 +1232,7 @@ Oracledb Methods
     connection may remain idle in the pool before it is terminated. This
     applies only when the pool has more than ``min`` connections open, allowing
     it to shrink to the specified minimum size. The default value is *0*
-    seconds. A value of *0* means that connections may remain idle
-    indefinitely.
+    seconds. A value of *0* means there is no limit.
 
     The ``wait_timeout`` parameter is the length of time (in milliseconds) that
     a caller should wait when acquiring a connection from the pool with
@@ -1241,13 +1240,13 @@ Oracledb Methods
     value is *0* milliseconds.
 
     The ``max_lifetime_session`` parameter is the length of time (in seconds)
-    that a pooled connection may exist since first being created.  The default
-    value is *0*. A value of *0* means that there is no maximum
-    time. Connections become candidates for termination when they are acquired
-    or released back to the pool and have existed for longer than
-    ``max_lifetime_session`` seconds. In python-oracledb Thick mode, Oracle
-    Client libraries 12.1 or later must be used and, prior to Oracle Client 21,
-    cleanup only occurs when the pool is accessed.
+    that a pooled connection may exist since first being created. The default
+    value is *0*. A value of *0* means that there is no limit. Connections
+    become candidates for termination when they are acquired or released back
+    to the pool and have existed for longer than ``max_lifetime_session``
+    seconds. In python-oracledb Thick mode, Oracle Client libraries 12.1 or
+    later must be used and, prior to Oracle Client 21, cleanup only occurs when
+    the pool is accessed.
 
     The ``session_callback`` parameter is a callable that is invoked when a
     connection is returned from the pool for the first time, or when the
@@ -1694,8 +1693,7 @@ Oracledb Methods
     connection may remain idle in the pool before it is terminated. This
     applies only when the pool has more than ``min`` connections open, allowing
     it to shrink to the specified minimum size. The default value is *0*
-    seconds. A value of *0* means that connections may remain idle
-    indefinitely.
+    seconds. A value of *0* means there is no limit.
 
     The ``wait_timeout`` parameter is the length of time (in milliseconds) that
     a caller should wait when acquiring a connection from the pool with
@@ -1704,12 +1702,12 @@ Oracledb Methods
 
     The ``max_lifetime_session`` parameter is the length of time (in seconds)
     that a pooled connection may exist since first being created. The default
-    value is *0*. A value of *0* means that there is no maximum
-    time. Connections become candidates for termination when they are acquired
-    or released back to the pool and have existed for longer than
-    ``max_lifetime_session`` seconds. In python-oracledb Thick mode, Oracle
-    Client libraries 12.1 or later must be used and, prior to Oracle Client 21,
-    cleanup only occurs when the pool is accessed.
+    value is *0*. A value of *0* means that there is no limit. Connections
+    become candidates for termination when they are acquired or released back
+    to the pool and have existed for longer than ``max_lifetime_session``
+    seconds. In python-oracledb Thick mode, Oracle Client libraries 12.1 or
+    later must be used and, prior to Oracle Client 21, cleanup only occurs when
+    the pool is accessed.
 
     The ``session_callback`` parameter is a callable that is invoked when a
     connection is returned from the pool for the first time, or when the
@@ -2213,7 +2211,7 @@ Oracledb Methods
     connection may remain idle in the pool before it is terminated. This
     applies only when the pool has more than ``min`` connections open, allowing
     it to shrink to the specified minimum size. The default value is *0*
-    seconds. A value of *0* means that there is no maximum time.
+    seconds. A value of *0* means there is no limit.
 
     The ``wait_timeout`` parameter is the length of time (in milliseconds) that
     a caller should wait when acquiring a connection from the pool with
@@ -2221,13 +2219,13 @@ Oracledb Methods
     value is *0* milliseconds.
 
     The ``max_lifetime_session`` parameter is the length of time (in seconds)
-    that a pooled connection may exist since first being created.  The default
-    value is *0*. A value of *0* means that there is no maximum
-    time. Connections become candidates for termination when they are acquired
-    or released back to the pool and have existed for longer than
-    ``max_lifetime_session`` seconds. In python-oracledb Thick mode, Oracle
-    Client libraries 12.1 or later must be used and, prior to Oracle Client 21,
-    cleanup only occurs when the pool is accessed.
+    that a pooled connection may exist since first being created. The default
+    value is *0*. A value of *0* means that there is no limit. Connections
+    become candidates for termination when they are acquired or released back
+    to the pool and have existed for longer than ``max_lifetime_session``
+    seconds. In python-oracledb Thick mode, Oracle Client libraries 12.1 or
+    later must be used and, prior to Oracle Client 21, cleanup only occurs when
+    the pool is accessed.
 
     The ``session_callback`` parameter is a callable that is invoked when a
     connection is returned from the pool for the first time, or when the

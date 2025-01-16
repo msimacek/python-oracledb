@@ -121,12 +121,12 @@ AsyncConnectionPool Attributes
 
     This read-write attribute is the maximum length of time (in seconds) that a
     pooled connection may exist since first being created. A value of *0* means
-    that there is no maximum time. Connections become candidates for
-    termination when they are acquired or released back to the pool, and have
-    existed for longer than ``max_lifetime_session`` seconds. Connections that
-    are in active use will not be closed. In python-oracledb Thick mode, Oracle
-    Client libraries 12.1 or later must be used and, prior to Oracle Client 21,
-    cleanup only occurs when the pool is accessed.
+    there is no limit. Connections become candidates for termination when they
+    are acquired or released back to the pool, and have existed for longer than
+    ``max_lifetime_session`` seconds. Connections that are in active use will
+    not be closed. In python-oracledb Thick mode, Oracle Client libraries 12.1
+    or later must be used and, prior to Oracle Client 21, cleanup only occurs
+    when the pool is accessed.
 
 .. attribute:: AsyncConnectionPool.max_sessions_per_shard
 
