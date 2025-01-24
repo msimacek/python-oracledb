@@ -502,6 +502,7 @@ cdef class Description(ConnectParamsNode):
         public object ssl_version
         public str wallet_location
         dict extra_connect_data_args
+        dict extra_security_args
         str connection_id
 
     cdef str _build_duration_str(self, double value)

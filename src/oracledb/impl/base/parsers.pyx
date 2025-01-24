@@ -51,7 +51,7 @@ CONTAINER_PARAM_NAMES = set([
 ])
 
 # CONNECT_DATA parameter names that are supported by the driver; all other
-# simple key/value pairs are passed unchanged to the database
+# key/value pairs are passed unchanged to the database
 CONNECT_DATA_PARAM_NAMES = set([
     "cclass",
     "connection_id_prefix",
@@ -62,6 +62,15 @@ CONNECT_DATA_PARAM_NAMES = set([
     "service_name",
     "sid",
     "use_tcp_fast_open",
+])
+
+# SECURITY parameter names that are supported by the driver; all other
+# key/value pairs are passed unchanged to the database
+SECURITY_PARAM_NAMES = set([
+    "ssl_server_cert_dn",
+    "ssl_server_dn_match",
+    "ssl_version",
+    "wallet_location",
 ])
 
 # a set of parameter names supported by the driver in EasyConnect strings that
@@ -636,19 +645,23 @@ cdef class ConnectStringParser(BaseParser):
                     self.data_as_str[self.pos + 1:instance_name_end_pos]
             self.pos = self.temp_pos
 
-    cdef dict _set_connect_data(self, dict args):
+    cdef dict _process_args_with_extras(self, dict args, set allowed_names,
+                                        str extras_name):
         """
-        Sets the connect data value.
+        Processes arguments which contain a set of known attributes and any
+        number of unknown attributes. The known attributes are left untouched
+        whereas the unknown ones are put in a separate dictionary with the
+        given name.
         """
         cdef:
             dict extras, result = {}
             object value
             str key
         for key, value in args.items():
-            if key in CONNECT_DATA_PARAM_NAMES:
+            if key in allowed_names:
                 result[key] = value
             else:
-                extras = result.setdefault("extra_connect_data_args", {})
+                extras = result.setdefault(extras_name, {})
                 extras[key] = value
         return result
 
@@ -674,7 +687,13 @@ cdef class ConnectStringParser(BaseParser):
                     addresses = [addresses]
                 value = [dict(address=a) for a in addresses] + [value]
             elif name == "connect_data":
-                value = self._set_connect_data(value)
+                value = self._process_args_with_extras(
+                    value, CONNECT_DATA_PARAM_NAMES, "extra_connect_data_args"
+                )
+            elif name == "security":
+                value = self._process_args_with_extras(
+                    value, SECURITY_PARAM_NAMES, "extra_security_args"
+                )
             args[name] = value
         elif isinstance(orig_value, list):
             args[name].append(value)

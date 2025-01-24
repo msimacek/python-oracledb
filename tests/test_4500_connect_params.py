@@ -1250,6 +1250,24 @@ class TestCase(test_env.BaseTestCase):
             self.assertEqual(params.port, port)
             self.assertEqual(params.get_connect_string(), connect_descriptor)
 
+    def test_4572(self):
+        "4572 - test passing through unrecognized parameters in SECURITY"
+        options = [
+            "(SIMPLE_KEY=SIMPLE_VALUE)",
+            "(COMPLEX_KEY=(SUB_VALUE_A=23)(SUB_VALUE_B=27))",
+            "(COMPLEX_KEY=(SUB_VALUE_A=A)(SUB_VALUE_B=(SUB_SUB_A=B)))",
+        ]
+        for option in options:
+            with self.subTest(option=option):
+                connect_string = (
+                    "(DESCRIPTION=(ADDRESS=(PROTOCOL=tcps)(HOST=host4572)"
+                    "(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=service4572))"
+                    f"(SECURITY=(SSL_SERVER_DN_MATCH=ON){option}))"
+                )
+                params = oracledb.ConnectParams()
+                params.parse_connect_string(connect_string)
+                self.assertEqual(params.get_connect_string(), connect_string)
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()
