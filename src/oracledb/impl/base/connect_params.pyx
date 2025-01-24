@@ -872,6 +872,9 @@ cdef class Description(ConnectParamsNode):
             if self.wallet_location is not None:
                 temp = f"(MY_WALLET_DIRECTORY={self.wallet_location})"
                 temp_parts.append(temp)
+            if self.extra_security_args is not None:
+                temp_parts.extend(f"({k.upper()}={self._value_repr(v)})"
+                                  for k, v in self.extra_security_args.items())
             parts.append(f'(SECURITY={"".join(temp_parts)})')
 
         return f'(DESCRIPTION={"".join(parts)})'
@@ -959,6 +962,9 @@ cdef class Description(ConnectParamsNode):
         _set_str_param(args, "ssl_server_cert_dn", self)
         _set_ssl_version_param(args, "ssl_version", self)
         _set_str_param(args, "wallet_location", self)
+        extra_args = args.get("extra_security_args")
+        if extra_args is not None:
+            self.extra_security_args = extra_args
 
     cdef int set_server_type(self, str value) except -1:
         """
