@@ -257,6 +257,21 @@ cdef class ConnectParamsImpl:
             errors._raise_err(errors.ERR_EXPIRED_ACCESS_TOKEN)
         return self._xor_bytes(self._token, self._token_obfuscator).decode()
 
+    cdef object _get_public_instance(self):
+        """
+        Returns the public instance to use when making calls out to user
+        defined code.
+        """
+        cdef object inst
+        if isinstance(self, PoolParamsImpl):
+            print("PUBLIC INST for POOL")
+            inst = PY_TYPE_POOL_PARAMS.__new__(PY_TYPE_POOL_PARAMS)
+        else:
+            print("PUBLIC INST for CONN")
+            inst = PY_TYPE_CONNECT_PARAMS.__new__(PY_TYPE_CONNECT_PARAMS)
+        inst._impl = self
+        return inst
+
     cdef object _get_token_expires(self, str token):
         """
         Gets the expiry date from the token.
