@@ -264,10 +264,8 @@ cdef class ConnectParamsImpl:
         """
         cdef object inst
         if isinstance(self, PoolParamsImpl):
-            print("PUBLIC INST for POOL")
             inst = PY_TYPE_POOL_PARAMS.__new__(PY_TYPE_POOL_PARAMS)
         else:
-            print("PUBLIC INST for CONN")
             inst = PY_TYPE_CONNECT_PARAMS.__new__(PY_TYPE_CONNECT_PARAMS)
         inst._impl = self
         return inst
