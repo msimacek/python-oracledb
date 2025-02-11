@@ -1,0 +1,11 @@
+__pycache__/
+.eggs/
+.tox/
+*.egg-info/
+build/
+dist/
+doc/build
+src/oracledb/*.c
+tests/ext/config.ini
+.ipynb_checkpoints/
+samples/sample.csv
