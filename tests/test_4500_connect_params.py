@@ -331,19 +331,21 @@ class TestCase(test_env.BaseTestCase):
     def test_4521(self):
         "4521 - test connect string with an address list"
         params = oracledb.ConnectParams()
-        connect_string = """
-            (DESCRIPTION=(LOAD_BALANCE=ON)(RETRY_COUNT=5)(RETRY_DELAY=2)
-            (ADDRESS_LIST=(LOAD_BALANCE=ON)
-            (ADDRESS=(PROTOCOL=tcp)(PORT=1521)(HOST=my_host25))
-            (ADDRESS=(PROTOCOL=tcps)(PORT=222)(HOST=my_host26)))
-            (CONNECT_DATA=(SERVICE_NAME=my_service_name25)))"""
+        connect_string = (
+            "(DESCRIPTION=(LOAD_BALANCE=ON)(RETRY_COUNT=5)(RETRY_DELAY=2)"
+            "(ADDRESS_LIST=(LOAD_BALANCE=ON)"
+            "(ADDRESS=(PROTOCOL=tcp)(HOST=my_host25)(PORT=4521))"
+            "(ADDRESS=(PROTOCOL=tcp)(HOST=my_host26)(PORT=4522)))"
+            "(CONNECT_DATA=(SERVICE_NAME=my_service_name25)))"
+        )
         params.parse_connect_string(connect_string)
         self.assertEqual(params.host, ["my_host25", "my_host26"])
-        self.assertEqual(params.port, [1521, 222])
-        self.assertEqual(params.protocol, ["tcp", "tcps"])
+        self.assertEqual(params.port, [4521, 4522])
+        self.assertEqual(params.protocol, ["tcp", "tcp"])
         self.assertEqual(params.service_name, "my_service_name25")
         self.assertEqual(params.retry_count, 5)
         self.assertEqual(params.retry_delay, 2)
+        self.assertEqual(params.get_connect_string(), connect_string)
 
     def test_4522(self):
         "4522 - test connect string with multiple address lists"
@@ -477,9 +479,9 @@ class TestCase(test_env.BaseTestCase):
             tcp_timeout_val = f"(TRANSPORT_CONNECT_TIMEOUT={out_val})"
             connect_string = (
                 f"(DESCRIPTION={tcp_timeout_val}"
-                + "(ADDRESS=(PROTOCOL=tcp)"
-                + f"(HOST={host})(PORT=1521))(CONNECT_DATA="
-                + f"(SERVICE_NAME={service_name})))"
+                "(ADDRESS=(PROTOCOL=tcp)"
+                f"(HOST={host})(PORT=1521))(CONNECT_DATA="
+                f"(SERVICE_NAME={service_name})))"
             )
             self.assertEqual(params.get_connect_string(), connect_string)
 
@@ -559,10 +561,10 @@ class TestCase(test_env.BaseTestCase):
             source_route_clause = "(SOURCE_ROUTE=ON)" if has_section else ""
             connect_string = (
                 f"(DESCRIPTION={source_route_clause}"
-                + "(ADDRESS_LIST="
-                + "(ADDRESS=(PROTOCOL=tcp)(HOST=host1)(PORT=1521))"
-                + "(ADDRESS=(PROTOCOL=tcp)(HOST=host2)(PORT=1522)))"
-                + "(CONNECT_DATA=(SERVICE_NAME=my_service_35)))"
+                f"(ADDRESS_LIST={source_route_clause}"
+                "(ADDRESS=(PROTOCOL=tcp)(HOST=host1)(PORT=1521))"
+                "(ADDRESS=(PROTOCOL=tcp)(HOST=host2)(PORT=1522)))"
+                "(CONNECT_DATA=(SERVICE_NAME=my_service_35)))"
             )
             self.assertEqual(params.get_connect_string(), connect_string)
 
@@ -1267,6 +1269,43 @@ class TestCase(test_env.BaseTestCase):
                 params = oracledb.ConnectParams()
                 params.parse_connect_string(connect_string)
                 self.assertEqual(params.get_connect_string(), connect_string)
+
+    def test_4573(self):
+        "4573 - test passing through unrecognized parameters in DESCRIPTION"
+        options = [
+            "(SIMPLE_KEY=SIMPLE_VALUE)",
+            "(COMPLEX_KEY=(SUB_VALUE_1=1)(SUB_VALUE_B=2))",
+            "(COMPLEX_KEY=(SUB_VALUE_2=S)(SUB_VALUE_B=(SUB_SUB_A=T)))",
+        ]
+        for option in options:
+            with self.subTest(option=option):
+                connect_string = (
+                    "(DESCRIPTION_LIST="
+                    f"(DESCRIPTION={option}(ADDRESS=(PROTOCOL=tcp)"
+                    "(HOST=host4573a)(PORT=1521))"
+                    "(CONNECT_DATA=(SERVICE_NAME=service4573)))"
+                    f"(DESCRIPTION={option}(ADDRESS=(PROTOCOL=tcp)"
+                    "(HOST=host4573b)(PORT=1521))"
+                    "(CONNECT_DATA=(SERVICE_NAME=service4573))))"
+                )
+                params = oracledb.ConnectParams()
+                params.parse_connect_string(connect_string)
+                self.assertEqual(params.get_connect_string(), connect_string)
+
+    def test_4574(self):
+        "4574 - test passing through specific unsupported parameters"
+        easy_connect = (
+            "host_4574/service_4574?"
+            "enable=broken&recv_buf_size=1024&send_buf_size=2048"
+        )
+        connect_descriptor = (
+            "(DESCRIPTION=(ENABLE=broken)(RECV_BUF_SIZE=1024)"
+            "(SEND_BUF_SIZE=2048)(ADDRESS=(PROTOCOL=tcp)(HOST=host_4574)"
+            "(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=service_4574)))"
+        )
+        params = oracledb.ConnectParams()
+        params.parse_connect_string(easy_connect)
+        self.assertEqual(params.get_connect_string(), connect_descriptor)
 
 
 if __name__ == "__main__":
