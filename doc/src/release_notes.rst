@@ -92,10 +92,11 @@ Common Changes
     mode parsed all connect strings and Thick mode passed the connect string
     unchanged to the Oracle Client library to parse. Parameters unrecognized by
     the driver in :ref:`Easy Connect strings <easyconnect>` are now ignored.
-    Parameters unrecognized by the driver in the ``CONNECT_DATA`` and
-    ``SECURITY`` sections of a :ref:`full connect descriptor <conndescriptor>`
-    are passed through unchanged. All other parameters in other sections of a
-    full connect descriptor that are unrecognized by the driver are ignored.
+    Parameters unrecognized by the driver in the ``DESCRIPTION``,
+    ``CONNECT_DATA`` and ``SECURITY`` sections of a
+    :ref:`full connect descriptor <conndescriptor>` are passed through
+    unchanged. All other parameters in other sections of a full connect
+    descriptor that are unrecognized by the driver are ignored.
 #)  Added attributes :attr:`DbObjectAttribute.precision`,
     :attr:`DbObjectAttribute.scale`, and :attr:`DbObjectAttribute.max_size` that
     provide additional metadata about
