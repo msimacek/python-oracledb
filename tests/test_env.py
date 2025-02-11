@@ -95,13 +95,13 @@ def _initialize():
     """
     if not get_is_thin():
         oracledb.init_oracle_client()
-    get_connection()
     plugin_names = os.environ.get("PYO_TEST_PLUGINS")
     if plugin_names is not None:
         for name in plugin_names.split(","):
             module_name = f"oracledb.plugins.{name}"
             print("importing module", module_name)
             importlib.import_module(module_name)
+    get_connection()
 
 
 def get_value(name, label, default_value=None, password=False):
