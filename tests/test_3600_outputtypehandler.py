@@ -709,20 +709,22 @@ class TestCase(test_env.BaseTestCase):
 
     def test_3677(self):
         "3677 - output type handler: from BINARY_DOUBLE to VARCHAR"
+        str_value = "36.75" if test_env.get_is_thin() else "3.675E+001"
         self.__test_type_handler(
             oracledb.DB_TYPE_BINARY_DOUBLE,
             oracledb.DB_TYPE_VARCHAR,
             36.75,
-            "36.75",
+            str_value,
         )
 
     def test_3678(self):
         "3678 - output type handler: from BINARY_FLOAT to VARCHAR"
+        str_value = "16.25" if test_env.get_is_thin() else "1.625E+001"
         self.__test_type_handler(
             oracledb.DB_TYPE_BINARY_FLOAT,
             oracledb.DB_TYPE_VARCHAR,
             16.25,
-            "16.25",
+            str_value,
         )
 
 
