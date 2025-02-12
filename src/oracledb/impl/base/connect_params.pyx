@@ -129,7 +129,7 @@ cdef class ConnectParamsImpl:
                 and not self.externalauth:
             user = config.get("user")
             password = config.get("password")
-            if not isinstance(password, dict):
+            if password is not None and not isinstance(password, dict):
                 errors._raise_err(errors.ERR_PLAINTEXT_PASSWORD_IN_CONFIG)
             if user is not None or password is not None:
                 self.set(dict(user=user, password=password))
