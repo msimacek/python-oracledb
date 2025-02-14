@@ -15,11 +15,6 @@ receiving of various payloads, such as RAW values, JSON, JMS, and objects.
 Transactional Event Queues use a highly optimized implementation of Advanced
 Queuing. They were previously called AQ Sharded Queues.
 
-.. note::
-
-    JSON and JMS payloads, array message queuing and dequeuing operations, and
-    :ref:`Recipient Lists <reciplists>` are only supported in python-oracledb
-    Thick mode. See :ref:`enablingthick`.
 
 Python-oracledb API calls are the same for Transactional Event Queues and
 Classic Queues, however there are differences in support for some payload
@@ -32,10 +27,17 @@ types.
 - The JSON payload requires Oracle Client libraries 21c (or later) and Oracle
   Database 21c (or later).
 
-There are examples of AQ Classic Queues in the `GitHub examples
+JSON and JMS payloads, array message queuing and dequeuing operations, and
+:ref:`Recipient Lists <reciplists>` are only supported in python-oracledb
+:ref:`Thick mode <enablingthick>`.
+
+There are examples of AQ Classic Queues in the `GitHub samples
 <https://github.com/oracle/python-oracledb/tree/main/samples>`__ directory.
 
 **Transactional Event Queue Support**
+
+Transactional Event Queues are only supported in python-oracledb :ref:`Thick
+mode <enablingthick>`.
 
 - RAW and named Oracle object payloads are supported for single and array
   message enqueuing and dequeuing when using Oracle Client 19c (or later) and
