@@ -17,8 +17,9 @@ Queuing. They were previously called AQ Sharded Queues.
 
 .. note::
 
-    JSON and JMS payloads, and array message queuing and dequeuing operations,
-    are only supported in python-oracledb Thick mode. See :ref:`enablingthick`.
+    JSON and JMS payloads, array message queuing and dequeuing operations, and
+    :ref:`Recipient Lists <reciplists>` are only supported in python-oracledb
+    Thick mode. See :ref:`enablingthick`.
 
 Python-oracledb API calls are the same for Transactional Event Queues and
 Classic Queues, however there are differences in support for some payload
