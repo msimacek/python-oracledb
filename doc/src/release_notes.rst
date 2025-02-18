@@ -29,11 +29,11 @@ Thin Mode Changes
 #)  Added parameter :data:`ConnectParams.use_sni` to specify that the TLS SNI
     extension should be used to reduce the number of TLS neegotiations that are
     needed to connect to the database.
-#)  Improved support for planned database maintenance by internally sending
-    explicit request boundaries when using python-oracledb connection pools.
 #)  Added parameter :data:`ConnectParams.instance_name` to specify the instance
     name to use when connecting to the database. Added support for setting the
     instance name in :ref:`Easy Connect strings <easyconnect>`.
+#)  Improved support for planned database maintenance by internally sending
+    explicit request boundaries when using python-oracledb connection pools.
 #)  Host names are now resolved to IP addresses in python-oracledb instead of
     the Python libraries. Address list load balancing and failover settings
     will be used when establishing connections.
@@ -102,6 +102,10 @@ Common Changes
 #)  Added :meth:`oracledb.register_password_type()` to allow users to register
     a function that will be called when a password is supplied as a dictionary
     containing the key "type".
+#)  Added attributes :attr:`DbObjectAttribute.precision`,
+    :attr:`DbObjectAttribute.scale`, and :attr:`DbObjectAttribute.max_size` that
+    provide additional metadata about
+    :ref:`database object attributes <dbobjectattr>`.
 #)  Set the default value of :attr:`defaults.config_dir` to
     ``$ORACLE_HOME/network/admin`` if the environment variable ``ORACLE_HOME``
     is set.
@@ -115,10 +119,6 @@ Common Changes
     :ref:`full connect descriptor <conndescriptor>` are passed through
     unchanged. All other parameters in other sections of a full connect
     descriptor that are unrecognized by the driver are ignored.
-#)  Added attributes :attr:`DbObjectAttribute.precision`,
-    :attr:`DbObjectAttribute.scale`, and :attr:`DbObjectAttribute.max_size` that
-    provide additional metadata about
-    :ref:`database object attributes <dbobjectattr>`.
 #)  Fixed bug where some :ref:`DbObject <dbobjecttype>` attributes for database
     objects defined using ANSI names (including FLOAT and REAL) may have shown
     as integers.
