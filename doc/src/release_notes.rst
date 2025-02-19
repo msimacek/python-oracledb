@@ -99,7 +99,7 @@ Common Changes
     :meth:`AsyncConnection.fetch_df_batches()` to fetch data as DataFrames
     compliant with the Python DataFrame Interchange protocol.  See
     :ref:`dataframeformat`.
-#)  Added support for Oracle Database 23ai SPARSE vectors.
+#)  Added support for Oracle Database 23.7 SPARSE vectors.
 #)  Added support for :ref:`naming and caching connection pools
     <connpoolcache>` during creation, and retrieving them later from the
     python-oracledb pool cache with :meth:`oracledb.get_pool()`.
@@ -161,6 +161,7 @@ Common Changes
 #)  Internal change: improve handling of metadata.
 #)  Internal build tool change: bumped minimum Cython version to 3.0.10 to
     avoid bug in earlier versions.
+#)  Improved test suite and documentation.
 
 
 oracledb 2.5.1 (December 2024)
