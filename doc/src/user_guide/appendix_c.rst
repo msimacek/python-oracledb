@@ -265,7 +265,7 @@ Advanced Queuing (AQ) Differences from cx_Oracle
 
 Use the new :ref:`Advanced Queuing (AQ) <aqusermanual>` API instead of the
 older API which was deprecated in cx_Oracle 7.2 and is not available in
-python-oracledb. Note that AQ is only available in python-oracledb Thick mode.
+python-oracledb.
 
 Replace:
 
