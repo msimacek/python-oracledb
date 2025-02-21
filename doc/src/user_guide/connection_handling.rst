@@ -990,6 +990,9 @@ user name, password, a cache time, and :ref:`python-oracledb settings
     * - ``config_time_to_live``
       - How many seconds the configuration is cached for. Defaults to 86,400 seconds (24 hours).
       - Optional
+    * - ``config_time_to_live_grace_period``
+      - How many seconds an expired configuration can still be used if a new configuration cannot be obtained. Defaults to 1,800 seconds (30 minutes).
+      - Optional
     * - ``pyo``
       - See :ref:`pyoparams`.
       - Optional
@@ -1149,6 +1152,9 @@ keys that can be in the JSON file are listed below.
       - Required
     * - ``config_time_to_live``
       - How many seconds the configuration is cached for. Defaults to 86,400 seconds (24 hours).
+      - Optional
+    * - ``config_time_to_live_grace_period``
+      - How many seconds an expired configuration can still be used if a new configuration cannot be obtained. Defaults to 1,800 seconds (30 minutes).
       - Optional
     * - ``pyo``
       - See :ref:`pyoparams`.
@@ -1375,6 +1381,9 @@ The keys that can be added in Azure App Configuration are listed below:
     * - ``config_time_to_live``
       - How many seconds the configuration is cached for. Defaults to 86,400 seconds (24 hours).
       - Optional
+    * - ``config_time_to_live_grace_period``
+      - How many seconds an expired configuration can still be used if a new configuration cannot be obtained. Defaults to 1,800 seconds (30 minutes).
+      - Optional
     * - ``pyo``
       - See :ref:`pyoparams`.
       - Optional
@@ -1500,16 +1509,19 @@ When ``config_time_to_live`` is reached, the configuration is considered to be
 "softly expired" and subsequent python-oracledb connections will attempt to
 obtain the configuration again from the configuration provider. If it cannot be
 retrieved, python-oracledb will continue to use the previous configuration for
-up to 30 minutes, after which the cached configuration fully expires. Future
-connection attempts will try to retrieve the configuration from the provider
-but will fail if the new configuration cannot be obtained.
+up to ``config_time_to_live_grace_period`` seconds which defaults to 1,800
+seconds (30 minutes). After this grace period the cached configuration fully
+expires. Future connection attempts will try to retrieve the configuration from
+the provider but will fail if the new configuration cannot be obtained.
 
-An example of specifying ``config_time_to_live`` in a JSON file for the File or
-OCI Object Storage Centralized Configuration Providers is::
+An example of changing the cache time to 12 hours with an additional grace time
+of 10 minutes for the File or OCI Object Storage Centralized Configuration
+Providers is::
 
     {
         "connect_descriptor": "dbhost.example.com:1522/orclpdb",
-        "config_time_to_live": 43400,
+        "config_time_to_live": 43200,
+        "config_time_to_live_grace_period": 600,
         "pyo": {
             "stmtcachesize": 30,
             "min": 2,
