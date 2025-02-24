@@ -229,6 +229,7 @@ def get_client_version():
         if get_is_thin():
             value = (23, 7)
         else:
+            _initialize()
             value = oracledb.clientversion()[:2]
         PARAMETERS[name] = value
     return value
