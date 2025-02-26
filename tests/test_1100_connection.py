@@ -954,6 +954,30 @@ class TestCase(test_env.BaseTestCase):
         conn = test_env.get_connection()
         self.assertEqual(conn.stmtcachesize, orig_stmtcachesize)
 
+    def test_1157(self):
+        "1157 - test connect() with multiple parameters hooks"
+
+        def hook1(params):
+            order.append("first")
+
+        def hook2(params):
+            order.append("second")
+
+        def hook3(params):
+            order.append("third")
+
+        oracledb.register_params_hook(hook1)
+        oracledb.register_params_hook(hook2)
+        oracledb.register_params_hook(hook3)
+        try:
+            order = []
+            test_env.get_connection()
+            self.assertEqual(order, ["first", "second", "third"])
+        finally:
+            oracledb.unregister_params_hook(hook1)
+            oracledb.unregister_params_hook(hook2)
+            oracledb.unregister_params_hook(hook3)
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()
