@@ -90,8 +90,9 @@ def _get_credential(parameters):
             tokens.append(ManagedIdentityCredential(client_id=client_id))
 
     if len(tokens) == 0:
-        message = \
+        message = (
             "Authentication options were not available in Connection String"
+        )
         raise Exception(message)
     elif len(tokens) == 1:
         return tokens[0]
