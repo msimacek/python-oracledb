@@ -322,7 +322,6 @@ cdef class ThinMsgPropsImpl(BaseMsgPropsImpl):
         bytes msgid
         int32_t state
         object payload_obj
-        int32_t version
         BaseThinConnImpl _conn_impl
         bytes enq_txn_id
         bytes sender_agent_name
@@ -334,7 +333,6 @@ cdef class ThinMsgPropsImpl(BaseMsgPropsImpl):
         self.delay = TNS_AQ_MSG_NO_DELAY
         self.expiration = TNS_AQ_MSG_NO_EXPIRATION
         self.recipients = []
-        self.version = 1
         self.sender_agent_protocol = 0
 
     def get_num_attempts(self):

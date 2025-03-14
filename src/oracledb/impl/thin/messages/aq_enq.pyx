@@ -77,7 +77,7 @@ cdef class AqEnqMessage(AqBaseMessage):
         buf.write_ub4(0)                        # sequence deviation
         buf.write_uint8(1)                      # TOID of payload (pointer)
         buf.write_ub4(16)                       # TOID of payload length
-        buf.write_ub2(self.props_impl.version)
+        buf.write_ub2(TNS_AQ_MESSAGE_VERSION)
         if self.queue_impl.is_json:
             buf.write_uint8(0)                  # payload (pointer)
             buf.write_uint8(0)                  # RAW payload (pointer)

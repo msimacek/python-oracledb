@@ -105,10 +105,10 @@ cdef class AqDeqMessage(AqBaseMessage):
             buf.write_ub4(0)                    # correlation id len
         buf.write_uint8(1)                      # toid of payload
         buf.write_ub4(16)                       # toid length
-        buf.write_ub2(self.props_impl.version)  # version of type
+        buf.write_ub2(TNS_AQ_MESSAGE_VERSION)
         buf.write_uint8(1)                      # payload
         buf.write_uint8(1)                      # return msg id
-        buf.write_ub4(16)                       # mesg id length
+        buf.write_ub4(TNS_AQ_MESSAGE_ID_LENGTH)
         deq_flags = 0
         delivery_mode = self.deq_options_impl.delivery_mode
         if (delivery_mode == TNS_AQ_MSG_BUFFERED):
