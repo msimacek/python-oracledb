@@ -64,13 +64,8 @@ cdef class AqEnqMessage(AqBaseMessage):
         buf.write_uint8(1)                      # queue name (pointer)
         buf.write_ub4(len(queue_name_bytes))    # queue name length
         self._write_msg_props(buf, self.props_impl)
-
-        if self.props_impl.recipients is None:
-            buf.write_uint8(0)                  # recipients (pointer)
-            buf.write_ub4(0)                    # number of key/value pairs
-        else:
-            buf.write_uint8(1)
-            buf.write_ub4(len(self.props_impl.recipients) * 3)
+        buf.write_uint8(0)                      # recipients (pointer)
+        buf.write_ub4(0)                        # number of key/value pairs
         buf.write_ub4(self.enq_options_impl.visibility)
         buf.write_uint8(0)                      # relative message id
         buf.write_ub4(0)                        # relative message length
