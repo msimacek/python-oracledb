@@ -47,7 +47,6 @@ cdef class AqDeqMessage(AqBaseMessage):
         """
         cdef:
             uint32_t num_bytes
-            const char_type *ptr
             uint16_t keyword
             uint32_t imageLength
             ThinDbObjectImpl obj_impl
@@ -55,8 +54,9 @@ cdef class AqDeqMessage(AqBaseMessage):
         buf.read_ub4(&num_bytes)
         if num_bytes > 0:
             self._process_msg_props(buf, self.props_impl)
-            ptr = buf._get_raw(TNS_AQ_MESSAGE_ID_LENGTH)
-            self.props_impl.msgid = ptr[:TNS_AQ_MESSAGE_ID_LENGTH]
+            self.props_impl.recipients = self._process_recipients(buf)
+            self.props_impl.payload = self._process_payload(buf)
+            self.props_impl.msgid = self._process_msg_id(buf)
 
     cdef int _write_message(self, WriteBuffer buf) except -1:
         """

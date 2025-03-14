@@ -92,6 +92,14 @@ cdef class AqBaseMessage(Message):
                     elif keyword == TNS_AQ_EXT_KEYWORD_ORIGINAL_MSGID:
                         props_impl.original_msg_id = value
 
+    cdef bytes _process_msg_id(self, ReadBuffer buf):
+        """
+        Reads a message id from the buffer and returns it.
+        """
+        cdef const char_type *ptr
+        ptr = buf.read_raw_bytes(TNS_AQ_MESSAGE_ID_LENGTH)
+        return ptr[:TNS_AQ_MESSAGE_ID_LENGTH]
+
     cdef int _process_msg_props(self, ReadBuffer buf,
                                 ThinMsgPropsImpl props_impl) except -1:
         """
@@ -116,10 +124,6 @@ cdef class AqBaseMessage(Message):
         buf.skip_ub4()                              # flags
         if buf._caps.ttc_field_version >= TNS_CCAP_FIELD_VERSION_21_1:
             buf.skip_ub4()                          # shard number
-        buf.read_ub4(&temp32)                       # num recipients
-        if temp32 > 0:
-            errors._raise_err(errors.ERR_NOT_IMPLEMENTED)
-        props_impl.payload = self._process_payload(buf)
 
     cdef object _process_payload(self, ReadBuffer buf):
         """
@@ -148,6 +152,16 @@ cdef class AqBaseMessage(Message):
                 return payload
             elif not self.queue_impl.is_json:
                 return b''
+
+    cdef object _process_recipients(self, ReadBuffer buf):
+        """
+        Process recipients for a message. Currently this is unsupported.
+        """
+        cdef uint32_t temp32
+        buf.read_ub4(&temp32)
+        if temp32 > 0:
+            errors._raise_err(errors.ERR_NOT_IMPLEMENTED)
+        return []
 
     cdef int _write_msg_props(self, WriteBuffer buf,
                               ThinMsgPropsImpl props_impl) except -1:
