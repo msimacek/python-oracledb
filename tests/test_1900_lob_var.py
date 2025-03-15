@@ -624,7 +624,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(var.getvalue().read(), value)
 
     def test_1940(self):
-        "1940 - temporary LOB in/out without modification"
+        "1940 - temporary LOB in/out with modification"
         search_value = "test"
         replace_value = "replaced"
         initial_value = f"{search_value} - 1939"
