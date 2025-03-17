@@ -64,8 +64,10 @@ Common Changes
     :attr:`defaults.fetch_decimals` is set to *True*.
 #)  Fixed bug when binding a variable that was previously bound as an output
     variable in a DML RETURNING statement.
-#)  An error message that links to documention on setting up a protocol hook
-    function is now returned for "ldap" and "ldaps" connection strings.
+#)  An error message that links to :ref:`documentation <ldapconnections>` on
+    setting up a protocol hook function is now returned for LDAP and LDAPS URL
+    connection strings in python-oracledb thin mode, or when
+    :attr:`defaults.thick_mode_dsn_passthrough` is *False*.
 #)  Error ``DPY-2062: payload cannot be enqueued since it does not match the
     payload type supported by the queue`` is now raised when the payload of a
     message being enqueued is not supported by the queue. Previously,
