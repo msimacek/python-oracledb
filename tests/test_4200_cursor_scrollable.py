@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# Copyright (c) 2020, 2024, Oracle and/or its affiliates.
+# Copyright (c) 2020, 2025, Oracle and/or its affiliates.
 #
 # This software is dual-licensed to you under the Universal Permissive License
 # (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
@@ -26,14 +26,9 @@
 4200 - Module for testing scrollable cursors
 """
 
-import unittest
-
 import test_env
 
 
-@unittest.skipIf(
-    test_env.get_is_thin(), "thin mode doesn't support scrollable cursors yet"
-)
 class TestCase(test_env.BaseTestCase):
     def test_4200(self):
         "4200 - test creating a scrollable cursor"
@@ -51,12 +46,13 @@ class TestCase(test_env.BaseTestCase):
         cursor = self.conn.cursor(scrollable=True)
         cursor.arraysize = self.cursor.arraysize
         cursor.execute("select NumberCol from TestNumbers order by IntCol")
-        with self.assertRaisesFullCode("DPI-1027"):
+        with self.assertRaisesFullCode("DPY-2063"):
             cursor.scroll(12, "absolute")
 
     def test_4202(self):
         "4202 - test scrolling absolute (when in buffers)"
         cursor = self.conn.cursor(scrollable=True)
+        cursor.prefetchrows = 0
         cursor.arraysize = self.cursor.arraysize
         cursor.execute("select NumberCol from TestNumbers order by IntCol")
         cursor.fetchmany()
@@ -83,6 +79,7 @@ class TestCase(test_env.BaseTestCase):
         "4204 - test scrolling to first row in result set (in buffers)"
         cursor = self.conn.cursor(scrollable=True)
         cursor.arraysize = self.cursor.arraysize
+        cursor.prefetchrows = 0
         cursor.execute("select NumberCol from TestNumbers order by IntCol")
         cursor.fetchmany()
         cursor.scroll(mode="first")
@@ -94,6 +91,7 @@ class TestCase(test_env.BaseTestCase):
         "4205 - test scrolling to first row in result set (not in buffers)"
         cursor = self.conn.cursor(scrollable=True)
         cursor.arraysize = self.cursor.arraysize
+        cursor.prefetchrows = 0
         cursor.execute("select NumberCol from TestNumbers order by IntCol")
         cursor.fetchmany()
         cursor.fetchmany()
@@ -117,7 +115,7 @@ class TestCase(test_env.BaseTestCase):
         cursor = self.conn.cursor(scrollable=True)
         cursor.arraysize = self.cursor.arraysize
         cursor.execute("select NumberCol from TestNumbers order by IntCol")
-        with self.assertRaisesFullCode("DPI-1027"):
+        with self.assertRaisesFullCode("DPY-2063"):
             cursor.scroll(15)
 
     def test_4208(self):
@@ -125,13 +123,14 @@ class TestCase(test_env.BaseTestCase):
         cursor = self.conn.cursor(scrollable=True)
         cursor.arraysize = self.cursor.arraysize
         cursor.execute("select NumberCol from TestNumbers order by IntCol")
-        with self.assertRaisesFullCode("DPI-1027"):
+        with self.assertRaisesFullCode("DPY-2063"):
             cursor.scroll(-5)
 
     def test_4209(self):
         "4209 - test scrolling relative (when in buffers)"
         cursor = self.conn.cursor(scrollable=True)
         cursor.arraysize = self.cursor.arraysize
+        cursor.prefetchrows = 0
         cursor.execute("select NumberCol from TestNumbers order by IntCol")
         cursor.fetchmany()
         message = "array size must exceed 1 for this test to work correctly"
@@ -164,7 +163,7 @@ class TestCase(test_env.BaseTestCase):
         self.assertEqual(cursor.fetchall(), [])
         cursor.scroll(mode="first")
         self.assertEqual(cursor.fetchall(), [])
-        with self.assertRaisesFullCode("DPI-1027"):
+        with self.assertRaisesFullCode("DPY-2063"):
             cursor.scroll(1, mode="absolute")
 
     def test_4212(self):
@@ -209,6 +208,18 @@ class TestCase(test_env.BaseTestCase):
         cursor.fetchmany()
         with self.assertRaisesFullCode("DPY-2009"):
             cursor.scroll(mode="middle")
+
+    def test_4214(self):
+        "4214 - test scroll after fetching all rows"
+        cursor = self.conn.cursor(scrollable=True)
+        cursor.arraysize = 5
+        cursor.prefetchrows = 0
+        cursor.execute("select NumberCol from TestNumbers order by IntCol")
+        cursor.fetchall()
+        cursor.scroll(5, mode="absolute")
+        (value,) = cursor.fetchone()
+        self.assertEqual(value, 6.25)
+        self.assertEqual(cursor.rowcount, 5)
 
 
 if __name__ == "__main__":
