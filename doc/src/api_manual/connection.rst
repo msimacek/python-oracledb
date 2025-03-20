@@ -153,6 +153,10 @@ Connection Methods
         The data frame support in python-oracledb 3.1 is a pre-release and may
         change in a future version.
 
+    .. note::
+
+        This method is an extension to the DB API definition.
+
     .. versionadded:: 3.0.0
 
 .. method:: Connection.fetch_df_batches(statement, parameters=None, \
@@ -180,6 +184,10 @@ Connection Methods
 
         The data frame support in python-oracledb 3.1 is a pre-release and may
         change in a future version.
+
+    .. note::
+
+        This method is an extension to the DB API definition.
 
     .. versionadded:: 3.0.0
 
