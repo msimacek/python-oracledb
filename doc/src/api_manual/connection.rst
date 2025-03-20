@@ -146,6 +146,8 @@ Connection Methods
     :attr:`Cursor.prefetchrows` size is always set to the value of the explicit
     or default ``arraysize`` parameter value.
 
+    Any LOB fetched must be less than 1 GB.
+
     See :ref:`dataframeformat` for the supported data types and examples.
 
     .. note::
@@ -177,6 +179,8 @@ Connection Methods
     ``fetch_df_batches()``'s :attr:`Cursor.arraysize` and
     :attr:`Cursor.prefetchrows` sizes are always set to the value of the
     explicit or default ``size`` parameter value.
+
+    Any LOB fetched must be less than 1 GB.
 
     See :ref:`dataframeformat` for the supported data types and examples.
 
