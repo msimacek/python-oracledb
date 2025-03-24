@@ -42,6 +42,10 @@ Thick Mode Changes
 #)  Fixed bug resulting in a segfault when unable to load the Oracle Client
     libraries
     (`ODPI-C <https://github.com/oracle/odpi>`__ dependency update).
+#)  Fixed bug which resulted in error ``ORA-24328: illegal attribute value``
+    when calling :meth:`Connection.gettype()` with Oracle Client libraries
+    11.2
+    (`ODPI-C <https://github.com/oracle/odpi>`__ dependency update).
 #)  Improved error message when getting :attr:`Connection.max_open_cursors`
     when using Oracle Client libraries 11.2
     (`ODPI-C <https://github.com/oracle/odpi>`__ dependency update).
