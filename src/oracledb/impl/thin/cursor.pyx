@@ -83,8 +83,8 @@ cdef class BaseThinCursorImpl(BaseCursorImpl):
         """
         cdef:
             uint64_t desired_row = 0
+            uint32_t orientation = 0
             ExecuteMessage message
-            uint32_t orientation
 
         # check mode and calculate desired row
         if mode == "relative":
