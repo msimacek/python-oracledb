@@ -28,6 +28,7 @@
 
 import oracledb
 import test_env
+import threading
 
 
 class TestCase(test_env.BaseTestCase):
@@ -39,6 +40,15 @@ class TestCase(test_env.BaseTestCase):
         b"sample raw data 5",
         b"sample raw data 6",
     ]
+
+    def __deq_in_thread(self, results):
+        with test_env.get_connection() as conn:
+            queue = conn.queue("TEST_RAW_QUEUE")
+            queue.deqoptions.wait = 10
+            props = queue.deqone()
+            if props is not None:
+                results.append(props.payload)
+            conn.commit()
 
     def __verify_attr(self, obj, attrName, value):
         setattr(obj, attrName, value)
@@ -107,10 +117,17 @@ class TestCase(test_env.BaseTestCase):
         self.__verify_attr(options, "visibility", oracledb.ENQ_IMMEDIATE)
 
     def test_7805(self):
-        "7805 - test errors for invalid values for enqueue"
+        "7805 - test waiting for dequeue"
         queue = self.get_and_clear_queue("TEST_RAW_QUEUE")
+        results = []
+        thread = threading.Thread(target=self.__deq_in_thread, args=(results,))
+        thread.start()
         value = self.raw_data[0]
-        self.assertRaises(TypeError, queue.enqone, value)
+        props = self.conn.msgproperties(payload=value)
+        queue.enqone(props)
+        self.conn.commit()
+        thread.join()
+        self.assertEqual(results, [value])
 
     def test_7806(self):
         "7806 - test getting/setting message properties attributes"
