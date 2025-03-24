@@ -79,6 +79,7 @@ Common Changes
     python-oracledb Thick mode raised the error ``DPI-1071: payload type in
     message properties must match the payload type of the queue`` and thin mode
     raised an internal error.
+#)  Improved the test suite and documentation.
 
 
 oracledb 3.0.0 (March 2025)
