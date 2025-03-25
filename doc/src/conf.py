@@ -26,7 +26,7 @@ extensions = [
     "table_with_summary",
     "oracle_deprecated",
     "dbapi_extension",
-    "sphinx_rtd_theme"
+    "sphinx_rtd_theme",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
