@@ -14,8 +14,8 @@ supporting the Python Database API v2.0 Specification.
 All connections in an application use the same mode.  See :ref:`vsessconinfo`
 to verify which mode is in use.
 
-If you are upgrading a cx_Oracle application to python-oracledb, then refer to
-:ref:`upgrading83` for changes that may be needed.
+If you are upgrading from the obsolete cx_Oracle driver to python-oracledb,
+then refer to :ref:`upgrading83` for changes that may be needed.
 
 .. _enablingthick:
 
