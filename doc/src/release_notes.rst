@@ -27,8 +27,10 @@ Thick Mode Changes
 
 Common Changes
 ++++++++++++++
-#)  Miscellaneous grammar and spelling fixes by John Bampton (`PR 479
-    <https://github.com/oracle/python-oracledb/pull/479>`__).
+
+#)  Miscellaneous grammar and spelling fixes by John Bampton
+    (`PR 479 <https://github.com/oracle/python-oracledb/pull/479>`__).
+
 
 oracledb 3.1.0 (April 2025)
 ---------------------------
