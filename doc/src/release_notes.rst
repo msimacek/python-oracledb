@@ -30,6 +30,7 @@ Thick Mode Changes
 Common Changes
 ++++++++++++++
 
+#)  Added support for using the Cython 3.1 release.
 #)  Miscellaneous grammar and spelling fixes by John Bampton
     (`PR 479 <https://github.com/oracle/python-oracledb/pull/479>`__).
 
