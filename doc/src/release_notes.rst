@@ -30,6 +30,10 @@ Thick Mode Changes
 Common Changes
 ++++++++++++++
 
+#)  Fixed a bug resulting in a segfault when attempting to use an
+    :ref:`output type handler <outputtypehandlers>` while fetching data frames
+    with :meth:`Connection.fetch_df_all()` and
+    :meth:`Connection.fetch_df_batches()`.
 #)  Added support for using the Cython 3.1 release.
 #)  Miscellaneous grammar and spelling fixes by John Bampton
     (`PR 479 <https://github.com/oracle/python-oracledb/pull/479>`__).
