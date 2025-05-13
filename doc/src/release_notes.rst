@@ -30,23 +30,26 @@ Thick Mode Changes
 Common Changes
 ++++++++++++++
 
-#)  Fixed a bug resulting in a segfault when attempting to use an
-    :ref:`output type handler <outputtypehandlers>` while fetching data frames
-    with :meth:`Connection.fetch_df_all()` and
-    :meth:`Connection.fetch_df_batches()`
-    (`issue 486 <https://github.com/oracle/python-oracledb/issues/486>`__).
 #)  Added support for using the Cython 3.1 release
     (`issue 493 <https://github.com/oracle/python-oracledb/issues/493>`__).
-#)  Miscellaneous grammar and spelling fixes by John Bampton
-    (`PR 479 <https://github.com/oracle/python-oracledb/pull/479>`__).
+#)  Improvements to data frame fetching with :meth:`Connection.fetch_df_all()`
+    and :meth:`Connection.fetch_df_batches()`:
+
+    - Added support for converting an :ref:`OracleDataFrame
+      <oracledataframeobj>` object to a foreign data frame object more than
+      once
+      (`issue 470 <https://github.com/oracle/python-oracledb/issues/470>`__).
+    - Fixed a bug resulting in a segfault when attempting to use an
+      :ref:`output type handler <outputtypehandlers>` while fetching data frames
+      (`issue 486 <https://github.com/oracle/python-oracledb/issues/486>`__).
+    - Fixed memory corruption in data frame queries
+      (`issue 489 <https://github.com/oracle/python-oracledb/issues/489>`__).
 #)  Fixed parsing of the connection string in the
     :ref:`Azure App Centralized Configuration Provider
     <azureappstorageprovider>`.
-#)  Fixed memory corruption in DataFrame queries
-    (`issue 489 <https://github.com/oracle/python-oracledb/issues/489>`__).
-#)  Added support for converting an OracleDataFrame object to a foreign data
-    frame object more than once
-    (`issue 470 <https://github.com/oracle/python-oracledb/issues/470>`__)
+#)  Miscellaneous grammar and spelling fixes by John Bampton
+    (`PR 479 <https://github.com/oracle/python-oracledb/pull/479>`__).
+#)  Improved the test suite and documentation.
 
 
 oracledb 3.1.0 (April 2025)
