@@ -20,9 +20,10 @@ Thin Mode Changes
 #)  Emulate support for :meth:`Queue.deqmany()` with JSON payloads when using
     Oracle Database 21c by internally calling :meth:`Queue.deqone()` as many
     times as needed.
-#)  Fixed bug with some databases when a connection is killed. In some
-    scenarios :meth:`Connection.is_healthy()` would have incorrectly returned
-    the value *True* and in other cases a possible hang could occur.
+#)  Fixed bug with :meth:`Connection.is_healthy()` after a session is killed,
+    such as by a DBA running ALTER SYSTEM KILL SESSION. Previously, in some
+    databases, it could incorrectly return *True*, while in other cases it
+    could hang.
 
 Thick Mode Changes
 ++++++++++++++++++
