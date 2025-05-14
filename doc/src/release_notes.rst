@@ -45,6 +45,9 @@ Common Changes
       (`issue 486 <https://github.com/oracle/python-oracledb/issues/486>`__).
     - Fixed memory corruption in data frame queries
       (`issue 489 <https://github.com/oracle/python-oracledb/issues/489>`__).
+    - Fixed bug when fetching data to an OracleDataFrame with dates prior to
+      1970 and after 2038 when using Windows
+      (`isuue 483 <https://github.com/oracle/python-oracledb/issues/483>`__).
 #)  Fixed parsing of the connection string in the
     :ref:`Azure App Centralized Configuration Provider
     <azureappstorageprovider>`.
