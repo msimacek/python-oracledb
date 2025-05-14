@@ -27,6 +27,7 @@ Module for testing dataframes
 """
 import datetime
 import decimal
+import os
 import unittest
 
 import oracledb
@@ -49,7 +50,7 @@ DATASET_1 = [
         "Doe",
         "San Francisco",
         "USA",
-        datetime.date(1989, 8, 22),
+        datetime.date(1968, 8, 22),
         12132.40,
         400,
         datetime.datetime.now(),
@@ -60,7 +61,7 @@ DATASET_1 = [
         "Hero",
         "San Fransokyo",
         "Japansa",
-        datetime.date(1988, 8, 22),
+        datetime.date(2045, 8, 22),
         234234.32,
         400,
         datetime.datetime.now(),
@@ -75,7 +76,7 @@ DATASET_2 = [
         "Doe",
         "San Francisco",
         "USA",
-        datetime.date(1989, 8, 22),
+        datetime.date(1970, 1, 1),
         None,
         400,
         datetime.datetime.now(),
@@ -221,6 +222,16 @@ class TestCase(test_env.BaseTestCase):
         if not HAS_INTEROP:
             self.skipTest("missing pandas or pyarrow modules")
 
+    def __convert_date(self, value):
+        """
+        Converts a date to the format required by Arrow. This requires a
+        workaround due a bug on Windows in the fromtimestamp() method of dates.
+        """
+        if os.name == "nt":
+            epoch_date = datetime.datetime(1970, 1, 1)
+            return int((value - epoch_date).total_seconds())
+        return value.timestamp()
+
     def __convert_to_array(self, data, typ):
         """
         Convert raw data to an Arrow array using pyarrow.
@@ -233,11 +244,13 @@ class TestCase(test_env.BaseTestCase):
         elif isinstance(typ, pyarrow.TimestampType):
             if typ.unit == "s":
                 data = [
-                    datetime.datetime(v.year, v.month, v.day).timestamp()
+                    self.__convert_date(
+                        datetime.datetime(v.year, v.month, v.day)
+                    )
                     for v in data
                 ]
             else:
-                data = [value.timestamp() * 1000000 for value in data]
+                data = [self.__convert_date(value) * 1000000 for value in data]
         mask = [value is None for value in data]
         return pyarrow.array(data, typ, mask=mask)
 

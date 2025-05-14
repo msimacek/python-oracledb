@@ -29,6 +29,22 @@
 # form returned by the decoders to an appropriate Python value.
 #------------------------------------------------------------------------------
 
+cdef int convert_date_to_arrow_date(OracleArrowArray arrow_array,
+                                    OracleDataBuffer *buffer) except -1:
+    """
+    Converts a DATE, TIMESTAMP, TIMESTAMP WITH LOCAL TIME ZONE or TIMESTAMP
+    WITH TIME ZONE value value stored in the buffer to an Arrow date. A
+    workaround is needed for Windows as described in the Python documentation:
+    https://docs.python.org/3/library/datetime.html#datetime.date.fromtimestamp
+    """
+    dt = convert_date_to_python(buffer)
+    if IS_WINDOWS and not (1971 <= buffer.as_date.year <= 2038):
+        ts = int((dt - EPOCH_DATE).total_seconds() * arrow_array.factor)
+    else:
+        ts = int(dt.timestamp() * arrow_array.factor)
+    arrow_array.append_int64(ts)
+
+
 cdef object convert_date_to_python(OracleDataBuffer *buffer):
     """
     Converts a DATE, TIMESTAMP, TIMESTAMP WITH LOCAL TIME ZONE or TIMESTAMP
@@ -243,9 +259,7 @@ cdef int convert_oracle_data_to_arrow(OracleMetadata from_metadata,
         rb = &data.buffer.as_raw_bytes
         arrow_array.append_bytes(<void*> rb.ptr, rb.num_bytes)
     elif arrow_type == NANOARROW_TYPE_TIMESTAMP:
-        ts = int(convert_date_to_python(&data.buffer).timestamp() *
-                 arrow_array.factor)
-        arrow_array.append_int64(ts)
+        convert_date_to_arrow_date(arrow_array, &data.buffer)
     elif arrow_type == NANOARROW_TYPE_DECIMAL128:
         convert_number_to_arrow_decimal(arrow_array, &data.buffer)
 
