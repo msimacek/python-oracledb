@@ -20,13 +20,29 @@ Thin Mode Changes
 #)  Emulate support for :meth:`Queue.deqmany()` with JSON payloads when using
     Oracle Database 21c by internally calling :meth:`Queue.deqone()` as many
     times as needed.
+
+Thick Mode Changes
+++++++++++++++++++
+
+Common Changes
+++++++++++++++
+
+#)  Fixed bug when fetching data to an OracleDataFrame with dates prior to 1970
+    and after 2038 when using Windows
+    (`isuue 483 <https://github.com/oracle/python-oracledb/issues/483>`__).
+#)  Improved the test suite and documentation.
+
+
+oracledb 3.1.1 (May 2025)
+-------------------------
+
+Thin Mode Changes
++++++++++++++++++
+
 #)  Fixed bug with :meth:`Connection.is_healthy()` after a session is killed,
     such as by a DBA running ALTER SYSTEM KILL SESSION. Previously, in some
     databases, it could incorrectly return *True*, while in other cases it
     could hang.
-
-Thick Mode Changes
-++++++++++++++++++
 
 Common Changes
 ++++++++++++++
@@ -45,15 +61,12 @@ Common Changes
       (`issue 486 <https://github.com/oracle/python-oracledb/issues/486>`__).
     - Fixed memory corruption in data frame queries
       (`issue 489 <https://github.com/oracle/python-oracledb/issues/489>`__).
-    - Fixed bug when fetching data to an OracleDataFrame with dates prior to
-      1970 and after 2038 when using Windows
-      (`isuue 483 <https://github.com/oracle/python-oracledb/issues/483>`__).
+
 #)  Fixed parsing of the connection string in the
     :ref:`Azure App Centralized Configuration Provider
     <azureappstorageprovider>`.
 #)  Miscellaneous grammar and spelling fixes by John Bampton
     (`PR 479 <https://github.com/oracle/python-oracledb/pull/479>`__).
-#)  Improved the test suite and documentation.
 
 
 oracledb 3.1.0 (April 2025)
