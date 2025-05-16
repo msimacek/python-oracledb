@@ -116,12 +116,6 @@ cdef const char* DRIVER_INSTALLATION_URL = \
 cdef const char* ENCODING_UTF8 = "UTF-8"
 cdef const char* ENCODING_UTF16 = "UTF-16BE"
 
-# variables needed for workaround on Windows for dates that fall before 1970
-# or after 2038
-# https://docs.python.org/3/library/datetime.html#datetime.date.fromtimestamp
-cdef bint IS_WINDOWS = os.name == 'nt'
-cdef object EPOCH_DATE = datetime.datetime(1970, 1, 1)
-
 # protocols registered with the library
 REGISTERED_PROTOCOLS = {}
 

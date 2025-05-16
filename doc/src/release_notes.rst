@@ -27,9 +27,6 @@ Thick Mode Changes
 Common Changes
 ++++++++++++++
 
-#)  Fixed bug when fetching data to an OracleDataFrame with dates prior to 1970
-    and after 2038 when using Windows
-    (`isuue 483 <https://github.com/oracle/python-oracledb/issues/483>`__).
 #)  Improved the test suite and documentation.
 
 
