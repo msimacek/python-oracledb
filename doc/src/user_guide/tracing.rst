@@ -295,7 +295,7 @@ GUID-28E2DC75-E157-4C0A-94AB-117C205789B9>`__ columns. You may see other values
 if you have changed the defaults using the :ref:`Defaults object <defaults>`
 before connecting, set the equivalent connection or pool creation parameters,
 or set the attribute :attr:`Connection.module` as shown in
-:ref:`endtoendtracing`, and the views in :ref:`tracingbind`.
+:ref:`endtoendtracing`.
 
 .. list-table-with-summary:: Sample V$SESSION column values
     :header-rows: 1
