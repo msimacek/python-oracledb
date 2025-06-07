@@ -974,14 +974,12 @@ Common Changes
     <https://github.com/oracle/python-oracledb/issues/250>`__).
 #)  Added properties :data:`FetchInfo.domain_schema`,
     :data:`FetchInfo.domain_name` and :data:`FetchInfo.annotations` for the
-    `SQL domain <https://docs.oracle.com/en/database/oracle/oracle-database/
-    23/sqlrf/create-domain.html#GUID-17D3A9C6-D993-4E94-BF6B-CACA56581F41>`__
-    and `annotations <https://docs.oracle.com/en/database/oracle/
-    oracle-database/23/sqlrf/annotations_clause.html#
-    GUID-1AC16117-BBB6-4435-8794-2B99F8F68052>`__
-    associated with columns that are being fetched. SQL domains and annotations
-    require Oracle Database 23ai. If using python-oracledb Thick mode, Oracle
-    Client 23ai is also required.
+    `SQL domain <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-
+    17D3A9C6-D993-4E94-BF6B-CACA56581F41>`__ and `annotations
+    <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-1AC16117-
+    BBB6-4435-8794-2B99F8F68052>`__ associated with columns that are being
+    fetched. SQL domains and annotations require Oracle Database 23ai. If using
+    python-oracledb Thick mode, Oracle Client 23ai is also required.
 #)  Added parameter ``data`` to :meth:`Connection.createlob()` to allow data to
     be written at LOB creation time.
 #)  Added type :data:`~oracledb.DB_TYPE_XMLTYPE` to represent data of type
