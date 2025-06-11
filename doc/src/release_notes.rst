@@ -37,7 +37,7 @@ Thin Mode Changes
 #)  Fixed bug resulting in explicit request boundaries to aid planned database
     maintenance not being sent when using connection pools with asyncio.
 #)  Fixed bug resulting in ``TypeError`` when using
-    :attr:`DeqOptions.correlation`` for buffered delivery mode.
+    :attr:`DeqOptions.correlation` for buffered delivery mode.
 
 Thick Mode Changes
 ++++++++++++++++++
