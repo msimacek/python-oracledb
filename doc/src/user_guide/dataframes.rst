@@ -108,32 +108,42 @@ Oracle Database will result in an exception. :ref:`Output type handlers
 
     * - Oracle Database Type
       - Arrow Data Type
-    * - DB_TYPE_NUMBER
-      - DECIMAL128, INT64, or DOUBLE
-    * - DB_TYPE_CHAR
-      - STRING
-    * - DB_TYPE_VARCHAR
-      - STRING
-    * - DB_TYPE_BINARY_FLOAT
-      - FLOAT
     * - DB_TYPE_BINARY_DOUBLE
       - DOUBLE
+    * - DB_TYPE_BINARY_FLOAT
+      - FLOAT
+    * - DB_TYPE_BLOB
+      - LARGE_BINARY
     * - DB_TYPE_BOOLEAN
       - BOOLEAN
+    * - DB_TYPE_CHAR
+      - STRING
+    * - DB_TYPE_CLOB
+      - LARGE_STRING
     * - DB_TYPE_DATE
       - TIMESTAMP
+    * - DB_TYPE_LONG
+      - LARGE_STRING
+    * - DB_TYPE_LONG_RAW
+      - LARGE_BINARY
+    * - DB_TYPE_NCHAR
+      - STRING
+    * - DB_TYPE_NCLOB
+      - LARGE_STRING
+    * - DB_TYPE_NUMBER
+      - DECIMAL128, INT64, or DOUBLE
+    * - DB_TYPE_NVARCHAR
+      - STRING
+    * - DB_TYPE_RAW
+      - BINARY
     * - DB_TYPE_TIMESTAMP
       - TIMESTAMP
     * - DB_TYPE_TIMESTAMP_LTZ
       - TIMESTAMP
     * - DB_TYPE_TIMESTAMP_TZ
       - TIMESTAMP
-    * - DB_TYPE_CLOB
-      - LARGE_STRING
-    * - DB_TYPE_BLOB
-      - LARGE_BINARY
-    * - DB_TYPE_RAW
-      - BINARY
+    * - DB_TYPE_VARCHAR
+      - STRING
 
 When converting Oracle Database NUMBERs:
 
