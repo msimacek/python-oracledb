@@ -214,8 +214,8 @@ When converting Oracle Database DATEs and TIMESTAMPs:
 
 - Arrow TIMESTAMPs will not have timezone data.
 
-- For Oracle Database DATE types, the Arrow TIMESTAMP will have a time unit of
-  "seconds".
+- For Oracle Database DATE columns, the Arrow TIMESTAMP will have a time unit
+  of "seconds".
 
 - For Oracle Database TIMESTAMP types, the Arrow TIMESTAMP time unit depends on
   the Oracle type's fractional precision as shown in the table below:
