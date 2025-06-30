@@ -1000,6 +1000,12 @@ class TestCase(test_env.BaseTestCase):
         (fetched_value,) = self.cursor.fetchone()
         self.assertEqual(fetched_value, value)
 
+    def test_4369(self):
+        "4369 - access cursor.rowcount after closing connection"
+        with test_env.get_connection() as conn:
+            cursor = conn.cursor()
+        self.assertEqual(cursor.rowcount, -1)
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()

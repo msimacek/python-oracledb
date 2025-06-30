@@ -913,6 +913,12 @@ class TestCase(test_env.BaseAsyncTestCase):
                     nested_rows, [("Nested String for Top Level String 2",)]
                 )
 
+    async def test_6353(self):
+        "6353 - access cursor.rowcount after closing connection"
+        async with test_env.get_connection_async() as conn:
+            cursor = conn.cursor()
+        self.assertEqual(cursor.rowcount, -1)
+
 
 if __name__ == "__main__":
     test_env.run_test_cases()
