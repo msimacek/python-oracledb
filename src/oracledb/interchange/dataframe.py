@@ -29,54 +29,23 @@
 # https://data-apis.org/dataframe-protocol/latest/API.html
 # -----------------------------------------------------------------------------
 
-from typing import Any, Dict, Iterable, List, Optional, Sequence
+from typing import List
 
-from .column import OracleColumn
-
-from .protocol import DataFrame
+from .nanoarrow_bridge import OracleArrowArray
 
 
-class OracleDataFrame(DataFrame):
+class OracleDataFrame:
     """
-    OracleDataFrame is an implementation of the DataFrame Interchange Protocol.
-    It provides an interface for exchanging tabular data between different data
-    frame libraries (e.g. pandas, pyarrow, polars).
+    OracleDataFrame implements the Arrow PyCapsule interface which provides an
+    interface for exchanging tabular data between different data frame
+    libraries (e.g. pandas, pyarrow, polars).
     """
 
-    def __init__(
-        self,
-        oracle_arrow_arrays: List,
-        allow_copy: bool = True,
-    ):
-        self._cols = []
-        self._cols_map = {}
-        self._rows = None
-        self._arrays = oracle_arrow_arrays
-        for ora_arrow_array in oracle_arrow_arrays:
-            column = OracleColumn(ora_arrow_array=ora_arrow_array)
-            self._rows = column.size()
-            self._cols.append(column)
-            self._cols_map[ora_arrow_array.name] = column
-        self.allow_copy = allow_copy
-
-    def __dataframe__(
-        self,
-        nan_as_null: bool = False,  # noqa: FBT001
-        allow_copy: bool = True,  # noqa: FBT001
-    ) -> DataFrame:
-        """
-        Returns a data frame adhering to the DataFrame Interchange protocol.
-        """
-        return self
-
-    def get_chunks(
-        self, n_chunks: Optional[int] = None
-    ) -> Iterable[DataFrame]:
-        """
-        Returns an iterator for each of the chunks in the data frame. Since
-        there is currently only one chunk, this simply returns itself.
-        """
-        yield self
+    def __init__(self, arrays: List):
+        self._arrays = arrays
+        self._arrays_by_name = {}
+        for array in arrays:
+            self._arrays_by_name[array.name] = array
 
     def column_arrays(self) -> List:
         """
@@ -89,9 +58,9 @@ class OracleDataFrame(DataFrame):
         """
         Returns a list of the names of the columns in the data frame.
         """
-        return list(self._cols_map.keys())
+        return [a.name for a in self._arrays]
 
-    def get_column(self, i: int) -> OracleColumn:
+    def get_column(self, i: int) -> OracleArrowArray:
         """
         Returns a column from the data frame given its zero-based index. If the
         index is out of range, an IndexError exception is raised.
@@ -101,63 +70,27 @@ class OracleDataFrame(DataFrame):
                 f"Column index {i} is out of bounds for "
                 f"DataFrame with {self.num_columns()} columns"
             )
-        return self._cols[i]
+        return self._arrays[i]
 
-    def get_column_by_name(self, name: str) -> OracleColumn:
+    def get_column_by_name(self, name: str) -> OracleArrowArray:
         """
         Returns a column from the data frame given the name of the column. If
         the column name is not found, a KeyError exception is raised.
         """
-        if name not in self._cols_map:
+        try:
+            return self._arrays_by_name[name]
+        except KeyError:
             raise KeyError(f"Column {name} not found in DataFrame")
-        return self._cols_map[name]
-
-    def get_columns(self) -> List[OracleColumn]:
-        """
-        Returns a list of all of the columns in the data frame.
-        """
-        return self._cols
-
-    @property
-    def metadata(self) -> Dict[str, Any]:
-        """
-        Returns metadata for the data frame. Currently this returns
-        information about the number of columns (num_columns), number of rows
-        (num_rows) and number of chunks (num_chunks).
-        """
-        return {
-            "num_columns": self.num_columns(),
-            "num_rows": self.num_rows(),
-            "num_chunks": self.num_chunks(),
-        }
-
-    def num_chunks(self) -> int:
-        """
-        Returns the number of chunks (contiguous memory blocks) in the data
-        frame. Currently this always returns 1.
-        """
-        return 1
 
     def num_columns(self) -> int:
         """
         Returns the number of columns in the data frame.
         """
-        return len(self._cols)
+        return len(self._arrays)
 
     def num_rows(self) -> int:
         """
         Returns the number of rows in the data frame.
         """
-        return self._rows
-
-    def select_columns(self, indices: Sequence[int]) -> "DataFrame":
-        """
-        Create a new DataFrame by selecting a subset of columns by index.
-        """
-        raise NotImplementedError()
-
-    def select_columns_by_name(self, names: Sequence[str]) -> "DataFrame":
-        """
-        Create a new DataFrame by selecting a subset of columns by name.
-        """
-        raise NotImplementedError()
+        if self._arrays:
+            return len(self._arrays[0])

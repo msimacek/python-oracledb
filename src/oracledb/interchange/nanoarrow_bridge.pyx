@@ -639,52 +639,6 @@ cdef class OracleArrowArray:
         _check_nanoarrow(ArrowArrayFinishBuildingDefault(self.arrow_array,
                                                          NULL))
 
-    def get_buffer_info(self):
-        """
-        Get buffer information required by the dataframe interchange logic.
-        """
-        cdef:
-            int64_t n_buffers = self.arrow_array.n_buffers
-            ArrowBufferView *buffer
-            ArrowArrayView view
-        _check_nanoarrow(ArrowArrayViewInitFromArray(&view, self.arrow_array))
-
-        # initialize all buffers to None to begin with
-        buffers = {
-            "validity": None,
-            "offsets": None,
-            "data": None
-        }
-
-        # validity buffer
-        if n_buffers > 0 and self.arrow_array.null_count > 0:
-            buffer = &view.buffer_views[0]
-            buffers["validity"] = (
-                buffer.size_bytes,
-                <uintptr_t> buffer.data.data
-            )
-
-        # data / offset buffer
-        if n_buffers == 2:
-            buffer = &view.buffer_views[1]
-            buffers["data"] = (
-                buffer.size_bytes,
-                <uintptr_t> buffer.data.data
-            )
-        elif n_buffers == 3:
-            buffer = &view.buffer_views[1]
-            buffers["offsets"] = (
-                buffer.size_bytes,
-                <uintptr_t> buffer.data.data
-            )
-            buffer = &view.buffer_views[2]
-            buffers["data"] = (
-                buffer.size_bytes,
-                <uintptr_t> buffer.data.data
-            )
-
-        return buffers
-
     @property
     def null_count(self) -> int:
         return self.arrow_array.null_count
