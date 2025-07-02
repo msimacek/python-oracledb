@@ -33,6 +33,9 @@ Thick Mode Changes
 Common Changes
 ++++++++++++++
 
+#)  Remove use of the Data Interchange Protocol in :ref:`OracleDataFrames
+    <oracledataframeobj>`. Note the data frame support in python-oracledb 3.3
+    is a pre-release, and may change in a future version.
 
 oracledb `3.2.0 <https://github.com/oracle/python-oracledb/compare/v3.1.1...v3.2.0>`__ (June 2025)
 --------------------------------------------------------------------------------------------------
