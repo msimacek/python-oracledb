@@ -316,7 +316,7 @@ from .sparse_vector import (
     SparseVector as SparseVector,
 )
 
-from .interchange import (
+from .dataframe import (
     OracleDataFrame as OracleDataFrame,
 )
 

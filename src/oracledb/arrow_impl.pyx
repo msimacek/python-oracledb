@@ -1,4 +1,4 @@
-# -----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Copyright (c) 2025, Oracle and/or its affiliates.
 #
 # This software is dual-licensed to you under the Universal Permissive License
@@ -20,14 +20,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# -----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
-# -----------------------------------------------------------------------------
-# __init__.py
+#------------------------------------------------------------------------------
+# arrow_impl.pyx
 #
-# Package initialization module.
-# -----------------------------------------------------------------------------
+# Cython file for the Arrow implementation.
+#------------------------------------------------------------------------------
 
-from .dataframe import (
-    OracleDataFrame as OracleDataFrame,
-)
+# cython: language_level=3
+
+cimport cpython
+
+from libc.stdint cimport uintptr_t
+from libc.string cimport memcpy, strlen, strchr
+
+from . import errors
+
+include "impl/arrow/array.pyx"

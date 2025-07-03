@@ -22,19 +22,12 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-# nanoarrow_bridge.pyx
+# array.pyx
 #
 # Cython wrapper around the Arrow C Data interface
 #------------------------------------------------------------------------------
 
-cimport cpython
-
-from libc.stdint cimport uintptr_t
-from libc.string cimport memcpy, strlen, strchr
-
-from .. import errors
-
-cdef extern from "nanoarrow/nanoarrow.c":
+cdef extern from "nanoarrow.c":
 
     ctypedef int ArrowErrorCode
 

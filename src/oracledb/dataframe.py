@@ -25,13 +25,13 @@
 # -----------------------------------------------------------------------------
 # dataframe.py
 #
-# Implement DataFrame class as documented in the standard
-# https://data-apis.org/dataframe-protocol/latest/API.html
+# Implement a data frame that can be used for efficiently transferring Arrow
+# array data to other data frame libraries.
 # -----------------------------------------------------------------------------
 
 from typing import List
 
-from .nanoarrow_bridge import OracleArrowArray
+from .arrow_impl import OracleArrowArray
 
 
 class OracleDataFrame:

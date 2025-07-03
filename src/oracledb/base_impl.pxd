@@ -39,7 +39,7 @@ cimport cpython.datetime as cydatetime
 
 ctypedef unsigned char char_type
 
-from .interchange.nanoarrow_bridge cimport (
+from .arrow_impl cimport (
     ArrowTimeUnit,
     ArrowType,
     OracleArrowArray,

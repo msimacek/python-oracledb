@@ -44,7 +44,7 @@ from cpython cimport array
 
 from .constants import VECTOR_META_FLAG_SPARSE_VECTOR
 
-from .interchange.nanoarrow_bridge cimport (
+from .arrow_impl cimport (
     NANOARROW_TIME_UNIT_SECOND,
     NANOARROW_TIME_UNIT_MILLI,
     NANOARROW_TIME_UNIT_MICRO,

@@ -23,10 +23,10 @@
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# nanoarrow_bridge.pxd
+# arrow_impl.pxd
 #
-# Cython definition file declaring the classes used for bridging between the
-# nanoarrow C interface and Python.
+# Cython definition file declaring the classes used for implementing the Arrow
+# interface.
 #------------------------------------------------------------------------------
 
 # cython: language_level = 3
