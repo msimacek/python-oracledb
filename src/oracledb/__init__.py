@@ -316,8 +316,12 @@ from .sparse_vector import (
     SparseVector as SparseVector,
 )
 
+from .arrow_array import (
+    ArrowArray as ArrowArray,
+)
+
 from .dataframe import (
-    OracleDataFrame as OracleDataFrame,
+    DataFrame as DataFrame,
 )
 
 from . import builtin_hooks

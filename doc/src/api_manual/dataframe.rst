@@ -46,10 +46,6 @@ OracleDataFrame Methods
 
     Returns a list of the column names in the data frame.
 
-.. method:: OracleDataFrame.get_chunks(n_chunks)
-
-    Returns itself, since python-oracledb only uses one chunk.
-
 .. method:: OracleDataFrame.get_column(i)
 
     Returns an :ref:`OracleArrowArray <oraclearrowarrayobj>` object for the column

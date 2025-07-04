@@ -37,4 +37,6 @@ from libc.string cimport memcpy, strlen, strchr
 
 from . import errors
 
+include "impl/arrow/utils.pyx"
 include "impl/arrow/array.pyx"
+include "impl/arrow/dataframe.pyx"
