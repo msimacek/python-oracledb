@@ -31,21 +31,25 @@
 
 from typing import List
 
-from .arrow_impl import OracleArrowArray
+from .arrow_array import ArrowArray
+from . import errors
 
 
-class OracleDataFrame:
-    """
-    OracleDataFrame implements the Arrow PyCapsule interface which provides an
-    interface for exchanging tabular data between different data frame
-    libraries (e.g. pandas, pyarrow, polars).
-    """
+class DataFrame:
+    _impl = None
 
-    def __init__(self, arrays: List):
-        self._arrays = arrays
-        self._arrays_by_name = {}
-        for array in arrays:
-            self._arrays_by_name[array.name] = array
+    def __init__(self):
+        errors._raise_err(errors.ERR_INTERNAL_CREATION_REQUIRED)
+
+    @classmethod
+    def _from_impl(cls, impl):
+        df = cls.__new__(cls)
+        df._impl = impl
+        df._arrays = [ArrowArray._from_impl(a) for a in impl.get_arrays()]
+        df._arrays_by_name = {}
+        for array in df._arrays:
+            df._arrays_by_name[array.name] = array
+        return df
 
     def column_arrays(self) -> List:
         """
@@ -60,7 +64,7 @@ class OracleDataFrame:
         """
         return [a.name for a in self._arrays]
 
-    def get_column(self, i: int) -> OracleArrowArray:
+    def get_column(self, i: int) -> ArrowArray:
         """
         Returns a column from the data frame given its zero-based index. If the
         index is out of range, an IndexError exception is raised.
@@ -72,7 +76,7 @@ class OracleDataFrame:
             )
         return self._arrays[i]
 
-    def get_column_by_name(self, name: str) -> OracleArrowArray:
+    def get_column_by_name(self, name: str) -> ArrowArray:
         """
         Returns a column from the data frame given the name of the column. If
         the column name is not found, a KeyError exception is raised.
@@ -92,5 +96,4 @@ class OracleDataFrame:
         """
         Returns the number of rows in the data frame.
         """
-        if self._arrays:
-            return len(self._arrays[0])
+        return len(self._arrays[0])
