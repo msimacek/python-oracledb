@@ -48,13 +48,6 @@ cdef extern from "nanoarrow.h":
         void (*release)(ArrowArray*)
         void *private_data
 
-    cdef struct ArrowArrayStream:
-        int (*get_schema)(ArrowArrayStream *, ArrowSchema * out)
-        int (*get_next)(ArrowArrayStream * stream, ArrowArray * out)
-        const char * (*get_last_error)(ArrowArrayStream *)
-        void (*release)(ArrowArrayStream *)
-        void *private_data
-
     cdef struct ArrowSchema:
         const char *format;
         const char *name;

@@ -35,6 +35,8 @@ cdef extern from "nanoarrow.c":
     ctypedef void (*ArrowBufferDeallocatorCallback)
 
     cdef struct ArrowArrayStream:
+        int (*get_schema)(ArrowArrayStream *, ArrowSchema * out)
+        int (*get_next)(ArrowArrayStream * stream, ArrowArray * out)
         void (*release)(ArrowArrayStream*)
 
     cdef struct ArrowBufferAllocator:
