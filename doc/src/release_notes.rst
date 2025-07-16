@@ -42,6 +42,8 @@ Common Changes
 
 #)  Changes to :ref:`data frame <dataframeformat>` support:
 
+    - Added support for binding data frames to :meth:`Cursor.executemany()` and
+      :meth:`AsyncCursor.executemany()` for fast data ingestion.
     - Added internal support for the ArrowArrayStream PyCapsule interface to
       simplify :ref:`OracleDataFrame <oracledataframeobj>` use.
     - Remove use of the DataFrame Interchange Protocol in
