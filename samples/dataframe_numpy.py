@@ -52,7 +52,7 @@ connection = oracledb.connect(
 #
 # Fetching all records
 
-# Get an OracleDataFrame
+# Get a python-oracledb DataFrame
 # Adjust arraysize to tune the query fetch performance
 sql = "select id from SampleQueryTab order by id"
 odf = connection.fetch_df_all(statement=sql, arraysize=100)
@@ -103,7 +103,7 @@ rows = [
 with connection.cursor() as cursor:
     cursor.executemany("insert into SampleVectorTab (v64) values (:1)", rows)
 
-# Get an OracleDataFrame
+# Get a python-oracledb DataFrame
 # Adjust arraysize to tune the query fetch performance
 sql = "select v64 from SampleVectorTab order by id"
 odf = connection.fetch_df_all(statement=sql, arraysize=100)
