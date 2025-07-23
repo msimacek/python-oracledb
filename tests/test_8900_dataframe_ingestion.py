@@ -28,38 +28,30 @@ Module for testing DataFrame ingestion
 
 import datetime
 import decimal
-import unittest
 
-try:
-    import pyarrow
-
-    HAS_INTEROP = True
-except ImportError:
-    HAS_INTEROP = False
+import pyarrow
 
 import test_env
 
-if HAS_INTEROP:
-    SPARSE_VECTOR_FIELDS_FLOAT32 = [
-        ("num_dimensions", pyarrow.int64()),
-        ("indices", pyarrow.list_(pyarrow.uint32())),
-        ("values", pyarrow.list_(pyarrow.float32())),
-    ]
+SPARSE_VECTOR_FIELDS_FLOAT32 = [
+    ("num_dimensions", pyarrow.int64()),
+    ("indices", pyarrow.list_(pyarrow.uint32())),
+    ("values", pyarrow.list_(pyarrow.float32())),
+]
 
-    SPARSE_VECTOR_FIELDS_FLOAT64 = [
-        ("num_dimensions", pyarrow.int64()),
-        ("indices", pyarrow.list_(pyarrow.uint32())),
-        ("values", pyarrow.list_(pyarrow.float64())),
-    ]
+SPARSE_VECTOR_FIELDS_FLOAT64 = [
+    ("num_dimensions", pyarrow.int64()),
+    ("indices", pyarrow.list_(pyarrow.uint32())),
+    ("values", pyarrow.list_(pyarrow.float64())),
+]
 
-    SPARSE_VECTOR_FIELDS_INT8 = [
-        ("num_dimensions", pyarrow.int64()),
-        ("indices", pyarrow.list_(pyarrow.uint32())),
-        ("values", pyarrow.list_(pyarrow.int8())),
-    ]
+SPARSE_VECTOR_FIELDS_INT8 = [
+    ("num_dimensions", pyarrow.int64()),
+    ("indices", pyarrow.list_(pyarrow.uint32())),
+    ("values", pyarrow.list_(pyarrow.int8())),
+]
 
 
-@unittest.skipUnless(HAS_INTEROP, "missing pyarrow module")
 class TestCase(test_env.BaseTestCase):
 
     def test_8900(self):
