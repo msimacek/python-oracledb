@@ -67,8 +67,7 @@ version = {attr = "oracledb.version.__version__"}
 
 [tool.black]
 line-length = 79
-target-version = ["py39", "py310", "py311", "py312", "py313", "py314"]
-required-version = 24
+required-version = 25
 
 [tool.ruff]
 line-length = 79
