@@ -355,6 +355,7 @@ create table &main_user..TestAllTypes (
     IntValue                            integer,
     SmallIntValue                       smallint,
     RealValue                           real,
+    DecimalValue                        number(20, 6),
     DoublePrecisionValue                double precision,
     FloatValue                          float,
     BinaryFloatValue                    binary_float,
