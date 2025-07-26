@@ -760,6 +760,7 @@ class TestCase(test_env.BaseTestCase):
             ("INTVALUE", oracledb.DB_TYPE_NUMBER, 38, 0, None),
             ("SMALLINTVALUE", oracledb.DB_TYPE_NUMBER, 38, 0, None),
             ("REALVALUE", oracledb.DB_TYPE_NUMBER, 63, -127, None),
+            ("DECIMALVALUE", oracledb.DB_TYPE_NUMBER, 20, 6, None),
             ("DOUBLEPRECISIONVALUE", oracledb.DB_TYPE_NUMBER, 126, -127, None),
             ("FLOATVALUE", oracledb.DB_TYPE_NUMBER, 126, -127, None),
             (
