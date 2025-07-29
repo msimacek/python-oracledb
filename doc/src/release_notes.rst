@@ -30,7 +30,7 @@ Thin Mode Changes
     bind variable immediately following a query that returned multiple
     duplicate rows.
 #)  Fixed bug with connect strings containing ``SOURCE_ROUTE=YES`` where the
-    second host is unresolvable by the client.
+    second host is unresolvable by the host running python-oracledb.
 
 Thick Mode Changes
 ++++++++++++++++++
