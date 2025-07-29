@@ -41,6 +41,14 @@ if not sample_env.get_is_thin():
 if sample_env.get_server_version() < (23, 6):
     sys.exit("This example requires Oracle Database 23.6 or later.")
 
+# this script works with thin mode, or with thick mode using Oracle Client
+# 23.6 or later
+if not oracledb.is_thin_mode() and oracledb.clientversion()[:2] < (23, 6):
+    sys.exit(
+        "This example requires python-oracledb thin mode, or Oracle Client"
+        " 23.6 or later"
+    )
+
 TXN_ID = b"my_transaction_id"
 
 pool = oracledb.create_pool(
@@ -58,14 +66,6 @@ print("Example 1:")
 # Start and suspend a transaction
 with pool.acquire() as connection1:
 
-    # this script works with thin mode, or with thick mode using Oracle Client
-    # 23.6 or later
-    if not connection1.thin and oracledb.clientversion()[:2] < (23, 6):
-        sys.exit(
-            "This example requires python-oracledb thin mode, or Oracle Client"
-            " 23.6 or later"
-        )
-
     # Immediately begin the transaction
     connection1.begin_sessionless_transaction(transaction_id=TXN_ID)
 
@@ -81,7 +81,7 @@ with pool.acquire() as connection1:
         for r in cursor1b.execute("select * from mytab"):
             print(r)
 
-# Resume and complete the transaction
+# Resume and complete the transaction in a different connection
 with pool.acquire() as connection2:
 
     # Immediately resume the transaction
@@ -131,7 +131,7 @@ with pool.acquire() as connection3:
         for r in cursor3b.execute("select * from mytab"):
             print(r)
 
-# Resume and complete the transaction
+# Resume and complete the transaction in a different connection
 with pool.acquire() as connection4:
     connection4.resume_sessionless_transaction(
         transaction_id=TXN_ID,
