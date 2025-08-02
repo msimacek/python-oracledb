@@ -22,8 +22,12 @@ Defaults Attributes
 
 .. attribute:: defaults.arraysize
 
-    The default value for :attr:`Cursor.arraysize`. This is a query tuning
-    attribute, see :ref:`Tuning Fetch Performance <tuningfetch>`.
+    The default value for :attr:`Cursor.arraysize` and
+    :attr:`AsyncCursor.arraysize`.
+
+    This is an attribute for tuning the performance of fetching rows from
+    Oracle Database. It does not affect data insertion. See :ref:`Tuning Fetch
+    Performance <tuningfetch>`.
 
     This attribute has an initial value of *100*.
 
@@ -139,12 +143,17 @@ Defaults Attributes
 
 .. attribute:: defaults.prefetchrows
 
-    The default value for :attr:`Cursor.prefetchrows`. This is a query tuning
-    attribute, see :ref:`Tuning Fetch Performance <tuningfetch>`.
+    The default value for :attr:`Cursor.prefetchrows` and
+    :attr:`AsyncCursor.prefetchrows`.
+
+    This is an attribute for tuning the performance of fetching rows from
+    Oracle Database. It does not affect data insertion. See :ref:`Tuning Fetch
+    Performance <tuningfetch>`.
 
     This attribute is ignored when using :meth:`Connection.fetch_df_all()` or
     :meth:`Connection.fetch_df_batches()` since these methods always set the
-    internal prefetch size to the relevant arraysize or size value.
+    internal prefetch size to their relevant ``arraysize`` or ``size``
+    parameter value.
 
     This attribute has an initial value of *2*.
 
@@ -163,8 +172,10 @@ Defaults Attributes
 
 .. attribute:: defaults.stmtcachesize
 
-    The default value for :attr:`Connection.stmtcachesize` and
-    :attr:`ConnectionPool.stmtcachesize`. This is a tuning attribute, see
+    The default value for :attr:`Connection.stmtcachesize`,
+    :attr:`ConnectionPool.stmtcachesize`,
+    :attr:`AsyncConnection.stmtcachesize`, and
+    :attr:`AsyncConnectionPool.stmtcachesize`. This is a tuning attribute, see
     :ref:`stmtcache`.
 
     This attribute has an initial value of *20*.
