@@ -6,6 +6,9 @@ API: AsyncCursor Objects
 
 .. currentmodule:: oracledb
 
+AsyncCursor Class
+=================
+
 .. autoclass:: AsyncCursor
 
     An AsyncCursor object should be created with

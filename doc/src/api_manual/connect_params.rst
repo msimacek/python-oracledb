@@ -6,6 +6,9 @@ API: ConnectParams Objects
 
 .. currentmodule:: oracledb
 
+ConnectParams Class
+===================
+
 .. autoclass:: ConnectParams
 
     See :ref:`usingconnparams` for more information.
