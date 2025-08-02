@@ -492,15 +492,18 @@ SodaOperation Methods
 .. method:: SodaOperation.fetchArraySize(value)
 
     This is a tuning method to specify the number of documents that are
-    internally fetched in batches by calls to :meth:`~SodaOperation.getCursor()`
-    and :meth:`~SodaOperation.getDocuments()`. It does not affect how many
-    documents are returned to the application. A value of *0* will use the
-    default value (*100*). This method is only available in Oracle Client 19.5
-    and higher.
+    internally fetched in batches by calls to
+    :meth:`~SodaOperation.getCursor()` and
+    :meth:`~SodaOperation.getDocuments()`. It does not affect how many
+    documents are returned to the application.
+
+    If ``fetchArraySize()`` is not used, or ``value`` is *0*, the array size
+    will default to *100*.
 
     As a convenience, the SodaOperation object is returned so that further
     criteria can be specified by chaining methods together.
 
+    This method is only available when using Oracle Client 19.5, or later.
 
 .. method:: SodaOperation.filter(value)
 

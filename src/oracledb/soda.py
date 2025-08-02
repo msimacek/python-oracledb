@@ -498,11 +498,15 @@ class SodaOperation:
         This is a tuning method to specify the number of documents that are
         internally fetched in batches by calls to getCursor() and
         getDocuments(). It does not affect how many documents are returned to
-        the application. A value of 0 will use the default value (100). This
-        method is only available in Oracle Client 19.5 and higher.
+        the application.
+
+        If fetchArraySize() is not used, or the value parameter is 0, the array
+        size will default to 100.
 
         As a convenience, the SodaOperation object is returned so that further
         criteria can be specified by chaining methods together.
+
+        This method is only available when using Oracle Client 19.5, or later.
         """
         if not isinstance(value, int) or value < 0:
             raise TypeError("expecting integer >= 0")
