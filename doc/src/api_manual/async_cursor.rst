@@ -135,6 +135,8 @@ AsyncCursor Attributes
 
 .. autoproperty:: AsyncCursor.bindvars
 
+.. autoproperty:: AsyncCursor.connection
+
 .. autoproperty:: AsyncCursor.description
 
 .. autoproperty:: AsyncCursor.fetchvars
