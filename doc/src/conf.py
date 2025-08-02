@@ -37,6 +37,9 @@ extensions = [
 # preserve defaults in function signatures
 autodoc_preserve_defaults = True
 
+# ensure that the constructor documentation is used in class documentation
+autoclass_content = "init"
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = [".templates"]
 

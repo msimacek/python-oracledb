@@ -888,7 +888,7 @@ def create_pool(
 
     - appcontext: application context used by the connection. It should be a
       list of 3-tuples (namespace, name, value) and each entry in the tuple
-      should be a string. This value is only used in thick mode (default: None)
+      should be a string (default: None)
 
     - shardingkey: a list of strings, numbers, bytes or dates that identify the
       database shard to connect to. This value is only used in thick mode
@@ -1425,7 +1425,7 @@ def create_pool_async(
 
     - appcontext: application context used by the connection. It should be a
       list of 3-tuples (namespace, name, value) and each entry in the tuple
-      should be a string. This value is only used in thick mode (default: None)
+      should be a string (default: None)
 
     - shardingkey: a list of strings, numbers, bytes or dates that identify the
       database shard to connect to. This value is only used in thick mode

@@ -28,6 +28,7 @@
 # Contains utility classes and methods.
 # -----------------------------------------------------------------------------
 
+import functools
 from typing import Any, Callable, Optional, Union
 
 from .arrow_array import ArrowArray
@@ -109,6 +110,7 @@ def params_initer(f):
     original method itself does nothing).
     """
 
+    @functools.wraps(f)
     def wrapped_f(self, *args, **kwargs):
         f(self, *args, **kwargs)
         self._impl = self._impl_class()
@@ -127,6 +129,7 @@ def params_setter(f):
     original method itself does nothing).
     """
 
+    @functools.wraps(f)
     def wrapped_f(self, *args, **kwargs):
         f(self, *args, **kwargs)
         self._impl.set(kwargs)

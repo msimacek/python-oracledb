@@ -849,27 +849,6 @@ class Connection(BaseConnection):
     ) -> None:
         """
         Constructor for creating a connection to the database.
-
-        The dsn parameter (data source name) can be a string in the format
-        user/password@connect_string or can simply be the connect string (in
-        which case authentication credentials such as the username and password
-        need to be specified separately). See the documentation on connection
-        strings for more information.
-
-        The pool parameter is expected to be a pool object and the use of this
-        parameter is the equivalent of calling acquire() on the pool.
-
-        The params parameter is expected to be of type ConnectParams and
-        contains connection parameters that will be used when establishing the
-        connection. See the documentation on ConnectParams for more
-        information. If this parameter is not specified, the additional keyword
-        parameters will be used to create an instance of ConnectParams. If both
-        the params parameter and additional keyword parameters are specified,
-        the values in the keyword parameters have precedence. Note that if a
-        dsn is also supplied, then in the python-oracledb Thin mode, the values
-        of the parameters specified (if any) within the dsn will override the
-        values passed as additional keyword parameters, which themselves
-        override the values set in the params parameter object.
         """
 
         super().__init__()
@@ -1713,8 +1692,7 @@ class AsyncConnection(BaseConnection):
         kwargs: dict,
     ) -> None:
         """
-        Constructor for asynchronous connection pool. Not intended to be used
-        directly but only indirectly through async_connect().
+        Constructor for creating an asynchronous connection to the database.
         """
         super().__init__()
         self._pool = pool
