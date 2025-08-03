@@ -368,8 +368,8 @@ class Pipeline:
 
 def create_pipeline() -> Pipeline:
     """
-    Creates a pipeline object which can be used to process a set of operations
-    against a database.
+    Creates a :ref:`pipeline object <pipelineobjs>` which can be used to
+    process a set of operations against a database.
     """
     pipeline = Pipeline.__new__(Pipeline)
     pipeline._impl = PipelineImpl()

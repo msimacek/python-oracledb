@@ -286,17 +286,14 @@ from .dsn import makedsn as makedsn
 from .driver_mode import is_thin_mode as is_thin_mode
 
 from .utils import (
+    clientversion as clientversion,
     enable_thin_mode as enable_thin_mode,
     from_arrow as from_arrow,
+    init_oracle_client as init_oracle_client,
     register_params_hook as register_params_hook,
     register_password_type as register_password_type,
     register_protocol as register_protocol,
     unregister_params_hook as unregister_params_hook,
-)
-
-from .thick_impl import (
-    clientversion as clientversion,
-    init_oracle_client as init_oracle_client,
 )
 
 from .constructors import (

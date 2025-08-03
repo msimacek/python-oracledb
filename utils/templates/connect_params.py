@@ -89,8 +89,7 @@ class ConnectParams:
 
     def get_connect_string(self) -> str:
         """
-        Returns the connection string associated with the ConnectParams
-        instance.
+        Returns the connection string associated with the instance.
         """
         return self._impl.get_connect_string()
 

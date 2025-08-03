@@ -29,22 +29,22 @@
 # -----------------------------------------------------------------------------
 
 import datetime
+from typing import Any
 
 from . import errors
 
-# synonyms for the types mandated by the database API
-Binary = bytes
-Date = datetime.date
-Timestamp = datetime.datetime
+
+def Binary(value: Any) -> bytes:
+    """
+    Constructs an object holding a binary (long) string value.
+    """
+    return bytes(value)
 
 
-def Time(hour: int, minute: int, second: int) -> None:
+def Date(year: int, month: int, day: int) -> datetime.date:
     """
-    Constructor mandated by the database API for creating a time value. Since
-    Oracle doesn't support time only values, an exception is raised when this
-    method is called.
+    Constructs an object holding a date value.
     """
-    errors._raise_err(errors.ERR_TIME_NOT_SUPPORTED)
 
 
 def DateFromTicks(ticks: float) -> datetime.date:
@@ -56,6 +56,15 @@ def DateFromTicks(ticks: float) -> datetime.date:
     return datetime.date.fromtimestamp(ticks)
 
 
+def Time(hour: int, minute: int, second: int) -> None:
+    """
+    Constructor mandated by the database API for creating a time value. Since
+    Oracle doesn't support time only values, an exception is raised when this
+    method is called.
+    """
+    errors._raise_err(errors.ERR_TIME_NOT_SUPPORTED)
+
+
 def TimeFromTicks(ticks: float) -> None:
     """
     Constructor mandated by the database API for creating a time value given
@@ -64,6 +73,14 @@ def TimeFromTicks(ticks: float) -> None:
     is called.
     """
     errors._raise_err(errors.ERR_TIME_NOT_SUPPORTED)
+
+
+def Timestamp(
+    year: int, month: int, day: int, hour: int, minute: int, second: int
+) -> datetime.datetime:
+    """
+    Constructs an object holding a time stamp value.
+    """
 
 
 def TimestampFromTicks(ticks: float) -> datetime.datetime:
