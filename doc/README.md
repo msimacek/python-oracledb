@@ -7,6 +7,10 @@ This directory contains the documentation source.  It is written using reST
 (re-Structured Text). The source files are processed using Sphinx and can be
 turned into HTML, PDF or ePub documentation.
 
+The "autodoc" extension has been used to use the function signatures and doc
+strings from the source. In order to make use of this the "oracledb" module
+must be importable.
+
 If you wish to build documentation yourself, install Sphinx and the Read the
 Docs theme.  Sphinx is available on many Linux distributions as a pre-built
 package. You can also install Sphinx and the Read the Docs theme using the
