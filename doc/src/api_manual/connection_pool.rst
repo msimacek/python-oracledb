@@ -6,6 +6,9 @@ API: ConnectionPool Objects
 
 .. currentmodule:: oracledb
 
+ConnectionPool Class
+====================
+
 .. autoclass:: ConnectionPool
 
     The new ConnectionPool class is synonymous with SessionPool. The

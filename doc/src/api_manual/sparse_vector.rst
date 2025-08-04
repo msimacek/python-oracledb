@@ -6,6 +6,9 @@ API: SparseVector Objects
 
 .. currentmodule:: oracledb
 
+SparseVector Class
+==================
+
 .. autoclass:: SparseVector
 
     See :ref:`sparsevectors` for more information.

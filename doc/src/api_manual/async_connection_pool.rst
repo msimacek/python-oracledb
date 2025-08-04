@@ -6,6 +6,9 @@ API: AsyncConnectionPool Objects
 
 .. currentmodule:: oracledb
 
+AsyncConnectionPool Class
+=========================
+
 .. autoclass:: AsyncConnectionPool
 
     An AsyncConnectionPool object should be created with

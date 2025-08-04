@@ -6,6 +6,9 @@ API: PoolParams Objects
 
 .. currentmodule:: oracledb
 
+PoolParams Class
+================
+
 .. autoclass:: PoolParams
 
     The PoolParams class is a subclass of the :ref:`ConnectParams Class
