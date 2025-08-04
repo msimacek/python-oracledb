@@ -45,6 +45,7 @@ def Date(year: int, month: int, day: int) -> datetime.date:
     """
     Constructs an object holding a date value.
     """
+    return datetime.date(year, month, day)
 
 
 def DateFromTicks(ticks: float) -> datetime.date:
@@ -76,11 +77,17 @@ def TimeFromTicks(ticks: float) -> None:
 
 
 def Timestamp(
-    year: int, month: int, day: int, hour: int, minute: int, second: int
+    year: int,
+    month: int,
+    day: int,
+    hour: int = 0,
+    minute: int = 0,
+    second: int = 0,
 ) -> datetime.datetime:
     """
     Constructs an object holding a time stamp value.
     """
+    return datetime.datetime(year, month, day, hour, minute, second)
 
 
 def TimestampFromTicks(ticks: float) -> datetime.datetime:
