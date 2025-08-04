@@ -1,38 +1,41 @@
-Sphinx is used to generate the HTML for the python-oracledb documentation.
+# python-oracledb Documentation Source
 
-The generated python-oracledb documentation is at
-https://python-oracledb.readthedocs.io/
+This directory contains the python-oracledb documentation source. It is written
+using reST (re-Structured Text). The source files are processed using
+[Sphinx](http://www.sphinx-doc.org) and can be turned into HTML, PDF or ePub
+documentation.
 
-This directory contains the documentation source.  It is written using reST
-(re-Structured Text). The source files are processed using Sphinx and can be
-turned into HTML, PDF or ePub documentation.
+**Visit https://python-oracledb.readthedocs.io/ for pre-built production and
+development python-oracledb documentation**
 
-The "autodoc" extension has been used to use the function signatures and doc
-strings from the source. In order to make use of this the "oracledb" module
-must be importable.
+## Building Documentation Locally
 
-If you wish to build documentation yourself, install Sphinx and the Read the
-Docs theme.  Sphinx is available on many Linux distributions as a pre-built
-package. You can also install Sphinx and the Read the Docs theme using the
-Python package manager "pip", for example::
+To build the documentation locally:
 
-    python -m pip install -r requirements.txt
+1. Install Sphinx and the Read the Docs theme using the Python package manager
+   ``pip``, for example:
 
-For more information on Sphinx, please visit this page:
+        python -m pip install -r requirements.txt
 
-http://www.sphinx-doc.org
+   You can alternatively install these from pre-built packages for your
+   operating system.
 
-Once Sphinx is installed, the supplied Makefile can be used to build the
-different targets, for example to build the HTML documentation, run::
+2. The "oracledb" module must be built and importable. This is needed for the
+   "autodoc" extension to create function signature documentation.
 
-    make
+3. Once Sphinx is installed, and "oracledb" can be imported by Python, use the
+   Makefile to build your desired documentation format.
 
-To make ePub documentation, run::
+   To build the HTML documentation:
 
-    make epub
+       make
 
-To make PDF documentation, run::
+   To make ePub documentation:
 
-    make pdf
+       make epub
 
-The program ``latexmk`` may be required by Sphinx to generate PDF output.
+   To make PDF documentation:
+
+       make pdf
+
+   The program ``latexmk`` may be required by Sphinx to generate PDF output.
