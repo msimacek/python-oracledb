@@ -278,7 +278,7 @@ from .aq import (
     MessageProperties as MessageProperties,
 )
 
-from .soda import(
+from .soda import (
     SodaDatabase as SodaDatabase,
     SodaCollection as SodaCollection,
     SodaDocument as SodaDocument,
