@@ -18,7 +18,7 @@ import sys
 # If your extensions are in another directory, add it here.
 sys.path.append(os.path.abspath("_ext"))
 
-# include the path of the source so that autodoc willfunction
+# include the path of the source so that autodoc will function
 sys.path.insert(0, str(pathlib.Path("..", "src").resolve()))
 
 # General configuration

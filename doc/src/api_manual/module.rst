@@ -11,8 +11,6 @@ API: python-oracledb Module
 Oracledb Methods
 ================
 
-.. currentmodule:: oracledb
-
 .. autofunction:: Binary
 
 .. autofunction:: clientversion
@@ -853,6 +851,7 @@ parameter of the :meth:`Connection.shutdown()` method.
     should be prohibited and no new transactions should be allowed. It then
     waits for only local active transactions to complete.
 
+.. _eventtypes:
 
 Event Types
 -----------
@@ -1654,13 +1653,6 @@ All of these types are extensions to the DB API definition.
 
     This type object is the Python type of the
     :ref:`database type constants <dbtypes>`.
-
-
-.. data:: LOB
-
-    This type object is the Python type of :data:`DB_TYPE_BLOB`,
-    :data:`DB_TYPE_BFILE`, :data:`DB_TYPE_CLOB` and :data:`DB_TYPE_NCLOB` data
-    that is returned from cursors.
 
 .. _tpcconstants:
 
