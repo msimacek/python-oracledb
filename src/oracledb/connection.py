@@ -51,7 +51,7 @@ from .cursor import AsyncCursor, Cursor
 from .dataframe import DataFrame
 from .dbobject import DbObjectType, DbObject
 from .lob import AsyncLOB, LOB
-from .pipeline import Pipeline
+from .pipeline import Pipeline, PipelineOpResult
 from .soda import SodaDatabase
 from .subscr import Subscription
 from .utils import normalize_sessionless_transaction_id
@@ -491,7 +491,7 @@ class BaseConnection:
     ) -> MessageProperties:
         """
         Returns an object specifying the properties of messages used in
-        advanced queuing. See :ref:`msgproperties` for more information.
+        advanced queuing.
 
         Each of the parameters are optional. If specified, they act as a
         shortcut for setting each of the equivalently named properties.
@@ -520,10 +520,10 @@ class BaseConnection:
         payload_type: Optional[Union[DbObjectType, str]] = None,
         *,
         payloadType: Optional[DbObjectType] = None,
-    ) -> Queue:
+    ) -> Union[Queue, AsyncQueue]:
         """
-        Creates a :ref:`queue <queue>` which is used to enqueue and dequeue
-        messages in Advanced Queuing.
+        Creates a queue which is used to enqueue and dequeue messages in
+        Advanced Queuing.
 
         The ``name`` parameter is expected to be a string identifying the queue
         in which messages are to be enqueued or dequeued.
@@ -2470,12 +2470,11 @@ class AsyncConnection(BaseConnection):
         self,
         pipeline: Pipeline,
         continue_on_error: bool = False,
-    ) -> list:
+    ) -> list[PipelineOpResult]:
         """
-        Runs all of the operations in the :ref:`pipeline <pipelineobj>` and
-        returns a list of :ref:`PipelineOpResult Objects
-        <pipelineopresultobjs>`, each entry corresponding to an operation
-        executed in the pipeline.
+        Runs all of the operations in the pipeline and returns a list of
+        PipelineOpResult, each entry corresponding to an operation executed in
+        the pipeline.
 
         The ``continue_on_error`` parameter determines whether operations
         should continue to run after an error has occurred. If this parameter

@@ -69,7 +69,7 @@ AsyncConnection Methods
 
 .. automethod:: AsyncConnection.commit
 
-.. automethod:: AsyncConnection.createlob(lob_type)
+.. automethod:: AsyncConnection.createlob
 
 .. automethod:: AsyncConnection.cursor
 

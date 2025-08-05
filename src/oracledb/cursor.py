@@ -260,13 +260,12 @@ class BaseCursor:
         self._impl = None
 
     @property
-    def description(self) -> FetchInfo:
+    def description(self) -> Union[list[FetchInfo], None]:
         """
         This read-only attribute contains information about the columns used in
-        a query. It is a sequence of :ref:`FetchInfo <fetchinfoobj>` objects,
-        one per column. This attribute will be *None* for statements that are
-        not SELECT or WITH statements, or if the cursor has not had
-        :meth:`execute()` invoked yet.
+        a query. It is a list of FetchInfo objects, one per column. This
+        attribute will be *None* for statements that are not SELECT or WITH
+        statements, or if the cursor has not had :meth:`execute()` invoked yet.
         """
         self._verify_open()
         if self._impl.is_query(self):
