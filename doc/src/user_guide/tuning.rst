@@ -1,5 +1,7 @@
 .. _tuning:
 
+.. currentmodule:: oracledb
+
 ***********************
 Tuning python-oracledb
 ***********************
