@@ -242,8 +242,8 @@ class Defaults:
         connect to Oracle Database. This is the value used in the CLIENT_DRIVER
         column of the V$SESSION_CONNECT_INFO view.
 
-        This attribute has an initial value of *None*. It is used as required in
-        python-oracledb Thick and Thin mode.
+        This attribute has an initial value of *None*. It is used as required
+        in python-oracledb Thick and Thin mode.
 
         In python-oracledb Thick mode, this attribute is used if the
         ``driver_name`` parameter is not specified in
