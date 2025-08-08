@@ -802,11 +802,12 @@ class Cursor(BaseCursor):
 
         The ``fetch_lobs`` parameter specifies whether to return LOB locators
         or ``str``/``bytes`` values when fetching LOB columns. The default
-        value is :data:`defaults.fetch_lobs`.
+        value is :data:`oracledb.defaults.fetch_lobs <Defaults.fetch_lobs>`.
 
         The ``fetch_decimals`` parameter specifies whether to return
         ``decimal.Decimal`` values when fetching columns of type ``NUMBER``.
-        The default value is :data:`defaults.fetch_decimals`.
+        The default value is :data:`oracledb.defaults.fetch_decimals
+        <Defaults.fetch_decimals>`.
 
         For maximum efficiency when reusing a statement, it is best to use the
         :meth:`Cursor.setinputsizes()` method to specify the parameter types
@@ -1140,11 +1141,12 @@ class AsyncCursor(BaseCursor):
 
         The ``fetch_lobs`` parameter specifies whether to return LOB locators
         or ``str``/``bytes`` values when fetching LOB columns. The default
-        value is :data:`defaults.fetch_lobs`.
+        value is :data:`oracledb.defaults.fetch_lobs <Defaults.fetch_lobs>`.
 
         The ``fetch_decimals`` parameter specifies whether to return
         ``decimal.Decimal`` values when fetching columns of type ``NUMBER``.
-        The default value is :data:`defaults.fetch_decimals`.
+        The default value is :data:`oracledb.defaults.fetch_decimals
+        <Defaults.fetch_decimals>`.
 
         For maximum efficiency when reusing a statement, it is best to use the
         :meth:`setinputsizes()` method to specify the parameter types and sizes
