@@ -132,13 +132,9 @@ from .enums import (
     VECTOR_FORMAT_INT8 as VECTOR_FORMAT_INT8,
 )
 
-from .version import __version__ as __version__
+from . import version
 
 from .constants import (
-    # mandated DB API constants
-    apilevel as apilevel,
-    threadsafety as threadsafety,
-    paramstyle as paramstyle,
     # AQ delivery modes
     MSG_BUFFERED as MSG_BUFFERED,
     MSG_PERSISTENT as MSG_PERSISTENT,
@@ -234,7 +230,6 @@ from .exceptions import (
 from .errors import _Error as _Error
 
 from .defaults import (
-    defaults as defaults,
     Defaults as Defaults,
 )
 
@@ -357,6 +352,35 @@ IntervalYM = collections.namedtuple("IntervalYM", ["years", "months"])
 class JsonId(bytes):
     pass
 
+
+apilevel: str = "2.0"
+"""
+A string constant stating the Python DB API level supported by python-oracledb.
+"""
+
+defaults: Defaults = Defaults()
+"""
+The defaults object for setting default behaviors of python-oracledb.
+"""
+
+paramstyle: str = "named"
+"""
+A string constant stating the type of parameter marker formatting expected by
+the interface. Currently 'named' as in 'where name = :name'.
+"""
+
+threadsafety: int = 2
+"""
+An integer constant stating the level of thread safety that python-oracledb
+supports. Currently 2, which means that threads may share the module and
+connections, but not cursors. Sharing means that a thread may use a resource
+without wrapping it using a mutex semaphore to implement resource locking.
+"""
+
+__version__: str = version.__version__
+"""
+A string constant stating the version of the module.
+"""
 
 package = sys.modules[__name__]
 base_impl.init_base_impl(package)

@@ -272,39 +272,18 @@ Oracledb Methods
 Oracledb Attributes
 ===================
 
-.. data:: apilevel
+.. autodata:: apilevel
 
-    A string constant stating the Python DB API level supported by
-    python-oracledb. Currently "2.0".
+.. autodata:: defaults
+    :no-value:
 
-.. data:: defaults
+    See :ref:`settingdefaults`.
 
-   The :ref:`Defaults <defaults>` object for setting default behaviors of
-   python-oracledb.
+.. autodata:: paramstyle
 
-   See :ref:`settingdefaults`.
+.. autodata:: threadsafety
 
-.. data:: paramstyle
-
-    A string constant stating the type of parameter marker formatting expected
-    by the interface. Currently 'named' as in 'where name = :name'.
-
-
-.. data:: threadsafety
-
-    An integer constant stating the level of thread safety that python-oracledb
-    supports. Currently 2, which means that threads may share the module and
-    connections, but not cursors. Sharing means that a thread may use a
-    resource without wrapping it using a mutex semaphore to implement resource
-    locking.
-
-.. data:: version
-
-    A string constant stating the version of the module. Currently '|release|'.
-
-.. data:: __version__
-
-    A string constant stating the version of the module. Currently '|release|'.
+.. autodata:: __version__
 
     .. dbapiattributeextension::
 
