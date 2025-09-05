@@ -458,7 +458,6 @@ cdef class ArrowArrayImpl:
         """
         cdef:
             ArrowArrayImpl array_impl
-            ArrowSchemaImpl schema_impl
             ArrowSchema *arrow_schema
             ArrowArray *arrow_array
         schema_capsule, array_capsule = obj.__arrow_c_array__()
