@@ -452,7 +452,7 @@ cdef class OracleMetadata:
     cdef int _set_arrow_type(self) except -1
     cdef OracleMetadata copy(self)
     @staticmethod
-    cdef OracleMetadata from_arrow_array(ArrowArrayImpl array_impl)
+    cdef OracleMetadata from_arrow_schema(ArrowSchemaImpl schema_impl)
     @staticmethod
     cdef OracleMetadata from_type(object typ)
     @staticmethod
@@ -751,8 +751,6 @@ cdef class BaseVarImpl:
     cdef object _get_scalar_value(self, uint32_t pos)
     cdef int _on_reset_bind(self, uint32_t num_rows) except -1
     cdef int _resize(self, uint32_t new_size) except -1
-    cdef int _set_metadata_from_arrow_array(self,
-                                            ArrowArrayImpl array) except -1
     cdef int _set_metadata_from_type(self, object typ) except -1
     cdef int _set_metadata_from_value(self, object value,
                                       bint is_plsql) except -1

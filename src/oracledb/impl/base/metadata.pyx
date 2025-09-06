@@ -125,14 +125,14 @@ cdef class OracleMetadata:
         return metadata
 
     @staticmethod
-    cdef OracleMetadata from_arrow_array(ArrowArrayImpl array_impl):
+    cdef OracleMetadata from_arrow_schema(ArrowSchemaImpl schema_impl):
         """
         Returns a new OracleMetadata instance with attributes set from an Arrow
         array.
         """
         cdef OracleMetadata metadata = OracleMetadata.__new__(OracleMetadata)
-        cdef ArrowType arrow_type = array_impl.schema_impl.arrow_type
-        metadata.name = array_impl.schema_impl.name
+        cdef ArrowType arrow_type = schema_impl.arrow_type
+        metadata.name = schema_impl.name
         if arrow_type in (NANOARROW_TYPE_DECIMAL128,
                           NANOARROW_TYPE_INT64):
             metadata.dbtype = DB_TYPE_NUMBER
@@ -161,8 +161,8 @@ cdef class OracleMetadata:
             errors._raise_err(errors.ERR_UNEXPECTED_DATA,
                               data=array.arrow_type)
         metadata._arrow_type = arrow_type
-        metadata.precision = array_impl.schema_impl.precision
-        metadata.scale = array_impl.schema_impl.scale
+        metadata.precision = schema_impl.precision
+        metadata.scale = schema_impl.scale
         return metadata
 
     @staticmethod
