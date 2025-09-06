@@ -255,6 +255,7 @@ cdef class BaseVarImpl:
         cdef:
             ArrowTimeUnit time_unit = NANOARROW_TIME_UNIT_SECOND
             ArrowType child_arrow_type = NANOARROW_TYPE_NA
+            ArrowSchemaImpl schema_impl
 
         self.metadata._set_arrow_type()
         if self.metadata._arrow_type == NANOARROW_TYPE_TIMESTAMP:
@@ -280,16 +281,17 @@ cdef class BaseVarImpl:
             else:
                 errors._raise_err(errors.ERR_ARROW_UNSUPPORTED_VECTOR_FORMAT)
 
-        self._arrow_array = ArrowArrayImpl.__new__(ArrowArrayImpl)
-        self._arrow_array.schema_impl = ArrowSchemaImpl.__new__(ArrowSchemaImpl)
-        self._arrow_array.populate_from_metadata(
-            arrow_type=self.metadata._arrow_type,
-            name=self.metadata.name,
-            precision=self.metadata.precision,
-            scale=self.metadata.scale,
-            time_unit=time_unit,
-            child_arrow_type=child_arrow_type,
+        schema_impl = ArrowSchemaImpl.__new__(ArrowSchemaImpl)
+        schema_impl.populate_from_metadata(
+            self.metadata._arrow_type,
+            self.metadata.name,
+            self.metadata.precision,
+            self.metadata.scale,
+            time_unit,
+            child_arrow_type,
         )
+        self._arrow_array = ArrowArrayImpl.__new__(ArrowArrayImpl)
+        self._arrow_array.populate_from_schema(schema_impl)
 
     cdef int _finalize_init(self) except -1:
         """

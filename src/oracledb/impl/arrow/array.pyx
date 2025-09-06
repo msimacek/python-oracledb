@@ -480,34 +480,18 @@ cdef class ArrowArrayImpl:
         self.schema_impl.populate_from_schema(schema)
         ArrowArrayMove(array, self.arrow_array)
 
-    cdef int populate_from_metadata(self, ArrowType arrow_type, str name,
-                                    int8_t precision, int8_t scale,
-                                    ArrowTimeUnit time_unit,
-                                    ArrowType child_arrow_type) except -1:
+    cdef int populate_from_schema(self, ArrowSchemaImpl schema_impl) except -1:
         """
-        Populate the array from the supplied metadata.
+        Populate the array from a schema.
         """
-        cdef ArrowType storage_type = arrow_type
-        if arrow_type == NANOARROW_TYPE_TIMESTAMP:
-            storage_type = NANOARROW_TYPE_INT64
-        self.schema_impl.populate_from_metadata(arrow_type, name, precision,
-                                                scale, time_unit,
-                                                child_arrow_type)
-        if arrow_type in (NANOARROW_TYPE_LIST, NANOARROW_TYPE_STRUCT):
-            _check_nanoarrow(
-                ArrowArrayInitFromSchema(
-                    self.arrow_array,
-                    self.schema_impl.arrow_schema,
-                    NULL
-                )
+        self.schema_impl = schema_impl
+        _check_nanoarrow(
+            ArrowArrayInitFromSchema(
+                self.arrow_array,
+                self.schema_impl.arrow_schema,
+                NULL
             )
-        else: # primitive type array init
-            _check_nanoarrow(
-                ArrowArrayInitFromType(
-                    self.arrow_array,
-                    storage_type
-                )
-            )
+        )
         _check_nanoarrow(ArrowArrayStartAppending(self.arrow_array))
 
     def get_array_capsule(self):

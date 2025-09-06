@@ -146,10 +146,7 @@ cdef class ArrowArrayImpl:
     cdef object get_vector(self, int64_t index, bint* is_null)
     cdef int populate_from_array(self, ArrowSchema* schema,
                                  ArrowArray* array) except -1
-    cdef int populate_from_metadata(self, ArrowType arrow_type, str name,
-                                    int8_t precision, int8_t scale,
-                                    ArrowTimeUnit time_unit,
-                                    ArrowType child_arrow_type) except -1
+    cdef int populate_from_schema(self, ArrowSchemaImpl schema_impl) except -1
 
 
 cdef class DataFrameImpl:
