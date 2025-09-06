@@ -44,7 +44,7 @@ cdef object convert_arrow_to_oracle_data(OracleMetadata metadata,
         tuple sparse_info
         bytes temp_bytes
 
-    arrow_type = metadata._arrow_type
+    arrow_type = metadata._schema_impl.arrow_type
     if arrow_type == NANOARROW_TYPE_INT64:
         array_impl.get_int64(array_index, &data.is_null, &int64_value)
         if not data.is_null:
@@ -314,7 +314,7 @@ cdef int convert_oracle_data_to_arrow(OracleMetadata from_metadata,
     if data.is_null:
         return array_impl.append_null()
 
-    arrow_type = to_metadata._arrow_type
+    arrow_type = to_metadata._schema_impl.arrow_type
     db_type_num = from_metadata.dbtype.num
     if arrow_type == NANOARROW_TYPE_INT64:
         convert_number_to_arrow_int64(array_impl, &data.buffer)

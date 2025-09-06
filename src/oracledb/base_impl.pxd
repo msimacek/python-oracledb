@@ -445,11 +445,11 @@ cdef class OracleMetadata:
         readonly uint32_t vector_dimensions
         readonly uint8_t vector_format
         readonly uint8_t vector_flags
-        ArrowType _arrow_type
+        ArrowSchemaImpl _schema_impl
         uint8_t _py_type_num
 
     cdef int _finalize_init(self) except -1
-    cdef int _set_arrow_type(self) except -1
+    cdef int _set_arrow_schema(self) except -1
     cdef OracleMetadata copy(self)
     @staticmethod
     cdef OracleMetadata from_arrow_schema(ArrowSchemaImpl schema_impl)

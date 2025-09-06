@@ -252,46 +252,10 @@ cdef class BaseVarImpl:
         Creates an Arrow array based on the type information selected by the
         user.
         """
-        cdef:
-            ArrowTimeUnit time_unit = NANOARROW_TIME_UNIT_SECOND
-            ArrowType child_arrow_type = NANOARROW_TYPE_NA
-            ArrowSchemaImpl schema_impl
-
-        self.metadata._set_arrow_type()
-        if self.metadata._arrow_type == NANOARROW_TYPE_TIMESTAMP:
-            if self.metadata.scale > 0 and self.metadata.scale <= 3:
-                time_unit = NANOARROW_TIME_UNIT_MILLI
-            elif self.metadata.scale > 3 and self.metadata.scale <= 6:
-                time_unit = NANOARROW_TIME_UNIT_MICRO
-            elif self.metadata.scale > 6 and self.metadata.scale <= 9:
-                time_unit = NANOARROW_TIME_UNIT_NANO
-
-        if self.metadata._arrow_type in (
-            NANOARROW_TYPE_LIST,
-            NANOARROW_TYPE_STRUCT
-        ):
-            if self.metadata.vector_format == VECTOR_FORMAT_FLOAT32:
-                child_arrow_type = NANOARROW_TYPE_FLOAT
-            elif self.metadata.vector_format == VECTOR_FORMAT_FLOAT64:
-                child_arrow_type = NANOARROW_TYPE_DOUBLE
-            elif self.metadata.vector_format == VECTOR_FORMAT_INT8:
-                child_arrow_type = NANOARROW_TYPE_INT8
-            elif self.metadata.vector_format == VECTOR_FORMAT_BINARY:
-                child_arrow_type = NANOARROW_TYPE_UINT8
-            else:
-                errors._raise_err(errors.ERR_ARROW_UNSUPPORTED_VECTOR_FORMAT)
-
-        schema_impl = ArrowSchemaImpl.__new__(ArrowSchemaImpl)
-        schema_impl.populate_from_metadata(
-            self.metadata._arrow_type,
-            self.metadata.name,
-            self.metadata.precision,
-            self.metadata.scale,
-            time_unit,
-            child_arrow_type,
-        )
+        if self.metadata._schema_impl is None:
+            self.metadata._set_arrow_schema()
         self._arrow_array = ArrowArrayImpl.__new__(ArrowArrayImpl)
-        self._arrow_array.populate_from_schema(schema_impl)
+        self._arrow_array.populate_from_schema(self.metadata._schema_impl)
 
     cdef int _finalize_init(self) except -1:
         """
