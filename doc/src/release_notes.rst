@@ -20,7 +20,7 @@ Thin Mode Changes
 +++++++++++++++++
 
 #)  Fixed bug when setting values of type ``datetime.date`` on variables (such
-    as created by :meth:`Cursor.var()` or implictly by
+    as created by :meth:`Cursor.var()` or implicitly by
     :meth:`Cursor.setinputsizes()`) of types
     :attr:`oracledb.DB_TYPE_TIMESTAMP`, :attr:`oracledb.DB_TYPE_TIMESTAMP_TZ`
     and :attr:`oracledb.DB_TYPE_TIMESTAMP_LTZ`.
