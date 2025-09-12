@@ -1287,6 +1287,10 @@ Thick Mode Changes
 #)  Fixed bug when using external authentication with an Easy Connect
     connection string.
 #)  Fixed memory leak when accessing objects embedded within other objects.
+#)  Fixed bug with error wrapping which could result in garbage characters
+    being introduced. Fixed potential bug when truncation could occur with very
+    large error messages.
+
 
 Common Changes
 ++++++++++++++
