@@ -32,9 +32,13 @@ import oracledb
 import pytest
 
 
-def test_4000(conn, cursor):
-    "4000 - test executing a statement multiple times (named args)"
+@pytest.fixture
+def empty_tab(cursor):
     cursor.execute("truncate table TestTempTable")
+
+
+def test_4000(conn, cursor, empty_tab):
+    "4000 - test executing a statement multiple times (named args)"
     rows = [{"value": n} for n in range(250)]
     cursor.arraysize = 100
     cursor.executemany(
@@ -47,9 +51,8 @@ def test_4000(conn, cursor):
     assert count == len(rows)
 
 
-def test_4001(conn, cursor):
+def test_4001(conn, cursor, empty_tab):
     "4001 - test executing a statement multiple times (positional args)"
-    cursor.execute("truncate table TestTempTable")
     rows = [[n] for n in range(230)]
     cursor.arraysize = 100
     cursor.executemany(
@@ -62,9 +65,8 @@ def test_4001(conn, cursor):
     assert count == len(rows)
 
 
-def test_4002(conn, cursor):
+def test_4002(conn, cursor, empty_tab):
     "4002 - test executing a statement multiple times (with prepare)"
-    cursor.execute("truncate table TestTempTable")
     rows = [[n] for n in range(225)]
     cursor.arraysize = 100
     cursor.prepare("insert into TestTempTable (IntCol) values (:1)")
@@ -75,9 +77,8 @@ def test_4002(conn, cursor):
     assert count == len(rows)
 
 
-def test_4003(conn, cursor):
+def test_4003(conn, cursor, empty_tab):
     "4003 - test executing a statement multiple times (with rebind)"
-    cursor.execute("truncate table TestTempTable")
     rows = [[n] for n in range(235)]
     cursor.arraysize = 100
     statement = "insert into TestTempTable (IntCol) values (:1)"
@@ -97,17 +98,15 @@ def test_4004(conn):
     cursor.executemany("declare t number; begin t := :1; end;", data)
 
 
-def test_4005(cursor):
+def test_4005(cursor, empty_tab):
     "4005 - test executing multiple times (with multiple batches)"
-    cursor.execute("truncate table TestTempTable")
     sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
     cursor.executemany(sql, [(1, None), (2, None)])
     cursor.executemany(sql, [(3, None), (4, "Testing")])
 
 
-def test_4006(cursor):
+def test_4006(cursor, empty_tab):
     "4006 - test executemany() with various numeric types"
-    cursor.execute("truncate table TestTempTable")
     data = [
         (1, 5),
         (2, 7.0),
@@ -125,9 +124,8 @@ def test_4006(cursor):
     assert cursor.fetchall() == data
 
 
-def test_4007(cursor):
+def test_4007(cursor, empty_tab):
     "4007 - test executing a statement multiple times (with resize)"
-    cursor.execute("truncate table TestTempTable")
     rows = [
         (1, "First"),
         (2, "Second"),
@@ -147,9 +145,8 @@ def test_4007(cursor):
     assert cursor.fetchall() == rows
 
 
-def test_4008(cursor, test_env):
+def test_4008(cursor, empty_tab, test_env):
     "4008 - test executing a statement multiple times (with exception)"
-    cursor.execute("truncate table TestTempTable")
     rows = [{"value": n} for n in (1, 2, 3, 2, 5)]
     statement = "insert into TestTempTable (IntCol) values (:value)"
     with test_env.assert_raises_full_code("ORA-00001"):
@@ -166,10 +163,9 @@ def test_4009(cursor, test_env):
         cursor.executemany(sql, "These are not valid parameters")
 
 
-def test_4010(cursor):
+def test_4010(cursor, empty_tab):
     "4010 - test calling executemany() without any bind parameters"
     num_rows = 5
-    cursor.execute("truncate table TestTempTable")
     cursor.executemany(
         """
         declare
@@ -190,10 +186,9 @@ def test_4010(cursor):
     assert count == num_rows
 
 
-def test_4011(cursor):
+def test_4011(cursor, empty_tab):
     "4011 - test calling executemany() with binds performed earlier"
     num_rows = 9
-    cursor.execute("truncate table TestTempTable")
     var = cursor.var(int, arraysize=num_rows)
     cursor.setinputsizes(var)
     cursor.executemany(
@@ -248,10 +243,9 @@ def test_4015(cursor, test_env):
         cursor.executemany("select :value from dual", rows)
 
 
-def test_4016(cursor):
+def test_4016(cursor, empty_tab):
     "4016 - test executemany() with a pl/sql statement with dml returning"
     num_rows = 5
-    cursor.execute("truncate table TestTempTable")
     out_var = cursor.var(oracledb.NUMBER, arraysize=5)
     cursor.setinputsizes(out_var)
     cursor.executemany(
@@ -272,9 +266,8 @@ def test_4016(cursor):
     assert out_var.values == [1, 2, 3, 4, 5]
 
 
-def test_4017(cursor):
+def test_4017(cursor, empty_tab):
     "4017 - test executemany() with pl/sql in binds and out binds"
-    cursor.execute("truncate table TestTempTable")
     values = [5, 8, 17, 24, 6]
     data = [(i, f"Test {i}") for i in values]
     out_bind = cursor.var(oracledb.NUMBER, arraysize=5)
@@ -292,9 +285,8 @@ def test_4017(cursor):
     assert out_bind.values == values
 
 
-def test_4018(cursor):
+def test_4018(cursor, empty_tab):
     "4018 - test executemany() with pl/sql outbinds"
-    cursor.execute("truncate table TestTempTable")
     out_bind = cursor.var(oracledb.NUMBER, arraysize=5)
     cursor.setinputsizes(out_bind)
     cursor.executemany("begin :out_var := 5; end;", 5)
@@ -330,9 +322,8 @@ def test_4020(cursor):
     assert var.values == [value]
 
 
-def test_4021(conn, cursor):
+def test_4021(conn, cursor, empty_tab):
     "4021 - test deferral of type assignment"
-    cursor.execute("truncate table TestTempTable")
     data = [(1, None), (2, 25)]
     cursor.executemany(
         """
@@ -440,10 +431,9 @@ def test_4026(cursor):
     assert error_obj.offset == 3
 
 
-def test_4027(cursor, test_env):
+def test_4027(cursor, empty_tab, test_env):
     "4027 - test executemany with number of iterations too small"
     data = [[1], [2], [3]]
-    cursor.execute("truncate table TestTempTable")
     cursor.executemany(
         """
         declare

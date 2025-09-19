@@ -37,9 +37,13 @@ def module_checks(anyio_backend, skip_unless_thin_mode):
     pass
 
 
-async def test_6100(async_conn, async_cursor):
-    "6100 - test executing a statement multiple times (named args)"
+@pytest.fixture
+async def empty_tab(async_cursor):
     await async_cursor.execute("truncate table TestTempTable")
+
+
+async def test_6100(async_conn, async_cursor, empty_tab):
+    "6100 - test executing a statement multiple times (named args)"
     rows = [{"value": n} for n in range(250)]
     async_cursor.arraysize = 100
     await async_cursor.executemany(
@@ -52,9 +56,8 @@ async def test_6100(async_conn, async_cursor):
     assert count == len(rows)
 
 
-async def test_6101(async_conn, async_cursor):
+async def test_6101(async_conn, async_cursor, empty_tab):
     "6101 - test executing a statement multiple times (positional args)"
-    await async_cursor.execute("truncate table TestTempTable")
     rows = [[n] for n in range(230)]
     async_cursor.arraysize = 100
     await async_cursor.executemany(
@@ -67,9 +70,8 @@ async def test_6101(async_conn, async_cursor):
     assert count == len(rows)
 
 
-async def test_6102(async_conn, async_cursor):
+async def test_6102(async_conn, async_cursor, empty_tab):
     "6102 - test executing a statement multiple times (with prepare)"
-    await async_cursor.execute("truncate table TestTempTable")
     rows = [[n] for n in range(225)]
     async_cursor.arraysize = 100
     async_cursor.prepare("insert into TestTempTable (IntCol) values (:1)")
@@ -80,9 +82,8 @@ async def test_6102(async_conn, async_cursor):
     assert count == len(rows)
 
 
-async def test_6103(async_conn, async_cursor):
+async def test_6103(async_conn, async_cursor, empty_tab):
     "6103 - test executing a statement multiple times (with rebind)"
-    await async_cursor.execute("truncate table TestTempTable")
     rows = [[n] for n in range(235)]
     async_cursor.arraysize = 100
     statement = "insert into TestTempTable (IntCol) values (:1)"
@@ -102,17 +103,15 @@ async def test_6104(async_conn):
     await cursor.executemany("declare t number; begin t := :1; end;", data)
 
 
-async def test_6105(async_cursor):
+async def test_6105(async_cursor, empty_tab):
     "6105 - test executing multiple times (with multiple batches)"
-    await async_cursor.execute("truncate table TestTempTable")
     sql = "insert into TestTempTable (IntCol, StringCol1) values (:1, :2)"
     await async_cursor.executemany(sql, [(1, None), (2, None)])
     await async_cursor.executemany(sql, [(3, None), (4, "Testing")])
 
 
-async def test_6106(async_cursor):
+async def test_6106(async_cursor, empty_tab):
     "6106 - test executemany() with various numeric types"
-    await async_cursor.execute("truncate table TestTempTable")
     data = [
         (1, 5),
         (2, 7.0),
@@ -130,9 +129,8 @@ async def test_6106(async_cursor):
     assert await async_cursor.fetchall() == data
 
 
-async def test_6107(async_cursor):
+async def test_6107(async_cursor, empty_tab):
     "6107 - test executing a statement multiple times (with resize)"
-    await async_cursor.execute("truncate table TestTempTable")
     rows = [
         (1, "First"),
         (2, "Second"),
@@ -152,9 +150,8 @@ async def test_6107(async_cursor):
     assert await async_cursor.fetchall() == rows
 
 
-async def test_6108(async_cursor, test_env):
+async def test_6108(async_cursor, empty_tab, test_env):
     "6108 - test executing a statement multiple times (with exception)"
-    await async_cursor.execute("truncate table TestTempTable")
     rows = [{"value": n} for n in (1, 2, 3, 2, 5)]
     statement = "insert into TestTempTable (IntCol) values (:value)"
     with test_env.assert_raises_full_code("ORA-00001"):
@@ -171,10 +168,9 @@ async def test_6109(async_cursor, test_env):
         await async_cursor.executemany(sql, "Not valid parameters")
 
 
-async def test_6110(async_cursor):
+async def test_6110(async_cursor, empty_tab):
     "6110 - test calling executemany() without any bind parameters"
     num_rows = 5
-    await async_cursor.execute("truncate table TestTempTable")
     await async_cursor.executemany(
         """
         declare
@@ -195,10 +191,9 @@ async def test_6110(async_cursor):
     assert count == num_rows
 
 
-async def test_6111(async_cursor):
+async def test_6111(async_cursor, empty_tab):
     "6111 - test calling executemany() with binds performed earlier"
     num_rows = 9
-    await async_cursor.execute("truncate table TestTempTable")
     var = async_cursor.var(int, arraysize=num_rows)
     async_cursor.setinputsizes(var)
     await async_cursor.executemany(
@@ -255,10 +250,9 @@ async def test_6115(async_cursor, test_env):
         await async_cursor.executemany("select :value from dual", rows)
 
 
-async def test_6116(async_cursor):
+async def test_6116(async_cursor, empty_tab):
     "6116 - test executemany() with a pl/sql statement with dml returning"
     num_rows = 5
-    await async_cursor.execute("truncate table TestTempTable")
     out_var = async_cursor.var(oracledb.NUMBER, arraysize=5)
     async_cursor.setinputsizes(out_var)
     await async_cursor.executemany(
@@ -279,9 +273,8 @@ async def test_6116(async_cursor):
     assert out_var.values == [1, 2, 3, 4, 5]
 
 
-async def test_6117(async_cursor):
+async def test_6117(async_cursor, empty_tab):
     "6117 - test executemany() with pl/sql in binds and out binds"
-    await async_cursor.execute("truncate table TestTempTable")
     values = [5, 8, 17, 24, 6]
     data = [(i, f"Test {i}") for i in values]
     out_bind = async_cursor.var(oracledb.NUMBER, arraysize=5)
@@ -299,9 +292,8 @@ async def test_6117(async_cursor):
     assert out_bind.values == values
 
 
-async def test_6118(async_cursor):
+async def test_6118(async_cursor, empty_tab):
     "6118 - test executemany() with pl/sql outbinds"
-    await async_cursor.execute("truncate table TestTempTable")
     out_bind = async_cursor.var(oracledb.NUMBER, arraysize=5)
     async_cursor.setinputsizes(out_bind)
     await async_cursor.executemany("begin :out_var := 5; end;", 5)
@@ -337,9 +329,8 @@ async def test_6120(async_cursor):
     assert var.values == [value]
 
 
-async def test_6121(async_conn, async_cursor):
+async def test_6121(async_conn, async_cursor, empty_tab):
     "6121 - test deferral of type assignment"
-    await async_cursor.execute("truncate table TestTempTable")
     data = [(1, None), (2, 25)]
     await async_cursor.executemany(
         """
