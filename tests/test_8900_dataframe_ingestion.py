@@ -51,7 +51,12 @@ SPARSE_VECTOR_FIELDS_INT8 = [
 ]
 
 
-def test_8900(conn, cursor):
+@pytest.fixture
+def empty_tab(cursor):
+    cursor.execute("delete from TestDataFrame")
+
+
+def test_8900(conn, cursor, empty_tab):
     "8900 - test basic ingestion of data frame"
     arrays = [
         pyarrow.array([1, 2, 3], pyarrow.int64()),
@@ -68,7 +73,6 @@ def test_8900(conn, cursor):
     ]
     names = ["Id", "FirstName", "Salary", "DateOfBirth"]
     df = pyarrow.table(arrays, names)
-    cursor.execute("delete from TestDataFrame")
     cursor.executemany(
         """
         insert into TestDataFrame
@@ -93,7 +97,7 @@ def test_8900(conn, cursor):
     assert fetched_df.equals(df)
 
 
-def test_8901(conn, cursor):
+def test_8901(conn, cursor, empty_tab):
     "8901 - test ingestion with null values"
     arrays = [
         pyarrow.array([1, 2, 3], pyarrow.int64()),
@@ -110,7 +114,6 @@ def test_8901(conn, cursor):
     ]
     names = ["Id", "FirstName", "Salary", "DateOfBirth"]
     df = pyarrow.table(arrays, names)
-    cursor.execute("delete from TestDataFrame")
     cursor.executemany(
         """
         insert into TestDataFrame
@@ -135,12 +138,11 @@ def test_8901(conn, cursor):
     assert fetched_df.equals(df)
 
 
-def test_8902(conn, cursor):
+def test_8902(conn, cursor, empty_tab):
     "8902 - test ingestion with single column"
     arrays = [pyarrow.array([1, 2, 3], pyarrow.int64())]
     names = ["Id"]
     df = pyarrow.table(arrays, names)
-    cursor.execute("delete from TestDataFrame")
     cursor.executemany("insert into TestDataFrame (Id) values (:1)", df)
     conn.commit()
     odf = conn.fetch_df_all(
@@ -154,7 +156,7 @@ def test_8902(conn, cursor):
     assert fetched_df.equals(df)
 
 
-def test_8903(conn, cursor):
+def test_8903(conn, cursor, empty_tab):
     "8903 - test ingestion with large data types"
     long_str = "X" * 32_768
     long_raw = b"Y" * 32_768
@@ -165,7 +167,6 @@ def test_8903(conn, cursor):
     ]
     names = ["Id", "LongData", "LongRawData"]
     df = pyarrow.table(arrays, names)
-    cursor.execute("delete from TestDataFrame")
     cursor.executemany(
         """
         insert into TestDataFrame (Id, LongData, LongRawData)
@@ -188,7 +189,7 @@ def test_8903(conn, cursor):
     assert fetched_df.equals(df)
 
 
-def test_8904(conn, cursor):
+def test_8904(conn, cursor, empty_tab):
     "8904 - test ingestion with decimal values"
     arrays = [
         pyarrow.array(
@@ -210,7 +211,6 @@ def test_8904(conn, cursor):
     ]
     names = ["Id", "DecimalData"]
     df = pyarrow.table(arrays, names)
-    cursor.execute("delete from TestDataFrame")
     cursor.executemany(
         """
         insert into TestDataFrame
@@ -267,7 +267,7 @@ def test_8905(skip_unless_native_boolean_supported, conn, cursor):
     assert fetched_df.equals(df)
 
 
-def test_8906(conn, cursor):
+def test_8906(conn, cursor, empty_tab):
     "8906 - test ingestion with timestamp values"
     arrays = [
         pyarrow.array([1, 2, 3], pyarrow.int64()),
@@ -282,7 +282,6 @@ def test_8906(conn, cursor):
     ]
     names = ["Id", "LastUpdated"]
     df = pyarrow.table(arrays, names)
-    cursor.execute("delete from TestDataFrame")
     cursor.executemany(
         """
         insert into TestDataFrame
@@ -395,7 +394,7 @@ def test_8910(conn, cursor):
         assert fetched_df.equals(df)
 
 
-def test_8911(conn, cursor):
+def test_8911(conn, cursor, empty_tab):
     "8911 - test nulls/None for all datatypes"
     arrays = [
         pyarrow.array([1], pyarrow.int64()),
@@ -414,7 +413,6 @@ def test_8911(conn, cursor):
         "RawData",
     ]
     df = pyarrow.table(arrays, names)
-    cursor.execute("delete from TestDataFrame")
     bind_names = ",".join(names)
     bind_values = ",".join(f":{i + 1}" for i in range(len(names)))
     cursor.executemany(
@@ -437,7 +435,7 @@ def test_8911(conn, cursor):
     assert fetched_df.equals(df)
 
 
-def test_8912(conn, cursor):
+def test_8912(conn, cursor, empty_tab):
     "8912 - test LOB sizes around 32K boundary using DataFrame ingestion"
     test_sizes = [32766, 32767, 32768, 32769, 32770]
     arrays = [
@@ -447,7 +445,6 @@ def test_8912(conn, cursor):
     ]
     names = ["Id", "LongData", "LongRawData"]
     df = pyarrow.table(arrays, names)
-    cursor.execute("delete from TestDataFrame")
     cursor.executemany(
         """
         insert into TestDataFrame (Id, LongData, LongRawData)
@@ -470,7 +467,7 @@ def test_8912(conn, cursor):
     assert fetched_df.equals(df)
 
 
-def test_8913(conn, cursor, test_env):
+def test_8913(conn, cursor, empty_tab, test_env):
     "8913 - test ingestion with mixed characters using DataFrame"
     if test_env.charset != "AL32UTF8":
         pytest.skip("Database character set must be AL32UTF8")
@@ -490,7 +487,6 @@ def test_8913(conn, cursor, test_env):
     ]
     names = ["Id", "FirstName"]
     df = pyarrow.table(arrays, names)
-    cursor.execute("delete from TestDataFrame")
     cursor.executemany(
         """
         insert into TestDataFrame (Id, FirstName)
@@ -512,7 +508,7 @@ def test_8913(conn, cursor, test_env):
     assert fetched_df.equals(df)
 
 
-def test_8914(conn, cursor):
+def test_8914(conn, cursor, empty_tab):
     "8914 - test various numeric values"
     test_data = [
         decimal.Decimal(0),
@@ -538,7 +534,6 @@ def test_8914(conn, cursor):
     ]
     names = ["Id", "DecimalData"]
     df = pyarrow.table(arrays, names)
-    cursor.execute("delete from TestDataFrame")
     cursor.executemany(
         """
         insert into TestDataFrame (Id, DecimalData)
@@ -561,7 +556,7 @@ def test_8914(conn, cursor):
     assert fetched_df.equals(df)
 
 
-def test_8915(conn, cursor):
+def test_8915(conn, cursor, empty_tab):
     "8915 - test various timestamp values"
     test_data = [
         datetime.datetime(2056, 2, 29),
@@ -580,7 +575,6 @@ def test_8915(conn, cursor):
     ]
     names = ["Id", "LastUpdated"]
     df = pyarrow.table(arrays, names)
-    cursor.execute("delete from TestDataFrame")
     cursor.executemany(
         """
         insert into TestDataFrame (Id, LastUpdated)
@@ -602,7 +596,7 @@ def test_8915(conn, cursor):
     assert fetched_df.equals(df)
 
 
-def test_8916(conn, cursor):
+def test_8916(conn, cursor, empty_tab):
     "8916 - test insertion with large data volumes"
     num_rows = 10_000
     ids = list(range(1, num_rows + 1))
@@ -615,7 +609,6 @@ def test_8916(conn, cursor):
     ]
     names = ["Id", "FirstName", "Salary"]
     df = pyarrow.table(arrays, names)
-    cursor.execute("delete from TestDataFrame")
     cursor.executemany(
         """
         insert into TestDataFrame (Id, FirstName, Salary)
@@ -858,9 +851,9 @@ def test_8918(skip_unless_vectors_supported, conn, cursor):
     assert fetched_df.equals(df)
 
 
-def test_8919(conn, cursor):
-    "8919 - test ingestion with various integer data types"
-    scenarios = [
+@pytest.mark.parametrize(
+    "values, dtype",
+    [
         ([-(2**7), 0, 2**7 - 1], pyarrow.int8()),
         ([-(2**15), 0, 2**15 - 1], pyarrow.int16()),
         ([-(2**31), 0, 2**31 - 1], pyarrow.int32()),
@@ -869,37 +862,38 @@ def test_8919(conn, cursor):
         ([0, 2**15, 2**16 - 1], pyarrow.uint16()),
         ([0, 2**31, 2**32 - 1], pyarrow.uint32()),
         ([0, 2**63, 2**64 - 1], pyarrow.uint64()),
-    ]
+    ],
+)
+def test_8919(values, dtype, conn, cursor, empty_tab):
+    "8919 - test ingestion with various integer data types"
     names = ["Id", "LongIntegerData"]
-    for values, dtype in scenarios:
-        arrays = [
-            pyarrow.array([1, 2, 3], pyarrow.int8()),
-            pyarrow.array(values, dtype),
-        ]
-        df = pyarrow.table(arrays, names)
-        cursor.execute("delete from TestDataFrame")
-        cursor.executemany(
-            """
-            insert into TestDataFrame (Id, LongIntegerData)
-            values (:1, :2)
-            """,
-            df,
-        )
-        conn.commit()
-        cursor.execute(
-            """
-            select to_char(LongIntegerData)
-            from TestDataFrame
-            order by Id
-            """
-        )
-        fetched_values = [int(s) for s, in cursor]
-        assert fetched_values == values
+    arrays = [
+        pyarrow.array([1, 2, 3], pyarrow.int8()),
+        pyarrow.array(values, dtype),
+    ]
+    df = pyarrow.table(arrays, names)
+    cursor.executemany(
+        """
+        insert into TestDataFrame (Id, LongIntegerData)
+        values (:1, :2)
+        """,
+        df,
+    )
+    conn.commit()
+    cursor.execute(
+        """
+        select to_char(LongIntegerData)
+        from TestDataFrame
+        order by Id
+        """
+    )
+    fetched_values = [int(s) for s, in cursor]
+    assert fetched_values == values
 
 
-def test_8920(conn, cursor):
-    "8920 - test ingestion with alternative date types"
-    scenarios = [
+@pytest.mark.parametrize(
+    "values, dtype",
+    [
         (
             [
                 datetime.datetime(1915, 9, 11),
@@ -916,29 +910,30 @@ def test_8920(conn, cursor):
             ],
             pyarrow.date64(),
         ),
-    ]
+    ],
+)
+def test_8920(values, dtype, conn, cursor, empty_tab):
+    "8920 - test ingestion with alternative date types"
     names = ["Id", "DateOfBirth"]
-    for values, dtype in scenarios:
-        arrays = [
-            pyarrow.array([1, 2, 3], pyarrow.int8()),
-            pyarrow.array(values, dtype),
-        ]
-        df = pyarrow.table(arrays, names)
-        cursor.execute("delete from TestDataFrame")
-        cursor.executemany(
-            """
-            insert into TestDataFrame (Id, DateOfBirth)
-            values (:1, :2)
-            """,
-            df,
-        )
-        conn.commit()
-        cursor.execute(
-            """
-            select DateOfBirth
-            from TestDataFrame
-            order by Id
-            """
-        )
-        fetched_values = [d for d, in cursor]
-        assert fetched_values == values
+    arrays = [
+        pyarrow.array([1, 2, 3], pyarrow.int8()),
+        pyarrow.array(values, dtype),
+    ]
+    df = pyarrow.table(arrays, names)
+    cursor.executemany(
+        """
+        insert into TestDataFrame (Id, DateOfBirth)
+        values (:1, :2)
+        """,
+        df,
+    )
+    conn.commit()
+    cursor.execute(
+        """
+        select DateOfBirth
+        from TestDataFrame
+        order by Id
+        """
+    )
+    fetched_values = [d for d, in cursor]
+    assert fetched_values == values

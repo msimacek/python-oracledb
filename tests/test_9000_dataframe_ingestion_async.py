@@ -56,7 +56,12 @@ def module_checks(anyio_backend, skip_unless_thin_mode):
     pass
 
 
-async def test_9000(async_conn, async_cursor):
+@pytest.fixture
+async def empty_tab(async_cursor):
+    await async_cursor.execute("delete from TestDataFrame")
+
+
+async def test_9000(async_conn, async_cursor, empty_tab):
     "9000 - test basic ingestion of data frame"
     arrays = [
         pyarrow.array([1, 2, 3], pyarrow.int64()),
@@ -73,7 +78,6 @@ async def test_9000(async_conn, async_cursor):
     ]
     names = ["Id", "FirstName", "Salary", "DateOfBirth"]
     df = pyarrow.table(arrays, names)
-    await async_cursor.execute("delete from TestDataFrame")
     await async_cursor.executemany(
         """
         insert into TestDataFrame
@@ -98,7 +102,7 @@ async def test_9000(async_conn, async_cursor):
     assert fetched_df.equals(df)
 
 
-async def test_9001(async_conn, async_cursor):
+async def test_9001(async_conn, async_cursor, empty_tab):
     "9001 - test ingestion with null values"
     arrays = [
         pyarrow.array([1, 2, 3], pyarrow.int64()),
@@ -115,7 +119,6 @@ async def test_9001(async_conn, async_cursor):
     ]
     names = ["Id", "FirstName", "Salary", "DateOfBirth"]
     df = pyarrow.table(arrays, names)
-    await async_cursor.execute("delete from TestDataFrame")
     await async_cursor.executemany(
         """
         insert into TestDataFrame
@@ -140,12 +143,11 @@ async def test_9001(async_conn, async_cursor):
     assert fetched_df.equals(df)
 
 
-async def test_9002(async_conn, async_cursor):
+async def test_9002(async_conn, async_cursor, empty_tab):
     "9002 - test ingestion with single column"
     arrays = [pyarrow.array([1, 2, 3], pyarrow.int64())]
     names = ["Id"]
     df = pyarrow.table(arrays, names)
-    await async_cursor.execute("delete from TestDataFrame")
     await async_cursor.executemany(
         "insert into TestDataFrame (Id) values (:1)", df
     )
@@ -161,7 +163,7 @@ async def test_9002(async_conn, async_cursor):
     assert fetched_df.equals(df)
 
 
-async def test_9003(async_conn, async_cursor):
+async def test_9003(async_conn, async_cursor, empty_tab):
     "9003 - test ingestion with large data types"
     long_str = "X" * 32_768
     long_raw = b"Y" * 32_768
@@ -172,7 +174,6 @@ async def test_9003(async_conn, async_cursor):
     ]
     names = ["Id", "LongData", "LongRawData"]
     df = pyarrow.table(arrays, names)
-    await async_cursor.execute("delete from TestDataFrame")
     await async_cursor.executemany(
         """
         insert into TestDataFrame (Id, LongData, LongRawData)
@@ -195,7 +196,7 @@ async def test_9003(async_conn, async_cursor):
     assert fetched_df.equals(df)
 
 
-async def test_9004(async_conn, async_cursor):
+async def test_9004(async_conn, async_cursor, empty_tab):
     "9004 - test ingestion with decimal values"
     arrays = [
         pyarrow.array(
@@ -217,7 +218,6 @@ async def test_9004(async_conn, async_cursor):
     ]
     names = ["Id", "DecimalData"]
     df = pyarrow.table(arrays, names)
-    await async_cursor.execute("delete from TestDataFrame")
     await async_cursor.executemany(
         """
         insert into TestDataFrame
@@ -275,7 +275,7 @@ async def test_9005(skip_unless_native_boolean_supported, async_conn):
     assert fetched_df.equals(df)
 
 
-async def test_9006(async_conn, async_cursor):
+async def test_9006(async_conn, async_cursor, empty_tab):
     "9006 - test ingestion with timestamp values"
     arrays = [
         pyarrow.array([1, 2, 3], pyarrow.int64()),
@@ -290,7 +290,6 @@ async def test_9006(async_conn, async_cursor):
     ]
     names = ["Id", "LastUpdated"]
     df = pyarrow.table(arrays, names)
-    await async_cursor.execute("delete from TestDataFrame")
     await async_cursor.executemany(
         """
         insert into TestDataFrame
@@ -403,7 +402,7 @@ async def test_9010(async_conn, async_cursor):
         assert fetched_df.equals(df)
 
 
-async def test_9011(async_conn, async_cursor):
+async def test_9011(async_conn, async_cursor, empty_tab):
     "9011 - test nulls/None for all datatypes"
     arrays = [
         pyarrow.array([1], pyarrow.int64()),
@@ -422,7 +421,6 @@ async def test_9011(async_conn, async_cursor):
         "RawData",
     ]
     df = pyarrow.table(arrays, names)
-    await async_cursor.execute("delete from TestDataFrame")
     bind_names = ",".join(names)
     bind_values = ",".join(f":{i + 1}" for i in range(len(names)))
     await async_cursor.executemany(
@@ -445,7 +443,7 @@ async def test_9011(async_conn, async_cursor):
     assert fetched_df.equals(df)
 
 
-async def test_9012(async_conn, async_cursor):
+async def test_9012(async_conn, async_cursor, empty_tab):
     "9012 - test LOB sizes around 32K boundary using DataFrame ingestion"
     test_sizes = [32766, 32767, 32768, 32769, 32770]
     arrays = [
@@ -455,7 +453,6 @@ async def test_9012(async_conn, async_cursor):
     ]
     names = ["Id", "LongData", "LongRawData"]
     df = pyarrow.table(arrays, names)
-    await async_cursor.execute("delete from TestDataFrame")
     await async_cursor.executemany(
         """
         insert into TestDataFrame (Id, LongData, LongRawData)
@@ -478,7 +475,7 @@ async def test_9012(async_conn, async_cursor):
     assert fetched_df.equals(df)
 
 
-async def test_9013(async_conn, async_cursor, test_env):
+async def test_9013(async_conn, async_cursor, empty_tab, test_env):
     "9013 - test ingestion with mixed characters using DataFrame"
     if test_env.charset != "AL32UTF8":
         pytest.skip("Database character set must be AL32UTF8")
@@ -498,7 +495,6 @@ async def test_9013(async_conn, async_cursor, test_env):
     ]
     names = ["Id", "FirstName"]
     df = pyarrow.table(arrays, names)
-    await async_cursor.execute("delete from TestDataFrame")
     await async_cursor.executemany(
         """
         insert into TestDataFrame (Id, FirstName)
@@ -520,7 +516,7 @@ async def test_9013(async_conn, async_cursor, test_env):
     assert fetched_df.equals(df)
 
 
-async def test_9014(async_conn, async_cursor):
+async def test_9014(async_conn, async_cursor, empty_tab):
     "9014 - test various numeric values"
     test_data = [
         decimal.Decimal(0),
@@ -546,7 +542,6 @@ async def test_9014(async_conn, async_cursor):
     ]
     names = ["Id", "DecimalData"]
     df = pyarrow.table(arrays, names)
-    await async_cursor.execute("delete from TestDataFrame")
     await async_cursor.executemany(
         """
         insert into TestDataFrame (Id, DecimalData)
@@ -569,7 +564,7 @@ async def test_9014(async_conn, async_cursor):
     assert fetched_df.equals(df)
 
 
-async def test_9015(async_conn, async_cursor):
+async def test_9015(async_conn, async_cursor, empty_tab):
     "9015 - test various timestamp values"
     test_data = [
         datetime.datetime(2056, 2, 29),
@@ -588,7 +583,6 @@ async def test_9015(async_conn, async_cursor):
     ]
     names = ["Id", "LastUpdated"]
     df = pyarrow.table(arrays, names)
-    await async_cursor.execute("delete from TestDataFrame")
     await async_cursor.executemany(
         """
         insert into TestDataFrame (Id, LastUpdated)
@@ -610,7 +604,7 @@ async def test_9015(async_conn, async_cursor):
     assert fetched_df.equals(df)
 
 
-async def test_9016(async_conn, async_cursor):
+async def test_9016(async_conn, async_cursor, empty_tab):
     "9016 - test insertion with large data volumes"
     num_rows = 10_000
     ids = list(range(1, num_rows + 1))
@@ -623,7 +617,6 @@ async def test_9016(async_conn, async_cursor):
     ]
     names = ["Id", "FirstName", "Salary"]
     df = pyarrow.table(arrays, names)
-    await async_cursor.execute("delete from TestDataFrame")
     await async_cursor.executemany(
         """
         insert into TestDataFrame (Id, FirstName, Salary)
@@ -867,9 +860,9 @@ async def test_9018(skip_unless_vectors_supported, async_conn, async_cursor):
     assert fetched_df.equals(df)
 
 
-async def test_9019(async_conn, async_cursor):
-    "9019 - test ingestion with various integer data types"
-    scenarios = [
+@pytest.mark.parametrize(
+    "values, dtype",
+    [
         ([-(2**7), 0, 2**7 - 1], pyarrow.int8()),
         ([-(2**15), 0, 2**15 - 1], pyarrow.int16()),
         ([-(2**31), 0, 2**31 - 1], pyarrow.int32()),
@@ -878,37 +871,39 @@ async def test_9019(async_conn, async_cursor):
         ([0, 2**15, 2**16 - 1], pyarrow.uint16()),
         ([0, 2**31, 2**32 - 1], pyarrow.uint32()),
         ([0, 2**63, 2**64 - 1], pyarrow.uint64()),
-    ]
+    ],
+)
+async def test_9019(values, dtype, async_conn, async_cursor, empty_tab):
+    "9019 - test ingestion with various integer data types"
     names = ["Id", "LongIntegerData"]
-    for values, dtype in scenarios:
-        arrays = [
-            pyarrow.array([1, 2, 3], pyarrow.int8()),
-            pyarrow.array(values, dtype),
-        ]
-        df = pyarrow.table(arrays, names)
-        await async_cursor.execute("delete from TestDataFrame")
-        await async_cursor.executemany(
-            """
-            insert into TestDataFrame (Id, LongIntegerData)
-            values (:1, :2)
-            """,
-            df,
-        )
-        await async_conn.commit()
-        await async_cursor.execute(
-            """
-            select to_char(LongIntegerData)
-            from TestDataFrame
-            order by Id
-            """
-        )
-        fetched_values = [int(s) async for s, in async_cursor]
-        assert fetched_values == values
+    arrays = [
+        pyarrow.array([1, 2, 3], pyarrow.int8()),
+        pyarrow.array(values, dtype),
+    ]
+    df = pyarrow.table(arrays, names)
+    await async_cursor.execute("delete from TestDataFrame")
+    await async_cursor.executemany(
+        """
+        insert into TestDataFrame (Id, LongIntegerData)
+        values (:1, :2)
+        """,
+        df,
+    )
+    await async_conn.commit()
+    await async_cursor.execute(
+        """
+        select to_char(LongIntegerData)
+        from TestDataFrame
+        order by Id
+        """
+    )
+    fetched_values = [int(s) async for s, in async_cursor]
+    assert fetched_values == values
 
 
-async def test_9020(async_conn, async_cursor):
-    "9020 - test ingestion with alternative date types"
-    scenarios = [
+@pytest.mark.parametrize(
+    "values, dtype",
+    [
         (
             [
                 datetime.datetime(1915, 9, 11),
@@ -925,29 +920,30 @@ async def test_9020(async_conn, async_cursor):
             ],
             pyarrow.date64(),
         ),
-    ]
+    ],
+)
+async def test_9020(values, dtype, async_conn, async_cursor, empty_tab):
+    "9020 - test ingestion with alternative date types"
     names = ["Id", "DateOfBirth"]
-    for values, dtype in scenarios:
-        arrays = [
-            pyarrow.array([1, 2, 3], pyarrow.int8()),
-            pyarrow.array(values, dtype),
-        ]
-        df = pyarrow.table(arrays, names)
-        await async_cursor.execute("delete from TestDataFrame")
-        await async_cursor.executemany(
-            """
-            insert into TestDataFrame (Id, DateOfBirth)
-            values (:1, :2)
-            """,
-            df,
-        )
-        await async_conn.commit()
-        await async_cursor.execute(
-            """
-            select DateOfBirth
-            from TestDataFrame
-            order by Id
-            """
-        )
-        fetched_values = [d async for d, in async_cursor]
-        assert fetched_values == values
+    arrays = [
+        pyarrow.array([1, 2, 3], pyarrow.int8()),
+        pyarrow.array(values, dtype),
+    ]
+    df = pyarrow.table(arrays, names)
+    await async_cursor.executemany(
+        """
+        insert into TestDataFrame (Id, DateOfBirth)
+        values (:1, :2)
+        """,
+        df,
+    )
+    await async_conn.commit()
+    await async_cursor.execute(
+        """
+        select DateOfBirth
+        from TestDataFrame
+        order by Id
+        """
+    )
+    fetched_values = [d async for d, in async_cursor]
+    assert fetched_values == values
