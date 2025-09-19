@@ -28,8 +28,6 @@ Module for testing dataframe with vector support with asyncio
 
 import array
 
-import numpy
-import pandas
 import pyarrow
 import pytest
 
@@ -41,37 +39,7 @@ def module_checks(
     pass
 
 
-def _convert_df_value(df_val):
-    """
-    This method converts a dataframe cell value to use with assertEqual()
-    For e.g. NaN and np.array cannot be compared directly. Values are
-    converted according to the following rules:
-     - NaN -> None
-     - np.array -> np.array.tolist() (Python list)
-    """
-    if isinstance(df_val, numpy.ndarray):
-        return df_val.tolist()
-    elif pandas.isna(df_val):
-        return None
-    elif isinstance(df_val, dict):
-        return {k: _convert_df_value(v) for k, v in df_val.items()}
-    else:
-        return df_val
-
-
-def _get_data_from_df(df):
-    """
-    Returns data from the data frame in a normalized fashion suitable for
-    comparison. In particular, NaN values cannot be compared to one another
-    so they are converted to the value None for comparison purposes.
-    """
-    return [
-        tuple(_convert_df_value(v) for v in row)
-        for row in df.itertuples(index=False, name=None)
-    ]
-
-
-async def test_9200(async_conn):
+async def test_9200(async_conn, test_env):
     "9200 - fetch float32 vector"
 
     # float32 is a special case while comparing dataframe values
@@ -95,10 +63,10 @@ async def test_9200(async_conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-async def test_9201(async_conn):
+async def test_9201(async_conn, test_env):
     "9201 - fetch float64 vector"
     data = [
         ([34.6, 77.8],),
@@ -115,10 +83,10 @@ async def test_9201(async_conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-async def test_9202(async_conn):
+async def test_9202(async_conn, test_env):
     "9202 - fetch int8 vector"
     data = [
         ([34, -77],),
@@ -135,10 +103,12 @@ async def test_9202(async_conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-async def test_9203(skip_unless_binary_vectors_supported, async_conn):
+async def test_9203(
+    skip_unless_binary_vectors_supported, async_conn, test_env
+):
     "9203 - fetch binary vector"
     data = [
         ([3, 2, 3],),
@@ -155,10 +125,10 @@ async def test_9203(skip_unless_binary_vectors_supported, async_conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-async def test_9204(async_conn):
+async def test_9204(async_conn, test_env):
     "9204 - fetch duplicate float64 vectors"
     data = [
         ([34.6, 77.8],),
@@ -202,10 +172,12 @@ async def test_9204(async_conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-async def test_9205(skip_unless_sparse_vectors_supported, async_conn):
+async def test_9205(
+    skip_unless_sparse_vectors_supported, async_conn, test_env
+):
     "9205 - fetch float32 sparse vectors"
     data = [
         (
@@ -231,10 +203,12 @@ async def test_9205(skip_unless_sparse_vectors_supported, async_conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-async def test_9206(skip_unless_sparse_vectors_supported, async_conn):
+async def test_9206(
+    skip_unless_sparse_vectors_supported, async_conn, test_env
+):
     "9206 - fetch float64 sparse vectors"
     data = [
         (
@@ -263,7 +237,7 @@ async def test_9206(skip_unless_sparse_vectors_supported, async_conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
 async def test_9207(async_conn, test_env):
@@ -278,7 +252,7 @@ async def test_9207(async_conn, test_env):
         )
 
 
-async def test_9208(async_conn):
+async def test_9208(async_conn, test_env):
     "9208 - test vector operations with different dimensions"
     data = [([1, 0, 3],), ([0, 5, -12.25, 0],), ([5.5, -6.25, 7, 8, 9],)]
     ora_df = await async_conn.fetch_df_all(
@@ -291,10 +265,10 @@ async def test_9208(async_conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-async def test_9209(async_conn):
+async def test_9209(async_conn, test_env):
     "9209 - test vector operations with large arrays"
     large_array = list(range(1, 1001))
     data = [(large_array,), (large_array,)]
@@ -307,7 +281,7 @@ async def test_9209(async_conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
 async def test_9210(
@@ -324,7 +298,7 @@ async def test_9210(
         )
 
 
-async def test_9211(async_conn):
+async def test_9211(async_conn, test_env):
     "9211 - test mixed vector types in a single dataframe"
     data = [
         ([1.5, 2.5, 3.5], [1, 2, 3]),
@@ -342,10 +316,10 @@ async def test_9211(async_conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-async def test_9212(async_conn):
+async def test_9212(async_conn, test_env):
     "9212 - test vectors with very large dimensions"
     large_dim = 800
     large_vector = [2.25] * large_dim
@@ -359,10 +333,12 @@ async def test_9212(async_conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-async def test_9213(skip_unless_binary_vectors_supported, async_conn):
+async def test_9213(
+    skip_unless_binary_vectors_supported, async_conn, test_env
+):
     "9213 - test binary vector edge case - max value"
     data = [
         ([255, 255, 255],),
@@ -376,4 +352,4 @@ async def test_9213(skip_unless_binary_vectors_supported, async_conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)

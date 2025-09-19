@@ -76,7 +76,9 @@ import platform
 import secrets
 import string
 
+import numpy
 import oracledb
+import pandas
 import pytest
 
 
@@ -182,6 +184,54 @@ class ParseCountInfo(SystemStatInfo):
 
 class TestEnv:
 
+    def _convert_df_value(self, df_val):
+        """
+        This method converts a dataframe cell value to use with assertions
+        For e.g. NaN and np.array cannot be compared directly. Values are
+        converted according to the following rules:
+         - NaN -> None
+         - np.array -> np.array.tolist() (Python list)
+        """
+        if isinstance(df_val, numpy.ndarray):
+            return df_val.tolist()
+        elif pandas.isna(df_val):
+            return None
+        elif isinstance(df_val, dict):
+            return {k: self._convert_df_value(v) for k, v in df_val.items()}
+        else:
+            return df_val
+
+    def _get_charset(self, conn):
+        """
+        Determines the character set in use by the database.
+        """
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                select value
+                from nls_database_parameters
+                where parameter = 'NLS_CHARACTERSET'
+                """
+            )
+            (value,) = cursor.fetchone()
+            return value
+
+    def _get_charset_ratios(self, conn):
+        """
+        Calculates the character set ratios used by the database.
+        """
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            select
+                cast('X' as varchar2(1)),
+                cast('Y' as nvarchar2(1))
+            from dual
+            """
+        )
+        varchar_info, nvarchar_info = cursor.description
+        return (varchar_info.internal_size, nvarchar_info.internal_size)
+
     def _initialize(self):
         """
         Initializes the remaining items after establishing a connection to the
@@ -225,37 +275,6 @@ class TestEnv:
 
         # mark environment as fully initialized
         self.initialized = True
-
-    def _get_charset(self, conn):
-        """
-        Determines the character set in use by the database.
-        """
-        with conn.cursor() as cursor:
-            cursor.execute(
-                """
-                select value
-                from nls_database_parameters
-                where parameter = 'NLS_CHARACTERSET'
-                """
-            )
-            (value,) = cursor.fetchone()
-            return value
-
-    def _get_charset_ratios(self, conn):
-        """
-        Calculates the character set ratios used by the database.
-        """
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            select
-                cast('X' as varchar2(1)),
-                cast('Y' as nvarchar2(1))
-            from dual
-            """
-        )
-        varchar_info, nvarchar_info = cursor.description
-        return (varchar_info.internal_size, nvarchar_info.internal_size)
 
     def _is_drcp(self):
         """
@@ -455,6 +474,17 @@ class TestEnv:
         Returns a connection to the database using asyncio.
         """
         return self.get_connection(dsn, use_async=True, **kwargs)
+
+    def get_data_from_df(self, df):
+        """
+        Returns data from the data frame in a normalized fashion suitable for
+        comparison. In particular, NaN values cannot be compared to one another
+        so they are converted to the value None for comparison purposes.
+        """
+        return [
+            tuple(self._convert_df_value(v) for v in row)
+            for row in df.itertuples(index=False, name=None)
+        ]
 
     def get_db_object_as_plain_object(self, obj):
         """

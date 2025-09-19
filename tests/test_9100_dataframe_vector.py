@@ -28,10 +28,7 @@ Module for testing dataframe with vector support
 
 import array
 
-import numpy
-import pandas
 import pyarrow
-
 import pytest
 
 
@@ -40,37 +37,7 @@ def module_checks(skip_unless_vectors_supported):
     pass
 
 
-def _convert_df_value(df_val):
-    """
-    This method converts a dataframe cell value to use with assertEqual()
-    For e.g. NaN and np.array cannot be compared directly. Values are
-    converted according to the following rules:
-     - NaN -> None
-     - np.array -> np.array.tolist() (Python list)
-    """
-    if isinstance(df_val, numpy.ndarray):
-        return df_val.tolist()
-    elif pandas.isna(df_val):
-        return None
-    elif isinstance(df_val, dict):
-        return {k: _convert_df_value(v) for k, v in df_val.items()}
-    else:
-        return df_val
-
-
-def _get_data_from_df(df):
-    """
-    Returns data from the data frame in a normalized fashion suitable for
-    comparison. In particular, NaN values cannot be compared to one another
-    so they are converted to the value None for comparison purposes.
-    """
-    return [
-        tuple(_convert_df_value(v) for v in row)
-        for row in df.itertuples(index=False, name=None)
-    ]
-
-
-def test_9100(conn):
+def test_9100(conn, test_env):
     "9100 - fetch float32 vector"
 
     # float32 is a special case while comparing dataframe values
@@ -94,10 +61,10 @@ def test_9100(conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-def test_9101(conn):
+def test_9101(conn, test_env):
     "9101 - fetch float64 vector"
     data = [
         ([34.6, 77.8],),
@@ -114,10 +81,10 @@ def test_9101(conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-def test_9102(conn):
+def test_9102(conn, test_env):
     "9102 - fetch int8 vector"
     data = [
         ([34, -77],),
@@ -134,10 +101,10 @@ def test_9102(conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-def test_9103(skip_unless_binary_vectors_supported, conn):
+def test_9103(skip_unless_binary_vectors_supported, conn, test_env):
     "9103 - fetch binary vector"
     data = [
         ([3, 2, 3],),
@@ -154,10 +121,10 @@ def test_9103(skip_unless_binary_vectors_supported, conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-def test_9104(conn):
+def test_9104(conn, test_env):
     "9104 - fetch duplicate float64 vectors"
     data = [
         ([34.6, 77.8],),
@@ -201,10 +168,10 @@ def test_9104(conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-def test_9105(skip_unless_sparse_vectors_supported, conn):
+def test_9105(skip_unless_sparse_vectors_supported, conn, test_env):
     "9105 - fetch float32 sparse vectors"
     data = [
         (
@@ -230,10 +197,10 @@ def test_9105(skip_unless_sparse_vectors_supported, conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-def test_9106(skip_unless_sparse_vectors_supported, conn):
+def test_9106(skip_unless_sparse_vectors_supported, conn, test_env):
     "9106 - fetch float64 sparse vectors"
     data = [
         (
@@ -262,7 +229,7 @@ def test_9106(skip_unless_sparse_vectors_supported, conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
 def test_9107(conn, test_env):
@@ -277,7 +244,7 @@ def test_9107(conn, test_env):
         )
 
 
-def test_9108(conn):
+def test_9108(conn, test_env):
     "9108 - test vector operations with different dimensions"
     data = [([1, 0, 3],), ([0, 5, -12.25, 0],), ([5.5, -6.25, 7, 8, 9],)]
 
@@ -291,10 +258,10 @@ def test_9108(conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-def test_9109(conn):
+def test_9109(conn, test_env):
     "9109 - test vector operations with large arrays"
     large_array = list(range(1, 1001))
     data = [(large_array,), (large_array,)]
@@ -307,7 +274,7 @@ def test_9109(conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
 def test_9110(skip_unless_sparse_vectors_supported, conn, test_env):
@@ -322,7 +289,7 @@ def test_9110(skip_unless_sparse_vectors_supported, conn, test_env):
         )
 
 
-def test_9111(conn):
+def test_9111(conn, test_env):
     "9111 - test mixed vector types in a single dataframe"
     data = [
         ([1.5, 2.5, 3.5], [1, 2, 3]),
@@ -340,10 +307,10 @@ def test_9111(conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-def test_9112(conn):
+def test_9112(conn, test_env):
     "9112 - test vectors with very large dimensions"
     large_dim = 800
     large_vector = [2.25] * large_dim
@@ -357,10 +324,10 @@ def test_9112(conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
 
 
-def test_9113(skip_unless_binary_vectors_supported, conn):
+def test_9113(skip_unless_binary_vectors_supported, conn, test_env):
     "9113 - test binary vector edge case - max value"
     data = [
         ([255, 255, 255],),
@@ -374,4 +341,4 @@ def test_9113(skip_unless_binary_vectors_supported, conn):
         """
     )
     fetched_df = pyarrow.table(ora_df).to_pandas()
-    assert data == _get_data_from_df(fetched_df)
+    assert data == test_env.get_data_from_df(fetched_df)
