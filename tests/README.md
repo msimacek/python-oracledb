@@ -1,16 +1,16 @@
 This directory contains the test suite for python-oracledb.
 
-1.  The schemas and SQL objects that are referenced in the test suite can be
+1.  Install pytest and tox:
+
+        python -m pip install pytest tox --upgrade
+
+2.  The schemas and SQL objects that are referenced in the test suite can be
     created by running the Python script [create_schema.py][1]. The script
     requires administrative privileges to complete successfully. A set of
     environment variables should be set as documented in the Python script
     [conftest.py][2]. Run the script using the following command:
 
         python -m pytest tests/create_schema.py
-
-2.  Install tox:
-
-        python -m pip install tox --upgrade
 
 3.  Run the test suite by issuing the following command in the top-level
     directory of your oracledb installation:
@@ -65,6 +65,7 @@ This directory contains the test suite for python-oracledb.
                grant create session to <External User>;
 
                alter user <Schema Owner> grant connect through <External User>;
+
 
 
 [1]: https://github.com/oracle/python-oracledb/blob/main/tests/create_schema.py
