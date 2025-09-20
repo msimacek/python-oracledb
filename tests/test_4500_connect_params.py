@@ -1178,6 +1178,7 @@ def test_4564():
         assert getattr(params, name) == actual_value
 
 
+@pytest.mark.filterwarnings("ignore:base64 encoded")
 def test_4565(test_env):
     "4565 - test set_from_config() with no user and password set"
     user = "user_4565"
