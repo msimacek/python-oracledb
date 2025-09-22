@@ -157,7 +157,7 @@ cdef class DataFrameBatchLoadManager(BatchLoadManager):
             for i, bind_var in enumerate(self.cursor_impl.bind_vars):
                 array_impl = self.df_impl.arrays[self.chunk_index + i]
                 bind_var.var_impl._arrow_array = array_impl
-                bind_var.var_impl._on_reset_bind(self.num_rows)
+                bind_var.var_impl._on_reset_bind(self.offset, self.num_rows)
 
     cdef int _next_chunk(self) except -1:
         """
@@ -222,7 +222,7 @@ cdef class FullDataBatchLoadManager(BatchLoadManager):
             object row
             ssize_t i
         self._calculate_num_rows_in_batch(self.total_num_rows)
-        self.cursor_impl._reset_bind_vars(self.num_rows)
+        self.cursor_impl._reset_bind_vars(self.offset, self.num_rows)
         for i in range(self.num_rows):
             if i == self.num_rows - 1:
                 defer_type_assignment = False

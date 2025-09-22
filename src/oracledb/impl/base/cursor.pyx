@@ -439,7 +439,8 @@ cdef class BaseCursorImpl:
             batch_size,
         )
 
-    cdef int _reset_bind_vars(self, uint32_t num_rows) except -1:
+    cdef int _reset_bind_vars(self, uint64_t array_offset,
+                              uint32_t num_rows) except -1:
         """
         Reset all of the existing bind variables. If any bind variables don't
         have enough space to store the number of rows specified, expand and
@@ -452,7 +453,7 @@ cdef class BaseCursorImpl:
             for i in range(len(self.bind_vars)):
                 bind_var = <BindVar> self.bind_vars[i]
                 if bind_var.var_impl is not None:
-                    bind_var.var_impl._on_reset_bind(num_rows)
+                    bind_var.var_impl._on_reset_bind(array_offset, num_rows)
                 bind_var.has_value = False
 
     def _set_oci_attr(self, uint32_t attr_num, uint32_t attr_type,
@@ -483,7 +484,7 @@ cdef class BaseCursorImpl:
             BindVar bind_var
             dict dict_params
         type_handler = self._get_input_type_handler()
-        self._reset_bind_vars(num_rows)
+        self._reset_bind_vars(0, num_rows)
         self._bind_values(cursor, type_handler, parameters, num_rows, row_num,
                           defer_type_assignment)
 

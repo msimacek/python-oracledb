@@ -730,7 +730,8 @@ cdef class BaseCursorImpl:
     cdef int _perform_binds(self, object conn, uint32_t num_execs) except -1
     cdef int _prepare(self, str statement, str tag,
                       bint cache_statement) except -1
-    cdef int _reset_bind_vars(self, uint32_t num_rows) except -1
+    cdef int _reset_bind_vars(self, uint64_t array_offset,
+                              uint32_t num_rows) except -1
     cdef int _verify_var(self, object var) except -1
     cdef int bind_one(self, object cursor, object parameters) except -1
     cdef object _finish_building_arrow_arrays(self)
@@ -771,7 +772,8 @@ cdef class BaseVarImpl:
     cdef DbType _get_adjusted_type(self, uint8_t ora_type_num)
     cdef list _get_array_value(self)
     cdef object _get_scalar_value(self, uint32_t pos)
-    cdef int _on_reset_bind(self, uint32_t num_rows) except -1
+    cdef int _on_reset_bind(self, uint64_t array_offset,
+                            uint32_t num_rows) except -1
     cdef int _resize(self, uint32_t new_size) except -1
     cdef int _set_metadata_from_type(self, object typ) except -1
     cdef int _set_metadata_from_value(self, object value,
