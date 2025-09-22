@@ -697,3 +697,4 @@ async def test_8816(async_conn, async_cursor, test_env):
             batch_size=75,
             suspend_on_success=True,
         )
+    await async_conn.resume_sessionless_transaction(TRANSACTION_ID_CLIENT)
