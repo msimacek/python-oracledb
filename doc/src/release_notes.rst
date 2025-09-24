@@ -75,6 +75,8 @@ Common Changes
     R4BZNC36MSFLKULA74KILLFY6GP3VCPA/>`__.
 #)  Pin Cython to 3.1.x instead of 3.1.0 as requested
     (`issue 530 <https://github.com/oracle/python-oracledb/issues/530>`__).
+#)  Support for :ref:`data frames <dataframeformat>` is no longer considered a
+    pre-release.
 #)  Fixed bug when attempting to execute an empty statement
     (`issue 525 <https://github.com/oracle/python-oracledb/issues/525>`__).
 #)  Fixed bug when attempting to convert an integer that cannot be represented
