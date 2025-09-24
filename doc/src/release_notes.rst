@@ -44,6 +44,9 @@ Thick Mode Changes
 Common Changes
 ++++++++++++++
 
+#)  Added parameter ``requested_schema`` to :meth:`Connection.fetch_df_all()`
+    and :meth:`Connection.fetch_df_batches()` to support type mapping when
+    querying.
 #)  Added support for all of the signed and unsigned fixed width integer types
     when ingesting data frames supporting the Arrow PyCapsule interface.
     Previously only ``int64`` was supported.

@@ -152,6 +152,7 @@ cdef class BaseCursorImpl:
         adjustments.
         """
         cdef:
+            ArrowSchemaImpl schema_impl
             object var, pub_metadata
             BaseConnImpl conn_impl
             BaseVarImpl var_impl
@@ -191,7 +192,12 @@ cdef class BaseCursorImpl:
         # otherwise, create a new variable using the provided fetch metadata
         var_impl = self._create_var_impl(conn)
         var_impl.num_elements = self._fetch_array_size
-        var_impl.metadata = metadata.copy()
+        if self.schema_impl is not None:
+            schema_impl = self.schema_impl.child_schemas[pos]
+            metadata.check_convert_to_arrow(schema_impl)
+            var_impl.metadata = OracleMetadata.from_arrow_schema(schema_impl)
+        else:
+            var_impl.metadata = metadata.copy()
         var_impl._fetch_metadata = metadata
 
         # adjust the variable based on the defaults specified by the user, if

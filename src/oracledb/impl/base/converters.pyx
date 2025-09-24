@@ -174,7 +174,7 @@ cdef int convert_date_to_arrow_timestamp(ArrowArrayImpl array_impl,
     dt = convert_date_to_python(buffer)
     td = dt - EPOCH_DATE
     ts = int(cydatetime.total_seconds(td) * array_impl.schema_impl.time_factor)
-    array_impl.append_int64(ts)
+    array_impl.append_int(ts)
 
 
 cdef object convert_interval_ds_to_python(OracleDataBuffer *buffer):
@@ -268,10 +268,10 @@ cdef int convert_number_to_arrow_double(ArrowArrayImpl array_impl,
         array_impl.append_double(double_value)
 
 
-cdef int convert_number_to_arrow_int64(ArrowArrayImpl array_impl,
-                                       OracleDataBuffer *buffer) except -1:
+cdef int convert_number_to_arrow_int(ArrowArrayImpl array_impl,
+                                     OracleDataBuffer *buffer) except -1:
     """
-    Converts a NUMBER value stored in the buffer to Arrow INT64.
+    Converts a NUMBER value stored in the buffer to an Arrow integer.
     """
     cdef:
         OracleNumber *value = &buffer.as_number
@@ -281,7 +281,23 @@ cdef int convert_number_to_arrow_int64(ArrowArrayImpl array_impl,
     if errno.errno != 0:
         errors._raise_err(errors.ERR_CANNOT_CONVERT_TO_ARROW_INTEGER,
                           value=value.chars[:value.num_chars].decode())
-    array_impl.append_int64(int64_value)
+    array_impl.append_int(int64_value)
+
+
+cdef int convert_number_to_arrow_uint(ArrowArrayImpl array_impl,
+                                      OracleDataBuffer *buffer) except -1:
+    """
+    Converts a NUMBER value stored in the buffer to an Arrow unsigned integer.
+    """
+    cdef:
+        OracleNumber *value = &buffer.as_number
+        uint64_t uint64_value
+    errno.errno = 0
+    uint64_value = strtoull((<const char*> value.chars), NULL, 0)
+    if errno.errno != 0:
+        errors._raise_err(errors.ERR_CANNOT_CONVERT_TO_ARROW_INTEGER,
+                          value=value.chars[:value.num_chars].decode())
+    array_impl.append_uint(uint64_value)
 
 
 cdef object convert_number_to_python_decimal(OracleDataBuffer *buffer):
@@ -374,8 +390,20 @@ cdef int convert_oracle_data_to_arrow(OracleMetadata from_metadata,
 
     arrow_type = to_metadata._schema_impl.arrow_type
     db_type_num = from_metadata.dbtype.num
-    if arrow_type == NANOARROW_TYPE_INT64:
-        convert_number_to_arrow_int64(array_impl, &data.buffer)
+    if arrow_type in (
+        NANOARROW_TYPE_INT8,
+        NANOARROW_TYPE_INT16,
+        NANOARROW_TYPE_INT32,
+        NANOARROW_TYPE_INT64,
+    ):
+        convert_number_to_arrow_int(array_impl, &data.buffer)
+    elif arrow_type in (
+        NANOARROW_TYPE_UINT8,
+        NANOARROW_TYPE_UINT16,
+        NANOARROW_TYPE_UINT32,
+        NANOARROW_TYPE_UINT64,
+    ):
+        convert_number_to_arrow_uint(array_impl, &data.buffer)
     elif arrow_type == NANOARROW_TYPE_DOUBLE:
         if db_type_num == DB_TYPE_NUM_NUMBER:
             convert_number_to_arrow_double(array_impl, &data.buffer)
@@ -384,7 +412,7 @@ cdef int convert_oracle_data_to_arrow(OracleMetadata from_metadata,
     elif arrow_type == NANOARROW_TYPE_FLOAT:
         array_impl.append_float(data.buffer.as_float)
     elif arrow_type == NANOARROW_TYPE_BOOL:
-        array_impl.append_int64(data.buffer.as_bool)
+        array_impl.append_int(data.buffer.as_bool)
     elif arrow_type in (
             NANOARROW_TYPE_BINARY,
             NANOARROW_TYPE_STRING,
