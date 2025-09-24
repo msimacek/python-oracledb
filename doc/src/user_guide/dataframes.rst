@@ -110,14 +110,17 @@ Or to iterate:
 Data Frame Type Mapping
 -----------------------
 
+Default Data Frame Type Mapping
++++++++++++++++++++++++++++++++
+
 Internally, python-oracledb's :ref:`DataFrame <oracledataframeobj>` support
 makes use of `Apache nanoarrow <https://arrow.apache.org/nanoarrow/>`__
 libraries to build data frames.
 
-The following data type mapping occurs from Oracle Database types to the Arrow
-types used in python-oracledb DataFrame objects. Querying any other data types
-from Oracle Database will result in an exception. :ref:`Output type handlers
-<outputtypehandlers>` cannot be used to map data types.
+The following default data type mapping occurs from Oracle Database types to
+the Arrow types used in python-oracledb DataFrame objects. Querying any other
+data types from Oracle Database will result in an exception. :ref:`Output type
+handlers <outputtypehandlers>` cannot be used to map data types.
 
 .. list-table-with-summary:: Mapping from Oracle Database to Arrow data types
     :header-rows: 1
@@ -257,6 +260,64 @@ When converting Oracle Database DATEs and TIMESTAMPs:
         - microseconds
       * - 7 - 9
         - nanoseconds
+
+Explicit Data Frame Type Mapping
+++++++++++++++++++++++++++++++++
+
+You can explicitly set the data types and names that a :ref:`DataFrame
+<oracledataframeobj>` will use by passing a ``requested_schema`` parameter to
+:meth:`Connection.fetch_df_all()` or
+:meth:`Connection.fetch_df_batches()`. The parameter should be an object
+implementing the `Arrow PyCapsule schema interface
+<https://arrow.apache.org/docs/python/generated/pyarrow.Schema.html>`__.  For
+example:
+
+.. code-block:: python
+
+    import pyarrow
+
+    # Default fetch
+
+    odf = connection.fetch_df_all(
+        "select 123 c1, 'Scott' c2 from dual"
+    )
+    tab = pyarrow.table(odf)
+    print("Default Output:", tab)
+
+    # Fetching with an explicit schema
+
+    schema = pyarrow.schema([
+        ("col_1", pyarrow.int16()),
+        ("C2", pyarrow.string())
+    ])
+
+    odf = connection.fetch_df_all(
+        "select 456 c1, 'King' c2 from dual",
+        requested_schema=schema
+    )
+    tab = pyarrow.table(odf)
+    print("\nNew Output:", tab)
+
+The schema should have an entry for each queried column.
+
+Running the example shows that the number column was fetched into the requested
+type INT16. Its name has also changed::
+
+    Default Output: pyarrow.Table
+    C1: double
+    C2: string
+    ----
+    C1: [[123]]
+    C2: [["Scott"]]
+
+    New Output: pyarrow.Table
+    col_1: int16
+    C2: string
+    ----
+    col_1: [[456]]
+    C2: [["King"]]
+
+An error will occur if the data cannot be represented in the requested type.
 
 .. _convertingodf:
 
