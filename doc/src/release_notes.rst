@@ -134,7 +134,7 @@ Common Changes
 
 #)  Pre-built binaries are now being created for Python 3.14. Note this Python
     version is currently in release candidate phase.
-#)  Added support for Oracle Database 23ai :ref:`Sessionless Transactions
+#)  Added support for Oracle Database 23.6 :ref:`Sessionless Transactions
     <sessionlesstxns>`.
 #)  Changes to :ref:`data frame <dataframeformat>` support:
 
@@ -165,7 +165,7 @@ Common Changes
     - Fixed bug when fetching numeric data with precision that exceeds 38 as
       decimal data.
     - Fixed bug when fetching large amounts of data in one round-trip when
-      using asyncio with Oracle Database versions before 23ai.
+      using asyncio with Oracle Database 21c and earlier.
 
     Note the data frame support in python-oracledb 3.3 is a pre-release, and
     may change in a future version.
@@ -192,8 +192,8 @@ Thin Mode Changes
     closed connection
     (`issue 482 <https://github.com/oracle/python-oracledb/issues/482>`__).
 #)  Fixed bug when connecting with asyncio using the parameter ``https_proxy``.
-#)  Fixed bug when fetching LOBs with asyncio from databases prior to Oracle
-    Database 23ai
+#)  Fixed bug when fetching LOBs with asyncio from Oracle Database 21c and
+    earlier
     (`issue 500 <https://github.com/oracle/python-oracledb/issues/500>`__).
 #)  Fixed regression when connecting where only the host specified by the
     ``https_proxy`` parameter can successfully perform name resolution.
@@ -242,7 +242,7 @@ Common Changes
       (`issue 505 <https://github.com/oracle/python-oracledb/issues/505>`__).
 
 #)  Added parameter ``pool_name`` to connection and pool creation methods to
-    support Oracle Database 23ai multi-pool :ref:`drcp`.
+    support Oracle Database 23.4 multi-pool :ref:`drcp`.
 #)  :ref:`GitHub Action <installghactions>` workflow updates:
 
     - Use GitHub Arm Linux runner for builds. Supplied by wojiushixiaobai
@@ -704,13 +704,13 @@ oracledb `2.4.0 <https://github.com/oracle/python-oracledb/compare/v2.3.0...v2.4
 Thin Mode Changes
 +++++++++++++++++
 
-#)  Added support for Oracle Database 23ai :ref:`statement pipelining
+#)  Added support for Oracle Database 23.4 :ref:`statement pipelining
     <pipelining>`.
 #)  Fixed bug resulting in a segfault when a closed cursor is bound as a REF
     CURSOR
     (`issue 368 <https://github.com/oracle/python-oracledb/issues/368>`__).
-#)  Fixed bug resulting in an inability to connect to Oracle Database 23ai
-    instances which have fast authentication disabled.
+#)  Fixed bug resulting in an inability to connect to Oracle Database version
+    23 instances which have fast authentication disabled.
 #)  Fixed error message when idle time is exceeded by a connection. The error
     ``DPY-4033: the database closed the connection because the connection's
     idle time has been exceeded`` is now raised when this situation is
@@ -786,7 +786,7 @@ Thick Mode Changes
 Common Changes
 ++++++++++++++
 
-#)  Added support for Oracle Database 23ai
+#)  Added support for Oracle Database 23.5
     :ref:`BINARY vector format <binaryformat>`.
 #)  Replaced integer constants for
     :ref:`connection authorization modes <connection-authorization-modes>`,
@@ -887,12 +887,12 @@ Thin Mode Changes
 #)  Fixed bug that would cause an internal error to be raised when attempting
     to close a connection that has been forcibly closed by the database.
 #)  Internal change: further efforts to tighten code looking for the end of a
-    database request made to Oracle Database 23ai.
+    database request made to Oracle Database version 23.
 
 Common Changes
 ++++++++++++++
 
-#)  Added support for Oracle Database 23ai columns of type :ref:`VECTOR
+#)  Added support for Oracle Database 23.4 columns of type :ref:`VECTOR
     <vectors>`.
 #)  Added support for columns of type INTERVAL YEAR TO MONTH which can be
     represented in Python by instances of the new
@@ -961,7 +961,7 @@ oracledb `2.1.0 <https://github.com/oracle/python-oracledb/compare/v2.0.1...v2.1
 Thin Mode Changes
 +++++++++++++++++
 
-#)  Oracle Database 23ai feature support:
+#)  Oracle Database version 23 feature support:
 
     - Added support for
       :ref:`implicit connection pooling with DRCP and PRCP <implicitconnpool>`,
@@ -1009,8 +1009,8 @@ Thin Mode Changes
 Thick Mode Changes
 ++++++++++++++++++
 
-#)  Added support for internal use of JSON in SODA with Oracle Client 23. This
-    allows for seamless transfer of extended data types.
+#)  Added support for internal use of JSON in SODA with Oracle Client version
+    23. This allows for seamless transfer of extended data types.
 #)  Fixed bug when calling :meth:`SodaDoc.getContent()` for SODA documents
     that do not contain JSON.
 #)  Corrected support for Oracle Sharding.
@@ -1030,7 +1030,7 @@ Common Changes
     returned by SODA in Oracle Database 23.4 and later in the ``_id``
     attribute of documents stored in native collections.
 #)  Added support for columns of type VECTOR usable with a limited
-    availability release of Oracle Database 23.
+    availability release of Oracle Database version 23.
 #)  Errors raised when calling :meth:`Cursor.executemany()` with PL/SQL now
     have the :data:`oracledb._Error.offset` attribute populated with the last
     iteration that succeeded
@@ -1125,8 +1125,8 @@ Thin Mode Changes
 #)  Added parameter :data:`ConnectParams.ssl_context` to modify the SSL context
     used when connecting via TLS
     (`issue 259 <https://github.com/oracle/python-oracledb/issues/259>`__).
-#)  Added support for an Oracle Database 23ai JSON feature allowing field names
-    with more than 255 UTF-8 encoded bytes.
+#)  Added support for an Oracle Database version 23 JSON feature allowing
+    fieldnames with more than 255 UTF-8 encoded bytes.
 #)  Added support for the ``FAILOVER`` clause in full connect descriptors.
 #)  Fixed bug in detecting the current time zone
     (`issue 257 <https://github.com/oracle/python-oracledb/issues/257>`__).
@@ -1136,8 +1136,8 @@ Thin Mode Changes
     multiple line comments with multiple asterisks before the closing slash.
 #)  A more meaningful error is raised when the wrong type of data is passed to
     :meth:`LOB.write()`.
-#)  Internal change to support an Oracle Database 23ai JSON feature improving
-    JSON storage usage.
+#)  Internal change to support an Oracle Database version 23 JSON feature
+    improving JSON storage usage.
 #)  Internal change to ensure that all connections in a pool have been closed
     gracefully before the pool is closed.
 #)  Internal changes to improve handling of the network protocol between
@@ -1174,8 +1174,9 @@ Common Changes
     17D3A9C6-D993-4E94-BF6B-CACA56581F41>`__ and `annotations
     <https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-1AC16117-
     BBB6-4435-8794-2B99F8F68052>`__ associated with columns that are being
-    fetched. SQL domains and annotations require Oracle Database 23ai. If using
-    python-oracledb Thick mode, Oracle Client 23ai is also required.
+    fetched. SQL domains and annotations require Oracle Database version 23,
+    or later. If using python-oracledb Thick mode, Oracle Client version 23,
+    or later, is also required.
 #)  Added parameter ``data`` to :meth:`Connection.createlob()` to allow data to
     be written at LOB creation time.
 #)  Added type :data:`~oracledb.DB_TYPE_XMLTYPE` to represent data of type
@@ -1195,7 +1196,7 @@ Common Changes
 #)  Errors that have entries in the
     :ref:`troubleshooting documentation <troubleshooting>` now have links to
     that documentation shown in the message text.
-#)  Fixed bug with binding boolean values with Oracle Database 23ai
+#)  Fixed bug with binding boolean values with Oracle Database version 23
     (`issue 263 <https://github.com/oracle/python-oracledb/issues/263>`__).
 #)  Fixed bug with getting unknown attributes from :ref:`Oracle Object
     <dbobject>` instances.
@@ -1265,9 +1266,9 @@ oracledb `1.4.0 <https://github.com/oracle/python-oracledb/compare/v1.3.2...v1.4
 Thin Mode Changes
 +++++++++++++++++
 
-#)  Added support for an Oracle Database 23ai feature that can improve the
-    performance of connection creation by reducing the number of round trips
-    required to create the second and subsequent connections to the same
+#)  Added support for an Oracle Database version 23 feature that can improve
+    the performance of connection creation by reducing the number of round
+    trips required to create the second and subsequent connections to the same
     database.
 #)  Added support for shrinking the connection pool back to the specified
     minimum size when the pool is idle for :data:`ConnectionPool.timeout`
@@ -1279,13 +1280,13 @@ Thin Mode Changes
     created. The default connection class will be of the form ``DPY:`` followed
     by a 16-byte unique identifier converted to base64 encoding.
 #)  Changed internal connection feature negotiation for more accurate Oracle
-    Database 23ai support.
+    Database version 23 support.
 #)  Added support for sending a generated connection identifier to the
     database used for tracing. An application specific prefix is prepended to
     this value if specified via a new ``connection_id_prefix`` parameter when
     creating standalone connections or connection pools.
 #)  Added URL to the Oracle Database Error Help Portal in Oracle Database
-    error messages similar to when Thick mode uses Oracle Client 23ai.
+    error messages similar to when Thick mode uses Oracle Client version 23.
 #)  Added support for the ``ORA_SDTZ`` environment variable used to set the
     session time zone used by the database.
 #)  Fixed bug when a dynamically sized connection pool is created with an
@@ -1359,8 +1360,8 @@ Common Changes
     same value as the SQL expression
     ``sys_context('userenv', 'instance_name')``.
 #)  Added support for relational queries on the underlying tables of SODA
-    collections created in Oracle Database 23ai if they contain JSON documents
-    with embedded OIDs.
+    collections created in Oracle Database version 23 if they contain JSON
+    documents with embedded OIDs.
 #)  Automatically retry a query if the error ``ORA-00932: inconsistent data
     types`` is raised (which can occur if a table or view is recreated with a
     data type that is incompatible with the column's previous data type).
@@ -1391,7 +1392,7 @@ Thin Mode Changes
 #)  Fixed bug which could cause a redirect loop with improperly configured
     listener redirects.
 #)  Fixed bug when executing PL/SQL with a large number of binds.
-#)  Fixed bug when using DRCP with Oracle Database 23ai.
+#)  Fixed bug when using DRCP with Oracle Database version 23
 
 Thick Mode Changes
 ++++++++++++++++++
@@ -1419,8 +1420,8 @@ Thin Mode Changes
 
 #)  Improved performance of regular expressions used for parsing SQL
     (`issue 172 <https://github.com/oracle/python-oracledb/issues/172>`__).
-#)  Fixed bug with Oracle Database 23ai when SQL is executed after first being
-    parsed.
+#)  Fixed bug with Oracle Database version 23 when SQL is executed after first
+    being parsed.
 #)  Fixed bug when :data:`ConnectionPool.timeout` is not *None* when creating a
     connection pool
     (`issue 166 <https://github.com/oracle/python-oracledb/issues/166>`__).
