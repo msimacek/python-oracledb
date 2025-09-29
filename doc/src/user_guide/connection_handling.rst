@@ -1925,7 +1925,7 @@ The DSN for LDAP connections can be an alias, as shown in the above references.
 Alternatively it can be an LDAP URL. The URL syntax removes the need for
 external LDAP and ``sqlnet.ora`` configuration files. See the technical brief
 `Oracle Client 23ai LDAP URL Syntax
-<https://www.oracle.com/a/otn/docs/database/oracle-net-23ai-ldap-url.  pdf>`__.
+<https://www.oracle.com/a/otn/docs/database/oracle-net-23ai-ldap-url.pdf>`__.
 
 **Python-oracledb Thick Mode LDAP Aliases**
 
@@ -2936,7 +2936,7 @@ Enabling DRCP in Oracle Database
 
 Oracle Database versions prior to 21c can have a single DRCP connection pool.
 From Oracle Database 21c, each pluggable database can optionally have its own
-pool, or can use the container level pool. From Oracle Database 23ai, you can
+pool, or can use the container level pool. From Oracle Database 23.4, you can
 create multiple pools at the pluggable, or container, database level. This
 multi-pool feature is useful where different applications connect to the same
 database, but there is a concern that one application's use of the pool may
@@ -3013,7 +3013,7 @@ instance restarts, unless explicitly stopped with the
 
     EXECUTE DBMS_CONNECTION_POOL.STOP_POOL()
 
-Oracle Database 23ai allows a ``DRAINTIME`` argument to be passed to
+Oracle Database version 23 allows a ``DRAINTIME`` argument to be passed to
 ``STOP_POOL()``, indicating that the pool will only be closed after the
 specified time.  This allows in-progress application work to continue. A
 draintime value of 0 can be used to immediately close the pool. See the
@@ -3137,7 +3137,7 @@ The overheads can impact ultimate scalability.
 
 **DRCP Pool Names**
 
-From Oracle Database 23ai, multiple DRCP pools can be created by setting a pool
+From Oracle Database 23.4, multiple DRCP pools can be created by setting a pool
 name at DRCP pool creation time. Applications using python-oracledb Thin mode
 can specify which DRCP pool to use by passing the ``pool_name`` parameter
 during connection or connection pool creation, for example:
@@ -3252,7 +3252,7 @@ with the pooled server option in the connection string.
 
 You can specify the class and purity options in connection strings when using
 Oracle Database 21c, or later. You can specify the pool name when using Oracle
-Database 23ai, or later.
+Database 23.4, or later.
 
 For example with the :ref:`Easy Connect <easyconnect>` syntax::
 
@@ -3397,9 +3397,9 @@ feature is enabled by adding a ``pool_boundary`` parameter to the application's
 acquire, or release, connections to be able use a DRCP or PRCP pool.
 
 Implicit connection pooling is available in python-oracledb Thin and
-:ref:`Thick <enablingthick>` modes.  It requires Oracle Database
-23ai. Python-oracledb Thick mode additionally requires Oracle Client 23ai
-libraries.
+:ref:`Thick <enablingthick>` modes. It requires Oracle Database
+version 23. Python-oracledb Thick mode additionally requires Oracle Client
+version 23 libraries.
 
 With implicit connection pooling, connections are internally acquired from the
 DRCP or PRCP pool when they are actually used by the application to do database
@@ -3911,8 +3911,9 @@ There are two options for placing the required files:
 
 1. Move the three files to the ``network/admin`` directory of the client
    libraries used by your application. For example, if you are using Oracle
-   Instant Client 23ai and it is in ``$HOME/instantclient_23_9``, then you would
-   put the wallet files in ``$HOME/instantclient_23_9/network/admin/``.
+   Instant Client version 23 and it is in ``$HOME/instantclient_23_9``, then
+   you would put the wallet files in
+   ``$HOME/instantclient_23_9/network/admin/``.
 
    A connection can be made using your database credentials and setting the
    ``dsn`` parameter to the desired :ref:`TNS Alias <netservice>` from the
@@ -4194,9 +4195,9 @@ extracted.
 
 .. note::
 
-       Use Oracle Client libraries 19.17, or later, or use Oracle Client 21c or
-       23ai.  They contain important bug fixes for using multiple wallets in
-       the one process.
+       Use Oracle Client libraries 19.17, or later, or use Oracle Client
+       version 21 or 23. These contain important bug fixes for using multiple
+       wallets in the one process.
 
 .. _connsharding:
 
