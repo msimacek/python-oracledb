@@ -10,6 +10,10 @@ Authentication allows only authorized users to access Oracle Database after
 successful verification of their identity. This section details the various
 Oracle Database authentication options supported in python-oracledb.
 
+The Oracle Client libraries used by python-oracledb Thick mode may support
+additional authentication options that are configured independently of the
+driver.
+
 .. _dbauthentication:
 
 Database Authentication
