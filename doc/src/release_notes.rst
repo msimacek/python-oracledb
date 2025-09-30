@@ -78,9 +78,10 @@ Common Changes
     support
     (`issue 512 <https://github.com/oracle/python-oracledb/issues/512>`__).
 #)  The x86_64 macOS and 32-bit Windows platforms are :ref:`deprecated
-    <deprecations>`. They will be desupported when the `cryptography
-    <https://pypi.org/project/cryptography/>`__ package desupports them, see
-    the `cryptography deprecation announcement <https://mail.python.org/
+    <deprecations>`. They will be desupported in a future release before, or
+    when, the `cryptography <https://pypi.org/project/cryptography/>`__ package
+    desupports them. See the `cryptography deprecation announcement
+    <https://mail.python.org/
     archives/list/python-announce-list@python.org/thread/
     R4BZNC36MSFLKULA74KILLFY6GP3VCPA/>`__.
 #)  Connectivity and interoperability with Oracle Database and Oracle Client
