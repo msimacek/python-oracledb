@@ -196,6 +196,12 @@ cdef class BaseCursorImpl:
             schema_impl = self.schema_impl.child_schemas[pos]
             metadata.check_convert_to_arrow(schema_impl)
             var_impl.metadata = OracleMetadata.from_arrow_schema(schema_impl)
+            if metadata.dbtype.num in (DB_TYPE_NUM_NUMBER,
+                                       DB_TYPE_NUM_BINARY_DOUBLE,
+                                       DB_TYPE_NUM_BINARY_FLOAT) \
+                    and schema_impl.arrow_type in (NANOARROW_TYPE_DOUBLE,
+                                                   NANOARROW_TYPE_FLOAT):
+                var_impl.metadata.dbtype = metadata.dbtype
         else:
             var_impl.metadata = metadata.copy()
         var_impl._fetch_metadata = metadata

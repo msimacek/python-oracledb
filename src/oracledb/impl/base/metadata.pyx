@@ -229,9 +229,14 @@ cdef class OracleMetadata:
                 NANOARROW_TYPE_UINT64
             ):
                 ok = True
-        elif db_type_num in (DB_TYPE_NUM_RAW, DB_TYPE_NUM_LONG_RAW):
+        elif db_type_num in (
+            DB_TYPE_NUM_BLOB,
+            DB_TYPE_NUM_RAW,
+            DB_TYPE_NUM_LONG_RAW
+        ):
             if arrow_type in (
                 NANOARROW_TYPE_BINARY,
+                NANOARROW_TYPE_FIXED_SIZE_BINARY,
                 NANOARROW_TYPE_LARGE_BINARY
             ):
                 ok = True
@@ -244,7 +249,11 @@ cdef class OracleMetadata:
             DB_TYPE_NUM_TIMESTAMP_LTZ,
             DB_TYPE_NUM_TIMESTAMP_TZ
         ):
-            if arrow_type == NANOARROW_TYPE_TIMESTAMP:
+            if arrow_type in (
+                NANOARROW_TYPE_DATE32,
+                NANOARROW_TYPE_DATE64,
+                NANOARROW_TYPE_TIMESTAMP
+            ):
                 ok = True
         elif db_type_num in (
             DB_TYPE_NUM_BINARY_DOUBLE,
@@ -254,10 +263,12 @@ cdef class OracleMetadata:
                 ok = True
         elif db_type_num in (
             DB_TYPE_NUM_CHAR,
+            DB_TYPE_NUM_CLOB,
+            DB_TYPE_NUM_LONG_NVARCHAR,
             DB_TYPE_NUM_LONG_VARCHAR,
             DB_TYPE_NUM_VARCHAR,
             DB_TYPE_NUM_NCHAR,
-            DB_TYPE_NUM_LONG_NVARCHAR,
+            DB_TYPE_NUM_NCLOB,
             DB_TYPE_NUM_NVARCHAR
         ):
             if arrow_type in (
