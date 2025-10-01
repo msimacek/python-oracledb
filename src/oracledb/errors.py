@@ -371,6 +371,7 @@ ERR_INVALID_SERVER_RESPONSE = 4035
 ERR_CANNOT_CONVERT_TO_ARROW_INTEGER = 4036
 ERR_CANNOT_CONVERT_TO_ARROW_DOUBLE = 4037
 ERR_INVALID_INTEGER = 4038
+ERR_CANNOT_CONVERT_TO_ARROW_FLOAT = 4039
 
 # error numbers that result in InternalError
 ERR_MESSAGE_TYPE_UNKNOWN = 5000
@@ -600,6 +601,9 @@ ERR_MESSAGE_FORMATS = {
     ),
     ERR_CANNOT_CONVERT_TO_ARROW_DOUBLE: (
         "{value} cannot be converted to an Arrow double"
+    ),
+    ERR_CANNOT_CONVERT_TO_ARROW_FLOAT: (
+        "{value} cannot be converted to an Arrow float"
     ),
     ERR_CANNOT_CONVERT_TO_ARROW_INTEGER: (
         "{value} cannot be converted to an Arrow integer"
