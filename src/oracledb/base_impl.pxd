@@ -337,8 +337,9 @@ cdef class Buffer:
     cdef int read_sb4(self, int32_t *value) except -1
     cdef int read_sb8(self, int64_t *value) except -1
     cdef bytes read_null_terminated_bytes(self)
-    cdef int read_oracle_data(self, OracleMetadata metadata,
-                              OracleData* data, bint from_dbobject) except -1
+    cdef object read_oracle_data(self, OracleMetadata metadata,
+                                 OracleData* data, bint from_dbobject,
+                                 bint decode_str)
     cdef object read_str(self, int csfrm, const char* encoding_errors=*)
     cdef object read_str_with_length(self)
     cdef int read_ub1(self, uint8_t *value) except -1

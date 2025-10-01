@@ -361,23 +361,12 @@ cdef int convert_bytes_to_oracle_data(OracleDataBuffer *buffer,
 
 
 cdef int convert_str_to_arrow(ArrowArrayImpl array_impl,
-                              OracleDataBuffer *buffer,
-                              uint8_t csfrm) except -1:
+                              OracleDataBuffer *buffer) except -1:
     """
     Converts a CHAR, NCHAR, LONG, VARCHAR, or NVARCHAR value stored in the
     buffer to an Arrow string.
     """
-    cdef:
-        OracleRawBytes *rb = &buffer.as_raw_bytes
-        const char *encoding_errors = NULL
-        bytes temp_bytes
-        str temp_str
-    if csfrm == CS_FORM_NCHAR:
-        temp_str = \
-                rb.ptr[:rb.num_bytes].decode(ENCODING_UTF16, encoding_errors)
-        temp_bytes = temp_str.encode()
-        rb.ptr = temp_bytes
-        rb.num_bytes = len(temp_bytes)
+    cdef OracleRawBytes *rb = &buffer.as_raw_bytes
     array_impl.append_bytes(<void*> rb.ptr, rb.num_bytes)
 
 
@@ -439,8 +428,7 @@ cdef int convert_oracle_data_to_arrow(OracleMetadata from_metadata,
             NANOARROW_TYPE_LARGE_BINARY,
             NANOARROW_TYPE_LARGE_STRING
     ):
-        convert_str_to_arrow(array_impl, &data.buffer,
-                             from_metadata.dbtype._csfrm)
+        convert_str_to_arrow(array_impl, &data.buffer)
     elif arrow_type == NANOARROW_TYPE_TIMESTAMP:
         convert_date_to_arrow_timestamp(array_impl, &data.buffer)
     elif arrow_type == NANOARROW_TYPE_DECIMAL128:

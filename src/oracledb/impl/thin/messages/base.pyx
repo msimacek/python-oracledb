@@ -1074,7 +1074,10 @@ cdef class MessageWithData(Message):
                     else:
                         column_value = PY_TYPE_DB_OBJECT._from_impl(obj_impl)
         else:
-            buf.read_oracle_data(metadata, &data, from_dbobject=False)
+            column_value = buf.read_oracle_data(
+                metadata, &data, from_dbobject=False,
+                decode_str=self.cursor_impl.fetching_arrow
+            )
             if metadata.dbtype._csfrm == CS_FORM_NCHAR:
                 buf._caps._check_ncharset_id()
             if self.cursor_impl.fetching_arrow:
