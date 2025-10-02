@@ -63,7 +63,7 @@ Common Changes
     - Added support for types ``date32`` and ``date64`` when ingesting data
       frames supporting the Arrow PyCapsule interface as requested
       (`issue 535 <https://github.com/oracle/python-oracledb/issues/535>`__).
-    - Data frames with multiple chunks are now supported.
+    - Ingesting data frames with multiple chunks is now supported.
     - Error ``DPY-8002: Apach Arrow C Data structure overflow detected. A
       larger structure is needed.`` is now raised when an overflow is detected
       (`issue 536 <https://github.com/oracle/python-oracledb/issues/536>`__).
