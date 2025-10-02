@@ -1126,7 +1126,8 @@ class Connection(BaseConnection):
         :data:`oracledb.defaults.fetch_decimals <Defaults.fetch_decimals>`.
 
         The ``requested_schema`` parameter specifies an object that implements
-        the Arrow PyCapsule schema interface.
+        the Arrow PyCapsule schema interface. The DataFrame returned by
+        ``fetch_df_all()`` will have the data types and names of the schema.
 
         Any LOB fetched must be less than 1 GB.
         """
@@ -1180,7 +1181,8 @@ class Connection(BaseConnection):
         :data:`oracledb.defaults.fetch_decimals <Defaults.fetch_decimals>`.
 
         The ``requested_schema`` parameter specifies an object that implements
-        the Arrow PyCapsule schema interface.
+        the Arrow PyCapsule schema interface. The DataFrame returned by
+        ``fetch_df_all()`` will have the data types and names of the schema.
 
         Any LOB fetched must be less than 1 GB.
         """
