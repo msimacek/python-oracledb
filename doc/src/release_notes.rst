@@ -52,10 +52,10 @@ Common Changes
       and :meth:`Connection.fetch_df_batches()` to support type mapping when
       querying
       (`issue 494 <https://github.com/oracle/python-oracledb/issues/494>`__).
-    - The large variants for strings and binary values that use 64-bit offsets
-      are now used by default in order to avoid the limits imposed by using
-      32-bit offsets. Use ``requested_schema`` if the smaller offset size is
-      desired
+    - The Apache Arrow data type "large" variants that have 64-bit offsets are
+      now used by default for strings and binary values in order to avoid the
+      limits imposed by using 32-bit offsets. Use ``requested_schema`` if the
+      smaller offset size is desired
       (`issue 536 <https://github.com/oracle/python-oracledb/issues/536>`__).
     - Added support for all of the signed and unsigned fixed width integer
       types when ingesting data frames supporting the Arrow PyCapsule
