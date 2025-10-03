@@ -81,13 +81,14 @@ Common Changes
     specified then the values of
     :attr:`oracledb.defaults.fetch_lobs <Defaults.fetch_lobs>` and
     :attr:`oracledb.defaults.fetch_decimals <Defaults.fetch_decimals>` are now
-    stored with the operation and used during pipeline execution.
-#)  Added optional dependencies [oci_config], [azure_config], [oci_auth] and
-    [azure_auth] to simplify installation of required packages for
-    :ref:`Centralized Configuration Provider <configprovidermodules>`
-    support and :ref:`Cloud Native Authentication <cloudnativemodules>`
-    support
-    (`issue 512 <https://github.com/oracle/python-oracledb/issues/512>`__).
+    stored with the operation and used during pipeline execution
+    (`issue 19 <https://github.com/oracle/python-oracledb/issues/19>`__).
+#)   Added optional dependencies `[oci_config]`, `[azure_config]`,
+     `[oci_auth]`, and `[azure_auth]` to simplify installation of required
+     packages for :ref:`Centralized Configuration Provider
+     <configprovidermodules>` support and :ref:`Cloud Native Authentication
+     <cloudnativemodules>` support
+     (`issue 512 <https://github.com/oracle/python-oracledb/issues/512>`__).
 #)  The x86_64 macOS and 32-bit Windows platforms are :ref:`deprecated
     <deprecations>`. They will be desupported in a future release before, or
     when, the `cryptography <https://pypi.org/project/cryptography/>`__ package
@@ -110,8 +111,8 @@ Common Changes
 #)  API documentation is now generated from the source code.
 #)  The test suite now uses `pytest <https://docs.pytest.org/>`__.
 #)  Internal change: the value of ``__module__`` for all classes is now left
-    untouched to avoid issues with ``inspect.getsource()`` but the
-    ``__repr__()`` now consistently shows the module as ``oracledb``.
+    untouched to avoid issues with ``inspect.getsource()`` but ``__repr__()``
+    now consistently shows the module as ``oracledb``.
 #)  Internal change: `typing_extensions <https://pypi.org/project/
     typing-extensions/>`__ is now a dependency.
 
