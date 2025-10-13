@@ -31,6 +31,8 @@ Thick Mode Changes
 Common Changes
 ++++++++++++++
 
+#)  Added Session Token-based authentication support when using
+    :ref:`OCI Cloud Native Authentication <cloudnativeauthoci>`.
 #)  Fixed bug that caused ``ORA-03137: malformed TTC packet from client
     rejected`` exception to be raised when attempting to call
     :meth:`Cursor.parse()` on a scrollable cursor.
