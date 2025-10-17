@@ -133,7 +133,7 @@ def _load_oci_config(token_auth_config):
 
 def _security_token_authentication(token_auth_config):
     """
-    Session token-based authentication: uses the security token specified by 
+    Session token-based authentication: uses the security token specified by
     the security_token_file parameter based on the OCI config file.
     """
     config = _load_oci_config(token_auth_config)
