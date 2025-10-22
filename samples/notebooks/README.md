@@ -54,7 +54,7 @@ In the terminal, set desired credentials, for example:
 
     export PYO_SAMPLES_ADMIN_USER=system
     export PYO_SAMPLES_ADMIN_PASSWORD=oracle
-    export PYO_SAMPLES_CONNECT_STRING=localhost/orclpdb1
+    export PYO_SAMPLES_CONNECT_STRING=localhost/orclpdb
     export PYO_SAMPLES_MAIN_USER=pythondemo
     export PYO_SAMPLES_MAIN_PASSWORD=welcome
     export PYO_SAMPLES_EDITION_USER=pythoneditions
@@ -68,6 +68,13 @@ Install the schema:
 ### Start Jupyter
 
     cd notebooks
+
+    export PYO_SAMPLES_ADMIN_USER=system
+    export PYO_SAMPLES_ADMIN_PASSWORD=oracle
+    export PYO_SAMPLES_CONNECT_STRING=localhost/orclpdb
+    export PYO_SAMPLES_MAIN_USER=pythondemo
+    export PYO_SAMPLES_MAIN_PASSWORD=welcome
+
     jupyter notebook
 
 If Jupyter is not in your path, you may need to find it on your computer and
@@ -77,6 +84,8 @@ invoke it with an absolute path, for example on macOS:
 
 Load each notebook *.ipynb file and step through the cells.
 
-Before running the notebooks cells, edit the credentials and connect string
-near the top of each notebook to match those used when installing the sample
+The notebooks will use the environment variables above for connection
+credentials. However, if these variables are not set in the terminal window
+that you start Jupyter in, then edit the credentials and connect string near
+the top of each notebook. Set the same values you used when installing the
 schema.
