@@ -6,9 +6,12 @@ python-oracledb.  The notebooks cover:
 - Connecting
 - Queries
 - DML
+- Transactions
+- Data frames
 - Data loading and unloading (CSV Files)
 - JSON
 - PL/SQL
+- Vectors
 - Objects
 
 Python-oracledb's default 'Thin' mode is used.
@@ -20,7 +23,8 @@ Jupyter notebooks let you easily step through, modify, and execute Python code:
 # Setup
 
 An existing Oracle Database is required.  The JSON demo assumes that Oracle
-Database 21c or later is being used.
+Database 21c or later is being used.  The VECTOR demo assumes that Oracle AI
+Database 26ai is being used.
 
 ### Install Python
 
