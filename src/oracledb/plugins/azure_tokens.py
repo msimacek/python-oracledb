@@ -32,20 +32,6 @@ import msal
 import oracledb
 
 
-def generate_token(token_auth_config, refresh=False):
-    """
-    Generates an Azure access token based on provided credentials.
-    """
-    user_auth_type = token_auth_config.get("auth_type") or ""
-    auth_type = user_auth_type.lower()
-    if auth_type == "azureserviceprincipal":
-        return _service_principal_credentials(token_auth_config)
-    else:
-        raise ValueError(
-            f"Unrecognized auth_type authentication method: {user_auth_type}"
-        )
-
-
 def _service_principal_credentials(token_auth_config):
     """
     Returns the access token for authentication as a service principal.
@@ -65,11 +51,45 @@ def _service_principal_credentials(token_auth_config):
         return auth_response["access_token"]
 
 
+def generate_token(token_auth_config, refresh=False):
+    """
+    Generates an Azure access token based on provided credentials.
+    """
+    user_auth_type = token_auth_config.get("auth_type") or ""
+    auth_type = user_auth_type.lower()
+    if auth_type == "azureserviceprincipal":
+        return _service_principal_credentials(token_auth_config)
+    else:
+        raise ValueError(
+            f"Unrecognized auth_type authentication method: {user_auth_type}"
+        )
+
+
+def validate_azure_auth_type(extra_auth_params):
+    """
+    Validates that extra_auth_params contains a valid 'auth_type'
+    """
+    user_auth_type = extra_auth_params.get("auth_type")
+    if not user_auth_type:
+        raise ValueError("extra_auth_params must include 'auth_type'.")
+
+    normalized = user_auth_type.lower()
+
+    if normalized != "azureserviceprincipal":
+        raise ValueError(
+            f"Invalid auth_type '{user_auth_type}'. "
+            "Expected: 'azureserviceprincipal'."
+        )
+
+    return normalized
+
+
 def azure_token_hook(params: oracledb.ConnectParams):
     """
     Azure-specific hook for generating a token.
     """
     if params.extra_auth_params is not None:
+        validate_azure_auth_type(params.extra_auth_params)
 
         def token_callback(refresh):
             return generate_token(params.extra_auth_params, refresh)

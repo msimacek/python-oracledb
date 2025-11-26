@@ -208,11 +208,32 @@ def generate_token(token_auth_config, refresh=False):
         )
 
 
+def validate_oci_auth_type(extra_auth_params):
+    """
+    Validates that extra_auth_params contains a valid 'auth_type'
+    """
+    user_auth_type = extra_auth_params.get("auth_type")
+    if not user_auth_type:
+        raise ValueError("extra_auth_params must include 'auth_type'.")
+
+    normalized = user_auth_type.lower()
+    valid_values = {a.value for a in AuthType}
+
+    if normalized not in valid_values:
+        raise ValueError(
+            f"Invalid auth_type '{user_auth_type}'. "
+            f"Expected one of: {sorted(valid_values)}."
+        )
+
+    return normalized
+
+
 def oci_token_hook(params: oracledb.ConnectParams):
     """
     OCI-specific hook for generating a token.
     """
     if params.extra_auth_params is not None:
+        validate_oci_auth_type(params.extra_auth_params)
 
         def token_callback(refresh):
             return generate_token(params.extra_auth_params, refresh)
