@@ -259,6 +259,7 @@ def test_2402(test_env):
         pytest.raises(TypeError, setattr, pool, "soda_metadata_cache", 22)
     pool.close()
 
+
 def test_2403(test_env):
     "2403 - connection rolls back before released back to the pool"
     pool = test_env.get_pool(getmode=oracledb.POOL_GETMODE_WAIT)
@@ -347,6 +348,7 @@ def test_2406(skip_if_drcp, test_env):
     cursor.close()
     pool.release(conn)
     pool.close()
+
 
 def test_2407(skip_if_drcp, skip_unless_thick_mode, test_env):
     "2407 - test heterogeneous pool with user and password specified"

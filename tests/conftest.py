@@ -993,7 +993,7 @@ def skip_unless_vectors_supported(test_env):
 
 @pytest.fixture
 def skip_unless_refcounting():
-    if sys.implementation.name in ('graalpy', 'pypy'):
+    if sys.implementation.name in ("graalpy", "pypy"):
         pytest.skip("needs interpreter with refcounting")
 
 

@@ -120,8 +120,10 @@ def test_1103(conn, test_env):
 
 def test_1104(test_env):
     "1104 - test use of autocommit"
-    with test_env.get_connection() as conn, \
-            test_env.get_connection() as other_conn:
+    with (
+        test_env.get_connection() as conn,
+        test_env.get_connection() as other_conn,
+    ):
         cursor = conn.cursor()
         other_cursor = other_conn.cursor()
         cursor.execute("truncate table TestTempTable")
@@ -130,7 +132,9 @@ def test_1104(test_env):
         assert other_cursor.fetchall() == []
         conn.autocommit = True
         cursor.execute("insert into TestTempTable (IntCol) values (2)")
-        other_cursor.execute("select IntCol from TestTempTable order by IntCol")
+        other_cursor.execute(
+            "select IntCol from TestTempTable order by IntCol"
+        )
         assert other_cursor.fetchall() == [(1,), (2,)]
 
 
@@ -232,8 +236,10 @@ def test_1112(conn):
 
 def test_1113(test_env):
     "1113 - connection rolls back before close"
-    with test_env.get_connection() as conn, \
-            test_env.get_connection() as other_conn:
+    with (
+        test_env.get_connection() as conn,
+        test_env.get_connection() as other_conn,
+    ):
         cursor = conn.cursor()
         cursor.execute("truncate table TestTempTable")
         other_cursor = other_conn.cursor()
@@ -247,8 +253,10 @@ def test_1113(test_env):
 
 def test_1114(test_env):
     "1114 - connection rolls back before destruction"
-    with test_env.get_connection() as conn, \
-            test_env.get_connection() as other_conn:
+    with (
+        test_env.get_connection() as conn,
+        test_env.get_connection() as other_conn,
+    ):
         cursor = conn.cursor()
         cursor.execute("truncate table TestTempTable")
         other_cursor = other_conn.cursor()
@@ -553,11 +561,15 @@ def test_1128(test_env):
             other_cursor = other_conn.cursor()
             cursor.execute("truncate table TestTempTable")
             cursor.execute(sql, data_to_insert[0])
-            other_cursor.execute("select IntCol, StringCol1 from TestTempTable")
+            other_cursor.execute(
+                "select IntCol, StringCol1 from TestTempTable"
+            )
             assert other_cursor.fetchall() == []
             conn.autocommit = True
             cursor.execute(sql, data_to_insert[1])
-            other_cursor.execute("select IntCol, StringCol1 from TestTempTable")
+            other_cursor.execute(
+                "select IntCol, StringCol1 from TestTempTable"
+            )
             assert other_cursor.fetchall() == data_to_insert
 
 
@@ -606,7 +618,9 @@ def test_1132(test_env):
 
     with test_env.get_connection(conn_class=MyConnection) as conn:
         qual_name = conn.__class__.__qualname__
-        expected_value = f"<{__name__}.{qual_name} to {conn.username}@{conn.dsn}>"
+        expected_value = (
+            f"<{__name__}.{qual_name} to {conn.username}@{conn.dsn}>"
+        )
         assert repr(conn) == expected_value
 
     expected_value = f"<{__name__}.{qual_name} disconnected>"
