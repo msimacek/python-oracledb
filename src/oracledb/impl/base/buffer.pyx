@@ -183,7 +183,10 @@ cdef class Buffer:
             elif ora_type_num == ORA_TYPE_NUM_BINARY_FLOAT:
                 decode_binary_float(ptr, num_bytes, &data.buffer)
             elif ora_type_num == ORA_TYPE_NUM_BOOLEAN:
-                decode_bool(ptr, num_bytes, &data.buffer)
+                if from_dbobject:
+                    data.buffer.as_bool = ptr[num_bytes - 1] == 1
+                else:
+                    data.buffer.as_bool = ptr[0] == 1
             elif ora_type_num in (
                 ORA_TYPE_NUM_CHAR,
                 ORA_TYPE_NUM_LONG,
