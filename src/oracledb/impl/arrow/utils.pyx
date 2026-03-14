@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (c) 2025, Oracle and/or its affiliates.
+# Copyright (c) 2025, 2026, Oracle and/or its affiliates.
 #
 # This software is dual-licensed to you under the Universal Permissive License
 # (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
@@ -57,9 +57,6 @@ cdef extern from "nanoarrow.c":
     cdef struct ArrowBitmap:
         ArrowBuffer buffer
 
-    cdef struct ArrowArrayView:
-        ArrowBufferView *buffer_views
-
     cdef struct ArrowDecimal:
         pass
 
@@ -107,8 +104,6 @@ cdef extern from "nanoarrow.c":
     ArrowErrorCode ArrowArrayStartAppending(ArrowArray* arrow_array)
     void ArrowArrayStreamRelease(ArrowArrayStream *array_stream)
     ArrowBitmap* ArrowArrayValidityBitmap(ArrowArray* arrow_array)
-    ArrowErrorCode ArrowArrayViewInitFromArray(ArrowArrayView* array_view,
-                                               ArrowArray* arrow_array)
     ArrowErrorCode ArrowBasicArrayStreamInit(ArrowArrayStream* array_stream,
                                              ArrowSchema* schema,
                                              int64_t n_arrays)
