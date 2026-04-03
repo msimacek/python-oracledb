@@ -59,24 +59,26 @@ Common Changes
 #)  Added attribute :attr:`ConnectParams.on_connect_callback` which can be set
     to a callable that is invoked when a standalone connection is created or a
     connection is acquired from a connection pool.
-#)  Improved :ref:`cloud native authentication <tokenauth>` plugins.
+#)  Improved :ref:`cloud native authentication <tokenauth>` plugins:
 
-    - Added Session Token-based authentication support to the OCI Tokens
-      plugin.
+    - Added Session Token-based authentication support to the :ref:`OCI Tokens
+      plugin <cloudnativeauthoci>`.
       (`issue 527 <https://github.com/oracle/python-oracledb/issues/527>`__).
-    - Added Resource Principal authentication support to the OCI Tokens
-      plugin.
+    - Added Resource Principal authentication support to the :ref:`OCI Tokens
+      plugin <cloudnativeauthoci>`.
     - Fixed bug when using multiple token authentication plugins. Note that an
       invalid ``auth_type`` parameter will no longer raise an exception but
       will simply be ignored.
-    - Removed unnecessary validation calls in the OCI Tokens plugin.
+    - Removed unnecessary validation calls in the
+      :ref:`OCI Tokens plugin <cloudnativeauthoci>`.
 
 #)  Added support for inserting :ref:`data frames <dataframeformat>` containing
     binary views (format "vb") and string views (format "vu")
     (`issue 573 <https://github.com/oracle/python-oracledb/issues/573>`__).
 #)  Added support for comparing :ref:`sparse vectors <sparsevectors>` with
     other sparse vectors.
-#)  Added support for sparse vectors with no non-zero values.
+#)  Added support for :ref:`sparse vectors <sparsevectors>` with no non-zero
+    values.
 #)  Added support for compiling with the HP aCC compiler
     (`issue 556 <https://github.com/oracle/python-oracledb/issues/556>`__).
 #)  Fixed bug when inserting :ref:`data frames <dataframeformat>` that are
