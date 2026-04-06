@@ -224,6 +224,8 @@ cdef class Capabilities:
                 TNS_CCAP_VECTOR_FEATURE_BINARY | \
                 TNS_CCAP_VECTOR_FEATURE_SPARSE
         self.compile_caps[TNS_CCAP_OCI3] = TNS_CCAP_OCI3_OCSSYNC
+        self.compile_caps[TNS_CCAP_FEATURE_BACKPORT2] = \
+                TNS_CCAP_END_USER_SEC_CTX_PIGGYBACK
 
     @cython.boundscheck(False)
     cdef void _init_runtime_caps(self):

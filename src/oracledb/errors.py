@@ -296,6 +296,8 @@ ERR_SCROLL_NOT_SUPPORTED = 2068
 ERR_WRONG_REQUESTED_SCHEMA_LENGTH = 2069
 ERR_INVALID_CALLABLE_FUN = 2070
 ERR_REGISTER_QUERY_ON_AQ_SUBSCR = 2071
+ERR_INVALID_END_USER_SECURITY_CONTEXT_LENGTH = 2072
+ERR_END_USER_SECURITY_CONTEXT_REQUIRES_TCPS = 2073
 ERR_NAME_HAS_EMBEDDED_QUOTES = 2074
 ERR_PARAM_SIZE_TOO_LARGE = 2075
 
@@ -672,6 +674,9 @@ ERR_MESSAGE_FORMATS = {
     ERR_DUPLICATED_PARAMETER: (
         '"{deprecated_name}" and "{new_name}" cannot be specified together'
     ),
+    ERR_END_USER_SECURITY_CONTEXT_REQUIRES_TCPS: (
+        "end_user_security_context requires use of the tcps protocol"
+    ),
     ERR_EMPTY_STATEMENT: ("an empty statement cannot be executed"),
     ERR_EXCEEDED_IDLE_TIME: (
         "the database closed the connection because the connection's idle "
@@ -739,6 +744,10 @@ ERR_MESSAGE_FORMATS = {
         "{max_index}"
     ),
     ERR_INVALID_ENUM_VALUE: "invalid value for enumeration {name}: {value}",
+    ERR_INVALID_END_USER_SECURITY_CONTEXT_LENGTH: (
+        "Specified end-user security context exceeds the maximum supported "
+        "size"
+    ),
     ERR_INVALID_INTEGER: (
         "integer {value} cannot be represented as Apache Arrow type "
         "{arrow_type}"
