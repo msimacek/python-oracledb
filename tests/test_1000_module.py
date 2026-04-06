@@ -377,7 +377,7 @@ def test_1021(test_env):
     ]
     for in_value, capitalize, out_value in options:
         assert oracledb.enquote_name(in_value, capitalize) == out_value
-    with test_env.assert_raises_full_code("DPY-2072"):
+    with test_env.assert_raises_full_code("DPY-2074"):
         oracledb.enquote_name('test_"1021c')
 
 
