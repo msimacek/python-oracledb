@@ -225,7 +225,7 @@ This shows the SQL statement is now::
 
 which throws an error::
 
-    oracledb.exceptions.DatabaseError: ORA-00904: " * FROM DEPT --": invalid identifier
+    oracledb.exceptions.DatabaseError: ORA-00904: "* FROM DEPARTMENTS --": invalid identifier
 
 Note that :func:`enquote_name()` does not allow embedded quotes in quoted
 identifiers and if used, it will return the error ``DPY-2074: name has embedded
