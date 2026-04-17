@@ -669,7 +669,7 @@ In python-oracledb Thick mode, the output will be like::
     python-oracledb thk : 3.4.0
 
 Note that you may not see these values if you have set
-:attr:`oracledb.defaults.driver_name <defaults.driver_name>` or the
+:attr:`oracledb.defaults.driver_name <Defaults.driver_name>` or the
 ``driver_name`` parameter in :meth:`oracledb.init_oracle_client()`.
 
 The python-oracledb version can also be shown with
