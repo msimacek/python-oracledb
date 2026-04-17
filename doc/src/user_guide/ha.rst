@@ -127,9 +127,9 @@ Data Guard with a broker will get FAN events generated when the standby
 database goes online.  Standalone databases will send FAN events when the
 database restarts.
 
-For more information on FAN, see the `white paper on Fast Application
+For more information on FAN, see the `technical brief on Fast Application
 Notification <https://www.oracle.com/technetwork/database/options/clustering/
-applicationcontinuity/learnmore/fastapplicationnotification12c-2538999.pdf>`__.
+overview/fastapplicationnotification12c-2980342.pdf>`__.
 
 .. _appcont:
 
