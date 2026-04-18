@@ -62,12 +62,14 @@ def create_end_user_security_context(
     """
     end_user_token = end_user_name = key = None
 
-    if isinstance(end_user_identity, str):
+    if isinstance(end_user_identity, str) and end_user_identity:
         end_user_token = end_user_identity
     elif (
         isinstance(end_user_identity, (tuple, list))
         and len(end_user_identity) == 2
-        and all(isinstance(value, str) for value in end_user_identity)
+        and all(
+            isinstance(value, str) and value for value in end_user_identity
+        )
     ):
         end_user_name, key = end_user_identity
     else:
@@ -76,8 +78,8 @@ def create_end_user_security_context(
             "(end_user_name, key)."
         )
 
-    if not isinstance(database_access_token, str):
-        raise ValueError("database_access_token must be a string.")
+    if not isinstance(database_access_token, str) or not database_access_token:
+        raise ValueError("database_access_token must be a non-empty string.")
 
     cls = thin_impl.EndUserSecurityContextImpl
     return cls.create_end_user_security_context(

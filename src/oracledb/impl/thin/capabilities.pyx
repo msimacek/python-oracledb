@@ -101,6 +101,7 @@ cdef class Capabilities:
         bint supports_oob
         bint supports_oob_check
         bint supports_end_of_response
+        bint supports_end_user_security_context
         bint supports_pipelining
         bint supports_request_boundaries
         uint32_t sdu
@@ -135,6 +136,10 @@ cdef class Capabilities:
             self.compile_caps[TNS_CCAP_FIELD_VERSION] = self.ttc_field_version
         if server_caps[TNS_CCAP_TTC4] & TNS_CCAP_EXPLICIT_BOUNDARY:
             self.supports_request_boundaries = True
+        if len(server_caps) > TNS_CCAP_FEATURE_BACKPORT2 \
+                and (server_caps[TNS_CCAP_FEATURE_BACKPORT2] \
+                    & TNS_CCAP_END_USER_SEC_CTX_PIGGYBACK):
+            self.supports_end_user_security_context = True
 
     @cython.boundscheck(False)
     cdef void _adjust_for_server_runtime_caps(self, bytearray server_caps):

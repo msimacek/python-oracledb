@@ -69,9 +69,13 @@ class EndUserSecMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        raw = request.COOKIES.get("identity")
-        identity = None if raw is None else json.loads(raw)
-
+        identity = None
+        try:
+            identity = json.loads(request.COOKIES["identity"])
+        except KeyError:
+            auth_header = request.META.get("HTTP_AUTHORIZATION")
+            if auth_header is not None and auth_header.startswith("Bearer "):
+                identity = auth_header.split()[1]
         set_end_user_identity(identity)
         return self.get_response(request)
 
