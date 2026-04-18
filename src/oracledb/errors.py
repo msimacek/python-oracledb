@@ -342,6 +342,7 @@ ERR_UNSUPPORTED_ARROW_TYPE = 3037
 ERR_CANNOT_CONVERT_TO_ARROW_TYPE = 3038
 ERR_CANNOT_CONVERT_FROM_ARROW_TYPE = 3039
 ERR_DB_CS_NOT_SUPPORTED = 3040
+ERR_UNSUPPORTED_DEEP_DATA_SECURITY_FEATURE = 3041
 
 # error numbers that result in DatabaseError
 ERR_TNS_ENTRY_NOT_FOUND = 4000
@@ -991,6 +992,9 @@ ERR_MESSAGE_FORMATS = {
         "internal error: unknown transaction sync version {version}"
     ),
     ERR_UNSUPPORTED_ARROW_TYPE: 'unsupported Apache Arrow type "{arrow_type}"',
+    ERR_UNSUPPORTED_DEEP_DATA_SECURITY_FEATURE: (
+        "database version does not support the Oracle Deep Data Security feature"
+    ),
     ERR_UNSUPPORTED_INBAND_NOTIFICATION: (
         "unsupported in-band notification with error number {err_num}"
     ),

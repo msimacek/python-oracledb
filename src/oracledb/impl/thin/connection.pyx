@@ -677,6 +677,10 @@ cdef class ThinConnImpl(BaseThinConnImpl):
             errors._raise_err(
                 errors.ERR_END_USER_SECURITY_CONTEXT_REQUIRES_TCPS
             )
+        if not self._protocol._caps.supports_end_user_security_context:
+            errors._raise_err(
+                errors.ERR_UNSUPPORTED_DEEP_DATA_SECURITY_FEATURE
+            )
         self.security_context = context
 
     def suspend_sessionless_transaction(self):

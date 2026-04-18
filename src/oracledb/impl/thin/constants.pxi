@@ -401,7 +401,6 @@ cdef enum:
 # end user security context flag
 cdef enum:
     TNS_SECURITY_CONTEXT_ATTACH_FLAG = 0x01
-    TNS_SECURITY_CONTEXT_DETACH_FLAG = 0x02
 
 # other connection constants
 cdef enum:
