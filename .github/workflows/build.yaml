@@ -10,6 +10,8 @@ on:
         description: List of package targets to build
         default: 'Linux, macOS, Windows, Source'
         required: false
+permissions:
+  contents: read
 
 jobs:
 
@@ -19,11 +21,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+                                  # v6.2.0
         with:
           cache: 'pip'
           python-version: 3.13
@@ -35,7 +38,8 @@ jobs:
         run: python setup.py sdist
 
       - name: Upload the artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+                                     # v7.0.1
         with:
           name: python-oracledb-source
           path: dist
@@ -56,7 +60,7 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
 
@@ -85,7 +89,8 @@ jobs:
             ./build.sh
 
       - name: Upload the artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+                                     # v7.0.1
         with:
           name: Linux_${{ matrix.platform }}_wheels
           path: dist/*.whl
@@ -101,11 +106,12 @@ jobs:
         arch: ['']
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+                                  # v6.2.0
         with:
           cache: 'pip'
           python-version: ${{ matrix.python-version }}
@@ -119,7 +125,8 @@ jobs:
         run: python -m build
 
       - name: Upload the artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+                                     # v7.0.1
         with:
           name: python-oracledb-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.arch }}
           path: dist/*.whl
@@ -135,11 +142,12 @@ jobs:
         arch: ['x86', '']
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+                                  # v6.2.0
         with:
           cache: 'pip'
           python-version: ${{ matrix.python-version }}
@@ -153,7 +161,8 @@ jobs:
         run: python -m build
 
       - name: Upload the artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+                                     # v7.0.1
         with:
           name: python-oracledb-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.arch }}
           path: dist/*.whl
@@ -165,7 +174,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/upload-artifact/merge@v6
+        uses: actions/upload-artifact/merge@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+                                           # v7.0.1
         with:
           name: python-oracledb-wheels
           delete-merged: true
