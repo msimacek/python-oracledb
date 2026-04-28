@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# Copyright (c) 2021, 2026, Oracle and/or its affiliates.
+# Copyright (c) 2021, 2025, Oracle and/or its affiliates.
 #
 # This software is dual-licensed to you under the Universal Permissive License
 # (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl and Apache License
@@ -448,7 +448,6 @@ class ConnectParams(metaclass=BaseMetaClass):
             f"driver_name={self.driver_name!r}, "
             f"use_sni={self.use_sni!r}, "
             f"thick_mode_dsn_passthrough={self.thick_mode_dsn_passthrough!r}, "
-            f"extra_auth_params={self.extra_auth_params!r}, "
             f"pool_name={self.pool_name!r}, "
             f"on_connect_callback={self.on_connect_callback!r}"
             ")"
@@ -569,15 +568,6 @@ class ConnectParams(metaclass=BaseMetaClass):
         A boolean indicating whether to use external authentication.
         """
         return self._impl.externalauth
-
-    @property
-    def extra_auth_params(self) -> dict:
-        """
-        A dictionary containing configuration parameters necessary for Oracle
-        Database authentication using plugins, such as the Azure and OCI cloud-
-        native authentication plugins.
-        """
-        return self._impl.extra_auth_params
 
     @property
     @_flatten_value

@@ -131,7 +131,6 @@ def test_4701(test_env):
         ("driver_name", "custom_driver"),
         ("use_sni", True),
         ("thick_mode_dsn_passthrough", True),
-        ("extra_auth_params", dict(extra1="A", extra2="B")),
         ("pool_name", "my_pool"),
         ("on_connect_callback", lambda conn: None),
     ]
