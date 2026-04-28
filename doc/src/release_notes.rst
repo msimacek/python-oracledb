@@ -87,6 +87,9 @@ Common Changes
 #)  Fixed bug when inserting :ref:`data frames <dataframeformat>` that are
     views of other data frames
     (`issue 574 <https://github.com/oracle/python-oracledb/issues/574>`__).
+#)  Since the parameter ``extra_auth_params`` of :type:`ConnectParams` and
+    :type:`PoolParams` often contains sensitive information, it is no longer
+    present in the ``repr()`` of the class nor is it available as an attribute.
 #)  Updated the `Jupyter notebook samples <https://github.com/oracle/
     python-oracledb/tree/main/samples/notebooks>`__ to cover recent
     python-oracledb features.

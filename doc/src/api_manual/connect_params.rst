@@ -175,12 +175,6 @@ All properties are read only.
 
     This attribute is only supported in python-oracledb Thick mode.
 
-.. autoproperty:: ConnectParams.extra_auth_params
-
-    This attribute is supported in both python-oracledb Thin and Thick modes.
-
-    .. versionadded:: 3.0.0
-
 .. autoproperty:: ConnectParams.host
 
     This attribute is supported in both python-oracledb Thin and Thick modes.
