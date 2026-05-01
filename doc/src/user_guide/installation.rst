@@ -189,6 +189,9 @@ If it is necessary to install a specific python-oracledb version, use the pip
 
     python -m pip install oracledb==3.2.0
 
+The status of Python versions can be found `here <https://devguide.python.org/
+versions/>`__.
+
 Supported Oracle Database Versions
 ==================================
 
