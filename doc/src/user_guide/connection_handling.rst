@@ -2240,6 +2240,8 @@ The parameters of :meth:`oracledb.create_end_user_security_context()` are:
       - The names of data roles granted to the application or local database user. These data roles are created with a ``CREATE DATA ROLE`` statement in the database.
 
         For external IAM systems, these data roles are mapped to roles managed in your IAM system.
+
+        If ``end_user_identity`` is a two-tuple value with user name and key, then only the default enabled data roles associated with the application identity are used. Any data roles explicitly provided by the application are not accepted and will raise an error.
       - Optional
     * - ``attributes``
       - Dictionary
