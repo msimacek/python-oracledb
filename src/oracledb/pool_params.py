@@ -543,6 +543,7 @@ class PoolParams(ConnectParams):
             f"driver_name={self.driver_name!r}, "
             f"use_sni={self.use_sni!r}, "
             f"thick_mode_dsn_passthrough={self.thick_mode_dsn_passthrough!r}, "
+            f"extra_auth_params={self.extra_auth_params!r}, "
             f"pool_name={self.pool_name!r}, "
             f"on_connect_callback={self.on_connect_callback!r}"
             ")"

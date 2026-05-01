@@ -726,6 +726,7 @@ def test_4539():
         ("driver_name", "custom_driver"),
         ("use_sni", True),
         ("thick_mode_dsn_passthrough", True),
+        ("extra_auth_params", dict(extra1="A", extra2="B")),
         ("pool_name", "my_pool"),
         ("on_connect_callback", lambda conn: None),
     ]
@@ -782,6 +783,7 @@ def test_4539():
         ("driver_name", "modified_driver_name"),
         ("use_sni", False),
         ("thick_mode_dsn_passthrough", False),
+        ("extra_auth_params", dict(extra1="X", extra2="Y")),
         ("pool_name", "my_second_pool"),
         ("on_connect_callback", lambda conn: None),
     ]
