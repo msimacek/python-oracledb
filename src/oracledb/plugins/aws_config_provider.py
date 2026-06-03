@@ -36,7 +36,6 @@ from urllib.parse import parse_qsl, unquote, urlparse
 import boto3
 import oracledb
 
-
 _COMMON_QUERY_PARAMETERS = frozenset(
     (
         "authentication",
@@ -156,9 +155,7 @@ def _get_secret_value(parameters: dict) -> str:
     if "versionstage" in parameters:
         aws_params["VersionStage"] = parameters["versionstage"]
     try:
-        response = client.get_secret_value(
-            SecretId=secret_name, **aws_params
-        )
+        response = client.get_secret_value(SecretId=secret_name, **aws_params)
     except Exception as e:
         _raise_aws_call_error(e, "Secrets Manager", "get_secret_value")
     text_value = response.get("SecretString")
@@ -222,8 +219,7 @@ def _parse_parameters(
             )
         if key not in supported_parameters:
             raise Exception(
-                f'Unsupported query parameter "{key}" '
-                "in connection string"
+                f'Unsupported query parameter "{key}" ' "in connection string"
             )
         if key in parameters:
             raise Exception(

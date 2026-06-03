@@ -55,7 +55,6 @@ from urllib.parse import quote
 import oracledb
 import pytest
 
-
 PYO_PARAMETERS = {
     "cclass": "pythontest_aws",
     "connection_id_prefix": "my_connection_prefix",
@@ -124,9 +123,7 @@ class AwsConfig:
 
     def __init__(self, test_env, extended_config):
         self.bucket_name = extended_config.get_str_value("aws_bucket_name")
-        self.object_prefix = extended_config.get_str_value(
-            "aws_object_prefix"
-        )
+        self.object_prefix = extended_config.get_str_value("aws_object_prefix")
         self.aws_region = extended_config.get_str_value("aws_region")
         self.aws_profile = extended_config.get_str_value(
             "aws_profile", os.environ.get("AWS_PROFILE")
@@ -403,9 +400,7 @@ def module_checks(extended_config):
     try:
         import oracledb.plugins.aws_config_provider  # noqa: F401
     except ImportError as exc:
-        pytest.skip(
-            f"AWS config store requirements are not available: {exc}"
-        )
+        pytest.skip(f"AWS config store requirements are not available: {exc}")
 
 
 @pytest.fixture(scope="module")
@@ -445,6 +440,7 @@ def test_ext_2902(aws_config, dsn_attr_name, params_class):
     expected_params = params_class()
     expected_params.set_from_config(aws_config.params_config)
     assert params == expected_params
+
 
 @pytest.mark.parametrize(
     "resource_format",
