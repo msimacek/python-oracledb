@@ -550,9 +550,9 @@ cdef class ConnectParamsImpl:
         user string.
         """
         start_pos = user.find("[")
-        if start_pos > 0 and user.endswith("]"):
+        if start_pos >= 0 and user.endswith("]"):
             self.proxy_user = user[start_pos + 1:-1]
-            self.user = user[:start_pos]
+            self.user = user[:start_pos] or None
         else:
             self.user = user
 
