@@ -34,7 +34,6 @@ Thick Mode Changes
 
 #)  Added support for a proxy user to be used with token authentication.
 
-
 Common Changes
 ++++++++++++++
 
