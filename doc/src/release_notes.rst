@@ -30,12 +30,14 @@ Thin Mode Changes
 #)  Fixed bug in :func:`oracledb.create_end_user_security_context()` which
     prevented the second item (key) in a two-item tuple identity from being set
     to *None*.
-#)  Fixed bug when attempting to use a proxy user with token authentication.
+#)  Fixed bug when attempting to use a proxy user with
+    :ref:`token authentication <tokenauth>`.
 
 Thick Mode Changes
 ++++++++++++++++++
 
-#)  Added support for a proxy user to be used with token authentication.
+#)  Added support for a proxy user to be used with
+    :ref:`token authentication <tokenauth>`.
 
 Common Changes
 ++++++++++++++
