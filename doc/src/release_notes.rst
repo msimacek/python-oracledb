@@ -48,7 +48,8 @@ Thick Mode Changes
 ++++++++++++++++++
 
 #)  Added support for a proxy user to be used with
-    :ref:`token authentication <tokenauth>`.
+    :ref:`token authentication <tokenauth>` when creating standalone
+    connections.
 
 Common Changes
 ++++++++++++++

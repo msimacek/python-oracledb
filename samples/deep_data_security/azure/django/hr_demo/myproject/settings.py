@@ -63,19 +63,26 @@ except ImportError as exc:
 def get_required_env_value(name: str) -> str:
     value = os.environ.get(name)
     if not value:
-        raise ImproperlyConfigured(f"Missing required environment variable: {name}")
+        raise ImproperlyConfigured(
+            f"Missing required environment variable: {name}"
+        )
     return value
+
 
 # Azure credentials for user token acquisition
 AZURE_USER_CLIENT_ID = get_required_env_value("AZURE_USER_CLIENT_ID")
-AZURE_USER_CLIENT_CREDENTIAL = get_required_env_value("AZURE_USER_CLIENT_CREDENTIAL")
+AZURE_USER_CLIENT_CREDENTIAL = get_required_env_value(
+    "AZURE_USER_CLIENT_CREDENTIAL"
+)
 AZURE_USER_AUTHORITY = get_required_env_value("AZURE_USER_AUTHORITY")
 AZURE_USER_REDIRECT_URI = get_required_env_value("AZURE_USER_REDIRECT_URI")
 AZURE_USER_SCOPES = get_required_env_value("AZURE_USER_SCOPES")
 
 # Azure credentials for database token acquisition
 AZURE_DB_CLIENT_ID = get_required_env_value("AZURE_DB_CLIENT_ID")
-AZURE_DB_CLIENT_CREDENTIAL = get_required_env_value("AZURE_DB_CLIENT_CREDENTIAL")
+AZURE_DB_CLIENT_CREDENTIAL = get_required_env_value(
+    "AZURE_DB_CLIENT_CREDENTIAL"
+)
 AZURE_DB_AUTHORITY = get_required_env_value("AZURE_DB_AUTHORITY")
 AZURE_DB_SCOPES = get_required_env_value("AZURE_DB_SCOPES")
 

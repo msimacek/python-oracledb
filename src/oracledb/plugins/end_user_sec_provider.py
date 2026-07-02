@@ -106,7 +106,9 @@ def end_user_sec_context_hook(params: oracledb.ConnectParams):
                 )
                 connection.set_end_user_security_context(context)
 
-        async def async_on_connect_callback(connection: oracledb.AsyncConnection):
+        async def async_on_connect_callback(
+            connection: oracledb.AsyncConnection,
+        ):
             set_end_user_sec_context(connection)
 
         def on_connect_callback(connection: oracledb.Connection):
