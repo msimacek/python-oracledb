@@ -44,6 +44,7 @@ Thick Mode Changes
 #)  Fixed bug where TIMESTAMP WITH TIME ZONE column data was converted
     incorrectly to :ref:`Arrow data frames <dataframeformat>`
     (`issue 596 <https://github.com/oracle/python-oracledb/issues/596>`__).
+#)  Fixed bug where the OSON encoder did not set the correct flags.
 
 Common Changes
 ++++++++++++++
