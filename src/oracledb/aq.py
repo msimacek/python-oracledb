@@ -40,6 +40,12 @@ from .base import BaseMetaClass
 from .dbobject import DbObject, DbObjectType
 
 
+_AQ_AGENT_NAME_MAX_LENGTH = 30
+_AQ_CORRELATION_MAX_LENGTH = 128
+_AQ_EXCEPTION_QUEUE_MAX_LENGTH = 51
+_AQ_TRANSFORMATION_MAX_LENGTH = 61
+
+
 class BaseQueue(metaclass=BaseMetaClass):
     @classmethod
     def _from_impl(cls, connection, impl):
@@ -303,7 +309,9 @@ class DeqOptions(metaclass=BaseMetaClass):
 
     @consumername.setter
     def consumername(self, value: str) -> None:
-        utils.check_parameter_length("value", value, 128)
+        utils.check_parameter_length(
+            "consumername", value, _AQ_AGENT_NAME_MAX_LENGTH
+        )
         self._impl.set_consumer_name(value)
 
     @property
@@ -319,7 +327,9 @@ class DeqOptions(metaclass=BaseMetaClass):
 
     @correlation.setter
     def correlation(self, value: str) -> None:
-        utils.check_parameter_length("value", value, 128)
+        utils.check_parameter_length(
+            "correlation", value, _AQ_CORRELATION_MAX_LENGTH
+        )
         self._impl.set_correlation(value)
 
     @property
@@ -394,7 +404,9 @@ class DeqOptions(metaclass=BaseMetaClass):
 
     @transformation.setter
     def transformation(self, value: str) -> None:
-        utils.check_parameter_length("value", value, 128)
+        utils.check_parameter_length(
+            "transformation", value, _AQ_TRANSFORMATION_MAX_LENGTH
+        )
         self._impl.set_transformation(value)
 
     @property
@@ -465,7 +477,9 @@ class EnqOptions(metaclass=BaseMetaClass):
 
     @transformation.setter
     def transformation(self, value: str) -> None:
-        utils.check_parameter_length("value", value, 128)
+        utils.check_parameter_length(
+            "transformation", value, _AQ_TRANSFORMATION_MAX_LENGTH
+        )
         self._impl.set_transformation(value)
 
     @property
@@ -511,7 +525,9 @@ class MessageProperties(metaclass=BaseMetaClass):
 
     @correlation.setter
     def correlation(self, value: str) -> None:
-        utils.check_parameter_length("value", value, 128)
+        utils.check_parameter_length(
+            "correlation", value, _AQ_CORRELATION_MAX_LENGTH
+        )
         self._impl.set_correlation(value)
 
     @property
@@ -561,7 +577,9 @@ class MessageProperties(metaclass=BaseMetaClass):
 
     @exceptionq.setter
     def exceptionq(self, value: str) -> None:
-        utils.check_parameter_length("value", value, 128)
+        utils.check_parameter_length(
+            "exceptionq", value, _AQ_EXCEPTION_QUEUE_MAX_LENGTH
+        )
         self._impl.set_exception_queue(value)
 
     @property
@@ -655,7 +673,9 @@ class MessageProperties(metaclass=BaseMetaClass):
     def recipients(self, value: list) -> None:
         if value is not None:
             for recipient in value:
-                utils.check_parameter_length("value", recipient, 120)
+                utils.check_parameter_length(
+                    "recipient", recipient, _AQ_AGENT_NAME_MAX_LENGTH
+                )
         self._impl.set_recipients(value)
         self._recipients = value
 
