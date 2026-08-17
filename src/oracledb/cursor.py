@@ -32,7 +32,7 @@
 import datetime
 import decimal
 import functools
-from typing import Any, Callable, Type
+from typing import Any, Callable, Self, Type
 
 from . import connection as connection_module
 from . import errors
@@ -1023,7 +1023,7 @@ class Cursor(BaseCursor):
         fetch_lobs: bool | None = None,
         fetch_decimals: bool | None = None,
         **keyword_parameters: Any,
-    ) -> Any:
+    ) -> Self:
         """
         Executes a statement against the database. See :ref:`sqlexecution`.
 
@@ -1344,7 +1344,7 @@ class AsyncCursor(BaseCursor):
         fetch_lobs: bool | None = None,
         fetch_decimals: bool | None = None,
         **keyword_parameters: Any,
-    ) -> None:
+    ) -> Self:
         """
         Executes a statement against the database. See :ref:`sqlexecution`.
 
