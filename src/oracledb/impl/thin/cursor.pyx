@@ -255,7 +255,6 @@ cdef class ThinCursorImpl(BaseCursorImpl):
                     if value is None or isinstance(value, (PY_TYPE_LOB,
                                                            PY_TYPE_ASYNC_LOB)):
                         continue
-                    print("creating temp lob!!!")
                     var_impl._values[idx] = yield from conn._createlob(
                         var_impl.metadata.dbtype, value
                     )
