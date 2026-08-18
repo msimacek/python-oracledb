@@ -1024,7 +1024,7 @@ class Cursor(BaseCursor):
         fetch_lobs: bool | None = None,
         fetch_decimals: bool | None = None,
         **keyword_parameters: Any,
-    ) -> Self:
+    ) -> Self | None:
         """
         Executes a statement against the database. See :ref:`sqlexecution`.
 
@@ -1345,7 +1345,7 @@ class AsyncCursor(BaseCursor):
         fetch_lobs: bool | None = None,
         fetch_decimals: bool | None = None,
         **keyword_parameters: Any,
-    ) -> Self:
+    ) -> Self | None:
         """
         Executes a statement against the database. See :ref:`sqlexecution`.
 
