@@ -547,49 +547,6 @@ cdef class BaseAsyncProtocol(BaseProtocol):
                     self._read_buf.notify_packet_received()
                 packet = self._transport.extract_packet()
 
-    async def end_pipeline(self, ThinConnImpl conn_impl, list messages,
-                           bint continue_on_error):
-        """
-        Called when all messages for the pipeline have been sent to the
-        database. An end pipeline message is sent to the database and then
-        the responses to all of the messages are processed.
-        """
-        cdef:
-            ssize_t num_responses_to_discard
-            ReadBuffer buf = self._read_buf
-            Message message, end_message
-        end_message = conn_impl._create_message(EndPipelineMessage)
-        end_message.send(self._write_buf)
-        buf._check_request_boundary = True
-        buf._in_pipeline = True
-        try:
-            num_responses_to_discard = len(messages) + 1
-            for message in messages:
-                try:
-                    if not buf.has_response():
-                        await buf.wait_for_response_async()
-                    buf._start_packet()
-                    message.preprocess()
-                    message.process(buf)
-                    num_responses_to_discard -= 1
-                    self._process_call_status(conn_impl, message.call_status)
-                    message._check_and_raise_exception()
-                except Exception as e:
-                    if not continue_on_error:
-                        raise
-                    message.pipeline_result_impl._capture_err(e)
-            await self._receive_packet(end_message,
-                                       check_request_boundary=True)
-            end_message.process(buf)
-            num_responses_to_discard = 0
-            end_message._check_and_raise_exception()
-        except:
-            await buf.discard_pipeline_responses(num_responses_to_discard)
-            raise
-        finally:
-            buf._check_request_boundary = False
-            buf._in_pipeline = False
-
 
 class AsyncProtocol(BaseAsyncProtocol, asyncio.Protocol):
     pass
