@@ -112,6 +112,8 @@ cdef class Capabilities:
         self._init_compile_caps()
         self._init_runtime_caps()
         self.sdu = 8192                 # initial value to use
+        if sys.platform != "win32":
+            self.supports_oob = True
 
     cdef void _adjust_for_protocol(self, uint16_t protocol_version,
                                    uint16_t protocol_options, uint32_t flags):
