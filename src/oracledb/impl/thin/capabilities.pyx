@@ -122,7 +122,8 @@ cdef class Capabilities:
         to the initial connection request.
         """
         self.protocol_version = protocol_version
-        self.supports_oob = protocol_options & TNS_GSO_CAN_RECV_ATTENTION
+        if self.supports_oob:
+            self.supports_oob = protocol_options & TNS_GSO_CAN_RECV_ATTENTION
         if flags & TNS_ACCEPT_FLAG_FAST_AUTH:
             self.supports_fast_auth = True
         if flags & TNS_ACCEPT_FLAG_CHECK_OOB:

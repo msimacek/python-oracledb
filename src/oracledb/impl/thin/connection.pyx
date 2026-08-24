@@ -337,7 +337,7 @@ cdef class ThinConnImpl(BaseConnImpl):
         # if we can use OOB, send an urgent message now followed by a reset
         # marker to see if the server understands it
         if caps.supports_oob and caps.supports_oob_check:
-            self.protocol._transport.send_oob_break()
+            self._protocol._transport.send_oob_break()
             self._protocol._send_marker(self._write_buf, TNS_MARKER_TYPE_RESET)
 
         # send the network services message, if applicable
@@ -1324,7 +1324,7 @@ cdef class NegotiateTlsSubOp(SubOperation):
         Runs the callback synchronously.
         """
         self.conn_impl._protocol._transport.renegotiate_tls(
-            self.addres, self.description
+            self.address, self.description
         )
 
     async def process_async(self):
