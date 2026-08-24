@@ -38,6 +38,11 @@ Thin Mode Changes
 #)  Fixed bug in :func:`oracledb.create_end_user_security_context()` which
     prevented the second item (key) in a two-item tuple identity from being set
     to *None*.
+#)  Added validation for UTF-8 byte-length limits on AQ attributes
+    :attr:`DeqOptions.consumername`, :attr:`MessageProperties.recipients`,
+    :attr:`DeqOptions.correlation`, :attr:`MessageProperties.correlation`,
+    :attr:`DeqOptions.transformation`, :attr:`EnqOptions.transformation`, and
+    :attr:`MessageProperties.exceptionq`.
 
 Thick Mode Changes
 ++++++++++++++++++
