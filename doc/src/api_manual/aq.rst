@@ -92,14 +92,14 @@ DeqOptions Attributes
 
 .. autoproperty:: DeqOptions.consumername
 
-    .. versionchanged:: 4.1.0
+    .. versionchanged:: 26.0.0
 
         The maximum length for this attribute was changed to *30* bytes to
         match Oracle Database limits.
 
 .. autoproperty:: DeqOptions.correlation
 
-    .. versionchanged:: 4.1.0
+    .. versionchanged:: 26.0.0
 
         The maximum length for this attribute was changed to *128* bytes to
         match Oracle Database limits.
@@ -114,7 +114,7 @@ DeqOptions Attributes
 
 .. autoproperty:: DeqOptions.transformation
 
-    .. versionchanged:: 4.1.0
+    .. versionchanged:: 26.0.0
 
         The maximum length for this attribute was changed to *61* bytes to
         match Oracle Database limits.
@@ -143,7 +143,7 @@ EnqOptions Attributes
 
 .. autoproperty:: EnqOptions.transformation
 
-    .. versionchanged:: 4.1.0
+    .. versionchanged:: 26.0.0
 
         The maximum length for this attribute was changed to *61* bytes to
         match Oracle Database limits.
@@ -172,7 +172,7 @@ MessageProperties Attributes
 
 .. autoproperty:: MessageProperties.correlation
 
-    .. versionchanged:: 4.1.0
+    .. versionchanged:: 26.0.0
 
         The maximum length for this attribute was changed to *128* bytes to
         match Oracle Database limits.
@@ -185,7 +185,7 @@ MessageProperties Attributes
 
 .. autoproperty:: MessageProperties.exceptionq
 
-    .. versionchanged:: 4.1.0
+    .. versionchanged:: 26.0.0
 
         The maximum length for this attribute was changed to *51* bytes to
         match Oracle Database limits.
@@ -200,7 +200,7 @@ MessageProperties Attributes
 
 .. autoproperty:: MessageProperties.recipients
 
-    .. versionchanged:: 4.1.0
+    .. versionchanged:: 26.0.0
 
         The maximum length for each recipient name was changed to *30* bytes to
         match Oracle Database limits.
