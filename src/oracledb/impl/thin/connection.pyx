@@ -338,7 +338,9 @@ cdef class ThinConnImpl(BaseConnImpl):
         # marker to see if the server understands it
         if caps.supports_oob and caps.supports_oob_check:
             self._protocol._transport.send_oob_break()
-            self._protocol._send_marker(self._write_buf, TNS_MARKER_TYPE_RESET)
+            self._protocol._send_marker(
+                self._protocol._write_buf, TNS_MARKER_TYPE_RESET
+            )
 
         # send the network services message, if applicable
         if self.connect_params.externalauth and address.protocol == "tcps" \
