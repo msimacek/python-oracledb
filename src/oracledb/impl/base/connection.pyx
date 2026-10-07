@@ -401,16 +401,22 @@ cdef class BaseConnImpl:
             )
         generator = method(*args, **kwargs)
         try:
+            exc = None
             while True:
                 try:
-                    sub_op = next(generator)
-                    if sub_op is not None:
-                        await self._process_async_operation_sub_op(sub_op)
+                    if exc is None:
+                        sub_op = next(generator)
+                    else:
+                        sub_op = generator.throw(exc)
+                        exc = None
                 except StopIteration as e:
                     result = e.value
                     break
-                except BaseException as e:
-                    generator.throw(e)
+                if sub_op is not None:
+                    try:
+                        await self._process_async_operation_sub_op(sub_op)
+                    except BaseException as e:
+                        exc = e
         except BaseException as operation_error:
             if completion is not None:
                 completion(operation_error)
@@ -436,16 +442,22 @@ cdef class BaseConnImpl:
             )
         generator = method(*args, **kwargs)
         try:
+            exc = None
             while True:
                 try:
-                    sub_op = next(generator)
-                    if sub_op is not None:
-                        self._process_sync_operation_sub_op(sub_op)
+                    if exc is None:
+                        sub_op = next(generator)
+                    else:
+                        sub_op = generator.throw(exc)
+                        exc = None
                 except StopIteration as e:
                     result = e.value
                     break
-                except BaseException as e:
-                    generator.throw(e)
+                if sub_op is not None:
+                    try:
+                        self._process_sync_operation_sub_op(sub_op)
+                    except BaseException as e:
+                        exc = e
         except BaseException as operation_error:
             if completion is not None:
                 completion(operation_error)
