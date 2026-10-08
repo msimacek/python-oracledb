@@ -24,6 +24,7 @@ Thin Mode Changes
     (`issue 610 <https://github.com/oracle/python-oracledb/issues/610>`__).
 #)  Internal change: improved performance when sending Oracle Deep Data
     Security end-user security contexts.
+#)  Fixed token expiration handling for client-credentials and OBO flows.
 
 Thick Mode Changes
 ++++++++++++++++++
