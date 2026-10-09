@@ -435,6 +435,16 @@ def unregister_params_hook(hook_function: Callable) -> None:
     base_impl.REGISTERED_PARAMS_HOOKS.remove(hook_function)
 
 
+def update_config_cache(dsn: str, *, remove_permanently: bool = False) -> None:
+    """
+    Updates cached information for a Centralized Configuration Provider.
+
+    The cached configuration is removed if ``remove_permanently`` is *True*;
+    otherwise, it is expired so it will be refreshed on its next use.
+    """
+    base_impl.update_config_cache_from_notification(dsn, remove_permanently)
+
+
 def verify_stored_proc_args(
     parameters: list | tuple, keyword_parameters: dict
 ) -> None:
