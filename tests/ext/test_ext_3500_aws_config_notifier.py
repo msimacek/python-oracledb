@@ -28,7 +28,7 @@ E3500 - Module for testing AWS config cache notifications with real resources.
 These tests require run_long_tests and the AWS notifier settings in
 sample_config.ini. EventBridge must send the matching S3 and Secrets Manager
 events to the configured SQS queue.
-E3504 also requires sqs:CreateQueue, sqs:DeleteQueue and sqs:SendMessage.
+E3504 and E3505 require sqs:CreateQueue, sqs:DeleteQueue and sqs:SendMessage.
 """
 
 import json
@@ -59,6 +59,9 @@ class AwsNotifierConfig:
         self.object_key = "aws notifier config.json"
         self.queue_url = extended_config.get_str_value("aws_sqs_queue_url")
         self.secret_names = []
+        self.original_objects = {}
+        self.created_queue_url = None
+        self.listener_thread = None
         self.connect_descriptor = test_env.connect_string
         self.db_user = test_env.main_user
         self.db_password = test_env.main_password
@@ -118,24 +121,96 @@ class AwsNotifierConfig:
         secret_name = quote(secret_name, safe="/")
         return f"config-awssecretsmanager://{secret_name}?{query}"
 
-    def cleanup_secrets(self):
-        for secret_name in self.secret_names:
+    def cleanup(self):
+        errors = []
+        secret_names = self.secret_names.copy()
+        for object_key, original_text in self.original_objects.items():
             try:
-                self.secrets_client.delete_secret(
-                    SecretId=secret_name, ForceDeleteWithoutRecovery=True
-                )
+                self.restore_object(original_text, object_key)
             except Exception as exc:
-                error = getattr(exc, "response", {}).get("Error", {})
-                if error.get("Code") != "ResourceNotFoundException":
-                    raise
-        self.secret_names.clear()
+                errors.append(exc)
+        for secret_name in secret_names:
+            try:
+                self.remove_secret_config(secret_name)
+            except Exception as exc:
+                errors.append(exc)
+
+        if self.created_queue_url is not None:
+            # Stop this test's listener before deleting its temporary queue.
+            events = [
+                {
+                    "source": "aws.s3",
+                    "detail-type": "Object Deleted",
+                    "detail": {
+                        "bucket": {"name": self.bucket_name},
+                        "object": {"key": object_key},
+                    },
+                }
+                for object_key in self.original_objects
+            ]
+            events.extend(
+                {
+                    "source": "aws.secretsmanager",
+                    "detail-type": "AWS API Call via CloudTrail",
+                    "detail": {
+                        "eventSource": "secretsmanager.amazonaws.com",
+                        "eventName": "DeleteSecret",
+                        "requestParameters": {"secretId": secret_name},
+                        "responseElements": {},
+                    },
+                }
+                for secret_name in secret_names
+            )
+            for event in events:
+                send_args = dict(QueueUrl=self.created_queue_url)
+                if self.created_queue_url.endswith(".fifo"):
+                    send_args.update(
+                        MessageGroupId="config",
+                        MessageDeduplicationId=uuid.uuid4().hex,
+                    )
+                try:
+                    self.sqs_client.send_message(
+                        **send_args, MessageBody=json.dumps(event)
+                    )
+                except Exception as exc:
+                    errors.append(exc)
+            if self.listener_thread is not None:
+                try:
+                    self.listener_thread.join(timeout=10)
+                except Exception as exc:
+                    errors.append(exc)
+            try:
+                self.sqs_client.delete_queue(QueueUrl=self.created_queue_url)
+            except Exception as exc:
+                errors.append(exc)
+        if errors:
+            raise RuntimeError(
+                "Errors cleaning up AWS test resources: "
+                + "; ".join(str(exc) for exc in errors)
+            ) from errors[0]
+
+    def create_queue(self, fifo=False):
+        queue_name = f"oracledb-notifier-{uuid.uuid4().hex}"
+        args = dict(QueueName=queue_name)
+        if fifo:
+            args.update(
+                QueueName=f"{queue_name}.fifo",
+                Attributes={"FifoQueue": "true"},
+            )
+        response = self.sqs_client.create_queue(**args)
+        self.queue_url = self.created_queue_url = response["QueueUrl"]
+        # Report missing receive permissions before starting the listener.
+        self.sqs_client.receive_message(
+            QueueUrl=self.queue_url, WaitTimeSeconds=0
+        )
 
     def create_secret_config(self, secret_name, config_key, stmtcachesize):
-        self.secrets_client.create_secret(
+        response = self.secrets_client.create_secret(
             Name=secret_name,
             SecretString=self._build_config_text(config_key, stmtcachesize),
         )
         self.secret_names.append(secret_name)
+        return response["ARN"]
 
     def drain_queue(self):
         deadline = time.monotonic() + 10
@@ -169,13 +244,29 @@ class AwsNotifierConfig:
         return response["Body"].read().decode()
 
     def get_stmtcachesize(self, dsn=None):
+        track_listener = (
+            self.created_queue_url is not None and self.listener_thread is None
+        )
+        if track_listener:
+            threads = set(threading.enumerate())
         params = oracledb.ConnectParams()
         params.parse_connect_string(dsn or self.dsn)
+        if track_listener:
+            (self.listener_thread,) = (
+                thread
+                for thread in threading.enumerate()
+                if thread not in threads
+                and thread.name == "oracledb-aws-config-listener"
+            )
         return params.stmtcachesize
 
     def put_config(self, config_key, stmtcachesize, object_key=None):
         if object_key is None:
             object_key = self.object_key
+        if object_key not in self.original_objects:
+            self.original_objects[object_key] = self.get_object_text(
+                object_key
+            )
         self.s3_client.put_object(
             Bucket=self.bucket_name,
             Key=object_key,
@@ -189,9 +280,14 @@ class AwsNotifierConfig:
         )
 
     def remove_secret_config(self, secret_name):
-        self.secrets_client.delete_secret(
-            SecretId=secret_name, ForceDeleteWithoutRecovery=True
-        )
+        try:
+            self.secrets_client.delete_secret(
+                SecretId=secret_name, ForceDeleteWithoutRecovery=True
+            )
+        except Exception as exc:
+            error = getattr(exc, "response", {}).get("Error", {})
+            if error.get("Code") != "ResourceNotFoundException":
+                raise
         self.secret_names.remove(secret_name)
 
     def restore_object(self, original_text, object_key=None):
@@ -250,7 +346,8 @@ def aws_notifier_config(request, test_env, extended_config):
     config.sqs_client = config.aws_session.client("sqs")
     config.config_key = request.node.name
     config.build_dsn(config.config_key)
-    return config
+    yield config
+    config.cleanup()
 
 
 def test_ext_3500(aws_notifier_config):
@@ -258,46 +355,32 @@ def test_ext_3500(aws_notifier_config):
     config = aws_notifier_config
     initial_stmtcachesize = 23
     updated_stmtcachesize = 37
-    original_text = config.get_object_text()
-    try:
-        config.put_config(
-            config.config_key, stmtcachesize=initial_stmtcachesize
-        )
-        time.sleep(5)
-        config.drain_queue()
+    config.put_config(config.config_key, stmtcachesize=initial_stmtcachesize)
+    time.sleep(5)
+    config.drain_queue()
 
-        assert config.get_stmtcachesize() == initial_stmtcachesize
-        config.put_config(
-            config.config_key, stmtcachesize=updated_stmtcachesize
-        )
-        config.wait_for_updated_config(expected_value=updated_stmtcachesize)
-        with oracledb.connect(
-            user=config.db_user, password=config.db_password, dsn=config.dsn
-        ) as conn:
-            assert conn.stmtcachesize == updated_stmtcachesize
-    finally:
-        config.restore_object(original_text)
+    assert config.get_stmtcachesize() == initial_stmtcachesize
+    config.put_config(config.config_key, stmtcachesize=updated_stmtcachesize)
+    config.wait_for_updated_config(expected_value=updated_stmtcachesize)
+    with oracledb.connect(
+        user=config.db_user, password=config.db_password, dsn=config.dsn
+    ) as conn:
+        assert conn.stmtcachesize == updated_stmtcachesize
 
 
 def test_ext_3501(aws_notifier_config):
     "E3501 - test real AWS SQS config cache delete notification"
     config = aws_notifier_config
     initial_stmtcachesize = 23
-    original_text = config.get_object_text()
-    try:
-        config.put_config(
-            config.config_key, stmtcachesize=initial_stmtcachesize
-        )
-        time.sleep(5)
-        config.drain_queue()
+    config.put_config(config.config_key, stmtcachesize=initial_stmtcachesize)
+    time.sleep(5)
+    config.drain_queue()
 
-        assert config.get_stmtcachesize() == initial_stmtcachesize
-        config.s3_client.delete_object(
-            Bucket=config.bucket_name, Key=config.object_key
-        )
-        config.wait_for_removed_config()
-    finally:
-        config.restore_object(original_text)
+    assert config.get_stmtcachesize() == initial_stmtcachesize
+    config.s3_client.delete_object(
+        Bucket=config.bucket_name, Key=config.object_key
+    )
+    config.wait_for_removed_config()
 
 
 def test_ext_3502(aws_notifier_config):
@@ -307,28 +390,25 @@ def test_ext_3502(aws_notifier_config):
     updated_stmtcachesize = 37
     secret_name = f"python-oracledb-test/aws-notifier-{uuid.uuid4().hex}"
     secret_dsn = config.build_secret_dsn(secret_name, config.config_key)
-    try:
-        config.create_secret_config(
-            secret_name,
-            config.config_key,
-            stmtcachesize=initial_stmtcachesize,
-        )
-        time.sleep(5)
-        config.drain_queue()
+    config.create_secret_config(
+        secret_name,
+        config.config_key,
+        stmtcachesize=initial_stmtcachesize,
+    )
+    time.sleep(5)
+    config.drain_queue()
 
-        assert config.get_stmtcachesize(secret_dsn) == initial_stmtcachesize
+    assert config.get_stmtcachesize(secret_dsn) == initial_stmtcachesize
 
-        config.put_secret_config(
-            secret_name,
-            config.config_key,
-            stmtcachesize=updated_stmtcachesize,
-        )
-        config.wait_for_updated_config(updated_stmtcachesize, secret_dsn)
+    config.put_secret_config(
+        secret_name,
+        config.config_key,
+        stmtcachesize=updated_stmtcachesize,
+    )
+    config.wait_for_updated_config(updated_stmtcachesize, secret_dsn)
 
-        config.remove_secret_config(secret_name)
-        config.wait_for_removed_config(secret_dsn)
-    finally:
-        config.cleanup_secrets()
+    config.remove_secret_config(secret_name)
+    config.wait_for_removed_config(secret_dsn)
 
 
 def test_ext_3503(aws_notifier_config):
@@ -339,33 +419,23 @@ def test_ext_3503(aws_notifier_config):
     first_updated_stmtcachesize = 37
     second_updated_stmtcachesize = 41
     other_object_key = f"{config.object_key}.other"
-    original_text = config.get_object_text()
-    other_original_text = config.get_object_text(other_object_key)
     other_config_key = f"{config.config_key}_other"
     other_dsn = config.build_dsn(other_config_key, other_object_key)
-    try:
-        config.put_config(config.config_key, initial_stmtcachesize)
-        config.put_config(
-            other_config_key, other_stmtcachesize, other_object_key
-        )
-        time.sleep(5)
-        config.drain_queue()
+    config.put_config(config.config_key, initial_stmtcachesize)
+    config.put_config(other_config_key, other_stmtcachesize, other_object_key)
+    time.sleep(5)
+    config.drain_queue()
 
-        assert config.get_stmtcachesize() == initial_stmtcachesize
-        assert config.get_stmtcachesize(other_dsn) == other_stmtcachesize
+    assert config.get_stmtcachesize() == initial_stmtcachesize
+    assert config.get_stmtcachesize(other_dsn) == other_stmtcachesize
 
-        config.s3_client.delete_object(
-            Bucket=config.bucket_name, Key=other_object_key
-        )
-        config.put_config(config.config_key, first_updated_stmtcachesize)
-        config.wait_for_updated_config(first_updated_stmtcachesize)
-        assert config.get_stmtcachesize(other_dsn) == other_stmtcachesize
+    config.put_config(config.config_key, first_updated_stmtcachesize)
+    config.wait_for_updated_config(first_updated_stmtcachesize)
+    assert config.get_stmtcachesize(other_dsn) == other_stmtcachesize
 
-        config.put_config(config.config_key, second_updated_stmtcachesize)
-        config.wait_for_updated_config(second_updated_stmtcachesize)
-    finally:
-        config.restore_object(original_text)
-        config.restore_object(other_original_text, other_object_key)
+    config.put_config(config.config_key, second_updated_stmtcachesize)
+    config.wait_for_updated_config(second_updated_stmtcachesize)
+    assert config.get_stmtcachesize(other_dsn) == other_stmtcachesize
 
 
 def test_ext_3504(aws_notifier_config):
@@ -375,13 +445,9 @@ def test_ext_3504(aws_notifier_config):
     suffix = uuid.uuid4().hex
     config.object_key = f"aws-notifier-{suffix}.json"
     other_object_key = f"{config.object_key}.other"
-    response = config.sqs_client.create_queue(
-        QueueName=f"oracledb-notifier-{suffix}"
-    )
-    config.queue_url = response["QueueUrl"]
+    config.create_queue()
     config.build_dsn(config.config_key)
     other_dsn = config.build_dsn(config.config_key, other_object_key)
-    listener_thread = None
     # Deliver notifications directly to isolate this queue from other
     # tests without changing the configured EventBridge routing.
     event = {
@@ -392,61 +458,117 @@ def test_ext_3504(aws_notifier_config):
             "object": {"key": config.object_key},
         },
     }
-    try:
-        # Register two DSNs with the same listener.
-        config.put_config(config.config_key, 23)
-        config.put_config(config.config_key, 24, other_object_key)
-        threads = set(threading.enumerate())
-        assert config.get_stmtcachesize() == 23
-        (listener_thread,) = (
-            thread
-            for thread in threading.enumerate()
-            if thread not in threads
-            and thread.name == "oracledb-aws-config-listener"
-        )
-        assert config.get_stmtcachesize(other_dsn) == 24
+    # Register two DSNs with the same listener.
+    config.put_config(config.config_key, 23)
+    config.put_config(config.config_key, 24, other_object_key)
+    assert config.get_stmtcachesize() == 23
+    listener_thread = config.listener_thread
+    assert config.get_stmtcachesize(other_dsn) == 24
 
-        # Refresh one config and check that the listener is still running.
-        config.put_config(config.config_key, 37)
+    # Refresh one config and check that the listener is still running.
+    config.put_config(config.config_key, 37)
+    config.sqs_client.send_message(
+        QueueUrl=config.queue_url,
+        MessageBody=json.dumps(event),
+    )
+    config.wait_for_updated_config(37)
+    assert listener_thread.is_alive()
+
+    # Delete each config; the first deletion must leave the listener alive.
+    event["detail-type"] = "Object Deleted"
+    for object_key, dsn in (
+        (other_object_key, other_dsn),
+        (config.object_key, config.dsn),
+    ):
+        config.s3_client.delete_object(
+            Bucket=config.bucket_name, Key=object_key
+        )
+        event["detail"]["object"]["key"] = object_key
         config.sqs_client.send_message(
             QueueUrl=config.queue_url,
             MessageBody=json.dumps(event),
         )
-        config.wait_for_updated_config(37)
-        assert listener_thread.is_alive()
+        config.wait_for_removed_config(dsn)
+        if dsn == other_dsn:
+            assert listener_thread.is_alive()
 
-        # Delete each config; the first deletion must leave the listener alive.
-        event["detail-type"] = "Object Deleted"
-        for object_key, dsn in (
-            (other_object_key, other_dsn),
-            (config.object_key, config.dsn),
-        ):
-            config.s3_client.delete_object(
-                Bucket=config.bucket_name, Key=object_key
-            )
-            event["detail"]["object"]["key"] = object_key
-            config.sqs_client.send_message(
-                QueueUrl=config.queue_url,
-                MessageBody=json.dumps(event),
-            )
-            config.wait_for_removed_config(dsn)
-            if dsn == other_dsn:
-                assert listener_thread.is_alive()
+    # The last deletion must stop the listener thread.
+    listener_thread.join(timeout=10)
+    assert not listener_thread.is_alive()
 
-        # The last deletion must stop the listener thread.
-        listener_thread.join(timeout=10)
-        assert not listener_thread.is_alive()
-    finally:
-        try:
-            event["detail-type"] = "Object Deleted"
-            for object_key in (config.object_key, other_object_key):
-                config.restore_object(None, object_key)
-                event["detail"]["object"]["key"] = object_key
-                config.sqs_client.send_message(
-                    QueueUrl=config.queue_url,
-                    MessageBody=json.dumps(event),
-                )
-            if listener_thread is not None:
-                listener_thread.join(timeout=10)
-        finally:
-            config.sqs_client.delete_queue(QueueUrl=config.queue_url)
+
+def test_ext_3505(aws_notifier_config):
+    "E3505 - test AWS Secrets Manager rotation and failed-call notifications"
+    config = aws_notifier_config
+    initial_stmtcachesize = 23
+    updated_stmtcachesize = 37
+    suffix = uuid.uuid4().hex
+    secret_name = f"python-oracledb-test/aws-notifier-{suffix}"
+    other_secret_name = f"{secret_name}-other"
+    # Isolate notifications and preserve their order for the failed-call check.
+    config.create_queue(fifo=True)
+    secret_dsn = config.build_secret_dsn(secret_name, config.config_key)
+    other_dsn = config.build_secret_dsn(other_secret_name, config.config_key)
+    send_args = dict(QueueUrl=config.queue_url, MessageGroupId="config")
+    config.create_secret_config(
+        secret_name, config.config_key, initial_stmtcachesize
+    )
+    other_arn = config.create_secret_config(
+        other_secret_name, config.config_key, initial_stmtcachesize
+    )
+    event = {
+        "source": "aws.secretsmanager",
+        "detail-type": "AWS Service Event via CloudTrail",
+        "resources": [],
+        "detail": {
+            "eventSource": "secretsmanager.amazonaws.com",
+            "eventName": "RotationSucceeded",
+            "requestParameters": None,
+            "responseElements": None,
+            "additionalEventData": {"SecretId": other_arn},
+        },
+    }
+    assert config.get_stmtcachesize(secret_dsn) == initial_stmtcachesize
+    assert config.get_stmtcachesize(other_dsn) == initial_stmtcachesize
+    for name, dsn in (
+        (secret_name, secret_dsn),
+        (other_secret_name, other_dsn),
+    ):
+        config.put_secret_config(
+            name, config.config_key, updated_stmtcachesize
+        )
+        # Wait for AWS to expose the update before sending its notification.
+        deadline = time.monotonic() + 30
+        while time.monotonic() < deadline:
+            response = config.secrets_client.get_secret_value(SecretId=name)
+            settings = json.loads(response["SecretString"])[config.config_key]
+            if settings["pyo"]["stmtcachesize"] == updated_stmtcachesize:
+                break
+            time.sleep(2)
+        else:
+            pytest.fail("Timed out waiting for updated secret in AWS")
+        assert config.get_stmtcachesize(dsn) == initial_stmtcachesize
+    failed_event = {
+        "source": "aws.secretsmanager",
+        "detail-type": "AWS API Call via CloudTrail",
+        "detail": {
+            "eventSource": "secretsmanager.amazonaws.com",
+            "eventName": "DeleteSecret",
+            "errorCode": "AccessDenied",
+            "requestParameters": {"secretId": secret_name},
+            "responseElements": None,
+        },
+    }
+    config.sqs_client.send_message(
+        **send_args,
+        MessageDeduplicationId=uuid.uuid4().hex,
+        MessageBody=json.dumps(failed_event),
+    )
+    # Refreshing the second secret confirms the failed call was processed.
+    config.sqs_client.send_message(
+        **send_args,
+        MessageDeduplicationId=uuid.uuid4().hex,
+        MessageBody=json.dumps(event),
+    )
+    config.wait_for_updated_config(updated_stmtcachesize, other_dsn)
+    assert config.get_stmtcachesize(secret_dsn) == initial_stmtcachesize

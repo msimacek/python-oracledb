@@ -316,14 +316,16 @@ def _get_secrets_manager_identifiers_from_event(
     event.
     """
     detail = event["detail"]
-    request_params = detail["requestParameters"]
-    response_elements = detail["responseElements"]
+    request_params = detail["requestParameters"] or {}
+    response_elements = detail["responseElements"] or {}
+    additional_data = detail.get("additionalEventData") or {}
 
     identifiers = set()
     for value in (
         request_params.get("secretId"),
         request_params.get("name"),
         response_elements.get("arn"),
+        additional_data.get("SecretId"),
     ):
         if isinstance(value, str):
             identifiers.add(value)
@@ -389,6 +391,7 @@ def _handle_secrets_manager_event(event: dict, queue_url: str) -> None:
         or event.get("detail-type") not in _SECRETS_MANAGER_DETAIL_TYPES
         or detail.get("eventSource") != "secretsmanager.amazonaws.com"
         or event_name not in _SECRETS_MANAGER_CHANGE_EVENTS
+        or detail.get("errorCode")
     ):
         return
     resource_names = {
