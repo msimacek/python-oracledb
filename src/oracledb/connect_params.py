@@ -1374,6 +1374,9 @@ class ConnectParams(metaclass=BaseMetaClass):
 
         The ``notification_fn`` parameter is an optional function that is
         called with the DSN used as the configuration cache key after the
-        configuration has been added to the cache.
+        configuration has been added to the cache. It is called each time the
+        configuration is cached, including after a reload. It is not called
+        when caching is disabled by setting ``config_time_to_live`` to *0*.
+        Passing *None* preserves the default behavior.
         """
         self._impl.set_from_config(config, notification_fn=notification_fn)
