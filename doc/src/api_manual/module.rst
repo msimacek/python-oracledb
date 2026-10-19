@@ -358,6 +358,8 @@ Oracledb Methods
 
     .. dbapimethodextension::
 
+    See :ref:`configchangenotification` for more information.
+
     .. versionadded:: 26.1.0
 
 
