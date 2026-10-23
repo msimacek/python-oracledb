@@ -1722,7 +1722,7 @@ notification, you must:
    Storage event notifications. For the list of supported events, see the
    :ref:`Google Cloud Storage events <_gcs_events>` table.
 
-   For the detailed steps on creating a Pub/Sub topic, see `Create a topic
+   For detailed steps on creating a Pub/Sub topic, see `Create a topic
    <https://docs.cloud.google.com/pubsub/docs/create-topic>`__.
 
 2. Create a dedicated pull subscription for the topic. See `Create pull
@@ -1753,7 +1753,7 @@ notification, you must:
    Identity and Access Management <https://docs.cloud.google.com/pubsub/docs/
    access-control>`__ for more information.
 
-   Also, the bucket's notification publisher must also be authorized to publish
+   Also, the bucket's notification publisher must be authorized to publish
    events to the topic.
 
 5. Add the full subscription name that was noted in step 2 as the
