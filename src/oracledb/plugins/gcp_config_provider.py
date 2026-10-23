@@ -32,7 +32,6 @@
 
 import json
 import threading
-import time
 import warnings
 
 from google.cloud import pubsub_v1
@@ -246,7 +245,7 @@ def _listen_for_config_changes(
                     future.cancel()
                     future.result()
             except Exception:
-                time.sleep(wait_seconds)
+                stop_event.wait(wait_seconds)
                 wait_seconds = min(wait_seconds * 2, 60)
             else:
                 wait_seconds = 1
