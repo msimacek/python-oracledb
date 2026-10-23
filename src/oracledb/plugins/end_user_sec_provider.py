@@ -132,7 +132,7 @@ def get_end_user_sec_context(
     data_roles = get_end_user_data_roles()
     attributes = get_end_user_attributes()
     db_version = tuple(int(part) for part in connection.version.split("."))[:3]
-    if db_version >= (23, 26, 4) and auth_flow == "on_behalf_of" :
+    if db_version >= (23, 26, 4) and auth_flow == "on_behalf_of":
         return oracledb.create_end_user_security_context(
             database_access_token=database_access_token,
             data_roles=data_roles or end_user_sec_params.get("data_roles"),

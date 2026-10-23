@@ -364,9 +364,7 @@ def metric_attributes(
         SERVER_PORT,
     )
     attributes = {
-        name: values[name]
-        for name in attribute_names
-        if name in values
+        name: values[name] for name in attribute_names if name in values
     }
     if error is not None:
         attributes[ERROR_TYPE] = error_attributes(error)[ERROR_TYPE]
