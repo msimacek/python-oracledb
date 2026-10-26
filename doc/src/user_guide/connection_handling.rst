@@ -1825,10 +1825,10 @@ The Google Cloud Storage configuration provider handles the following events:
       - The matching cached configuration is expired.
     * - ``OBJECT_ARCHIVE``
       - An object generation is archived.
-      - The matching cached configuration is expired if the event includes ``overwrittenByGeneration`` (object replacement). Otherwise, the cahced configuration is removed permanently.
+      - The matching cached configuration is expired if the event includes ``overwrittenByGeneration`` (object replacement). Otherwise, the cached configuration is removed permanently.
     * - ``OBJECT_DELETE``
       - An object is deleted.
-      - The matching cached configuration is expired if the event includes ``overwrittenByGeneration`` (object replacement). Otherwise, the cahced configuration is removed permanently.
+      - The matching cached configuration is expired if the event includes ``overwrittenByGeneration`` (object replacement). Otherwise, the cached configuration is removed permanently.
 
 Other Cloud Storage event types are ignored.
 
