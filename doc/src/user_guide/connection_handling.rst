@@ -5737,10 +5737,6 @@ encrypted communication between python-oracledb and the database server
 without requiring client-side certificates or wallets. ezTLS requires Oracle AI
 Database 26ai version 23.26.4 or later.
 
-.. note::
-
-    Oracle ezTLS is only supported in python-oracledb Thin mode.
-
 Traditional certificate-based TLS verifies server identity using certificates.
 ezTLS does not perform certificate-based identity verification. Instead, it
 uses a shared secret established during database authentication to verify and
