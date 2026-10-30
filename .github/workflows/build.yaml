@@ -76,13 +76,21 @@ jobs:
 
       - name: Generate script
         run: |
-          echo export PYO_COMPILE_ARGS=-g0 > build.sh
+          echo 'set -e' > build.sh
+          echo export PYO_COMPILE_ARGS=-g0 >> build.sh
           echo /opt/python/cp310-cp310/bin/python3.10 -m build >> build.sh
           echo /opt/python/cp311-cp311/bin/python3.11 -m build >> build.sh
           echo /opt/python/cp312-cp312/bin/python3.12 -m build >> build.sh
           echo /opt/python/cp313-cp313/bin/python3.13 -m build >> build.sh
           echo /opt/python/cp314-cp314/bin/python3.14 -m build >> build.sh
           echo /opt/python/cp315-cp315/bin/python3.15 -m build >> build.sh
+          if [ "${{ matrix.clib }}" = "gnu" ]; then
+            # GraalPy is installed on demand
+            for tag in graalpy312-graalpy250_312_native graalpy313-graalpy253_313_native; do
+              echo manylinux-interpreters ensure "$tag" >> build.sh
+              echo /opt/python/"$tag"/bin/python -m build >> build.sh
+            done
+          fi
           echo cd dist >> build.sh
           echo auditwheel repair *.whl >> build.sh
           echo rm *.whl >> build.sh
@@ -114,6 +122,14 @@ jobs:
         os: [macos-latest]
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.15']
         arch: ['']
+        include:
+          # GraalPy macOS wheels are only built for ARM64.
+          - os: macos-latest
+            python-version: 'graalpy-25.0'  # 3.12
+            arch: arm64
+          - os: macos-latest
+            python-version: 'graalpy-25.4'  # 3.13
+            arch: arm64
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -151,6 +167,13 @@ jobs:
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.15']
         arch: ['x86', 'x64']
         include:
+          # GraalPy Windows distributions are only available for x64.
+          - os: windows-latest
+            arch: x64
+            python-version: 'graalpy-25.0'  # 3.12
+          - os: windows-latest
+            arch: x64
+            python-version: 'graalpy-25.4'  # 3.13
           - os: windows-11-arm
             arch: arm64
             python-version: '3.11'
@@ -175,7 +198,7 @@ jobs:
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
                                   # v6.2.0
         with:
-          cache: 'pip'
+          cache: ${{ !startsWith(matrix.python-version, 'graalpy-') && 'pip' || '' }}
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.arch }}
           allow-prereleases: true
